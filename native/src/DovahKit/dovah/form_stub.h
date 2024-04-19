@@ -209,7 +209,7 @@ namespace dovah {
 
       public:
          form_stub_addenda* addenda = nullptr;
-         bare_form_id_t formID    = 0; // form ID (file-local)
+         bare_form_id_t formID    = 0; // form ID (file-local during load; global once stored)
          enum form_type form_type = form_type::none;
          flags_t        flags     = 0; // when there are getters/setters for these, use those instead of editing the mask directly
          // there will be 2 bytes of padding here

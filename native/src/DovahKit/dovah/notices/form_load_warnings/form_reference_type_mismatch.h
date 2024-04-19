@@ -16,6 +16,12 @@ namespace dovah::notices::form_load_warnings {
    class form_reference_type_mismatch final : public base_form_load_warning {
       public:
          MAKE_CLONE_OVERLOAD;
+
+      public:
+         struct metadata_type {
+            std::optional<size_t> nth_reference;
+         };
+
       public:
          constexpr form_reference_type_mismatch(
             form_stub& subject,
@@ -50,6 +56,8 @@ namespace dovah::notices::form_load_warnings {
          form_stub&             target;
          std::vector<form_type> desired; // NOTE: If this member == { form_type::reference }, then any REFR subclass would be accepted as well.
          uint32_t               subrecord_signature = 0;
+
+         metadata_type metadata;
    };
 }
 #include "../_util.undef.h"

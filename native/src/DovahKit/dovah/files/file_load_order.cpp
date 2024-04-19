@@ -23,6 +23,7 @@
 #include "../notice_code_list.h"
 #include <fstream>
 
+#include "../exceptions/form_renumber_failed.h"
 #include "../load_order_interfaces/file_load.h"
 #include "../load_order_requests/form_creation_request.h"
 #include "../load_order_requests/form_deletion_request.h"
@@ -30,6 +31,12 @@
 #include "../load_order_requests/form_renumber_request.h"
 #include "../load_order_requests/game_setting_edit_request.h"
 #include "../load_order_requests/game_setting_renumber_request.h"
+#include "../notices/file_load_warnings/form_override_has_armo_arma_mismatch.h"
+#include "../notices/file_load_warnings/game_setting_has_multiple_records_in_a_file.h"
+#include "../notices/file_load_warnings/game_setting_name_is_unrecognized.h"
+#include "../notices/file_load_warnings/game_setting_record_has_bad_form_id.h"
+#include "../notices/file_load_warnings/game_setting_record_has_no_name.h"
+#include "../notices/file_load_warnings/the_game_doesnt_load_new_actor_value_infos.h"
 #include "../notices/form_load_warnings/form_reference_type_mismatch.h"
 #include "../notices/base_form_load_warning.h"
 
@@ -517,34 +524,45 @@ namespace dovah {
             //
             auto* file_a = target->get_file_at_index(0);
             auto* file_b = stub->get_file_at_index(-1);
-            //
-            detailed_notice warning;
-            warning.code               = is_armo_arma ? notice_code::form_override_has_armo_arma_mismatch : notice_code::form_override_has_type_mismatch;
-            warning.cause_form.localID = target->formID;
-            warning.cause_form.fixedID = formID;
-            warning.cause_form.type    = type_a;
-            warning.set_flag(detailed_notice::flag::has_cause_form);
-            if (file_a) {
-               warning.cause_file = file_a->get_filename();
-               warning.set_flag(detailed_notice::flag::has_cause_file);
-            }
-            if (file_b) {
-               warning.relevant_files.emplace_back() = file_b->get_filename();
-            }
-            //
-            auto& relevant = warning.relevant_forms.emplace_back();
-            relevant.localID = stub->formID;
-            relevant.fixedID = formID;
-            relevant.type    = type_b;
-            //
-            if (!is_armo_arma) {
-               warning.type    = detailed_notice::notice_type::error;
-               warning.context = detailed_notice::notice_context::file_load;
-               this->save_load_state.current_load_results->error = warning;
+
+            if (is_armo_arma) {
+               notices::file_load_warnings::form_override_has_armo_arma_mismatch notice(*target, *stub);
+               if (file_b)
+                  notice.source_file = file_b->get_filename();
+               if (file_a)
+                  notice.overridden_form.source_file = file_a->get_filename();
+               notice.overriding_form.source_file = notice.source_file;
+               notice.overriding_form.form_ids = {
+                  .local  = stub->formID,
+                  .global = formID,
+               };
+               this->_log_warning(notice);
+            } else {
+               detailed_notice notice;
+               notice.code               = notice_code::form_override_has_type_mismatch;
+               notice.cause_form.localID = target->formID;
+               notice.cause_form.fixedID = formID;
+               notice.cause_form.type    = type_a;
+               notice.set_flag(detailed_notice::flag::has_cause_form);
+               if (file_a) {
+                  notice.cause_file = file_a->get_filename();
+                  notice.set_flag(detailed_notice::flag::has_cause_file);
+               }
+               if (file_b) {
+                  notice.relevant_files.emplace_back() = file_b->get_filename();
+               }
+               //
+               auto& relevant = notice.relevant_forms.emplace_back();
+               relevant.localID = stub->formID;
+               relevant.fixedID = formID;
+               relevant.type    = type_b;
+               //
+               notice.type = detailed_notice::notice_type::error;
+               notice.context = detailed_notice::notice_context::file_load;
+               this->save_load_state.current_load_results->error = notice;
                //
                return form_id_status::form_type_mismatch;
             }
-            this->_log_load_warning(warning);
          }
          //
          // Delete the new stub, and overwrite the pointer (in this function and in our caller(s)) with 
@@ -607,17 +625,12 @@ namespace dovah {
          // This is not an override.
          //
          if (stub->form_type == form_type::actor_value_info) {
-            detailed_notice warning;
-            warning.code = notice_code::the_game_doesnt_load_new_actor_value_infos;
-            warning.cause_form.localID = stub->formID;
-            warning.cause_form.fixedID = formID;
-            warning.cause_form.type    = stub->form_type;
-            warning.set_flag(detailed_notice::flag::has_cause_form);
+            auto notice = notices::file_load_warnings::the_game_doesnt_load_new_actor_value_infos(*stub);
+            notice.subject_form_id = formID;
             if (auto* file = stub->get_file_at_index(-1)) {
-               warning.cause_file = file->get_filename();
-               warning.set_flag(detailed_notice::flag::has_cause_file);
+               notice.source_file = file->get_filename();
             }
-            this->_log_load_warning(warning);
+            this->_log_warning(notice);
          }
          if (stub->source_file_count() == 1) {
             if (stub->test_record_flags(tes_file_record_header::flag::partial)) {
@@ -782,29 +795,26 @@ namespace dovah {
       if (result != form_id_status::valid)
          formID = 0;
       //
-      if (working.name.empty()) {
-         detailed_notice warning;
-         warning.code               = notice_code::game_setting_record_is_nameless;
-         warning.cause_form.localID = localID;
-         warning.cause_form.fixedID = formID;
-         warning.cause_form.type    = form_type::setting;
-         warning.set_flag(detailed_notice::flag::has_cause_form);
-         warning.cause_file = file->get_filename();
-         warning.set_flag(detailed_notice::flag::has_cause_file);
-         this->_log_load_warning(warning);
-         return;
-      }
-      //
       if (!formID) {
-         detailed_notice warning;
-         warning.code               = notice_code::game_setting_record_has_bad_form_id;
-         warning.cause_form.localID = localID;
-         warning.cause_form.fixedID = 0;
-         warning.cause_form.type    = form_type::setting;
-         warning.set_flag(detailed_notice::flag::has_cause_form);
-         warning.cause_file = file->get_filename();
-         warning.set_flag(detailed_notice::flag::has_cause_file);
-         this->_log_load_warning(warning);
+         notices::file_load_warnings::game_setting_record_has_bad_form_id notice;
+         notice.source_file    = file->get_filename();
+         notice.form_ids.local = localID;
+         if (result == form_id_status::valid)
+            notice.form_ids.global = formID;
+         notice.setting_name = working.name;
+         this->_log_warning(notice);
+         if (working.name.empty()) {
+            return;
+         }
+      }
+      if (working.name.empty()) {
+         notices::file_load_warnings::game_setting_record_has_no_name notice;
+         notice.source_file    = file->get_filename();
+         notice.form_ids.local = localID;
+         if (result == form_id_status::valid)
+            notice.form_ids.global = formID;
+         this->_log_warning(notice);
+         return;
       }
       //
       if (formID) {
@@ -873,21 +883,17 @@ namespace dovah {
             // This is a redundant game setting definition: the game setting was already defined in this file, 
             // but with a different form ID. Let's log a warning before we do anything else.
             //
-            detailed_notice warning;
-            warning.code               = notice_code::game_setting_record_is_redundant;
-            warning.cause_form.localID = localID;
-            warning.cause_form.fixedID = formID;
-            warning.cause_form.type    = form_type::setting;
-            warning.set_flag(detailed_notice::flag::has_cause_form);
-            warning.cause_file = file->get_filename();
-            warning.set_flag(detailed_notice::flag::has_cause_file);
+            notices::file_load_warnings::game_setting_has_multiple_records_in_a_file notice;
             //
-            auto& relevant = warning.relevant_forms.emplace_back();
-            relevant.localID = 0;
-            relevant.fixedID = priorID;
-            relevant.type    = form_type::setting;
+            notice.source_file = file->get_filename();
             //
-            this->_log_load_warning(warning);
+            notice.setting_name           = working.name;
+            notice.last_seen_form_id      = priorID;
+            notice.current_form_ids.local = localID;
+            if (result == form_id_status::valid)
+               notice.current_form_ids.global = formID;
+            //
+            this->_log_warning(notice);
             //
             // What we need to do next depends on what file this came from. If it was the active file, then we 
             // need to delete the old form stub (if no other settings are using it). Why? Well, we don't want 
@@ -925,16 +931,13 @@ namespace dovah {
       entry.source_file = file;
       entry.formID      = formID;
       if (!entry.definition) {
-         detailed_notice warning;
-         warning.code               = notice_code::game_setting_name_is_unrecognized;
-         warning.cause_form.localID = localID;
-         warning.cause_form.fixedID = formID;
-         warning.cause_form.type    = form_type::setting;
-         warning.set_flag(detailed_notice::flag::has_cause_form);
-         warning.cause_file = file->get_filename();
-         warning.set_flag(detailed_notice::flag::has_cause_file);
-         warning.set_cause_editor_id(entry.name);
-         this->_log_load_warning(warning);
+         notices::file_load_warnings::game_setting_name_is_unrecognized notice;
+         notice.source_file    = file->get_filename();
+         notice.form_ids.local = localID;
+         if (result == form_id_status::valid)
+            notice.form_ids.global = formID;
+         notice.setting_name = working.name;
+         this->_log_warning(notice);
       }
    }
 
@@ -1950,56 +1953,52 @@ namespace dovah {
       return form_deletion_request(*this, target);
    }
    form_renumber_request file_load_order::request_form_renumber(form_stub& stub, bare_form_id_t desiredID) noexcept {
+      using exception  = exceptions::form_renumber_failed;
+      using error_code = exception::error_code;
+
       form_renumber_request result(*this, stub);
       result.desiredID = desiredID;
       //
       if (stub.is_hardcoded()) {
-         result.error = notice_code::cannot_renumber_hardcoded_form;
-         return result;
+         throw exception(error_code::form_is_hardcoded, stub);
       }
       if (desiredID == 0) {
-         result.error = notice_code::zero_is_not_an_allowed_form_id;
-         return result;
+         throw exception(error_code::form_id_is_zero, stub);
       }
       if ((desiredID & plugin_form_id_mask) == 0) {
-         result.error = notice_code::form_id_is_in_the_hardcoded_range;
-         return result;
+         throw exception(error_code::form_id_is_in_hardcoded_range, stub);
       }
       if (!this->is_defined_in_active_file(stub)) {
-         result.error = notice_code::form_is_not_defined_in_active_file;
-         return result;
+         throw exception(error_code::form_is_not_from_active_file, stub);
       }
       if (!this->files.empty()) {
          auto prefix = this->file_prefix_for(*this->files.back());
          auto max    = prefix.max_form_id();
          if (desiredID > max) {
-            result.error = notice_code::form_id_is_out_of_bounds;
-            return result;
+            throw exception(error_code::form_id_is_out_of_bounds, stub);
          }
       }
       //
       if (!this->active_file) {
-         result.error = notice_code::no_active_file;
-         return result;
+         throw exception(error_code::no_active_file, stub);
       }
       auto guard1 = std::lock_guard(this->forms.lock);
       auto guard2 = std::lock_guard(this->form_creation_request_info.lock);
       if (this->has_form(desiredID)) {
-         result.error = notice_code::form_id_is_already_in_use;
-         return result;
+         throw exception(error_code::form_id_is_occupied, stub);
       }
       auto& list = this->form_creation_request_info.reserved_formIDs;
       if (std::find(list.begin(), list.end(), desiredID) != list.end()) {
-         result.error = notice_code::form_id_is_reserved_for_other_process;
-         return result;
+         throw exception(error_code::form_id_is_reserved, stub);
       }
       list.push_back(desiredID);
       return result;
    }
    void file_load_order::commit_form_renumber_request(form_renumber_request& request) noexcept {
+      using exception  = exceptions::form_renumber_failed;
+      using error_code = exception::error_code;
+
       if (&request.owner != this)
-         return;
-      if (request.error != default_notice_code)
          return;
       //
       bare_form_id_t desiredID = request.desiredID;
@@ -2019,8 +2018,9 @@ namespace dovah {
                if (!entry.other)
                   continue;
                if (!this->is_defined_in_active_file(*entry.other)) {
-                  request.error = notice_code::cannot_inject_form_overtop_none_stub;
-                  return;
+                  auto ex = exception(error_code::cannot_inject_form_overtop_none_stub, request.target);
+                  ex.details.none_stub = occupier;
+                  throw ex;
                }
             }
             //
@@ -2028,38 +2028,23 @@ namespace dovah {
             //
             auto result = this->_destroy_none_stub(*occupier);
             if (result != default_notice_code) { // destruction failed
-               request.error = result;
-               if (result == notice_code::cannot_sever_references_to_target)
-                  request.error = notice_code::cannot_sever_references_to_none_stub;
-               return;
+               auto ex = exception(error_code::cannot_sever_references_to_none_stub, request.target);
+               ex.details.none_stub = occupier;
+               throw ex;
             }
          }
       }
       //
       auto& stub = request.target;
-      if (ALL_FORM_TYPES_ARE_IMPLEMENTED_YES_IM_SURE == false) {
-         for (auto& pair : stub.inbound) { // Check to ensure we can load all users.
-            auto& entry = pair.second;
-            auto* other = entry.other;
-            if (!entry.other->load()) {
-               request.error = notice_code::cannot_load_all_users_of_this_form;
-               break;
-            }
-         }
-      }
-      if (request.error == default_notice_code) {
-         this->_renumber_form(stub, desiredID, true);
-      }
+      this->_renumber_form(stub, desiredID, true);
       //
       // Un-reserve the form ID:
       //
       this->_abandon_form_id_reservation(desiredID);
       //
-      if (request.error == default_notice_code) {
-         request.desiredID = 0;
-         if (this->on_form_renumber)
-            (this->on_form_renumber)(stub, oldID, desiredID);
-      }
+      request.desiredID = 0;
+      if (this->on_form_renumber)
+         (this->on_form_renumber)(stub, oldID, desiredID);
    }
    game_setting_edit_request file_load_order::request_game_setting_change(bool automatic_id) noexcept {
       game_setting_edit_request result(*this, automatic_id ? game_setting_edit_request::form_id_policy::find_valid_id : game_setting_edit_request::form_id_policy::use_chosen_id);

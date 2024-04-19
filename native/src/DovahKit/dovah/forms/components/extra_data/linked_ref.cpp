@@ -8,14 +8,10 @@ namespace dovah::loaded_forms::components::extra {
          return load_result::unrecognized;
       if (subrecord.size() >= 8) {
          subrecord.read(this->keyword);
-         intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-            detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::keyword, intfc.target_stub, this->keyword)
-         );
+         intfc.warn_if_ref_is_wrong_type(this->keyword, form_type::keyword, subrecord.signature());
       }
       subrecord.read(this->ref);
-      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-         detailed_notice::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->ref)
-      );
+      intfc.warn_if_ref_is_wrong_type(this->ref, form_type::reference, subrecord.signature());
       return load_result::succeeded;
    }
    void linked_ref::save(tes_record_writer& record, save_interface_t& intfc) {

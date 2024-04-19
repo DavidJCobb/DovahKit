@@ -10,6 +10,9 @@
 #include "dovah/form_stub.h"
 
 namespace {
+   namespace file_load_warnings {
+      using namespace dovah::notices::file_load_warnings;
+   }
    namespace form_load_warnings {
       using namespace dovah::notices::form_load_warnings;
    }
@@ -22,6 +25,136 @@ namespace editor_helpers {
    extern QString backend_warning_to_string(const dovah::notices::base_warning& warning) {
       constexpr const char* disambig = "backend warnings";
 
+      #pragma region file load warnings
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::form_override_has_armo_arma_mismatch*>(&warning)) {
+            auto overridden_form = form_identifiers_to_string(&casted->overridden_form.stub);
+            auto overriding_form = QString("[%1:%2]%3")
+               .arg(editor_helpers::form_signature_to_string(&casted->overriding_form.stub))
+               .arg(editor_helpers::form_id_to_string(casted->overriding_form.form_ids.global))
+               .arg(casted->overriding_form.stub.get_editor_id());
+
+            auto overridden_file = QString::fromStdString(casted->overridden_form.source_file);
+            auto overriding_file = QString::fromStdString(casted->overriding_form.source_file);
+
+            return QObject::tr(
+               "File %4 is attempting to override form %1 (defined in file %2) with form %3. The form types are "
+               "mismatched, but Skyrim allows ARMA/ARMO mismatches as a legacy behavior from Fallout 3's GECK. "
+               "This override will be loaded as %5."
+            ).arg(overridden_form).arg(overridden_file).arg(overriding_form).arg(overriding_file).arg(form_signature_to_string(&casted->overridden_form.stub));
+         }
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::game_setting_has_multiple_records_in_a_file*>(&warning)) {
+            bool has_current_global_id = casted->current_form_ids.global.has_value();
+
+            QString name     = QString::fromStdString(casted->setting_name);
+            QString prior_id = editor_helpers::form_id_to_string(casted->last_seen_form_id);
+            QString local_id = editor_helpers::form_id_to_string(casted->current_form_ids.local);
+            
+            if (has_current_global_id) {
+               auto global_id = editor_helpers::form_id_to_string(casted->current_form_ids.global.value());
+               return QObject::tr(
+                  "Found a game setting record (GMST) for setting \"%1\" with form ID %2, but this setting already has "
+                  "at least one other record in the same file. The last seen record had form ID %3. When DovahKit "
+                  "finishes loading all files, this setting will use whatever form ID we last saw it with by then."
+               ).arg(name).arg(global_id).arg(prior_id);
+            }
+            return QObject::tr(
+               "Found a game setting record (GMST) for setting \"%1\" with out-of-bounds or otherwise invalid form "
+               "ID %2, but this setting already has at least one other record in the same file. The last seen record "
+               "had form ID %3. When DovahKit finishes loading all files, this setting will use whatever form ID we "
+               "last saw it with by then."
+            ).arg(name).arg(local_id).arg(prior_id);
+         }
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::game_setting_record_has_bad_form_id*>(&warning)) {
+            bool no_name              = casted->setting_name.empty();
+            bool id_failed_to_resolve = !casted->form_ids.global.has_value();
+            bool id_is_none           = casted->form_ids.global.value_or(1) == 0;
+
+            QString name     = QString::fromStdString(casted->setting_name);
+            QString local_id = editor_helpers::form_id_to_string(casted->form_ids.local);
+            QString global_id;
+            if (!id_failed_to_resolve) {
+               global_id = editor_helpers::form_id_to_string(casted->form_ids.global.value());
+            }
+            
+            if (id_failed_to_resolve) {
+               return QObject::tr(
+                  "A game setting record (GMST) for setting \"%1\" has a bad form ID (local ID %2). This is incorrect, "
+                  "but the setting will still load properly."
+               ).arg(name).arg(local_id);
+            } else if (id_is_none) {
+               return QObject::tr(
+                  "A game setting (GMST) for setting \"%1\" has a local form ID (%2) that resolves to NONE (00000000). "
+                  "This is incorrect, but the setting will still load properly."
+               ).arg(name).arg(local_id);
+            } else {
+               return QObject::tr(
+                  "There's something wrong with the form ID for a game setting record (GMST) for setting \"%1\". The "
+                  "local ID was %2 and the global ID was %3. The setting will still load properly."
+               ).arg(name).arg(local_id).arg(global_id);
+            }
+         }
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::game_setting_record_has_no_name*>(&warning)) {
+            if (!casted->form_ids.global.has_value()) {
+               QString local_id = editor_helpers::form_id_to_string(casted->form_ids.local);
+               return QObject::tr(
+                  "A game setting record (GMST) has no name (i.e. no EDID subrecord or an empty EDID subrecord), "
+                  "so neither Skyrim, the Creation Kit, nor DovahKit will load it. The record in question also "
+                  "had an out-of-bounds or otherwise invalid form ID (%1)."
+               ).arg(local_id);
+            }
+
+            QString global_id = editor_helpers::form_id_to_string(casted->form_ids.global.value());
+            return QObject::tr(
+               "The game setting record (GMST) with form ID %1 has no name (i.e. no EDID subrecord or an empty "
+               "EDID subrecord), so neither Skyrim, the Creation Kit, nor DovahKit will load it."
+            ).arg(global_id);
+         }
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::game_setting_record_has_unrecognized_subrecord*>(&warning)) {
+            QString subrecord = cobb::qt::four_cc_to_string(casted->subrecord_signature);
+
+            QString name     = QString::fromStdString(casted->setting_name);
+            QString local_id = editor_helpers::form_id_to_string(casted->form_ids.local);
+            QString global_id;
+            if (auto& id = casted->form_ids.global; id.has_value()) {
+               global_id = editor_helpers::form_id_to_string(id.value());
+            }
+
+            if (name.isEmpty()) {
+               if (!global_id.isEmpty()) {
+                  return QObject::tr(
+                     "A game setting record (GMST) with no editor ID and form ID %1 contained unrecognized "
+                     "subrecord %2."
+                  ).arg(global_id).arg(subrecord);
+               }
+               return QObject::tr(
+                  "A game setting record (GMST) with no editor ID and file-local form ID %1 contained unrecognized "
+                  "subrecord %2."
+               ).arg(local_id).arg(subrecord);
+            }
+            if (!global_id.isEmpty()) {
+               return QObject::tr(
+                  "A game setting record (GMST) for setting \"%1\" with file-local form ID %2 contained unrecognized "
+                  "subrecord %3."
+               ).arg(name).arg(local_id).arg(subrecord);
+            }
+            return QObject::tr(
+               "A game setting record (GMST) for setting \"%1\" with form ID %2 contained unrecognized "
+               "subrecord %3."
+            ).arg(name).arg(global_id).arg(subrecord);
+         }
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::the_game_doesnt_load_new_actor_value_infos*>(&warning)) {
+            auto subject = QString("[%1:%2]%3")
+               .arg(editor_helpers::form_signature_to_string(&casted->subject))
+               .arg(editor_helpers::form_id_to_string(casted->subject_form_id))
+               .arg(casted->subject.get_editor_id());
+
+            return QObject::tr(
+               "Actor value info %1 is not an override; DovahKit will load it, but Skyrim will not. "
+               "Skyrim only loads overrides of the hardcoded actor value infos."
+            ).arg(subject);
+         }
+      #pragma endregion
+
       #pragma region form load warnings
          if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::form_reference_type_mismatch*>(&warning)) {
             QString subject   = form_identifiers_to_string(&casted->subject);
@@ -29,40 +162,74 @@ namespace editor_helpers {
             QString target    = form_identifiers_to_string(&casted->target);
             
             QString desired;
-
             switch (casted->desired.size()) {
+               case 0:
+                  desired = QString("some type other than the one it happens to refer to (no error information available; tell DovahKit's developer about this)");
+                  break;
                case 1:
-                  desired = form_type_name_to_string(casted->desired[0]);
-                  return QObject::tr(
-                     "%1 contained subrecord %2, expected to refer to a form of type %3; it instead referred to %4.",
-                     disambig
-                  ).arg(subject).arg(subrecord).arg(desired).arg(target);
+                  desired = QString("type ") + form_type_name_to_string(casted->desired[0]);
+                  break;
                case 2:
-                  return QObject::tr(
-                     "%1 contained subrecord %2, expected to refer to a form of type %3 or type %4; it instead referred to %5.",
-                     disambig
-                  )
-                     .arg(subject)
-                     .arg(subrecord)
+                  desired = QString("types %1 or %2")
                      .arg(form_type_name_to_string(casted->desired[0]))
                      .arg(form_type_name_to_string(casted->desired[1]))
-                     .arg(target);
-            }
-
-            {
-               auto& list = casted->desired;
-               auto  size = list.size();
-               for (size_t i = 0; i < size; ++i) {
-                  desired += form_type_name_to_string(casted->desired[i]);
-                  if (i + 1 < size) {
-                     desired += ", ";
-                     if (i + 2 == size)
-                        desired += "or ";
+                  ;
+                  break;
+               default:
+                  desired = QString("types ");
+                  {
+                     auto& list = casted->desired;
+                     auto  size = list.size();
+                     for (size_t i = 0; i < size; ++i) {
+                        desired += form_type_name_to_string(casted->desired[i]);
+                        if (i + 1 < size) {
+                           desired += ", ";
+                           if (i + 2 == size)
+                              desired += "or ";
+                        }
+                     }
                   }
+                  break;
+            }
+            
+            // Messages for special cases
+            if (casted->metadata.nth_reference.has_value()) {
+               const auto nth_reference = casted->metadata.nth_reference.value();
+
+               switch (casted->subrecord_signature) { // form components
+                  case 'DSTD': // destruction stage
+                     return QObject::tr(
+                        "Destruction stage %2 in %1 referred to form %4 when it was expected to refer to a form of %3.",
+                        disambig
+                     ).arg(subject).arg(nth_reference).arg(desired).arg(target);
+
+                  case 'KWDA': // keyword list entry
+                     return QObject::tr(
+                        "%1 contains a keyword list whose %2th entry referred to form %4 when it was expected to refer to a form of %3.",
+                        disambig
+                     ).arg(subject).arg(nth_reference).arg(desired).arg(target);
+
+                  case 'XCLR': // extra-data: cell region list entry
+                     return QObject::tr(
+                        "The region list for cell %1 contains an entry at position %2 which referred to form %4 when it was expected to refer to a form of %3.",
+                        disambig
+                     ).arg(subject).arg(nth_reference).arg(desired).arg(target);
+               }
+               switch (casted->subject.form_type) {
+                  case dovah::form_type::shout:
+                     switch (casted->subrecord_signature) {
+                        case 'SNAM':
+                           return QObject::tr(
+                              "The %2th word in Shout %1 referred to form %4 when it was expected to refer to a form of %3.",
+                              disambig
+                           ).arg(subject).arg(nth_reference).arg(desired).arg(target);
+                     }
+                     break;
                }
             }
+
             return QObject::tr(
-               "%1 contained subrecord %2, expected to refer to a form of types %3; it instead referred to %4.",
+               "%1 contained subrecord %2, expected to refer to a form of %3; it instead referred to %4.",
                disambig
             ).arg(subject).arg(subrecord).arg(desired).arg(target);
          }

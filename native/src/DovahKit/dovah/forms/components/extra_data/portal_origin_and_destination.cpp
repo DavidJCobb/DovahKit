@@ -8,12 +8,8 @@ namespace dovah::loaded_forms::components::extra {
          return load_result::unrecognized;
       subrecord.read(this->origin);
       subrecord.read(this->destination);
-      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-         detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, this->origin)
-      );
-      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-         detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, this->destination)
-      );
+      intfc.warn_if_ref_is_wrong_type(this->origin,      form_type::reference, subrecord.signature());
+      intfc.warn_if_ref_is_wrong_type(this->destination, form_type::reference, subrecord.signature());
       return load_result::succeeded;
    }
    void portal_origin_and_destination::save(tes_record_writer& record, save_interface_t& intfc) {

@@ -73,8 +73,8 @@ namespace dovah::loaded_forms::components {
          subrecord.read(stage.debrisCount);
                   
          const auto& stub = intfc.target_stub;
-         intfc.warn_if_ref_is_wrong_type(stage.explosion, form_type::explosion, subrecord.signature());
-         intfc.warn_if_ref_is_wrong_type(stage.debris,    form_type::debris,    subrecord.signature());
+         intfc.warn_if_ref_is_wrong_type(stage.explosion, form_type::explosion, subrecord, { .nth_reference = stage_index });
+         intfc.warn_if_ref_is_wrong_type(stage.debris,    form_type::debris,    subrecord, { .nth_reference = stage_index });
 
          ++nth_dstd_subrecord;
       };

@@ -51,10 +51,11 @@ namespace dovah::loaded_forms {
          cobb::vector3<float> position; // DATA
          cobb::vector3<float> rotation; // DATA // radians
 
-         notice_code_t set_position(cobb::vector3<float> position);
-         notice_code_t set_position_and_parent(cobb::vector3<float> position, form_stub& world_or_cell);
-         notice_code_t set_position_and_cell(cobb::vector3<float> position, form_stub& parent_cell);
-         notice_code_t set_position_and_world(cobb::vector3<float> position, form_stub& parent_world);
+         // These functions all potentially throw dovah::exceptions::object_reference_move_failed.
+         void set_position(cobb::vector3<float> position);
+         void set_position_and_parent(cobb::vector3<float> position, form_stub& world_or_cell);
+         void set_position_and_cell(cobb::vector3<float> position, form_stub& parent_cell);
+         void set_position_and_world(cobb::vector3<float> position, form_stub& parent_world);
 
          float get_scale() const; // applies in-game precision and range limits; if you want to know the in-ESP value, access the "scale" extra-data yourself
          float get_raw_scale() const;

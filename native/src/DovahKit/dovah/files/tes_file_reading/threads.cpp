@@ -4,6 +4,8 @@
 #include "../../logging.h"
 #include "../../notice_code_list.h"
 
+#include "../../notices/file_load_warnings/game_setting_record_has_unrecognized_subrecord.h"
+
 namespace dovah::tes_file_reading::threads {
    #pragma region basic
    void basic::exec() {
@@ -479,16 +481,12 @@ namespace dovah::tes_file_reading::threads {
                      continue;
                   }
                   if (subrecord.signature() != 'DATA') {
-                     detailed_notice warning;
-                     warning.code               = notice_code::unrecognized_subrecord;
-                     warning.cause_form.localID = record.formID();
-                     warning.cause_form.fixedID = 0;
-                     warning.cause_form.type    = form_type::setting;
-                     warning.cause_file         = this->loader->get_filename();
-                     warning.set_flag(detailed_notice::flag::has_cause_form | detailed_notice::flag::has_cause_file);
-                     warning.set_cause_subrecord(subrecord);
-                     warning.set_cause_editor_id(working.name);
-                     this->log_load_warning(warning);
+                     notices::file_load_warnings::game_setting_record_has_unrecognized_subrecord notice;
+                     notice.source_file         = this->loader->get_filename();
+                     notice.setting_name        = working.name;
+                     notice.form_ids.local      = record.formID();
+                     notice.subrecord_signature = subrecord.signature();
+                     this->log_load_warning(notice);
                      //
                      continue;
                   }

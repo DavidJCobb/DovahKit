@@ -4,6 +4,8 @@
 #include "file_loader.h"
 #include "../../form_stub_addenda.h"
 
+#include "../../notices/base_file_load_warning.h"
+
 namespace dovah::tes_file_reading {
    file_or_file_part_loader::file_or_file_part_loader(file_loader& f) : load_interface(f.get_load_interface(*this)) {
       this->loader = &f;
@@ -37,6 +39,11 @@ namespace dovah::tes_file_reading {
       auto& file = this->get_file_loader();
       n.set_cause_file(file.get_filename());
       this->load_interface.log_load_warning(n);
+   }
+   void file_or_file_part_loader::log_load_warning(notices::base_file_load_warning& notice) {
+      auto& file = this->get_file_loader();
+      notice.source_file = file.get_filename();
+      this->load_interface.log_warning(notice);
    }
    void file_or_file_part_loader::log_load_error(detailed_notice& n) {
       auto& file = this->get_file_loader();

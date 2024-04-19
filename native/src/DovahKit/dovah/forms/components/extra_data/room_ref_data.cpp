@@ -19,18 +19,14 @@ namespace dovah::loaded_forms::components::extra {
          if (record.peek_next_subrecord_type() == 'LNAM') { // the game doesn't validate the subrecord type; it'll just eat whatever comes next.
             auto& subrecord = record.next_subrecord();
             subrecord.read(this->lighting_template);
-            intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-               detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::lighting_template, intfc.target_stub, this->lighting_template)
-            );
+            intfc.warn_if_ref_is_wrong_type(this->lighting_template, form_type::lighting_template, subrecord.signature());
          }
       }
       if (this->flags & flag::has_imagespace) {
          if (record.peek_next_subrecord_type() == 'INAM') { // the game doesn't validate the subrecord type; it'll just eat whatever comes next.
             auto& subrecord = record.next_subrecord();
             subrecord.read(this->imagespace);
-            intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-               detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::imagespace, intfc.target_stub, this->imagespace)
-            );
+            intfc.warn_if_ref_is_wrong_type(this->imagespace, form_type::imagespace, subrecord.signature());
          }
       }
       if (this->linked_room_count > 0) {
@@ -46,9 +42,7 @@ namespace dovah::loaded_forms::components::extra {
             auto& subrecord = record.next_subrecord();
             auto& formID    = this->linked_rooms.emplace_back();
             subrecord.read(formID);
-            intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-               detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, formID)
-            );
+            intfc.warn_if_ref_is_wrong_type(formID, form_type::reference, subrecord, { .nth_reference = this->linked_rooms.size() - 1});
          }
       }
       return true;

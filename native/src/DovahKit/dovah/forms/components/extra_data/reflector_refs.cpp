@@ -8,10 +8,7 @@ namespace dovah::loaded_forms::components::extra {
       auto& entry = this->entries.emplace_back();
       subrecord.read(entry.target);
       subrecord.read(entry.type);
-      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-         detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, entry.target)
-            .set_subrecord_index(this->entries.size() - 1)
-      );
+      intfc.warn_if_ref_is_wrong_type(entry.target, form_type::reference, subrecord, { .nth_reference = this->entries.size() - 1});
       return load_result::succeeded;
    }
    void reflector_refs::save(tes_record_writer& record, save_interface_t& intfc) {

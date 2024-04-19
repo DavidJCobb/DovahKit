@@ -52,120 +52,6 @@ namespace editor_helpers {
                text = text.arg(form_a).arg(file_a).arg(form_b).arg(file_b);
             }
             break;
-         case notice_code::form_override_has_armo_arma_mismatch:
-            {
-               text = QObject::tr("File %4 is attempting to override form %1 (defined in file %2) with form %3. The form types are mismatched, but Skyrim allows ARMA/ARMO mismatches as a legacy behavior from Fallout 3's GECK. This override will be loaded as %5.", "log window");
-               QString file_a = QObject::tr("<unknown filename>", "log window");
-               QString file_b = file_a;
-               QString form_a = QObject::tr("<unknown form>", "log window");
-               QString form_b = form_a;
-               QString final_signature = QObject::tr("????", "log window - unknown signature");
-               //
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form_a = _read_error_form_id_to_string(notice.cause_form);
-                  final_signature = cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(notice.cause_form.type).signature);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file_a = QString::fromStdString(notice.cause_file);
-               }
-               if (!notice.relevant_forms.empty()) {
-                  form_b = _read_error_form_id_to_string(notice.relevant_forms[0]);
-               }
-               if (!notice.relevant_files.empty()) {
-                  file_b = QString::fromStdString(notice.relevant_files[0]);
-               }
-               //
-               text = text.arg(form_a).arg(file_a).arg(form_b).arg(file_b).arg(final_signature);
-            }
-            break;
-         case notice_code::unrecognized_subrecord:
-            {
-               QString form      = QObject::tr("<unknown form>", "log window");
-               QString subrecord = QObject::tr("<unknown subrecord>", "log window");
-               QString addendum;
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-                  if (notice.cause_form.type == dovah::form_type::note) {
-                     addendum = QObject::tr("Note that some subrecords in NOTE forms are only read for specific note types, and will be treated as unrecognized should they appear in other types.", "notice_code::unrecognized_subrecord - NOTE addendum");
-                  }
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
-                  subrecord = cobb::qt::four_cc_to_string(notice.cause_subrecord);
-               }
-               //
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  QString file = QString::fromStdString(notice.cause_file);
-                  text = QObject::tr("Form %1 in file %3 contained at least one unrecognized subrecord with signature %2. %4")
-                     .arg(form).arg(subrecord).arg(file).arg(addendum);
-               } else {
-                  text = QObject::tr("Form %1 contained at least one unrecognized subrecord with signature %2. %3")
-                     .arg(form).arg(subrecord).arg(addendum);
-               }
-            }
-            break;
-         case notice_code::form_reference_is_of_incorrect_type:
-            {
-               QString referrer  = QObject::tr("<unknown form>", "log window");
-               QString referent  = referrer;
-               QString subrecord = QObject::tr("<unknown subrecord>", "log window");
-               QString desired   = QObject::tr("<unknown type", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  referrer = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form_type) {
-                  desired = cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(notice.cause_form_type).signature);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_subrecord) {
-                  subrecord = cobb::qt::four_cc_to_string(notice.cause_subrecord);
-               }
-               if (!notice.relevant_forms.empty()) {
-                  referent = _read_error_form_id_to_string(notice.relevant_forms[0]);
-               }
-               //
-               // %1: Referrer form
-               // %2: Subrecord signature
-               // %3: Referent form
-               // %4: Desired form type
-               // %5: Subrecord or referent index
-               //
-               bool has_desired_type = notice.flags & dovah::detailed_notice::flag::has_cause_form_type;
-               bool has_index        = notice.flags & dovah::detailed_notice::flag::has_cause_subrecord_index;
-               bool has_form_index   = notice.flags & dovah::detailed_notice::flag::has_cause_form_index;
-               if (has_form_index) {
-                  if (has_desired_type)
-                     text = QObject::tr("Form %1 refers to multiple forms using %2 subrecord(s); referent form #%5 was %3, but was supposed to refer to a form of type %4.");
-                  else
-                     text = QObject::tr("Form %1 refers to multiple forms using %2 subrecord(s); referent form #%5 was %3, which is not the correct type.");
-               } else if (has_index) {
-                  if (has_desired_type)
-                     text = QObject::tr("Form %1 contained multiple %2 subrecords; %2[%5] referred to form %3, but was supposed to refer to a form of type %4.");
-                  else
-                     text = QObject::tr("Form %1 contained multiple %2 subrecords; %2[%5] referred to form %3, which is not the correct type.");
-               } else {
-                  if (has_desired_type)
-                     text = QObject::tr("Form %1 contained a %2 subrecord that referred to form %3, but was supposed to refer to a form of type %4.");
-                  else
-                     text = QObject::tr("Form %1 contained a %2 subrecord that referred to form %3, which is not the correct type.");
-               }
-               //
-               text = text
-                  .replace("%1", referrer) // QString::arg nags about unused arguments so we have to do this garbage
-                  .replace("%2", subrecord)
-                  .replace("%3", referent)
-                  .replace("%4", desired)
-                  .replace("%5", QString::number(notice.cause_subrecord_index));
-            }
-            break;
-         case notice_code::game_setting_record_is_nameless:
-            {
-               QString form = QObject::tr("<unknown GMST record>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               //
-               text = QObject::tr("Record %1 has no editor ID (EDID) or an empty editor ID. Skyrim and the Creation Kit would skip it, so DovahKit is skipping it as well.").arg(form);
-            }
-            break;
          case notice_code::game_setting_record_is_misordered:
             {
                QString form = QObject::tr("<unknown GMST record>", "log window");
@@ -199,50 +85,6 @@ namespace editor_helpers {
                   text = QObject::tr("Form %1 contained a %2 subrecord with extra bytes at the end.")
                      .arg(form).arg(subrecord);
                }
-            }
-            break;
-         case notice_code::game_setting_record_is_redundant:
-            {
-               text = QObject::tr("Record %1%4 in file %3 redundantly defines the same setting as record %2 in the same file. The setting will use the last-loaded value and form ID.", "log window");
-               QString file   = QObject::tr("<unknown filename>",    "log window");
-               QString form_a = QObject::tr("<unknown GMST record>", "log window");
-               QString form_b = form_a;
-               QString name   = QObject::tr("", "log window - missing editor ID");
-               //
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form_a = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file = QString::fromStdString(notice.cause_file);
-               }
-               if (!notice.relevant_forms.empty()) {
-                  form_b = _read_error_form_id_to_string(notice.relevant_forms[0]);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_editor_id) {
-                  name = QObject::tr(" (%1)", "log window - editor ID").arg(QString::fromStdString(notice.cause_editor_id));
-               }
-               //
-               text = text.arg(form_a).arg(form_b).arg(file).arg(name);
-            }
-            break;
-         case notice_code::game_setting_record_has_bad_form_id:
-            {
-               text = QObject::tr("Record %1%3 in file %2 has an out-of-bounds or otherwise invalid form ID. This is incorrect, but the setting should still load properly.", "log window");
-               QString file = QObject::tr("<unknown filename>",    "log window");
-               QString form = QObject::tr("<unknown GMST record>", "log window");
-               QString name = QObject::tr("", "log window - missing editor ID");
-               //
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file = QString::fromStdString(notice.cause_file);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_editor_id) {
-                  name = QObject::tr(" (%1)", "log window - editor ID").arg(QString::fromStdString(notice.cause_editor_id));
-               }
-               //
-               text = text.arg(form).arg(file).arg(name);
             }
             break;
          case notice_code::game_setting_record_has_bad_type:
@@ -691,22 +533,6 @@ namespace editor_helpers {
                text = text.arg(form).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
             }
             break;
-         case notice_code::the_game_doesnt_load_new_actor_value_infos:
-            {
-               text = QObject::tr("File %2 supplied new actor value definition %1, but Skyrim doesn't load new actor value infos; it only loads overrides of the hardcoded ones.", "notice_code::the_game_doesnt_load_new_actor_value_infos");
-               //
-               QString form = QObject::tr("<unknown form>", "log window");
-               QString file = QObject::tr("<unknown file>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file = QString::fromStdString(notice.cause_file);
-               }
-               //
-               text = text.arg(form).arg(file);
-            }
-            break;
          case notice_code::length_prefixed_string_was_too_long_to_save:
             {
                text = QObject::tr("Form %1 subrecord %2 contained a subrecord that was too long to save (%3 bytes out of %4 allowed).", "notice_code::length_prefixed_string_was_too_long_to_save");
@@ -733,30 +559,6 @@ namespace editor_helpers {
                }
                //
                text = text.arg(form).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
-            }
-            break;
-         case notice_code::papyrus_property_has_multiple_scalar_values:
-            {
-               text = QObject::tr("A Papyrus property somewhere on form %1 was not an array, but had multiple values in-memory. DovahKit must've done something wrong...", "notice_code::papyrus_property_has_multiple_scalar_values");
-               //
-               QString form = QObject::tr("<unknown form>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               //
-               text = text.arg(form);
-            }
-            break;
-         case notice_code::papyrus_property_is_scalar_but_empty:
-            {
-               text = QObject::tr("A Papyrus property somewhere on form %1 was not an array, but had no value in-memory. DovahKit must've done something wrong... We saved it with a default value (zero, empty string, None, etc.).", "notice_code::papyrus_property_is_scalar_but_empty");
-               //
-               QString form = QObject::tr("<unknown form>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               //
-               text = text.arg(form);
             }
             break;
             //

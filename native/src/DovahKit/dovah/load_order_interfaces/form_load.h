@@ -4,6 +4,7 @@
 #include <vector>
 #include "../core.h"
 #include "../form_types.h"
+#include "../notices/form_load_warnings/form_reference_type_mismatch.h"
 
 namespace dovah {
    namespace notices {
@@ -42,6 +43,19 @@ namespace dovah::load_order_interfaces {
          #pragma region warn_if_ref_is_wrong_type
             void warn_if_ref_is_wrong_type(form_stub* target, form_type desired, uint32_t subrecord_signature);
 
+            void warn_if_ref_is_wrong_type(
+               form_stub* target,
+               form_type  desired,
+               const tes_file_reading::subrecord& subrecord,
+               const notices::form_load_warnings::form_reference_type_mismatch::metadata_type& metadata
+            );
+            void warn_if_ref_is_wrong_type(
+               const form_reference_t& target,
+               form_type               desired,
+               const tes_file_reading::subrecord& subrecord,
+               const notices::form_load_warnings::form_reference_type_mismatch::metadata_type& metadata
+            );
+
             // for conditions:
             void warn_if_ref_is_wrong_type(form_stub* target, std::vector<form_type> desired, uint32_t subrecord_signature);
 
@@ -49,9 +63,9 @@ namespace dovah::load_order_interfaces {
             void warn_if_ref_is_wrong_type(form_stub* target, const std::array<form_type, Size>& desired, uint32_t subrecord_signature);
 
             // Allow all funcs that take `form_stub` to also take `form_reference_t`:
-            template<typename Desired>
-            void warn_if_ref_is_wrong_type(form_reference_t& target, Desired&& desired, uint32_t sub) {
-               warn_if_ref_is_wrong_type(target.get_form_stub(), desired, sub);
+            template<typename... Args>
+            void warn_if_ref_is_wrong_type(form_reference_t& target, Args&&... args) {
+               warn_if_ref_is_wrong_type(target.get_form_stub(), std::forward<Args>(args)...);
             }
          #pragma endregion
 

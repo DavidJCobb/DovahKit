@@ -164,7 +164,7 @@ namespace dovah {
          std::vector<loaded_file*> files;
          loaded_file*      hardcoded_forms_file = nullptr; // needed so that form_stubs for non-overridden hardcoded forms can find this file_load_order. form_stubs rely on accessing the load order through their owning files.
          loaded_file*      none_stubs_file      = nullptr; // needed so that none-stubs can find this file_load_order.
-         loaded_file*      active_file          = nullptr;
+         loaded_file*      active_file          = nullptr; // note: if no active file is specified when loading, but the load order has room for one, then we auto-create an active file with no name, so editing operations work smoothly.
          _form_map         forms;
          _form_map_by_type forms_by_type;
          _form_map         active_file_forms; // all forms that come from the active file AND all forms overridden in the active file, which means that some of these may have originally loaded from different files.

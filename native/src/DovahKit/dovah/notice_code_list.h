@@ -23,24 +23,24 @@ namespace dovah {
          save_complete_but_to_temporary_file         = 0x0000000E, // The file was saved successfully, but only to a temporary file. It was not possible to rename that temporary file to the desired filename.
          unsaved_form_cleanup_failed                 = 0x0000000F, // Some forms were not saved to the file, but could not be deleted from memory. It is not safe to continue this editing session.
          form_override_has_type_mismatch             = 0x00000010,
-         form_override_has_armo_arma_mismatch        = 0x00000011,
          //
          //
          //
-         unrecognized_subrecord                      = 0x00000015, // FORM full load: a subrecord was unrecognized.
-         form_reference_is_of_incorrect_type         = 0x00000016, // FORM full load: a (form_reference_t) ended up referring to a form of the wrong type.
          //
          //
-         game_setting_record_is_nameless             = 0x00000019, // A GMST record had no EDID or an empty EDID.
+         //
+         //
+         //
+         //
          game_setting_record_is_misordered           = 0x0000001A, // A GMST record has its EDID record in the wrong place.
          subrecord_has_extra_content                 = 0x0000001B, // A subrecord has unexpected data at its end. (This is not emitted for most subrecords, but is explicitly checked for in special cases like the GMST loader.)
-         game_setting_record_is_redundant            = 0x0000001C, // Multiple GMST records in the same file define the same setting but with different form IDs.
-         game_setting_record_has_bad_form_id         = 0x0000001D, // A GMST record has an out-of-bounds or otherwise invalid form ID.
+         //
+         //
          game_setting_record_has_bad_type            = 0x0000001E, // A GMST record has an unrecognized name, and the name's type prefix is also unrecognized.
          game_setting_name_is_unrecognized           = 0x0000001F,
          form_id_unavailable_for_game_setting        = 0x00000020, // A game setting edit request failed because a form ID wasn't available for use.
          game_setting_edit_request_lacked_id         = 0x00000021, // A game setting edit request failed because it had no form ID.
-         form_id_is_already_in_use                   = 0x00000022,
+         //
          form_id_is_reserved_for_other_process       = 0x00000023, // Cannot use the specified form ID. It is reserved for use by another process, such as form creation or form renumbering.
          cannot_load_right_now                       = 0x00000024, // It is not safe to load right now, as a save or load operation is already in progress.
          game_setting_record_has_no_data             = 0x00000025, // A GMST record had no DATA subrecord.
@@ -50,11 +50,11 @@ namespace dovah {
          default_object_rejected_for_bad_type        = 0x00000029, // The loaded DefaultObjectManager won't let you use the specified form for the specified entry, as the form is of the wrong type.
          default_object_accepted_but_unknown         = 0x0000002A, // The loaded DefaultObjectManager has created the specified entry, but wants you to know that the entry isn't one that DovahKit's backend recognizes.
          singleton_form_is_redundantly_defined       = 0x0000002B, // A file contained multiple records for the same singleton form (e.g. multiple DOBJ records or multiple NAVI records).
-         cannot_renumber_hardcoded_form              = 0x0000002C,
-         form_is_not_defined_in_active_file          = 0x0000002D, // The desired operation can only be performed on forms that were originally defined in the active file.
+         //
+         //
          zero_is_not_an_allowed_form_id              = 0x0000002E, // The desired operation does not allow you to use zero as a form ID.
          cannot_load_all_users_of_this_form          = 0x0000002F, // The desired operation requires that DovahKit load all of the forms that use the target form, and that isn't yet implemented.
-         form_id_is_in_the_hardcoded_range           = 0x00000030, // You cannot use this form ID, because it's in the range reserved for hardcoded forms.
+         //
          cannot_sever_references_to_none_stub        = 0x00000031,
          unimplemented_form_type                     = 0x00000032, // DovahKit recognizes this form type and it is valid, but editing has not yet been implemented for it.
          invalid_parent_child_relationship           = 0x00000033, // Forms of type A cannot have parents of type B.
@@ -73,7 +73,7 @@ namespace dovah {
          cyclical_dependency_between_files           = 0x00000040, // The load order contains files whose master lists form a circular dependency.
          active_file_is_master_and_there_are_plugins = 0x00000041, // DovahKit can't place the active file at the end of the load order, because it's ESM-flagged and other files aren't.
          record_found_in_wrong_top_level_group       = 0x00000042,
-         cannot_inject_form_overtop_none_stub        = 0x00000043,
+         //
          //
          unknown_error                               = 0x00000045,
          active_file_is_dependency                   = 0x00000046, // The active file is listed as another file's master. This load order is invalid, because we need the active file at the bottom of the load order.
@@ -100,21 +100,21 @@ namespace dovah {
          //
          //
          //
-         the_game_doesnt_load_new_actor_value_infos  = 0x0000005E, // Skyrim doesn't load new AVIF records. AVIF records that don't override a hardcoded AVIF form will be ignored.
+         //
          //
          length_prefixed_string_was_too_long_to_save = 0x00000060,
          too_many_destruction_stages_to_save         = 0x00000061,
-         papyrus_property_has_multiple_scalar_values = 0x00000062, // Cannot save a non-array Papyrus property when it has multiple values in-memory. Something edited the property incorrectly.
-         papyrus_property_is_scalar_but_empty        = 0x00000063, // Attempted to save a non-array Papyrus property that had no value. Something edited the property incorrectly. We saved it with a default.
+         //
+         //
          //
          //
          havok_data_is_not_supported_here            = 0x00000066, // This feature can't load/save/etc. Havok data.
          landscape_heights_are_too_steep             = 0x00000067, // This landscape cannot be saved, because there is too steep a slope somewhere in its heightmap.
-         cannot_set_position_of_orphaned_reference   = 0x00000068, // This REFR has no parent (e.g. PlayerRef) and so cannot be moved.
-         desired_position_is_outside_of_desired_cell = 0x00000069, // You asked to move this REFR to an exterior cell, but the position you wanted to use is outside of that cell's bounds.
-         failed_to_create_cell_to_move_reference_to  = 0x0000006A, // The coordinates you wanted to move this REFR to lie outside of any existing cells, and attempting to create a new cell failed (e.g. no form ID available).
-         cannot_reparent_hardcoded_reference         = 0x0000006B, // Hardcoded references typically don't exist in a parent cell, and cannot be reparented.
-         operation_not_allowed_on_form_working_copy  = 0x0000006C,
+         //
+         //
+         //
+         //
+         //
       };
    };
 }

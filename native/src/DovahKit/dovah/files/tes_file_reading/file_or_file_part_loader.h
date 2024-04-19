@@ -4,6 +4,9 @@
 #include "../file_load_order.h"
 
 namespace dovah {
+   namespace notices {
+      class base_file_load_warning;
+   }
    namespace tes_file_reading {
       class file_loader;
    }
@@ -30,6 +33,7 @@ namespace dovah::tes_file_reading {
          
       protected:
          void log_load_warning(detailed_notice&);
+         void log_load_warning(notices::base_file_load_warning&);
          void log_load_error(detailed_notice&);
          
          form_stub* make_stub_for_record();

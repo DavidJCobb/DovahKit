@@ -10,56 +10,6 @@ namespace dovah {
       entry.localID = 0;
    }
 
-   /*static*/ detailed_notice detailed_notice::warn_about_unrecognized_subrecord(uint32_t subrecord, const form_stub& referrer) {
-      detailed_notice warning;
-      warning.type    = notice_type::warning;
-      warning.context = notice_context::on_demand_form_load;
-      warning.code    = notice_code::unrecognized_subrecord;
-      warning.set_cause_form(referrer);
-      warning.set_cause_subrecord(subrecord);
-      return warning;
-   }
-   /*static*/ detailed_notice detailed_notice::warn_if_wrong_type(uint32_t subrecord_signature, form_type desired, const form_stub& referrer, const form_reference_t& reference) {
-      if (reference.form_type_matches(desired))
-         return detailed_notice();
-      detailed_notice warning;
-      warning.type    = notice_type::warning;
-      warning.context = notice_context::on_demand_form_load;
-      warning.code    = notice_code::form_reference_is_of_incorrect_type;
-      warning.set_cause_form(referrer);
-      warning.set_cause_form_type(desired);
-      warning.set_cause_subrecord(subrecord_signature);
-      warning.add_relevant_form(*reference.get_form_stub());
-      return warning;
-   }
-   /*static*/ detailed_notice detailed_notice::warn_if_wrong_type(uint32_t subrecord_signature, std::initializer_list<form_type> desired, const form_stub& referrer, const form_reference_t& reference) {
-      for (auto ft : desired)
-         if (reference.form_type_matches(ft))
-            return detailed_notice();
-      detailed_notice warning;
-      warning.type    = notice_type::warning;
-      warning.context = notice_context::on_demand_form_load;
-      warning.code    = notice_code::form_reference_is_of_incorrect_type;
-      warning.set_cause_form(referrer);
-      warning.set_cause_subrecord(subrecord_signature);
-      warning.add_relevant_form(*reference.get_form_stub());
-      return warning;
-   }
-   /*static*/ detailed_notice detailed_notice::warn_if_not_object_reference(uint32_t subrecord_signature, const form_stub& referrer, const form_reference_t& reference) {
-      for (auto& info : form_types)
-         if (info.is_reference())
-            if (reference.form_type_matches(info.form_type))
-               return detailed_notice();
-      detailed_notice warning;
-      warning.type    = notice_type::warning;
-      warning.context = notice_context::on_demand_form_load;
-      warning.code    = notice_code::form_reference_is_of_incorrect_type;
-      warning.set_cause_form(referrer);
-      warning.set_cause_subrecord(subrecord_signature);
-      warning.add_relevant_form(*reference.get_form_stub());
-      return warning;
-   }
-
 
    detailed_notice& detailed_notice::set_cause_form_index(int i) noexcept {
       this->cause_form_index = i;

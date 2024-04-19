@@ -7,9 +7,7 @@ namespace dovah::loaded_forms::components::extra {
       if (subrecord.signature() != signature)
          return load_result::unrecognized;
       subrecord.read(this->ref);
-      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-         detailed_notice::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->ref)
-      );
+      intfc.warn_if_ref_is_wrong_type(this->ref, form_type::reference, subrecord.signature());
       subrecord.read(this->flags);
       subrecord.read(this->pad05);
       return load_result::succeeded;

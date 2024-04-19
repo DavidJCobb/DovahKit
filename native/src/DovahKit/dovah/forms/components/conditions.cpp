@@ -133,9 +133,7 @@ namespace dovah::loaded_forms::components {
             } else {
                subrecord.unchecked_read(this->run_on.index);
             }
-            intfc.log_load_warning(
-               detailed_notice::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, this->run_on.reference)
-            );
+            intfc.warn_if_ref_is_wrong_type(this->run_on.reference, form_type::reference, subrecord.signature());
             //
             // End of CTDA subrecord.
             //

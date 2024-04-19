@@ -9,10 +9,7 @@ namespace dovah::loaded_forms::components::extra {
       this->regions.resize(size);
       for (size_t i = 0; i < size; ++i) {
          subrecord.read(this->regions[i]);
-         intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-            detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::region, intfc.target_stub, this->regions[i])
-               .set_cause_form_index(i)
-         );
+         intfc.warn_if_ref_is_wrong_type(this->regions[i], form_type::region, subrecord, { .nth_reference = i });
       }
       return load_result::succeeded;
    }

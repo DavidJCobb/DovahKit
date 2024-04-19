@@ -7,9 +7,7 @@ namespace dovah::loaded_forms::components::extra {
          return load_result::unrecognized;
       auto& formID = this->refs.emplace_back();
       subrecord.read(formID);
-      intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-         detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::reference, intfc.target_stub, formID)
-      );
+      intfc.warn_if_ref_is_wrong_type(formID, form_type::reference, subrecord.signature());
       return load_result::succeeded;
    }
    void lit_water::save(tes_record_writer& record, save_interface_t& intfc) {

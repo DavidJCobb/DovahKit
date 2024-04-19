@@ -14,7 +14,6 @@ namespace dovah {
          file_load_order& owner;
          form_stub&       target;
          bare_form_id_t   desiredID = 0;
-         notice_code_t    error     = default_notice_code;
          
          form_renumber_request(file_load_order& o, form_stub& target);
          form_renumber_request(form_renumber_request&&);
@@ -24,8 +23,6 @@ namespace dovah {
       public:
          ~form_renumber_request();
          
-         constexpr notice_code_t get_error_code() const noexcept { return this->error; }
-         
-         bool commit();
+         void commit();
    };
 }

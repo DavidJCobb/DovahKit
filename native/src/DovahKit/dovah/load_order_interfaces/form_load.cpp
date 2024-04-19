@@ -1,6 +1,7 @@
 #include "./form_load.h"
 #include "../files/tes_file_reading/file_loader.h"
 #include "../files/file_load_order.h"
+#include "../notices/form_load_warnings/form_reference_type_mismatch.h"
 #include "../notices/base_form_load_warning.h"
 #include "../detailed_notice.h"
 #include "../form_stub.h"
@@ -29,6 +30,7 @@ namespace dovah::load_order_interfaces {
 
       this->owner._log_warning(notice);
    }
+
    void form_load::warn_if_ref_is_wrong_type(
       form_stub* target,
       form_type  desired,
@@ -50,6 +52,38 @@ namespace dovah::load_order_interfaces {
          subrecord_signature
       );
       this->log_load_warning(notice);
+   }
+   void form_load::warn_if_ref_is_wrong_type(
+      form_stub* target,
+      form_type  desired,
+      const tes_file_reading::subrecord& subrecord,
+      const notices::form_load_warnings::form_reference_type_mismatch::metadata_type& metadata
+   ) {
+      if (!target)
+         return;
+      if (desired == form_type::reference) {
+         if (form_type_is_reference(target->form_type))
+            return;
+      } else {
+         if (target->form_type == desired)
+            return;
+      }
+      notices::form_load_warnings::form_reference_type_mismatch notice(
+         const_cast<form_stub&>(this->target_stub), // TODO: clean things up so we don't need const cast lol
+         *target,
+         desired,
+         subrecord.signature()
+      );
+      notice.metadata = metadata;
+      this->log_load_warning(notice);
+   }
+   void form_load::warn_if_ref_is_wrong_type(
+      const form_reference_t& target,
+      form_type               desired,
+      const tes_file_reading::subrecord& subrecord,
+      const notices::form_load_warnings::form_reference_type_mismatch::metadata_type& metadata
+   ) {
+      return warn_if_ref_is_wrong_type(target.get_form_stub(), desired, subrecord, metadata);
    }
    
    void form_load::warn_if_ref_is_wrong_type(form_stub* target, std::vector<form_type> desired, uint32_t subrecord_signature) {

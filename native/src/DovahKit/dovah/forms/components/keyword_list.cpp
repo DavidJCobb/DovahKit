@@ -16,7 +16,7 @@ namespace dovah::loaded_forms::components {
             for (uint32_t i = 0; i < keywordSize; i++) {
                if (subrecord.read(formID)) {
                   this->forms.push_back(formID);
-                  intfc.warn_if_ref_is_wrong_type(formID, form_type::keyword, subrecord.signature());
+                  intfc.warn_if_ref_is_wrong_type(formID, form_type::keyword, subrecord, { .nth_reference = i });
                }
             }
             break;

@@ -77,11 +77,6 @@ namespace dovah {
 
       void add_relevant_form(const form_stub&);
 
-      static detailed_notice warn_about_unrecognized_subrecord(uint32_t subrecord, const form_stub& referrer);
-      static detailed_notice warn_if_wrong_type(uint32_t subrecord_signature, form_type desired, const form_stub& referrer, const form_reference_t& reference);
-      static detailed_notice warn_if_wrong_type(uint32_t subrecord_signature, std::initializer_list<form_type> desired, const form_stub& referrer, const form_reference_t& reference);
-      static detailed_notice warn_if_not_object_reference(uint32_t subrecord_signature, const form_stub& referrer, const form_reference_t& reference);
-
       // Chainable setters:
       constexpr detailed_notice& modify_flag(flags_t f, bool s) noexcept {
          if (s)

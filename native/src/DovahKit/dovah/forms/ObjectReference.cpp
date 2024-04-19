@@ -14,28 +14,38 @@
 #include "./DefaultObjectManager.h"
 #include "./Door.h"
 
+#include "../exceptions/object_reference_move_failed.h"
 #include "../load_order_requests/form_creation_request.h"
 
 namespace dovah::loaded_forms {
-   notice_code_t ObjectReference::set_position(cobb::vector3<float> position) {
-      if (this->is_working_copy)
-         return notice_code::operation_not_allowed_on_form_working_copy;
+   void ObjectReference::set_position(cobb::vector3<float> position) {
+      using exception  = exceptions::object_reference_move_failed;
+      using error_code = exception::error_code;
+
+      if (this->is_working_copy) {
+         throw exception(error_code::operation_not_allowed_on_form_working_copy, this->stub);
+      }
       auto* cell = this->stub.get_parent_form();
-      if (!cell) // technically possible with PlayerRef
-         return notice_code::cannot_set_position_of_orphaned_reference;
+      if (!cell) { // technically possible with PlayerRef
+         throw exception(error_code::reference_is_orphaned, this->stub);
+      }
       if (!cell->is_exterior_cell()) {
          if (!this->is_working_copy)
             this->stub.set_edited(true);
          this->position = position;
-         return notice_code::none;
+         return;
       }
       auto* world = cell->get_parent_form();
       assert(world && "How is an exterior cell not in a worldspace?");
       return this->set_position_and_world(position, *world);
    }
-   notice_code_t ObjectReference::set_position_and_parent(cobb::vector3<float> position, form_stub& world_or_cell) {
-      if (this->is_working_copy)
-         return notice_code::operation_not_allowed_on_form_working_copy;
+   void ObjectReference::set_position_and_parent(cobb::vector3<float> position, form_stub& world_or_cell) {
+      using exception  = exceptions::object_reference_move_failed;
+      using error_code = exception::error_code;
+
+      if (this->is_working_copy) {
+         throw exception(error_code::operation_not_allowed_on_form_working_copy, this->stub);
+      }
       assert(world_or_cell.form_type == form_type::cell || world_or_cell.form_type == form_type::worldspace);
       if (world_or_cell.form_type == dovah::form_type::worldspace) {
          return this->set_position_and_world(position, world_or_cell);
@@ -47,11 +57,16 @@ namespace dovah::loaded_forms {
       }
       return this->set_position_and_cell(position, world_or_cell);
    }
-   notice_code_t ObjectReference::set_position_and_cell(cobb::vector3<float> position, form_stub& parent_cell) {
-      if (this->is_working_copy)
-         return notice_code::operation_not_allowed_on_form_working_copy;
-      if (this->stub.is_hardcoded())
-         return notice_code::cannot_reparent_hardcoded_reference;
+   void ObjectReference::set_position_and_cell(cobb::vector3<float> position, form_stub& parent_cell) {
+      using exception  = exceptions::object_reference_move_failed;
+      using error_code = exception::error_code;
+
+      if (this->is_working_copy) {
+         throw exception(error_code::operation_not_allowed_on_form_working_copy, this->stub);
+      }
+      if (this->stub.is_hardcoded()) {
+         throw exception(error_code::reference_is_hardcoded, this->stub);
+      }
       auto* world = parent_cell.get_parent_form();
       if (world) {
          assert(world->form_type == form_type::worldspace && "How is a cell a child of a non-worldspace form?");
@@ -61,19 +76,27 @@ namespace dovah::loaded_forms {
          parent_cell.get_grid_coordinates(cx, cy);
          int32_t gx = position.x / 4096;
          int32_t gy = position.y / 4096;
-         if (cx != gx || cy != gy)
-            return notice_code::desired_position_is_outside_of_desired_cell;
+         if (cx != gx || cy != gy) {
+            auto ex = exception(error_code::desired_position_is_outside_of_desired_cell, this->stub);
+            ex.details.cell     = &parent_cell;
+            ex.details.position = position;
+            throw ex;
+         }
       }
       this->stub.set_edited(true);
       this->stub.set_parent_form(&parent_cell);
       this->position = position;
-      return notice_code::none;
    }
-   notice_code_t ObjectReference::set_position_and_world(cobb::vector3<float> position, form_stub& world) {
-      if (this->is_working_copy)
-         return notice_code::operation_not_allowed_on_form_working_copy;
-      if (this->stub.is_hardcoded())
-         return notice_code::cannot_reparent_hardcoded_reference;
+   void ObjectReference::set_position_and_world(cobb::vector3<float> position, form_stub& world) {
+      using exception  = exceptions::object_reference_move_failed;
+      using error_code = exception::error_code;
+
+      if (this->is_working_copy) {
+         throw exception(error_code::operation_not_allowed_on_form_working_copy, this->stub);
+      }
+      if (this->stub.is_hardcoded()) {
+         throw exception(error_code::reference_is_hardcoded, this->stub);
+      }
       assert(world.form_type == form_type::worldspace);
       int32_t gx = position.x / 4096;
       int32_t gy = position.y / 4096;
@@ -82,7 +105,7 @@ namespace dovah::loaded_forms {
          this->stub.set_edited(true);
          this->stub.set_parent_form(move_to_cell);
          this->position = position;
-         return notice_code::none;
+         return;
       }
       //
       // There's no existing cell bounding the desired REFR coordinates, so we'll 
@@ -90,21 +113,22 @@ namespace dovah::loaded_forms {
       //
       auto& lo      = this->stub.get_owning_load_order();
       auto  request = lo.request_form_creation(dovah::form_type::cell);
-      if (!request.is_valid())
-         return notice_code::failed_to_create_cell_to_move_reference_to;
+      if (!request.is_valid()) {
+         throw exception(error_code::failed_to_create_destination_cell, this->stub);
+      }
       request.set_parent_form(&world);
       request.cell_grid_coordinates.x = gx;
       request.cell_grid_coordinates.y = gy;
       request.cell_grid_coordinates.present = true;
       move_to_cell = request.commit();
-      if (!move_to_cell)
-         return notice_code::failed_to_create_cell_to_move_reference_to;
+      if (!move_to_cell) {
+         throw exception(error_code::failed_to_create_destination_cell, this->stub);
+      }
       this->stub.set_edited(true);
       this->stub.set_parent_form(move_to_cell);
       this->position = position;
-      return notice_code::none;
    }
-   //
+   
    float ObjectReference::get_scale() const {
       float scale = 1.0F;
       if (auto* extra = this->extra_data.lookup<dovah::loaded_forms::components::extra::scale>(dovah::loaded_forms::components::extra_data_type::scale)) {

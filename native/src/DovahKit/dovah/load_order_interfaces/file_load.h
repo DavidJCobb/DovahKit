@@ -1,6 +1,9 @@
 #pragma once
 
 namespace dovah {
+   namespace notices {
+      class base_file_load_warning;
+   }
    namespace tes_file_reading {
       class file_loader;
    }
@@ -17,6 +20,8 @@ namespace dovah::load_order_interfaces {
 
          void log_load_warning(detailed_notice&);
          void log_load_error(detailed_notice&);
+
+         void log_warning(const notices::base_file_load_warning&);
 
       protected:
          file_load(file_load_order& o) : owner(o) {}

@@ -130,9 +130,7 @@ namespace dovah::loaded_forms::components {
             if (subrecord.signature() == signature) {
                if (subrecord.read(this->form)) {
                   if (desired_form_type != form_type::none)
-                     intfc.log_load_warning(
-                        detailed_notice::warn_if_wrong_type(signature, desired_form_type, intfc.target_stub, this->form)
-                     );
+                     intfc.warn_if_ref_is_wrong_type(this->form, desired_form_type, subrecord.signature());
                   return load_result::succeeded;
                }
                return load_result::failed;

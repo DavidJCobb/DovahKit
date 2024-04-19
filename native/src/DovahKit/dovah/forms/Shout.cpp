@@ -52,9 +52,9 @@ namespace dovah::loaded_forms {
                   subrecord.read(entry.word_of_power);
                   subrecord.read(entry.spell);
                   subrecord.read(entry.recoveryTime);
-                  //
-                  intfc.warn_if_ref_is_wrong_type(entry.word_of_power, form_type::word_of_power, subrecord.signature()); // TODO: find a way to log the word index
-                  intfc.warn_if_ref_is_wrong_type(entry.spell,         form_type::spell,         subrecord.signature()); // TODO: find a way to log the word index
+                  
+                  intfc.warn_if_ref_is_wrong_type(entry.word_of_power, form_type::word_of_power, subrecord, { .nth_reference = current_word });
+                  intfc.warn_if_ref_is_wrong_type(entry.spell,         form_type::spell,         subrecord, { .nth_reference = current_word });
                }
                ++current_word;
                break;
