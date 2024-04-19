@@ -138,10 +138,7 @@ namespace dovah::loaded_forms::components {
          //
          this->texture_swaps.push_back(entry);
          //
-         intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-            detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::texture_set, intfc.target_stub, entry.texture_set)
-               .set_cause_form_index(i)
-         );
+         intfc.warn_if_ref_is_wrong_type(entry.texture_set, form_type::texture_set, subrecord.signature());
          //
          if (!subrecord.is_in_bounds())
             break;

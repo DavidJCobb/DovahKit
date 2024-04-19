@@ -1,0 +1,1 @@
+These requests are used to perform tasks like creating, renumbering, or deleting forms. Note that some of them can iterate invalidators to the internal form map for a few reasons, such as deleting none-stubs that are in their way.

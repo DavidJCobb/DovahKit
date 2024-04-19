@@ -1,4 +1,4 @@
-#include "./warning_to_string.h"
+#include "./backend_warning_to_string.h"
 #include <QObject>
 #include "helpers/dynamic_fast_cast.h"
 #include "dovah/notices/_all_warnings.h"
@@ -19,18 +19,50 @@ namespace {
 }
 
 namespace editor_helpers {
-   extern QString warning_or_error_to_string(const dovah::notices::base_warning& warning) {
+   extern QString backend_warning_to_string(const dovah::notices::base_warning& warning) {
       constexpr const char* disambig = "backend warnings";
 
       #pragma region form load warnings
          if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::form_reference_type_mismatch*>(&warning)) {
             QString subject   = form_identifiers_to_string(&casted->subject);
             QString subrecord = cobb::qt::four_cc_to_string(casted->subrecord_signature);
-            QString desired   = form_type_name_to_string(casted->target.form_type);
             QString target    = form_identifiers_to_string(&casted->target);
-            //
+            
+            QString desired;
+
+            switch (casted->desired.size()) {
+               case 1:
+                  desired = form_type_name_to_string(casted->desired[0]);
+                  return QObject::tr(
+                     "%1 contained subrecord %2, expected to refer to a form of type %3; it instead referred to %4.",
+                     disambig
+                  ).arg(subject).arg(subrecord).arg(desired).arg(target);
+               case 2:
+                  return QObject::tr(
+                     "%1 contained subrecord %2, expected to refer to a form of type %3 or type %4; it instead referred to %5.",
+                     disambig
+                  )
+                     .arg(subject)
+                     .arg(subrecord)
+                     .arg(form_type_name_to_string(casted->desired[0]))
+                     .arg(form_type_name_to_string(casted->desired[1]))
+                     .arg(target);
+            }
+
+            {
+               auto& list = casted->desired;
+               auto  size = list.size();
+               for (size_t i = 0; i < size; ++i) {
+                  desired += form_type_name_to_string(casted->desired[i]);
+                  if (i + 1 < size) {
+                     desired += ", ";
+                     if (i + 2 == size)
+                        desired += "or ";
+                  }
+               }
+            }
             return QObject::tr(
-               "%1 contained subrecord %2, expected to refer to a form of type %3; it instead referred to %4.",
+               "%1 contained subrecord %2, expected to refer to a form of types %3; it instead referred to %4.",
                disambig
             ).arg(subject).arg(subrecord).arg(desired).arg(target);
          }

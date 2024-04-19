@@ -3,6 +3,8 @@
 #include "../form_stub_addenda.h"
 #include "../notice_code_list.h"
 
+#include "../notices/form_load_warnings/by_form_type/dialogue_branch/mishandled_owning_quest_id.h"
+
 namespace dovah::loaded_forms {
    void DialogueBranch::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       if (!intfc.is_winning_record)
@@ -23,15 +25,11 @@ namespace dovah::loaded_forms {
                break;
             case 'SNAM':
                if (subrecord.read(this->starting_topic))
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::topic, this->stub, formID)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->starting_topic, form_type::topic, subrecord.signature());
                break;
             case 'QNAM':
                if (subrecord.read(this->owning_quest)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::quest, this->stub, formID)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->owning_quest, form_type::quest, subrecord.signature());
                   if (this->owning_quest && !subrecord.form_id_can_survive_redundant_fixup(this->owning_quest.formID())) {
                      //
                      // The game accidentally performs the local-to-global form ID conversion twice on this form ID: it 
@@ -84,14 +82,11 @@ namespace dovah::loaded_forms {
                      // Where you're at risk is if you override a dialogue branch in another mod or in a DLC file, or 
                      // if you create a dialogue branch whose owning quest is in another mod or in a DLC file.
                      //
-                     detailed_notice warning;
-                     warning.code    = notice_code::dialogue_branch_mishandled_owning_quest_id;
-                     warning.type    = detailed_notice::notice_type::warning;
-                     warning.context = detailed_notice::notice_context::on_demand_form_load;
-                     warning.set_cause_form(this->stub);
-                     warning.set_cause_subrecord(subrecord.signature());
-                     warning.add_relevant_form(*this->owning_quest.get_form_stub());
-                     intfc.log_load_warning(warning);
+                     notices::form_load_warnings::by_type::dialogue_branch::mishandled_owning_quest_id notice(
+                        this->stub,
+                        *this->owning_quest.get_form_stub()
+                     );
+                     intfc.log_load_warning(notice);
                   }
                }
                break;
@@ -102,9 +97,7 @@ namespace dovah::loaded_forms {
                this->script_data.load(subrecord, intfc);
                break;
             default:
-               intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-               );
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }

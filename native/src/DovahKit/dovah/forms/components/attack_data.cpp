@@ -2,6 +2,14 @@
 #include "../_common_cpp.h"
 #include "../../notice_code_list.h"
 
+#include "../../notices/form_load_warnings/by_form_component/attack_data/expected_event_subrecord.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_component::attack_data;
+   }
+}
+
 namespace dovah::loaded_forms::components {
    void attack_data::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       auto& subrecord = record.get_current_subrecord();
@@ -17,9 +25,7 @@ namespace dovah::loaded_forms::components {
       //
       if (signature == 'ATKR') {
          if (subrecord.read(this->race)) {
-            intfc.log_load_warning(
-               detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::race, intfc.target_stub, this->race)
-            );
+            intfc.warn_if_ref_is_wrong_type(this->race, form_type::race, subrecord.signature());
          }
          return;
       }
@@ -29,18 +35,14 @@ namespace dovah::loaded_forms::components {
             subrecord.unchecked_read(dst.damage_mult);
             subrecord.unchecked_read(dst.attack_chance);
             if (subrecord.read(dst.attack_spell)) {
-               intfc.log_load_warning(
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::spell, form_type::shout }, intfc.target_stub, dst.attack_spell)
-               );
+               intfc.warn_if_ref_is_wrong_type(dst.attack_spell, std::array{ form_type::spell, form_type::shout }, subrecord.signature());
             }
             subrecord.unchecked_read(dst.flags);
             subrecord.unchecked_read(dst.attack_angle);
             subrecord.unchecked_read(dst.strike_angle);
             subrecord.unchecked_read(dst.stagger);
             if (subrecord.read(dst.keyword)) {
-               intfc.log_load_warning(
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::keyword, intfc.target_stub, dst.keyword)
-               );
+               intfc.warn_if_ref_is_wrong_type(dst.keyword, form_type::keyword, subrecord.signature());
             }
             subrecord.unchecked_read(dst.knockdown);
             subrecord.unchecked_read(dst.recovery_time);
@@ -54,11 +56,11 @@ namespace dovah::loaded_forms::components {
          //
          auto& next = record.next_subrecord();
          if (next.signature() != 'ATKE') {
-            detailed_notice warning;
-            warning.code = notice_code::attack_data_expected_event_subrecord;
-            warning.set_cause_form(intfc.target_stub);
-            warning.set_cause_subrecord(next.signature());
-            intfc.log_load_warning(warning);
+            specific_load_warnings::expected_event_subrecord notice(
+               const_cast<form_stub&>(intfc.target_stub),
+               next.signature()
+            );
+            intfc.log_load_warning(notice);
          }
          subrecord.read(dst.event);
          return;

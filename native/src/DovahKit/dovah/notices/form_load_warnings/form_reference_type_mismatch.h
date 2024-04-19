@@ -1,5 +1,7 @@
 #pragma once
+#include <array>
 #include <cstdint>
+#include <vector>
 #include "../base_form_load_warning.h"
 
 #include "../../form_types.h"
@@ -24,13 +26,30 @@ namespace dovah::notices::form_load_warnings {
          :
             base_form_load_warning(subject),
             target(target),
-            desired(desired),
+            desired{ desired },
             subrecord_signature(subrecord_signature)
          {}
 
-         form_stub& target;
-         form_type  desired; // NOTE: If this == form_type::reference, then any REFR subclass would be accepted as well.
-         uint32_t   subrecord_signature = 0;
+         template<size_t Size>
+         constexpr form_reference_type_mismatch(
+            form_stub& subject,
+            form_stub& target,
+            const std::array<form_type, Size>& desired,
+            uint32_t   subrecord_signature
+         )
+         :
+            base_form_load_warning(subject),
+            target(target),
+            subrecord_signature(subrecord_signature)
+         {
+            this->desired.resize(Size);
+            for (size_t i = 0; i < Size; ++i)
+               this->desired[i] = desired[i];
+         }
+
+         form_stub&             target;
+         std::vector<form_type> desired; // NOTE: If this member == { form_type::reference }, then any REFR subclass would be accepted as well.
+         uint32_t               subrecord_signature = 0;
    };
 }
 #include "../_util.undef.h"

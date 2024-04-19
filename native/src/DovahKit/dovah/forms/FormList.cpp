@@ -24,9 +24,7 @@ namespace dovah::loaded_forms {
                   this->contents.push_back(formID);
                break;
             default:
-               intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-               );
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }

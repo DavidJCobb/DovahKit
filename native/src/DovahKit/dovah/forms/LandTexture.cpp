@@ -22,16 +22,12 @@ namespace dovah::loaded_forms {
                break;
             case 'TNAM':
                if (subrecord.read(this->texture_set)) {
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::texture_set, this->stub, this->texture_set)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->texture_set, form_type::texture_set, subrecord.signature());
                }
                break;
             case 'MNAM':
                if (subrecord.read(this->havok.material)) {
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::material_type, this->stub, this->havok.material)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->havok.material, form_type::material_type, subrecord.signature());
                }
                break;
             case 'HNAM':
@@ -44,9 +40,7 @@ namespace dovah::loaded_forms {
             case 'GNAM':
                if (subrecord.read(form_id) && form_id) {
                   this->grasses.push_back(form_id);
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::grass, this->stub, form_id)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(form_id, form_type::grass, subrecord.signature());
                }
                break;
             case 'INAM':
@@ -56,9 +50,7 @@ namespace dovah::loaded_forms {
                }
                [[fallthrough]];
             default:
-               intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-               );
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }

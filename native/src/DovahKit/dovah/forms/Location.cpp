@@ -185,21 +185,25 @@ namespace dovah::loaded_forms {
                if (!intfc.is_winning_record)
                   break;
                subrecord.read(this->parent_location);
+               intfc.warn_if_ref_is_wrong_type(this->parent_location, form_type::location, subrecord.signature());
                break;
             case 'NAM1':
                if (!intfc.is_winning_record)
                   break;
                subrecord.read(this->music);
+               intfc.warn_if_ref_is_wrong_type(this->music, form_type::music_type, subrecord.signature());
                break;
             case 'FNAM':
                if (!intfc.is_winning_record)
                   break;
                subrecord.read(this->unreported_crime_faction);
+               intfc.warn_if_ref_is_wrong_type(this->unreported_crime_faction, form_type::faction, subrecord.signature());
                break;
             case 'MNAM':
                if (!intfc.is_winning_record)
                   break;
                subrecord.read(this->marker);
+               intfc.warn_if_ref_is_wrong_type(this->marker, form_type::reference, subrecord.signature());
                break;
             case 'RNAM':
                if (!intfc.is_winning_record)
@@ -210,6 +214,7 @@ namespace dovah::loaded_forms {
                if (!intfc.is_winning_record)
                   break;
                subrecord.read(this->horse_marker);
+               intfc.warn_if_ref_is_wrong_type(this->horse_marker, form_type::reference, subrecord.signature());
                break;
             case 'CNAM':
                if (!intfc.is_winning_record)
@@ -217,9 +222,7 @@ namespace dovah::loaded_forms {
                this->color.load(subrecord);
                break;
             default:
-               intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-               );
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }

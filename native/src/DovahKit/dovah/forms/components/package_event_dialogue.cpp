@@ -2,6 +2,14 @@
 #include "../_common_cpp.h"
 #include "../../notice_code_list.h"
 
+#include "../../notices/form_load_warnings/by_form_component/package_event_dialogue/unrecognized_subrecord.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_component::package_event_dialogue;
+   }
+}
+
 namespace dovah::loaded_forms::components {
    bool package_event_dialogue::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       //
@@ -12,37 +20,30 @@ namespace dovah::loaded_forms::components {
          switch (subrecord.signature()) {
             case 'INAM':
                subrecord.read(this->idle);
-               intfc.log_load_warning(
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::idle, intfc.target_stub, this->idle)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->idle, form_type::idle, subrecord.signature());
                break;
             case 'TNAM':
                this->type = topic_type::ref;
                subrecord.read(this->topic);
-               intfc.log_load_warning(
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::topic, intfc.target_stub, this->topic)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->topic, form_type::topic, subrecord.signature());
                return true; // TESPackage::Data::Load aborts after reading TNAM
             case 'PDTO':
                {
                   subrecord.read(this->type);
                   if (this->type == topic_type::ref) {
                      subrecord.read(this->topic);
-                     intfc.log_load_warning(
-                        detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::topic, intfc.target_stub, this->topic)
-                     );
+                     intfc.warn_if_ref_is_wrong_type(this->topic, form_type::topic, subrecord.signature());
                   } else if (this->type == topic_type::subtype)
                      subrecord.read(this->topic_subtype);
                }
                return true; // TESPackage::Data::Load aborts after reading PDTO
             default:
                {
-                  detailed_notice warning;
-                  warning.code = notice_code::package_event_dialogue_unrecognized_subrecord;
-                  warning.set_cause_form(intfc.target_stub);
-                  warning.set_cause_subrecord(subrecord.signature());
-                  //
-                  intfc.log_load_warning(warning);
+                  specific_load_warnings::unrecognized_subrecord notice(
+                     const_cast<form_stub&>(intfc.target_stub),
+                     subrecord.signature()
+                  );
+                  intfc.log_load_warning(notice);
                }
                break;
          }

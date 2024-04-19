@@ -179,7 +179,11 @@
       </widget>
      </item>
      <item row="8" column="1">
-      <widget class="QLineEdit" name="activateTextOverride"/>
+      <widget class="QLineEdit" name="activateTextOverride">
+       <property name="whatsThis">
+        <string>Change the default verb shown on the HUD when aiming at this Activator.</string>
+       </property>
+      </widget>
      </item>
      <item row="5" column="1">
       <widget class="DKFormPicker" name="waterType"/>
@@ -201,6 +205,9 @@
        </property>
        <item row="1" column="1">
         <widget class="QCheckBox" name="flagRandomAnimStart">
+         <property name="whatsThis">
+          <string>If checked, this Activator will skip a random amount of time when beginning its idle animation. Use this when multiple instances of the same model may be placed near each other, and when their idle animations shouldn't be perfectly synchronized.</string>
+         </property>
          <property name="text">
           <string>Random Anim Start</string>
          </property>
@@ -215,6 +222,9 @@
        </item>
        <item row="2" column="1">
         <widget class="QCheckBox" name="flagChildCanUse">
+         <property name="whatsThis">
+          <string>If checked, NPCs that are flagged as children will be able to use this Activator.</string>
+         </property>
          <property name="text">
           <string>Child Can Use</string>
          </property>
@@ -257,6 +267,9 @@
        </item>
        <item row="4" column="1">
         <widget class="QCheckBox" name="flagIgnoredBySandbox">
+         <property name="whatsThis">
+          <string>If checked, NPCs will not interact with this Activator while using &quot;sandbox&quot; AI procedures.</string>
+         </property>
          <property name="text">
           <string>Ignored By Sandbox</string>
          </property>
@@ -264,6 +277,9 @@
        </item>
        <item row="2" column="0">
         <widget class="QCheckBox" name="flagOnLocalMap">
+         <property name="whatsThis">
+          <string>If checked, this Activator will be visible on the Local Map.</string>
+         </property>
          <property name="text">
           <string>On Local Map</string>
          </property>

@@ -79,9 +79,7 @@ namespace dovah::loaded_forms::components {
             subrecord.skip_bytes(3);
             if (this->flags & flag::compare_to_global) {
                subrecord.unchecked_read(this->comparison.operand.global);
-               intfc.log_load_warning(
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::global, intfc.target_stub, this->comparison.operand.global)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->comparison.operand.global, form_type::global, subrecord.signature());
             } else {
                subrecord.unchecked_read(this->comparison.operand.constant);
             }
@@ -111,17 +109,7 @@ namespace dovah::loaded_forms::components {
                            auto& value_form = this->parameters[i].form;
                            subrecord.unchecked_read(value_form);
                            //
-                           if (allowed.size() == 1) {
-                              intfc.log_load_warning(
-                                 detailed_notice::warn_if_wrong_type(subrecord.signature(), arg_type->allowed_form_types[0], intfc.target_stub, value_form)
-                              );
-                           } else if (auto* stub = value_form.get_form_stub()) {
-                              if (!arg_type->allows_form_type(stub->form_type)) {
-                                 intfc.log_load_warning(
-                                    detailed_notice::warn_if_wrong_type(subrecord.signature(), {}, intfc.target_stub, value_form)
-                                 );
-                              }
-                           }
+                           intfc.warn_if_ref_is_wrong_type(value_form, arg_type->allowed_form_types, subrecord.signature());
                         } else {
                            subrecord.unchecked_read(this->parameters[i].dword);
                         }

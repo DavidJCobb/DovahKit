@@ -1,5 +1,6 @@
 #pragma once
 #include "../extra_data.h"
+#include "../../../load_order_interfaces/form_load.h"
 #include "../../../form_stub_use_info_builder.h"
 #include "_use_info.h"
 

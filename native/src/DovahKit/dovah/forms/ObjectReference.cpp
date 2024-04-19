@@ -14,6 +14,8 @@
 #include "./DefaultObjectManager.h"
 #include "./Door.h"
 
+#include "../load_order_requests/form_creation_request.h"
+
 namespace dovah::loaded_forms {
    notice_code_t ObjectReference::set_position(cobb::vector3<float> position) {
       if (this->is_working_copy)
@@ -172,9 +174,7 @@ namespace dovah::loaded_forms {
                   //
                   // Subrecord is not extra-data.
                   //
-                  intfc.log_load_warning(
-                     detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-                  );
+                  intfc.warn_on_unrecognized_subrecord(subrecord);
                }
                break;
          }

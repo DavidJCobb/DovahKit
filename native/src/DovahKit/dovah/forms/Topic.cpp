@@ -41,15 +41,11 @@ namespace dovah::loaded_forms {
                break;
             case 'BNAM':
                if (subrecord.read(this->owning_forms.branch))
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::dialogue_branch, this->stub, formID)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->owning_forms.branch, form_type::dialogue_branch, subrecord.signature());
                break;
             case 'QNAM':
                if (subrecord.read(this->owning_forms.quest))
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::quest, this->stub, formID)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->owning_forms.quest, form_type::quest, subrecord.signature());
                break;
             case 'SNAM':
                subrecord.read(this->subtype);
@@ -67,9 +63,7 @@ namespace dovah::loaded_forms {
                this->script_data.load(subrecord, intfc);
                break;
             default:
-               intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-               );
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }

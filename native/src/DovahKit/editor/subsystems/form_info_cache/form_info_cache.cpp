@@ -13,6 +13,7 @@
 
 #include "editor/subsystems/papyrus/core.h"
 
+#include "dovah/load_order_interfaces/form_load.h"
 #include "./cacheable_traits/attached_scripts.h"
 #include "./cacheable_traits/model_path.h"
 #include "./cacheable_traits/quest_filter.h"

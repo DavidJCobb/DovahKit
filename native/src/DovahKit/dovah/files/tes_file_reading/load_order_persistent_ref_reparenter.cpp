@@ -5,6 +5,7 @@
 #include "../../form_stub_addenda.h"
 #include "../../form_stub_helpers.h"
 #include "../../utils/world_position_to_grid_coordinates.h"
+#include "../../load_order_interfaces/form_load.h"
 
 #include "../../forms/Cell.h"
 

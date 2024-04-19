@@ -2,6 +2,14 @@
 #include "_common_cpp.h"
 #include "../notice_code_list.h"
 
+#include "../notices/form_load_warnings/by_form_type/shout/wrong_word_count.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_type::shout;
+   }
+}
+
 namespace dovah::loaded_forms {
    void Shout::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
@@ -29,15 +37,11 @@ namespace dovah::loaded_forms {
                break;
             case 'MDOB':
                subrecord.read(this->menu_display_object);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::statik, this->stub, this->menu_display_object)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->menu_display_object, form_type::statik, subrecord.signature());
                break;
             case 'ETYP':
                subrecord.read(this->equip_type);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::equip_slot, this->stub, this->equip_type)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->equip_type, form_type::equip_slot, subrecord.signature());
                break;
             case 'DESC':
                subrecord.read(this->description);
@@ -49,21 +53,13 @@ namespace dovah::loaded_forms {
                   subrecord.read(entry.spell);
                   subrecord.read(entry.recoveryTime);
                   //
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::word_of_power, this->stub, entry.word_of_power)
-                        .set_subrecord_index(current_word)
-                  );
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::spell, this->stub, entry.spell)
-                        .set_subrecord_index(current_word)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(entry.word_of_power, form_type::word_of_power, subrecord.signature()); // TODO: find a way to log the word index
+                  intfc.warn_if_ref_is_wrong_type(entry.spell,         form_type::spell,         subrecord.signature()); // TODO: find a way to log the word index
                }
                ++current_word;
                break;
             default:
-               intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-               );
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }
@@ -72,12 +68,11 @@ namespace dovah::loaded_forms {
          // The game always assumes that SHOU will have three SNAMs. The Rule of One will not be properly 
          // applied if a SHOU override supplies fewer than three SNAMs.
          //
-         detailed_notice warning;
-         warning.code = notice_code::shout_has_wrong_word_count;
-         warning.set_cause_form(this->stub);
-         warning.extra_integers[0] = current_word;
-         //
-         intfc.log_load_warning(warning);
+         specific_load_warnings::wrong_word_count notice(
+            this->stub,
+            current_word
+         );
+         intfc.log_load_warning(notice);
       }
    }
    /*static*/ void Shout::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {

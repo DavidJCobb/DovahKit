@@ -3,10 +3,21 @@
 #include <unordered_map>
 #include <QDialog>
 #include <QObject>
-#include "../dovah/core.h"
-#include "../dovah/files/file_load_order.h"
+#include "dovah/core.h"
+#include "dovah/files/file_load_order.h"
+
+#include "dovah/load_order_requests/form_creation_request.h"
+#include "dovah/load_order_requests/form_deletion_request.h"
+#include "dovah/load_order_requests/form_duplication_request.h"
+#include "dovah/load_order_requests/form_renumber_request.h"
+#include "dovah/load_order_requests/game_setting_edit_request.h"
+#include "dovah/load_order_requests/game_setting_renumber_request.h"
 
 namespace dovah {
+   namespace notices {
+      class base_error;
+      class base_warning;
+   }
    class  bsa_archived_file;
    class  bsa_load_order;
    class  compiled_papyrus_script;
@@ -77,10 +88,13 @@ class DovahKitCore : public QObject {
       void dataAbandonComplete(); // we have abandoned all forms
       void dataAcquireComplete(const dovah::tes_file_reading::read_results&); // we have loaded new files and forms
       void dataAcquireFailed(const dovah::tes_file_reading::read_results&);   // we tried to load new files, but failed
-      //
+      
       void fileLoadWarningReceived(const dovah::detailed_notice&);
       void fileLoadStatisticsAvailable(const file_load_stats&);
-      //
+
+      void backendErrorReceived(const dovah::notices::base_error&);
+      void backendWarningReceived(const dovah::notices::base_warning&);
+      
       void formModificationImminent(dovah::form_stub*); // emit this before changing a form, so that listeners can update any Use Info they are displaying
       void formModified(dovah::form_stub*); // you should emit this manually when you change a form in a way that other windows/widgets might need to know about, e.g. changing the editor ID
       void formCreated(dovah::form_stub*);
@@ -99,19 +113,19 @@ class DovahKitCore : public QObject {
       void formRenumbered(dovah::form_stub*, bare_form_id_t oldID, bare_form_id_t newID);
       //
       void formsRenumberedEnMasse();
-      //
+      
       void gameSettingValueChanged(const char* name);
       void gameSettingValueChangeFailed(const char* name, dovah::notice_code_t);
       void gameSettingRenumbered(const char* name, bare_form_id_t oldID, bare_form_id_t newID);
       //
       void defaultObjectEntryChanged(uint32_t signature);
-      //
+      
       void dataSaveImminent();
       void dataSaveComplete();
       void dataSaveFailed(const dovah::detailed_notice&);
-      //
+      
       void editorEncodingChanged(const std::string& prior, const std::string& after);
-      //
+      
    public:
       void abandon_data();
       inline bool has_data() const noexcept { return this->loaded; }

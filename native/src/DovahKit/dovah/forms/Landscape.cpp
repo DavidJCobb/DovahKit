@@ -9,7 +9,14 @@
 
 #include "Cell.h"
 
+#include "../notices/form_load_warnings/by_form_type/landscape/excess_layers_per_quad.h"
+#include "../notices/form_load_warnings/by_form_type/landscape/invalid_quad_for_land_texture.h"
+
 namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_type::landscape;
+   }
+
    static constexpr float vertex_distance = dovah::loaded_forms::Cell::side_length / (dovah::loaded_forms::Landscape::vertices_per_side - 1);
 }
 
@@ -184,25 +191,19 @@ namespace dovah::loaded_forms {
                if (subrecord.is_in_bounds(4)) {
                   form_reference_t ref;
                   subrecord.read(ref);
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::land_texture, this->stub, ref)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(ref, form_type::land_texture, subrecord.signature());
                   //
                   uint8_t quad;
                   if (subrecord.read(quad)) {
                      if (quad < 4)
                         this->default_quad_textures[quad] = ref;
                      else {
-                        detailed_notice warning;
-                        warning.type    = detailed_notice::notice_type::warning;
-                        warning.context = detailed_notice::notice_context::on_demand_form_load;
-                        warning.code    = notice_code::invalid_landscape_quad_index;
-                        warning.set_cause_form(this->stub);
-                        warning.set_cause_subrecord(subrecord.signature());
-                        if (ref)
-                           warning.add_relevant_form(*ref.get_form_stub());
-                        warning.extra_integers[0] = quad;
-                        intfc.log_load_warning(warning);
+                        specific_load_warnings::invalid_quad_for_land_texture notice(
+                           this->stub,
+                           specific_load_warnings::invalid_quad_for_land_texture::texture_type::default_texture,
+                           quad
+                        );
+                        intfc.log_load_warning(notice);
                      }
                   }
                   subrecord.skip_bytes(3); // BTXT and ATXT have the same header, but BTXT doesn't use the layer index. advise writing a -1 layer index when saving
@@ -218,16 +219,13 @@ namespace dovah::loaded_forms {
                   subrecord.skip_bytes(1);
                   subrecord.read(layer.layer);
                   if (quad > 3) {
-                     detailed_notice warning;
-                     warning.type    = detailed_notice::notice_type::warning;
-                     warning.context = detailed_notice::notice_context::on_demand_form_load;
-                     warning.code    = notice_code::invalid_landscape_quad_index;
-                     warning.set_cause_form(this->stub);
-                     warning.set_cause_subrecord(subrecord.signature());
-                     if (layer.texture)
-                        warning.add_relevant_form(*layer.texture.get_form_stub());
-                     warning.extra_integers[0] = quad;
-                     intfc.log_load_warning(warning);
+                     specific_load_warnings::invalid_quad_for_land_texture notice(
+                        this->stub,
+                        specific_load_warnings::invalid_quad_for_land_texture::texture_type::blended_texture,
+                        quad,
+                        layer.layer
+                     );
+                     intfc.log_load_warning(notice);
                      //
                      // Discard anything that would go into a bad quad. Excess layers are sensible to keep 
                      // around within an editor, because those can arise from a user clumsily painting a 
@@ -239,17 +237,14 @@ namespace dovah::loaded_forms {
                      break;
                   }
                   if (layer.layer >= max_usable_layers_per_quad) {
-                     detailed_notice warning;
-                     warning.type    = detailed_notice::notice_type::warning;
-                     warning.context = detailed_notice::notice_context::on_demand_form_load;
-                     warning.code    = notice_code::landscape_quads_can_only_have_six_layers;
-                     warning.set_cause_form(this->stub);
-                     warning.set_cause_subrecord(subrecord.signature());
-                     if (layer.texture)
-                        warning.add_relevant_form(*layer.texture.get_form_stub());
-                     warning.extra_integers[0] = quad;
-                     warning.extra_integers[1] = layer.layer;
-                     intfc.log_load_warning(warning);
+                     specific_load_warnings::excess_layers_per_quad notice(
+                        this->stub,
+                        quad,
+                        layer.layer,
+                        subrecord.signature(),
+                        layer.texture.get_form_stub()
+                     );
+                     intfc.log_load_warning(notice);
                   }
                   //
                   bool existing = false;
@@ -319,15 +314,11 @@ namespace dovah::loaded_forms {
                while (subrecord.is_in_bounds(4)) {
                   auto& ref = this->textures.emplace_back();
                   subrecord.unchecked_read(ref);
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::land_texture, this->stub, ref)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(ref, form_type::land_texture, subrecord.signature());
                }
                break;
             default:
-               intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-               );
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }

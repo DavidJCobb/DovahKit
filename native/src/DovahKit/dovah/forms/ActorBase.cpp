@@ -58,9 +58,7 @@ namespace dovah::loaded_forms {
                if (!this->creature_sounds.empty()) {
                   auto& form = this->creature_sounds.back().sound;
                   if (subrecord.read(form)) {
-                     intfc.log_load_warning(
-                        detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, form)
-                     );
+                     intfc.warn_if_ref_is_wrong_type(form, form_type::sound_descriptor, subrecord.signature());
                   }
                }
                break;
@@ -72,30 +70,22 @@ namespace dovah::loaded_forms {
             #pragma region Package override lists
             case 'SCOR':
                if (subrecord.read(this->ai.package_override_lists.spectator)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->ai.package_override_lists.spectator)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->ai.package_override_lists.spectator, form_type::package, subrecord.signature());
                }
                break;
             case 'OCOR':
                if (subrecord.read(this->ai.package_override_lists.observe_corpse)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->ai.package_override_lists.observe_corpse)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->ai.package_override_lists.observe_corpse, form_type::package, subrecord.signature());
                }
                break;
             case 'GWOR':
                if (subrecord.read(this->ai.package_override_lists.guard_warn)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->ai.package_override_lists.guard_warn)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->ai.package_override_lists.guard_warn, form_type::package, subrecord.signature());
                }
                break;
             case 'ECOR':
                if (subrecord.read(this->ai.package_override_lists.combat)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->ai.package_override_lists.combat)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->ai.package_override_lists.combat, form_type::package, subrecord.signature());
                }
                break;
             #pragma endregion
@@ -110,9 +100,7 @@ namespace dovah::loaded_forms {
             case 'PRKR':
                if (subrecord.read(form_id)) {
                   this->perks.push_back(form_id);
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::perk, this->stub, form_id)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(form_id, form_type::perk, subrecord.signature());
                }
                break;
             #pragma endregion
@@ -127,9 +115,7 @@ namespace dovah::loaded_forms {
             case 'SPLO':
                if (subrecord.read(form_id)) {
                   this->spells.push_back(form_id);
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::spell, this->stub, form_id)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(form_id, form_type::spell, subrecord.signature());
                }
                break;
             #pragma endregion
@@ -198,9 +184,7 @@ namespace dovah::loaded_forms {
                break;
             case 'TPLT':
                if (subrecord.read(this->template_data.actor)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::actor_base, form_type::leveled_character }, this->stub, this->template_data.actor)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->template_data.actor, std::array{ form_type::actor_base, form_type::leveled_character }, subrecord.signature());
                }
                break;
             case 'AIDT':
@@ -274,16 +258,12 @@ namespace dovah::loaded_forms {
                break;
             case 'ANAM':
                if (subrecord.read(this->far_away.model)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::armor, this->stub, this->far_away.model)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->far_away.model, form_type::armor, subrecord.signature());
                }
                break;
             case 'CNAM':
                if (subrecord.read(this->stats.combat_class)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::combat_class, this->stub, this->stats.combat_class)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->stats.combat_class, form_type::combat_class, subrecord.signature());
                }
                break;
             case 'DNAM':
@@ -305,16 +285,12 @@ namespace dovah::loaded_forms {
                break;
             case 'GNAM':
                if (subrecord.read(this->gift_filter)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::formlist, this->stub, this->gift_filter)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->gift_filter, form_type::formlist, subrecord.signature());
                }
                break;
             case 'INAM':
                if (subrecord.read(this->death_item)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::leveled_item, this->stub, this->death_item)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->death_item, form_type::leveled_item, subrecord.signature());
                }
                break;
             case 'QNAM':
@@ -326,9 +302,7 @@ namespace dovah::loaded_forms {
                break;
             case 'RNAM':
                if (subrecord.read(this->race)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::race, this->stub, this->race)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->race, form_type::race, subrecord.signature());
                }
                break;
             case 'SNAM':
@@ -336,58 +310,42 @@ namespace dovah::loaded_forms {
                   auto& entry = this->faction_memberships.emplace_back();
                   subrecord.unchecked_read(entry.faction);
                   subrecord.unchecked_read(entry.rank);
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::faction, this->stub, entry.faction)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(entry.faction, form_type::faction, subrecord.signature());
                }
                break;
             case 'WNAM':
                if (subrecord.read(this->worn_armor)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::armor, this->stub, this->worn_armor)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->worn_armor, form_type::armor, subrecord.signature());
                }
                break;
             case 'ZNAM':
                if (subrecord.read(this->stats.combat_style)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::combat_style, this->stub, this->stats.combat_style)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->stats.combat_style, form_type::combat_style, subrecord.signature());
                }
                break;
             case 'CRIF':
                if (subrecord.read(this->crime_faction)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::faction, this->stub, this->crime_faction)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->crime_faction, form_type::faction, subrecord.signature());
                }
                break;
             case 'DOFT':
                if (subrecord.read(this->outfits.normal)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::outfit, this->stub, this->outfits.normal)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->outfits.normal, form_type::outfit, subrecord.signature());
                }
                break;
             case 'SOFT':
                if (subrecord.read(this->outfits.sleeping)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::outfit, this->stub, this->outfits.sleeping)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->outfits.sleeping, form_type::outfit, subrecord.signature());
                }
                break;
             case 'DPLT':
                if (subrecord.read(this->ai.default_package_list)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, this->stub, this->ai.default_package_list)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->ai.default_package_list, form_type::package, subrecord.signature());
                }
                break;
             case 'FTST':
                if (subrecord.read(this->face.texture_set)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::texture_set, this->stub, this->face.texture_set)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->face.texture_set, form_type::texture_set, subrecord.signature());
                }
                break;
             case 'HEAD': // found via disassembly; identical to PNAM
@@ -401,24 +359,18 @@ namespace dovah::loaded_forms {
             case 'PKID':
                if (subrecord.read(form_id)) {
                   this->ai.package_list.push_back(form_id);
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, this->stub, form_id)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(form_id, form_type::package, subrecord.signature());
                }
                break;
             case 'HCLF':
                if (subrecord.read(form_id)) {
                   this->head.hair_colors.push_back(form_id);
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::color, this->stub, form_id)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(form_id, form_type::color, subrecord.signature());
                }
                break;
             case 'VTCK':
                if (subrecord.read(this->voicetype)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::voicetype, this->stub, this->voicetype)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->voicetype, form_type::voicetype, subrecord.signature());
                }
                break;
             case 'NAM0':
@@ -475,6 +427,10 @@ namespace dovah::loaded_forms {
                   subrecord.unchecked_read(this->face.parts.eyes);
                   subrecord.unchecked_read(this->face.parts.mouth);
                }
+               break;
+
+            default:
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }

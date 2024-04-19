@@ -6,5 +6,5 @@ namespace dovah::notices {
 }
 
 namespace editor_helpers {
-   extern QString warning_or_error_to_string(const dovah::notices::base_warning&);
+   extern QString backend_warning_to_string(const dovah::notices::base_warning&);
 }

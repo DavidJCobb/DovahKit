@@ -4,6 +4,9 @@
 #include "../form_stub_addenda.h"
 #include "components/extra_data/_use_info.h"
 
+#include "../notices/form_load_warnings/by_form_type/cell/cell_type_not_yet_known.h"
+#include "../notices/form_load_warnings/by_form_type/cell/data_for_wrong_cell_type.h"
+
 namespace dovah::loaded_forms {
    void Cell::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
@@ -25,22 +28,21 @@ namespace dovah::loaded_forms {
                break;
             case 'XCLC':
                if (!loaded_cell_flags) {
-                  detailed_notice warning;
-                  warning.code = notice_code::cell_flags_not_yet_found;
-                  warning.set_cause_form(this->stub);
-                  warning.set_cause_subrecord(subrecord.signature());
-                  //
-                  intfc.log_load_warning(warning);
+                  notices::form_load_warnings::by_type::cell::cell_type_not_yet_known notice(
+                     this->stub,
+                     subrecord.signature()
+                  );
+                  intfc.log_load_warning(notice);
                   //
                   // Cells without flags would theoretically default to being exteriors, so don't early-out here.
                   //
                } else if (this->cell_flags & cell_flag::interior) {
-                  detailed_notice warning;
-                  warning.code = notice_code::exterior_cell_data_in_interior_cell;
-                  warning.set_cause_form(this->stub);
-                  warning.set_cause_subrecord(subrecord.signature());
-                  //
-                  intfc.log_load_warning(warning);
+                  notices::form_load_warnings::by_type::cell::data_for_wrong_cell_type notice(
+                     this->stub,
+                     notices::form_load_warnings::by_type::cell::data_for_wrong_cell_type::cell_type::interior,
+                     subrecord.signature()
+                  );
+                  intfc.log_load_warning(notice);
                   break;
                }
                subrecord.skip_bytes(sizeof(int32_t)); // XCLC grid X; form stubs store this information
@@ -49,30 +51,27 @@ namespace dovah::loaded_forms {
                break;
             case 'XCLL':
                if (!loaded_cell_flags) {
-                  detailed_notice warning;
-                  warning.code = notice_code::cell_flags_not_yet_found;
-                  warning.set_cause_form(this->stub);
-                  warning.set_cause_subrecord(subrecord.signature());
-                  //
-                  intfc.log_load_warning(warning);
+                  notices::form_load_warnings::by_type::cell::cell_type_not_yet_known notice(
+                     this->stub,
+                     subrecord.signature()
+                  );
+                  intfc.log_load_warning(notice);
                   break;
                }
                if (!(this->cell_flags & cell_flag::interior)) {
-                  detailed_notice warning;
-                  warning.code = notice_code::interior_cell_data_in_exterior_cell;
-                  warning.set_cause_form(this->stub);
-                  warning.set_cause_subrecord(subrecord.signature());
-                  //
-                  intfc.log_load_warning(warning);
+                  notices::form_load_warnings::by_type::cell::data_for_wrong_cell_type notice(
+                     this->stub,
+                     notices::form_load_warnings::by_type::cell::data_for_wrong_cell_type::cell_type::exterior,
+                     subrecord.signature()
+                  );
+                  intfc.log_load_warning(notice);
                   break;
                }
                this->interior.lighting.load(subrecord, intfc);
                break;
             case 'LTMP':
                subrecord.read(this->interior.lighting_template);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::lighting_template, this->stub, this->interior.lighting_template)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->interior.lighting_template, form_type::lighting_template, subrecord.signature());
                break;
             case 'TVDT':
                this->exterior.occlusion_data.present = true;
@@ -116,9 +115,7 @@ namespace dovah::loaded_forms {
                   //
                   // Subrecord is not extra-data.
                   //
-                  intfc.log_load_warning(
-                     detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-                  );
+                  intfc.warn_on_unrecognized_subrecord(subrecord);
                }
                break;
          }

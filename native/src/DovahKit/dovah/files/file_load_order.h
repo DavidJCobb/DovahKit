@@ -18,12 +18,17 @@
 #include "../data/game_settings.h"
 
 namespace dovah {
-   class form_stub;
-   using map_of_forms = std::unordered_map<bare_form_id_t, form_stub*>;
+   namespace load_order_interfaces {
+      class file_load;
+      class form_load;
+      class form_save;
+   }
+   namespace notices {
+      class base_error;
 
-   class  bsa_load_order;
-   struct tes_file_header;
-   class  threaded_load_order_use_info_builder;
+      class base_warning;
+      class base_form_load_warning;
+   }
    namespace tes_file_reading {
       class file_loader;
       class file_header_reader;
@@ -34,7 +39,6 @@ namespace dovah {
       class  write_results;
       class  file_writer;
    }
-
    class form_creation_request;
    class form_duplication_request;
    class form_deletion_request;
@@ -42,12 +46,17 @@ namespace dovah {
    class game_setting_edit_request;
    class game_setting_renumber_request;
 
-   namespace load_order_interfaces {
-      class file_load;
-      class form_load;
-      class form_save;
-   }
+   //
 
+   class form_stub;
+   using map_of_forms = std::unordered_map<bare_form_id_t, form_stub*>;
+
+   class  bsa_load_order;
+   struct tes_file_header;
+   class  threaded_load_order_use_info_builder;
+}
+
+namespace dovah {
    class loaded_game_setting {
       public:
          const game_setting_definition*       definition  = nullptr;
@@ -71,11 +80,11 @@ namespace dovah {
       friend class load_order_interfaces::form_load;
       friend class load_order_interfaces::form_save;
       public:
-         static constexpr uint8_t invalid_load_prefix = 0xFF;
-         static constexpr uint8_t light_load_prefix   = 0xFE;
+         static constexpr const uint8_t invalid_load_prefix = 0xFF;
+         static constexpr const uint8_t light_load_prefix   = 0xFE;
          using loaded_file   = tes_file_reading::file_loader;
          using loaded_header = tes_file_reading::file_header_reader;
-         //
+         
          enum class form_id_status {
             valid,
             out_of_bounds,
@@ -84,13 +93,16 @@ namespace dovah {
             form_type_mismatch,
             injected_partial,
          };
-         //
+         
          using form_create_callback_t     = void(*)(form_stub*);
          using form_loss_callback_t       = void(*)(form_stub&);
          using form_renumber_callback_t   = void(*)(form_stub&, bare_form_id_t oldID, bare_form_id_t newID);
          using detailed_notice_callback_t = void(*)(const detailed_notice&);
          using generic_callback_t         = void(*)();
-         //
+
+         using emit_error_callback = void(*)(const notices::base_error&);
+         using emit_warning_callback = void(*)(const notices::base_warning&);
+         
       protected:
          struct _form_map {
             mutable std::mutex lock;
@@ -207,6 +219,8 @@ namespace dovah {
          void _log_load_warning(const detailed_notice&);
          void _log_save_warning(const detailed_notice&);
 
+         void _log_warning(const notices::base_warning&);
+
          bool _abandon_form_id_reservation(bare_form_id_t);
 
          notice_code_t _destroy_none_stub(form_stub&);
@@ -251,6 +265,8 @@ namespace dovah {
          generic_callback_t         on_mass_renumber = nullptr; // occurs when changing whether the active file is an ESL
          detailed_notice_callback_t on_read_warning  = nullptr; // warnings that occur when reading data from a TES file, whether during the initial stub build or when loading forms later. frontend is responsible for maintaining thread-safety.
          detailed_notice_callback_t on_save_warning  = nullptr; // warnings that occur when saving a file. frontend is responsible for maintaining thread-safety.
+         emit_error_callback        on_error         = nullptr;
+         emit_warning_callback      on_warning       = nullptr;
          //
          void queue_file(const std::string& name);
          void unqueue_file(const std::string& name);
@@ -393,284 +409,4 @@ namespace dovah {
          //
          bool save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config& cfg, dovah::tes_file_writing::write_results& results);
    };
-
-   #pragma region Requests to manipulate forms
-   //
-   // These requests are used to perform tasks like creating, renumbering, or deleting forms. 
-   // Note that some of them can iterate invalidators to the form map for a few reasons, such 
-   // as deleting none-stubs that are in their way.
-   //
-
-   class form_creation_request {
-      friend class file_load_order;
-      friend class form_duplication_request;
-      //
-      // Instances of this class can be created through the (file_load_order), and allow outside 
-      // code to take actions in between reserving a form ID for use with a new form, and actually 
-      // creating the new form. The use case that drove its creation: being able to have this UI 
-      // flow:
-      //
-      //  - User asks to create a new form. We immediately try to reserve a form ID.
-      //
-      //  - If the reservation fails, we report an error and abort immediately.
-      //
-      //  - We ask the user for the desired editor ID.
-      //
-      //  - We create the form, with that editor ID, all in one go.
-      //
-      // This class is capable of creating a new, blank form, or of duplicating a single form. If 
-      // you wish to duplicate a form and its children, then use (form_duplication_request).
-      //
-      protected:
-         file_load_order& owner;
-         enum form_type   form_type = form_type::none;
-         bare_form_id_t   formID    = 0;       // the form ID reserved for the newly-created form. set by the owning load order
-         form_stub*       child_of  = nullptr; // what form should serve as the new form's parent?
-         form_stub*       clone_of  = nullptr; // do we want to create a new form from scratch, or duplicate an existing one?
-         notice_code_t    error     = default_notice_code;
-         //
-         // In order to return (form_creation_request) instances from functions that construct them 
-         // without (form_creation_request::~form_creation_request) blowing away all of our data, we 
-         // must: define a move constructor; and delete all copy constructors and copy-assignments. 
-         // Copying shouldn't be allowed for this class anyway, though.
-         //
-         form_creation_request(file_load_order& o);
-         form_creation_request(form_creation_request&&);
-         form_creation_request(const form_creation_request&) = delete;
-         form_creation_request& operator=(const form_creation_request&) = delete;
-         //
-      public:
-         ~form_creation_request();
-         //
-         std::string editorID; // the editor ID to be used for the new form
-         struct {
-            int32_t x = 0;
-            int32_t y = 0;
-            bool    present = false;
-         } cell_grid_coordinates; // grid coordinates to use when creating an exterior cell
-         //
-         inline bool is_valid() const noexcept { return this->formID != 0 && this->error == default_notice_code; } // returns (true) if the request has a reserved ID and has not yet completed/failed
-         inline notice_code_t get_error_code() const noexcept { return this->error; }
-         //
-         void set_parent_form(form_stub* parent);
-         void set_parent_form(bare_form_id_t parentID);
-         //
-         void queue_clone(form_stub* original);
-         form_stub* commit();
-   };
-
-   class form_duplication_request {
-      protected:
-         file_load_order& owner;
-         form_creation_request* main_request = nullptr;
-         std::vector<form_creation_request*> child_requests;
-         //
-         form_stub* parent = nullptr; // if the original form has a parent and you want the clone to have a different parent, use this. (nullptr) defaults to same parent.
-         //
-         form_duplication_request(form_duplication_request&&);
-         form_duplication_request(const form_duplication_request&) = delete;
-         form_duplication_request& operator=(const form_duplication_request&) = delete;
-      public:
-         form_duplication_request(file_load_order& o);
-         ~form_duplication_request();
-         //
-         std::string editorID;
-         struct {
-            int32_t x = 0;
-            int32_t y = 0;
-            bool    present = false;
-         } cell_grid_coordinates; // grid coordinates to use when duplicating an exterior cell
-         //
-         void set_target(form_stub* original);
-         //
-         void set_parent_form(form_stub* parent);
-         void set_parent_form(bare_form_id_t parentID);
-         //
-         form_stub* commit();
-         //
-         notice_code_t get_main_form_error_code() const noexcept;
-         std::vector<notice_code_t> get_child_form_error_codes() const noexcept; // returns only non-none errors
-         std::vector<notice_code_t> get_error_codes() const noexcept; // returns all error codes, including nones. main first, then children
-         bool has_error() const noexcept;
-         bool is_valid() const noexcept;
-         unsigned int get_total_form_count() const noexcept;
-   };
-   
-   class form_deletion_request {
-      friend file_load_order;
-      protected:
-         file_load_order& owner;
-         form_stub&       target;
-         notice_code_t    error = default_notice_code;
-         file_prefix      active_file_prefix; // cached for faster checks
-         bool             done = false;
-         //
-         std::set<form_stub*> seen_stubs;
-         std::set<form_stub*> forms_needing_delete;
-         std::set<form_stub*> forms_needing_flag;
-         //
-         form_deletion_request(file_load_order& o, form_stub& t);
-         form_deletion_request(form_deletion_request&&);
-         form_deletion_request(const form_deletion_request&) = delete;
-         form_deletion_request& operator=(const form_deletion_request&) = delete;
-         //
-         bool _form_should_be_flagged(form_stub&);
-         void _gather_others(form_stub* start = nullptr);
-         void _prep_for_delete(form_stub&, bool flag); // use for deletion and for flagging as deleted
-         //
-      public:
-         bool force_delete_overrides = false; // if (true), then we will straight-up delete ALL forms. if (false), then forms outside the active file are overridden and FLAGGED AS deleted.
-         //
-         std::vector<form_stub*> get_forms_pending_delete(bool include_flagged = true) const noexcept;
-         std::vector<form_stub*> get_forms_pending_flagging() const noexcept;
-         inline notice_code_t get_error_code() const noexcept { return this->error; }
-         //
-         void commit(); // cannot produce or signal errors. if no errors already occurred, then once you call this, you're locked in.
-   };
-
-   class form_renumber_request {
-      friend class file_load_order;
-      protected:
-         file_load_order& owner;
-         form_stub&       target;
-         bare_form_id_t   desiredID = 0;
-         notice_code_t    error     = default_notice_code;
-         //
-         form_renumber_request(file_load_order& o, form_stub& target);
-         form_renumber_request(form_renumber_request&&);
-         form_renumber_request(const form_renumber_request&) = delete;
-         form_renumber_request& operator=(const form_renumber_request&) = delete;
-         //
-      public:
-         ~form_renumber_request();
-         //
-         inline notice_code_t get_error_code() const noexcept { return this->error; }
-         //
-         bool commit();
-   };
-   #pragma endregion
-
-   class game_setting_edit_request {
-      friend class file_load_order;
-      public:
-         enum class form_id_policy {
-            find_valid_id,
-            use_chosen_id,
-         };
-      protected:
-         file_load_order& owner;
-         bare_form_id_t   desiredID = 0;
-         notice_code_t    code      = default_notice_code;
-         bool reservedID = false;
-         bool done       = false;
-         //
-         game_setting_edit_request(file_load_order& o, form_id_policy);
-         game_setting_edit_request(game_setting_edit_request&&);
-         game_setting_edit_request(const game_setting_edit_request&) = delete;
-         game_setting_edit_request& operator=(const game_setting_edit_request&) = delete;
-         //
-      public:
-         ~game_setting_edit_request();
-         //
-         struct {
-            std::string        name;
-            game_setting_value value;
-         } setting;
-         const form_id_policy policy = form_id_policy::find_valid_id;
-         //
-         inline bare_form_id_t get_queued_form_id() const noexcept { return this->desiredID; }
-         inline notice_code_t get_notice_code() const noexcept { return this->code; }
-         inline bool was_successful() const noexcept { return this->done; }
-         //
-         void acquire_form_id(); // for use with form_id_policy::find_valid_id
-         void set_desired_form_id(bare_form_id_t); // for use with form_id_policy::use_chosen_id
-         //
-         void commit();
-   };
-
-   class game_setting_renumber_request {
-      friend class file_load_order;
-      protected:
-         file_load_order& owner;
-         bare_form_id_t   desiredID = 0;
-         notice_code_t    code      = default_notice_code;
-         bool reservedID = false;
-         bool done       = false;
-         //
-         game_setting_renumber_request(file_load_order& o);
-         game_setting_renumber_request(game_setting_renumber_request&&);
-         game_setting_renumber_request(const game_setting_renumber_request&) = delete;
-         game_setting_renumber_request& operator=(const game_setting_renumber_request&) = delete;
-         //
-      public:
-         ~game_setting_renumber_request();
-         //
-         std::string setting;
-         //
-         inline bare_form_id_t get_queued_form_id() const noexcept { return this->desiredID; }
-         inline notice_code_t get_notice_code() const noexcept { return this->code; }
-         inline bool was_successful() const noexcept { return this->done; }
-         //
-         void set_desired_form_id(bare_form_id_t); // for use with form_id_policy::use_chosen_id
-         //
-         void commit();
-   };
-
-   namespace load_order_interfaces {
-      class file_load {
-         friend class file_load_order;
-         friend class tes_file_reading::file_loader;
-         public:
-            file_load_order& owner;
-
-            void log_load_warning(detailed_notice&);
-            void log_load_error(detailed_notice&);
-
-         protected:
-            file_load(file_load_order& o) : owner(o) {}
-      };
-
-      class form_load {
-         friend class form_stub;
-         public:
-            file_load_order& owner;
-            const form_stub& target_stub;
-            const tes_file_reading::file_loader* current_file = nullptr;
-            bool     is_winning_record = false;
-            bool     is_partial_record = false; // you could also check the record flags, but there are certain cases where the flag should be ignored, and this bool better reflects those
-            uint32_t last_record_flags = 0;
-
-            // TIP: This function only logs a warning if it has a warning code. Some helper functions can be 
-            // called blindly to create and return warnings that only have a code if there's an actual problem.
-            void log_load_warning(const detailed_notice&);
-
-            inline bool is_active_file() const noexcept {
-               if (!this->current_file)
-                  return false;
-               return this->owner.file_is_active(*this->current_file);
-            }
-            
-         protected:
-            form_load(file_load_order& o, const form_stub& t) : owner(o), target_stub(t) {}
-      };
-
-      class form_save {
-         friend class tes_file_writing::file_writer;
-         protected:
-            form_stub* previous_child = nullptr;
-            tes_file_writing::file_writer& writer;
-         public:
-            file_load_order& owner;
-
-            // TIP: This function only logs a warning if it has a warning code.
-            void log_save_warning(detailed_notice&);
-            inline const form_stub* get_previous_child() const noexcept { return this->previous_child; }
-
-            // The file writer can only retain one save error.
-            void set_save_error(const detailed_notice&);
-            
-         protected:
-            form_save(file_load_order& o, tes_file_writing::file_writer& w) : owner(o), writer(w) {}
-      };
-   }
 }

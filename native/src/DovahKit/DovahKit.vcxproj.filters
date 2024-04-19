@@ -2259,7 +2259,37 @@
     <ClCompile Include="ui\utils\DKStyledItemDelegate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\helpers\warning_to_string.cpp">
+    <ClCompile Include="editor\helpers\backend_warning_to_string.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\helpers\backend_error_to_string.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_interfaces\form_load.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_interfaces\file_load.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_interfaces\form_save.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_requests\form_creation_request.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_requests\form_duplication_request.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_requests\form_deletion_request.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_requests\form_renumber_request.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_requests\game_setting_edit_request.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\load_order_requests\game_setting_renumber_request.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -5744,7 +5774,7 @@
     <ClInclude Include="dovah\notices\form_save_warnings\not_yet_implemented.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\helpers\warning_to_string.h">
+    <ClInclude Include="editor\helpers\backend_warning_to_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\notices\form_load_warnings\_all.h">
@@ -5757,6 +5787,42 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\notices\_util.undef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\helpers\backend_error_to_string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_save_errors\_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\_all_errors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_interfaces\form_load.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_interfaces\file_load.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_interfaces\form_save.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_requests\form_creation_request.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_requests\form_duplication_request.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_requests\form_deletion_request.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_requests\form_renumber_request.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_requests\game_setting_edit_request.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_requests\game_setting_renumber_request.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -6747,6 +6813,10 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.md" />
+    <None Include="dovah\load_order_interfaces\form_load.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\load_order_requests\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

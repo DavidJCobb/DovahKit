@@ -27,9 +27,7 @@ namespace dovah::loaded_forms {
                   auto& dm = this->directional_material;
                   subrecord.read(dm.max_angle);
                   subrecord.read(dm.material_object);
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::material_object, this->stub, dm.material_object)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(dm.material_object, form_type::material_object, subrecord.signature());
                   if (subrecord.is_skyrim_special()) {
                      subrecord.read(dm.flags);
                   } else {
@@ -50,9 +48,7 @@ namespace dovah::loaded_forms {
                }
                break;
             default:
-               intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-               );
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }

@@ -45,18 +45,14 @@ namespace dovah::loaded_forms::components {
             break;
          case 'QNAM':
             subrecord.read(this->quest);
-            intfc.log_load_warning(
-               detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::quest, intfc.target_stub, this->quest)
-            );
+            intfc.warn_if_ref_is_wrong_type(this->quest, form_type::quest, subrecord.signature());
             break;
          case 'SCRO':
             {
                form_reference_t form;
                if (subrecord.read(form)) {
                   this->refs.push_back(form);
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_not_object_reference(subrecord.signature(), intfc.target_stub, form)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(form, form_type::reference, subrecord.signature());
                }
             }
             break;

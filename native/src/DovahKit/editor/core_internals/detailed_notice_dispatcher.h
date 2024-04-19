@@ -1,6 +1,11 @@
 #pragma once
 #include "../core.h"
 
+namespace dovah::notices {
+   class base_error;
+   class base_warning;
+}
+
 namespace DovahKitEditorInternals {
    struct multithreadable_detailed_notice {
       dovah::detailed_notice warning;
@@ -23,12 +28,16 @@ namespace DovahKitEditorInternals {
             return instance;
          }
          detailed_notice_dispatcher();
-         //
+         
       signals:
          void received(multithreadable_detailed_notice);
-         //
+         void receivedError(dovah::notices::base_error*); // recipient must delete received pointer
+         void receivedWarning(dovah::notices::base_warning*); // recipient must delete received pointer
+         
       public slots:
          void send(const dovah::detailed_notice&);
+         void send(const dovah::notices::base_error&);
+         void send(const dovah::notices::base_warning&);
    };
 }
 

@@ -40,23 +40,17 @@ namespace dovah::loaded_forms {
                break;
             case 'SNAM': // open sound
                if (subrecord.read(this->open_sound)) {
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, this->open_sound)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->open_sound, form_type::sound_descriptor, subrecord.signature());
                }
                break;
             case 'ANAM': // close sound
                if (subrecord.read(this->close_sound)) {
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, this->close_sound)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->close_sound, form_type::sound_descriptor, subrecord.signature());
                }
                break;
             case 'BNAM': // loop sound
                if (subrecord.read(this->loop_sound)) {
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, this->loop_sound)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->loop_sound, form_type::sound_descriptor, subrecord.signature());
                }
                break;
             case 'FNAM':
@@ -65,15 +59,11 @@ namespace dovah::loaded_forms {
             case 'TNAM':
                if (subrecord.read(formID)) {
                   this->random_destinations.push_back(formID);
-                  intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::cell, form_type::worldspace }, this->stub, formID)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(formID, std::array{ form_type::cell, form_type::worldspace }, subrecord.signature());
                }
                break;
             default:
-               intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-               );
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }

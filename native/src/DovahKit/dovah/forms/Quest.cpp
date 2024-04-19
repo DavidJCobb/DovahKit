@@ -4,6 +4,16 @@
 #include "../logging.h"
 #include "../notice_code_list.h"
 
+#include "../notices/form_load_warnings/by_form_type/quest/alias_papyrus_data_belongs_to_missing_alias.h"
+#include "../notices/form_load_warnings/by_form_type/quest/alias_papyrus_data_specifies_wrong_quest.h"
+#include "../notices/form_load_warnings/by_form_type/quest/papyrus_fragment_belongs_to_missing_log_entry.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_type::quest;
+   }
+}
+
 namespace {
    constexpr uint32_t _signature_for_alias_type(dovah::loaded_forms::Alias::alias_type t) {
       using namespace dovah::loaded_forms;
@@ -57,9 +67,7 @@ namespace dovah::loaded_forms {
                break;
             case 'ALEQ':
                subrecord.read(this->fill_from_alias.quest);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::quest, intfc.target_stub, this->fill_from_alias.quest)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->fill_from_alias.quest, form_type::quest, subrecord.signature());
                this->fill_type = fill_type_t::other_alias_in_other_quest;
                break;
             case 'ALFE':
@@ -112,9 +120,7 @@ namespace dovah::loaded_forms {
       switch (subrecord.signature()) {
          case 'ALRT': // ALFA+ALRT
             subrecord.read(this->fill_loc_ref_type);
-            intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-               detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::location_ref_type, intfc.target_stub, this->fill_loc_ref_type)
-            );
+            intfc.warn_if_ref_is_wrong_type(this->fill_loc_ref_type, form_type::location_ref_type, subrecord.signature());
             break;
          case 'ALFR':
             if (subrecord.read(this->fill_from_reference))
@@ -152,32 +158,24 @@ namespace dovah::loaded_forms {
          case 'ALPC':
             if (subrecord.read(formID)) {
                this->packages.push_back(formID);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, formID)
-               );
+               intfc.warn_if_ref_is_wrong_type(formID, form_type::package, subrecord.signature());
             }
             break;
          case 'ALFC':
             if (subrecord.read(formID)) {
                this->factions.push_back(formID);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::faction, intfc.target_stub, formID)
-               );
+               intfc.warn_if_ref_is_wrong_type(formID, form_type::faction, subrecord.signature());
             }
             break;
          case 'ALSP':
             if (subrecord.read(formID)) {
                this->spells.push_back(formID);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::spell, intfc.target_stub, formID)
-               );
+               intfc.warn_if_ref_is_wrong_type(formID, form_type::spell, subrecord.signature());
             }
             break;
          case 'VTCK':
             if (subrecord.read(this->additional_voicetype)) {
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::actor_base, form_type::formlist }, intfc.target_stub, this->additional_voicetype)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->additional_voicetype, std::array{ form_type::actor_base, form_type::formlist }, subrecord.signature());
             }
             break;
          case 'KSIZ':
@@ -191,30 +189,22 @@ namespace dovah::loaded_forms {
             break;
          case 'SCOR':
             if (subrecord.read(this->package_override_lists.spectator)) {
-               intfc.log_load_warning(
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.spectator)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->package_override_lists.spectator, form_type::package, subrecord.signature());
             }
             break;
          case 'OCOR':
             if (subrecord.read(this->package_override_lists.observe_corpse)) {
-               intfc.log_load_warning(
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.observe_corpse)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->package_override_lists.observe_corpse, form_type::package, subrecord.signature());
             }
             break;
          case 'GWOR':
             if (subrecord.read(this->package_override_lists.guard_warn)) {
-               intfc.log_load_warning(
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.guard_warn)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->package_override_lists.guard_warn, form_type::package, subrecord.signature());
             }
             break;
          case 'ECOR':
             if (subrecord.read(this->package_override_lists.combat)) {
-               intfc.log_load_warning(
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::package, intfc.target_stub, this->package_override_lists.combat)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->package_override_lists.combat, form_type::package, subrecord.signature());
             }
             break;
          case 'ALDN':
@@ -931,14 +921,12 @@ namespace dovah::loaded_forms {
                         // so we can't properly handle this. At least, not without adding some major 
                         // special-case code for this deep into the loader...
                         //
-                        detailed_notice warning;
-                        warning.code = notice_code::alias_papyrus_data_specifies_wrong_quest;
-                        warning.set_cause_form(this->stub);
-                        warning.set_cause_subrecord(subrecord.signature());
-                        if (owner.form)
-                           warning.add_relevant_form(*owner.form.get_form_stub());
-                        warning.extra_integers[0] = owner.alias_id;
-                        intfc.log_load_warning(warning);
+                        specific_load_warnings::alias_papyrus_data_specifies_wrong_quest notice(
+                           this->stub,
+                           *owner.form.get_form_stub(),
+                           owner.alias_id
+                        );
+                        intfc.log_load_warning(notice);
                         //
                         components::papyrus::attachment_data::skip_use_info(subrecord);
                         continue;
@@ -981,9 +969,7 @@ namespace dovah::loaded_forms {
                   form_reference_t id;
                   if (subrecord.read(id) && id) {
                      this->text_display_globals.push_back(id);
-                     intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                        detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::global, this->stub, id)
-                     );
+                     intfc.warn_if_ref_is_wrong_type(id, form_type::global, subrecord.signature());
                   }
                }
                break;
@@ -1088,9 +1074,7 @@ namespace dovah::loaded_forms {
                //
                break;
             default:
-               intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-               );
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }
@@ -1102,12 +1086,11 @@ namespace dovah::loaded_forms {
          for (auto& entry : pending_alias_scripts) {
             auto* alias = this->lookup_alias_by_id(entry.alias_id);
             if (!alias) {
-               detailed_notice warning;
-               warning.code = notice_code::alias_papyrus_data_belongs_to_missing_alias;
-               warning.set_cause_form(this->stub);
-               warning.set_cause_subrecord('VMAD');
-               warning.extra_integers[0] = entry.alias_id;
-               intfc.log_load_warning(warning);
+               specific_load_warnings::alias_papyrus_data_belongs_to_missing_alias notice(
+                  this->stub,
+                  entry.alias_id
+               );
+               intfc.log_load_warning(notice);
                //
                continue;
             }
@@ -1130,13 +1113,12 @@ namespace dovah::loaded_forms {
                   continue;
                }
             }
-            detailed_notice warning;
-            warning.code = notice_code::quest_fragment_belongs_to_missing_log_entry;
-            warning.set_cause_form(this->stub);
-            warning.set_cause_subrecord('VMAD');
-            warning.extra_integers[0] = data.stage_id;
-            warning.extra_integers[1] = data.entry_index;
-            intfc.log_load_warning(warning);
+            specific_load_warnings::papyrus_fragment_belongs_to_missing_log_entry notice(
+               this->stub,
+               data.stage_id,
+               data.entry_index
+            );
+            intfc.log_load_warning(notice);
          }
          pending_log_entry_scripts.clear();
       }

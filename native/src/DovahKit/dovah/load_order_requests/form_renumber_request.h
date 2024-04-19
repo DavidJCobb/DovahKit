@@ -1,0 +1,31 @@
+#pragma once
+#include "../core.h"
+#include "../notice_code_t.h"
+
+namespace dovah {
+   class file_load_order;
+   class form_stub;
+}
+
+namespace dovah {
+   class form_renumber_request {
+      friend class file_load_order;
+      protected:
+         file_load_order& owner;
+         form_stub&       target;
+         bare_form_id_t   desiredID = 0;
+         notice_code_t    error     = default_notice_code;
+         
+         form_renumber_request(file_load_order& o, form_stub& target);
+         form_renumber_request(form_renumber_request&&);
+         form_renumber_request(const form_renumber_request&) = delete;
+         form_renumber_request& operator=(const form_renumber_request&) = delete;
+         
+      public:
+         ~form_renumber_request();
+         
+         constexpr notice_code_t get_error_code() const noexcept { return this->error; }
+         
+         bool commit();
+   };
+}

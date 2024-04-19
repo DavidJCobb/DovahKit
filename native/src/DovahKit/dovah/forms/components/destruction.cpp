@@ -3,6 +3,14 @@
 #include "../Form.h" // for LOAD_NAIVELY_WHEN_THE_GAME_DOES directive
 #include "../../notice_code_list.h"
 
+#include "../../notices/form_load_warnings/by_form_component/destruction/stage_serialized_index_out_of_bounds.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_component::destruction;
+   }
+}
+
 namespace dovah::loaded_forms::components {
    void destruction_stage_data::use_info_builder::done() {
       for (auto& stage : this->per_stage) {
@@ -43,13 +51,13 @@ namespace dovah::loaded_forms::components {
          last_loaded_stage = stage_index;
          //
          if (stage_index >= this->stages.size()) {
-            detailed_notice warning;
-            warning.code = notice_code::destruction_stage_serialized_index_out_of_bounds;
-            warning.set_cause_subrecord(subrecord.signature());
-            warning.set_subrecord_index(nth_dstd_subrecord);
-            warning.extra_integers[0] = stage_index;
-            warning.extra_integers[1] = this->stages.size();
-            intfc.log_load_warning(warning);
+            specific_load_warnings::stage_serialized_index_out_of_bounds notice(
+               const_cast<form_stub&>(intfc.target_stub),
+               nth_dstd_subrecord,
+               stage_index,
+               this->stages.size()
+            );
+            intfc.log_load_warning(notice);
             //
             ++nth_dstd_subrecord;
             return;
@@ -65,14 +73,8 @@ namespace dovah::loaded_forms::components {
          subrecord.read(stage.debrisCount);
                   
          const auto& stub = intfc.target_stub;
-         intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-            detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::explosion, stub, stage.explosion)
-               .set_subrecord_index(nth_dstd_subrecord)
-         );
-         intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-            detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::debris, stub, stage.debris)
-               .set_subrecord_index(nth_dstd_subrecord)
-         );
+         intfc.warn_if_ref_is_wrong_type(stage.explosion, form_type::explosion, subrecord.signature());
+         intfc.warn_if_ref_is_wrong_type(stage.debris,    form_type::debris,    subrecord.signature());
 
          ++nth_dstd_subrecord;
       };

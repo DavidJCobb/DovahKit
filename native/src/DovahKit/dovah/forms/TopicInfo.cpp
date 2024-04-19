@@ -2,6 +2,14 @@
 #include "_common_cpp.h"
 #include "../notice_code_list.h"
 
+#include "../notices/form_load_warnings/by_form_type/topic_info/response_addendum_subrecord_too_early.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_type::topic_info;
+   }
+}
+
 namespace dovah::loaded_forms {
    void TopicInfo::response::clear(TopicInfo& owner) {
       this->emotion = decltype(this->emotion)();
@@ -101,11 +109,11 @@ namespace dovah::loaded_forms {
       }
       //
       auto _report_misplaced_response_subrecord = [this, &intfc](tes_subrecord_reader& subrecord) {
-         detailed_notice warning;
-         warning.code = notice_code::info_response_subrecord_before_responses;
-         warning.set_cause_form(this->stub);
-         warning.set_cause_subrecord(subrecord.signature());
-         intfc.log_load_warning(warning);
+         specific_load_warnings::response_addendum_subrecord_too_early notice(
+            this->stub,
+            subrecord.signature()
+         );
+         intfc.log_load_warning(notice);
       };
       //
       bool move_to_next_legacy_script = true;
@@ -136,9 +144,7 @@ namespace dovah::loaded_forms {
                if (subrecord.read(formID)) {
                   auto& list = partial ? this->link_to.locked : this->link_to.normal;
                   list.push_back(formID);
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::topic, this->stub, formID)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(formID, form_type::topic, subrecord.signature());
                }
                break;
             case 'CNAM':
@@ -146,16 +152,12 @@ namespace dovah::loaded_forms {
                break;
             case 'DNAM':
                if (subrecord.read(this->use_shared_info)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::topic_info, this->stub, this->use_shared_info)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->use_shared_info, form_type::topic_info, subrecord.signature());
                }
                break;
             case 'TPIC':
                if (subrecord.read(this->topic)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::topic, this->stub, this->topic)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->topic, form_type::topic, subrecord.signature());
                }
                break;
             case 'RNAM':
@@ -165,9 +167,7 @@ namespace dovah::loaded_forms {
                break;
             case 'TWAT':
                if (subrecord.read(this->walk_away_topic)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::topic, this->stub, this->walk_away_topic)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->walk_away_topic, form_type::topic, subrecord.signature());
                }
                break;
             case 'ANAM':
@@ -178,16 +178,12 @@ namespace dovah::loaded_forms {
                // anything actually accesses this hashmap.
                //
                if (subrecord.read(this->speaker)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::actor_base, this->stub, this->speaker)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->speaker, form_type::actor_base, subrecord.signature());
                }
                break;
             case 'ONAM':
                if (subrecord.read(this->audio_override_output)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::sound_output_model, this->stub, this->audio_override_output)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->audio_override_output, form_type::sound_output_model, subrecord.signature());
                }
                break;
             case 'TRDT':
@@ -199,9 +195,7 @@ namespace dovah::loaded_forms {
                   subrecord.read(r.response_number);
                   subrecord.skip_bytes(3);
                   if (subrecord.read(r.sound)) {
-                     intfc.log_load_warning(
-                        detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::sound_descriptor, this->stub, r.sound)
-                     );
+                     intfc.warn_if_ref_is_wrong_type(r.sound, form_type::sound_descriptor, subrecord.signature());
                   }
                   subrecord.read(r.flags);
                   subrecord.skip_bytes(3);
@@ -242,9 +236,7 @@ namespace dovah::loaded_forms {
                if (!partial) {
                   auto& form = this->responses.back().idles.listener;
                   if (subrecord.read(form)) {
-                     intfc.log_load_warning(
-                        detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::idle, this->stub, form)
-                     );
+                     intfc.warn_if_ref_is_wrong_type(form, form_type::idle, subrecord.signature());
                   }
                }
                break;
@@ -256,9 +248,7 @@ namespace dovah::loaded_forms {
                if (!partial) {
                   auto& form = this->responses.back().idles.speaker;
                   if (subrecord.read(form)) {
-                     intfc.log_load_warning(
-                        detailed_notice::warn_if_wrong_type(subrecord.signature(), dovah::form_type::idle, this->stub, form)
-                     );
+                     intfc.warn_if_ref_is_wrong_type(form, form_type::idle, subrecord.signature());
                   }
                }
                break;
@@ -291,9 +281,7 @@ namespace dovah::loaded_forms {
                move_to_next_legacy_script = true;
                break;
             default:
-               intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-               );
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }

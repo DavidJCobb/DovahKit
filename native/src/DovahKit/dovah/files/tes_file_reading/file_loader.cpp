@@ -2,6 +2,7 @@
 #include "../../notice_code_list.h"
 #include "file_threaded_part_loader_base.h"
 #include "threads.h"
+#include "../../load_order_interfaces/file_load.h"
 
 namespace dovah::tes_file_reading {
    file_loader::file_loader(interface_t& intfc) : file_or_file_part_loader(*this, intfc) {

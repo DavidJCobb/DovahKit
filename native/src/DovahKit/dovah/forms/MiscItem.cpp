@@ -58,22 +58,16 @@ namespace dovah::loaded_forms {
                break;
             case 'YNAM':
                if (subrecord.read(this->take_sound)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, this->take_sound)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->take_sound, form_type::sound_descriptor, subrecord.signature());
                }
                break;
             case 'ZNAM':
                if (subrecord.read(this->drop_sound)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, this->drop_sound)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->drop_sound, form_type::sound_descriptor, subrecord.signature());
                }
                break;
             default:
-               intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-               );
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }

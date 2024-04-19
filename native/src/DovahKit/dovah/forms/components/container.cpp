@@ -2,6 +2,14 @@
 #include "../_common_cpp.h"
 #include "../../notice_code_list.h"
 
+#include "../../notices/form_load_warnings/by_form_component/container/item_has_bad_owner_form_type.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_component::container;
+   }
+}
+
 namespace dovah::loaded_forms::components {
    void container_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (subrecord.signature() == 'CNTO') { // CoNTainer Object
@@ -21,24 +29,19 @@ namespace dovah::loaded_forms::components {
          auto& entry = this->entries.back();
          if (subrecord.read(entry.ownership.owner)) {
             auto ownerStub = subrecord.lookup_form_by_id(entry.ownership.owner);
-            intfc.log_load_warning(
-               detailed_notice::warn_if_wrong_type(subrecord.signature(), { form_type::actor_base, form_type::faction }, intfc.target_stub, entry.ownership.owner)
-            );
+            intfc.warn_if_ref_is_wrong_type(entry.ownership.owner, std::array{ form_type::actor_base, form_type::faction }, subrecord.signature());
             if (ownerStub && ownerStub->form_type == form_type::actor_base) {
                subrecord.unchecked_read(entry.ownership.global);
-               intfc.log_load_warning(
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::global, intfc.target_stub, entry.ownership.global)
-               );
+               intfc.warn_if_ref_is_wrong_type(entry.ownership.global, form_type::global, subrecord.signature());
             } else {
                subrecord.unchecked_read(entry.ownership.faction_rank);
                //
                if (ownerStub && ownerStub->form_type != form_type::faction) {
-                  detailed_notice warning;
-                  warning.code = notice_code::container_item_has_bad_owner_form_type;
-                  warning.set_cause_form(intfc.target_stub);
-                  warning.set_cause_subrecord(subrecord.signature());
-                  warning.add_relevant_form(*ownerStub);
-                  intfc.log_load_warning(warning);
+                  specific_load_warnings::item_has_bad_owner_form_type notice(
+                     const_cast<form_stub&>(intfc.target_stub),
+                     *ownerStub
+                  );
+                  intfc.log_load_warning(notice);
                }
             }
             entry.condition.present = true;

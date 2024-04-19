@@ -1,11 +1,17 @@
 #include "log_list_view.h"
 #include <QHeaderView>
 #include <QLineEdit>
-#include "../../../helpers/qt/strings.h"
-#include "../../../dovah/notice_code_list.h"
-#include "../../../editor/core.h"
-#include "../../../editor/open_window_for_form.h"
-#include "../../../editor/helpers/warning_or_error_to_string.h"
+#include "helpers/qt/strings.h"
+#include "dovah/notice_code_list.h"
+#include "editor/core.h"
+#include "editor/open_window_for_form.h"
+#include "editor/helpers/warning_or_error_to_string.h"
+#include "editor/helpers/backend_error_to_string.h"
+#include "editor/helpers/backend_warning_to_string.h"
+
+#include "dovah/notices/base_form_load_warning.h"
+#include "dovah/notices/base_form_save_error.h"
+#include "dovah/notices/base_form_save_warning.h"
 
 namespace {
    QString _read_error_form_id_to_string(const dovah::detailed_notice::relevant_form& form) {
@@ -46,6 +52,27 @@ LogListModelItem::LogListModelItem(const dovah::detailed_notice& warning) {
          break;
    }
 }
+
+LogListModelItem::LogListModelItem(const dovah::notices::base_error& notice) {
+   this->metadata.type = Type::Error;
+   this->text = editor_helpers::backend_error_to_string(notice);
+
+   if (auto* casted = dynamic_cast<const dovah::notices::base_form_save_error*>(&notice)) {
+      this->metadata.context = Context::FormSave;
+   }
+}
+LogListModelItem::LogListModelItem(const dovah::notices::base_warning& notice) {
+   this->metadata.type = Type::Warning;
+   this->text = editor_helpers::backend_warning_to_string(notice);
+
+   if (auto* casted = dynamic_cast<const dovah::notices::base_form_load_warning*>(&notice)) {
+      this->metadata.context = Context::FormLoad;
+      this->file = QString::fromUtf8(QByteArray::fromStdString(casted->record_info.source_file));
+   } else if (auto* casted = dynamic_cast<const dovah::notices::base_form_save_warning*>(&notice)) {
+      this->metadata.context = Context::FormSave;
+   }
+}
+
 bool LogListModelItem::compare(const dovah::detailed_notice& warning) const noexcept {
    if (this->type != type_t::detailed_notice)
       return false;
@@ -64,6 +91,9 @@ LogListModel::LogListModel(QObject* parent) : QAbstractTableModel(parent) {
    QObject::connect(&editor, &DovahKitCore::dataSaveImminent,        this, &LogListModel::dataSaveImminent);
    QObject::connect(&editor, &DovahKitCore::dataSaveComplete,        this, &LogListModel::dataSaveComplete);
    QObject::connect(&editor, &DovahKitCore::dataSaveFailed,          this, &LogListModel::saveErrorReceived);
+
+   QObject::connect(&editor, &DovahKitCore::backendErrorReceived,   this, &LogListModel::errorReceived);
+   QObject::connect(&editor, &DovahKitCore::backendWarningReceived, this, &LogListModel::warningReceived);
 }
 
 void LogListModel::dataAcquireComplete() {
@@ -168,6 +198,79 @@ void LogListModel::gameSettingValueChangeFailed(const char* name, dovah::notice_
    auto last_inserted  = first_inserted;
    this->beginInsertRows(QModelIndex(), first_inserted, last_inserted);
    this->children.push_back(item);
+   this->endInsertRows();
+}
+
+bool LogListModel::_has_matching_notice(dovah::bare_form_id_t form_id, QString text) const {
+   if (!form_id)
+      return false;
+
+   auto& map = this->warnings_cause_by_form;
+   auto it = map.find(form_id);
+   if (it == map.end())
+      return false;
+
+   auto& list = *it;
+   for (auto* item : list) {
+      if (item->text == text)
+         return true;
+   }
+
+   return false;
+}
+
+void LogListModel::errorReceived(const dovah::notices::base_error& notice) {
+   dovah::bare_form_id_t form_id = 0;
+
+   if (auto* casted = dynamic_cast<const dovah::notices::base_form_save_error*>(&notice)) {
+      form_id = casted->subject.formID;
+   }
+
+   auto text = editor_helpers::backend_error_to_string(notice);
+   if (text.isEmpty())
+      return;
+
+   auto* item = new item_type(notice);
+   
+   auto first_inserted = this->children.size();
+   auto last_inserted  = first_inserted;
+   this->beginInsertRows({}, first_inserted, last_inserted);
+   //
+   this->children.push_back(item);
+   if (form_id) {
+      auto& list = this->warnings_cause_by_form[form_id];
+      list.push_back(item);
+   }
+   //
+   this->endInsertRows();
+}
+void LogListModel::warningReceived(const dovah::notices::base_warning& notice) {
+   dovah::bare_form_id_t form_id = 0;
+
+   if (auto* casted = dynamic_cast<const dovah::notices::base_form_load_warning*>(&notice)) {
+      if (!casted->record_info.is_winning_record)
+         return;
+      form_id = casted->subject.formID;
+   }
+
+   auto text = editor_helpers::backend_warning_to_string(notice);
+   if (text.isEmpty())
+      return;
+   if (this->_has_matching_notice(form_id, text))
+      return;
+
+   auto* item = new item_type(notice);
+   
+   auto first_inserted = this->children.size();
+   auto last_inserted  = first_inserted;
+   this->beginInsertRows({}, first_inserted, last_inserted);
+   //
+   this->children.push_back(item);
+   if (form_id) {
+      auto& list = this->warnings_cause_by_form[form_id];
+      list.push_back(item);
+   }
+   //
    this->endInsertRows();
 }
 

@@ -143,9 +143,19 @@
     <ClCompile Include="dovah\forms\components\papyrus\property.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\property_object_value.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\property_value.cpp" />
+    <ClCompile Include="dovah\load_order_interfaces\file_load.cpp" />
+    <ClCompile Include="dovah\load_order_interfaces\form_load.cpp" />
+    <ClCompile Include="dovah\load_order_interfaces\form_save.cpp" />
+    <ClCompile Include="dovah\load_order_requests\form_creation_request.cpp" />
+    <ClCompile Include="dovah\load_order_requests\form_deletion_request.cpp" />
+    <ClCompile Include="dovah\load_order_requests\form_duplication_request.cpp" />
+    <ClCompile Include="dovah\load_order_requests\form_renumber_request.cpp" />
+    <ClCompile Include="dovah\load_order_requests\game_setting_edit_request.cpp" />
+    <ClCompile Include="dovah\load_order_requests\game_setting_renumber_request.cpp" />
     <ClCompile Include="dovah\utils\refs_need_persistence_checker.cpp" />
+    <ClCompile Include="editor\helpers\backend_error_to_string.cpp" />
     <ClCompile Include="editor\helpers\form_stub_drag_drop.cpp" />
-    <ClCompile Include="editor\helpers\warning_to_string.cpp" />
+    <ClCompile Include="editor\helpers\backend_warning_to_string.cpp" />
     <ClCompile Include="editor\ini\main.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_vmad_info.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\form_info_cache.cpp" />
@@ -890,6 +900,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
+    <ClInclude Include="dovah\load_order_interfaces\file_load.h" />
+    <ClInclude Include="dovah\load_order_interfaces\form_load.h" />
+    <ClInclude Include="dovah\load_order_interfaces\form_save.h" />
+    <ClInclude Include="dovah\load_order_requests\form_creation_request.h" />
+    <ClInclude Include="dovah\load_order_requests\form_deletion_request.h" />
+    <ClInclude Include="dovah\load_order_requests\form_duplication_request.h" />
+    <ClInclude Include="dovah\load_order_requests\form_renumber_request.h" />
+    <ClInclude Include="dovah\load_order_requests\game_setting_edit_request.h" />
+    <ClInclude Include="dovah\load_order_requests\game_setting_renumber_request.h" />
     <ClInclude Include="dovah\notices\base_error.h" />
     <ClInclude Include="dovah\notices\base_form_load_warning.h" />
     <ClInclude Include="dovah\notices\base_form_save_error.h" />
@@ -922,12 +941,15 @@
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\landscape\heightmap_contains_too_steep_a_slope.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\quest\too_many_log_entry_papyrus_fragments.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\quest\too_many_scripted_aliases.h" />
+    <ClInclude Include="dovah\notices\form_save_errors\_all.h" />
     <ClInclude Include="dovah\notices\form_save_warnings\not_yet_implemented.h" />
+    <ClInclude Include="dovah\notices\_all_errors.h" />
     <ClInclude Include="dovah\notices\_all_warnings.h" />
     <ClInclude Include="dovah\notices\_util.define.h" />
     <ClInclude Include="dovah\notices\_util.undef.h" />
+    <ClInclude Include="editor\helpers\backend_error_to_string.h" />
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
-    <ClInclude Include="editor\helpers\warning_to_string.h" />
+    <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
     <ClInclude Include="helpers\hashing\crc32.h" />
     <ClInclude Include="nif\blocks\BSValueNode.h" />
     <ClInclude Include="nif\utils\find_all_retexturable_blocks.h" />
@@ -2358,6 +2380,8 @@
     <None Include="dovah\forms\components\papyrus\attachment_data.inl" />
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="dovah\forms\structs\precached_nif_info.inl" />
+    <None Include="dovah\load_order_interfaces\form_load.inl" />
+    <None Include="dovah\load_order_requests\README.md" />
     <None Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.md" />
     <None Include="dovah\utils\file_prefix.inl" />
     <None Include="dovah\_docs\compiled script files.md" />

@@ -60,9 +60,7 @@ namespace dovah::loaded_forms {
                this->decal_data->load(subrecord, intfc);
                break;
             default:
-               intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-               );
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }

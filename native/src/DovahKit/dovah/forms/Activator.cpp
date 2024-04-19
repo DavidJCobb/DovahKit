@@ -44,21 +44,15 @@ namespace dovah::loaded_forms {
                break;
             case 'SNAM':
                subrecord.read(this->looping_sound);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, this->looping_sound)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->looping_sound, form_type::sound_descriptor, subrecord.signature());
                break;
             case 'VNAM':
                subrecord.read(this->activation_sound);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, this->activation_sound)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->activation_sound, form_type::sound_descriptor, subrecord.signature());
                break;
             case 'WNAM':
                subrecord.read(this->water_type);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::water_type, this->stub, this->water_type)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->water_type, form_type::water_type, subrecord.signature());
                break;
             case 'RNAM':
                subrecord.read(this->activation_verb);
@@ -68,14 +62,10 @@ namespace dovah::loaded_forms {
                break;
             case 'KNAM':
                subrecord.read(this->interact_keyword);
-               intfc.log_load_warning( // if there's not actually anything to warn about, then this won't log anything
-                  detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::keyword, this->stub, this->interact_keyword)
-               );
+               intfc.warn_if_ref_is_wrong_type(this->interact_keyword, form_type::keyword, subrecord.signature());
                break;
             default:
-               intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-               );
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }

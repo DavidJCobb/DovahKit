@@ -37,6 +37,9 @@
 #include "form_stub_meta_type.h"
 #include "ui/types/quest_alias.h"
 
+#include "dovah/notices/base_error.h"
+#include "dovah/notices/base_warning.h"
+
 namespace {
    void _on_form_created(dovah::form_stub* stub) {
       if (stub)
@@ -71,6 +74,13 @@ namespace {
       //
       DovahKitEditorInternals::detailed_notice_dispatcher::get().send(warning);
    }
+
+   void _on_backend_error(const dovah::notices::base_error& notice) {
+      DovahKitEditorInternals::detailed_notice_dispatcher::get().send(notice);
+   }
+   void _on_backend_warning(const dovah::notices::base_warning& notice) {
+      DovahKitEditorInternals::detailed_notice_dispatcher::get().send(notice);
+   }
 }
 
 namespace {
@@ -103,6 +113,27 @@ DovahKitCore::DovahKitCore() {
       QObject::connect(&dispatcher, &dispatcher_t::received, this, [this](DovahKitEditorInternals::multithreadable_detailed_notice w) {
          emit this->fileLoadWarningReceived(w.warning);
       }, Qt::QueuedConnection);
+
+      QObject::connect(
+         &dispatcher,
+         &dispatcher_t::receivedWarning,
+         this,
+         [this](dovah::notices::base_warning* cloned) {
+            emit this->backendWarningReceived(*cloned);
+            delete cloned;
+         },
+         Qt::QueuedConnection
+      );
+      QObject::connect(
+         &dispatcher,
+         &dispatcher_t::receivedError,
+         this,
+         [this](dovah::notices::base_error* cloned) {
+            emit this->backendErrorReceived(*cloned);
+            delete cloned;
+         },
+         Qt::QueuedConnection
+      );
    }
    //
    {
@@ -161,6 +192,8 @@ void DovahKitCore::_configure_load_order() {
    this->load_order->on_form_renumber = &_on_form_renumber;
    this->load_order->on_mass_renumber = &_on_mass_renumber;
    this->load_order->on_read_warning  = &_on_read_warning;
+   this->load_order->on_error         = &_on_backend_error;
+   this->load_order->on_warning       = &_on_backend_warning;
    this->load_order->adopt_archive_list(*(new dovah::bsa_load_order));
 }
 void DovahKitCore::abandon_data() {

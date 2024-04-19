@@ -1,6 +1,7 @@
 #include "file_writer.h"
 #include "../file_load_order.h"
 #include "../tes_file_reading/file_loader.h"
+#include "../../load_order_interfaces/form_save.h"
 #include "../../core.h"
 #include "../../form_stub.h"
 #include "../../form_stub_addenda.h"

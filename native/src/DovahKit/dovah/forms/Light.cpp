@@ -75,15 +75,11 @@ namespace dovah::loaded_forms {
                break;
             case 'SNAM':
                if (subrecord.read(this->item_data.sound)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, this->item_data.sound)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->item_data.sound, form_type::sound_descriptor, subrecord.signature());
                }
                break;
             default:
-               intfc.log_load_warning(
-                  detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-               );
+               intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }

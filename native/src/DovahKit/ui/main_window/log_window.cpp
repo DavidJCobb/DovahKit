@@ -1,8 +1,4 @@
 #include "log_window.h"
-#include "../../helpers/qt/strings.h"
-#include "../../editor/core.h"
-#include "../../dovah/detailed_notice.h"
-#include "../../dovah/notice_code_list.h"
 #include <QClipboard>
 
 LogWindow::LogWindow(QWidget* parent) : QWidget(parent) {
@@ -17,7 +13,7 @@ LogWindow::LogWindow(QWidget* parent) : QWidget(parent) {
       auto* widget = this->ui.list;
       auto* model  = widget->model();
       auto  sel    = widget->selectionModel()->selectedRows();
-      for (auto index : sel) {
+      for (const auto& index : sel) {
          int  i = index.row();
          auto i_text = model->index(i, 0);
          auto i_file = model->index(i, 1);

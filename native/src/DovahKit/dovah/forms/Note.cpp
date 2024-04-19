@@ -2,6 +2,14 @@
 #include "_common_cpp.h"
 #include "../notice_code_list.h"
 
+#include "../notices/form_load_warnings/by_form_type/note/non_texture_note_includes_texture_path.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_type::note;
+   }
+}
+
 namespace dovah::loaded_forms {
    void Note::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
@@ -48,33 +56,27 @@ namespace dovah::loaded_forms {
             case 'ONAM':
                if (subrecord.read(form_id)) {
                   this->owning_quests.push_back(form_id);
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::quest, this->stub, form_id)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(form_id, form_type::quest, subrecord.signature());
                }
                break;
             case 'XNAM':
                if (this->type != note_type::image) {
-                  detailed_notice warning;
-                  warning.code = notice_code::non_texture_note_includes_texture_path;
-                  warning.set_cause_form(this->stub);
-                  intfc.log_load_warning(warning);
+                  specific_load_warnings::non_texture_note_includes_texture_path notice(
+                     this->stub
+                  );
+                  intfc.log_load_warning(notice);
                   break;
                }
                subrecord.read(this->content.image);
                break;
             case 'YNAM':
                if (subrecord.read(this->take_sound)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, this->take_sound)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->take_sound, form_type::sound_descriptor, subrecord.signature());
                }
                break;
             case 'ZNAM':
                if (subrecord.read(this->drop_sound)) {
-                  intfc.log_load_warning(
-                     detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, this->drop_sound)
-                  );
+                  intfc.warn_if_ref_is_wrong_type(this->drop_sound, form_type::sound_descriptor, subrecord.signature());
                }
                break;
             default:
@@ -98,9 +100,7 @@ namespace dovah::loaded_forms {
                            case 'SNAM':
                               handled = true;
                               if (subrecord.read(this->content.sound)) {
-                                 intfc.log_load_warning(
-                                    detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::sound_descriptor, this->stub, this->content.sound)
-                                 );
+                                 intfc.warn_if_ref_is_wrong_type(this->content.sound, form_type::sound_descriptor, subrecord.signature());
                               }
                               break;
                         }
@@ -118,17 +118,13 @@ namespace dovah::loaded_forms {
                            case 'SNAM':
                               handled = true;
                               if (subrecord.read(this->content.speaker)) {
-                                 intfc.log_load_warning(
-                                    detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::actor_base, this->stub, this->content.speaker)
-                                 );
+                                 intfc.warn_if_ref_is_wrong_type(this->content.speaker, form_type::actor_base, subrecord.signature());
                               }
                               break;
                            case 'TNAM':
                               handled = true;
                               if (subrecord.read(this->content.topic)) {
-                                 intfc.log_load_warning(
-                                    detailed_notice::warn_if_wrong_type(subrecord.signature(), form_type::topic, this->stub, this->content.topic)
-                                 );
+                                 intfc.warn_if_ref_is_wrong_type(this->content.topic, form_type::topic, subrecord.signature());
                               }
                               break;
                         }
@@ -138,9 +134,7 @@ namespace dovah::loaded_forms {
                      content_loaded = true;
                   }
                   if (!handled) {
-                     intfc.log_load_warning(
-                        detailed_notice::warn_about_unrecognized_subrecord(subrecord.signature(), this->stub)
-                     );
+                     intfc.warn_on_unrecognized_subrecord(subrecord);
                   }
                }
                break;
