@@ -9,7 +9,6 @@ namespace dovah {
       this->form_type = other.form_type;
       this->child_of  = other.child_of;
       this->clone_of  = other.clone_of;
-      this->error     = other.error;
       //
       this->editorID  = other.editorID;
       this->cell_grid_coordinates = other.cell_grid_coordinates;

@@ -397,6 +397,10 @@ I think `active_load_order` might be a better name. This would better distinguis
 
 One thing I'd really like to do is do a better job of separating out all the machinery related to loadin and saving. It'd be nice if `active_load_order` would just retain the loaded data, and defer to temporary data structures for the actual load and save operations &mdash; perhaps something like `dovah::load_order_serialization::load_process` and `dovah::load_order_serialization::save_process`. Passkeys could grant them appropriate access to the `active_load_order` internals.
 
+Miscellaneous:
+
+* `form_creation_request::commit` and friends should return a `form_stub&`, so callers don't have to check whether the request succeeded even when it doesn't throw an exception.
+
 ## Get rid of notice codes because they suck and are bad
 
 DovahKit reports all backend warnings and errors via an enum called `dovah::notice_code` and a struct called `dovah::detailed_notice`. The notice codes are similar to WinAPI error codes, and the "detailed notice" struct contains fields for every possible piece of error information that a warning or error could provide.

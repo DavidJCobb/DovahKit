@@ -14,6 +14,7 @@
 #include "./DefaultObjectManager.h"
 #include "./Door.h"
 
+#include "../exceptions/form_creation_failed.h"
 #include "../exceptions/object_reference_move_failed.h"
 #include "../load_order_requests/form_creation_request.h"
 
@@ -111,16 +112,15 @@ namespace dovah::loaded_forms {
       // There's no existing cell bounding the desired REFR coordinates, so we'll 
       // have to try and create a new cell.
       //
-      auto& lo      = this->stub.get_owning_load_order();
-      auto  request = lo.request_form_creation(dovah::form_type::cell);
-      if (!request.is_valid()) {
+      auto& lo = this->stub.get_owning_load_order();
+      try {
+         auto request = lo.request_form_creation(dovah::form_type::cell);
+         request.set_parent_form(&world);
+         request.cell_grid_coordinates = { .x = gx, .y = gy };
+         move_to_cell = request.commit();
+      } catch (const exceptions::form_creation_failed&) {
          throw exception(error_code::failed_to_create_destination_cell, this->stub);
       }
-      request.set_parent_form(&world);
-      request.cell_grid_coordinates.x = gx;
-      request.cell_grid_coordinates.y = gy;
-      request.cell_grid_coordinates.present = true;
-      move_to_cell = request.commit();
       if (!move_to_cell) {
          throw exception(error_code::failed_to_create_destination_cell, this->stub);
       }

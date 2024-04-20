@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
+#include "dovah/exceptions/form_creation_failed.h"
 #include "dovah/forms/factories/hardcoded.h"
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "dovah/form_stub_helpers.h"
@@ -1650,27 +1651,28 @@ namespace dovahkit::subsystems::worldedit {
                      //
                      // Create the destination cell.
                      //
-                     auto request = DovahKitCore::get().request_form_creation(dovah::form_type::cell);
-                     request.set_parent_form(this->target_area.world);
-                     request.cell_grid_coordinates.present = true;
-                     request.cell_grid_coordinates.x = gx_after;
-                     request.cell_grid_coordinates.y = gy_after;
-                     destination_cell = request.commit();
-                     if (!destination_cell) {
-                        //
-                        // Cell creation failed.
-                        //
+                     try {
+                        auto request = DovahKitCore::get().request_form_creation(dovah::form_type::cell);
+                        request.set_parent_form(this->target_area.world);
+                        request.cell_grid_coordinates = { .x = gx_after, .y = gy_after };
+                        destination_cell = request.commit();
+                     } catch (const dovah::exceptions::form_creation_failed& ex) {
                         #if _DEBUG
                            __debugbreak();
                         #endif
                         continue;
-                     } else {
-                        //
-                        // We want to load the newly-created cell, if possible.
-                        //
-                        if (this->loaded_cells.contains_coordinate(gx_after, gy_after)) {
-                           this->_load_cell(destination_cell, gx_after, gy_after);
-                        }
+                     }
+                     if (!destination_cell) {
+                        #if _DEBUG
+                           __debugbreak();
+                        #endif
+                        continue;
+                     }
+                     //
+                     // We want to load the newly-created cell, if possible.
+                     //
+                     if (this->loaded_cells.contains_coordinate(gx_after, gy_after)) {
+                        this->_load_cell(destination_cell, gx_after, gy_after);
                      }
                   }
                   sel_info.stub->set_parent_form(destination_cell);

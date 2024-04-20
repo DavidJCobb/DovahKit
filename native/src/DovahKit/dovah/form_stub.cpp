@@ -1026,9 +1026,11 @@ namespace dovah {
       auto* instance = create_blank_loaded_form_by_type(this->form_type, fcp);
       if (instance) {
          auto source = this->load();
-         if (!source || !source->_clone_impl(instance)) {
+         if (!source) {
             delete instance;
             instance = nullptr;
+         } else {
+            source->_clone_impl(instance);
          }
       }
       this->working_copy = instance;
