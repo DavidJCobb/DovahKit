@@ -400,13 +400,12 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(response_idle_for_listener); // add these from the last response
       uib.add_outbound_reference(response_idle_for_speaker);
    }
-   /*virtual*/ bool TopicInfo::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   /*virtual*/ void TopicInfo::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (TopicInfo*)out;
-      //
+      
       bool committing_to_self = (&out->stub == &this->stub) && this->is_working_copy;
-      //
+      
       copy->info_flags = this->info_flags;
       copy->load_flags = this->load_flags;
       copy->favor_level = this->favor_level;
@@ -447,8 +446,6 @@ namespace dovah::loaded_forms {
       copy->override_topic_text = this->override_topic_text;
       copy->object_bounds = this->object_bounds;
       copy->script_data.clone_from(this->script_data, *copy);
-      //
-      return true;
    }
    /*virtual*/ bool TopicInfo::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);

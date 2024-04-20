@@ -106,11 +106,10 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   bool TextureSet::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void TextureSet::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto* copy = (TextureSet*)out;
-      //
+      
       copy->script_data.clone_from(this->script_data, *copy);
       copy->textures.diffuse     = this->textures.diffuse;
       copy->textures.normal      = this->textures.normal;
@@ -131,8 +130,6 @@ namespace dovah::loaded_forms {
          copy->decal_data = nullptr;
       }
       copy->bounds = this->bounds;
-      //
-      return true;
    }
    bool TextureSet::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);

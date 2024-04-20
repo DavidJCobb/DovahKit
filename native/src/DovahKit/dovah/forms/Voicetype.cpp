@@ -24,13 +24,11 @@ namespace dovah::loaded_forms {
    /*static*/ void Voicetype::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       return; // this form type does not have any subrecords that contain form IDs
    }
-   bool Voicetype::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void Voicetype::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (Voicetype*)out;
-      //
+      
       copy->voicetype_flags = this->voicetype_flags;
-      return true;
    }
    bool Voicetype::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& DNAM = record.open_next_subrecord('DNAM');

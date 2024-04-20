@@ -1245,11 +1245,10 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   bool Quest::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void Quest::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (Quest*)out;
-      //
+      
       copy->script_data.clone_from(this->script_data, *copy);
       copy->name       = this->name;
       copy->flags      = this->flags;
@@ -1288,8 +1287,6 @@ namespace dovah::loaded_forms {
          for (size_t i = 0; i < size; ++i)
             copy->aliases[i] = this->aliases[i]->clone(*copy);
       }
-      //
-      return true;
    }
    bool Quest::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
       {

@@ -242,11 +242,10 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(content_topic);
       uib.add_outbound_reference(form_id);
    }
-   bool Note::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void Note::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (Note*)out;
-      //
+      
       copy->script_data.clone_from(this->script_data, *copy);
       copy->model.clone_from(this->model);
       copy->drop_sound.set(*copy, this->drop_sound);
@@ -257,8 +256,6 @@ namespace dovah::loaded_forms {
       copy->content.topic.set(*copy, this->content.topic);
       copy->name = this->name;
       copy->icon = this->icon;
-      //
-      return true;
    }
    bool Note::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);

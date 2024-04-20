@@ -52,12 +52,12 @@ namespace dovah::loaded_forms {
          components::papyrus_attachment_data script_data;
          components::object_bounds bounds;
 
-         inline bool is_skin_texture_set() const noexcept {
+         constexpr bool is_skin_texture_set() const noexcept {
             return (this->texture_flags & texture_set_flag::is_skin_textures) != 0;
          }
 
          template<size_t s> requires (s < 8)
-         inline constexpr std::string& texture_by_index() noexcept {
+         constexpr std::string& texture_by_index() noexcept {
             auto& list = this->textures;
             if constexpr (s == 0)
                return list.diffuse;
@@ -78,7 +78,7 @@ namespace dovah::loaded_forms {
             cobb::unreachable();
          };
 
-         inline std::string* texture_by_index(size_t s) noexcept {
+         constexpr std::string* texture_by_index(size_t s) noexcept {
             auto& list = this->textures;
             if (s == 0)
                return &list.diffuse;
@@ -103,7 +103,7 @@ namespace dovah::loaded_forms {
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //
       protected:
-         virtual bool _clone_impl(Form* out) const noexcept override;
+         virtual void _clone_impl(Form* out) const noexcept override;
          virtual bool _save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) override;
          virtual void _clear_impl() noexcept override;
          virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;

@@ -141,11 +141,10 @@ namespace dovah::loaded_forms {
    }
    void Shout::setup(const file_load_order& load_order) noexcept {
    }
-   bool Shout::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void Shout::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (Shout*)out;
-      //
+      
       // NOTE: Form::clone already took care of the form flags, including the "treat as power" flag.
       copy->name        = this->name;
       copy->description = this->description;
@@ -158,7 +157,6 @@ namespace dovah::loaded_forms {
          word.spell.set(*copy, from.spell);
          word.recoveryTime = from.recoveryTime;
       }
-      return true;
    }
    bool Shout::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& FULL = record.open_next_subrecord('FULL');

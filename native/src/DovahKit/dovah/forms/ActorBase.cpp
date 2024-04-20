@@ -625,9 +625,8 @@ namespace dovah::loaded_forms {
       attack_data.commit(uib);
       destruction_uib.done();
    }
-   bool ActorBase::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void ActorBase::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (ActorBase*)out;
       
       // components
@@ -747,8 +746,6 @@ namespace dovah::loaded_forms {
       copy->worn_armor.set(*copy, this->worn_armor);
       copy->height = this->height;
       copy->weight = this->weight;
-
-      return true;
    }
    bool ActorBase::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);

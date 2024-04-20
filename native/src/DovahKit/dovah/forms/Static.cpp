@@ -89,11 +89,10 @@ namespace dovah::loaded_forms {
       }
       uib.add_outbound_reference(directional_material_object);
    }
-   bool Static::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void Static::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (Static*)out;
-      //
+      
       copy->script_data.clone_from(this->script_data, *copy);
       copy->bounds = this->bounds;
       copy->model.clone_from(this->model, *copy);
@@ -105,7 +104,6 @@ namespace dovah::loaded_forms {
          dst.flags     = src.flags;
       }
       copy->distant_lod_paths = this->distant_lod_paths;
-      return true;
    }
    bool Static::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);

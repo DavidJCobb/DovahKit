@@ -34,7 +34,7 @@ namespace dovah::loaded_forms {
    }
    void Form::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
    }
-   Form* Form::clone(form_stub& receiving_stub, bool* out_complete) const noexcept {
+   Form* Form::clone(form_stub& receiving_stub) const noexcept {
       assert(receiving_stub.form == nullptr && "Cannot clone a loaded form into a stub that already has a loaded form.");
       //
       constructor_params fcp;
@@ -46,9 +46,7 @@ namespace dovah::loaded_forms {
          receiving_stub.set_edited(true);
          if (this->stub.addenda)
             receiving_stub.get_or_create_addenda().clone_from(*this->stub.addenda);
-         bool result = this->_clone_impl(instance);
-         if (out_complete)
-            *out_complete = result;
+         this->_clone_impl(instance);
       }
       return instance;
    }

@@ -26,14 +26,12 @@ namespace dovah::loaded_forms {
    /*static*/ void WordOfPower::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       return; // this form type does not have any subrecords that contain form IDs
    }
-   bool WordOfPower::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void WordOfPower::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (WordOfPower*)out;
-      //
+      
       copy->dragon_name = this->dragon_name;
       copy->human_name  = this->human_name;
-      return true;
    }
    bool WordOfPower::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& FULL = record.open_next_subrecord('FULL');

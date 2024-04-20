@@ -111,13 +111,12 @@ namespace dovah::loaded_forms {
             uib.add_outbound_reference(formID, use_info_entry::flag::dialogue_quest);
       }
    }
-   /*virtual*/ bool Topic::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   /*virtual*/ void Topic::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (Topic*)out;
-      //
+      
       bool committing_to_self = (&out->stub == &this->stub) && this->is_working_copy;
-      //
+      
       copy->owning_forms.branch.set(*copy, this->owning_forms.branch);
       copy->owning_forms.quest.set(*copy, this->owning_forms.quest);
       copy->text = this->text;
@@ -128,8 +127,6 @@ namespace dovah::loaded_forms {
       copy->subtype  = this->subtype;
       copy->object_bounds = this->object_bounds;
       copy->script_data.clone_from(this->script_data, *copy);
-      //
-      return true;
    }
    /*virtual*/ bool Topic::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
       auto& FULL = record.open_next_subrecord('FULL');

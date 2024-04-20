@@ -130,11 +130,10 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(sound);
       destruction_uib.done();
    }
-   bool Light::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void Light::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (Light*)out;
-      //
+
       copy->item_data.sound.set(*copy, this->item_data.sound);
       copy->item_data = this->item_data;
       //
@@ -164,8 +163,6 @@ namespace dovah::loaded_forms {
             dst_opt.value().clone_from(src_opt.value(), *copy);
          }
       }
-      //
-      return true;
    }
    bool Light::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);

@@ -29,15 +29,13 @@ namespace dovah::loaded_forms {
    /*static*/ void Color::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       return; // this form type does not have any subrecords that contain form IDs
    }
-   bool Color::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void Color::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (Color*)out;
-      //
+      
       copy->name  = this->name;
       copy->color = this->color;
       copy->color_flags = this->color_flags;
-      return true;
    }
    bool Color::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& FULL = record.open_next_subrecord('FULL');

@@ -159,11 +159,10 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(ingredient);       // FLOR/PFIG
       destruction_uib.done();
    }
-   bool Flora::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void Flora::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (Flora*)out;
-      //
+      
       #pragma region ACTI fields
          copy->script_data.clone_from(this->script_data, *copy);
          copy->bounds = this->bounds;
@@ -194,8 +193,6 @@ namespace dovah::loaded_forms {
          copy->ingredient.set(*copy, this->ingredient);
          copy->chance_by_season = this->chance_by_season;
       #pragma endregion
-      //
-      return true;
    }
    bool Flora::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);

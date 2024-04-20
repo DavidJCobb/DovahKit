@@ -208,11 +208,10 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(vendor_chest);
       vendor_location.commit_to(uib);
    }
-   bool Faction::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void Faction::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (Faction*)out;
-      //
+      
       copy->name = this->name;
       {
          size_t size = this->relationships.size();
@@ -247,7 +246,6 @@ namespace dovah::loaded_forms {
       copy->has_object_bounds = this->has_object_bounds;
       copy->object_bounds = this->object_bounds;
       copy->script_data.clone_from(this->script_data, *copy);
-      return true;
    }
    bool Faction::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& FULL = record.open_next_subrecord('FULL');

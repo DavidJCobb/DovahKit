@@ -390,11 +390,10 @@ namespace dovah::loaded_forms {
       for (auto id : general_textures)
          uib.add_outbound_reference(id);
    }
-   bool Landscape::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void Landscape::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto* copy = (Landscape*)out;
-      //
+      
       copy->land_flags = this->land_flags;
       copy->heightmap.heights = this->heightmap.heights;
       copy->heightmap.normals = this->heightmap.normals;
@@ -419,8 +418,6 @@ namespace dovah::loaded_forms {
       }
       //
       copy->mpcd = this->mpcd;
-      //
-      return true;
    }
    bool Landscape::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& DATA = record.open_next_subrecord('DATA');

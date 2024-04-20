@@ -135,11 +135,10 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(water_type, use_info_entry::flag::water_acti_type);
       destruction_uib.done();
    }
-   bool Activator::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void Activator::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (Activator*)out;
-      //
+      
       copy->script_data.clone_from(this->script_data, *copy);
       copy->bounds = this->bounds;
       copy->model.clone_from(this->model, *copy);
@@ -164,7 +163,6 @@ namespace dovah::loaded_forms {
       copy->interact_keyword.set(*copy, this->interact_keyword);
       copy->activation_verb = this->activation_verb;
       copy->activator_flags = this->activator_flags;
-      return true;
    }
    bool Activator::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);

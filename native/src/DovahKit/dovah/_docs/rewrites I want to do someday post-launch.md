@@ -360,6 +360,43 @@ In practice, there are some holes in this design, stemming in large part from th
 
   Within form data, these custom containers would be conditional types, i.e. `tracked_form_pointer_list` for a "real" form and `std::vector<form_stub*>` for a working copy.
 
+## Improve form stub / file handling and loading
+
+### File loading
+
+The data structures for this feel like spaghetti. They're better than they used to be, but is there anything we can do to improve them further?
+
+### Form stubs
+
+The `load` function will fail, returning without loading form data, under the following circumstances:
+
+* The stub has no source files
+  * Only possible while the stub is being built; `assert` that source files are present instead of failing?
+  * Redundantly checked in two parts of the function
+* The stub is for a GMST or a none-stub
+* Form loading is blocked (i.e. the load order is mid-load or mid-save, and we're not loading as part of that save operation)
+* No form loader (i.e. loading the given form type isn't implemented yet)
+* Any load failure
+  * Unsaved active file (or other cases of the stub's file offset being 0)
+    * In the case of an unsaved active file, shouldn't we assert that this isn't the case? It shouldn't be possible to create a form in the active file without creating both the stub and its loaded data (and indeed, `file_load_order` will delete a stub if it fails to create blank loaded-form data for it), so if the stub belongs to an unsaved active file, then it should *always* already have loaded-form data and should early-out at the start of the `form_stub::_load` function.
+    * Under what circumstances *can* that file offset be 0? We need to document that, and any other sentinel and uninitialized values within form stubs.
+  * `instantiate_hardcoded_form` returns `nullptr`
+    * Under what circumstances is this allowed to occur? I assume it's only if we don't have a loaded-form class defined for a given form type, but we should formally document this!
+  * ``create_blank_loaded_form_by_type` returns `nullptr`
+    * Under what circumstances is this allowed to occur? I assume it's only if we don't have a loaded-form class defined for a given form type, but we should formally document this!
+
+As noted in the list above, several of these failure cases should be assertion failures instead; and more rigorous documentation is needed for form stubs, their sentinel values, and when their contents are undefined, too.
+
+There are also cases where a form stub has "unresolved" or "in-progress" values in it. For example, when we create a form stub for parsing a file, we set its form ID to the *file-local* form ID for the record being parsed. When we commit that stub to the load order, we eventually resolve that form ID to a global one and store the resolved form ID on the stub. However, some file load warnings and errors are emitted before form IDs are resolved, and we never get around to resolving form IDs for error reporting; warnings for malformed GMST records are one case that sticks out in my mind. Essentially, this is a case of a "work-in-progress" value being stuck in a field for (possibly) longer than is necessary, with practical downsides that are visible outside of the internals of the load process (i.e. anyone who receives the affected file load warnings/errors has to avoid certain fields on `form_stub` based entirely on implementation details that should be fully hidden away).
+
+### Restructure `file_load_order`
+
+Hm... I don't like its name and I don't like that it's stored in the `dovah/files/` directory.
+
+I think `active_load_order` might be a better name. This would better distinguish it from the general concept of a "load order," while also matching the term "active file" and being clearer about the class's purpose: it holds all of the loaded data associated with a load order; it's the DovahKit counterpart to Bethesda's `TESDataHandler`.
+
+One thing I'd really like to do is do a better job of separating out all the machinery related to loadin and saving. It'd be nice if `active_load_order` would just retain the loaded data, and defer to temporary data structures for the actual load and save operations &mdash; perhaps something like `dovah::load_order_serialization::load_process` and `dovah::load_order_serialization::save_process`. Passkeys could grant them appropriate access to the `active_load_order` internals.
+
 ## Get rid of notice codes because they suck and are bad
 
 DovahKit reports all backend warnings and errors via an enum called `dovah::notice_code` and a struct called `dovah::detailed_notice`. The notice codes are similar to WinAPI error codes, and the "detailed notice" struct contains fields for every possible piece of error information that a warning or error could provide.

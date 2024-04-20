@@ -1883,6 +1883,12 @@ namespace dovah {
             }
          }
       }
+
+      if (!can_construct_form_data(request.form_type) || !can_load_form_data(request.form_type)) {
+         request.error = notice_code::unimplemented_form_type;
+         return nullptr;
+      }
+
       //
       loaded_forms::Form* loaded = nullptr;
       uint32_t record_flags = 0;
@@ -1894,11 +1900,7 @@ namespace dovah {
          fcp.stub = stub;
          //
          loaded = create_blank_loaded_form_by_type(request.form_type, fcp);
-         if (!loaded) {
-            request.error = notice_code::unimplemented_form_type;
-            delete stub;
-            return nullptr;
-         }
+         assert(loaded != nullptr && "Previous checks already established that we can construct this form type. Why did we receive nullptr when trying?");
       }
       stub->form     = loaded;
       stub->_add_file(*this->active_file, 0);
@@ -1935,10 +1937,8 @@ namespace dovah {
          //
          auto original = request.clone_of->load();
          if (original) {
-            bool result = false;
-            loaded = original->clone(*stub, &result);
-            if (!result)
-               request.error = notice_code::form_created_but_clone_failed;
+            loaded = original->clone(*stub);
+            assert(loaded != nullptr && "Previous checks already established that we can construct this form type. Why did we receive nullptr when trying?");
          }
       } else {
          loaded->setup(*this);

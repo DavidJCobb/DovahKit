@@ -365,11 +365,10 @@ namespace dovah::loaded_forms {
       this->water_type.set(*this, default_water);
       this->water_type_lod.set(*this, default_water);
    }
-   bool Worldspace::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void Worldspace::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (Worldspace*)out;
-      //
+      
       copy->large_references.clone_from(this->large_references, *copy);
       copy->name = this->name;
       copy->max_height_data = this->max_height_data;
@@ -400,7 +399,6 @@ namespace dovah::loaded_forms {
       copy->has_object_bounds = this->has_object_bounds;
       copy->object_bounds = this->object_bounds;
       copy->script_data.clone_from(this->script_data, *copy);
-      return true;
    }
    bool Worldspace::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       if (record.flags() & tes_file_record_header::flag::partial) { // TESWorldSpace::LoadPartial only loads NAM0 and NAM9

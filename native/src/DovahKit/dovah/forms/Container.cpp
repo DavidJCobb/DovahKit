@@ -113,11 +113,10 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(sound_close);
       destruction_uib.done();
    }
-   bool Container::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void Container::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (Container*)out;
-      //
+      
       copy->script_data.clone_from(this->script_data, *copy);
       copy->bounds = this->bounds;
       copy->model.clone_from(this->model, *copy);
@@ -139,7 +138,6 @@ namespace dovah::loaded_forms {
       copy->weight = this->weight;
       copy->open_sound.set(*copy, this->open_sound);
       copy->close_sound.set(*copy, this->close_sound);
-      return true;
    }
    bool Container::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);

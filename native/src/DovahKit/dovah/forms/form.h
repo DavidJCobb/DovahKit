@@ -82,7 +82,7 @@ namespace dovah {
             // unless the cloning process fails. If (receiving_stub) already has a non-null form 
             // pointer when passed in, an assertion will fail.
             //
-            Form* clone(form_stub& receiving_stub, bool* out_complete = nullptr) const noexcept;
+            Form* clone(form_stub& receiving_stub) const noexcept;
 
             void clear(); // clear absolutely all data on the form
 
@@ -103,7 +103,7 @@ namespace dovah {
             virtual bool would_bethesda_compress() const noexcept { return false; } // provided for CELL
             
          protected:
-            virtual bool _clone_impl(Form* out) const noexcept { return false; }; // TODO: implement on existing forms; then, make pure
+            virtual void _clone_impl(Form* out) const noexcept {}; // TODO: implement on existing forms; then, make pure
             virtual bool _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save&) { return false; }; // TODO: implement on existing forms; then, make pure
             virtual void _clear_impl() noexcept {}; // TODO: implement on existing forms; then, make pure
 

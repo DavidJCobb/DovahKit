@@ -92,9 +92,8 @@ namespace dovah::loaded_forms {
          uib.extra_pointer = nullptr;
       }
    }
-   bool DefaultObjectManager::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void DefaultObjectManager::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (DefaultObjectManager*)out;
       //
       if (!copy->entries.empty()) {
@@ -109,7 +108,6 @@ namespace dovah::loaded_forms {
          data.is_active_file = pair.second.is_active_file;
          data.form.set(*copy, pair.second.form);
       }
-      return true;
    }
    bool DefaultObjectManager::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       bool opened = false;

@@ -105,11 +105,10 @@ namespace dovah::loaded_forms {
       for (const auto id : grasses)
          uib.add_outbound_reference(id);
    }
-   bool LandTexture::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void LandTexture::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto* copy = (LandTexture*)out;
-      //
+      
       copy->script_data.clone_from(this->script_data, *copy);
       copy->bounds = this->bounds;
       copy->texture_set.set(*copy, this->texture_set);
@@ -119,8 +118,6 @@ namespace dovah::loaded_forms {
       copy->specular_exponent = this->specular_exponent;
       copy->remaster_flags    = this->remaster_flags;
       copy_form_reference_list(*copy, copy->grasses, this->grasses);
-      //
-      return true;
    }
    bool LandTexture::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);

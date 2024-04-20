@@ -47,4 +47,11 @@ namespace dovah {
          return (f)(c);
       return nullptr;
    }
+
+   extern bool can_construct_form_data(form_type ft) noexcept {
+      return function_table[(size_t)ft].construct != nullptr;
+   }
+   extern bool can_load_form_data(form_type ft) noexcept {
+      return function_table[(size_t)ft].load != nullptr;
+   }
 }

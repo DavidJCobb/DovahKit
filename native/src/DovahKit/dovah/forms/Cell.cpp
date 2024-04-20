@@ -182,9 +182,8 @@ namespace dovah::loaded_forms {
          return true;
       return false;
    }
-   bool Cell::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void Cell::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (Cell*)out;
       //
       copy->name = this->name;
@@ -200,7 +199,6 @@ namespace dovah::loaded_forms {
       copy->has_object_bounds = this->has_object_bounds;
       copy->object_bounds = this->object_bounds;
       copy->script_data.clone_from(this->script_data, *copy);
-      return true;
    }
    bool Cell::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       if (record.flags() & tes_file_record_header::flag::partial) // TESObjectCELL::LoadPartial is a no-op

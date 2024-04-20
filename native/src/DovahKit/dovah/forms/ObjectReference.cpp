@@ -237,18 +237,16 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(base_form, use_info_entry::flag::object_reference);
       eduis.commit_to(uib);
    }
-   bool ObjectReference::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void ObjectReference::_clone_impl(Form* out) const noexcept {
+      assert(out->type == this->type);
       auto copy = (ObjectReference*)out;
-      //
+      
       copy->extra_data.clone_from(this->extra_data, *copy);
       copy->script_data.clone_from(this->script_data, *copy);
       copy->base_form.set(*copy, this->base_form);
       copy->is_open  = this->is_open;
       copy->position = this->position;
       copy->rotation = this->rotation;
-      return true;
    }
    bool ObjectReference::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);

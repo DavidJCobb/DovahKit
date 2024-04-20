@@ -52,11 +52,10 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   bool FormList::_clone_impl(Form* out) const noexcept {
-      if (out->type != form_type)
-         return false;
+   void FormList::_clone_impl(Form* out) const noexcept {
+      assert(out->type == form_type);
       auto copy = (FormList*)out;
-      //
+      
       copy->script_data.clone_from(this->script_data, *copy);
       copy->bounds = this->bounds;
       //
@@ -64,7 +63,6 @@ namespace dovah::loaded_forms {
       copy->contents.resize(size);
       for (size_t i = 0; i < size; ++i)
          copy->contents[i].set(*copy, this->contents[i]);
-      return true;
    }
    bool FormList::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
