@@ -1,10 +1,10 @@
 #pragma once
 #include <cstdint>
-#include <memory>
 #include <vector>
 #include "../common.h"
 #include "../../core.h"
 #include "../../detailed_notice.h"
+#include "../../notices/base_file_load_warning.h"
 
 namespace dovah::notices {
    class base_file_load_warning;
@@ -15,9 +15,10 @@ namespace dovah::tes_file_reading {
       public:
          detailed_notice error;
          std::vector<detailed_notice> warnings;
-         std::vector<std::unique_ptr<notices::base_file_load_warning>> warnings_ex;
+         std::vector<notices::base_file_load_warning*> warnings_ex; // owned pointers
 
          read_results();
+         ~read_results();
 
          detailed_notice& add_warning() noexcept;
          void add_warning(detailed_notice&) noexcept;
