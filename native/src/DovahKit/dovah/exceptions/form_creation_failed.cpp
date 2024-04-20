@@ -2,7 +2,7 @@
 #include "../load_order_requests/form_creation_request.h"
 
 namespace dovah::exceptions {
-   form_creation_failed::form_creation_failed(error_code ec, const form_creation_request& request) : std::runtime_error("Failed to create a form.") {
+   form_creation_failed::form_creation_failed(error_code ec, const form_creation_request& request) : std::runtime_error("Failed to create a form."), code(ec) {
       this->details.requested_form_type = request.requested_form_type();
       if (request.cell_grid_coordinates.has_value()) {
          auto& src = request.cell_grid_coordinates.value();
