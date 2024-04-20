@@ -64,6 +64,20 @@ namespace editor_helpers {
                "last saw it with by then."
             ).arg(name).arg(local_id).arg(prior_id);
          }
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::game_setting_name_is_unrecognized*>(&warning)) {
+            QString name     = QString::fromStdString(casted->setting_name);
+            QString local_id = editor_helpers::form_id_to_string(casted->form_ids.local);
+
+            if (auto& global_id_opt = casted->form_ids.global; global_id_opt.has_value()) {
+               auto global_id = editor_helpers::form_id_to_string(global_id_opt.value());
+               return QObject::tr(
+                  "Game setting \"%1\" (defined by a GMST form with ID %2) has an unrecognized name."
+               ).arg(name).arg(global_id);
+            }
+            return QObject::tr(
+               "Game setting \"%1\" (defined by a GMST form with file-local form ID %2) has an unrecognized name."
+            ).arg(name).arg(local_id);
+         }
          if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::game_setting_record_has_bad_form_id*>(&warning)) {
             bool no_name              = casted->setting_name.empty();
             bool id_failed_to_resolve = !casted->form_ids.global.has_value();

@@ -107,26 +107,6 @@ namespace editor_helpers {
                text = text.arg(form).arg(file).arg(name);
             }
             break;
-         case notice_code::game_setting_name_is_unrecognized:
-            {
-               text = QObject::tr("Record %1%3 in file %2 defines an unrecognized game setting.", "log window");
-               QString file = QObject::tr("<unknown filename>",    "log window");
-               QString form = QObject::tr("<unknown GMST record>", "log window");
-               QString name = QObject::tr("", "log window - missing editor ID");
-               //
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file = QString::fromStdString(notice.cause_file);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_editor_id) {
-                  name = QObject::tr(" (%1)", "log window - editor ID").arg(QString::fromStdString(notice.cause_editor_id));
-               }
-               //
-               text = text.arg(form).arg(file).arg(name);
-            }
-            break;
          case notice_code::game_setting_record_has_no_data:
             {
                text = QObject::tr("Record %1%3 in file %2 is missing its DATA subrecord.", "log window");

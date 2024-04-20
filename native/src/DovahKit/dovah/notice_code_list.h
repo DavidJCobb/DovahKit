@@ -37,7 +37,7 @@ namespace dovah {
          //
          //
          game_setting_record_has_bad_type            = 0x0000001E, // A GMST record has an unrecognized name, and the name's type prefix is also unrecognized.
-         game_setting_name_is_unrecognized           = 0x0000001F,
+         //
          //
          //
          //
