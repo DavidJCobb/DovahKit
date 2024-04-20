@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovah\exceptions\form_creation_failed.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.tests.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attached_script.cpp" />
@@ -899,6 +900,8 @@
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovah\exceptions\enums\form_creation_error_code.h" />
+    <ClInclude Include="dovah\exceptions\form_creation_failed.h" />
     <ClInclude Include="dovah\exceptions\form_renumber_failed.h" />
     <ClInclude Include="dovah\exceptions\game_setting_renumber_failed.h" />
     <ClInclude Include="dovah\exceptions\game_setting_value_change_failed.h" />

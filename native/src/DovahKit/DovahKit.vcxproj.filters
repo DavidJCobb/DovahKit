@@ -2292,6 +2292,9 @@
     <ClCompile Include="dovah\load_order_requests\game_setting_renumber_request.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\exceptions\form_creation_failed.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5862,6 +5865,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\exceptions\game_setting_value_change_failed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\form_creation_failed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\enums\form_creation_error_code.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

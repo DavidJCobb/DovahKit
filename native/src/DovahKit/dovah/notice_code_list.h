@@ -45,7 +45,7 @@ namespace dovah {
          cannot_load_right_now                       = 0x00000024, // It is not safe to load right now, as a save or load operation is already in progress.
          game_setting_record_has_no_data             = 0x00000025, // A GMST record had no DATA subrecord.
          game_setting_record_unreadable_data         = 0x00000026, // A GMST record's DATA subrecord could not be read. This can happen if the subrecord is too small.
-         cannot_sever_references_to_target           = 0x00000027,
+         //
          //
          default_object_rejected_for_bad_type        = 0x00000029, // The loaded DefaultObjectManager won't let you use the specified form for the specified entry, as the form is of the wrong type.
          default_object_accepted_but_unknown         = 0x0000002A, // The loaded DefaultObjectManager has created the specified entry, but wants you to know that the entry isn't one that DovahKit's backend recognizes.
@@ -55,15 +55,15 @@ namespace dovah {
          zero_is_not_an_allowed_form_id              = 0x0000002E, // The desired operation does not allow you to use zero as a form ID.
          cannot_load_all_users_of_this_form          = 0x0000002F, // The desired operation requires that DovahKit load all of the forms that use the target form, and that isn't yet implemented.
          //
-         cannot_sever_references_to_none_stub        = 0x00000031,
-         unimplemented_form_type                     = 0x00000032, // DovahKit recognizes this form type and it is valid, but editing has not yet been implemented for it.
-         invalid_parent_child_relationship           = 0x00000033, // Forms of type A cannot have parents of type B.
-         exterior_grid_coordinates_already_taken     = 0x00000034, // Cannot create a cell with the specified coordinates, as a cell in this worldspace already has those coordinates.
-         cannot_create_reference_with_no_parent_cell = 0x00000035,
-         interior_cell_clone_cannot_have_parent      = 0x00000036, // When duplicating an interior cell, you must not specify a parent worldspace.
-         exterior_cell_clone_must_have_parent        = 0x00000037, // When duplicating an exterior cell, you must specify a parent worldspace.
          //
-         form_id_unavailable_for_new_form            = 0x00000039, // A form creation request failed because a form ID wasn't available for use.
+         unimplemented_form_type                     = 0x00000032, // DovahKit recognizes this form type and it is valid, but editing has not yet been implemented for it.
+         //
+         //
+         //
+         //
+         //
+         //
+         //
          form_id_is_out_of_bounds                    = 0x0000003A, // The requested form ID is out-of-bounds, e.g. form ID 0x05000000 in a load order with fewer than six files.
          post_save_none_stub_cleanup_failed          = 0x0000003B, // Failed to clean up none-stubs after an otherwise successful save operation. It is not safe to continue this editing session.
          malformed_file                              = 0x0000003C, // Generic error code for malformed files.

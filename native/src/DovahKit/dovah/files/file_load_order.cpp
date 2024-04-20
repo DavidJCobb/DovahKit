@@ -23,6 +23,7 @@
 #include "../notice_code_list.h"
 #include <fstream>
 
+#include "../exceptions/form_creation_failed.h"
 #include "../exceptions/form_renumber_failed.h"
 #include "../exceptions/game_setting_renumber_failed.h"
 #include "../exceptions/game_setting_value_change_failed.h"
@@ -974,17 +975,23 @@ namespace dovah {
       return false;
    }
 
-   notice_code_t file_load_order::_destroy_none_stub(form_stub& stub) {
-      if (!ALL_FORM_TYPES_ARE_IMPLEMENTED_YES_IM_SURE) {
+   bool file_load_order::_can_destroy_none_stub(form_stub& stub) {
+      if constexpr (!ALL_FORM_TYPES_ARE_IMPLEMENTED_YES_IM_SURE) {
          //
          // Double-check that we *can* destroy all references to the stub, first.
          //
          for (auto& pair : stub.inbound) {
             auto& data = pair.second;
             if (!data.other || !data.other->load())
-               return notice_code::cannot_sever_references_to_target;
+               return false;
          }
       }
+      return true;
+   }
+   void file_load_order::_destroy_none_stub(form_stub& stub) {
+      assert(stub.is_none_stub());
+      assert(this->_can_destroy_none_stub(stub));
+
       stub.sever_all_outbound_references(); // sever the stub's references to other forms.
       //
       std::vector<form_stub*> pending;
@@ -1011,7 +1018,6 @@ namespace dovah {
       this->active_file_forms_by_type[stub.form_type].forms.erase(formID);
       //
       delete &stub;
-      return default_notice_code;
    }
 
    #pragma region Form renumbering
@@ -1775,73 +1781,62 @@ namespace dovah {
    #pragma region Load order code for various form modification requests
    form_stub* file_load_order::create_form_of_type(form_type ft) {
       auto request = this->request_form_creation(ft);
-      if (!request.is_valid())
-         return nullptr;
       return this->commit_form_creation_request(request);
    }
-   form_creation_request file_load_order::request_form_creation(form_type ft) {
+   form_creation_request file_load_order::request_form_creation(form_type ft) noexcept {
+      using exception  = exceptions::form_creation_failed;
+      using error_code = exception::error_code;
+
       form_creation_request result(*this);
       result.form_type = ft;
       //
-      if (!is_valid_form_type(ft)) {
-         result.error = notice_code::unknown_form_type;
-         return result;
-      }
-      auto prefix = this->active_file_prefix();
-      if (prefix.is_undefined()) {
-         result.error = notice_code::no_active_file;
-         return result;
-      }
-      assert(this->active_file && "How were we able to get the prefix of the active file when the pointer has been lost?"); // in case any code changes in the future
-      auto formID = prefix.coerce_form_id(this->active_file->header.nextFormID);
-      //
-      auto  guard = std::lock_guard(this->form_creation_request_info.lock);
-      auto& list  = this->form_creation_request_info.reserved_formIDs;
-      {
-         auto guard = std::lock_guard(this->forms.lock);
-         if (std::find(list.begin(), list.end(), formID) != list.end()) // if the form ID is reserved, then we need to find a new one
-            formID = 0;
-         if (!(formID & 0x00FFFFFF) || this->get_form(formID, true) != nullptr) {
-            formID = this->find_first_free_form_id_in_active_file();
-            if (!formID) { // no form ID available
-               result.error = notice_code::form_id_unavailable_for_new_form;
-               return result;
+      if (is_valid_form_type(ft) && this->active_file) {
+         auto prefix = this->active_file_prefix();
+         auto formID = prefix.coerce_form_id(this->active_file->header.nextFormID);
+         
+         auto  guard = std::lock_guard(this->form_creation_request_info.lock);
+         auto& list  = this->form_creation_request_info.reserved_formIDs;
+         {
+            auto guard = std::lock_guard(this->forms.lock);
+            if (std::find(list.begin(), list.end(), formID) != list.end()) // if the form ID is reserved, then we need to find a new one
+               formID = 0;
+            if (!(formID & 0x00FFFFFF) || this->get_form(formID, true) != nullptr) {
+               formID = this->find_first_free_form_id_in_active_file();
             }
          }
+         if (formID)
+            list.push_back(formID);
+
+         result.formID = formID;
       }
-      //
-      list.push_back(formID);
-      result.formID = formID;
       return result;
    }
-   form_stub* file_load_order::commit_form_creation_request(form_creation_request& request) {
-      bare_form_id_t formID = request.formID;
-      if (!formID)
-         return nullptr;
+   std::optional<exceptions::form_creation_error_code> file_load_order::would_form_creation_request_fail(const form_creation_request& request) noexcept {
+      using error_code = exceptions::form_creation_error_code;
+
       if (&request.owner != this)
-         return nullptr;
-      if (form_stub* occupier = this->get_form(formID, false)) {
+         return error_code::wrong_load_order;
+      if (!is_valid_form_type(request.form_type))
+         return error_code::invalid_form_type;
+      if (!this->active_file)
+         return error_code::no_active_file;
+      if (!request.formID)
+         return error_code::no_form_id_available;
+      if (!can_construct_form_data(request.form_type) || !can_load_form_data(request.form_type))
+         return error_code::unimplemented_form_type;
+
+      // Can we destroy any occupying none-stub?
+      if (form_stub* occupier = this->get_form(request.formID, false)) {
          assert(occupier->is_none_stub() && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
-         if (occupier->is_none_stub()) {
-            //
-            // If a none-stub is taking the desired form ID, then destroy it. If we 
-            // can't destroy it, then that's an error.
-            //
-            auto result = this->_destroy_none_stub(*occupier);
-            if (result != default_notice_code) { // destruction failed
-               request.error = result;
-               if (result == notice_code::cannot_sever_references_to_target)
-                  request.error = notice_code::cannot_sever_references_to_none_stub;
-               return nullptr;
-            }
-         }
+         if (!this->_can_destroy_none_stub(*occupier))
+            return error_code::cannot_sever_references_to_none_stub;
       }
-      //
+
       if (request.child_of) {
          auto parent_type = request.child_of->form_type;
          auto child_type  = request.form_type;
-         bool error       = false;
-         //
+
+         bool error = false;
          if (form_type_is_reference(child_type)) { // validate parent/child relationships
             error = parent_type != form_type::cell;
          } else if (child_type == form_type::cell) {
@@ -1851,45 +1846,52 @@ namespace dovah {
          } else {
             error = true;
          }
-         //
-         if (error) {
-            request.error = notice_code::invalid_parent_child_relationship;
-            return nullptr;
-         }
-         //
+         if (error)
+            return error_code::invalid_parent_child_relationship;
+         
          if (child_type == form_type::cell) { // validate worldspace grid coordinates
-            auto* existing = form_stub_helpers::get_worldspace_cell_by_grid(request.child_of, request.cell_grid_coordinates.x, request.cell_grid_coordinates.y);
-            if (existing) {
-               request.error = notice_code::exterior_grid_coordinates_already_taken;
-               return nullptr;
-            }
+            auto& grid_opt = request.cell_grid_coordinates;
+            if (!grid_opt.has_value())
+               return error_code::exterior_cell_must_have_grid_coordinates;
+            auto& grid_coords = grid_opt.value();
+
+            auto* existing = form_stub_helpers::get_worldspace_cell_by_grid(request.child_of, grid_coords.x, grid_coords.y);
+            if (existing)
+               return error_code::exterior_grid_coordinates_already_taken;
          }
       } else {
-         if (form_type_is_reference(request.form_type)) {
-            request.error = notice_code::cannot_create_reference_with_no_parent_cell;
-            return nullptr;
-         }
+         if (form_type_is_reference(request.form_type))
+            return error_code::cannot_create_reference_with_no_parent_cell;
       }
       if (request.clone_of && request.form_type == form_type::cell) {
          if (request.child_of) {
-            if (!request.clone_of->is_exterior_cell()) {
-               request.error = notice_code::interior_cell_clone_cannot_have_parent;
-               return nullptr;
-            }
+            if (!request.clone_of->is_exterior_cell())
+               return error_code::interior_cell_clone_cannot_have_parent;
          } else {
-            if (request.clone_of->is_exterior_cell()) {
-               request.error = notice_code::exterior_cell_clone_must_have_parent;
-               return nullptr;
-            }
+            if (request.clone_of->is_exterior_cell())
+               return error_code::exterior_cell_clone_must_have_parent;
          }
       }
 
-      if (!can_construct_form_data(request.form_type) || !can_load_form_data(request.form_type)) {
-         request.error = notice_code::unimplemented_form_type;
-         return nullptr;
+      return {};
+   }
+   form_stub* file_load_order::commit_form_creation_request(form_creation_request& request) {
+      using exception  = exceptions::form_creation_failed;
+      using error_code = exception::error_code;
+
+      bare_form_id_t formID = request.formID;
+
+      auto error = this->would_form_creation_request_fail(request);
+      if (error.has_value()) {
+         throw exception(error.value(), request);
       }
 
-      //
+      if (form_stub* occupier = this->get_form(request.formID, false)) {
+         assert(occupier->is_none_stub() && "We should have reserved this form ID when the request was initialized. How did it end up taken?");
+         assert(this->_can_destroy_none_stub(*occupier));
+         this->_destroy_none_stub(*occupier);
+      }
+
       loaded_forms::Form* loaded = nullptr;
       uint32_t record_flags = 0;
       //
@@ -1908,13 +1910,14 @@ namespace dovah {
       stub->editorID = request.editorID;
       stub->set_edited(true);
       //
-      if (request.cell_grid_coordinates.present) {
+      if (request.cell_grid_coordinates.has_value()) {
+         auto& src = request.cell_grid_coordinates.value();
          if (!stub->addenda)
             stub->addenda = new form_stub_addenda;
          auto& a = *stub->addenda;
          a.flags |= form_stub_addenda::flag::has_grid_coordinates;
-         a.grid_coords.x = request.cell_grid_coordinates.x;
-         a.grid_coords.y = request.cell_grid_coordinates.y;
+         a.grid_coords.x = src.x;
+         a.grid_coords.y = src.y;
       }
       //
       {
@@ -2034,12 +2037,12 @@ namespace dovah {
             //
             // Okay, let's attempt destruction.
             //
-            auto result = this->_destroy_none_stub(*occupier);
-            if (result != default_notice_code) { // destruction failed
+            if (!this->_can_destroy_none_stub(*occupier)) {
                auto ex = exception(error_code::cannot_sever_references_to_none_stub, request.target);
                ex.details.none_stub = occupier;
                throw ex;
             }
+            this->_destroy_none_stub(*occupier);
          }
       }
       //

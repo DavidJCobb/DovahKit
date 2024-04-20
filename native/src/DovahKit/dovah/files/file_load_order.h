@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <functional>
 #include <mutex>
+#include <optional>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -16,6 +17,7 @@
 #include "../localized_strings.h"
 #include "../notice_code_t.h"
 #include "../data/game_settings.h"
+#include "../exceptions/enums/form_creation_error_code.h"
 
 namespace dovah {
    namespace load_order_interfaces {
@@ -223,7 +225,8 @@ namespace dovah {
 
          bool _abandon_form_id_reservation(bare_form_id_t);
 
-         notice_code_t _destroy_none_stub(form_stub&);
+         bool _can_destroy_none_stub(form_stub&);
+         void _destroy_none_stub(form_stub&);
          
          void _renumber_form(form_stub&, bare_form_id_t new_id, bool update_users);
          notice_code_t _renumber_game_setting(loaded_game_setting&, bare_form_id_t new_id);
@@ -369,12 +372,17 @@ namespace dovah {
          bool get_loaded_setting_by_name(const game_setting_definition& name, loaded_game_setting& out) const noexcept;
          
          form_stub* create_form_of_type(form_type);
-         form_creation_request request_form_creation(form_type);
+         form_creation_request request_form_creation(form_type) noexcept;
+         std::optional<exceptions::form_creation_error_code> would_form_creation_request_fail(const form_creation_request&) noexcept;
          form_stub* commit_form_creation_request(form_creation_request&); // you can call this, but you're meant to call form_creation_request::commit instead
+
          form_duplication_request request_form_duplication();
+
          form_deletion_request request_form_deletion(form_stub&);
+
          form_renumber_request request_form_renumber(form_stub&, bare_form_id_t desiredID);
          void commit_form_renumber_request(form_renumber_request&); // you can call this, but you're meant to call form_renumber_request::commit instead
+
          game_setting_edit_request request_game_setting_change(bool automatic_id = true);
          void commit_game_setting_change_request(game_setting_edit_request&);
          game_setting_renumber_request request_game_setting_renumber();

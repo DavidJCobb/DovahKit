@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <optional>
 #include <string>
 #include "../core.h"
 #include "../form_types.h"
@@ -37,25 +38,27 @@ namespace dovah {
          bare_form_id_t   formID    = 0;       // the form ID reserved for the newly-created form. set by the owning load order
          form_stub*       child_of  = nullptr; // what form should serve as the new form's parent?
          form_stub*       clone_of  = nullptr; // do we want to create a new form from scratch, or duplicate an existing one?
-         notice_code_t    error     = default_notice_code;
 
          form_creation_request(file_load_order& o);
          form_creation_request(form_creation_request&&);
          form_creation_request(const form_creation_request&) = delete;
          form_creation_request& operator=(const form_creation_request&) = delete;
+
+      public:
+         struct grid_coordinates {
+            int32_t x = 0;
+            int32_t y = 0;
+         };
          
       public:
          ~form_creation_request();
          
          std::string editorID; // the editor ID to be used for the new form
-         struct {
-            int32_t x = 0;
-            int32_t y = 0;
-            bool    present = false;
-         } cell_grid_coordinates; // grid coordinates to use when creating an exterior cell
-         
-         constexpr bool is_valid() const noexcept { return this->formID != 0 && this->error == default_notice_code; } // returns (true) if the request has a reserved ID and has not yet completed/failed
-         constexpr notice_code_t get_error_code() const noexcept { return this->error; }
+         std::optional<grid_coordinates> cell_grid_coordinates; // grid coordinates to use when creating an exterior cell
+
+         constexpr enum form_type requested_form_type() const noexcept { return this->form_type; }
+         constexpr form_stub* requested_parent_form() const noexcept { return this->child_of; }
+         constexpr bare_form_id_t reserved_form_id() const noexcept { return this->formID; }
          
          void set_parent_form(form_stub* parent);
          void set_parent_form(bare_form_id_t parentID);

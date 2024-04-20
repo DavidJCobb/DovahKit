@@ -4,10 +4,10 @@
 #include <vector>
 #include "../core.h"
 #include "../notice_code_t.h"
+#include "./form_creation_request.h"
 
 namespace dovah {
    class file_load_order;
-   class form_creation_request;
    class form_stub;
 }
 
@@ -28,11 +28,7 @@ namespace dovah {
          ~form_duplication_request();
          
          std::string editorID;
-         struct {
-            int32_t x = 0;
-            int32_t y = 0;
-            bool    present = false;
-         } cell_grid_coordinates; // grid coordinates to use when duplicating an exterior cell
+         std::optional<form_creation_request::grid_coordinates> cell_grid_coordinates; // grid coordinates to use when duplicating an exterior cell
          
          void set_target(form_stub* original);
          
@@ -41,11 +37,6 @@ namespace dovah {
          
          form_stub* commit();
          
-         notice_code_t get_main_form_error_code() const noexcept;
-         std::vector<notice_code_t> get_child_form_error_codes() const noexcept; // returns only non-none errors
-         std::vector<notice_code_t> get_error_codes() const noexcept; // returns all error codes, including nones. main first, then children
-         bool has_error() const noexcept;
-         bool is_valid() const noexcept;
          size_t get_total_form_count() const noexcept;
    };
 }

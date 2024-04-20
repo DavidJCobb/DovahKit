@@ -37,6 +37,7 @@
 #include "form_stub_meta_type.h"
 #include "ui/types/quest_alias.h"
 
+#include "dovah/exceptions/form_creation_failed.h"
 #include "dovah/exceptions/game_setting_renumber_failed.h"
 #include "dovah/notices/base_error.h"
 #include "dovah/notices/base_warning.h"
@@ -454,34 +455,28 @@ namespace {
          QObject::tr("Unable to duplicate this form. %1").arg(text)
       );
    }
-   QString _stringify_duplicate_form_a_posteriori_error(dovah::notice_code_t code) {
-      using notice_code = dovah::notice_code;
+   QString _stringify_duplicate_form_a_posteriori_error(dovah::exceptions::form_creation_failed::error_code code) {
+      using error_code = std::decay_t<decltype(code)>;
       switch (code) {
-         case notice_code::unknown_form_type:
+         case error_code::invalid_form_type:
             return QObject::tr("An internal program error occurred: DovahKit tried to create a form but supplied a bad form type.");
-         case notice_code::no_active_file:
-            //
-            // This should've been caught beforehand.
-            //
-            break;
-         case notice_code::form_id_unavailable_for_new_form:
-            //
-            // This should've been caught beforehand.
-            //
-            break;
-         case notice_code::unimplemented_form_type:
+         case error_code::no_active_file:
+            return QObject::tr("There is neither an active file in the load order nor any room in the load order for a new file.");
+         case error_code::no_form_id_available:
+            return QObject::tr("Not enough form IDs are left in the active file to use for the duplicated form(s). (This error was detected late; please report this to DovahKit's developer as a bug.)");
+         case error_code::unimplemented_form_type:
             return QObject::tr("DovahKit does not support editing this form type.");
-         case notice_code::invalid_parent_child_relationship:
+         case error_code::invalid_parent_child_relationship:
             return QObject::tr("The specified parent form cannot have a child form of this type.");
-         case notice_code::exterior_grid_coordinates_already_taken:
+         case error_code::exterior_grid_coordinates_already_taken:
             return QObject::tr("The specified worldspace already has an exterior cell at the desired grid coordinates.");
-         case notice_code::cannot_create_reference_with_no_parent_cell:
+         case error_code::cannot_create_reference_with_no_parent_cell:
             return QObject::tr("References cannot be created outside of a cell.");
-         case notice_code::interior_cell_clone_cannot_have_parent:
+         case error_code::interior_cell_clone_cannot_have_parent:
             return QObject::tr("Interior cells cannot have a parent worldspace.");
-         case notice_code::exterior_cell_clone_must_have_parent:
+         case error_code::exterior_cell_clone_must_have_parent:
             return QObject::tr("Exterior cells must have a parent worldspace.");
-         case notice_code::cannot_sever_references_to_none_stub:
+         case error_code::cannot_sever_references_to_none_stub:
             return QObject::tr("DovahKit needed to select a form ID to use for the new form. The chosen form ID is the target of one or more dangling references, and DovahKit does not know how to sever those references, so the form creation process could not continue.");
       }
       return "";
@@ -490,48 +485,6 @@ namespace {
 dovah::form_stub* DovahKitCore::duplicate_form(dovah::form_stub& original, QWidget* dialog_parent) {
    auto  request = this->request_form_duplication();
    request.set_target(&original);
-   if (request.has_error()) {
-      auto errors = request.get_error_codes();
-      //
-      unsigned int needed_forms    = request.get_total_form_count();
-      unsigned int no_reservations = 0;
-      unsigned int other_failures  = 0;
-      //
-      for (auto e : errors) {
-         if (e == dovah::notice_code::none)
-            continue;
-         if (e == dovah::notice_code::no_active_file) {
-            _report_duplicate_form_error(dialog_parent, tr("There is neither an active file in the load order nor any room in the load order for a new file."));
-            return nullptr;
-         }
-         if (e == dovah::notice_code::form_id_unavailable_for_new_form) {
-            ++no_reservations;
-            continue;
-         }
-         ++other_failures;
-      }
-      auto    total = no_reservations + other_failures;
-      QString text;
-      if (total > 1) {
-         if (no_reservations) {
-            text = tr("A total of %1 forms need to be created, but the file only has %2 free form IDs to spare.").arg(needed_forms).arg(no_reservations);
-            if (other_failures)
-               text += tr(" Additional errors were encountered while validating %3 other forms.").arg(other_failures);
-            text += tr(" No forms were created.");
-         } else {
-            text = tr("A total of %1 forms need to be created, but errors were encountered while validating %2 of those forms.").arg(needed_forms).arg(other_failures);
-            text += tr(" No forms were created.");
-         }
-      } else {
-         if (no_reservations) {
-            text = tr("The file doesn't have any free form IDs that a new form could use.");
-         } else {
-            text = tr("An error occurred.");
-         }
-      }
-      _report_duplicate_form_error(dialog_parent, text);
-      return nullptr;
-   }
    //
    if (!dovah::form_type_is_reference(original.form_type)) { // shouldn't ever happen for the Object Window, but eh
       QString suggestion = editor_helpers::make_editor_id_for_duplicate(original.get_editor_id());
@@ -541,28 +494,43 @@ dovah::form_stub* DovahKitCore::duplicate_form(dovah::form_stub& original, QWidg
          return nullptr;
       request.editorID = editor_id.toStdString();
    }
-   auto result = request.commit();
-   //
-   QString error_text;
-   auto    main_error   = request.get_main_form_error_code();
-   auto    child_errors = request.get_child_form_error_codes();
-   if (main_error != dovah::default_notice_code) {
-      error_text = _stringify_duplicate_form_a_posteriori_error(main_error);
-   }
-   if (!child_errors.empty()) {
-      if (error_text.isEmpty())
-         error_text = tr("The following errors were encountered:<br/><br/>");
-      else
-         error_text += tr(" Additionally, the following errors were encountered when trying to clone this form's children:<br/><br/>");
-      //
-      for (auto e : child_errors) {
-         error_text += _stringify_duplicate_form_a_posteriori_error(e);
+
+   using exception  = dovah::exceptions::form_creation_failed;
+   using error_code = exception::error_code;
+
+   dovah::form_stub* root_created_form = nullptr;
+   try {
+      root_created_form = request.commit();
+   } catch (const dovah::exceptions::form_creation_failed& ex) {
+      QString error_text;
+      if (ex.code == error_code::no_form_id_available) {
+         size_t needed_forms    = ex.details.form_ids_needed;
+         size_t no_reservations = ex.details.form_ids_missing;
+         size_t other_failures  = ex.details.failure_count - no_reservations;
+         
+         if (ex.details.failure_count > 1) {
+            if (no_reservations) {
+               error_text = tr("A total of %1 forms need to be created, but the file only has %2 free form IDs to spare.").arg(needed_forms).arg(no_reservations);
+               if (other_failures)
+                  error_text += tr(" Additional errors were encountered while validating %3 other forms.").arg(other_failures);
+               error_text += tr(" No forms were created.");
+            } else {
+               error_text = tr("A total of %1 forms need to be created, but errors were encountered while validating %2 of those forms.").arg(needed_forms).arg(other_failures);
+               error_text += tr(" No forms were created.");
+            }
+         } else {
+            if (no_reservations) {
+               error_text = tr("The file doesn't have any free form IDs that a new form could use.");
+            } else {
+               error_text = tr("An error occurred.");
+            }
+         }
+      } else {
+         error_text = _stringify_duplicate_form_a_posteriori_error(ex.code);
       }
-   }
-   if (!error_text.isEmpty()) {
       _report_duplicate_form_error(dialog_parent, error_text);
    }
-   return result;
+   return root_created_form;
 }
 
 void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent) {

@@ -2,6 +2,7 @@
 #include "../files/file_load_order.h"
 #include "../form_stub_helpers.h"
 #include "./form_creation_request.h"
+#include "../exceptions/form_creation_failed.h"
 
 namespace dovah {
    form_duplication_request::form_duplication_request(file_load_order& o) : owner(o) {
@@ -73,65 +74,72 @@ namespace dovah {
    }
    //
    form_stub* form_duplication_request::commit() {
+      using exception = exceptions::form_creation_failed;
+
       if (!this->main_request)
          return nullptr;
       this->main_request->editorID = this->editorID;
-      this->main_request->cell_grid_coordinates.x = this->cell_grid_coordinates.x;
-      this->main_request->cell_grid_coordinates.y = this->cell_grid_coordinates.y;
-      this->main_request->cell_grid_coordinates.present = this->cell_grid_coordinates.present;
+      this->main_request->cell_grid_coordinates = this->cell_grid_coordinates;
       if (!this->parent) {
          if (auto* parent = this->main_request->clone_of->get_parent_form())
             this->main_request->set_parent_form(parent);
       }
-      auto* result = this->main_request->commit();
-      if (!result)
-         return nullptr;
-      //
-      for (auto* request : this->child_requests) {
-         if (!request)
-            continue;
-         request->set_parent_form(result);
-         request->commit();
+
+      {
+         struct {
+            exception::error_code  code;
+            form_creation_request* request = nullptr;
+         } primary_failure;
+         size_t error_count = 0;
+         size_t ids_failed_to_allocate = 0;
+         
+         auto ec = this->owner.would_form_creation_request_fail(*this->main_request);
+         if (ec.has_value()) {
+            ++error_count;
+            if (ec.value() == exception::error_code::no_form_id_available)
+               ++ids_failed_to_allocate;
+            primary_failure.code    = ec.value();
+            primary_failure.request = this->main_request;
+         }
+         for (auto* request : this->child_requests) {
+            if (!request)
+               continue;
+            auto ec = this->owner.would_form_creation_request_fail(*request);
+            if (ec.has_value()) {
+               ++error_count;
+               if (ec.value() == exception::error_code::no_form_id_available)
+                  ++ids_failed_to_allocate;
+               if (!primary_failure.request) {
+                  primary_failure.code    = ec.value();
+                  primary_failure.request = this->main_request;
+               }
+            }
+         }
+         
+         if (primary_failure.request) {
+            auto ex = exception(primary_failure.code, *primary_failure.request);
+            ex.details.form_ids_needed  = this->get_total_form_count();
+            ex.details.form_ids_missing = ids_failed_to_allocate;
+            ex.details.failure_count    = error_count;
+            throw ex;
+         }
       }
-      //
-      return result;
-   }
-   notice_code_t form_duplication_request::get_main_form_error_code() const noexcept {
-      if (this->main_request)
-         return this->main_request->error;
-      return default_notice_code;
-   }
-   std::vector<notice_code_t> form_duplication_request::get_child_form_error_codes() const noexcept {
-      std::vector<notice_code_t> out;
-      for (auto* request : this->child_requests)
-         if (request && request->error != default_notice_code)
-            out.push_back(request->error);
-      return out;
-   }
-   std::vector<notice_code_t> form_duplication_request::get_error_codes() const noexcept {
-      std::vector<notice_code_t> out;
-      if (this->main_request) {
-         out.push_back(this->main_request->error);
-         for (auto* request : this->child_requests)
-            if (request)
-               out.push_back(request->error);
+
+      form_stub* main_created_form = nullptr;
+      try {
+         main_created_form = this->main_request->commit();
+         assert(main_created_form != nullptr);
+         for (auto* request : this->child_requests) {
+            if (!request)
+               continue;
+            request->set_parent_form(main_created_form);
+            request->commit();
+         }
+      } catch (const exception& ex) {
+         assert(false && "We pre-flighted the sub-requests for this form duplication request, and they all passed. How did we end up throwing an exception when committing them?");
+         throw; // re-throw
       }
-      return out;
-   }
-   bool form_duplication_request::has_error() const noexcept {
-      if (this->main_request) {
-         if (this->main_request->error != default_notice_code)
-            return true;
-         for (auto* request : this->child_requests)
-            if (request && request->error != default_notice_code)
-               return true;
-      }
-      return false;
-   }
-   bool form_duplication_request::is_valid() const noexcept {
-      if (!this->main_request)
-         return false;
-      return this->main_request->is_valid();
+      return main_created_form;
    }
    size_t form_duplication_request::get_total_form_count() const noexcept {
       if (!this->main_request)
