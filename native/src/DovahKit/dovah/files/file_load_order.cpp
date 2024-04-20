@@ -24,6 +24,8 @@
 #include <fstream>
 
 #include "../exceptions/form_renumber_failed.h"
+#include "../exceptions/game_setting_renumber_failed.h"
+#include "../exceptions/game_setting_value_change_failed.h"
 #include "../load_order_interfaces/file_load.h"
 #include "../load_order_requests/form_creation_request.h"
 #include "../load_order_requests/form_deletion_request.h"
@@ -1097,13 +1099,16 @@ namespace dovah {
       _extract(this->active_file_forms_by_type[form_type]);
    }
    notice_code_t file_load_order::_renumber_game_setting(loaded_game_setting& entry, bare_form_id_t new_id) {
+      using exception  = exceptions::game_setting_renumber_failed;
+      using error_code = exception::error_code;
+
       if (entry.formID == new_id)
          return default_notice_code;
       if (entry.source_file != this->active_file) {
          #if _DEBUG
             __debugbreak(); // Why are we attempting to renumber a game setting definition that didn't come from the active file?
          #endif
-         return notice_code::game_setting_is_not_in_active_file;
+         throw exception(error_code::setting_is_not_in_active_file, entry.name);
       }
       //
       // To renumber a game setting, we need to create or renumber an existing form stub.
@@ -1128,8 +1133,11 @@ namespace dovah {
                   //
                   for (auto& pair : stub->inbound) {
                      auto& data = pair.second;
-                     if (!data.other || !data.other->load())
-                        return notice_code::cannot_sever_references_to_target;
+                     if (!data.other || !data.other->load()) {
+                        auto ex = exception(error_code::cannot_sever_references_to_setting, entry.name);
+                        ex.details.occupying_stub = data.other;
+                        throw ex;
+                     }
                   }
                }
                //
@@ -1765,13 +1773,13 @@ namespace dovah {
    }
 
    #pragma region Load order code for various form modification requests
-   form_stub* file_load_order::create_form_of_type(form_type ft) noexcept {
+   form_stub* file_load_order::create_form_of_type(form_type ft) {
       auto request = this->request_form_creation(ft);
       if (!request.is_valid())
          return nullptr;
       return this->commit_form_creation_request(request);
    }
-   form_creation_request file_load_order::request_form_creation(form_type ft) noexcept {
+   form_creation_request file_load_order::request_form_creation(form_type ft) {
       form_creation_request result(*this);
       result.form_type = ft;
       //
@@ -1806,7 +1814,7 @@ namespace dovah {
       result.formID = formID;
       return result;
    }
-   form_stub* file_load_order::commit_form_creation_request(form_creation_request& request) noexcept {
+   form_stub* file_load_order::commit_form_creation_request(form_creation_request& request) {
       bare_form_id_t formID = request.formID;
       if (!formID)
          return nullptr;
@@ -1946,13 +1954,13 @@ namespace dovah {
          (this->on_form_create)(stub);
       return stub;
    }
-   form_duplication_request file_load_order::request_form_duplication() noexcept {
+   form_duplication_request file_load_order::request_form_duplication() {
       return form_duplication_request(*this);
    }
-   form_deletion_request file_load_order::request_form_deletion(form_stub& target) noexcept {
+   form_deletion_request file_load_order::request_form_deletion(form_stub& target) {
       return form_deletion_request(*this, target);
    }
-   form_renumber_request file_load_order::request_form_renumber(form_stub& stub, bare_form_id_t desiredID) noexcept {
+   form_renumber_request file_load_order::request_form_renumber(form_stub& stub, bare_form_id_t desiredID) {
       using exception  = exceptions::form_renumber_failed;
       using error_code = exception::error_code;
 
@@ -1994,13 +2002,13 @@ namespace dovah {
       list.push_back(desiredID);
       return result;
    }
-   void file_load_order::commit_form_renumber_request(form_renumber_request& request) noexcept {
+   void file_load_order::commit_form_renumber_request(form_renumber_request& request) {
       using exception  = exceptions::form_renumber_failed;
       using error_code = exception::error_code;
 
       if (&request.owner != this)
-         return;
-      //
+         throw exception(error_code::wrong_load_order, request.target);
+      
       bare_form_id_t desiredID = request.desiredID;
       bare_form_id_t oldID     = request.target.formID;
       if (!desiredID)
@@ -2046,24 +2054,22 @@ namespace dovah {
       if (this->on_form_renumber)
          (this->on_form_renumber)(stub, oldID, desiredID);
    }
-   game_setting_edit_request file_load_order::request_game_setting_change(bool automatic_id) noexcept {
+   game_setting_edit_request file_load_order::request_game_setting_change(bool automatic_id) {
       game_setting_edit_request result(*this, automatic_id ? game_setting_edit_request::form_id_policy::find_valid_id : game_setting_edit_request::form_id_policy::use_chosen_id);
       return result;
    }
-   void file_load_order::commit_game_setting_change_request(game_setting_edit_request& request) noexcept {
+   void file_load_order::commit_game_setting_change_request(game_setting_edit_request& request) {
+      using exception  = exceptions::game_setting_value_change_failed;
+      using error_code = exception::error_code;
+
       if (&request.owner != this)
-         return;
+         throw exception(error_code::wrong_load_order, request.setting.name);
+
       if (!request.desiredID) {
          if (request.policy == game_setting_edit_request::form_id_policy::find_valid_id) {
             this->set_reserved_form_id_for(request);
-            if (!request.desiredID) {
-               if (request.code != default_notice_code)
-                  request.code = notice_code::game_setting_edit_request_lacked_id;
-               return;
-            }
          } else {
-            request.code = notice_code::game_setting_edit_request_lacked_id;
-            return;
+            throw exception(error_code::form_id_is_zero, request.setting.name);
          }
       }
       std::string lowercase;
@@ -2098,20 +2104,19 @@ namespace dovah {
       //
       if (request.reservedID)
          this->_abandon_form_id_reservation(request.desiredID);
-      //
-      request.code = default_notice_code;
-      request.done = true;
    }
-   game_setting_renumber_request file_load_order::request_game_setting_renumber() noexcept {
+   game_setting_renumber_request file_load_order::request_game_setting_renumber() {
       game_setting_renumber_request result(*this);
       return result;
    }
-   void file_load_order::commit_game_setting_renumber_request(game_setting_renumber_request& request) noexcept {
+   void file_load_order::commit_game_setting_renumber_request(game_setting_renumber_request& request) {
+      using exception  = exceptions::game_setting_renumber_failed;
+      using error_code = exception::error_code;
+
       if (&request.owner != this)
-         return;
+         throw exception(error_code::wrong_load_order, request.setting);
       if (!request.desiredID) {
-         request.code = notice_code::game_setting_edit_request_lacked_id;
-         return;
+         throw exception(error_code::form_id_is_zero, request.setting);
       }
       std::string lowercase;
       lowercase.reserve(request.setting.size());
@@ -2128,8 +2133,7 @@ namespace dovah {
             entry = &back;
       }
       if (!entry) {
-         request.code = notice_code::game_setting_is_not_in_active_file;
-         return;
+         throw exception(error_code::setting_is_not_in_active_file, request.setting);
       }
       auto code = this->_renumber_game_setting(*entry, request.desiredID);
       //
@@ -2143,8 +2147,12 @@ namespace dovah {
    }
    //
    void file_load_order::set_reserved_form_id_for(game_setting_edit_request& request, bare_form_id_t desired) {
+      using exception  = exceptions::game_setting_value_change_failed;
+      using error_code = exception::error_code;
+
       if (&request.owner != this)
-         return;
+         throw exception(error_code::wrong_load_order, request.setting.name);
+
       auto  guard = std::lock_guard(this->form_creation_request_info.lock);
       auto& list  = this->form_creation_request_info.reserved_formIDs;
       if (request.reservedID) {
@@ -2156,8 +2164,7 @@ namespace dovah {
       //
       if (desired) {
          if (std::find(list.begin(), list.end(), desired) != list.end()) {
-            request.code = notice_code::form_id_is_reserved_for_other_process;
-            return;
+            throw exception(error_code::form_id_is_reserved, request.setting.name);
          }
          //
          bool reserve = true;
@@ -2165,8 +2172,7 @@ namespace dovah {
             auto* stub = this->forms.forms[desired];
             if (stub) {
                if (stub->form_type != form_type::setting) {
-                  request.code = notice_code::form_id_is_already_in_use;
-                  return;
+                  throw exception(error_code::form_id_is_occupied, request.setting.name);
                }
                reserve = false;
             }
@@ -2194,8 +2200,7 @@ namespace dovah {
       //
       auto prefix = this->active_file_prefix();
       if (prefix.is_undefined()) {
-         request.code = notice_code::no_active_file;
-         return;
+         throw exception(error_code::no_active_file, request.setting.name);
       }
       assert(this->active_file && "How were we able to get the prefix of the active file when the pointer has been lost?"); // in case any code changes in the future
       auto formID = prefix.coerce_form_id(this->active_file->header.nextFormID);
@@ -2206,8 +2211,7 @@ namespace dovah {
          if (!(formID & 0x00FFFFFF) || cobb::unordered_map_contains(this->forms.forms, formID)) {
             formID = this->find_first_free_form_id_in_active_file();
             if (!formID) { // no form ID available
-               request.code = notice_code::form_id_unavailable_for_game_setting;
-               return;
+               throw exception(error_code::no_form_id_available, request.setting.name);
             }
          }
       }
@@ -2217,8 +2221,12 @@ namespace dovah {
       request.reservedID = true;
    }
    void file_load_order::set_reserved_form_id_for(game_setting_renumber_request& request, bare_form_id_t desired) {
+      using exception  = exceptions::game_setting_renumber_failed;
+      using error_code = exception::error_code;
+
       if (&request.owner != this)
-         return;
+         throw exception(error_code::wrong_load_order, request.setting);
+
       auto  guard = std::lock_guard(this->form_creation_request_info.lock);
       auto& list  = this->form_creation_request_info.reserved_formIDs;
       if (request.reservedID) {
@@ -2233,8 +2241,7 @@ namespace dovah {
          return;
       }
       if (std::find(list.begin(), list.end(), desired) != list.end()) {
-         request.code = notice_code::form_id_is_reserved_for_other_process;
-         return;
+         throw exception(error_code::form_id_is_reserved, request.setting);
       }
       //
       bool reserve = true;
@@ -2242,8 +2249,9 @@ namespace dovah {
          auto* stub = this->forms.forms[desired];
          if (stub) {
             if (stub->form_type != form_type::setting) {
-               request.code = notice_code::form_id_is_already_in_use;
-               return;
+               auto ex = exception(error_code::form_id_is_occupied, request.setting);
+               ex.details.occupying_stub = stub;
+               throw ex;
             }
             reserve = false;
          }

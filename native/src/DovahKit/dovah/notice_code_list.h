@@ -38,15 +38,15 @@ namespace dovah {
          //
          game_setting_record_has_bad_type            = 0x0000001E, // A GMST record has an unrecognized name, and the name's type prefix is also unrecognized.
          game_setting_name_is_unrecognized           = 0x0000001F,
-         form_id_unavailable_for_game_setting        = 0x00000020, // A game setting edit request failed because a form ID wasn't available for use.
-         game_setting_edit_request_lacked_id         = 0x00000021, // A game setting edit request failed because it had no form ID.
+         //
+         //
          //
          form_id_is_reserved_for_other_process       = 0x00000023, // Cannot use the specified form ID. It is reserved for use by another process, such as form creation or form renumbering.
          cannot_load_right_now                       = 0x00000024, // It is not safe to load right now, as a save or load operation is already in progress.
          game_setting_record_has_no_data             = 0x00000025, // A GMST record had no DATA subrecord.
          game_setting_record_unreadable_data         = 0x00000026, // A GMST record's DATA subrecord could not be read. This can happen if the subrecord is too small.
          cannot_sever_references_to_target           = 0x00000027,
-         game_setting_is_not_in_active_file          = 0x00000028, // Cannot renumber a GMST that doesn't originate from the active file.
+         //
          default_object_rejected_for_bad_type        = 0x00000029, // The loaded DefaultObjectManager won't let you use the specified form for the specified entry, as the form is of the wrong type.
          default_object_accepted_but_unknown         = 0x0000002A, // The loaded DefaultObjectManager has created the specified entry, but wants you to know that the entry isn't one that DovahKit's backend recognizes.
          singleton_form_is_redundantly_defined       = 0x0000002B, // A file contained multiple records for the same singleton form (e.g. multiple DOBJ records or multiple NAVI records).

@@ -11,6 +11,10 @@ namespace dovah::exceptions {
    class form_renumber_failed : public std::runtime_error {
       public:
          enum class error_code {
+            // The request was passed to a `file_load_order` instance other than the one used to 
+            // create and configure it.
+            wrong_load_order,
+
             // You cannot renumber hardcoded forms.
             form_is_hardcoded,
 

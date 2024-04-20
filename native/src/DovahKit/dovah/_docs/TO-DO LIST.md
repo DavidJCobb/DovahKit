@@ -17,6 +17,7 @@ Also refer to comments in `main.cpp`, though many were written years ago...
     * Code to convert between games should fail on SSE -> LE if any non-hardcoded forms are in this range
   * Form renumbering should only error on this if the current game doesn't support it (i.e. `skyrim_classic`)
   * When renumbering forms into this range with SSE, pop a dialog box warning the user that LE and older SSE doesn't support it, and that they also won't be able to convert their mod from SSE to LE unless they renumber all forms back out of the range.
+  * Don't forget handling GMST renumbering too.
 
 ## Loading
 * `add_hardcoded_forms_to_load_order` in `dovah/forms/factories/hardcoded.h` is only used by the file load process and should be passkeyed somehow.

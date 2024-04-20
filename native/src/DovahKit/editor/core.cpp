@@ -37,6 +37,7 @@
 #include "form_stub_meta_type.h"
 #include "ui/types/quest_alias.h"
 
+#include "dovah/exceptions/game_setting_renumber_failed.h"
 #include "dovah/notices/base_error.h"
 #include "dovah/notices/base_warning.h"
 
@@ -667,19 +668,14 @@ bool DovahKitCore::for_each_loaded_game_setting(std::function<bool(const dovah::
       return false;
    return this->load_order->for_each_loaded_game_setting(callback);
 }
-bool DovahKitCore::edit_game_setting(const char* name, const dovah::game_setting_value& value) {
+void DovahKitCore::edit_game_setting(const char* name, const dovah::game_setting_value& value) {
    if (!this->load_order)
-      return false;
+      return;
    auto request = this->load_order->request_game_setting_change();
    request.setting.name  = name;
    request.setting.value = value;
    request.commit();
-   if (request.was_successful()) {
-      emit this->gameSettingValueChanged(name);
-   } else {
-      emit this->gameSettingValueChangeFailed(name, request.get_notice_code());
-   }
-   return request.was_successful();
+   emit this->gameSettingValueChanged(name);
 }
 //
 namespace {
@@ -690,19 +686,27 @@ namespace {
          QObject::tr("Unable to change this game setting's form ID. %1").arg(text)
       );
    }
-   QString _stringify_game_setting_renumber_error(dovah::notice_code_t code) {
+   QString _stringify_game_setting_renumber_error(const dovah::exceptions::game_setting_renumber_failed& ex) {
+      using error_code = std::decay_t<decltype(ex)>::error_code;
+
       const char* disambig = "game setting renumber errors";
       //
-      switch (code) {
-         case dovah::notice_code::form_id_unavailable_for_game_setting:
-            return QObject::tr("This desired form ID is unavailable for some reason.", disambig);
-         case dovah::notice_code::form_id_is_already_in_use:
-            return QObject::tr("The desired form ID is in use by another form.", disambig);
-         case dovah::notice_code::form_id_is_reserved_for_other_process:
+      switch (ex.code) {
+         case error_code::form_id_is_zero:
+            return QObject::tr("Zero is not a valid form ID.", disambig);
+         case error_code::form_id_is_in_hardcoded_range:
+            return QObject::tr("The desired form ID is in the hardcoded range.", disambig);
+         case error_code::form_id_is_out_of_bounds:
+            return QObject::tr("The desired form ID is out of bounds.", disambig);
+         case error_code::form_id_is_occupied:
+            return QObject::tr("The desired form ID is in use by another form (not another game setting).", disambig);
+         case error_code::form_id_is_reserved:
             return QObject::tr("The desired form ID is currently reserved for use in some other process, such as form creation.", disambig);
-         case dovah::notice_code::cannot_sever_references_to_target:
+         case error_code::no_active_file:
+            return QObject::tr("There is no active file, nor room in the load order for a new file.", disambig);
+         case error_code::cannot_sever_references_to_setting:
             return QObject::tr("One or more forms refer to this game setting's form ID, even though that shouldn't be possible, and DovahKit doesn't know how to edit those forms and thus can't sever those references.", disambig);
-         case dovah::notice_code::game_setting_is_not_in_active_file:
+         case error_code::setting_is_not_in_active_file:
             return QObject::tr("You can't renumber a game setting that isn't defined in the active file.", disambig);
       }
       return "";
@@ -751,16 +755,13 @@ void DovahKitCore::renumber_game_setting(const char* name, QWidget* dialog_paren
    //
    bare_form_id_t oldID = setting.formID;
    //
-   auto request = this->load_order->request_game_setting_renumber();
-   request.setting = name;
-   request.set_desired_form_id(newID);
-   if (auto code = request.get_notice_code()) {
-      _report_game_setting_renumber_error(dialog_parent, _stringify_game_setting_renumber_error(code));
-      return;
-   }
-   request.commit();
-   if (auto code = request.get_notice_code()) {
-      _report_game_setting_renumber_error(dialog_parent, _stringify_game_setting_renumber_error(code));
+   try {
+      auto request = this->load_order->request_game_setting_renumber();
+      request.setting = name;
+      request.set_desired_form_id(newID);
+      request.commit();
+   } catch (const dovah::exceptions::game_setting_renumber_failed& ex) {
+      _report_game_setting_renumber_error(dialog_parent, _stringify_game_setting_renumber_error(ex));
       return;
    }
    emit this->gameSettingRenumbered(name, oldID, newID);

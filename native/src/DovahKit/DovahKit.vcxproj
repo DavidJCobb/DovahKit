@@ -900,6 +900,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\exceptions\form_renumber_failed.h" />
+    <ClInclude Include="dovah\exceptions\game_setting_renumber_failed.h" />
+    <ClInclude Include="dovah\exceptions\game_setting_value_change_failed.h" />
     <ClInclude Include="dovah\exceptions\object_reference_move_failed.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
     <ClInclude Include="dovah\load_order_interfaces\file_load.h" />

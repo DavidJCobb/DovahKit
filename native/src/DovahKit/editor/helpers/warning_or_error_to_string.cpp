@@ -324,28 +324,40 @@ namespace editor_helpers {
                   switch (notice.errno_value) {
                      case ENFILE:
                         en_text = QObject::tr("Too many files open (system-wide).", "notice::filesystem_error (errno text)");
+                        break;
                      case EMFILE:
                         en_text = QObject::tr("Too many files open (this process).", "notice::filesystem_error (errno text)");
+                        break;
                      case EINVAL:
                         en_text = QObject::tr("The file name or path may be invalid", "notice::filesystem_error (errno text)");
+                        break;
                      case ELOOP:
                         en_text = QObject::tr("The file was inaccessible due to a cyclical reference among symbolic links in the file path.", "notice::filesystem_error (errno text)");
+                        break;
                      case ENAMETOOLONG:
                         en_text = QObject::tr("The file was inaccessible; the path name (whether before or after symbolic links) is too long.", "notice::filesystem_error (errno text)");
+                        break;
                      case EACCES:
                         en_text = QObject::tr("The file is locked, or you do not have permission to access it.", "notice::filesystem_error (errno text)");
+                        break;
                      case EBUSY:
                         en_text = QObject::tr("The file is locked.", "notice::filesystem_error (errno text)");
+                        break;
                      case ENOENT:
                         en_text = QObject::tr("The file does not exist.", "notice::filesystem_error (errno text)");
+                        break;
                      case EROFS:
                         en_text = QObject::tr("The file exists on a read-only filesystem and cannot be opened for writing.", "notice::filesystem_error (errno text)");
+                        break;
                      case ENOMEM:
                         en_text = QObject::tr("Insufficient memory.", "notice::filesystem_error (errno text)");
+                        break;
                      case EISDIR:
                         en_text = QObject::tr("The 'file' is actually a directory and therefore cannot be opened for writing.", "notice::filesystem_error (errno text)");
+                        break;
                      case ENOTDIR:
                         en_text = QObject::tr("The specified path is not a directory.", "notice::filesystem_error (errno text)");
+                        break;
                   }
                   if (!en_text.isEmpty())
                      text = QObject::tr("A filesystem error occurred: %1", "notice_code::filesystem_error (errno)").arg(en_text);

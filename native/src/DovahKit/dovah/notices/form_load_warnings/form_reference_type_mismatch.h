@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <vector>
 #include "../base_form_load_warning.h"
 

@@ -1,10 +1,12 @@
-#include "game_setting_window.h"
+#include "./game_setting_window.h"
 #include <QAction>
 #include <QItemSelectionModel>
 #include <QMenu>
-#include "../../dovah/data/game_settings.h"
-#include "../../helpers/qt/spinbox.h"
-#include "../../editor/core.h"
+#include <QMessageBox>
+#include "helpers/qt/spinbox.h"
+#include "dovah/data/game_settings.h"
+#include "dovah/exceptions/game_setting_value_change_failed.h"
+#include "editor/core.h"
 
 namespace {
    GameSettingList::model_item_type* _get_selected_item(QTableView* widget) {
@@ -88,11 +90,36 @@ GameSettingWindow::GameSettingWindow(QWidget* parent) : QDialog(parent) {
          default:
             return;
       }
-      bool result = editor.edit_game_setting(name.c_str(), value);
-      if (!result) {
-         //
-         // TODO: message box telling the user that an error occurred, and to check the log window
-         //
+      {
+         using exception  = dovah::exceptions::game_setting_value_change_failed;
+         using error_code = exception::error_code;
+
+         try {
+            editor.edit_game_setting(name.c_str(), value);
+         } catch (const exception& ex) {
+            QString text;
+            switch (ex.code) {
+               case error_code::form_id_is_occupied:
+                  text = tr("The requested form ID is occupied.");
+                  break;
+               case error_code::form_id_is_reserved:
+                  text = tr("The requested form ID is reserved for use by an in-progress editing operation.");
+                  break;
+               case error_code::form_id_is_zero:
+                  text = tr("Zero is not a valid form ID to use here.");
+                  break;
+               case error_code::no_active_file:
+                  text = tr("There is no active file, nor room in the load order for a new file.");
+                  break;
+               case error_code::no_form_id_available:
+                  text = tr("There are no available form IDs to use for this game setting right now.");
+                  break;
+               default:
+                  text = tr("An internal error occurred. The game setting's value was not changed.");
+                  break;
+            }
+            QMessageBox::critical(this, tr("Error"), text);
+         }
       }
    });
    //

@@ -8,8 +8,6 @@ namespace {
    const char* _explain_error_code(dovah::notice_code_t code) {
       using notice_code = dovah::notice_code;
       switch (code) {
-         case notice_code::form_is_not_defined_in_active_file:
-            return "cannot duplicate the form (or one of its child forms) because it doesn't originate from the active file";
          case notice_code::form_id_unavailable_for_new_form:
             return "cannot duplicate the form (or one of its child forms) because there aren't enough form IDs left in the active file";
          case notice_code::unimplemented_form_type:

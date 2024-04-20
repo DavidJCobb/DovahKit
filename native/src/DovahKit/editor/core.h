@@ -115,7 +115,6 @@ class DovahKitCore : public QObject {
       void formsRenumberedEnMasse();
       
       void gameSettingValueChanged(const char* name);
-      void gameSettingValueChangeFailed(const char* name, dovah::notice_code_t);
       void gameSettingRenumbered(const char* name, bare_form_id_t oldID, bare_form_id_t newID);
       //
       void defaultObjectEntryChanged(uint32_t signature);
@@ -186,7 +185,7 @@ class DovahKitCore : public QObject {
 
       bool get_loaded_game_setting(const char* name, dovah::loaded_game_setting& out);
       bool for_each_loaded_game_setting(std::function<bool(const dovah::loaded_game_setting&)>);
-      bool edit_game_setting(const char* name, const dovah::game_setting_value&);
+      void edit_game_setting(const char* name, const dovah::game_setting_value&); // may throw dovah::exceptions::game_setting_value_change_failed
       void renumber_game_setting(const char* name, QWidget* dialog_parent); // handles UI, error reporting, etc., for you
       
       void set_default_object(uint32_t signature, dovah::form_stub*);

@@ -368,17 +368,17 @@ namespace dovah {
          bool get_loaded_setting_by_name(const std::string& name, loaded_game_setting& out) const noexcept;
          bool get_loaded_setting_by_name(const game_setting_definition& name, loaded_game_setting& out) const noexcept;
          
-         form_stub* create_form_of_type(form_type) noexcept;
-         form_creation_request request_form_creation(form_type) noexcept;
-         form_stub* commit_form_creation_request(form_creation_request&) noexcept; // you can call this, but you're meant to call form_creation_request::commit instead
-         form_duplication_request request_form_duplication() noexcept;
-         form_deletion_request request_form_deletion(form_stub&) noexcept;
-         form_renumber_request request_form_renumber(form_stub&, bare_form_id_t desiredID) noexcept;
-         void commit_form_renumber_request(form_renumber_request&) noexcept; // you can call this, but you're meant to call form_renumber_request::commit instead
-         game_setting_edit_request request_game_setting_change(bool automatic_id = true) noexcept;
-         void commit_game_setting_change_request(game_setting_edit_request&) noexcept;
-         game_setting_renumber_request request_game_setting_renumber() noexcept;
-         void commit_game_setting_renumber_request(game_setting_renumber_request&) noexcept;
+         form_stub* create_form_of_type(form_type);
+         form_creation_request request_form_creation(form_type);
+         form_stub* commit_form_creation_request(form_creation_request&); // you can call this, but you're meant to call form_creation_request::commit instead
+         form_duplication_request request_form_duplication();
+         form_deletion_request request_form_deletion(form_stub&);
+         form_renumber_request request_form_renumber(form_stub&, bare_form_id_t desiredID);
+         void commit_form_renumber_request(form_renumber_request&); // you can call this, but you're meant to call form_renumber_request::commit instead
+         game_setting_edit_request request_game_setting_change(bool automatic_id = true);
+         void commit_game_setting_change_request(game_setting_edit_request&);
+         game_setting_renumber_request request_game_setting_renumber();
+         void commit_game_setting_renumber_request(game_setting_renumber_request&);
          //
          void set_reserved_form_id_for(game_setting_edit_request&,     bare_form_id_t desired = 0);
          void set_reserved_form_id_for(game_setting_renumber_request&, bare_form_id_t desired = 0);

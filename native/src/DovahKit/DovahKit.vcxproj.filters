@@ -5858,6 +5858,12 @@
     <ClInclude Include="dovah\exceptions\form_renumber_failed.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\exceptions\game_setting_renumber_failed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\game_setting_value_change_failed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

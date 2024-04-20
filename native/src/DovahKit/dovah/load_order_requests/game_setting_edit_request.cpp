@@ -8,8 +8,6 @@ namespace dovah {
       this->setting    = other.setting;
       this->desiredID  = other.desiredID;
       this->reservedID = other.reservedID;
-      this->code       = other.code;
-      this->done       = other.done;
    }
    game_setting_edit_request::~game_setting_edit_request() {
       this->owner.abandon_form_id_reservation(*this);

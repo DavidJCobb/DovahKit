@@ -11,8 +11,6 @@ namespace {
             return "cannot create a new form because this is not a valid form type";
          case notice_code::no_active_file:
             return "cannot create a new form because there is neither an active file nor any room in the load order for a new file";
-         case notice_code::form_id_unavailable_for_game_setting:
-            [[fallthrough]];
          case notice_code::form_id_unavailable_for_new_form:
             return "cannot create a new form because there are no form IDs left in the active file";
          case notice_code::unimplemented_form_type:
