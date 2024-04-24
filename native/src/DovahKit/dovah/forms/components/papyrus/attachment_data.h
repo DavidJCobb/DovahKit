@@ -31,7 +31,7 @@ namespace dovah::loaded_forms::components::papyrus {
          fragment_data_base* fragment_data = nullptr;
          
          bool load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes we're at a VMAD subrecord
-         bool save(tes_subrecord_writer&, load_order_interfaces::form_save&);
+         void save(tes_subrecord_writer&, load_order_interfaces::form_save&);
          static attachment_header generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
          static void skip_use_info(tes_subrecord_reader&);
 
@@ -44,7 +44,7 @@ namespace dovah::loaded_forms::components::papyrus {
             std::vector<std::string>& out_deleted
          );
          
-         bool save(tes_record_writer&, load_order_interfaces::form_save&); // opens VMAD, writes, closes; doesn't write a subrecord if there are no scripts attached
+         void save(tes_record_writer&, load_order_interfaces::form_save&); // opens VMAD, writes, closes; doesn't write a subrecord if there are no scripts attached
          void clone_from(const attachment_data& source, loaded_forms::Form& owner_of_clone) noexcept;
          void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
          void clear(loaded_forms::Form& my_owner) noexcept;

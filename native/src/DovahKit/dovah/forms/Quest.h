@@ -250,7 +250,7 @@ namespace dovah::loaded_forms {
                   std::string function; // read as a length-prefixed string, capped to 65535 chars
                   //
                   void load(tes_subrecord_reader&); // read from VMAD
-                  bool save(tes_subrecord_writer&, uint16_t stage_id, uint32_t entry_index); // write to VMAD
+                  void save(tes_subrecord_writer&, uint16_t stage_id, uint32_t entry_index); // write to VMAD
                   static void generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib);
                   void clear();
                   //
@@ -268,7 +268,7 @@ namespace dovah::loaded_forms {
             protected:
                void load(tes_record_reader&,    load_order_interfaces::form_load&); // assumes QSTD subrecord has already been opened
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&);
-               bool save(tes_record_writer&,    load_order_interfaces::form_save&);
+               void save(tes_record_writer&,    load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
 
             public:
@@ -294,7 +294,7 @@ namespace dovah::loaded_forms {
                
             protected:
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes INDX subrecord has already been opened
-               bool save(tes_record_writer&,    load_order_interfaces::form_save&);
+               void save(tes_record_writer&,    load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
 
             public:
@@ -319,7 +319,7 @@ namespace dovah::loaded_forms {
                
             protected:
                void load(tes_subrecord_reader&, load_order_interfaces::form_load&); // assumes QSTA subrecord has already been opened
-               bool save(tes_record_writer&, load_order_interfaces::form_save&);
+               void save(tes_record_writer&, load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
 
             public:
@@ -343,7 +343,7 @@ namespace dovah::loaded_forms {
                
             protected:
                void load(tes_record_reader&, load_order_interfaces::form_load&); // assumes QOBJ subrecord has already been opened
-               bool save(tes_record_writer&, load_order_interfaces::form_save&);
+               void save(tes_record_writer&, load_order_interfaces::form_save&);
                void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
 
             public:
@@ -393,7 +393,7 @@ namespace dovah::loaded_forms {
 
       protected:
          virtual void _clone_impl(Form* out) const noexcept override;
-         virtual bool _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) override;
+         virtual void _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) override;
          virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
          virtual void _clear_impl() noexcept override;
    };

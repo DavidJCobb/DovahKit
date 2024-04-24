@@ -14,6 +14,9 @@
 #include "dovah/load_order_requests/game_setting_renumber_request.h"
 
 namespace dovah {
+   namespace exceptions {
+      class form_deletion_failed;
+   }
    namespace notices {
       class base_error;
       class base_warning;
@@ -121,7 +124,7 @@ class DovahKitCore : public QObject {
       
       void dataSaveImminent();
       void dataSaveComplete();
-      void dataSaveFailed(const dovah::detailed_notice&);
+      void dataSaveFailed();
       
       void editorEncodingChanged(const std::string& prior, const std::string& after);
       
@@ -148,7 +151,10 @@ class DovahKitCore : public QObject {
       bool active_file_has_name() const noexcept;
       QString get_active_file_name() const noexcept;
       bool has_active_file() const noexcept;
-      bool save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config& cfg, dovah::tes_file_writing::write_results& results);
+
+      // Can throw exceptions from inside.
+      void save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config& cfg, dovah::tes_file_writing::write_results& results);
+
       QString get_active_file_author() const noexcept;
       QString get_active_file_description() const noexcept;
       void set_active_file_author(const QString&) const noexcept;
@@ -180,6 +186,7 @@ class DovahKitCore : public QObject {
       void delete_form(
          dovah::form_stub& target,
          std::function<bool(const dovah::form_deletion_request&)> after_gather, // return false to cancel; this is a good place to report errors or show a confirmation prompt
+         std::function<void(const dovah::exceptions::form_deletion_failed&)> on_gather_error,
          std::function<void(const dovah::form_deletion_request&)> after_complete
       );
 

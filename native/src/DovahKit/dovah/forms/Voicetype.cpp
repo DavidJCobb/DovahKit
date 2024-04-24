@@ -30,11 +30,10 @@ namespace dovah::loaded_forms {
       
       copy->voicetype_flags = this->voicetype_flags;
    }
-   bool Voicetype::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Voicetype::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& DNAM = record.open_next_subrecord('DNAM');
       DNAM.write(this->voicetype_flags);
       DNAM.close();
-      return true;
    }
    void Voicetype::_clear_impl() noexcept {
       this->voicetype_flags = 0;

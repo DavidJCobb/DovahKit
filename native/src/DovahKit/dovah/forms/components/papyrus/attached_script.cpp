@@ -3,6 +3,14 @@
 #include "../../../logging.h"
 #include "./attachment_header.h"
 
+#include "../../../notices/form_save_errors/by_form_component/papyrus/too_many_properties_on_script.h"
+
+namespace {
+   namespace specific_save_errors {
+      using namespace dovah::notices::form_save_errors::by_component::papyrus;
+   }
+}
+
 namespace dovah::loaded_forms::components::papyrus {
    bool attached_script::load(const attachment_header& header, tes_subrecord_reader& subrecord) {
       subrecord.read_length_prefixed_string<2>(this->name);
@@ -31,23 +39,21 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return true;
    }
-   bool attached_script::save(const attachment_header& header, tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) noexcept {
+   void attached_script::save(const attachment_header& header, tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) noexcept {
       subrecord.write_length_prefixed_string<2>(this->name);
       uint16_t count = this->properties.size();
       if (this->properties.size() > std::numeric_limits<decltype(count)>::max()) {
-         dovah::logging::print_line("Problem encountered while saving script %s: too many properties.", this->name.c_str());
-         return false;
+         auto notice = specific_save_errors::too_many_properties_on_script(
+            *intfc.target_stub,
+            this->properties.size(),
+            this->name
+         );
+         intfc.throw_save_error(notice);
       }
       subrecord.write(this->status);
       subrecord.write(count);
-      for (uint16_t i = 0; i < count; i++) {
-         auto& prop = this->properties[i];
-         if (!prop.save(header, subrecord, intfc)) {
-            dovah::logging::print_line("Problem encountered while saving property %d for script %s.", i, this->name.c_str());
-            return false;
-         }
-      }
-      return true;
+      for(auto& prop : this->properties)
+         prop.save(header, subrecord, intfc);
    }
 
    void attached_script::clear_properties(loaded_forms::Form& my_owner) {

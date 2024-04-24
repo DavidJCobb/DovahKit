@@ -158,7 +158,7 @@ namespace dovah::loaded_forms {
       copy->drop_sound.set(*copy, this->drop_sound);
       copy->take_sound.set(*copy, this->take_sound);
    }
-   bool MiscItem::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void MiscItem::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       auto& OBND = record.open_next_subrecord('OBND');
       this->bounds.save(OBND, intfc);
@@ -179,7 +179,6 @@ namespace dovah::loaded_forms {
       DATA.write(this->value);
       DATA.write(this->weight);
       DATA.close();
-      return true;
    }
    void MiscItem::_clear_impl() noexcept {
       this->bounds.clear();

@@ -147,6 +147,7 @@
     <ClCompile Include="dovah\load_order_interfaces\file_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_save.cpp" />
+    <ClCompile Include="dovah\load_order_processes\file_save.cpp" />
     <ClCompile Include="dovah\load_order_requests\form_creation_request.cpp" />
     <ClCompile Include="dovah\load_order_requests\form_deletion_request.cpp" />
     <ClCompile Include="dovah\load_order_requests\form_duplication_request.cpp" />
@@ -901,15 +902,20 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\exceptions\enums\form_creation_error_code.h" />
+    <ClInclude Include="dovah\exceptions\file_save_failed.h" />
     <ClInclude Include="dovah\exceptions\form_creation_failed.h" />
+    <ClInclude Include="dovah\exceptions\form_deletion_failed.h" />
     <ClInclude Include="dovah\exceptions\form_renumber_failed.h" />
+    <ClInclude Include="dovah\exceptions\game_change_failed.h" />
     <ClInclude Include="dovah\exceptions\game_setting_renumber_failed.h" />
     <ClInclude Include="dovah\exceptions\game_setting_value_change_failed.h" />
     <ClInclude Include="dovah\exceptions\object_reference_move_failed.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
+    <ClInclude Include="dovah\game_change_failure_reason.h" />
     <ClInclude Include="dovah\load_order_interfaces\file_load.h" />
     <ClInclude Include="dovah\load_order_interfaces\form_load.h" />
     <ClInclude Include="dovah\load_order_interfaces\form_save.h" />
+    <ClInclude Include="dovah\load_order_processes\file_save.h" />
     <ClInclude Include="dovah\load_order_requests\form_creation_request.h" />
     <ClInclude Include="dovah\load_order_requests\form_deletion_request.h" />
     <ClInclude Include="dovah\load_order_requests\form_duplication_request.h" />
@@ -954,10 +960,12 @@
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\papyrus\too_many_perk_fragments.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\papyrus\too_many_properties_on_script.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\papyrus\too_many_scene_phase_fragments.h" />
+    <ClInclude Include="dovah\notices\form_save_errors\by_form_component\papyrus\too_many_scripts.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\landscape\heightmap_contains_too_steep_a_slope.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\quest\too_many_log_entry_papyrus_fragments.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\quest\too_many_scripted_aliases.h" />
     <ClInclude Include="dovah\notices\form_save_errors\_all.h" />
+    <ClInclude Include="dovah\notices\form_save_errors\form_type_is_unimplemented.h" />
     <ClInclude Include="dovah\notices\form_save_warnings\not_yet_implemented.h" />
     <ClInclude Include="dovah\notices\_all_errors.h" />
     <ClInclude Include="dovah\notices\_all_warnings.h" />
@@ -2397,6 +2405,7 @@
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="dovah\forms\structs\precached_nif_info.inl" />
     <None Include="dovah\load_order_interfaces\form_load.inl" />
+    <None Include="dovah\load_order_processes\file_save.md" />
     <None Include="dovah\load_order_requests\README.md" />
     <None Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.md" />
     <None Include="dovah\utils\file_prefix.inl" />

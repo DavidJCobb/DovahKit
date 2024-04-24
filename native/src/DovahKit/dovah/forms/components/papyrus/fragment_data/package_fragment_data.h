@@ -23,7 +23,7 @@ namespace dovah::loaded_forms::components::papyrus {
          package_fragment_data() : fragment_data_base(type) {};
 
          virtual void load(attachment_data& owner, tes_subrecord_reader&) override;
-         virtual void save(attachment_data& owner, tes_subrecord_writer&) override;
+         virtual void save(attachment_data& owner, tes_subrecord_writer&, load_order_interfaces::form_save&) override;
          virtual fragment_data_base* clone(loaded_forms::Form& owner_of_clone) const noexcept override;
          
          uint8_t     unknown = 2;

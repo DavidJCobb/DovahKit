@@ -3,6 +3,9 @@
 #include "../files/file_load_order.h"
 #include "../detailed_notice.h"
 
+#include "../exceptions/file_save_failed.h"
+#include "../notices/base_form_save_error.h"
+
 namespace dovah::load_order_interfaces {
    void form_save::log_save_warning(detailed_notice& warning) {
       warning.type    = detailed_notice::notice_type::warning;
@@ -12,15 +15,9 @@ namespace dovah::load_order_interfaces {
       }
       this->owner._log_save_warning(warning);
    }
-   void form_save::set_save_error(const detailed_notice& error) {
-      if (this->writer.error.is_defined())
-         return;
-      auto& we = this->writer.error;
-      we = error;
-      we.type    = detailed_notice::notice_type::error;
-      we.context = detailed_notice::notice_context::form_save;
-      if (!(we.flags & detailed_notice::flag::has_file_offset)) {
-         we.set_file_offset(this->writer.get_output_position());
-      }
+   void form_save::throw_save_error(const notices::base_form_save_error& error) {
+      auto ex = exceptions::file_save_failed(exceptions::file_save_failed::error_code::form_save_failed);
+      ex.details.form_save_error.reset((notices::base_form_save_error*)error.clone());
+      throw ex;
    }
 }

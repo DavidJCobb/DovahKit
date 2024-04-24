@@ -33,14 +33,13 @@ namespace dovah::loaded_forms {
       copy->dragon_name = this->dragon_name;
       copy->human_name  = this->human_name;
    }
-   bool WordOfPower::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void WordOfPower::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->dragon_name);
       FULL.close();
       auto& TNAM = record.open_next_subrecord('TNAM');
       TNAM.write(this->human_name);
       TNAM.close();
-      return true;
    }
    void WordOfPower::_clear_impl() noexcept {
       this->dragon_name.reset();

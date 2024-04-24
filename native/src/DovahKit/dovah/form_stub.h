@@ -24,6 +24,9 @@ namespace dovah {
    namespace load_order_interfaces {
       class form_load;
    }
+   namespace load_order_processes {
+      class file_save;
+   }
    namespace tes_file_reading {
       class basic_reader;
       class file_or_file_part_loader;
@@ -111,6 +114,7 @@ namespace dovah {
       template<typename loaded_form_t> friend class loaded_form_ptr;
       friend file_load_order;
       friend tes_file_reading::file_or_file_part_loader;
+      friend load_order_processes::file_save;
       //
       public:
          form_stub();

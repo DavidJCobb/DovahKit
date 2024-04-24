@@ -1,6 +1,14 @@
 #include "./scene_fragment_data.h"
 #include "../../../_common_cpp.h"
 
+#include "../../../../notices/form_save_errors/by_form_component/papyrus/too_many_scene_phase_fragments.h"
+
+namespace {
+   namespace specific_save_errors {
+      using namespace dovah::notices::form_save_errors::by_component::papyrus;
+   }
+}
+
 namespace dovah::loaded_forms::components::papyrus {
    void scene_fragment_data::load(attachment_data& owner, tes_subrecord_reader& subrecord) {
       uint8_t flags = 0;
@@ -39,7 +47,7 @@ namespace dovah::loaded_forms::components::papyrus {
          subrecord.read_length_prefixed_string<2>(frag.function);
       }
    }
-   void scene_fragment_data::save(attachment_data& owner, tes_subrecord_writer& subrecord) {
+   void scene_fragment_data::save(attachment_data& owner, tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
       uint8_t flags = 0;
       if (this->fragments.on_begin.has_value()) {
          flags |= fragment_flag::has_begin_fragment;
@@ -52,7 +60,14 @@ namespace dovah::loaded_forms::components::papyrus {
       subrecord.write(flags);
       subrecord.write_length_prefixed_string<2>(this->filename);
 
-      assert(this->fragments.on_phase.size() <= max_phase_fragment_count && "Too many fragments in scene_fragment_data.");
+      if (this->fragments.on_phase.size() > max_phase_fragment_count) {
+         auto notice = specific_save_errors::too_many_scene_phase_fragments(
+            *intfc.target_stub,
+            this->fragments.on_phase.size()
+         );
+         intfc.throw_save_error(notice);
+         return;
+      }
       subrecord.write((phase_fragment_count_serialized_type)this->fragments.on_phase.size());
       for (auto& frag : this->fragments.on_phase) {
          subrecord.write(frag.unknown00);

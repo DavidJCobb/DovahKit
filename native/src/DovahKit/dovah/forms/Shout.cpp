@@ -158,7 +158,7 @@ namespace dovah::loaded_forms {
          word.recoveryTime = from.recoveryTime;
       }
    }
-   bool Shout::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Shout::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);
       FULL.close();
@@ -176,7 +176,6 @@ namespace dovah::loaded_forms {
          SNAM.write(word.recoveryTime);
          SNAM.close();
       }
-      return true;
    }
    void Shout::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->equip_type.clear_if(*this, other);

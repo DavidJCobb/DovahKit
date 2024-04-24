@@ -26,15 +26,15 @@ namespace dovah {
          public:
             using type     = dovah::tes_file_group_type;
             using header_t = dovah::tes_file_group_header;
-            //
+            
          protected:
             header_t header;
             uint32_t pos = 0; // position of the start of the group, i.e. just before the signature
-            //
+            
          public:
-            inline operator bool() const noexcept { return this->exists(); }
-            inline bool exists() const noexcept { return this->header.signature != 0; }
-            //
+            constexpr operator bool() const noexcept { return this->exists(); }
+            constexpr bool exists() const noexcept { return this->header.signature != 0; }
+            
             group* get_parent() const noexcept;
       };
 
@@ -77,12 +77,12 @@ namespace dovah {
             record& operator=(const record& other) = delete; // no copy
             record(record& other) = delete; // no copy
             //
-            inline bool is_skyrim_special() const noexcept { return this->header.version >= 44; }
-            inline uint32_t flags() const noexcept { return this->header.flags; }
-            inline uint16_t version() const noexcept { return this->header.version; }
+            constexpr bool is_skyrim_special() const noexcept { return this->header.version >= 44; }
+            constexpr uint32_t flags() const noexcept { return this->header.flags; }
+            constexpr uint16_t version() const noexcept { return this->header.version; }
             //
-            operator bool() const noexcept { return this->exists(); }
-            inline bool exists() const noexcept { return this->header.signature != 0; }
+            constexpr operator bool() const noexcept { return this->exists(); }
+            constexpr bool exists() const noexcept { return this->header.signature != 0; }
             //
             subrecord& get_current_subrecord() const noexcept;
             subrecord& open_next_subrecord(uint32_t signature);
@@ -119,13 +119,13 @@ namespace dovah {
             subrecord& operator=(const subrecord& other) = delete; // no copy
             subrecord(subrecord& other) = delete; // no copy
             //
-            inline operator bool() const { return this->header.signature != 0; }
-            inline bool exists() const noexcept { return this->header.signature != 0; }
+            constexpr operator bool() const { return this->header.signature != 0; }
+            constexpr bool exists() const noexcept { return this->header.signature != 0; }
             //
             record& get_containing_record() const;
             inline bool is_skyrim_special() const noexcept { return this->get_containing_record().is_skyrim_special(); }
             //
-            inline uint32_t signature() const noexcept { return this->header.signature; }
+            constexpr uint32_t signature() const noexcept { return this->header.signature; }
             //
             inline void reserve_more(uint32_t bytes) { this->data.reserve(this->pos + bytes); }
             //

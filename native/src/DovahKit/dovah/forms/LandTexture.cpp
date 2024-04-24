@@ -119,7 +119,7 @@ namespace dovah::loaded_forms {
       copy->remaster_flags    = this->remaster_flags;
       copy_form_reference_list(*copy, copy->grasses, this->grasses);
    }
-   bool LandTexture::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void LandTexture::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       if (!this->bounds.is_zero()) {
          auto& OBND = record.open_next_subrecord('OBND');
@@ -147,7 +147,6 @@ namespace dovah::loaded_forms {
          INAM.write(this->remaster_flags);
          INAM.close();
       }
-      return true;
    }
    void LandTexture::_clear_impl() noexcept {
       this->texture_set.set(*this, nullptr);

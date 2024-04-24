@@ -4,10 +4,14 @@
 #include "../../notice_code_list.h"
 
 #include "../../notices/form_load_warnings/by_form_component/destruction/stage_serialized_index_out_of_bounds.h"
+#include "../../notices/form_save_errors/by_form_component/destruction/too_many_stages.h"
 
 namespace {
    namespace specific_load_warnings {
       using namespace dovah::notices::form_load_warnings::by_component::destruction;
+   }
+   namespace specific_save_errors {
+      using namespace dovah::notices::form_save_errors::by_component::destruction;
    }
 }
 
@@ -173,11 +177,11 @@ namespace dovah::loaded_forms::components {
    void destruction_stage_data::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto stage_count = this->stages.size();
       if (stage_count > std::numeric_limits<uint8_t>::max()) {
-         detailed_notice error;
-         error.code = notice_code::too_many_destruction_stages_to_save;
-         error.extra_integers[0] = stage_count;
-         error.extra_integers[1] = std::numeric_limits<uint8_t>::max();
-         intfc.set_save_error(error);
+         auto notice = specific_save_errors::too_many_stages(
+            *intfc.target_stub,
+            stage_count
+         );
+         intfc.throw_save_error(notice);
          return;
       }
       auto& DEST = record.open_next_subrecord('DEST');

@@ -5,6 +5,14 @@
 #include "./attachment_header.h"
 #include "./attached_script.h"
 
+#include "../../../notices/form_save_errors/by_form_component/papyrus/too_many_scripts.h"
+
+namespace {
+   namespace specific_save_errors {
+      using namespace dovah::notices::form_save_errors::by_component::papyrus;
+   }
+}
+
 namespace dovah::loaded_forms::components::papyrus {
    bool attachment_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (!this->header.load(subrecord))
@@ -50,26 +58,27 @@ namespace dovah::loaded_forms::components::papyrus {
          this->fragment_data->load(*this, subrecord);
       return subrecord.is_in_bounds();
    }
-   bool attachment_data::save(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
+   void attachment_data::save(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
       this->header.save(subrecord);
-      if (this->scripts.size() > std::numeric_limits<uint16_t>::max())
-         return false;
-      subrecord.write(serialized_script_count_type(this->scripts.size()));
-      for (auto& script : this->scripts) {
-         if (!script.save(this->header, subrecord, intfc))
-            return false;
+      if (this->scripts.size() > std::numeric_limits<uint16_t>::max()) {
+         auto notice = specific_save_errors::too_many_scripts(
+            *intfc.target_stub,
+            this->scripts.size()
+         );
+         intfc.throw_save_error(notice);
       }
+      subrecord.write(serialized_script_count_type(this->scripts.size()));
+      for (auto& script : this->scripts)
+         script.save(this->header, subrecord, intfc);
       if (this->fragment_data)
-         this->fragment_data->save(*this, subrecord);
-      return true;
+         this->fragment_data->save(*this, subrecord, intfc);
    }
-   bool attachment_data::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void attachment_data::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       if (this->scripts.empty() && !this->fragment_data)
-         return true;
+         return;
       auto& VMAD = record.open_next_subrecord('VMAD');
-      auto result = this->save(VMAD, intfc);
+      this->save(VMAD, intfc);
       VMAD.close();
-      return result;
    }
    void attachment_data::clone_from(const attachment_data& other, loaded_forms::Form& owner_of_clone) noexcept {
       this->header = other.header;

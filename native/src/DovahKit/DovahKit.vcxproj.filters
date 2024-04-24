@@ -2295,6 +2295,9 @@
     <ClCompile Include="dovah\exceptions\form_creation_failed.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\load_order_processes\file_save.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5873,6 +5876,27 @@
     <ClInclude Include="dovah\exceptions\enums\form_creation_error_code.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\exceptions\form_deletion_failed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\file_save_failed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\game_change_failure_reason.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\exceptions\game_change_failed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_save_errors\form_type_is_unimplemented.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_save_errors\by_form_component\papyrus\too_many_scripts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\load_order_processes\file_save.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6865,6 +6889,7 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\load_order_requests\README.md" />
+    <None Include="dovah\load_order_processes\file_save.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

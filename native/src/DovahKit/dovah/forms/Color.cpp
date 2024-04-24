@@ -37,7 +37,7 @@ namespace dovah::loaded_forms {
       copy->color = this->color;
       copy->color_flags = this->color_flags;
    }
-   bool Color::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Color::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);
       FULL.close();
@@ -47,7 +47,6 @@ namespace dovah::loaded_forms {
       auto& FNAM = record.open_next_subrecord('FNAM');
       FNAM.write(this->color_flags);
       FNAM.close();
-      return true;
    }
    void Color::_clear_impl() noexcept {
    }

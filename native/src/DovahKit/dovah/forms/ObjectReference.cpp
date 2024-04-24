@@ -248,7 +248,7 @@ namespace dovah::loaded_forms {
       copy->position = this->position;
       copy->rotation = this->rotation;
    }
-   bool ObjectReference::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void ObjectReference::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       //
       auto& NAME = record.open_next_subrecord('NAME');
@@ -268,8 +268,6 @@ namespace dovah::loaded_forms {
       DATA.write(this->rotation.y);
       DATA.write(this->rotation.z);
       DATA.close();
-      //
-      return true;
    }
    void ObjectReference::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);

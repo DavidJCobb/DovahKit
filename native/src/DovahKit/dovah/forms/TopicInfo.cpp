@@ -447,7 +447,7 @@ namespace dovah::loaded_forms {
       copy->object_bounds = this->object_bounds;
       copy->script_data.clone_from(this->script_data, *copy);
    }
-   /*virtual*/ bool TopicInfo::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
+   /*virtual*/ void TopicInfo::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       if (this->info_flags || this->days_until_reset) {
          auto& ENAM = record.open_next_subrecord('ENAM');
@@ -493,8 +493,6 @@ namespace dovah::loaded_forms {
       record.write_formID_subrecord('ANAM', this->speaker, true);
       record.write_formID_subrecord('TWAT', this->walk_away_topic, true);
       record.write_formID_subrecord('ONAM', this->audio_override_output, true);
-      //
-      return true;
    }
    /*virtual*/ void TopicInfo::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->speaker.clear_if(*this, other);

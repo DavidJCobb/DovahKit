@@ -7,21 +7,21 @@ namespace dovah {
       enum type : notice_code_t {
          none = 0x00000000,
          //
-         load_order_would_overflow_into_lights       = 0x00000001,
-         load_order_contains_light_files             = 0x00000002,
-         load_order_is_invalid_somehow               = 0x00000003, // The operation you wish to perform is impossible, because the load order is already in an invalid state.
+         //
+         //
+         //
          unknown_form_type                           = 0x00000004,
-         cannot_save_right_now                       = 0x00000005, // It is not safe to save right now, as a save or load operation is already in progress.
-         no_filename_specified                       = 0x00000006,
-         save_complete_but_reopen_failed             = 0x00000007, // A file was successfully saved, but could not be reopened afterwards. Further editing is not possible.
+         //
+         //
+         //
          out_of_memory                               = 0x00000008,
          zlib_memory_error                           = 0x00000009,
          zlib_buffer_error                           = 0x0000000A,
-         forms_out_of_esl_form_id_range              = 0x0000000B, // One or more relevant forms is outside of the range of form IDs available to an ESL.
+         //
          file_has_too_many_dependencies              = 0x0000000C,
-         no_active_file                              = 0x0000000D,
-         save_complete_but_to_temporary_file         = 0x0000000E, // The file was saved successfully, but only to a temporary file. It was not possible to rename that temporary file to the desired filename.
-         unsaved_form_cleanup_failed                 = 0x0000000F, // Some forms were not saved to the file, but could not be deleted from memory. It is not safe to continue this editing session.
+         //
+         //
+         //
          form_override_has_type_mismatch             = 0x00000010,
          //
          //
@@ -53,10 +53,10 @@ namespace dovah {
          //
          //
          zero_is_not_an_allowed_form_id              = 0x0000002E, // The desired operation does not allow you to use zero as a form ID.
-         cannot_load_all_users_of_this_form          = 0x0000002F, // The desired operation requires that DovahKit load all of the forms that use the target form, and that isn't yet implemented.
          //
          //
-         unimplemented_form_type                     = 0x00000032, // DovahKit recognizes this form type and it is valid, but editing has not yet been implemented for it.
+         //
+         //
          //
          //
          //
@@ -65,7 +65,7 @@ namespace dovah {
          //
          //
          form_id_is_out_of_bounds                    = 0x0000003A, // The requested form ID is out-of-bounds, e.g. form ID 0x05000000 in a load order with fewer than six files.
-         post_save_none_stub_cleanup_failed          = 0x0000003B, // Failed to clean up none-stubs after an otherwise successful save operation. It is not safe to continue this editing session.
+         //
          malformed_file                              = 0x0000003C, // Generic error code for malformed files.
          missing_master                              = 0x0000003D, // Failed to load a file, because one of the file's masters is missing.
          missing_file                                = 0x0000003E, // Failed to load a file, because the file is missing.
@@ -94,8 +94,8 @@ namespace dovah {
          //
          //
          //
-         too_many_script_fragments_to_save           = 0x00000058, // A form has too many script fragments, and cannot be saved.
-         too_many_aliases_with_scripts_to_save       = 0x00000059, // A quest has too many aliases with script data, and cannot be saved.
+         //
+         //
          //
          //
          //
@@ -103,13 +103,13 @@ namespace dovah {
          //
          //
          length_prefixed_string_was_too_long_to_save = 0x00000060,
-         too_many_destruction_stages_to_save         = 0x00000061,
+         //
          //
          //
          //
          //
          havok_data_is_not_supported_here            = 0x00000066, // This feature can't load/save/etc. Havok data.
-         landscape_heights_are_too_steep             = 0x00000067, // This landscape cannot be saved, because there is too steep a slope somewhere in its heightmap.
+         //
          //
          //
          //

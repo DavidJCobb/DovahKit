@@ -419,7 +419,7 @@ namespace dovah::loaded_forms {
       //
       copy->mpcd = this->mpcd;
    }
-   bool Landscape::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Landscape::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& DATA = record.open_next_subrecord('DATA');
       DATA.write(this->land_flags);
       DATA.close();
@@ -468,31 +468,34 @@ namespace dovah::loaded_forms {
          float base_offset = floor(list[0] / 8.0F);
          float span_offset = 0.0F;
          VHGT.write(base_offset);
-         for (int i = 0; i < total_vertex_count; ++i) {
+         for (size_t i = 0; i < total_vertex_count; ++i) {
             int x = i % vertices_per_side; // col
             int y = i / vertices_per_side; // row
-            //
-            int8_t out = 0;
+
+            size_t j = i;
+            if (x == 0 && y != 0)
+               j = i - vertices_per_side; // list[j] == height[0][y - 1]
+            else if (x == 0)
+               j = i;
+            else
+               j = i - 1;
+
             float  raw = 0.0F;
-            if (x == 0) {
-               if (y != 0) {
-                  int j = i - vertices_per_side; // list[j] == height[0][y - 1]
-                  raw = round((list[i] - list[j]) / 8.0F);
-               }
-            } else {
-               raw = round((list[i] - list[i - 1]) / 8.0F);
+            if (i != j) {
+               raw = round((list[i] - list[j]) / 8.0F);
             }
+            
             if (raw < std::numeric_limits<int8_t>::min() || raw > std::numeric_limits<int8_t>::max()) {
-               detailed_notice error;
-               error.code = notice_code::landscape_heights_are_too_steep;
-               error.set_cause_form(this->stub);
-               error.set_cause_subrecord('VHGT');
-               error.extra_integers[0] = i;
-               intfc.set_save_error(error);
-               //
-               return false;
+               auto notice = specific_save_errors::heightmap_contains_too_steep_a_slope(
+                  this->stub,
+                  i,
+                  j,
+                  list[i],
+                  list[j]
+               );
+               intfc.throw_save_error(notice);
             }
-            out = raw;
+            int8_t out = raw;
             VHGT.write(out);
          }
          VHGT.skip_bytes(3);
@@ -571,7 +574,6 @@ namespace dovah::loaded_forms {
          warning.set_cause_subrecord('MPCD');
          intfc.log_save_warning(warning);
       }
-      return true;
    }
    void Landscape::_clear_impl() noexcept {
       clear_form_reference_list(this->textures, *this);

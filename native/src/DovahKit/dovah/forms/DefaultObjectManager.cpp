@@ -109,7 +109,7 @@ namespace dovah::loaded_forms {
          data.form.set(*copy, pair.second.form);
       }
    }
-   bool DefaultObjectManager::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void DefaultObjectManager::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       bool opened = false;
       for (auto& pair : this->entries) {
          auto& entry = pair.second;
@@ -123,8 +123,6 @@ namespace dovah::loaded_forms {
       }
       if (opened)
          record.get_current_subrecord().close();
-      //
-      return true;
    }
    void DefaultObjectManager::_sever_outbound_references_impl(form_stub& other) noexcept {
       for (auto& pair : this->entries)

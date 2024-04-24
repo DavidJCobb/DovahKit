@@ -1,4 +1,4 @@
-#include "file_writer.h"
+#include "./file_writer.h"
 #include "../file_load_order.h"
 #include "../tes_file_reading/file_loader.h"
 #include "../../load_order_interfaces/form_save.h"
@@ -13,8 +13,12 @@
 extern "C" {
    #include "../../../zlib/zlib.h" // interproject ref
 }
+#include "../../exceptions/file_save_failed.h"
 
 namespace {
+   using exception  = dovah::exceptions::file_save_failed;
+   using error_code = exception::error_code;
+
    constexpr const auto reference_form_types = []() {
       constexpr const size_t count = []() {
          size_t n = 0;
@@ -200,74 +204,47 @@ namespace dovah::tes_file_writing {
    }
    bool file_writer::_write_form(form_stub* stub, form_stub* previous_child) {
       auto loaded = stub->load_even_if_unsafe({});
-      if (loaded) {
-         assert(is_valid_form_type(stub->form_type) && "Stub form type is out of bounds.");
-         auto& record = this->_open_next_record(form_type_info::lookup(stub->form_type).signature, stub->formID);
-         record.header.flags = stub->get_record_flags() & ~tes_file_record_header::non_data_flags;
-         if (stub->is_edited())
-            record.header.flags &= ~tes_file_record_header::flag::partial; // if the stub was previously a partial record in the active file but is now edited, clear the "partial" flag
-         else if (!stub->file_list_includes(&this->source))
-            record.header.flags |= tes_file_record_header::flag::partial; // if the stub is not in the active file, thne we must be saving it because one of its new child forms is, so set the "partial" flag
-         //
-         auto intfc = load_order_interfaces::form_save(this->owner, *this);
-         intfc.previous_child = previous_child;
-         //
-         if (loaded->save(record, intfc)) {
-            auto& write_info = this->fixup_data.form_stubs[stub->formID];
-            write_info.stub    = stub;
-            write_info.offset  = this->get_stream_position(); // we haven't closed the record yet, so this is still at the start of where we're about to write the record
-            write_info.partial = (record.header.flags & tes_file_record_header::flag::partial);
-            for (auto& pair : stub->outbound) {
-               auto  id    = pair.first;
-               auto& entry = pair.second;
-               if (!this->_can_serialize_form(entry.other))
-                  write_info.sever_references_to.push_back(id);
-            }
-            //
-            if (this->_should_compress_current_record(stub))
-               record.header.flags |= tes_file_record_header::flag::compressed;
-            //
-            if (stub->form_type == form_type::cell) {
-               this->compress_state.containing_cell_is_compressed = record.header.body_is_compressed();
-            }
-            //
-            record._close();
-            if (this->error.is_defined()) // any zlib errors?
-               return false;
-         } else {
-            record._clear(); // abort this attempt at writing a record
-            //
-            // The question now is, what do we want to do as an alternative to trying to write 
-            // the loaded form data?
-            //
-            // Here's a brave idea: what if we just copied the form's original data from its 
-            // source file? I mean, if it's not a hardcoded form or a form that we've created 
-            // at run-time, then it should have come from a file. The whole point of form stubs 
-            // is to let us load form data on demand, and if it's good enough to load, then it 
-            // should be good enough to save, too, right?
-            //
-            // Well, yes, but actually no. See, the source file could have a different list of 
-            // masters than the new file that we're saving, which means that we need to fix up 
-            // form IDs in the data that we're saving. We can't do that if we're just blindly 
-            // copying data, so (outside of just resaving a file with the same masters it had 
-            // to start with) we'd just end up writing a ton of garbage form IDs.
-            //
-            // The only suitable alternative to writing loaded form data, then, is failing with 
-            // an error.
-            //
-            auto& error = this->error;
-            error.type    = detailed_notice::notice_type::error;
-            error.context = detailed_notice::notice_context::form_save;
-            if (!error.is_defined()) // check this before setting the code in case whatever caused the write to fail also signalled an error on its own
-               error.code = notice_code::unknown_form_type;
-            error.set_cause_form(*stub).set_file_offset(this->get_stream_position());
-            return false;
-         }
-      } else {
-         this->error.code = notice_code::unknown_form_type;
-         this->error.set_cause_form(*stub).set_file_offset(this->get_stream_position());
-         return false;
+      if (!loaded) {
+         auto ex = exception(error_code::unimplemented_form_type);
+         ex.details.unimplemented_form = stub;
+         throw ex;
       }
+
+      assert(is_valid_form_type(stub->form_type) && "Stub form type is out of bounds.");
+      auto& record = this->_open_next_record(form_type_info::lookup(stub->form_type).signature, stub->formID);
+      record.header.flags = stub->get_record_flags() & ~tes_file_record_header::non_data_flags;
+      if (stub->is_edited())
+         record.header.flags &= ~tes_file_record_header::flag::partial; // if the stub was previously a partial record in the active file but is now edited, clear the "partial" flag
+      else if (!stub->file_list_includes(&this->source))
+         record.header.flags |= tes_file_record_header::flag::partial; // if the stub is not in the active file, thne we must be saving it because one of its new child forms is, so set the "partial" flag
+      //
+      auto intfc = load_order_interfaces::form_save(this->owner, *this);
+      intfc.previous_child = previous_child;
+      intfc.target_stub    = stub;
+      //
+      loaded->save(record, intfc);
+      {
+         auto& write_info = this->fixup_data.form_stubs[stub->formID];
+         write_info.stub    = stub;
+         write_info.offset  = this->get_stream_position(); // we haven't closed the record yet, so this is still at the start of where we're about to write the record
+         write_info.partial = (record.header.flags & tes_file_record_header::flag::partial);
+         for (auto& pair : stub->outbound) {
+            auto  id    = pair.first;
+            auto& entry = pair.second;
+            if (!this->_can_serialize_form(entry.other))
+               write_info.sever_references_to.push_back(id);
+         }
+         //
+         if (this->_should_compress_current_record(stub))
+            record.header.flags |= tes_file_record_header::flag::compressed;
+         //
+         if (stub->form_type == form_type::cell) {
+            this->compress_state.containing_cell_is_compressed = record.header.body_is_compressed();
+         }
+         //
+         record._close();
+      }
+
       if (stub->has_child_forms()) {
          //
          // Now, we need to write child groups and forms as appropriate:
@@ -295,28 +272,33 @@ namespace dovah::tes_file_writing {
          //
          // Write compressed record data.
          //
-         auto& error  = this->error;
          uint32_t decompressed_size = record.header.size;
          uint32_t compressed_size   = compressBound(decompressed_size);
          auto  buffer = malloc(compressed_size);
          if (!buffer) {
-            error.code = notice_code::out_of_memory;
-            this->error.set_cause_form(*stub).set_file_offset(this->get_stream_position());
-            this->error.cause_form.fixedID = record.header.formID;
-            return;
+            auto ex = exception(error_code::out_of_memory);
+            ex.details.unimplemented_form = stub; // TODO: rename this field
+            throw ex;
          }
          int result = compress2((Bytef*)buffer, (uLongf*)&compressed_size, (const Bytef*)record.data.data(), decompressed_size, Z_BEST_COMPRESSION);
          if (result != Z_OK) {
-            this->error.set_cause_form(*stub).set_file_offset(this->get_stream_position());
-            this->error.cause_form.fixedID = record.header.formID;
             switch (result) {
                case Z_MEM_ERROR:
-                  error.code = notice_code::zlib_memory_error;
-                  return;
+                  {
+                     auto ex = exception(error_code::zlib_memory_error);
+                     ex.details.unimplemented_form = stub; // TODO: rename this field
+                     throw ex;
+                  }
                case Z_BUF_ERROR:
-                  error.code = notice_code::zlib_buffer_error;
-                  return;
+                  {
+                     auto ex = exception(error_code::zlib_buffer_error);
+                     ex.details.unimplemented_form = stub; // TODO: rename this field
+                     throw ex;
+                  }
             }
+            auto ex = exception(error_code::zlib_unknown_error);
+            ex.details.unimplemented_form = stub; // TODO: rename this field
+            throw ex;
          }
          record.header.size = compressed_size + sizeof(decompressed_size);
          this->_write(record.header);
@@ -705,7 +687,7 @@ namespace dovah::tes_file_writing {
    void file_writer::open() {
       this->stream.open(this->path, std::ios_base::binary | std::ios_base::trunc);
    }
-   bool file_writer::write() {
+   void file_writer::write() {
       this->_update_ref_persistence_pre_save();
       this->_write_header();
       for (uint32_t signature : group_sequence_list) {
@@ -749,8 +731,6 @@ namespace dovah::tes_file_writing {
       this->set_stream_position(this->fixup_data.record_and_group_count.offset);
       this->_write(uint32_t(this->fixup_data.record_and_group_count.value));
       this->set_stream_position(pos);
-      //
-      return !this->error.is_defined();
    }
    void file_writer::update_source_file_header() {
       auto& header = this->source.header;

@@ -25,7 +25,7 @@ namespace dovah::loaded_forms::components::papyrus {
          constexpr property_type scalar_type() const noexcept { return scalar_property_type_for(this->type()); }
                   
          bool load(const attachment_header& header, tes_subrecord_reader&);
-         bool save(const attachment_header& header, tes_subrecord_writer&, load_order_interfaces::form_save&) noexcept;
+         void save(const attachment_header& header, tes_subrecord_writer&, load_order_interfaces::form_save&) noexcept;
          void clone_from(const property& source, loaded_forms::Form& owner_of_clone) noexcept;
          void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
          void clear(loaded_forms::Form& my_owner) noexcept;

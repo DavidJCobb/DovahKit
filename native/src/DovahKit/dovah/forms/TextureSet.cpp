@@ -131,7 +131,7 @@ namespace dovah::loaded_forms {
       }
       copy->bounds = this->bounds;
    }
-   bool TextureSet::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void TextureSet::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       if (!this->bounds.is_zero()) {
          auto& OBND = record.open_next_subrecord('OBND');
@@ -164,8 +164,6 @@ namespace dovah::loaded_forms {
          data->save(DODT, intfc);
          DODT.close();
       }
-      //
-      return true;
    }
    void TextureSet::_clear_impl() noexcept {
       this->textures.diffuse.clear();

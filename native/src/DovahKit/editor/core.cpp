@@ -38,6 +38,8 @@
 #include "ui/types/quest_alias.h"
 
 #include "dovah/exceptions/form_creation_failed.h"
+#include "dovah/exceptions/form_deletion_failed.h"
+#include "dovah/exceptions/game_change_failed.h"
 #include "dovah/exceptions/game_setting_renumber_failed.h"
 #include "dovah/notices/base_error.h"
 #include "dovah/notices/base_warning.h"
@@ -352,17 +354,15 @@ QString DovahKitCore::get_active_file_name() const noexcept {
 bool DovahKitCore::has_active_file() const noexcept {
    return this->load_order->has_active_file();
 }
-bool DovahKitCore::save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config& cfg, dovah::tes_file_writing::write_results& results) {
-   //
-   // TODO: fail if a save is in progress.
-   //
+void DovahKitCore::save_active_file(std::filesystem::path name_to_use_if_nameless, const dovah::tes_file_writing::write_config& cfg, dovah::tes_file_writing::write_results& results) {
    emit dataSaveImminent();
-   if (this->load_order->save_active_file(name_to_use_if_nameless, cfg, results)) {
-      emit dataSaveComplete();
-      return true;
+   try {
+      this->load_order->save_active_file(name_to_use_if_nameless, cfg, results);
+   } catch (...) {
+      emit dataSaveFailed();
+      throw; // re-throw
    }
-   emit dataSaveFailed(results.error);
-   return false;
+   emit dataSaveComplete();
 }
 QString DovahKitCore::get_active_file_author() const noexcept {
    if (auto* header = this->load_order->get_active_file_header())
@@ -534,37 +534,14 @@ dovah::form_stub* DovahKitCore::duplicate_form(dovah::form_stub& original, QWidg
 }
 
 void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent) {
+   using exception  = dovah::exceptions::form_deletion_failed;
+   using error_code = exception::error_code;
+
    this->delete_form(target,
       //
       // After-gather callback:
       //
       [this, dialog_parent](const dovah::form_deletion_request& request) {
-         auto error = request.get_error_code();
-         if (error != dovah::default_notice_code) {
-            using notice_code = dovah::notice_code;
-            //
-            QString text;
-            switch (error) {
-               case notice_code::no_active_file:
-                  text = tr("There is neither an active file nor room in the load order for an active file.");
-                  break;
-               case notice_code::cannot_delete_hardcoded_form:
-                  text = tr("The form is hardcoded into the game engine and cannot be deleted.");
-                  break;
-               case notice_code::unimplemented_form_type:
-                  text = tr("DovahKit doesn't currently support this form type, which means that it cannot flag the form as deleted.");
-                  break;
-               case notice_code::cannot_load_all_users_of_this_form:
-                  text = tr("One of the forms that uses this form is of an unsupported type, which means that that use cannot be severed.");
-                  break;
-            }
-            QMessageBox::critical(
-               dialog_parent,
-               QObject::tr("Error", "delete form error"),
-               QObject::tr("Unable to delete this form. %1").arg(text)
-            );
-            return false;
-         }
          if (dialog_parent) {
             //
             // Show a confirmation prompt.
@@ -578,6 +555,28 @@ void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent)
          }
          return true;
       },
+      [this, dialog_parent](const dovah::exceptions::form_deletion_failed& ex) {
+         QString text;
+         switch (ex.code) {
+            case error_code::no_active_file:
+               text = tr("There is neither an active file nor room in the load order for an active file.");
+               break;
+            case error_code::form_is_hardcoded:
+               text = tr("The form is hardcoded into the game engine and cannot be deleted.");
+               break;
+            case error_code::unimplemented_form_type:
+               text = tr("DovahKit doesn't currently support this form type, which means that it cannot flag the form as deleted.");
+               break;
+            case error_code::cannot_load_all_users_of_this_form:
+               text = tr("One of the forms that uses this form is of an unsupported type, which means that that use cannot be severed.");
+               break;
+         }
+         QMessageBox::critical(
+            dialog_parent,
+            QObject::tr("Error", "delete form error"),
+            QObject::tr("Unable to delete this form. %1").arg(text)
+         );
+      },
       //
       // After-complete callback:
       //
@@ -587,43 +586,40 @@ void DovahKitCore::delete_form(dovah::form_stub& target, QWidget* dialog_parent)
 void DovahKitCore::delete_form(
    dovah::form_stub& target,
    std::function<bool(const dovah::form_deletion_request&)> after_gather,
+   std::function<void(const dovah::exceptions::form_deletion_failed&)> on_gather_error,
    std::function<void(const dovah::form_deletion_request&)> after_complete
 ) {
-   auto request = this->load_order->request_form_deletion(target);
-   if (!after_gather(request))
-      return;
-   if (request.get_error_code() != dovah::default_notice_code)
-      return;
-   //
-   struct _entry {
-      dovah::bare_form_id_t id;
-      bool flagged;
-   };
-   std::vector<_entry> formIDs;
-   auto forms_d = request.get_forms_pending_delete(false);
-   auto forms_f = request.get_forms_pending_flagging();
-   formIDs.reserve(forms_d.size() + forms_f.size());
-   for (auto* stub : forms_d) {
-      emit this->formDeletionImminent(stub, false);
-      formIDs.push_back({ stub->formID, false });
+   try {
+      auto request = this->load_order->request_form_deletion(target);
+      if (!after_gather(request))
+         return;
+      
+      struct _entry {
+         dovah::bare_form_id_t id;
+         bool flagged;
+      };
+      std::vector<_entry> formIDs;
+      auto forms_d = request.get_forms_pending_delete(false);
+      auto forms_f = request.get_forms_pending_flagging();
+      formIDs.reserve(forms_d.size() + forms_f.size());
+      for (auto* stub : forms_d) {
+         emit this->formDeletionImminent(stub, false);
+         formIDs.push_back({ stub->formID, false });
+      }
+      for (auto* stub : forms_f) {
+         emit this->formDeletionImminent(stub, true);
+         formIDs.push_back({ stub->formID, true });
+      }
+      
+      request.commit();
+
+      for (auto& entry : formIDs)
+         emit this->formDeletionComplete(entry.id, entry.flagged);
+      
+      after_complete(request);
+   } catch (const dovah::exceptions::form_deletion_failed& ex) {
+      on_gather_error(ex);
    }
-   for (auto* stub : forms_f) {
-      emit this->formDeletionImminent(stub, true);
-      formIDs.push_back({ stub->formID, true });
-   }
-   //
-   request.commit();
-   assert(request.get_error_code() == dovah::default_notice_code);
-      //
-      // (form_deletion_request::commit) should never produce any errors. If it were to for some 
-      // reason, those errors would be impossible to handle: there isn't enough information 
-      // retained to know what form failed to delete, and the operation wouldn't be recoverable 
-      // anyway because other forms may have already been deleted, including parent forms.
-      //
-   for (auto& entry : formIDs)
-      emit this->formDeletionComplete(entry.id, entry.flagged);
-   //
-   after_complete(request);
 }
 
 bool DovahKitCore::get_loaded_game_setting(const char* name, dovah::loaded_game_setting& out) {

@@ -1,6 +1,14 @@
 #include "./perk_fragment_data.h"
 #include "../../../_common_cpp.h"
 
+#include "../../../../notices/form_save_errors/by_form_component/papyrus/too_many_perk_fragments.h"
+
+namespace {
+   namespace specific_save_errors {
+      using namespace dovah::notices::form_save_errors::by_component::papyrus;
+   }
+}
+
 namespace dovah::loaded_forms::components::papyrus {
    void perk_fragment_data::load(attachment_data& owner, tes_subrecord_reader& subrecord) {
       if (!subrecord.read(this->unknown))
@@ -24,10 +32,17 @@ namespace dovah::loaded_forms::components::papyrus {
             break;
       }
    }
-   void perk_fragment_data::save(attachment_data& owner, tes_subrecord_writer& subrecord) {
+   void perk_fragment_data::save(attachment_data& owner, tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
       subrecord.write(this->unknown);
       subrecord.write_length_prefixed_string<2>(this->filename);
-      assert(this->fragments.size() <= max_fragment_count && "Too many fragments in perk_fragment_data.");
+      if (this->fragments.size() > max_fragment_count) {
+         auto notice = specific_save_errors::too_many_perk_fragments(
+            *intfc.target_stub,
+            this->fragments.size()
+         );
+         intfc.throw_save_error(notice);
+         return;
+      }
       subrecord.write((fragment_count_serialized_type)this->fragments.size());
       for (auto& frag : this->fragments) {
          subrecord.write(frag.index);

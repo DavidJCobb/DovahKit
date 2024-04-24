@@ -7,10 +7,15 @@
 #include "../notices/form_load_warnings/by_form_type/quest/alias_papyrus_data_belongs_to_missing_alias.h"
 #include "../notices/form_load_warnings/by_form_type/quest/alias_papyrus_data_specifies_wrong_quest.h"
 #include "../notices/form_load_warnings/by_form_type/quest/papyrus_fragment_belongs_to_missing_log_entry.h"
+#include "../notices/form_save_errors/by_form_type/quest/too_many_log_entry_papyrus_fragments.h"
+#include "../notices/form_save_errors/by_form_type/quest/too_many_scripted_aliases.h"
 
 namespace {
    namespace specific_load_warnings {
       using namespace dovah::notices::form_load_warnings::by_type::quest;
+   }
+   namespace specific_save_errors {
+      using namespace dovah::notices::form_save_errors::by_type::quest;
    }
 }
 
@@ -626,7 +631,7 @@ namespace dovah::loaded_forms {
             if (!subrecord.read_length_prefixed_string<2>(this->function))
                return;
          }
-         bool Quest::LogEntry::script_fragment::save(tes_subrecord_writer& subrecord, uint16_t stage_id, uint32_t entry_index) {
+         void Quest::LogEntry::script_fragment::save(tes_subrecord_writer& subrecord, uint16_t stage_id, uint32_t entry_index) {
             assert(subrecord.signature() == 'VMAD');
             subrecord.write(stage_id);
             subrecord.write(this->unknown02);
@@ -634,7 +639,6 @@ namespace dovah::loaded_forms {
             subrecord.write(this->unknown08);
             subrecord.write_length_prefixed_string<2>(this->filename);
             subrecord.write_length_prefixed_string<2>(this->function);
-            return true;
          }
          void Quest::LogEntry::script_fragment::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
             subrecord.skip_bytes(
@@ -669,7 +673,7 @@ namespace dovah::loaded_forms {
             assert(subrecord.signature() == 'CNAM' && "Quest::LogEntry::loadText should only be called just after the CNAM subrecord is opened.");
             subrecord.read(this->journal_text);
          }
-         bool Quest::LogEntry::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+         void Quest::LogEntry::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
             auto& QSDT = record.open_next_subrecord('QSDT');
             QSDT.write(this->flags);
             QSDT.close();
@@ -679,7 +683,6 @@ namespace dovah::loaded_forms {
             CNAM.write(this->journal_text);
             CNAM.close();
             record.write_formID_subrecord('NAM0', this->next_quest_id, true);
-            return true;
          }
          void Quest::LogEntry::sever_outbound_references(form_stub& other, loaded_forms::Form& my_owner) noexcept {
             for (auto& cnd : this->conditions)
@@ -711,7 +714,7 @@ namespace dovah::loaded_forms {
             subrecord.unchecked_read(this->padding);
          }
       }
-      bool Quest::Stage::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      void Quest::Stage::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
          auto& INDX = record.open_next_subrecord('INDX');
          INDX.write(this->index);
          INDX.write(this->flags);
@@ -719,7 +722,6 @@ namespace dovah::loaded_forms {
          INDX.close();
          for (auto& entry : this->entries)
             entry.save(record, intfc);
-         return true;
       }
       void Quest::Stage::sever_outbound_references(form_stub& other, loaded_forms::Form& my_owner) noexcept {
          for (auto& entry : this->entries)
@@ -756,7 +758,7 @@ namespace dovah::loaded_forms {
          // Conditions aren't loaded here; the main QUST loader handles that.
          //
       }
-      bool Quest::Target::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      void Quest::Target::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
          auto& QSTA = record.open_next_subrecord('QSTA');
          QSTA.write(this->aliasID);
          QSTA.write(this->flags);
@@ -764,7 +766,6 @@ namespace dovah::loaded_forms {
          QSTA.close();
          for (auto& cnd : this->conditions)
             cnd.save(record, intfc);
-         return true;
       }
       void Quest::Target::sever_outbound_references(form_stub& other, loaded_forms::Form& my_owner) noexcept {
          for (auto& cnd : this->conditions)
@@ -820,7 +821,7 @@ namespace dovah::loaded_forms {
             }
          }
       }
-      bool Quest::Objective::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      void Quest::Objective::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
          auto& QOBJ = record.open_next_subrecord('QOBJ');
          QOBJ.write(this->index);
          QOBJ.close();
@@ -832,7 +833,6 @@ namespace dovah::loaded_forms {
          NNAM.close();
          for (auto& t : this->targets)
             t.save(record, intfc);
-         return true;
       }
       void Quest::Objective::sever_outbound_references(form_stub& other, loaded_forms::Form& my_owner) noexcept {
          for (auto& t : this->targets)
@@ -1288,7 +1288,7 @@ namespace dovah::loaded_forms {
             copy->aliases[i] = this->aliases[i]->clone(*copy);
       }
    }
-   bool Quest::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
+   void Quest::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
       {
          size_t alias_count = 0;
          size_t log_count   = 0;
@@ -1297,23 +1297,21 @@ namespace dovah::loaded_forms {
                if (!e.fragment.empty())
                   ++log_count;
          if (log_count > std::numeric_limits<uint16_t>::max()) {
-            detailed_notice error;
-            error.code = notice_code::too_many_script_fragments_to_save;
-            error.extra_integers[0] = log_count;
-            error.extra_integers[1] = std::numeric_limits<uint16_t>::max();
-            intfc.set_save_error(error);
-            return false;
+            auto notice = specific_save_errors::too_many_log_entry_papyrus_fragments(
+               *intfc.target_stub,
+               log_count
+            );
+            intfc.throw_save_error(notice);
          }
          for (auto* a : this->aliases)
             if (!a->script_data.empty())
                ++alias_count;
          if (alias_count > std::numeric_limits<uint16_t>::max()) {
-            detailed_notice error;
-            error.code = notice_code::too_many_aliases_with_scripts_to_save;
-            error.extra_integers[0] = log_count;
-            error.extra_integers[1] = std::numeric_limits<uint16_t>::max();
-            intfc.set_save_error(error);
-            return false;
+            auto notice = specific_save_errors::too_many_scripted_aliases(
+               *intfc.target_stub,
+               alias_count
+            );
+            intfc.throw_save_error(notice);
          }
          if (alias_count || log_count || !this->script_data.empty()) {
             auto& VMAD = record.open_next_subrecord('VMAD');
@@ -1378,17 +1376,14 @@ namespace dovah::loaded_forms {
          cnd.save(record, intfc);
       }
       for (auto& obj : this->stages)
-         if (!obj.save(record, intfc))
-            return false;
+         obj.save(record, intfc);
       for (auto& obj : this->objectives)
-         if (!obj.save(record, intfc))
-            return false;
+         obj.save(record, intfc);
       auto& ANAM = record.open_next_subrecord('ANAM');
       ANAM.write(this->next_alias_id);
       ANAM.close();
       for (auto* alias : this->aliases)
          alias->save(record, intfc);
-      return true;
    }
    void Quest::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);

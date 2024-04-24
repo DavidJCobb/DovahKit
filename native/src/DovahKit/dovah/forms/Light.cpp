@@ -164,7 +164,7 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   bool Light::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Light::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       auto& OBND = record.open_next_subrecord('OBND');
       this->bounds.save(OBND, intfc);
@@ -214,7 +214,6 @@ namespace dovah::loaded_forms {
       FNAM.write(this->fade);
       FNAM.close();
       record.write_formID_subrecord('SNAM', this->item_data.sound, true);
-      return true;
    }
    void Light::_clear_impl() noexcept {
       this->script_data.clear(*this);

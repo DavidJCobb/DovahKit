@@ -194,7 +194,7 @@ namespace dovah::loaded_forms {
          copy->chance_by_season = this->chance_by_season;
       #pragma endregion
    }
-   bool Flora::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Flora::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       auto& OBND = record.open_next_subrecord('OBND');
       this->bounds.save(OBND, intfc);
@@ -215,7 +215,6 @@ namespace dovah::loaded_forms {
          RNAM.close();
       }
       record.write_formID_subrecord('KNAM', this->interact_keyword, true);
-      return true;
    }
    void Flora::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);

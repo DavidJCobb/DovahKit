@@ -71,7 +71,6 @@ class LogListModel : public QAbstractTableModel {
       void dataAcquireComplete();
       void dataSaveImminent();
       void dataSaveComplete();
-      void saveErrorReceived(const dovah::detailed_notice& error);
       void loadWarningReceived(const dovah::detailed_notice& warning);
 
       void errorReceived(const dovah::notices::base_error&);

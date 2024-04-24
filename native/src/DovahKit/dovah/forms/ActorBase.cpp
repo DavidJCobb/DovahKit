@@ -747,7 +747,7 @@ namespace dovah::loaded_forms {
       copy->height = this->height;
       copy->weight = this->weight;
    }
-   bool ActorBase::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void ActorBase::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       auto& OBND = record.open_next_subrecord('OBND');
       this->bounds.save(OBND, intfc);
@@ -989,7 +989,6 @@ namespace dovah::loaded_forms {
             TIAS.close();
          }
       }
-      return true;
    }
    void ActorBase::_sever_outbound_references_impl(form_stub& other) noexcept {
       // components

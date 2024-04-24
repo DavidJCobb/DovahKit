@@ -190,19 +190,6 @@ namespace editor_helpers {
          case notice_code::unknown_form_type:
             text = QObject::tr("One of the forms that needs to be saved is of a type that DovahKit has not yet been programmed to handle.", "write error");
             break;
-         case notice_code::no_active_file:
-            text = QObject::tr("You did not select an active file, and there is no room in this load order for another file.", "write error");
-            break;
-         case notice_code::cannot_save_right_now:
-            text = QObject::tr("It is not safe to save right now, because DovahKit is currently performing some other operation (e.g. a load or save).", "write error");
-            break;
-         case notice_code::no_filename_specified:
-            text = QObject::tr("The active file is implicit (nameless) and no filename was provided. (Wait, what? How did this happen? We should've made you either provide a name or cancel.)", "write error");
-            break;
-         case notice_code::save_complete_but_reopen_failed:
-            non_continuable_success = true;
-            text = QObject::tr("The file was successfully saved, but could not be reopened for editing after the save. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
-            break;
          case notice_code::out_of_memory:
             text = QObject::tr("An out-of-memory error occurred at some point during the save process, likely while trying to write a compressed record.", "write error");
             break;
@@ -212,25 +199,12 @@ namespace editor_helpers {
          case notice_code::zlib_buffer_error:
             text = QObject::tr("A zlib buffer error occurred while trying to save a compressed record.", "write error");
             break;
-         case notice_code::forms_out_of_esl_form_id_range:
-            text = QObject::tr("You cannot convert a file to an ESL if any of its forms have IDs above XX000FFF.", "write error");
-            break;
          case notice_code::file_has_too_many_dependencies:
             if (notice.context == dovah::detailed_notice::notice_context::file_load) {
                text = QObject::tr("The file claims to have more than 254 dependencies. This is impossible.", "read error");
             } else {
                text = QObject::tr("A file cannot have more than 254 dependencies.", "write error");
             }
-            break;
-         case notice_code::load_order_would_overflow_into_lights:
-            text = QObject::tr("The current load order would not be possible in Skyrim Special. Too many files (besides the active file) are loaded; they are overflowing into the 0xFE slot.", "write error");
-            break;
-         case notice_code::load_order_contains_light_files:
-            text = QObject::tr("The current load order would not be possible in Skyrim Classic. The load order contains ESL files (besides the active file).", "write error");
-            break;
-         case notice_code::unsaved_form_cleanup_failed:
-            non_continuable_success = true;
-            text = QObject::tr("The file was successfully saved, but some forms were lost during the conversion. Internal errors occurred while trying to remove these forms from memory. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
             break;
          case notice_code::form_id_is_out_of_bounds:
             {
@@ -245,10 +219,6 @@ namespace editor_helpers {
                //
                text = QObject::tr("File %2 is malformed: record %1 had a form ID whose load order prefix would place it out of bounds.", "read error").arg(form).arg(file);
             }
-            break;
-         case notice_code::post_save_none_stub_cleanup_failed:
-            non_continuable_success = true;
-            text = QObject::tr("The file was successfully saved, but internal errors occurred while trying to clean up information on dangling form-to-form references. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
             break;
          case notice_code::zero_is_not_an_allowed_form_id:
             {
@@ -501,30 +471,6 @@ namespace editor_helpers {
                text = text.arg(form).arg(file_sent_to).arg(file_initial).arg(topic_initial).arg(topic_sent_to);
             }
             break;
-         case notice_code::too_many_script_fragments_to_save:
-            {
-               text = QObject::tr("Form %1 contains %2 script fragments, but the file format can only encode up to %3 fragments.", "notice_code::too_many_script_fragments_to_save");
-               //
-               QString form = QObject::tr("<unknown form>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               //
-               text = text.arg(form).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
-            }
-            break;
-         case notice_code::too_many_aliases_with_scripts_to_save:
-            {
-               text = QObject::tr("Quest %1 contains script data for %2 aliases, but the file format can only encode script data for up to %3 aliases.", "notice_code::too_many_aliases_with_scripts_to_save");
-               //
-               QString form = QObject::tr("<unknown form>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               //
-               text = text.arg(form).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
-            }
-            break;
          case notice_code::length_prefixed_string_was_too_long_to_save:
             {
                text = QObject::tr("Form %1 subrecord %2 contained a subrecord that was too long to save (%3 bytes out of %4 allowed).", "notice_code::length_prefixed_string_was_too_long_to_save");
@@ -539,18 +485,6 @@ namespace editor_helpers {
                }
                //
                text = text.arg(form).arg(subrecord).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
-            }
-            break;
-         case notice_code::too_many_destruction_stages_to_save:
-            {
-               text = QObject::tr("Form %1 contained too many destruction stages to save (%2 stages out of %3 allowed).", "notice_code::too_many_destruction_stages_to_save");
-               //
-               QString form = QObject::tr("<unknown form>",      "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               //
-               text = text.arg(form).arg(notice.extra_integers[0]).arg(notice.extra_integers[1]);
             }
             break;
             //
@@ -574,33 +508,6 @@ namespace editor_helpers {
                }
             }
             break;
-         case notice_code::landscape_heights_are_too_steep:
-            {
-               text = QObject::tr("Landspace %1 vertex (%2, %3) is too steep relative to vertex (%4, %5). The landscape cannot be saved.", "notice_code::landscape_heights_are_too_steep");
-               //
-               constexpr int vertices_per_side = dovah::loaded_forms::Landscape::vertices_per_side;
-               int i  = notice.extra_integers[0];
-               int xa = i % vertices_per_side;
-               int ya = i / vertices_per_side;
-               int xb = 0;
-               int yb = 0;
-               if (xa == 0) {
-                  xb = xa;
-                  yb = ya - 1;
-               } else {
-                  xb = xa - 1;
-                  yb = ya;
-               }
-               //
-               QString form = QObject::tr("<unknown form>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               //
-               text = text.arg(form).arg(xa).arg(ya).arg(xb).arg(yb);
-            }
-            break;
-
             //
          case notice_code::unknown_error:
          default:

@@ -153,7 +153,7 @@ namespace dovah::loaded_forms {
       copy->loop_sound.set(*copy, this->loop_sound);
       copy_form_reference_list(*copy, copy->random_destinations, this->random_destinations);
    }
-   bool Door::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Door::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       auto& OBND = record.open_next_subrecord('OBND');
       this->bounds.save(OBND, intfc);
@@ -172,7 +172,6 @@ namespace dovah::loaded_forms {
       FNAM.close();
       for (auto& form : this->random_destinations)
          record.write_formID_subrecord('TNAM', form);
-      return true;
    }
    void Door::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);

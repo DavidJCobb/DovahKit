@@ -4,15 +4,22 @@
 #include "../forms/Form.h"
 #include "../form_stub.h"
 #include "../notice_code_list.h"
+#include "../exceptions/form_deletion_failed.h"
+
+namespace {
+   using exception  = dovah::exceptions::form_deletion_failed;
+   using error_code = exception::error_code;
+}
 
 namespace dovah {
    form_deletion_request::form_deletion_request(file_load_order& o, form_stub& t) : owner(o), target(t) {
-      if (this->target.is_hardcoded() || this->target.formID < minimum_plugin_form_id) {
-         this->error = notice_code::cannot_delete_hardcoded_form;
-         return;
-      }
+      if (!owner.active_file)
+         throw exception(error_code::no_active_file, this->target);
+      if (this->target.is_hardcoded() || this->target.formID < minimum_plugin_form_id)
+         throw exception(error_code::form_is_hardcoded, this->target);
+
       this->active_file_prefix = this->owner.active_file_prefix();
-      //
+      
       if (_form_should_be_flagged(this->target)) {
          this->forms_needing_flag.insert(&this->target);
       } else {
@@ -22,7 +29,6 @@ namespace dovah {
       this->_gather_others(&this->target);
    }
    form_deletion_request::form_deletion_request(form_deletion_request&& other) : owner(other.owner), target(other.target) {
-      this->error = other.error;
       std::swap(this->forms_needing_delete, other.forms_needing_delete);
       std::swap(this->seen_stubs, other.seen_stubs);
       //
@@ -30,7 +36,7 @@ namespace dovah {
       //
       this->active_file_prefix = this->owner.active_file_prefix();
    }
-   bool form_deletion_request::_form_should_be_flagged(form_stub& stub) {
+   bool form_deletion_request::_form_should_be_flagged(form_stub& stub) noexcept {
       if (this->force_delete_overrides)
          return false;
       if (stub.is_hardcoded()) // we don't currently allow any kind of deletion of hardcoded forms, but it never hurts to be prepared for what might change
@@ -45,14 +51,13 @@ namespace dovah {
       // not only all of the to-be-deleted forms, but also all of their users, in order to sever 
       // uses and set "deleted" flags as necessary.
       //
-      if (this->error != default_notice_code)
-         return;
       if (!start)
          start = &this->target;
       //
       if (!start->load()) {
-         this->error = notice_code::unimplemented_form_type;
-         return;
+         auto ex = exception(error_code::unimplemented_form_type, this->target);
+         ex.details.referent = start;
+         throw ex;
       }
       //
       for (auto& pair : start->inbound) {
@@ -63,8 +68,10 @@ namespace dovah {
          this->seen_stubs.insert(entry.other);
          //
          if (!entry.other->load()) { // Check to ensure we can load all users.
-            this->error = notice_code::cannot_load_all_users_of_this_form;
-            return;
+            auto ex = exception(error_code::cannot_load_all_users_of_this_form, this->target);
+            ex.details.referent = start;
+            ex.details.referrer = entry.other;
+            throw ex;
          }
          //
          if (entry.flags & use_info_entry::flag::parent_child) {
@@ -75,8 +82,6 @@ namespace dovah {
                this->forms_needing_delete.insert(entry.other);
             }
             this->_gather_others(entry.other);
-            if (this->error != default_notice_code)
-               return;
          }
       }
    }
@@ -119,13 +124,13 @@ namespace dovah {
          out.push_back(stub);
       return out;
    }
-   void form_deletion_request::commit() {
-      if (this->done || this->error != default_notice_code)
-         return;
-      if (!owner.active_file) {
-         this->error = notice_code::no_active_file;
-         return;
-      }
+
+   //
+   // This operation is not allowed to fail, as there's no way to recover from any potential 
+   // failures: we can't easily signal which deletion failed, and some other deletions may 
+   // have already been carried out.
+   //
+   void form_deletion_request::commit() noexcept {
       bare_form_id_t lowestID = 0xFFFFFFFF;
       for (auto* stub : this->forms_needing_delete) {
          this->_prep_for_delete(*stub, false);
@@ -151,6 +156,5 @@ namespace dovah {
          stub->load()->friendly_delete_override(this->owner);
          stub->set_edited(true);
       }
-      this->done = true;
    }
 }

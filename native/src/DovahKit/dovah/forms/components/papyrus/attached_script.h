@@ -25,7 +25,7 @@ namespace dovah::loaded_forms::components::papyrus {
          std::vector<property> properties;
                   
          bool load(const attachment_header& owner, tes_subrecord_reader&);
-         bool save(const attachment_header& owner, tes_subrecord_writer&, load_order_interfaces::form_save&) noexcept;
+         void save(const attachment_header& owner, tes_subrecord_writer&, load_order_interfaces::form_save&) noexcept;
 
          void clear_properties(loaded_forms::Form& owner);
          void clone_properties(loaded_forms::Form& my_owner, const attached_script& other);

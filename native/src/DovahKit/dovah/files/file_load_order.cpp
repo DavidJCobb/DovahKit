@@ -23,11 +23,15 @@
 #include "../notice_code_list.h"
 #include <fstream>
 
+#include "../exceptions/file_save_failed.h"
 #include "../exceptions/form_creation_failed.h"
+#include "../exceptions/form_deletion_failed.h"
 #include "../exceptions/form_renumber_failed.h"
+#include "../exceptions/game_change_failed.h"
 #include "../exceptions/game_setting_renumber_failed.h"
 #include "../exceptions/game_setting_value_change_failed.h"
 #include "../load_order_interfaces/file_load.h"
+#include "../load_order_processes/file_save.h"
 #include "../load_order_requests/form_creation_request.h"
 #include "../load_order_requests/form_deletion_request.h"
 #include "../load_order_requests/form_duplication_request.h"
@@ -1230,9 +1234,9 @@ namespace dovah {
    }
 
    #pragma region Changing the current game
-   notice_code_t file_load_order::_can_change_current_game(game g, bool because_we_are_changing_whether_the_active_file_is_light) const noexcept {
+   std::optional<game_change_failure_reason> file_load_order::_can_change_current_game(game g, bool because_we_are_changing_whether_the_active_file_is_light) const noexcept {
       if (this->current_game == g)
-         return notice_code::none;
+         return {};
       //
       bool prior_light = game_supports_light_plugins(this->current_game);
       bool after_light = game_supports_light_plugins(g);
@@ -1242,16 +1246,15 @@ namespace dovah {
             // See if we can enable light plug-in support.
             //
             auto size = this->files.size();
-            if (size > 0xFF)
-               return notice_code::load_order_is_invalid_somehow; // how do we have more than 255 non-light plug-ins in a load order for a game with no ESL support?
+            assert(size <= 0xFF); // how do we have more than 255 non-light plug-ins in a load order for a game with no ESL support?
             if (size == 0xFF) {
                //
                // The load order contains enough loaded files to overflow into slot 0xFE.
                //
                if (!because_we_are_changing_whether_the_active_file_is_light)
-                  return notice_code::load_order_would_overflow_into_lights;
+                  return game_change_failure_reason::load_order_would_overflow_into_lights;
                if (this->active_file && this->files.back() != this->active_file)
-                  return notice_code::load_order_would_overflow_into_lights;
+                  return game_change_failure_reason::load_order_would_overflow_into_lights;
             }
          } else {
             //
@@ -1260,28 +1263,28 @@ namespace dovah {
             //
             if (!because_we_are_changing_whether_the_active_file_is_light) {
                if (this->active_file && this->active_file->is_light())
-                  return notice_code::load_order_contains_light_files;
+                  return game_change_failure_reason::load_order_contains_light_files;
             }
             for (auto* file : this->files) {
                if (file == this->active_file)
                   continue;
                if (file->is_light())
-                  return notice_code::load_order_contains_light_files;
+                  return game_change_failure_reason::load_order_contains_light_files;
             }
          }
       }
-      return notice_code::none;
+      return {};
    }
-   notice_code_t file_load_order::_change_current_game(game g, bool because_we_are_changing_whether_the_active_file_is_light) {
+   void file_load_order::_change_current_game(game g, bool because_we_are_changing_whether_the_active_file_is_light) {
       auto code = this->_can_change_current_game(g, because_we_are_changing_whether_the_active_file_is_light);
-      if (code == notice_code::none)
-         this->current_game = g;
-      return code;
+      if (code.has_value())
+         throw exceptions::game_change_failed(code.value(), this->current_game, g);
+      this->current_game = g;
    }
-   notice_code_t file_load_order::can_change_current_game(game g) const noexcept {
+   std::optional<game_change_failure_reason> file_load_order::can_change_current_game(game g) const noexcept {
       return this->_can_change_current_game(g, false);
    }
-   notice_code_t file_load_order::change_current_game(game g) {
+   void file_load_order::change_current_game(game g) {
       return this->_change_current_game(g, false);
    }
    #pragma endregion
@@ -2401,7 +2404,7 @@ namespace dovah {
       return &this->active_file->header;
    }
 
-   bool file_load_order::save_active_file(std::filesystem::path requested_filename, const dovah::tes_file_writing::write_config& cfg, dovah::tes_file_writing::write_results& results) {
+   void file_load_order::save_active_file(std::filesystem::path requested_filename, const dovah::tes_file_writing::write_config& cfg, dovah::tes_file_writing::write_results& results) {
       //
       // The process of saving an active file is somewhat complex, due to the need to support 
       // both Skyrim Classic  and Skyrim Special,  as well as the  need to support converting 
@@ -2489,283 +2492,9 @@ namespace dovah {
       //    stubs that were defined in the active  file but didn't save, as well as any none-
       //    stubs that were referred to only by active file forms.
       //
-      if (!this->active_file) {
-         results.error.code = notice_code::no_active_file;
-         return false;
-      }
-      _save_load_lock_guard save_load_lock_guard(*this, save_load_type::is_saving);
-      if (!save_load_lock_guard) {
-         results.error.code = notice_code::cannot_save_right_now;
-         return false;
-      }
-      //
-      std::filesystem::path desired_filename = this->active_file->get_filename();
-      if (!requested_filename.empty())
-         desired_filename = requested_filename;
-      if (desired_filename.empty()) {
-         results.error.code = notice_code::no_filename_specified;
-         return false;
-      }
-      //
-      if (this->files.size() > 0xFE) {
-         results.error.code = notice_code::file_has_too_many_dependencies;
-         return false;
-      }
-      //
-      desired_filename = std::filesystem::path(this->base_path) / desired_filename;
-      std::filesystem::path temporary_filename = desired_filename;
-      {  // opening the file for writing will clear its contents (which is bad for the user and will break our reading/writing), so we want to ALWAYS write to a temporary file first!
-         auto ext = temporary_filename.extension().string();
-         if (_stricmp(ext.data(), ".tes") == 0) {
-            //
-            // This normally should never happen. The editor should never allow you to open a *.TES 
-            // file directly. You can end up working with one e.g. if a save is successful but we are 
-            // unable to replace the file being saved over, but when that happens, we shouldn't be 
-            // updating the file_reader's stored filename, so that should still point to the old name.
-            //
-         } else {
-            temporary_filename.replace_extension(".tes");
-         }
-      }
-      //
-      auto old_active_file_prefix = this->file_prefix_for(*this->active_file);
-      bool was_originally_light   = this->active_file->is_light();
-      bool save_as_light_plugin   = (cfg.file_flags & tes_file_flag::light) || _stricmp(desired_filename.extension().string().data(), ".esl") == 0;
-      if (cfg.output_game != game::skyrim_special)
-         save_as_light_plugin = false;
-      if (save_as_light_plugin && !was_originally_light) {
-         //
-         // Double-check to make sure that saving as an ESL should even be possible.
-         //
-         for (auto& pair : this->active_file_forms.forms) {
-            auto id = pair.second->formID;
-            if (id & 0x00FFF000) {
-               results.error.code = notice_code::forms_out_of_esl_form_id_range;
-               return false;
-            }
-         }
-      }
-      if (this->current_game != cfg.output_game) {
-         auto code = this->_can_change_current_game(cfg.output_game, was_originally_light != save_as_light_plugin);
-         if (code != notice_code::none) {
-            results.error.code = code;
-            return false;
-         }
-      }
-      //
-      tes_file_writing::file_writer writer(*this, *this->active_file, cfg);
-      writer.path = temporary_filename;
-      writer.open();
-      if (writer.write()) {
-         //
-         // Okay, so we have successfully written the updated form data to a temporary file. Now, we 
-         // need to do a few things: we need to close the active file's mapped file view; we need to 
-         // replace the old file with our temporary one; and we need to reopen the mapped file view 
-         // on the updated file. (The file view needs to be closed because it's shared read access; 
-         // it *should* prevent the file from being modified.)
-         //
-         writer.close(); // so we can move the new file
-         this->active_file->close(); // so we can replace the old file
-         //
-         this->_change_current_game(cfg.output_game, was_originally_light != save_as_light_plugin);
-         //
-         if (!writer.post_save_rename(desired_filename)) {
-            auto& warning = results.add_warning();
-            warning.code = notice_code::save_complete_but_to_temporary_file;
-            warning.relevant_files.emplace_back(temporary_filename.filename().string());
-         }
-         if (!this->active_file->reopen()) {
-            //
-            // We were unable to reopen the mapped file view after fully updating the active file, 
-            // so we can't load form content for active file form stubs anymore. In other words, the 
-            // save completed, but further editing is not possible.
-            //
-            results.error.code = notice_code::save_complete_but_reopen_failed;
-            return false;
-         }
-         //
-         // The file was reopened successfully, so let's update our in-memory state to match the data 
-         // that was saved out.
-         //
-         if (was_originally_light != save_as_light_plugin) {
-            //
-            // We have changed whether the active file is a light plug-in, so we need to change all 
-            // of its form IDs in memory.
-            //
-            auto new_prefix = this->file_prefix_for(*this->active_file, save_as_light_plugin);
-            //
-            std::vector<form_stub*> stubs;
-            for (auto& pair : this->active_file_forms.forms) {
-               auto* stub = pair.second;
-               if (!stub)
-                  continue;
-               auto  id   = stub->formID;
-               if (old_active_file_prefix.contains_form_id(id))
-                  stubs.push_back(stub);
-            }
-            for (auto* stub : stubs) {
-               if (stub->formID < 0x800)
-                  continue;
-               this->_renumber_form(*stub, new_prefix.coerce_form_id(stub->formID), false);
-            }
-            //
-            // And of course, we need to keep the loaded game settings consistent, too.
-            //
-            for (auto& pair : this->game_settings.by_name) {
-               auto& list = pair.second;
-               for (auto& entry : list) {
-                  if (entry.source_file != this->active_file)
-                     continue;
-                  if (entry.formID < 0x800)
-                     continue;
-                  entry.formID = new_prefix.coerce_form_id(entry.formID);
-               }
-            }
-         }
-         writer.update_source_file_header();
-         //
-         // The last two steps, before editing can resume, involve updating all form stubs in memory. 
-         // Stubs that were saved to the new file need to have their file offsets updated. Active file 
-         // stubs that were NOT saved (e.g. forms that were lost during a conversion between games) 
-         // need to be discarded. (We need to discard those forms because the file they were originally 
-         // loaded from may have been replaced, and if it wasn't, then it still isn't in use anymore; 
-         // as such, if those forms have been unloaded, we can't load their data into memory anymore.)
-         //
-         for (auto& pair : writer.fixup_data.form_stubs) {
-            auto& info = pair.second;
-            auto* stub = info.stub;
-            stub->_set_source_file_offset(*this->active_file, info.offset);
-            stub->_modify_source_file_record_flags(*this->active_file, tes_file_record_header::flag::partial, info.partial);
-            if (!stub->is_edited()) {
-               //
-               // If the form stub was written to the file despite not having been flagged as edited, 
-               // it would be because a child/descendant form or parent/ancestor form was edited. 
-               // We need to add this form to the active file form list.
-               //
-               this->active_file_forms.forms[stub->formID] = stub;
-               this->active_file_forms_by_type[stub->form_type].forms[stub->formID] = stub;
-            }
-            stub->set_edited(false);
-            //
-            if (!info.sever_references_to.empty()) {
-               //
-               // According to this form's use info, it refers to other forms that we were unable to 
-               // write to the final file. Those references will have been serialized as zero, so now 
-               // we need to sever them in-memory: if the form is still loaded, then we need to update 
-               // the loaded data, and either way, we also need to update the use info.
-               //
-               // One example of where this could happen: imagine that we're converting the active 
-               // file from Skyrim Special to Skyrim Classic, and it contains a form list that has 
-               // an entry for a VOLI form -- a type that can only exist in Skyrim Special. When 
-               // writing, we'll serialize form ID 0 instead of the VOLI form ID. If the VOLI form is 
-               // part of the active file, then we'll also discard it below using a form deletion 
-               // request, and that will sever the references to it. However, if the VOLI belongs to 
-               // one of the active file's masters, then it won't be deleted, so we need to sever the 
-               // references to it here.
-               //
-               auto loaded = stub->get_content_if_loaded(); // use this to ensure it doesn't unload out from under us
-               for (auto id : info.sever_references_to) {
-                  auto* target = this->get_form(id, false);
-                  assert(target && "Error during post-save cleanup: How does one of the saved forms have a dangling form-to-form reference with no target none-stub?");
-                  if (loaded)
-                     loaded->sever_outbound_references_to(*target);
-                  stub->revoke_all_outbound_references_to(target);
-               }
-            }
-         }
-         //
-         // Okay, that's the file data updated for all saved stubs. Now, we need to discard the 
-         // stubs that couldn't be saved, as well as any none-stubs that can safely be discarded. 
-         // In order to avoid invalidating iterators during a loop and crashing, we'll gather up 
-         // all the stubs-to-discard into a vector, and then chuck 'em all in another loop.
-         //
-         std::vector<form_stub*> stubs_to_remove;
-         for (auto& pair : this->active_file_forms.forms) {
-            bare_form_id_t id = pair.first;
-            if (!cobb::unordered_map_contains(writer.fixup_data.form_stubs, id))
-               stubs_to_remove.push_back(pair.second); // removing can invalidate iterators, which would break this loop
-         }
-         size_t only_none_stubs_past_this_point = stubs_to_remove.size();
-         for (auto& pair : this->forms_by_type[form_type::none].forms) {
-            auto* stub = pair.second;
-            if (!stub || !stub->is_none_stub())
-               continue;
-            //
-            // There are two situations in which we can safely delete a none-stub post-save: 
-            //
-            //  - It was unreferenced at the start of the save process, and therefore still is 
-            //    now.
-            //
-            //  - All references to it meet either of these two conditions:
-            //
-            //     - They are outbound from forms that were serialized to the file, and they 
-            //       were therefore serialized as zero, tracked, and then severed as part of 
-            //       the "fixup" loop above... which means that they *aren't* inbound 
-            //       references anymore.
-            //
-            //     - They are outbound from forms that themselves need to be removed. (We can 
-            //       use the (only_none_stubs_past_this_point) variable to test this faster, 
-            //       because none-stubs should never be able to refer to each other.)
-            //
-            // Attempting to delete any other none-stub may result in non-active-file forms 
-            // being wrongly flagged as "edited" as a result of the deletion. Those forms 
-            // would then bake into the active file during subsequent saves.
-            //
-            bool can_delete = true;
-            for (auto& pair : stub->inbound) {
-               auto* user = pair.second.other;
-               if (!user)
-                  continue;
-               if (std::find(stubs_to_remove.begin(), stubs_to_remove.begin() + only_none_stubs_past_this_point, user) != stubs_to_remove.end()) // the referencing form is itself going to be discarded.
-                  continue;
-               can_delete = false;
-               break;
-            }
-            if (can_delete)
-               stubs_to_remove.push_back(pair.second);
-         }
-         //
-         // Okay, now we have a list of all the stubs to discard, so let's get to it!
-         //
-         for (auto* stub : stubs_to_remove) {
-            auto type = stub->form_type;
-            if (type == form_type::setting) // GMSTs are a special case. their form-stubs are just placeholders and do not retain meaningful information, file offsets included
-               continue;
-            if (form_type_info::lookup(type).flags & form_type_info::flag::is_singleton) {
-               //
-               // Only strip these forms if they originated from the active file (i.e. the active file including 
-               // redundant instances of a singleton form, and subsequently only saving one instance with merged 
-               // data). If a stub isn't stripped, then remove its "edited" flag (that won't have been done above).
-               //
-               if (!stub->file_list_includes(this->active_file)) {
-                  stub->set_edited(false);
-                  continue;
-               }
-            }
-            if (this->on_form_loss)
-               (this->on_form_loss)(*stub); // ensure that the frontend can abandon any references it has to this stub and its loaded form data
-            //
-            bool is_none_stub = stub->is_none_stub();
-            auto request      = this->request_form_deletion(*stub); // this will also sever any uses of the form, which will prevent dangling stub pointers in any already-loaded "user" forms
-            request.commit();
-            if (request.get_error_code() != default_notice_code) {
-               results.error.code = notice_code::unsaved_form_cleanup_failed;
-               if (is_none_stub)
-                  results.error.code = notice_code::post_save_none_stub_cleanup_failed;
-            }
-         }
-         //
-         // Oh, and if we switched the active file's "light" flag, then the frontend may need a heads-up.
-         //
-         if (was_originally_light != save_as_light_plugin) {
-            if (this->on_mass_renumber)
-               (this->on_mass_renumber)();
-         }
-         //
-         if (results.error.is_defined())
-            return false;
-      }
-      results.error = writer.error;
-      return !results.error.is_defined();
+
+      auto process = load_order_processes::file_save(*this);
+      process.write_config = cfg;
+      process.execute();
    }
 }

@@ -200,7 +200,7 @@ namespace dovah::loaded_forms {
       copy->object_bounds = this->object_bounds;
       copy->script_data.clone_from(this->script_data, *copy);
    }
-   bool Cell::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Cell::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       if (record.flags() & tes_file_record_header::flag::partial) // TESObjectCELL::LoadPartial is a no-op
          return true;
       //
@@ -258,8 +258,6 @@ namespace dovah::loaded_forms {
          subrecord.close();
       }
       this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
-      //
-      return true;
    }
    void Cell::_clear_impl() noexcept {
       this->name.reset();

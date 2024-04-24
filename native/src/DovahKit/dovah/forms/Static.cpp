@@ -105,7 +105,7 @@ namespace dovah::loaded_forms {
       }
       copy->distant_lod_paths = this->distant_lod_paths;
    }
-   bool Static::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Static::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       auto& OBND = record.open_next_subrecord('OBND');
       this->bounds.save(OBND, intfc);
@@ -130,7 +130,6 @@ namespace dovah::loaded_forms {
          }
          MNAM.close();
       }
-      return true;
    }
    void Static::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);

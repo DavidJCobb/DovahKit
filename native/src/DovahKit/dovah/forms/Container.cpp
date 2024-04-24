@@ -139,7 +139,7 @@ namespace dovah::loaded_forms {
       copy->open_sound.set(*copy, this->open_sound);
       copy->close_sound.set(*copy, this->close_sound);
    }
-   bool Container::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Container::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       auto& OBND = record.open_next_subrecord('OBND');
       this->bounds.save(OBND, intfc);
@@ -157,7 +157,6 @@ namespace dovah::loaded_forms {
       DATA.close();
       record.write_formID_subrecord('SNAM', this->open_sound, true);
       record.write_formID_subrecord('QNAM', this->close_sound, true);
-      return true;
    }
    void Container::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);

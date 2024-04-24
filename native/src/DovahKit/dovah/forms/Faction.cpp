@@ -247,7 +247,7 @@ namespace dovah::loaded_forms {
       copy->object_bounds = this->object_bounds;
       copy->script_data.clone_from(this->script_data, *copy);
    }
-   bool Faction::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Faction::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);
       FULL.close();
@@ -328,8 +328,6 @@ namespace dovah::loaded_forms {
          subrecord.close();
       }
       this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
-      //
-      return true;
    }
    void Faction::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);

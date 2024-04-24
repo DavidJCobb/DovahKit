@@ -400,7 +400,7 @@ namespace dovah::loaded_forms {
       copy->object_bounds = this->object_bounds;
       copy->script_data.clone_from(this->script_data, *copy);
    }
-   bool Worldspace::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Worldspace::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       if (record.flags() & tes_file_record_header::flag::partial) { // TESWorldSpace::LoadPartial only loads NAM0 and NAM9
          auto& NAM0 = record.open_next_subrecord('NAM0');
          NAM0.write(this->bounds.min.x);
@@ -410,7 +410,7 @@ namespace dovah::loaded_forms {
          NAM9.write(this->bounds.max.x);
          NAM9.write(this->bounds.max.y);
          NAM9.close();
-         return true;
+         return;
       }
       //
       bool is_fixed_dimensions = this->world_flags & world_flag::fixed_dimensions;
@@ -565,8 +565,6 @@ namespace dovah::loaded_forms {
          subrecord.close();
       }
       this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
-      //
-      return true;
    }
    void Worldspace::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);

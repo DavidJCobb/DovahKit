@@ -10,7 +10,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "file_load_order_normalizer.h"
+#include "./file_load_order_normalizer.h"
 #include "../utils/file_prefix.h"
 #include "../detailed_notice.h"
 #include "../form_stub.h"
@@ -18,12 +18,16 @@
 #include "../notice_code_t.h"
 #include "../data/game_settings.h"
 #include "../exceptions/enums/form_creation_error_code.h"
+#include "../game_change_failure_reason.h"
 
 namespace dovah {
    namespace load_order_interfaces {
       class file_load;
       class form_load;
       class form_save;
+   }
+   namespace load_order_processes {
+      class file_save;
    }
    namespace notices {
       class base_error;
@@ -81,6 +85,7 @@ namespace dovah {
       friend class load_order_interfaces::file_load;
       friend class load_order_interfaces::form_load;
       friend class load_order_interfaces::form_save;
+      friend class load_order_processes::file_save;
       public:
          static constexpr const uint8_t invalid_load_prefix = 0xFF;
          static constexpr const uint8_t light_load_prefix   = 0xFE;
@@ -239,18 +244,18 @@ namespace dovah {
          // converting a Skyrim Special file to a Skyrim Classic file.)
          //
 
-         notice_code_t _change_current_game(game g, bool because_we_are_changing_whether_the_active_file_is_light);
-         notice_code_t _can_change_current_game(game g, bool because_we_are_changing_whether_the_active_file_is_light) const noexcept;
+         void _change_current_game(game g, bool because_we_are_changing_whether_the_active_file_is_light);
+         std::optional<game_change_failure_reason> _can_change_current_game(game g, bool because_we_are_changing_whether_the_active_file_is_light) const noexcept;
          
       public:
          ~file_load_order();
-         //
+         
          bool is_light_plugin_support_enabled() const noexcept;
-         //
-         inline game get_current_game() const noexcept { return this->current_game; }
-         notice_code_t can_change_current_game(game) const noexcept;
-         notice_code_t change_current_game(game);
-         //
+         
+         constexpr game get_current_game() const noexcept { return this->current_game; }
+         std::optional<game_change_failure_reason> can_change_current_game(game) const noexcept;
+         void change_current_game(game);
+         
          #pragma region Content related to loading
          std::string base_path; // used for loading and saving. changing this between loading files and saving them back out is undefined behavior.
          struct {
@@ -414,7 +419,11 @@ namespace dovah {
          //
          // The return value is a  success bool. Specific error information can be  found in the load order 
          // instance's (save_error) field.
+         // 
+         // Can throw:
+         //  - dovah::exceptions::file_save_failed
+         //  - dovah::exceptions::game_change_failed (if saving for a different game)
          //
-         bool save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config& cfg, dovah::tes_file_writing::write_results& results);
+         void save_active_file(std::filesystem::path replacement_filename, const dovah::tes_file_writing::write_config& cfg, dovah::tes_file_writing::write_results& results);
    };
 }

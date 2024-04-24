@@ -141,7 +141,7 @@ namespace dovah::loaded_forms {
       copy->object_bounds = this->object_bounds;
       copy->script_data.clone_from(this->script_data, *copy);
    }
-   /*virtual*/ bool DialogueBranch::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
+   /*virtual*/ void DialogueBranch::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
       record.write_formID_subrecord('QNAM', this->owning_quest);
       auto& TNAM = record.open_next_subrecord('TNAM');
       TNAM.write(this->tnam);
@@ -152,8 +152,6 @@ namespace dovah::loaded_forms {
       record.write_formID_subrecord('SNAM', this->starting_topic);
       //
       this->script_data.save(record, intfc);
-      //
-      return true;
    }
    /*virtual*/ void DialogueBranch::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->starting_topic.clear_if(*this, other);

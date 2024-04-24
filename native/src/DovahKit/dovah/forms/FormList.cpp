@@ -64,7 +64,7 @@ namespace dovah::loaded_forms {
       for (size_t i = 0; i < size; ++i)
          copy->contents[i].set(*copy, this->contents[i]);
    }
-   bool FormList::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void FormList::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       if (!this->bounds.is_zero()) {
          auto& OBND = record.open_next_subrecord('OBND');
@@ -73,7 +73,6 @@ namespace dovah::loaded_forms {
       }
       for (auto& entry : this->contents)
          record.write_formID_subrecord('LNAM', entry);
-      return true;
    }
    void FormList::_clear_impl() noexcept {
       this->script_data.clear(*this);

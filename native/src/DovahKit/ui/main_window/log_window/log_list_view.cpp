@@ -42,15 +42,7 @@ LogListModelItem::LogListModelItem(const dovah::detailed_notice& warning) {
       this->file = QString::fromStdString(warning.cause_file);
    }
    //
-   bool non_continuable_success = false;
-   text = editor_helpers::warning_or_error_to_string(warning);
-   switch (warning.code) {
-      case notice_code::save_complete_but_reopen_failed:
-      case notice_code::unsaved_form_cleanup_failed:
-      case notice_code::post_save_none_stub_cleanup_failed:
-         non_continuable_success = true;
-         break;
-   }
+   this->text = editor_helpers::warning_or_error_to_string(warning);
 }
 
 LogListModelItem::LogListModelItem(const dovah::notices::base_error& notice) {
@@ -90,7 +82,6 @@ LogListModel::LogListModel(QObject* parent) : QAbstractTableModel(parent) {
    QObject::connect(&editor, &DovahKitCore::dataAcquireComplete,     this, &LogListModel::dataAcquireComplete);
    QObject::connect(&editor, &DovahKitCore::dataSaveImminent,        this, &LogListModel::dataSaveImminent);
    QObject::connect(&editor, &DovahKitCore::dataSaveComplete,        this, &LogListModel::dataSaveComplete);
-   QObject::connect(&editor, &DovahKitCore::dataSaveFailed,          this, &LogListModel::saveErrorReceived);
 
    QObject::connect(&editor, &DovahKitCore::backendErrorReceived,   this, &LogListModel::errorReceived);
    QObject::connect(&editor, &DovahKitCore::backendWarningReceived, this, &LogListModel::warningReceived);
@@ -117,19 +108,6 @@ void LogListModel::dataSaveImminent() {
 }
 void LogListModel::dataSaveComplete() {
    this->addTextEntry(tr("The active file has been successfully saved.", "log window"));
-}
-void LogListModel::saveErrorReceived(const dovah::detailed_notice& error) {
-   auto* item = new item_type(error);
-   if (item->empty()) {
-      delete item;
-      return;
-   }
-   //
-   auto first_inserted = this->children.size();
-   auto last_inserted  = first_inserted;
-   this->beginInsertRows(QModelIndex(), first_inserted, last_inserted);
-   this->children.push_back(item);
-   this->endInsertRows();
 }
 void LogListModel::loadWarningReceived(const dovah::detailed_notice& warning) {
    using flag = dovah::detailed_notice::flag;

@@ -29,7 +29,7 @@ namespace dovah::loaded_forms::components::papyrus {
                subrecord.read_length_prefixed_string<2>(frag.function);
       }
    }
-   void package_fragment_data::save(attachment_data& owner, tes_subrecord_writer& subrecord) {
+   void package_fragment_data::save(attachment_data& owner, tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
       uint8_t flags = 0;
       if (this->fragments.on_begin.has_value()) {
          flags |= fragment_flag::has_begin_fragment;

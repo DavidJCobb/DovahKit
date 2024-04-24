@@ -118,7 +118,7 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       return success;
    }
-   bool property::save(const attachment_header& header, tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) noexcept {
+   void property::save(const attachment_header& header, tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) noexcept {
       subrecord.write_length_prefixed_string<2>(this->name);
       subrecord.write(this->type());
       subrecord.write(this->status);
@@ -146,7 +146,6 @@ namespace dovah::loaded_forms::components::papyrus {
             this->value
          );
       }
-      return true;
    }
    void property::clone_from(const property& source, loaded_forms::Form& owner_of_clone) noexcept {
       this->clear(owner_of_clone);

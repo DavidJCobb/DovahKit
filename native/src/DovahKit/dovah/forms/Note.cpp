@@ -257,7 +257,7 @@ namespace dovah::loaded_forms {
       copy->name = this->name;
       copy->icon = this->icon;
    }
-   bool Note::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Note::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       auto& OBND = record.open_next_subrecord('OBND');
       this->bounds.save(OBND, intfc);
@@ -286,7 +286,6 @@ namespace dovah::loaded_forms {
          record.write_formID_subrecord('TNAM', this->content.topic);
          record.write_formID_subrecord('SNAM', this->content.speaker);
       }
-      return true;
    }
    void Note::_clear_impl() noexcept {
       this->model.clear();

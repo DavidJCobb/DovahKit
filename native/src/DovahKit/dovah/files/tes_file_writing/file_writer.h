@@ -4,17 +4,25 @@
 #include <fstream>
 #include <unordered_map>
 #include <vector>
-#include "config.h"
-#include "elements.h"
+#include "./config.h"
+#include "./elements.h"
 #include "../../utils/refs_need_persistence_checker.h"
 #include "../../detailed_notice.h"
 
 namespace dovah {
-   class file_load_order;
+   namespace exceptions {
+      class file_save_failed;
+   }
+   namespace notices {
+      class base_error;
+   }
    namespace tes_file_reading {
       class file_loader;
    }
+   class file_load_order;
+}
 
+namespace dovah {
    namespace tes_file_writing {
       class file_writer {
          friend group;
@@ -25,7 +33,7 @@ namespace dovah {
             using file_offset_t = uint32_t;
             using stream_t      = std::basic_ofstream<uint8_t>;
             static constexpr int max_group_depth = 7;
-            //
+            
             struct form_stub_write_info {
                //
                // This data should be transplanted into a form_stub after the full file write is complete.
@@ -35,7 +43,7 @@ namespace dovah {
                bool       partial = false;
                std::vector<bare_form_id_t> sever_references_to;
             };
-            //
+            
          protected:
             mutable stream_t stream; // ofstream::tellp and friends aren't const despite not modifying the stream state
             file_load_order& owner;
@@ -49,7 +57,7 @@ namespace dovah {
             struct {
                bool containing_cell_is_compressed = false;
             } compress_state;
-            //
+            
             record& _open_next_record(uint32_t signature, bare_form_id_t);
             bool _should_compress_current_record(form_stub* stub = nullptr) const noexcept;
             void _write_header();
@@ -88,7 +96,6 @@ namespace dovah {
             bool use_string_table; // constructor defaults this to whatever the source file did
             #pragma endregion
             //
-            detailed_notice error;
             struct {
                struct {
                   file_offset_t record_count   = 0;
@@ -101,7 +108,7 @@ namespace dovah {
                std::unordered_map<bare_form_id_t, form_stub_write_info> form_stubs;
             } fixup_data;
             
-            inline group& get_current_group() {
+            constexpr group& get_current_group() {
                for (signed int i = this->_groups.size() - 1; i >= 0; i--) {
                   auto& group = this->_groups[i];
                   if (group)
@@ -109,8 +116,8 @@ namespace dovah {
                }
                return this->_groups[0];
             }
-            inline record& get_current_record() { return this->_record; }
-            inline subrecord& get_current_subrecord() { return this->_subrecord; }
+            constexpr record& get_current_record() { return this->_record; }
+            constexpr subrecord& get_current_subrecord() { return this->_subrecord; }
 
             group& open_group(tes_file_group_type, uint32_t label, uint32_t unknown = 0);
             void close_current_group();
@@ -120,7 +127,7 @@ namespace dovah {
             uint32_t get_output_position() const noexcept; // stream position + record position if open + subrecord position if open. WARNING: this can't account for large subrecords that end up using 'XXXX'
 
             void open();
-            bool write();
+            void write();
             void update_source_file_header();
             void close();
             bool post_save_rename(const std::filesystem::path& desired);

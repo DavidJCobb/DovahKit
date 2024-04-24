@@ -11,6 +11,9 @@
 #include "./components/papyrus/attached_script.h"
 #include "./components/papyrus/property.h"
 
+#include "../load_order_interfaces/form_save.h"
+#include "../notices/form_save_errors/form_type_is_unimplemented.h"
+
 namespace dovah::loaded_forms {
    Form::Form(enum form_type ft, const constructor_params& c) : type(ft), is_working_copy(c.is_working_copy), stub(*c.stub) {
       assert(c.stub && "Form::constructor_params::stub must not be nullptr at the time construction occurs!");
@@ -53,7 +56,7 @@ namespace dovah::loaded_forms {
    void Form::clear() {
       this->_clear_impl();
    }
-   bool Form::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Form::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       assert(!this->is_working_copy && "Do not call Form::save on a working copy of a loaded form!");
       if (this->stub.is_deleted()) {
          //
@@ -62,14 +65,14 @@ namespace dovah::loaded_forms {
          //
          auto& info = form_type_info::lookup(this->form_type);
          if (info.flags & form_type_info::flag::empty_if_deleted)
-            return true;
+            return;
       }
       //
       auto editor_id = this->get_editor_id();
       if (editor_id && editor_id[0])
          record.write_string_subrecord('EDID', editor_id);
       //
-      return this->_save_impl(record, intfc);
+      this->_save_impl(record, intfc);
    }
    void Form::friendly_delete_override(const file_load_order& load_order) noexcept {
       bool flag = !this->_friendly_delete_impl(load_order);
@@ -85,6 +88,10 @@ namespace dovah::loaded_forms {
       }
       this->_sever_outbound_references_impl(other);
    }
+
+   /*virtual*/ void Form::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
+      intfc.throw_save_error(notices::form_save_errors::form_type_is_unimplemented(this->stub));
+   };
 
    /*static*/ bool Form::subrecord_is_handled_elsewhere(uint32_t signature) {
       switch (signature) {
