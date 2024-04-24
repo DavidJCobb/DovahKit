@@ -20,6 +20,24 @@ namespace editor_helpers {
       constexpr const char* disambig = "backend errors";
 
       #pragma region form save errors
+         if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::form_type_is_unimplemented*>(&warning)) {
+            QString subject = form_identifiers_to_string(&casted->subject);
+            //
+            return QObject::tr(
+               "%1 is of a type that isn't yet implemented in DovahKit.",
+               disambig
+            ).arg(subject);
+         }
+         if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::length_prefixed_string_is_too_long_to_serialize*>(&warning)) {
+            QString subject   = form_identifiers_to_string(&casted->subject);
+            QString subrecord = cobb::qt::four_cc_to_string(casted->subrecord_signature);
+            //
+            return QObject::tr(
+               "Failed to serialize %1 subrecord %2: a length-prefixed string had length %3, but the maximum supported length is %4.",
+               disambig
+            ).arg(subject).arg(subrecord).arg(casted->size).arg(casted->max_serializable_size);
+         }
+         //
          #pragma region by form component
             #pragma region destruction data
                if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::by_component::destruction::too_many_stages*>(&warning)) {
@@ -56,6 +74,14 @@ namespace editor_helpers {
                   return QObject::tr(
                      "Papyrus data for scene %1 attempts to define %2 scene phase fragments, but the file format can only "
                      "encode %3 fragments.",
+                     disambig
+                  ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::by_component::papyrus::too_many_scripts*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Papyrus data for %1 has %2 attached scripts, but the file format can only encode %3 scripts.",
                      disambig
                   ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
                }

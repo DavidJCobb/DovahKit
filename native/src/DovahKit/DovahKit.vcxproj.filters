@@ -5897,6 +5897,9 @@
     <ClInclude Include="dovah\load_order_processes\file_save.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\notices\form_save_errors\length_prefixed_string_is_too_long_to_serialize.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

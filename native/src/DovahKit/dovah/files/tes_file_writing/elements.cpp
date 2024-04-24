@@ -4,6 +4,9 @@
 #include "../file_load_order.h"
 #include "../../notice_code_list.h"
 
+#include "../../exceptions/file_save_failed.h"
+#include "../../notices/form_save_errors/length_prefixed_string_is_too_long_to_serialize.h"
+
 namespace dovah::tes_file_writing {
    void record::_write_impl(const void* source, uint32_t size) {
       this->data.resize(this->pos + size);
@@ -141,13 +144,16 @@ namespace dovah::tes_file_writing {
       this->write(field.value);
    }
    void subrecord::_report_length_prefixed_string_too_long_to_save(size_t len, size_t max) {
-      auto& error = this->owner.error;
-      if (error.is_defined())
-         return;
-      error.code = notice_code::length_prefixed_string_was_too_long_to_save;
-      error.set_cause_subrecord(this->signature());
-      error.extra_integers[0] = len;
-      error.extra_integers[1] = max;
+      auto error = notices::form_save_errors::length_prefixed_string_is_too_long_to_serialize(
+         *this->owner._current_target,
+         len,
+         max,
+         this->signature()
+      );
+
+      auto ex = exceptions::file_save_failed(exceptions::file_save_failed::error_code::form_save_failed);
+      ex.details.form_save_error.reset((notices::base_form_save_error*)error.clone());
+      throw ex;
    }
    void subrecord::_write_placeholder_for_length_prefixed_string_too_long_to_save(size_t len, size_t bytes) {
       assert(bytes >= 1);

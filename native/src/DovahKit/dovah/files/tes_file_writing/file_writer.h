@@ -57,6 +57,7 @@ namespace dovah {
             struct {
                bool containing_cell_is_compressed = false;
             } compress_state;
+            form_stub* _current_target = nullptr;
             
             record& _open_next_record(uint32_t signature, bare_form_id_t);
             bool _should_compress_current_record(form_stub* stub = nullptr) const noexcept;

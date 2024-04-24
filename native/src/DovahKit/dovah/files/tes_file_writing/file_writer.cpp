@@ -203,6 +203,8 @@ namespace dovah::tes_file_writing {
       --this->fixup_data.record_and_group_count.value; // this should not include the file-header record
    }
    bool file_writer::_write_form(form_stub* stub, form_stub* previous_child) {
+      this->_current_target = stub;
+
       auto loaded = stub->load_even_if_unsafe({});
       if (!loaded) {
          auto ex = exception(error_code::unimplemented_form_type);
@@ -223,6 +225,7 @@ namespace dovah::tes_file_writing {
       intfc.target_stub    = stub;
       //
       loaded->save(record, intfc);
+      this->_current_target = nullptr;
       {
          auto& write_info = this->fixup_data.form_stubs[stub->formID];
          write_info.stub    = stub;

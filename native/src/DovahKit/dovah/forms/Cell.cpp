@@ -202,7 +202,7 @@ namespace dovah::loaded_forms {
    }
    void Cell::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       if (record.flags() & tes_file_record_header::flag::partial) // TESObjectCELL::LoadPartial is a no-op
-         return true;
+         return;
       //
       bool is_exterior = this->stub.is_exterior_cell();
       //

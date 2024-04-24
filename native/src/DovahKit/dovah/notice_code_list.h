@@ -7,7 +7,7 @@ namespace dovah {
       enum type : notice_code_t {
          none = 0x00000000,
          //
-         //
+         no_filename_specified, // LOL whoops still needed for read!
          //
          //
          unknown_form_type                           = 0x00000004,
@@ -102,7 +102,7 @@ namespace dovah {
          //
          //
          //
-         length_prefixed_string_was_too_long_to_save = 0x00000060,
+         //
          //
          //
          //
