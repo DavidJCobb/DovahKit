@@ -152,8 +152,8 @@ namespace dovah {
             owner_file_t* pointer = nullptr;
             uint32_t      offset  = 0;
             uint32_t      flags   = 0; // record flags
-            //
-            operator bool() const noexcept { return this->pointer != nullptr; }
+            
+            constexpr operator bool() const noexcept { return this->pointer != nullptr; }
          };
          struct file_data_list {
             file_data* entries = nullptr;
@@ -185,9 +185,8 @@ namespace dovah {
          void _get_source_file_list(file_data*& out_arr, uint16_t& out_count) const noexcept;
          void _adopt_source_file_list(const form_stub* other); // prepends
          void _set_source_file_list(const std::vector<file_data>&);
-         //
-         file_data* _get_source_file_info(int16_t file_index = -1) const noexcept; // defined this way so code internal to form_stub can actually modify the info in question
-         //
+         
+         constexpr file_data* _get_source_file_info(int16_t file_index = -1) noexcept;
          
       public:
          #pragma region Passkeyed methods
@@ -242,36 +241,36 @@ namespace dovah {
          void do_custom_parse(tes_file_reading::basic_reader* reader, custom_parse_functor_type loader) noexcept;
          
          #pragma region Source file member functions
-         const file_data* get_source_file_info(int16_t file_index = -1) const noexcept;
-         bool file_list_includes(const owner_file_t*) const noexcept;
-         bool has_source_files() const noexcept;
-         inline bool has_multiple_source_files() const noexcept { return this->flags & flag::has_multiple_source_files; }
-         int16_t source_file_count() const noexcept;
-         int16_t index_of_file(const owner_file_t*) const noexcept;
-         owner_file_t* get_file_at_index(int16_t) const noexcept;
+         constexpr const file_data* get_source_file_info(int16_t file_index = -1) const noexcept;
+         constexpr bool file_list_includes(const owner_file_t*) const noexcept;
+         constexpr bool has_source_files() const noexcept;
+         constexpr bool has_multiple_source_files() const noexcept;
+         constexpr int16_t source_file_count() const noexcept;
+         constexpr int16_t index_of_file(const owner_file_t*) const noexcept;
+         constexpr owner_file_t* get_file_at_index(int16_t) const noexcept;
          //
-         uint32_t get_file_offset(int16_t file_index = -1) const noexcept;
+         constexpr uint32_t get_file_offset(int16_t file_index = -1) const noexcept;
          #pragma endregion
          
          bool can_unload_form() const noexcept;
          file_load_order& get_owning_load_order() const noexcept;
-         inline const char* get_editor_id() const noexcept { return this->editorID.c_str(); };
-         inline uint32_t    get_refcount()  const noexcept { return this->refcount; };
-         inline bool        refcount_is_maxed_out() const noexcept { return this->refcount == std::numeric_limits<uint32_t>::max(); }
-         inline bool        is_deleted()   const noexcept { return this->test_record_flags(tes_file_record_header::flag::deleted); };
-         inline bool        is_edited()    const noexcept { return (bool)(this->flags & flag::is_edited); };
-         inline bool        is_hardcoded() const noexcept { return (bool)(this->flags & flag::is_hardcoded); };
+         constexpr const char* get_editor_id() const noexcept { return this->editorID.c_str(); };
+         inline uint32_t       get_refcount()  const noexcept { return this->refcount; }
+         inline bool           refcount_is_maxed_out() const noexcept { return this->refcount == std::numeric_limits<uint32_t>::max(); }
+         constexpr bool        is_deleted()   const noexcept; // record flag
+         constexpr bool        is_edited()    const noexcept;
+         constexpr bool        is_hardcoded() const noexcept;
          bool is_edited_or_in_active_file() const noexcept;
          bool is_injected() const noexcept;
          bool is_non_overridden_hardcoded_form() const noexcept;
          bool is_none_stub() const noexcept;
          void set_edited(bool v);
 
-         uint32_t get_record_flags() const noexcept;
-         bool test_record_flags(uint32_t mask) const noexcept;
+         constexpr uint32_t get_record_flags() const noexcept;
+         constexpr bool test_record_flags(uint32_t mask) const noexcept;
+         constexpr bool test_record_flags_for_file(uint32_t mask, int16_t file_index) const noexcept;
+         constexpr bool test_record_flags_for_file(uint32_t mask, owner_file_t&) const noexcept;
          void edit_record_flags(uint32_t mask, bool clear_or_set) noexcept; // also sets the form as edited
-         bool test_record_flags_for_file(uint32_t mask, int16_t file_index) const noexcept;
-         bool test_record_flags_for_file(uint32_t mask, owner_file_t&) const noexcept;
 
          #pragma region Addenda helper functions
          form_stub_addenda& get_or_create_addenda() noexcept;
@@ -495,3 +494,5 @@ namespace dovah {
    }
    #pragma endregion
 }
+
+#include "./form_stub.inl"

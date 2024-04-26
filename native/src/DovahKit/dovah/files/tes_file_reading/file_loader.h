@@ -40,11 +40,11 @@ namespace dovah::tes_file_reading {
          bool  fetch_record_header(uint32_t pos, tes_file_record_header&, uint32_t& record_decompressed_size);
          std::string get_filename() const noexcept;
          //
-         inline bool is_aborted() const noexcept { return this->aborted; }
+         constexpr bool is_aborted() const noexcept { return this->aborted; }
          //
-         inline bool is_light()  const noexcept { return this->header.is_light(); }
-         inline bool is_master() const noexcept { return this->header.is_master(); }
-         inline bool uses_string_table() const noexcept { return this->header.flags & flag::localized_string_table; }
+         constexpr bool is_light()  const noexcept { return this->header.is_light(); }
+         constexpr bool is_master() const noexcept { return this->header.is_master(); }
+         constexpr bool uses_string_table() const noexcept { return this->header.flags & flag::localized_string_table; }
          //
          bool load(const std::filesystem::path&); // path is optional; if empty, reuses prior path (if any). calling this while a load is already in progress is undefined behavior
          void close(); // intended for use during the save process, with the file then being reopened by the caller upon a successful save

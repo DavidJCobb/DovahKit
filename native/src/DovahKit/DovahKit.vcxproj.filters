@@ -6893,6 +6893,9 @@
     </None>
     <None Include="dovah\load_order_requests\README.md" />
     <None Include="dovah\load_order_processes\file_save.md" />
+    <None Include="dovah\form_stub.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

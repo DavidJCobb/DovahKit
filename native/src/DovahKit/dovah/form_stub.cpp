@@ -13,6 +13,25 @@
 #include "form_stub_use_info_builder.h"
 #include "logging.h"
 
+namespace {
+   //
+   // When DovahKit is finished, every form type should be implemented, which means we should 
+   // be able to skim records and generate use info for every form stub. This, by definition, 
+   // would entail looking at every subrecord in each form's record.
+   // 
+   // Until all form types are implemented, this variable controls whether we want to simulate 
+   // some of the processing overhead involved: if a form type doesn't support generating use 
+   // info, but this variable is true, then we'll open all of the record's subrecords anyway.
+   //
+   constexpr const bool dummy_parse_subrecords_when_use_info_isnt_possible =
+      #if _DEBUG
+         true
+      #else
+         false
+      #endif
+   ;
+}
+
 namespace dovah {
    form_stub::form_stub() {
       this->file = file_data();
@@ -306,8 +325,10 @@ namespace dovah {
       //
       if (this->has_multiple_source_files())
          delete[] this->files.entries;
-      this->files.entries = resized;
-      this->files.count   = count_a + count_b;
+      this->files = {
+         .entries = resized,
+         .count   = (int16_t)(count_a + count_b)
+      };
       this->flags |= flag::has_multiple_source_files;
    }
    void form_stub::_set_source_file_list(const std::vector<file_data>& list) {
@@ -316,9 +337,11 @@ namespace dovah {
       auto size = list.size();
       if (size < 2) {
          this->flags &= ~flag::has_multiple_source_files;
-         this->file.offset  = 0;
-         this->file.pointer = nullptr;
-         this->file.flags   = 0;
+         this->file = {
+            .pointer = nullptr,
+            .offset  = 0,
+            .flags   = 0,
+         };
          if (size) {
             this->file.offset  = list[0].offset;
             this->file.pointer = list[0].pointer;
@@ -327,8 +350,10 @@ namespace dovah {
          return;
       }
       this->flags |= flag::has_multiple_source_files;
-      this->files.entries = new file_data[size];
-      this->files.count   = size;
+      this->files = {
+         .entries = new file_data[size],
+         .count   = (int16_t)size,
+      };
       for (uint16_t i = 0; i < size; ++i) {
          auto& f = this->files.entries[i];
          auto& o = list[i];
@@ -336,57 +361,6 @@ namespace dovah {
          f.pointer = o.pointer;
          f.flags   = o.flags;
       }
-   }
-
-   const form_stub::file_data* form_stub::get_source_file_info(int16_t i) const noexcept {
-      return this->_get_source_file_info(i);
-   }
-
-   bool form_stub::has_source_files() const noexcept {
-      if (!this->has_multiple_source_files())
-         return this->file;
-      return this->files.entries != nullptr;
-   }
-   int16_t form_stub::source_file_count() const noexcept {
-      if (!this->has_multiple_source_files()) {
-         if (!this->file)
-            return 0;
-         return 1;
-      }
-      return this->files.count;
-   }
-   int16_t form_stub::index_of_file(const owner_file_t* f) const noexcept {
-      if (!this->has_multiple_source_files()) {
-         if (this->file.pointer == f)
-            return 0;
-         return -1;
-      }
-      auto size = this->files.count;
-      for (uint16_t i = 0; i < size; ++i)
-         if (this->files.entries[i].pointer == f)
-            return i;
-      return -1;
-   }
-   bool form_stub::file_list_includes(const owner_file_t* f) const noexcept {
-      if (!this->has_multiple_source_files())
-         return this->file.pointer == f;
-      auto size = this->files.count;
-      for (uint16_t i = 0; i < size; ++i)
-         if (this->files.entries[i].pointer == f)
-            return true;
-      return false;
-   }
-   form_stub::owner_file_t* form_stub::get_file_at_index(int16_t i) const noexcept {
-      auto* data = this->get_source_file_info(i);
-      if (data)
-         return data->pointer;
-      return nullptr;
-   }
-   uint32_t form_stub::get_file_offset(int16_t file_index) const noexcept {
-      auto* data = this->get_source_file_info(file_index);
-      if (data)
-         return data->offset;
-      return 0;
    }
    #pragma endregion
 
@@ -462,15 +436,6 @@ namespace dovah {
    }
 
    #pragma region form stub record flags
-   uint32_t form_stub::get_record_flags() const noexcept {
-      auto* info = this->get_source_file_info();
-      if (!info)
-         return 0;
-      return info->flags;
-   }
-   bool form_stub::test_record_flags(uint32_t mask) const noexcept {
-      return this->test_record_flags_for_file(mask, -1);
-   }
    void form_stub::edit_record_flags(uint32_t mask, bool clear_or_set) noexcept {
       auto* info = this->_get_source_file_info();
       if (!info)
@@ -495,15 +460,6 @@ namespace dovah {
          return;
       this->set_edited(true);
       this->_add_file(*active, 0, mask);
-   }
-   bool form_stub::test_record_flags_for_file(uint32_t mask, int16_t file_index) const noexcept {
-      auto* info = this->get_source_file_info(file_index);
-      if (!info)
-         return false;
-      return (info->flags & mask) == mask;
-   }
-   bool form_stub::test_record_flags_for_file(uint32_t mask, owner_file_t& f) const noexcept {
-      return this->test_record_flags_for_file(mask, this->index_of_file(&f));
    }
    #pragma endregion
 
@@ -537,6 +493,17 @@ namespace dovah {
                if (builder) {
                   builder(record, use_interface);
                   use_interface.commit();
+
+                  bool didnt_read_anything = record.current_offset() == 0 && !record.get_current_subrecord();
+                  bool read_everything     = !record.is_in_bounds();
+
+                  assert((didnt_read_anything || read_everything) && "A form type's `generate_use_info` function should either read nothing (not even opening any subrecords), or read the whole record! (Reading nothing is fine if the form type in question can't refer to any other forms.)");
+               } else {
+                  if constexpr (dummy_parse_subrecords_when_use_info_isnt_possible) {
+                     while (auto& subrecord = record.next_subrecord()) {
+                        ;
+                     }
+                  }
                }
             }
          }
@@ -640,19 +607,6 @@ namespace dovah {
       this->_add_one_way_outbound_reference({}, parent, use_info_entry::flag::parent_child);
    }
    #pragma endregion
-
-   form_stub::file_data* form_stub::_get_source_file_info(int16_t i) const noexcept {
-      if (!this->has_multiple_source_files()) {
-         if (i != 0 && i != -1)
-            return nullptr;
-         return const_cast<file_data*>(&this->file);
-      }
-      if (i < 0)
-         i += this->files.count;
-      if (i >= this->files.count)
-         return nullptr;
-      return &this->files.entries[i];
-   }
 
    void form_stub::_insert_child_topic_info(form_stub_passkeys::build_use_info_during_load, form_stub& info, size_t at) {
       assert(info.get_parent_form() == this);
@@ -777,14 +731,6 @@ namespace dovah {
    #pragma endregion
 
    #pragma region Form stub parenthood functions
-   bool form_stub::has_child_forms() const noexcept {
-      for (auto& pair : this->inbound) {
-         auto& entry = pair.second;
-         if (entry.flags & use_info_entry::flag::parent_child)
-            return true;
-      }
-      return false;
-   }
    form_stub* form_stub::get_parent_form() const noexcept {
       for (auto& pair : this->outbound) {
          auto& entry = pair.second;
@@ -795,6 +741,14 @@ namespace dovah {
          return entry.other;
       }
       return nullptr;
+   }
+   bool form_stub::has_child_forms() const noexcept {
+      for (auto& pair : this->inbound) {
+         auto& entry = pair.second;
+         if (entry.flags & use_info_entry::flag::parent_child)
+            return true;
+      }
+      return false;
    }
    bool form_stub::is_parent_form_of(form_stub& child) const noexcept {
       auto& map = this->inbound;
@@ -807,6 +761,7 @@ namespace dovah {
       }
       return false;
    }
+
    void form_stub::orphan() {
       auto* parent = this->get_parent_form();
       if (!parent)

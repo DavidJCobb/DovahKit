@@ -84,7 +84,7 @@ namespace dovah::tes_file_reading {
          //
          bool is_available() const noexcept;
          bool is_eof() const noexcept;
-         inline bool is_in_bounds(uint32_t bytes) const noexcept {
+         constexpr bool is_in_bounds(uint32_t bytes) const noexcept {
             return ((uint64_t)this->stream_position + bytes) < this->file_size;
          }
          //
@@ -92,7 +92,7 @@ namespace dovah::tes_file_reading {
          object_type next_record_or_group(); // only called during the initial file read
          bool        next_subrecord(); // called after the initial file read, when loading a form_stub's full content
          //
-         inline group& get_current_group() {
+         constexpr group& get_current_group() {
             for (signed int i = this->_groups.size() - 1; i >= 0; i--) {
                auto& group = this->_groups[i];
                if (group)
@@ -110,9 +110,9 @@ namespace dovah::tes_file_reading {
             //
             return this->_groups[0];
          }
-         inline record&    get_current_record()    { return this->_record; }
-         inline subrecord& get_current_subrecord() { return this->_subrecord; }
-         //
+         constexpr record&    get_current_record()    { return this->_record; }
+         constexpr subrecord& get_current_subrecord() { return this->_subrecord; }
+         
          bool uses_string_table() const noexcept;
    };
 }

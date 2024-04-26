@@ -395,7 +395,9 @@ Hm... I don't like its name and I don't like that it's stored in the `dovah/file
 
 I think `active_load_order` might be a better name. This would better distinguish it from the general concept of a "load order," while also matching the term "active file" and being clearer about the class's purpose: it holds all of the loaded data associated with a load order; it's the DovahKit counterpart to Bethesda's `TESDataHandler`.
 
-One thing I'd really like to do is do a better job of separating out all the machinery related to loadin and saving. It'd be nice if `active_load_order` would just retain the loaded data, and defer to temporary data structures for the actual load and save operations &mdash; perhaps something like `dovah::load_order_serialization::load_process` and `dovah::load_order_serialization::save_process`. Passkeys could grant them appropriate access to the `active_load_order` internals.
+One thing I'd really like to do is do a better job of separating out all the machinery related to loading and saving. It'd be nice if `active_load_order` would just retain the loaded data, and defer to temporary data structures for the actual load and save operations &mdash; perhaps something like `dovah::load_order_serialization::load_process` and `dovah::load_order_serialization::save_process`. Passkeys could grant them appropriate access to the `active_load_order` internals.
+
+(PRE-LAUNCH UPDATE: We now use a `save_process`, but it's just a straight-up `friend` of multiple types; and it's used entirely within `file_load_order`, rather than being something you can create externally and then invoke on an active load order. Really, at present it's just a means of moving the save code to other files and splitting it up a bit for organization's sake, rather than being a true refactor. Plus, the machinery for handling files is also messy and so a lot of stuff is still spaghetti. A more complete redesign and rewrite would be needed, with careful consideration given to things like what information needs to be known by what systems, and when, for the purposes of things like error reporting.)
 
 Miscellaneous:
 

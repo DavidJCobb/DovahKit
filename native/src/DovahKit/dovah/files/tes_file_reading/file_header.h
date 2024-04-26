@@ -18,7 +18,8 @@ namespace dovah::tes_file_reading {
                light                  = 0x0200, // SSE-only
             };
          };
-         //
+         
+      public:
          std::string name;
          uint32_t    flags = 0;
          uint32_t    record_and_group_count = 0;
@@ -26,10 +27,11 @@ namespace dovah::tes_file_reading {
          std::string author;
          std::string description;
          std::vector<std::string> masters;
-         //
+         
+      public:
          void clear();
          bool load(const char* path, detailed_notice* out_error_if_any = nullptr) noexcept; // if result.defined() == false, then the load operation succeeded
-         inline bool is_light() const noexcept { return (this->flags & flag::light) != 0; }
-         inline bool is_master() const noexcept { return (this->flags & flag::master) != 0; }
+         constexpr bool is_light() const noexcept { return (this->flags & flag::light) != 0; }
+         constexpr bool is_master() const noexcept { return (this->flags & flag::master) != 0; }
    };
 }

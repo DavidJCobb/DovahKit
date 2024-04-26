@@ -1,5 +1,6 @@
 #include "construct.h"
 #include "../_all.h"
+#include "./use_info.h"
 
 namespace {
    using namespace dovah;
@@ -38,6 +39,14 @@ namespace {
 }
 namespace dovah {
    form_loader_function_t get_form_loader_function(form_type ft) noexcept {
+      if (get_outbound_uses_builder_by_type(ft) == nullptr)
+         //
+         // If we haven't generated use info for a form type, then it's not safe to load 
+         // its full data, as all use info machinery built into forms assumes that use 
+         // info will have been generated during the file load step.
+         //
+         return nullptr;
+
       if (auto* f = function_table[(size_t)ft].load)
          return f;
       return nullptr;
@@ -52,6 +61,14 @@ namespace dovah {
       return function_table[(size_t)ft].construct != nullptr;
    }
    extern bool can_load_form_data(form_type ft) noexcept {
+      if (get_outbound_uses_builder_by_type(ft) == nullptr)
+         //
+         // If we haven't generated use info for a form type, then it's not safe to load 
+         // its full data, as all use info machinery built into forms assumes that use 
+         // info will have been generated during the file load step.
+         //
+         return false;
+
       return function_table[(size_t)ft].load != nullptr;
    }
 }

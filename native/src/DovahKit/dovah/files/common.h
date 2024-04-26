@@ -127,7 +127,7 @@ namespace dovah {
       uint16_t version;
       uint16_t version_control_2;
       //
-      inline bool body_is_compressed() const noexcept { return (this->flags & flag::compressed) != 0; }
+      constexpr bool body_is_compressed() const noexcept { return (this->flags & flag::compressed) != 0; }
       //
       static constexpr int struct_size = sizeof(signature) + sizeof(size) + sizeof(flags) + sizeof(formID) + sizeof(version_control) + sizeof(version) + sizeof(version_control_2);
    };

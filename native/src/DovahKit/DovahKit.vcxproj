@@ -2405,6 +2405,7 @@
     <None Include="dovah\forms\components\papyrus\attachment_data.inl" />
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="dovah\forms\structs\precached_nif_info.inl" />
+    <None Include="dovah\form_stub.inl" />
     <None Include="dovah\load_order_interfaces\form_load.inl" />
     <None Include="dovah\load_order_processes\file_save.md" />
     <None Include="dovah\load_order_requests\README.md" />

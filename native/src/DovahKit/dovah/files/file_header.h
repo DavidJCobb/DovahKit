@@ -41,12 +41,12 @@ namespace dovah {
       uint32_t interior_cell_count; // INCC
       // TODO: SCRN
       //
-      inline bool is_light() const noexcept {
+      constexpr bool is_light() const noexcept {
          if (this->flags & flag::light)
             return true;
          return this->details & detail_flag::file_extension_forces_light;
       }
-      inline bool is_master() const noexcept {
+      constexpr bool is_master() const noexcept {
          if (this->flags & flag::master)
             return true;
          return this->details & detail_flag::file_extension_forces_master;
