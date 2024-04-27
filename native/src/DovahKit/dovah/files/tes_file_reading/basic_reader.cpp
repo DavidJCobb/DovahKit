@@ -1,6 +1,5 @@
 #include "basic_reader.h"
 #include "file_loader.h"
-#include "../../notice_code_list.h"
 extern "C" {
    #include "../../../zlib/zlib.h"
 }

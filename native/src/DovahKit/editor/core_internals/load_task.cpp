@@ -3,7 +3,6 @@
 #include "dovah/files/file_load_order.h"
 #include "dovah/exceptions/file_load_failed.h"
 #include "dovah/exceptions/invalid_load_order.h"
-#include "./detailed_notice_dispatcher.h"
 
 namespace DovahKitEditorInternals {
    load_task::load_task(DovahKitCore& ed) : editor(ed) {

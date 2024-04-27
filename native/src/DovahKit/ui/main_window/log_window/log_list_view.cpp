@@ -1,11 +1,9 @@
-#include "log_list_view.h"
+#include "./log_list_view.h"
 #include <QHeaderView>
 #include <QLineEdit>
 #include "helpers/qt/strings.h"
-#include "dovah/notice_code_list.h"
 #include "editor/core.h"
 #include "editor/open_window_for_form.h"
-#include "editor/helpers/warning_or_error_to_string.h"
 #include "editor/helpers/backend_error_to_string.h"
 #include "editor/helpers/backend_warning_to_string.h"
 
@@ -13,38 +11,11 @@
 #include "dovah/notices/base_form_save_error.h"
 #include "dovah/notices/base_form_save_warning.h"
 
-namespace {
-   QString _read_error_form_id_to_string(const dovah::detailed_notice::relevant_form& form) {
-      QString signature = cobb::qt::four_cc_to_string(dovah::form_type_info::lookup(form.type).signature);
-      QString local     = QObject::tr("????????", "log window - missing form ID");
-      QString fixed     = QObject::tr("--------", "log window - missing form ID");
-      if (form.fixedID)
-         fixed = QString("%1").arg(form.fixedID, 8, 16, QChar('0')).toUpper();
-      if (form.localID) {
-         local = QString("%1").arg(form.localID, 8, 16, QChar('0')).toUpper();
-         return QObject::tr("[%1][Local:%2][Loaded:%3]").arg(signature).arg(local).arg(fixed);
-      }
-      return QObject::tr("[%1:%2]").arg(signature).arg(fixed);
-   }
-}
-
 #pragma region LogListModelItem
 LogListModelItem::LogListModelItem(const QString& t) {
    this->type = type_t::text;
    this->text = t;
 }
-LogListModelItem::LogListModelItem(const dovah::detailed_notice& warning) {
-   using notice_code = dovah::notice_code;
-   //
-   this->data = warning;
-   this->type = type_t::detailed_notice;
-   if (warning.flags & dovah::detailed_notice::flag::has_cause_file) {
-      this->file = QString::fromStdString(warning.cause_file);
-   }
-   //
-   this->text = editor_helpers::warning_or_error_to_string(warning);
-}
-
 LogListModelItem::LogListModelItem(const dovah::notices::base_error& notice) {
    this->metadata.type = Type::Error;
    this->text = editor_helpers::backend_error_to_string(notice);
@@ -65,11 +36,6 @@ LogListModelItem::LogListModelItem(const dovah::notices::base_warning& notice) {
    }
 }
 
-bool LogListModelItem::compare(const dovah::detailed_notice& warning) const noexcept {
-   if (this->type != type_t::detailed_notice)
-      return false;
-   return this->data == warning;
-}
 bool LogListModelItem::empty() const noexcept {
    return this->text.isEmpty();
 }
@@ -78,7 +44,6 @@ bool LogListModelItem::empty() const noexcept {
 #pragma region LogListModel
 LogListModel::LogListModel(QObject* parent) : QAbstractTableModel(parent) {
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::fileLoadWarningReceived, this, &LogListModel::loadWarningReceived);
    QObject::connect(&editor, &DovahKitCore::dataAcquireComplete,     this, &LogListModel::dataAcquireComplete);
    QObject::connect(&editor, &DovahKitCore::dataSaveImminent,        this, &LogListModel::dataSaveImminent);
    QObject::connect(&editor, &DovahKitCore::dataSaveComplete,        this, &LogListModel::dataSaveComplete);
@@ -108,49 +73,6 @@ void LogListModel::dataSaveImminent() {
 }
 void LogListModel::dataSaveComplete() {
    this->addTextEntry(tr("The active file has been successfully saved.", "log window"));
-}
-void LogListModel::loadWarningReceived(const dovah::detailed_notice& warning) {
-   using flag = dovah::detailed_notice::flag;
-   //
-   if (warning.context == dovah::detailed_notice::notice_context::on_demand_form_load) {
-      //
-      // Don't log warnings from on-demand form loads, unless the specific data is 
-      // coalesced.
-      //
-      if (!warning.is_winning_record())
-         return;
-   }
-   //
-   auto& map = this->warnings_cause_by_form;
-   auto  cause_form_id  = warning.cause_form.fixedID;
-   bool  has_cause_form = warning.flags & flag::has_cause_form;
-   if (has_cause_form && cause_form_id) {
-      auto it = map.find(cause_form_id);
-      if (it != map.end()) {
-         auto& list = *it;
-         for (auto* item : list) {
-            if (item->compare(warning))
-               return;
-         }
-      }
-   }
-   auto* item = new item_type(warning);
-   if (item->empty()) {
-      delete item;
-      return;
-   }
-   //
-   auto first_inserted = this->children.size();
-   auto last_inserted  = first_inserted;
-   this->beginInsertRows(QModelIndex(), first_inserted, last_inserted);
-   //
-   this->children.push_back(item);
-   if (has_cause_form && cause_form_id) {
-      auto& list = map[cause_form_id];
-      list.push_back(item);
-   }
-   //
-   this->endInsertRows();
 }
 
 bool LogListModel::_has_matching_notice(dovah::bare_form_id_t form_id, QString text) const {

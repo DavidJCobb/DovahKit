@@ -14,7 +14,6 @@ namespace dovah {
       class file_loader;
       class subrecord;
    }
-   struct detailed_notice;
    class file_load_order;
    class form_stub;
    class form_reference_t;
@@ -34,10 +33,6 @@ namespace dovah::load_order_interfaces {
          uint32_t last_record_flags = 0;
 
       public:
-         // TIP: This function only logs a warning if it has a warning code. Some helper functions can be 
-         // called blindly to create and return warnings that only have a code if there's an actual problem.
-         void log_load_warning(const detailed_notice&);
-
          void log_load_warning(notices::base_form_load_warning&);
          
          #pragma region warn_if_ref_is_wrong_type

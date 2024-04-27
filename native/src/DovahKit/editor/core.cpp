@@ -9,9 +9,7 @@
 #include "helpers/performance.h"
 #include "helpers/windows_registry.h"
 #include "helpers/qt/strings.h"
-#include "../dovah/detailed_notice.h"
 #include "../dovah/form_stub.h"
-#include "../dovah/notice_code_list.h"
 #include "../dovah/localized_strings.h"
 #include "../dovah/files/bsa/bsa_load_order.h"
 #include "../dovah/files/tes_file_writing/results.h"
@@ -21,7 +19,7 @@
 #include "../dovah/utils/get_user_language_name.h"
 #include "../dovah/forms/DefaultObjectManager.h"
 #include "core_internals/load_task.h"
-#include "core_internals/detailed_notice_dispatcher.h"
+#include "core_internals/backend_notice_dispatcher.h"
 #include "helpers/make_editor_id_for_duplicate.h"
 #include "../ui/main_window/delete_form_dialog.h"
 #include "../ui/main_window/form_use_info.h"
@@ -66,31 +64,12 @@ namespace {
    void _on_mass_renumber() {
       emit DovahKitCore::get().formsRenumberedEnMasse();
    }
-   void _on_read_warning(const dovah::detailed_notice& warning) {
-      //
-      // This callback can come from the initial file load (where form stubs are built), or 
-      // when loading the full contents of a form. This particular frontend runs the initial 
-      // file load on a worker thread to avoid blocking the UI, which means that we need to 
-      // adapt the data sent by this callback and guarantee that the signal we emit goes to 
-      // the main thread.
-      //
-      // Accordingly, we rely on a "dispatcher" singleton that: wraps the warning struct in 
-      // another struct suitable for use as a Qt metatype; and then emits a signal, which 
-      // DovahKitCore will in turn listen for.
-      //
-      // (If we were to just emit the DovahKitCore signal from here, without registering a 
-      // metatype, then it would only trigger slots registered on whatever thread we're 
-      // emitting from. Registering the metatype allows Qt to copy the data and trigger 
-      // slots across threads.)
-      //
-      DovahKitEditorInternals::detailed_notice_dispatcher::get().send(warning);
-   }
 
    void _on_backend_error(const dovah::notices::base_error& notice) {
-      DovahKitEditorInternals::detailed_notice_dispatcher::get().send(notice);
+      DovahKitEditorInternals::backend_notice_dispatcher::get().send(notice);
    }
    void _on_backend_warning(const dovah::notices::base_warning& notice) {
-      DovahKitEditorInternals::detailed_notice_dispatcher::get().send(notice);
+      DovahKitEditorInternals::backend_notice_dispatcher::get().send(notice);
    }
 }
 
@@ -119,12 +98,8 @@ DovahKitCore::DovahKitCore() {
    this->set_encoding();
    //
    {
-      using dispatcher_t = DovahKitEditorInternals::detailed_notice_dispatcher;
+      using dispatcher_t = DovahKitEditorInternals::backend_notice_dispatcher;
       dispatcher_t& dispatcher = dispatcher_t::get();
-      QObject::connect(&dispatcher, &dispatcher_t::received, this, [this](DovahKitEditorInternals::multithreadable_detailed_notice w) {
-         emit this->fileLoadWarningReceived(w.warning);
-      }, Qt::QueuedConnection);
-
       QObject::connect(
          &dispatcher,
          &dispatcher_t::receivedWarning,
@@ -202,7 +177,6 @@ void DovahKitCore::_configure_load_order() {
    this->load_order->on_form_loss     = &_on_form_loss;
    this->load_order->on_form_renumber = &_on_form_renumber;
    this->load_order->on_mass_renumber = &_on_mass_renumber;
-   this->load_order->on_read_warning  = &_on_read_warning;
    this->load_order->on_error         = &_on_backend_error;
    this->load_order->on_warning       = &_on_backend_warning;
    this->load_order->adopt_archive_list(*(new dovah::bsa_load_order));

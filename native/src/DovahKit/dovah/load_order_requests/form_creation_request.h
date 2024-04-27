@@ -4,7 +4,6 @@
 #include <string>
 #include "../core.h"
 #include "../form_types.h"
-#include "../notice_code_t.h"
 
 namespace dovah {
    class file_load_order;

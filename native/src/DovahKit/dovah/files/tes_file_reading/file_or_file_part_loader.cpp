@@ -1,5 +1,4 @@
 #include "file_or_file_part_loader.h"
-#include "../../notice_code_list.h"
 #include "../file_load_order.h"
 #include "file_loader.h"
 #include "../../form_stub_addenda.h"
@@ -16,11 +15,6 @@ namespace dovah::tes_file_reading {
       this->loader = &self;
    }
    
-   void file_or_file_part_loader::log_load_warning(detailed_notice& n) {
-      auto& file = this->get_file_loader();
-      n.set_cause_file(file.get_filename());
-      this->load_interface.log_load_warning(n);
-   }
    void file_or_file_part_loader::log_load_warning(notices::base_file_load_warning& notice) {
       auto& file = this->get_file_loader();
       notice.source_file = file.get_filename();

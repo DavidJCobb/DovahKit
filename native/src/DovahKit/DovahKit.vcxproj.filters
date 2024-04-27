@@ -468,13 +468,10 @@
     <ClCompile Include="ui\main_window\_debug_hooks\list_none_stubs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\detailed_notice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\files\tes_file_writing\results.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\core_internals\detailed_notice_dispatcher.cpp">
+    <ClCompile Include="editor\core_internals\backend_notice_dispatcher.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\files\tes_file_reading\file_loader.cpp">
@@ -490,9 +487,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\files\tes_file_reading\threaded_load_order_use_info_builder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\helpers\warning_or_error_to_string.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="helpers\lua\metamethod_names.cpp">
@@ -2774,12 +2768,6 @@
     <ClInclude Include="dovah\localization\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\notice_code_t.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\notice_code_list.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\data\game_settings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2798,9 +2786,6 @@
     <ClInclude Include="ui\main_window\_debug_hooks\list_none_stubs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\detailed_notice.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\files\tes_file_writing\results.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2817,9 +2802,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\files\tes_file_reading\threaded_load_order_use_info_builder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\helpers\warning_or_error_to_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\eight_cc.h">
@@ -6276,7 +6258,7 @@
     <QtMoc Include="ui\main_window\default_object_window\default_object_list.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="editor\core_internals\detailed_notice_dispatcher.h">
+    <QtMoc Include="editor\core_internals\backend_notice_dispatcher.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\formlist.h">

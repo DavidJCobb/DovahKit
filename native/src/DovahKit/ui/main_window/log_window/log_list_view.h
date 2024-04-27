@@ -3,8 +3,7 @@
 #include <QAbstractItemModel>
 #include <QString>
 #include <QTableView>
-#include "../../../dovah/core.h"
-#include "../../../dovah/detailed_notice.h"
+#include "dovah/core.h"
 
 namespace dovah::notices {
    class base_error;
@@ -31,10 +30,8 @@ class LogListModelItem {
       };
 
    public:
-      using detailed_notice = dovah::detailed_notice;
       enum class type_t {
          text,
-         detailed_notice, // (text) stores the "rendered" output
       };
       
       struct {
@@ -44,15 +41,12 @@ class LogListModelItem {
       type_t  type = type_t::text;
       QString text;
       QString file;
-      detailed_notice data;
       
       LogListModelItem() {}
       LogListModelItem(const QString&);
-      LogListModelItem(const detailed_notice&);
       LogListModelItem(const dovah::notices::base_error&);
       LogListModelItem(const dovah::notices::base_warning&);
       
-      bool compare(const detailed_notice&) const noexcept;
       bool empty() const noexcept;
 };
 
@@ -71,7 +65,6 @@ class LogListModel : public QAbstractTableModel {
       void dataAcquireComplete();
       void dataSaveImminent();
       void dataSaveComplete();
-      void loadWarningReceived(const dovah::detailed_notice& warning);
 
       void errorReceived(const dovah::notices::base_error&);
       void warningReceived(const dovah::notices::base_warning&);

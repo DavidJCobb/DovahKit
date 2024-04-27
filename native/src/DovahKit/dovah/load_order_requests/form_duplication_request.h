@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 #include "../core.h"
-#include "../notice_code_t.h"
 #include "./form_creation_request.h"
 
 namespace dovah {

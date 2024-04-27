@@ -24,7 +24,6 @@ namespace dovah {
    class  bsa_archived_file;
    class  bsa_load_order;
    class  compiled_papyrus_script;
-   struct detailed_notice;
    class  form_deletion_request;
    class  form_stub;
    struct localized_string;
@@ -92,7 +91,6 @@ class DovahKitCore : public QObject {
       void dataAcquireComplete(); // we have loaded new files and forms
       void dataAcquireFailed(QString error_message); // we tried to load new files, but failed
       
-      void fileLoadWarningReceived(const dovah::detailed_notice&);
       void fileLoadStatisticsAvailable(const file_load_stats&);
 
       void backendErrorReceived(const dovah::notices::base_error&);

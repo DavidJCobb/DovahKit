@@ -3,25 +3,9 @@
 #include "../files/file_load_order.h"
 #include "../notices/form_load_warnings/form_reference_type_mismatch.h"
 #include "../notices/base_form_load_warning.h"
-#include "../detailed_notice.h"
 #include "../form_stub.h"
 
 namespace dovah::load_order_interfaces {
-   void form_load::log_load_warning(const detailed_notice& input) {
-      if (!input.is_defined())
-         return;
-      detailed_notice warning = input;
-      warning.type    = detailed_notice::notice_type::warning;
-      warning.context = detailed_notice::notice_context::on_demand_form_load;
-      warning.modify_flag(detailed_notice::flag::is_winning_record, this->is_winning_record);
-      //
-      if (this->current_file && warning.cause_file.empty()) {
-         warning.cause_file = this->current_file->get_filename();
-         warning.set_flag(detailed_notice::flag::has_cause_file);
-      }
-      //
-      this->owner._log_load_warning(warning);
-   }
    void form_load::log_load_warning(notices::base_form_load_warning& notice) {
       notice.record_info.is_winning_record = this->is_winning_record;
       if (this->current_file && notice.record_info.source_file.empty()) {

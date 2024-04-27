@@ -7,7 +7,6 @@
 #include "./config.h"
 #include "./elements.h"
 #include "../../utils/refs_need_persistence_checker.h"
-#include "../../detailed_notice.h"
 
 namespace dovah {
    namespace exceptions {

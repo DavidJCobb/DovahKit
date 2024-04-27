@@ -7,7 +7,6 @@
 #include "dovah/files/tes_file_writing/results.h"
 #include "editor/core.h"
 #include "editor/helpers/backend_error_to_string.h"
-#include "dovah/notice_code_list.h"
 #include "../main_window.h"
 
 #include "editor/ini/main.h"

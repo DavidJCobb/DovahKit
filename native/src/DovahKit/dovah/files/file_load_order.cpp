@@ -1,25 +1,24 @@
-#include "file_load_order.h"
+#include "./file_load_order.h"
 #include "helpers/performance.h"
 #include "helpers/string/strieq_ascii.h"
 #include "helpers/unordered_map.h"
 #include "../form_stub.h"
 #include "../form_stub_addenda.h"
 #include "../form_stub_helpers.h"
-#include "tes_file_reading/file_loader.h"
-#include "tes_file_reading/file_header.h"
-#include "tes_file_reading/threaded_load_order_use_info_builder.h"
-#include "tes_file_reading/load_order_persistent_ref_reparenter.h"
-#include "tes_file_writing/file_writer.h"
-#include "tes_file_writing/results.h"
+#include "./tes_file_reading/file_loader.h"
+#include "./tes_file_reading/file_header.h"
+#include "./tes_file_reading/threaded_load_order_use_info_builder.h"
+#include "./tes_file_reading/load_order_persistent_ref_reparenter.h"
+#include "./tes_file_writing/file_writer.h"
+#include "./tes_file_writing/results.h"
 #include "../forms/factories/construct.h"
 #include "../forms/factories/hardcoded.h"
 #include "../forms/Form.h"
 #include "../logging.h"
-#include "bsa/bsa_load_order.h"
+#include "./bsa/bsa_load_order.h"
 #include "../utils/get_ini_defined_bsa_list.h"
 #include "../utils/get_user_language_name.h"
 #include "../localization/localized_string_store.h"
-#include "../notice_code_list.h"
 #include <fstream>
 
 #include "../exceptions/invalid_load_order/active_file_is_master_and_there_are_plugins.h"
@@ -982,13 +981,6 @@ namespace dovah {
       }
    }
 
-   void file_load_order::_log_load_warning(const detailed_notice& w) {
-      if (!w.is_defined())
-         return;
-      if (this->on_read_warning)
-         (this->on_read_warning)(w);
-   }
-
    void file_load_order::_log_warning(const notices::base_warning& notice) {
       if (this->on_warning)
          (this->on_warning)(notice);
@@ -1136,12 +1128,12 @@ namespace dovah {
       _extract(this->active_file_forms);
       _extract(this->active_file_forms_by_type[form_type]);
    }
-   notice_code_t file_load_order::_renumber_game_setting(loaded_game_setting& entry, bare_form_id_t new_id) {
+   void file_load_order::_renumber_game_setting(loaded_game_setting& entry, bare_form_id_t new_id) {
       using exception  = exceptions::game_setting_renumber_failed;
       using error_code = exception::error_code;
 
       if (entry.formID == new_id)
-         return default_notice_code;
+         return;
       if (entry.source_file != this->active_file) {
          #if _DEBUG
             __debugbreak(); // Why are we attempting to renumber a game setting definition that didn't come from the active file?
@@ -1232,8 +1224,6 @@ namespace dovah {
             (this->on_form_create)(stub);
       }
       entry.formID = new_id;
-      //
-      return default_notice_code;
    }
    #pragma endregion
 
@@ -2169,14 +2159,13 @@ namespace dovah {
       if (!entry) {
          throw exception(error_code::setting_is_not_in_active_file, request.setting);
       }
-      auto code = this->_renumber_game_setting(*entry, request.desiredID);
+      this->_renumber_game_setting(*entry, request.desiredID);
       //
       // Okay. The form stub is now squared away. Now, we need to un-flag the form ID as reserved.
       //
       if (request.reservedID)
          this->_abandon_form_id_reservation(request.desiredID);
       //
-      request.code = default_notice_code;
       request.done = true;
    }
    //

@@ -1,8 +1,7 @@
-#include "load_window.h"
+#include "./load_window.h"
 #include <array>
 #include <QErrorMessage>
-#include "../../editor/core.h"
-#include "../../editor/helpers/warning_or_error_to_string.h"
+#include "editor/core.h"
 #include "../main_window.h"
 
 namespace {

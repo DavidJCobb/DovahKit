@@ -4,7 +4,6 @@
 #include <QMessageBox>
 #include "dovah/exceptions/form_creation_failed.h"
 #include "dovah/exceptions/form_renumber_failed.h"
-#include "dovah/notice_code_list.h"
 #include "editor/core.h"
 #include "editor/open_window_for_form.h"
 #include "editor/helpers/make_editor_id_for_duplicate.h"

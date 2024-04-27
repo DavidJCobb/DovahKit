@@ -8,7 +8,6 @@
 #include "../../form_stub_helpers.h"
 #include "../../forms/Form.h"
 #include "../../forms/ObjectReference.h"
-#include "../../notice_code_list.h"
 #include "../common.h"
 extern "C" {
    #include "../../../zlib/zlib.h" // interproject ref

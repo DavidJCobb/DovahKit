@@ -6,7 +6,6 @@
 
 #include "dovah/exceptions/object_reference_move_failed.h"
 #include "dovah/forms/ObjectReference.h"
-#include "dovah/notice_code_list.h"
 
 namespace {
    using namespace dovahscript;

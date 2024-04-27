@@ -12,10 +12,8 @@
 #include <vector>
 #include "./file_load_order_normalizer.h"
 #include "../utils/file_prefix.h"
-#include "../detailed_notice.h"
 #include "../form_stub.h"
 #include "../localized_strings.h"
-#include "../notice_code_t.h"
 #include "../data/game_settings.h"
 #include "../exceptions/enums/form_creation_error_code.h"
 #include "../game_change_failure_reason.h"
@@ -101,7 +99,6 @@ namespace dovah {
          using form_create_callback_t     = void(*)(form_stub*);
          using form_loss_callback_t       = void(*)(form_stub&);
          using form_renumber_callback_t   = void(*)(form_stub&, bare_form_id_t oldID, bare_form_id_t newID);
-         using detailed_notice_callback_t = void(*)(const detailed_notice&);
          using generic_callback_t         = void(*)();
 
          using emit_error_callback = void(*)(const notices::base_error&);
@@ -219,8 +216,6 @@ namespace dovah {
          void _reparent_persistent_references();
          void _build_use_info();
 
-         void _log_load_warning(const detailed_notice&);
-
          void _log_warning(const notices::base_warning&);
 
          bool _abandon_form_id_reservation(bare_form_id_t);
@@ -229,7 +224,7 @@ namespace dovah {
          void _destroy_none_stub(form_stub&);
          
          void _renumber_form(form_stub&, bare_form_id_t new_id, bool update_users);
-         notice_code_t _renumber_game_setting(loaded_game_setting&, bare_form_id_t new_id);
+         void _renumber_game_setting(loaded_game_setting&, bare_form_id_t new_id);
 
          uint32_t _count_game_settings_with_form_id(bare_form_id_t) const noexcept; // doesn't lock
          
@@ -266,10 +261,8 @@ namespace dovah {
          form_loss_callback_t       on_form_loss     = nullptr; // occurs when a form stub is about to be unexpectedly deleted due to backend processes (e.g. SSE-only forms being lost after a conversion to Classic); frontend code MUST abandon the stub and its loaded form data
          form_renumber_callback_t   on_form_renumber = nullptr;
          generic_callback_t         on_mass_renumber = nullptr; // occurs when changing whether the active file is an ESL
-         detailed_notice_callback_t on_read_warning  = nullptr; // warnings that occur when reading data from a TES file, whether during the initial stub build or when loading forms later. frontend is responsible for maintaining thread-safety.
-         detailed_notice_callback_t on_save_warning  = nullptr; // warnings that occur when saving a file. frontend is responsible for maintaining thread-safety.
-         emit_error_callback        on_error         = nullptr;
-         emit_warning_callback      on_warning       = nullptr;
+         emit_error_callback        on_error         = nullptr; // any "error" notice. invoked on whatever thread encountered the error; make sure your callback is thread-safe.
+         emit_warning_callback      on_warning       = nullptr; // any "warning" notice. invoked on whatever thread encountered the error; make sure your callback is thread-safe.
          //
          void queue_file(const std::string& name);
          void unqueue_file(const std::string& name);

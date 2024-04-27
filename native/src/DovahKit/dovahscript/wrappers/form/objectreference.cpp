@@ -19,7 +19,6 @@
 #include "dovah/form_stub_helpers.h"
 #include "dovah/forms/Form.h"
 #include "dovah/forms/ObjectReference.h"
-#include "dovah/notice_code_list.h"
 #include "./objectreference/position.h"
 #include "./objectreference/rotation.h"
 

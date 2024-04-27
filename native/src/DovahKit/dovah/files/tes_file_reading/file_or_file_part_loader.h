@@ -28,7 +28,6 @@ namespace dovah::tes_file_reading {
          lo_interface_t load_interface;
          
       protected:
-         void log_load_warning(detailed_notice&);
          void log_load_warning(notices::base_file_load_warning&);
          
          form_stub* make_stub_for_record();
