@@ -676,10 +676,10 @@ namespace dovah {
          }
          if (stub->form_type == form_type::cell) {
             if (stub->test_record_flags(tes_file_record_header::flag::persistent)) {
-               auto* old_parent = target->get_parent_form();
+               auto* old_parent = existing_form->get_parent_form();
                if (old_parent && old_parent != new_parent) { // Re-parenting cells isn't supported and isn't a sane operation, but no harm in covering it here
                   auto* addenda = old_parent->addenda;
-                  if (addenda && addenda->persistent_cell == target)
+                  if (addenda && addenda->persistent_cell == existing_form)
                      addenda->persistent_cell = nullptr;
                }
             }
