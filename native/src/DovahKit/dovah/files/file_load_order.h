@@ -275,7 +275,7 @@ namespace dovah {
          void queue_file(const std::string& name);
          void unqueue_file(const std::string& name);
          void queue_active_file(const std::string& name); // TODO
-         bool load_queued_files();
+         void load_queued_files();
          //
          bool is_loading() const noexcept;
          

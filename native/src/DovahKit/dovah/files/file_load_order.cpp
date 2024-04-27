@@ -312,7 +312,7 @@ namespace dovah {
    void file_load_order::queue_active_file(const std::string& name) {
       this->queued_load.active_file = name;
    }
-   bool file_load_order::load_queued_files() {
+   void file_load_order::load_queued_files() {
       _save_load_lock_guard save_load_lock_guard(*this, save_load_type::is_loading);
       if (!save_load_lock_guard) {
          throw exceptions::file_load_failed(exceptions::file_load_failed::error_code::save_or_load_already_in_progress);
@@ -528,8 +528,6 @@ namespace dovah {
             }
          }
       }
-      //
-      return true;
    }
    //
    bool file_load_order::is_loading() const noexcept {

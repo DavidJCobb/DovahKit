@@ -253,8 +253,8 @@ namespace {
          QString dependent = QString::fromStdString(casted->dependent_file);
 
          return QObject::tr(
-            "The desired active file, %1, is a dependency of file %2, and so cannot be the last "
-            "file in the load order."
+            "The active file (%1) is listed as another file's (%2) master. This load order is "
+            "invalid, because we need the active file at the bottom of the load order."
          ).arg(active).arg(dependent);
       } else if (auto* casted = dynamic_cast<const load_order_would_have_too_many_files*>(&ex)) {
          if (casted->file_counts.active_file_dependencies.has_value()) {
@@ -265,11 +265,13 @@ namespace {
          }
          if (casted->file_counts.light == 0) {
             return QObject::tr(
-               "The load order contains too many files: %1 heavy."
+               "The load order contains too many files: %1 heavy. The max is 254 for games "
+               "that support light plug-ins, and 255 for older games."
             ).arg(casted->file_counts.heavy);
          }
          return QObject::tr(
-            "The load order contains too many files: %1 light and %2 heavy."
+            "The load order contains too many files: %1 light and %2 heavy. The cap is 254 "
+            "heavy plug-ins and 4096 light plug-ins."
          ).arg(casted->file_counts.light).arg(casted->file_counts.heavy);
       }
       return QObject::tr("Unknown problem with the requested load order.");
@@ -309,8 +311,7 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
       // NOTE: For any signals emitted by the worker and received from the spawning thread, you MUST 
       // specify a context object (i.e. the QObject before your functor). If you don't, Qt WILL fail 
       // an assertion when the signal is received, before even executing any of the code in your 
-      // signal handler, and the assertion message WILL be completely wrong and waste multiple hours 
-      // of your goddamned time.
+      // signal handler, and the assertion message WILL be misleading.
       //
       // Presumably it has something to do with Qt::AutoConnection, which is supposed to adapt signals 
       // across threads; I assume it can't do that if you don't explicitly provide a context object 

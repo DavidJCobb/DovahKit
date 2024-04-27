@@ -12,8 +12,9 @@ namespace DovahKitEditorInternals {
    void load_task::exec() {
       benchmark.begin();
       try {
-         result = editor.load_order->load_queued_files();
+         editor.load_order->load_queued_files();
          benchmark.end();
+         this->result = true;
       } catch (const dovah::exceptions::invalid_load_order& ex) {
          benchmark.end();
 

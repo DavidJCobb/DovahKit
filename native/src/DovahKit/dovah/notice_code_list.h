@@ -42,7 +42,7 @@ namespace dovah {
          //
          //
          //
-         cannot_load_right_now                       = 0x00000024, // It is not safe to load right now, as a save or load operation is already in progress.
+         //
          game_setting_record_has_no_data             = 0x00000025, // A GMST record had no DATA subrecord.
          game_setting_record_unreadable_data         = 0x00000026, // A GMST record's DATA subrecord could not be read. This can happen if the subrecord is too small.
          //
@@ -66,18 +66,18 @@ namespace dovah {
          //
          //
          //
-         malformed_file                              = 0x0000003C, // Generic error code for malformed files.
-         missing_master                              = 0x0000003D, // Failed to load a file, because one of the file's masters is missing.
-         missing_file                                = 0x0000003E, // Failed to load a file, because the file is missing.
-         locked_file                                 = 0x0000003F, // DovahKit was unable to read a file because it is locked by the OS.
-         cyclical_dependency_between_files           = 0x00000040, // The load order contains files whose master lists form a circular dependency.
-         active_file_is_master_and_there_are_plugins = 0x00000041, // DovahKit can't place the active file at the end of the load order, because it's ESM-flagged and other files aren't.
+         //
+         //
+         //
+         //
+         //
+         //
          record_found_in_wrong_top_level_group       = 0x00000042,
          //
          //
-         unknown_error                               = 0x00000045,
-         active_file_is_dependency                   = 0x00000046, // The active file is listed as another file's master. This load order is invalid, because we need the active file at the bottom of the load order.
-         load_order_would_have_too_many_files        = 0x00000047, // We can't load this load order. It would have too many files (greater than 4096 lights, 255 heavies, or if an active file is selected, 255 or 254 total).
+         //
+         //
+         //
          //
          //
          //

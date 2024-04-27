@@ -30,12 +30,14 @@ namespace DovahKitEditorInternals {
          file_load_stats    stats;
          DovahKitCore&      editor;
          std::exception_ptr exception;
-         bool result = false;
+         //
+         bool result = false; // only needed for synchronous loads by DovahKitCore, and I'm not even sure I still want to support those
          
       signals:
          void complete(DovahKitCore::file_load_stats); // this must be fully qualified, or Qt's preprocessor will make a mistake and attempts to pass this across threads at run-time will fail. <https://blog.debiania.in.ua/posts/2019-06-10-nested-structs-as-signal-arguments-in-qt.html>
          void failed();
          void ended(); // called after (complete) and (failed)
+
       public slots:
          void exec();
    };

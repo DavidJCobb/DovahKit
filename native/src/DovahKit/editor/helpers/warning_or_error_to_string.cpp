@@ -143,34 +143,6 @@ namespace editor_helpers {
                text = text.arg(file).arg(form).arg(grup);
             }
             break;
-         case notice_code::active_file_is_dependency:
-            text = QObject::tr("The active file is listed as another file's master. This load order is invalid, because we need the active file at the bottom of the load order.", "notice_code::active_file_is_dependency");
-            break;
-         case notice_code::load_order_would_have_too_many_files:
-            {
-               text = QObject::tr("We can't load this load order. It would have too many files.%1", "notice_code::load_order_would_have_too_many_files");
-               //
-               QString detail;
-               auto total = notice.extra_integers[0];
-               auto heavy = notice.extra_integers[1];
-               auto light = notice.extra_integers[2];
-               if (total) {
-                  if (heavy && light) {
-                     if (heavy > 255) {
-                        detail = QObject::tr(" The load order contains %1 files, of which %2 are not light; there can be no more than 255 non-light files.", "notice_code::load_order_would_have_too_many_files (too many heavy)")
-                           .arg(total).arg(heavy);
-                     } else if (light > 4096) {
-                        detail = QObject::tr(" The load order contains %1 files, of which %2 are light; there can be no more than 4096 light files.", "notice_code::load_order_would_have_too_many_files (too many light)")
-                           .arg(total).arg(light);
-                     }
-                  } else {
-                     detail = QObject::tr(" The load order contains %1 files, but the cap is 255 for games that support ESLs and 254 for games that don't.", "notice_code::load_order_would_have_too_many_files (too many total)")
-                        .arg(total);
-                  }
-               }
-               text = text.arg(detail);
-            }
-            break;
          case notice_code::quest_objective_unexpected_subrecord:
             {
                QString form      = QObject::tr("<unknown form>", "log window");
@@ -209,7 +181,6 @@ namespace editor_helpers {
             }
             break;
             //
-         case notice_code::unknown_error:
          default:
             text = QObject::tr("Unknown error.", "write error");
             break;
