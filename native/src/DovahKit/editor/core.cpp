@@ -820,15 +820,7 @@ void DovahKitCore::set_default_object(uint32_t signature, dovah::form_stub* stub
    }
    auto loaded = singleton_stub->load().ptr_cast<dovah::loaded_forms::DefaultObjectManager>();
    if (loaded) {
-      //
-      // This *can* return warning and failure codes, but the UI shouldn't allow the user to 
-      // supply any invalid values, so for now, don't bother displaying them.
-      //
-      auto code = loaded->set_entry(signature, stub);
-      switch (code) {
-         case dovah::notice_code::default_object_rejected_for_bad_type:
-            return;
-      }
+      loaded->set_entry(signature, stub);
       //
       // Emit success signal:
       //

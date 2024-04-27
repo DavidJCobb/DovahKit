@@ -188,6 +188,125 @@ namespace editor_helpers {
                "subrecord %3."
             ).arg(name).arg(global_id).arg(subrecord);
          }
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::game_setting_record_is_misordered*>(&warning)) {
+            QString name     = QString::fromStdString(casted->setting_name);
+            QString local_id = editor_helpers::form_id_to_string(casted->record.local_id);
+            QString global_id;
+            if (auto& id = casted->record.global_id; id.has_value()) {
+               global_id = editor_helpers::form_id_to_string(id.value());
+            }
+
+            if (name.isEmpty()) {
+               if (!global_id.isEmpty()) {
+                  return QObject::tr(
+                     "The game setting record (GMST) with form ID %1 has its subrecords in the wrong order. EDID must come "
+                     "first, and DATA must come somewhere after EDID."
+                  ).arg(global_id);
+               }
+               return QObject::tr(
+                  "The game setting record (GMST) with file-local form ID %1 has its subrecords in the wrong order. EDID must "
+                  "come first, and DATA must come somewhere after EDID."
+               ).arg(local_id);
+            }
+            if (!global_id.isEmpty()) {
+               return QObject::tr(
+                  "The game setting record (GMST) for setting \"%1\" with file-local form ID %2 has its subrecords in the "
+                  "wrong order. EDID must come first, and DATA must come somewhere after EDID."
+               ).arg(name).arg(local_id);
+            }
+            return QObject::tr(
+               "The game setting record (GMST) for setting \"%1\" with form ID %2 has its subrecords in the wrong order. "
+               "EDID must come first, and DATA must come somewhere after EDID."
+            ).arg(name).arg(global_id);
+         }
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::game_setting_value_has_extra_content*>(&warning)) {
+            QString name     = QString::fromStdString(casted->setting_name);
+            QString local_id = editor_helpers::form_id_to_string(casted->record.local_id);
+            QString global_id;
+            if (auto& id = casted->record.global_id; id.has_value()) {
+               global_id = editor_helpers::form_id_to_string(id.value());
+            }
+
+            if (name.isEmpty()) {
+               if (!global_id.isEmpty()) {
+                  return QObject::tr(
+                     "A game setting record (GMST) with no editor ID and form ID %1 contained %2 extra bytes at the "
+                     "end of its DATA subrecord (%3 bytes expected; %4 total)."
+                  ).arg(global_id).arg(casted->data_size - casted->expected_size).arg(casted->expected_size).arg(casted->data_size);
+               }
+               return QObject::tr(
+                  "A game setting record (GMST) with no editor ID and file-local form ID %1 contained %2 extra bytes "
+                  "at the end of its DATA subrecord (%3 bytes expected; %4 total)."
+               ).arg(local_id).arg(casted->data_size - casted->expected_size).arg(casted->expected_size).arg(casted->data_size);
+            }
+            if (!global_id.isEmpty()) {
+               return QObject::tr(
+                  "A game setting record (GMST) for setting \"%1\" with file-local form ID %2 contained %3 extra bytes "
+                  "at the end of its DATA subrecord (%4 bytes expected; %5 total)."
+               ).arg(name).arg(local_id).arg(casted->data_size - casted->expected_size).arg(casted->expected_size).arg(casted->data_size);
+            }
+            return QObject::tr(
+               "A game setting record (GMST) for setting \"%1\" with form ID %2 contained %3 extra bytes at the "
+               "end of its DATA subrecord (%4 bytes expected; %5 total)."
+            ).arg(name).arg(global_id).arg(casted->data_size - casted->expected_size).arg(casted->expected_size).arg(casted->data_size);
+         }
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::game_setting_value_type_unknown*>(&warning)) {
+            QString name     = QString::fromStdString(casted->setting_name);
+            QString local_id = editor_helpers::form_id_to_string(casted->record.local_id);
+            QString global_id;
+            if (auto& id = casted->record.global_id; id.has_value()) {
+               global_id = editor_helpers::form_id_to_string(id.value());
+            }
+
+            if (!name.isEmpty()) {
+               if (!global_id.isEmpty()) {
+                  return QObject::tr(
+                     "Unable to load the value of a game setting record (GMST) for setting \"%1\" with file-local form ID %2. "
+                     "The game setting's value type (bool/float/int/etc.) is unknown."
+                  ).arg(name).arg(local_id);
+               }
+               return QObject::tr(
+                  "Unable to load the value of a game setting record (GMST) for setting \"%1\" with form ID %2. The game setting's "
+                  "value type (bool/float/int/etc.) is unknown."
+               ).arg(name).arg(global_id);
+            }
+            //
+            // We should never emit this error for nameless settings, because we know a priori that we can't identify 
+            // their value type. The value type is based on the first letter of the setting name (i.e. Hungarian 
+            // notation).
+            //
+         }
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::game_setting_value_unreadable*>(&warning)) {
+            QString name     = QString::fromStdString(casted->setting_name);
+            QString local_id = editor_helpers::form_id_to_string(casted->record.local_id);
+            QString global_id;
+            if (auto& id = casted->record.global_id; id.has_value()) {
+               global_id = editor_helpers::form_id_to_string(id.value());
+            }
+
+            QString explanation = QObject::tr("The data is truncated or malformed.");
+            if (!casted->subrecord_is_present)
+               explanation = QObject::tr("The DATA subrecord is missing.");
+
+            if (name.isEmpty()) {
+               if (!global_id.isEmpty()) {
+                  return QObject::tr(
+                     "Failed to load the value of the game setting record (GMST) with form ID %1. %2"
+                  ).arg(global_id).arg(explanation);
+               }
+               return QObject::tr(
+                  "Failed to load the value of the game setting record (GMST) with file-local form ID %1. %2"
+               ).arg(local_id).arg(explanation);
+            }
+            if (!global_id.isEmpty()) {
+               return QObject::tr(
+                  "Failed to load the value of the game setting record (GMST) for setting \"%1\" with file-local form ID %2. %3"
+               ).arg(name).arg(local_id).arg(explanation);
+            }
+            return QObject::tr(
+               "Failed to load the value of the game setting record (GMST) for setting \"%1\" with form ID %2. %3"
+            ).arg(name).arg(global_id).arg(explanation);
+         }
          if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::partial_info_override_has_different_parent*>(&warning)) {
             auto subject = QString("[%1:%2]")
                .arg(editor_helpers::form_type_name_to_string(casted->record.form_type))
@@ -217,6 +336,22 @@ namespace editor_helpers {
                "utter confusion) and is not an attempt at repairing the data. If circumstances allow, you should remove "
                "the \"partial\" flag from this override using xEdit or a similar tool."
             ).arg(subject).arg(override_file).arg(original_file).arg(parent_prior).arg(parent_after);
+         }
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::record_found_in_wrong_top_level_group*>(&warning)) {
+            QString expected = cobb::qt::four_cc_to_string(casted->top_level_group_label);
+            QString found    = cobb::qt::four_cc_to_string(casted->record.signature);
+
+            if (casted->record.global_id.has_value()) {
+               QString form_id = form_id_to_string(casted->record.global_id.value());
+               return QObject::tr(
+                  "Found record [%1:%2] in the record group for %3 records."
+               ).arg(found).arg(form_id).arg(expected);
+            }
+
+            QString form_id = form_id_to_string(casted->record.local_id);
+            return QObject::tr(
+               "Found a %1 record with file-local form ID %2 inside the record group for %3 records."
+            ).arg(found).arg(form_id).arg(expected);
          }
          if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::singleton_form_is_redundantly_defined*>(&warning)) {
             auto subject = QString("[%1:%2]")
@@ -507,6 +642,18 @@ namespace editor_helpers {
                      "No such log entry exists on the quest.",
                      disambig
                   ).arg(subject).arg(casted->stage_id).arg(casted->entry_index);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::quest::unexpected_subrecord_in_objective*>(&warning)) {
+                  auto subject   = form_identifiers_to_string(&casted->subject);
+                  auto signature = cobb::qt::four_cc_to_string(casted->signature);
+                  
+                  return QObject::tr(
+                     "While loading a quest objective for quest %1, encountered an unexpected subrecord "
+                     "with signature %2. A quest objective will blindly consume subrecords until it finds "
+                     "one it expects; if the objective is missing its \"end\" subrecord, then the quest "
+                     "will not load properly.",
+                     disambig
+                  ).arg(subject).arg(signature);
                }
             #pragma endregion
             #pragma region shout

@@ -1,6 +1,5 @@
 #include "legacy_script.h"
 #include "../_common_cpp.h"
-#include "../../notice_code_list.h"
 
 namespace dovah::loaded_forms::components {
    bool legacy_script::empty() const noexcept {

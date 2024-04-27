@@ -25,7 +25,7 @@ namespace dovah::load_order_interfaces {
       friend class form_stub;
       public:
          file_load_order& owner;
-         const form_stub& target_stub;
+         form_stub&       target_stub;
          //
          const tes_file_reading::file_loader* current_file = nullptr;
          //

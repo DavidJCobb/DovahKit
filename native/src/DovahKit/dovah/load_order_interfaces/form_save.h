@@ -3,11 +3,11 @@
 namespace dovah {
    namespace notices {
       class base_form_save_error;
+      class base_form_save_warning;
    }
    namespace tes_file_writing {
       class file_writer;
    }
-   struct detailed_notice;
    class file_load_order;
    class form_stub;
 }
@@ -22,11 +22,9 @@ namespace dovah::load_order_interfaces {
          file_load_order& owner;
          form_stub* target_stub = nullptr;
 
-         // TIP: This function only logs a warning if it has a warning code.
-         void log_save_warning(detailed_notice&);
-
          constexpr const form_stub* get_previous_child() const noexcept { return this->previous_child; }
 
+         void log_save_warning(notices::base_form_save_warning&);
          [[noreturn]] void throw_save_error(const notices::base_form_save_error&);
             
       protected:

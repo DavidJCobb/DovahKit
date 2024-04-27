@@ -4,8 +4,6 @@
 #include <type_traits>
 #include "helpers/type_traits/is_std_vector.h"
 #include "../../_common_cpp.h"
-#include "../../../logging.h"
-#include "../../../notice_code_list.h"
 #include "./attachment_header.h"
 
 namespace {

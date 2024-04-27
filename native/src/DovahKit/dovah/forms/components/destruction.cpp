@@ -1,7 +1,6 @@
 #include "destruction.h"
 #include "../_common_cpp.h"
 #include "../Form.h" // for LOAD_NAIVELY_WHEN_THE_GAME_DOES directive
-#include "../../notice_code_list.h"
 
 #include "../../notices/form_load_warnings/by_form_component/destruction/stage_serialized_index_out_of_bounds.h"
 #include "../../notices/form_save_errors/by_form_component/destruction/too_many_stages.h"

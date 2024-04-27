@@ -21,7 +21,7 @@ namespace dovah::loaded_forms {
          std::unordered_map<signature_t, entry> entries;
 
          form_stub* get_entry(signature_t) const noexcept;
-         notice_code_t set_entry(signature_t, form_stub*);
+         void set_entry(signature_t, form_stub*); // can throw `dovah::exceptions::default_object_assign_failed`
          bool entry_is_edited(signature_t) const noexcept;
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc); // TODO: FINISH ME

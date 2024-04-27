@@ -5,6 +5,8 @@
 #include "../../helpers/unordered_map.h"
 #include "factories/hardcoded.h"
 
+#include "../exceptions/default_object_assign_failed.h"
+
 namespace dovah::loaded_forms {
    form_stub* DefaultObjectManager::get_entry(signature_t signature) const noexcept {
       entry none;
@@ -16,20 +18,22 @@ namespace dovah::loaded_forms {
       auto& e = cobb::unordered_map_get_if_present(this->entries, signature, none);
       return e.is_active_file;
    }
-   notice_code_t DefaultObjectManager::set_entry(signature_t signature, form_stub* stub) {
+   void DefaultObjectManager::set_entry(signature_t signature, form_stub* stub) {
       auto* definition = get_default_object_definition(signature);
       if (definition) {
-         if (stub && stub->form_type != definition->type)
-            return notice_code::default_object_rejected_for_bad_type;
+         if (stub && stub->form_type != definition->type) {
+            exceptions::default_object_assign_failed ex;
+            ex.dobj_signature   = signature;
+            ex.known_definition = definition;
+            ex.used_form_stub   = stub;
+            throw ex;
+         }
       }
       auto& entry = this->entries[signature];
       entry.form.set(*this, stub);
       entry.is_active_file = true;
       if (!this->is_working_copy)
          this->stub.set_edited(true);
-      if (!definition)
-         return notice_code::default_object_accepted_but_unknown;
-      return default_notice_code;
    }
 
    void DefaultObjectManager::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {

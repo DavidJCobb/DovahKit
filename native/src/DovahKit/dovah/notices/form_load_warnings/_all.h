@@ -17,6 +17,7 @@
    #include "./by_form_type/quest/alias_papyrus_data_belongs_to_missing_alias.h"
    #include "./by_form_type/quest/alias_papyrus_data_specifies_wrong_quest.h"
    #include "./by_form_type/quest/papyrus_fragment_belongs_to_missing_log_entry.h"
+   #include "./by_form_type/quest/unexpected_subrecord_in_objective.h"
    #include "./by_form_type/shout/wrong_word_count.h"
    #include "./by_form_type/topic_info/response_addendum_subrecord_too_early.h"
    #include "./by_form_type/worldspace/is_own_parent.h"

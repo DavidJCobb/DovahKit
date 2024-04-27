@@ -1,10 +1,11 @@
-#include "default_object_window.h"
+#include "./default_object_window.h"
 #include <QAction>
 #include <QItemSelectionModel>
 #include <QMenu>
-#include "../../dovah/data/default_objects.h"
-#include "../../editor/core.h"
-#include "../../editor/get_default_object_info.h"
+#include "dovah/data/default_objects.h"
+#include "dovah/exceptions/default_object_assign_failed.h"
+#include "editor/core.h"
+#include "editor/get_default_object_info.h"
 
 namespace {
    DefaultObjectList::model_item_type* _get_selected_item(QTableView* widget) {
@@ -44,7 +45,14 @@ DefaultObjectWindow::DefaultObjectWindow(QWidget* parent) : QDialog(parent) {
       if (!item)
          return;
       auto& editor = DovahKitCore::get();
-      editor.set_default_object(item->signature, this->ui.form->formStub());
+      try {
+         editor.set_default_object(item->signature, this->ui.form->formStub());
+      } catch (const dovah::exceptions::default_object_assign_failed& ex) {
+         //
+         // The UI shouldn't allow you to perform invalid assigns, so don't even 
+         // bother displaying anything.
+         //
+      }
    });
    //
    this->ui.list->setTextFilter(this->ui.filter);

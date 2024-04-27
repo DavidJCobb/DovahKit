@@ -4,17 +4,6 @@
 #include "../core.h"
 
 namespace DovahKitEditorInternals {
-   struct multithreadable_load_results {
-      dovah::tes_file_reading::read_results data;
-      //
-      // Data types registered with Qt as "metatypes" must define a default constructor, a 
-      // copy constructor, and a destructor, unless they are POD structs:
-      //
-      multithreadable_load_results() = default;
-      multithreadable_load_results(const multithreadable_load_results&) = default;
-      ~multithreadable_load_results() = default;
-   };
-
    class load_task : public QObject {
       //
       // Helper class. This can be used as a worker for a QThread, allowing for 
@@ -42,7 +31,3 @@ namespace DovahKitEditorInternals {
          void exec();
    };
 }
-
-// IntelliSense doesn't like Q_DECLARE_METATYPE; ignore errors here unless they're compiler errors:
-Q_DECLARE_METATYPE(DovahKitEditorInternals::multithreadable_load_results)
-// needed so that QObject::connect can pass these across threads (by copying them). refer to load_task's constructor as well.

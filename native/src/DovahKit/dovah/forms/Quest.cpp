@@ -1,12 +1,11 @@
 #include "Quest.h"
 #include "_common_cpp.h"
 #include "../form_stub_addenda.h"
-#include "../logging.h"
-#include "../notice_code_list.h"
 
 #include "../notices/form_load_warnings/by_form_type/quest/alias_papyrus_data_belongs_to_missing_alias.h"
 #include "../notices/form_load_warnings/by_form_type/quest/alias_papyrus_data_specifies_wrong_quest.h"
 #include "../notices/form_load_warnings/by_form_type/quest/papyrus_fragment_belongs_to_missing_log_entry.h"
+#include "../notices/form_load_warnings/by_form_type/quest/unexpected_subrecord_in_objective.h"
 #include "../notices/form_save_errors/by_form_type/quest/too_many_log_entry_papyrus_fragments.h"
 #include "../notices/form_save_errors/by_form_type/quest/too_many_scripted_aliases.h"
 
@@ -810,12 +809,11 @@ namespace dovah::loaded_forms {
                   return;
                default:
                   {
-                     detailed_notice warning;
-                     warning.code = notice_code::quest_objective_unexpected_subrecord;
-                     warning.set_cause_form(intfc.target_stub);
-                     warning.set_cause_subrecord(subrecord.signature());
-                     //
-                     intfc.log_load_warning(warning);
+                     specific_load_warnings::unexpected_subrecord_in_objective notice(
+                        intfc.target_stub,
+                        subrecord.signature()
+                     );
+                     intfc.log_load_warning(notice);
                   }
                   break;
             }

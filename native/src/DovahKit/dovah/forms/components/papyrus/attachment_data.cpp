@@ -1,6 +1,5 @@
 #include "./attachment_data.h"
 #include "../../_common_cpp.h"
-#include "../../../logging.h"
 #include "./fragment_data/_all.h"
 #include "./attachment_header.h"
 #include "./attached_script.h"

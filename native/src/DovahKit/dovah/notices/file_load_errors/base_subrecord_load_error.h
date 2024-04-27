@@ -9,7 +9,7 @@ namespace dovah::notices::file_load_errors {
 
          struct {
             uint32_t signature = 0;
-            uint16_t size      = 0;
+            uint32_t size      = 0;
 
             uint32_t offset_into_record = 0;
          } subrecord;

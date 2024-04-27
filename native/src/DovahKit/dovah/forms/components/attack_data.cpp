@@ -1,6 +1,5 @@
 #include "attack_data.h"
 #include "../_common_cpp.h"
-#include "../../notice_code_list.h"
 
 #include "../../notices/form_load_warnings/by_form_component/attack_data/expected_event_subrecord.h"
 

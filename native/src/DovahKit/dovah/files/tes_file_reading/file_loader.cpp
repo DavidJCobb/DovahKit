@@ -1,5 +1,4 @@
 #include "file_loader.h"
-#include "../../notice_code_list.h"
 #include "file_threaded_part_loader_base.h"
 #include "threads.h"
 #include "../../load_order_interfaces/file_load.h"
@@ -10,6 +9,7 @@
 #include "../../notices/file_load_errors/interior_cell_block_group_badly_nested.h"
 #include "../../notices/file_load_errors/interior_cell_block_has_no_parent_group.h"
 #include "../../notices/file_load_errors/malformed_file_header.h"
+#include "../../notices/file_load_warnings/record_found_in_wrong_top_level_group.h"
 
 namespace dovah::tes_file_reading {
    file_loader::file_loader(interface_t& intfc) : file_or_file_part_loader(*this, intfc) {
@@ -349,14 +349,16 @@ namespace dovah::tes_file_reading {
                   uint32_t group_signature = _byteswap_ulong(group.header.label);
                   if (record.signature() != group_signature) { // misplaced record?
                      form_type group_type = form_type_info::signature_to_form_type(group_signature);
+                     
+                     notices::file_load_warnings::record_found_in_wrong_top_level_group notice;
+                     notice.top_level_group_label = group_signature;
+                     notice.record = {
+                        .local_id  = record.formID(),
+                        .global_id = stub->formID,
+                        .signature = record.signature(),
+                     };
                      //
-                     detailed_notice warning;
-                     warning.code = notice_code::record_found_in_wrong_top_level_group;
-                     warning.set_cause_form(*stub);
-                     warning.set_cause_signature(group_signature);
-                     warning.set_cause_form_type(group_type);
-                     //
-                     this->log_load_warning(warning);
+                     this->get_file_loader().get_load_interface(*this).log_warning(notice);
                   }
                }
             }

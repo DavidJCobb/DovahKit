@@ -1,6 +1,5 @@
 #include "./attached_script.h"
 #include "../../_common_cpp.h"
-#include "../../../logging.h"
 #include "./attachment_header.h"
 
 #include "../../../notices/form_save_errors/by_form_component/papyrus/too_many_properties_on_script.h"

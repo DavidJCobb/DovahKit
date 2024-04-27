@@ -5,13 +5,13 @@
 #include "helpers/cpuinfo.h"
 //
 #include "_common_cpp.h"
-#include "../notice_code_list.h"
 
 #include "Cell.h"
 
 #include "../notices/form_load_warnings/by_form_type/landscape/excess_layers_per_quad.h"
 #include "../notices/form_load_warnings/by_form_type/landscape/invalid_quad_for_land_texture.h"
 #include "../notices/form_save_errors/by_form_type/landscape/heightmap_contains_too_steep_a_slope.h"
+#include "../notices/form_save_warnings/not_yet_implemented.h"
 
 namespace {
    namespace specific_load_warnings {
@@ -568,11 +568,8 @@ namespace dovah::loaded_forms {
          //
          // We can't currently generate MPCD data, so let's not save it.
          //
-         detailed_notice warning;
-         warning.code = notice_code::havok_data_is_not_supported_here;
-         warning.set_cause_form(this->stub);
-         warning.set_cause_subrecord('MPCD');
-         intfc.log_save_warning(warning);
+         notices::form_save_warnings::not_yet_implemented error(this->stub, 'MPCD');
+         intfc.log_save_warning(error);
       }
    }
    void Landscape::_clear_impl() noexcept {

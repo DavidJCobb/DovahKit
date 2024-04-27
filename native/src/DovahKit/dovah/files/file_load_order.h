@@ -220,7 +220,6 @@ namespace dovah {
          void _build_use_info();
 
          void _log_load_warning(const detailed_notice&);
-         void _log_save_warning(const detailed_notice&);
 
          void _log_warning(const notices::base_warning&);
 

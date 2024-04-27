@@ -7,7 +7,6 @@
 
 namespace DovahKitEditorInternals {
    load_task::load_task(DovahKitCore& ed) : editor(ed) {
-      qRegisterMetaType<DovahKitEditorInternals::multithreadable_load_results>();
    }
    void load_task::exec() {
       benchmark.begin();

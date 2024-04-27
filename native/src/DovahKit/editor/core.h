@@ -195,6 +195,7 @@ class DovahKitCore : public QObject {
       void edit_game_setting(const char* name, const dovah::game_setting_value&); // may throw dovah::exceptions::game_setting_value_change_failed
       void renumber_game_setting(const char* name, QWidget* dialog_parent); // handles UI, error reporting, etc., for you
       
+      // can throw `dovah::exceptions::default_object_assign_failed`
       void set_default_object(uint32_t signature, dovah::form_stub*);
       void set_default_object(uint32_t signature, bare_form_id_t);
 

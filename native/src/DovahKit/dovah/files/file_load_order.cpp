@@ -988,12 +988,6 @@ namespace dovah {
       if (this->on_read_warning)
          (this->on_read_warning)(w);
    }
-   void file_load_order::_log_save_warning(const detailed_notice& w) {
-      if (!w.is_defined())
-         return;
-      if (this->on_save_warning)
-         (this->on_save_warning)(w);
-   }
 
    void file_load_order::_log_warning(const notices::base_warning& notice) {
       if (this->on_warning)

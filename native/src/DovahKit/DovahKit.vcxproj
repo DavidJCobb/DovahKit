@@ -900,6 +900,7 @@
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovah\exceptions\default_object_assign_failed.h" />
     <ClInclude Include="dovah\exceptions\enums\form_creation_error_code.h" />
     <ClInclude Include="dovah\exceptions\file_load_failed.h" />
     <ClInclude Include="dovah\exceptions\file_save_failed.h" />
@@ -959,7 +960,12 @@
     <ClInclude Include="dovah\notices\file_load_warnings\game_setting_record_has_no_name.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\game_setting_record_has_bad_form_id.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\game_setting_record_has_unrecognized_subrecord.h" />
+    <ClInclude Include="dovah\notices\file_load_warnings\game_setting_record_is_misordered.h" />
+    <ClInclude Include="dovah\notices\file_load_warnings\game_setting_value_has_extra_content.h" />
+    <ClInclude Include="dovah\notices\file_load_warnings\game_setting_value_type_unknown.h" />
+    <ClInclude Include="dovah\notices\file_load_warnings\game_setting_value_unreadable.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\partial_info_override_has_different_parent.h" />
+    <ClInclude Include="dovah\notices\file_load_warnings\record_found_in_wrong_top_level_group.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\singleton_form_is_redundantly_defined.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\the_game_doesnt_load_new_actor_value_infos.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\_all.h" />
@@ -976,6 +982,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\alias_papyrus_data_belongs_to_missing_alias.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\alias_papyrus_data_specifies_wrong_quest.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\papyrus_fragment_belongs_to_missing_log_entry.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\unexpected_subrecord_in_objective.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\shout\wrong_word_count.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_addendum_subrecord_too_early.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\worldspace\is_own_parent.h" />

@@ -28,12 +28,12 @@ namespace {
             //       (perhaps as part of a post-launch rewrite, views into TES files could be given metadata e.g. the "asking" form stub's form ID?)
          };
          if constexpr (std::is_base_of_v<dovah::notices::file_load_errors::base_subrecord_load_error, T>) {
-            const auto& subrecord = self.get_current_record();
+            const auto& subrecord = self.get_current_subrecord();
             err->subrecord = {
                .signature = subrecord.signature(),
                .size      = subrecord.size(),
 
-               .offset_in_record = record.current_offset() - subrecord.offset(),
+               .offset_into_record = record.current_offset() - subrecord.offset(),
             };
          }
       }
