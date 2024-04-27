@@ -535,12 +535,12 @@ namespace dovah {
 
    file_load_order::form_id_status file_load_order::accept_form_stub(form_stub*& stub) {
       std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
-      
+
       uint32_t formID;
       auto     result = this->local_formID_to_global_formID(stub, formID);
       if (result != form_id_status::valid || formID == 0) {
          using error_type = dovah::notices::file_load_errors::form_id_is_invalid;
-         
+
          auto problem = error_type::problem_code::unknown;
          switch (result) {
             case file_load_order::form_id_status::missing_master:
@@ -559,22 +559,31 @@ namespace dovah {
 
          auto error = std::make_unique<error_type>(problem);
          if (source_file) {
-            error->filename    = source_file->get_filename();
+            error->filename = source_file->get_filename();
             error->file_offset = ((const tes_file_reading::basic_reader*)source_file)->get_position(); // TODO: HACK HACK HACK
          }
          error->form = {
             .local_id = stub->formID,
-            .type     = stub->form_type,
+            .type = stub->form_type,
          };
 
          auto ex = dovah::exceptions::file_load_failed();
          ex.details.file_load_error = std::move(error);
          throw ex;
       }
-      
+
       auto* new_parent = stub->get_parent_form();
-      if (form_stub* target = this->forms.forms[formID]) { // is this an override?
-         auto type_a = target->form_type;
+
+      form_stub* existing_form = nullptr;
+      {
+         auto it = this->forms.forms.find(formID);
+         if (it != this->forms.forms.end()) {
+            existing_form = it->second;
+         }
+      }
+
+      if (existing_form) { // is this an override?
+         auto type_a = existing_form->form_type;
          auto type_b = stub->form_type;
          if (type_a != type_b) {
             //
@@ -586,11 +595,11 @@ namespace dovah {
             //
             bool is_armo_arma = (type_a == form_type::armor || type_b == form_type::armor) && (type_a == form_type::armor_addon || type_b == form_type::armor_addon);
             //
-            auto* file_a = target->get_file_at_index(0);
+            auto* file_a = existing_form->get_file_at_index(0);
             auto* file_b = stub->get_file_at_index(-1);
 
             if (is_armo_arma) {
-               notices::file_load_warnings::form_override_has_armo_arma_mismatch notice(*target, *stub);
+               notices::file_load_warnings::form_override_has_armo_arma_mismatch notice(*existing_form, *stub);
                if (file_b)
                   notice.source_file = file_b->get_filename();
                if (file_a)
@@ -613,7 +622,7 @@ namespace dovah {
                   .type     = stub->form_type,
                };
                error->overridden_form = {
-                  .type = target->form_type,
+                  .type = existing_form->form_type,
                };
                if (file_a)
                   error->overridden_form.source_file = file_a->get_filename();
@@ -634,9 +643,9 @@ namespace dovah {
             // If the stub is a topic info and it's being re-parented by an override, then we need to 
             // update the form stub addenda for its old parent.
             //
-            auto* old_parent = target->get_parent_form();
+            auto* old_parent = existing_form->get_parent_form();
             if (old_parent && old_parent != new_parent) {
-               old_parent->_remove_child_topic_info({}, *target, false);
+               old_parent->_remove_child_topic_info({}, *existing_form, false);
                //
                if (stub->test_record_flags(tes_file_record_header::flag::partial)) {
                   //
@@ -656,7 +665,7 @@ namespace dovah {
                   notice.record.global_id = formID;
                   notice.parent_of_overridden = old_parent;
                   notice.parent_of_overriding = new_parent;
-                  if (auto* data = target->get_source_file_info(0)) {
+                  if (auto* data = existing_form->get_source_file_info(0)) {
                      if (auto* pointer = data->pointer) {
                         notice.source_file_for_overridden = pointer->get_filename();
                      }
@@ -676,10 +685,10 @@ namespace dovah {
             }
          }
          assert(!stub->has_multiple_source_files()); // the input stub should've been read by ONE file
-         target->_add_file(*stub->file.pointer, stub->file.offset, stub->file.flags);
-         target->_set_parent_form_one_way({}, new_parent);
+         existing_form->_add_file(*stub->file.pointer, stub->file.offset, stub->file.flags);
+         existing_form->_set_parent_form_one_way({}, new_parent);
          delete stub;
-         stub = target;
+         stub = existing_form;
       } else {
          //
          // This is not an override.
