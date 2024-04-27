@@ -4,6 +4,8 @@
 #include "file_loader.h"
 #include "../../form_stub_addenda.h"
 
+#include "../../exceptions/file_load_failed.h"
+#include "../../notices/file_load_errors/parent_form_is_missing.h"
 #include "../../notices/base_file_load_warning.h"
 
 namespace dovah::tes_file_reading {
@@ -14,27 +16,6 @@ namespace dovah::tes_file_reading {
       this->loader = &self;
    }
    
-   basic_reader::object_type file_or_file_part_loader::next_record_or_group() {
-      if (this->last_error.is_defined())
-         return object_type::none;
-      auto result = basic_reader::next_record_or_group(); // call super
-      if (this->last_error.is_defined()) {
-         this->log_load_error(this->last_error);
-         this->_reset_last_error();
-      }
-      return result;
-   }
-   bool file_or_file_part_loader::next_subrecord() {
-      if (this->last_error.is_defined())
-         return false;
-      auto result = basic_reader::next_subrecord(); // call super
-      if (this->last_error.is_defined()) {
-         this->log_load_error(this->last_error);
-         this->_reset_last_error();
-      }
-      return result;
-   }
-
    void file_or_file_part_loader::log_load_warning(detailed_notice& n) {
       auto& file = this->get_file_loader();
       n.set_cause_file(file.get_filename());
@@ -45,12 +26,6 @@ namespace dovah::tes_file_reading {
       notice.source_file = file.get_filename();
       this->load_interface.log_warning(notice);
    }
-   void file_or_file_part_loader::log_load_error(detailed_notice& n) {
-      auto& file = this->get_file_loader();
-      n.set_cause_file(file.get_filename());
-      this->load_interface.log_load_error(n);
-      file.abort();
-   }
 
    form_stub* file_or_file_part_loader::make_stub_for_record() {
       auto& record = this->get_current_record();
@@ -60,91 +35,47 @@ namespace dovah::tes_file_reading {
       stub->form_type = form_type_info::signature_to_form_type(record.signature());
       return stub;
    }
-   bool file_or_file_part_loader::set_stub_parent(form_stub* stub, bare_form_id_t parentID) {
+   void file_or_file_part_loader::set_stub_parent(form_stub* stub, bare_form_id_t parentID) {
       if (!parentID) {
          stub->_set_parent_form_one_way({}, nullptr);
-         return true;
+         return;
       }
       auto& lo     = this->get_file_loader().get_load_interface(*this).owner;
       auto* parent = lo.get_form(parentID);
       if (!parent) {
-         detailed_notice error;
-         error.code = notice_code::parent_form_is_missing;
-         error.set_file_offset(this->get_position());
-         error.cause_form.fixedID = 0;
-         error.cause_form.localID = stub->formID;
-         error.cause_form.type    = stub->form_type;
-         error.set_flag(detailed_notice::flag::has_cause_form);
-         this->log_load_error(error);
-         //
-         return false;
+         auto error = std::make_unique<dovah::notices::file_load_errors::parent_form_is_missing>();
+         error->filename    = this->get_file_loader().get_filename();
+         error->file_offset = this->get_position();
+         error->form = {
+            .local_id = stub->formID,
+            .type     = stub->form_type,
+         };
+
+         auto ex = dovah::exceptions::file_load_failed();
+         ex.details.file_load_error = std::move(error);
+         throw ex;
       }
       stub->_set_parent_form_one_way({}, parent);
-      return true;
    }
    bool file_or_file_part_loader::commit_stub(form_stub*& stub) {
       auto& file = this->get_file_loader();
-      if (file.is_aborted())
+      auto result = file_load_order::form_id_status::valid;
+      try {
+         result = this->load_interface.owner.accept_form_stub(stub);
+      } catch (const dovah::exceptions::file_load_failed& ex) {
+         delete stub;
+         stub = nullptr;
+
+         throw; // re-throw without object slicing
+      }
+      if (result == file_load_order::form_id_status::injected_partial) {
+         //
+         // The file load order already logged this one on its own and did not 
+         // accept the stub, but it only needs to be a warning, not an error.
+         //
+         delete stub;
+         stub = nullptr;
          return false;
-      auto result = this->load_interface.owner.accept_form_stub(stub);
-      switch (result) {
-         case file_load_order::form_id_status::missing_master: // <-- this one in particular can only happen if we failed to load a master, which implies that a file was edited between us checking the header and us loading it
-         case file_load_order::form_id_status::out_of_bounds:
-            {
-               detailed_notice error;
-               error.code = notice_code::form_id_is_out_of_bounds;
-               if (result == file_load_order::form_id_status::missing_master) {
-                  error.code = notice_code::form_id_is_inside_of_a_missing_master;
-               }
-               error.set_cause_file(file.get_filename());
-               error.set_file_offset(this->get_position());
-               error.cause_form.fixedID = 0;
-               error.cause_form.localID = stub->formID;
-               error.cause_form.type    = stub->form_type;
-               error.set_flag(detailed_notice::flag::has_cause_form);
-               this->log_load_error(error);
-               //
-               delete stub;
-               stub = nullptr;
-            }
-            return false;
-         case file_load_order::form_id_status::null_is_not_allowed:
-            {
-               detailed_notice error;
-               error.code = notice_code::zero_is_not_an_allowed_form_id;
-               error.set_cause_file(file.get_filename());
-               error.set_file_offset(this->get_position());
-               error.cause_form.fixedID = 0;
-               error.cause_form.localID = stub->formID;
-               error.cause_form.type    = stub->form_type;
-               error.set_flag(detailed_notice::flag::has_cause_form);
-               this->log_load_error(error);
-               //
-               delete stub;
-               stub = nullptr;
-            }
-            return false;
-         case file_load_order::form_id_status::form_type_mismatch:
-            //
-            // The file load order already logged this one on its own, but it 
-            // can't abort the load process, so we'll do that.
-            //
-            this->get_file_loader().abort();
-            {
-               delete stub;
-               stub = nullptr;
-            }
-            return false;
-         case file_load_order::form_id_status::injected_partial:
-            //
-            // The file load order already logged this one on its own and did not 
-            // accept the stub, but it only needs to be a warning, not an error.
-            //
-            {
-               delete stub;
-               stub = nullptr;
-            }
-            return false;
       }
       return stub != nullptr;
    }

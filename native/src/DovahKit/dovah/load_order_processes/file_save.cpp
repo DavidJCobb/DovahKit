@@ -4,6 +4,7 @@
 #include "../files/tes_file_reading/file_loader.h" // loaded files
 #include "../forms/Form.h"
 
+#include "../exceptions/file_load_failed.h" // for if reopening the file post-save fails
 #include "../exceptions/file_save_failed.h"
 #include "../exceptions/form_deletion_failed.h"
 #include "../exceptions/game_change_failed.h"
@@ -94,7 +95,9 @@ namespace dovah::load_order_processes {
          } else {
             this->results.filename = desired_filename.filename().string();
          }
-         if (!active_load_order.active_file->reopen()) {
+         try {
+            active_load_order.active_file->reopen();
+         } catch (const exceptions::file_load_failed& ex) {
             //
             // We were unable to reopen the mapped file view after fully updating the active file, 
             // so we can't load form content for active file form stubs anymore. In other words, the 

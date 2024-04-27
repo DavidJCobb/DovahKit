@@ -7,22 +7,22 @@ namespace dovah {
       enum type : notice_code_t {
          none = 0x00000000,
          //
-         no_filename_specified, // LOL whoops still needed for read!
-         //
-         //
-         unknown_form_type                           = 0x00000004,
          //
          //
          //
-         out_of_memory                               = 0x00000008,
-         zlib_memory_error                           = 0x00000009,
-         zlib_buffer_error                           = 0x0000000A,
-         //
-         file_has_too_many_dependencies              = 0x0000000C,
          //
          //
          //
-         form_override_has_type_mismatch             = 0x00000010,
+         //
+         //
+         //
+         //
+         //
+         //
+         //
+         //
+         //
+         //
          //
          //
          //
@@ -41,7 +41,7 @@ namespace dovah {
          //
          //
          //
-         form_id_is_reserved_for_other_process       = 0x00000023, // Cannot use the specified form ID. It is reserved for use by another process, such as form creation or form renumbering.
+         //
          cannot_load_right_now                       = 0x00000024, // It is not safe to load right now, as a save or load operation is already in progress.
          game_setting_record_has_no_data             = 0x00000025, // A GMST record had no DATA subrecord.
          game_setting_record_unreadable_data         = 0x00000026, // A GMST record's DATA subrecord could not be read. This can happen if the subrecord is too small.
@@ -49,10 +49,6 @@ namespace dovah {
          //
          default_object_rejected_for_bad_type        = 0x00000029, // The loaded DefaultObjectManager won't let you use the specified form for the specified entry, as the form is of the wrong type.
          default_object_accepted_but_unknown         = 0x0000002A, // The loaded DefaultObjectManager has created the specified entry, but wants you to know that the entry isn't one that DovahKit's backend recognizes.
-         singleton_form_is_redundantly_defined       = 0x0000002B, // A file contained multiple records for the same singleton form (e.g. multiple DOBJ records or multiple NAVI records).
-         //
-         //
-         zero_is_not_an_allowed_form_id              = 0x0000002E, // The desired operation does not allow you to use zero as a form ID.
          //
          //
          //
@@ -64,7 +60,11 @@ namespace dovah {
          //
          //
          //
-         form_id_is_out_of_bounds                    = 0x0000003A, // The requested form ID is out-of-bounds, e.g. form ID 0x05000000 in a load order with fewer than six files.
+         //
+         //
+         //
+         //
+         //
          //
          malformed_file                              = 0x0000003C, // Generic error code for malformed files.
          missing_master                              = 0x0000003D, // Failed to load a file, because one of the file's masters is missing.
@@ -78,19 +78,19 @@ namespace dovah {
          unknown_error                               = 0x00000045,
          active_file_is_dependency                   = 0x00000046, // The active file is listed as another file's master. This load order is invalid, because we need the active file at the bottom of the load order.
          load_order_would_have_too_many_files        = 0x00000047, // We can't load this load order. It would have too many files (greater than 4096 lights, 255 heavies, or if an active file is selected, 255 or 254 total).
-         filesystem_error                            = 0x00000048,
-         interior_cell_block_has_no_parent_group     = 0x00000049, // Malformed file: an interior cell block GRUP has no parent GRUP.
-         interior_cell_block_group_badly_nested      = 0x0000004A, // Malformed file: an interior cell block GRUP is nested under a parent GRUP of the wrong type or hierarchy.
-         invalid_record_signature                    = 0x0000004B, // Malformed file: a record had a suspicious (or just unknown) signature.
-         form_id_is_inside_of_a_missing_master       = 0x0000004C,
-         unexpected_nested_group_in_simple_top_group = 0x0000004D, // Malformed file: a "simple" top-level GRUP contained a nested GRUP.
-         extended_subrecord_with_no_length           = 0x0000004E, // Malformed file: an 'XXXX' subrecord contained no usable length value.
-         form_initial_record_is_partial              = 0x0000004F, // A form's initial record is flagged as "partial." The flag will not be honored when loading form data on-demand.
-         form_initial_record_is_partial_and_injected = 0x00000050, // A form's initial record is flagged as "partial," and is injected. The game would skip this record entirely, so we're skipping it as well; the form has not been loaded.
-         cannot_delete_hardcoded_form                = 0x00000051,
+         //
+         //
+         //
+         //
+         //
+         //
+         //
+         //
+         //
+         //
          quest_objective_unexpected_subrecord        = 0x00000052, // Unrecognized subrecord inside of the object. The loader for this object blindly consumes subrecords until it finds an expected end; if the end is missing, then this will end badly!
-         parent_form_is_missing                      = 0x00000053, // Failed to load a file, because a form's parent form ID doesn't correspond to a valid form.
-         partial_info_override_has_different_parent  = 0x00000054, // A partial-flagged INFO override has a different parent from the original. This can lead to all sorts of data mishandling in-game.
+         //
+         //
          //
          //
          //

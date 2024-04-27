@@ -28,30 +28,6 @@ namespace editor_helpers {
       //
       bool non_continuable_success = false;
       switch (notice.code) {
-         case notice_code::form_override_has_type_mismatch:
-            {
-               text = QObject::tr("File %4 is attempting to override form %1 (defined in file %2) with form %3. The form types are mismatched; the override will not be loaded.", "log window");
-               QString file_a = QObject::tr("<unknown filename>", "log window");
-               QString file_b = file_a;
-               QString form_a = QObject::tr("<unknown form>", "log window");
-               QString form_b = form_a;
-               //
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form_a = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file_a = QString::fromStdString(notice.cause_file);
-               }
-               if (!notice.relevant_forms.empty()) {
-                  form_b = _read_error_form_id_to_string(notice.relevant_forms[0]);
-               }
-               if (!notice.relevant_files.empty()) {
-                  file_b = QString::fromStdString(notice.relevant_files[0]);
-               }
-               //
-               text = text.arg(form_a).arg(file_a).arg(form_b).arg(file_b);
-            }
-            break;
          case notice_code::game_setting_record_is_misordered:
             {
                QString form = QObject::tr("<unknown GMST record>", "log window");
@@ -147,26 +123,6 @@ namespace editor_helpers {
                text = text.arg(form).arg(file).arg(name);
             }
             break;
-         case notice_code::singleton_form_is_redundantly_defined:
-            {
-               text = QObject::tr("File %1 contains multiple records that define the same singleton: %2 and %3. The game only allows one form of this type to exist; all records are loaded into that one form, so there's no need to have multiple records.", "log window");
-               QString file   = QObject::tr("<unknown filename>",    "log window");
-               QString form_a = QObject::tr("<unknown GMST record>", "log window");
-               QString form_b = form_a;
-               //
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form_a = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (!notice.relevant_forms.empty()) {
-                  form_b = _read_error_form_id_to_string(notice.relevant_forms[0]);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file = QString::fromStdString(notice.cause_file);
-               }
-               //
-               text = text.arg(file).arg(form_a).arg(form_b);
-            }
-            break;
          case notice_code::record_found_in_wrong_top_level_group:
             {
                text = QObject::tr("File %1 contained form %2 inside of the %3 GRUP.", "log window");
@@ -185,57 +141,6 @@ namespace editor_helpers {
                }
                //
                text = text.arg(file).arg(form).arg(grup);
-            }
-            break;
-         case notice_code::unknown_form_type:
-            text = QObject::tr("One of the forms that needs to be saved is of a type that DovahKit has not yet been programmed to handle.", "write error");
-            break;
-         case notice_code::out_of_memory:
-            text = QObject::tr("An out-of-memory error occurred at some point during the save process, likely while trying to write a compressed record.", "write error");
-            break;
-         case notice_code::zlib_memory_error:
-            text = QObject::tr("A zlib memory error occurred while trying to save a compressed record.", "write error");
-            break;
-         case notice_code::zlib_buffer_error:
-            text = QObject::tr("A zlib buffer error occurred while trying to save a compressed record.", "write error");
-            break;
-         case notice_code::file_has_too_many_dependencies:
-            if (notice.context == dovah::detailed_notice::notice_context::file_load) {
-               text = QObject::tr("The file claims to have more than 254 dependencies. This is impossible.", "read error");
-            } else {
-               text = QObject::tr("A file cannot have more than 254 dependencies.", "write error");
-            }
-            break;
-         case notice_code::form_id_is_out_of_bounds:
-            {
-               QString form = QObject::tr("<unknown form ID>", "log window");
-               QString file = QObject::tr("<unknown filename>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file = QString::fromStdString(notice.cause_file);
-               }
-               //
-               text = QObject::tr("File %2 is malformed: record %1 had a form ID whose load order prefix would place it out of bounds.", "read error").arg(form).arg(file);
-            }
-            break;
-         case notice_code::zero_is_not_an_allowed_form_id:
-            {
-               QString form = QObject::tr("<unknown form>", "log window");
-               QString file = QObject::tr("<unknown filename>", "log window");
-               QString pos  = QObject::tr("<unknown file offset>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file = QString::fromStdString(notice.cause_file);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_file_offset) {
-                  pos = QString("0x%1").arg(notice.offset, 0, 16).toUpper();
-               }
-               //
-               text = QObject::tr("File %2 is malformed: record %1 at offset %3 uses zero as its form ID.", "read error").arg(form).arg(file).arg(pos);
             }
             break;
          case notice_code::active_file_is_dependency:
@@ -266,140 +171,6 @@ namespace editor_helpers {
                text = text.arg(detail);
             }
             break;
-         case notice_code::filesystem_error:
-            {
-               text = QObject::tr("A filesystem error occurred.", "notice_code::filesystem_error");
-               if (notice.flags & dovah::detailed_notice::flag::has_errno) {
-                  QString en_text;
-                  switch (notice.errno_value) {
-                     case ENFILE:
-                        en_text = QObject::tr("Too many files open (system-wide).", "notice::filesystem_error (errno text)");
-                        break;
-                     case EMFILE:
-                        en_text = QObject::tr("Too many files open (this process).", "notice::filesystem_error (errno text)");
-                        break;
-                     case EINVAL:
-                        en_text = QObject::tr("The file name or path may be invalid", "notice::filesystem_error (errno text)");
-                        break;
-                     case ELOOP:
-                        en_text = QObject::tr("The file was inaccessible due to a cyclical reference among symbolic links in the file path.", "notice::filesystem_error (errno text)");
-                        break;
-                     case ENAMETOOLONG:
-                        en_text = QObject::tr("The file was inaccessible; the path name (whether before or after symbolic links) is too long.", "notice::filesystem_error (errno text)");
-                        break;
-                     case EACCES:
-                        en_text = QObject::tr("The file is locked, or you do not have permission to access it.", "notice::filesystem_error (errno text)");
-                        break;
-                     case EBUSY:
-                        en_text = QObject::tr("The file is locked.", "notice::filesystem_error (errno text)");
-                        break;
-                     case ENOENT:
-                        en_text = QObject::tr("The file does not exist.", "notice::filesystem_error (errno text)");
-                        break;
-                     case EROFS:
-                        en_text = QObject::tr("The file exists on a read-only filesystem and cannot be opened for writing.", "notice::filesystem_error (errno text)");
-                        break;
-                     case ENOMEM:
-                        en_text = QObject::tr("Insufficient memory.", "notice::filesystem_error (errno text)");
-                        break;
-                     case EISDIR:
-                        en_text = QObject::tr("The 'file' is actually a directory and therefore cannot be opened for writing.", "notice::filesystem_error (errno text)");
-                        break;
-                     case ENOTDIR:
-                        en_text = QObject::tr("The specified path is not a directory.", "notice::filesystem_error (errno text)");
-                        break;
-                  }
-                  if (!en_text.isEmpty())
-                     text = QObject::tr("A filesystem error occurred: %1", "notice_code::filesystem_error (errno)").arg(en_text);
-               } else if (notice.flags & dovah::detailed_notice::flag::has_winapi_error_code) {
-                  text = QObject::tr("A filesystem error occurred: %1", "notice_code::filesystem_error (WinAPI)")
-                     .arg(cobb::qt::winapi_code_to_string(notice.winapi_error));
-               }
-            }
-            break;
-         case notice_code::interior_cell_block_has_no_parent_group:
-            text = QObject::tr("The file is malformed: an interior cell block has no parent group.", "read error");
-            break;
-         case notice_code::interior_cell_block_group_badly_nested:
-            text = QObject::tr("The file is malformed: an interior cell block is nested under a group of the wrong type or hierarchy.", "read error");
-            break;
-         case notice_code::invalid_record_signature:
-            {
-               text = QObject::tr("The file is malformed: a record had an unknown or suspicious signature.", "notice_code::invalid_record_signature (no details available)");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_signature) {
-                  QString signature = cobb::qt::four_cc_to_string(notice.cause_signature);
-                  bool printable = true;
-                  for (auto c : signature) {
-                     if (!c.isPrint()) {
-                        printable = false;
-                        break;
-                     }
-                  }
-                  if (printable) {
-                     text = QObject::tr("The file is malformed: a record had an unknown or suspicious signature: %1.", "notice_code::invalid_record_signature (printable)").arg(signature);
-                  } else {
-                     signature = QObject::tr("0x%1 0x%2 0x%3 0x%4", "hex codes")
-                        .arg((notice.cause_signature >> 0x18) & 0xFF)
-                        .arg((notice.cause_signature >> 0x10) & 0xFF)
-                        .arg((notice.cause_signature >> 0x08) & 0xFF)
-                        .arg((notice.cause_signature >> 0x00) & 0xFF);
-                     text = QObject::tr("The file is malformed: a record had an unknown or suspicious signature. The signature contains unprintable characters; the raw bytes are %1.", "notice_code::invalid_record_signature (unprintable)").arg(signature);
-                  }
-               }
-            }
-            break;
-         case notice_code::form_id_is_inside_of_a_missing_master:
-            {
-               QString form = QObject::tr("<unknown form ID>", "log window");
-               QString file = QObject::tr("<unknown filename>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file = QString::fromStdString(notice.cause_file);
-               }
-               //
-               text = QObject::tr("File %2 is malformed: record %1 had a form ID whose load order prefix would place it inside of a missing master.", "read error").arg(form).arg(file);
-            }
-            break;
-         case notice_code::unexpected_nested_group_in_simple_top_group:
-            text = QObject::tr("A record was found in the wrong top-group.", "read error");
-            break;
-         case notice_code::extended_subrecord_with_no_length:
-            text = QObject::tr("An extended subrecord did not supply an extended length.", "read error");
-            break;
-         case notice_code::form_initial_record_is_partial:
-            {
-               text = QObject::tr("Form %1 in file %2 is flagged as a partial record but is the first loaded record for this form. The \"partial\" flag will not be honored.", "notice_code::form_initial_record_is_partial");
-               //
-               QString form = QObject::tr("<unknown form>", "log window");
-               QString file = QObject::tr("<unknown file>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file = QString::fromStdString(notice.cause_file);
-               }
-               //
-               text = text.arg(form).arg(file);
-            }
-            break;
-         case notice_code::form_initial_record_is_partial_and_injected:
-            {
-               text = QObject::tr("Form %1 in file %2 is flagged as a partial record but is the first loaded record with this form ID; it's also an injected record. The game would skip this record because there is no already-loaded record for this form that isn't both partial and injected. We're skipping it as well: this form was not loaded.", "notice_code::form_initial_record_is_partial_and_injected");
-               //
-               QString form = QObject::tr("<unknown form>", "log window");
-               QString file = QObject::tr("<unknown file>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file = QString::fromStdString(notice.cause_file);
-               }
-               //
-               text = text.arg(form).arg(file);
-            }
-            break;
          case notice_code::quest_objective_unexpected_subrecord:
             {
                QString form      = QObject::tr("<unknown form>", "log window");
@@ -414,61 +185,6 @@ namespace editor_helpers {
                text = QObject::tr("A quest objective in form %1 contained at least one unrecognized subrecord with signature %2. This could be a serious problem, as a quest objective will blindly consume subrecords until it finds one it expects.")
                   .arg(form)
                   .arg(subrecord);
-            }
-            break;
-         case notice_code::parent_form_is_missing:
-            {
-               text = QObject::tr("Form %1 in file %2 claims to belong to a non-existent parent form.", "notice_code::parent_form_is_missing");
-               //
-               QString form = QObject::tr("<unknown form>", "log window");
-               QString file = QObject::tr("<unknown file>", "log window");
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file = QString::fromStdString(notice.cause_file);
-               }
-               //
-               text = text.arg(form).arg(file);
-            }
-            break;
-         case notice_code::partial_info_override_has_different_parent:
-            {
-               text = QObject::tr("TopicInfo %1, originally defined in file %3, has an override in file %2 that is flagged as partial "
-                                  "and that moves the TopicInfo from Topic %4 to Topic %5. Skyrim does not properly handle partial-flagged "
-                                  "TopicInfo overrides that re-parent the TopicInfo; depending on the precise circumstances under which "
-                                  "this override is loaded, Skyrim may inadvertently associate the TopicInfo with multiple Topics, may "
-                                  "desynchronize the TopicInfo such that it thinks it's inside of a different Topic than the one it's "
-                                  "actually in, or may discard an unrelated TopicInfo from the Topic that this TopicInfo has been moved to. "
-                                  "Though the effect that these issues have on game stability is not known as of this writing, this problem "
-                                  "should be considered unsafe. DovahKit will interpret this data by re-parenting the TopicInfo as normal, "
-                                  "but this is just the way the data is interpreted (in lieu of DovahKit actually trying to mimic the game's "
-                                  "utter confusion) and is not an attempt at repairing the data. If circumstances allow, you should remove "
-                                  "the \"partial\" flag from this override using xEdit or a similar tool.",
-                  "notice_code::partial_info_override_has_different_parent"
-               );
-               //
-               QString form          = QObject::tr("<unknown form>", "log window");
-               QString file_initial  = QObject::tr("<unknown file>", "log window");
-               QString file_sent_to  = file_initial;
-               QString topic_initial = QObject::tr("<unknown topic>", "log window");
-               QString topic_sent_to = topic_initial;
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_form) {
-                  form = _read_error_form_id_to_string(notice.cause_form);
-               }
-               if (notice.flags & dovah::detailed_notice::flag::has_cause_file) {
-                  file_sent_to = QString::fromStdString(notice.cause_file);
-               }
-               if (!notice.relevant_files.empty()) {
-                  file_initial = QString::fromStdString(notice.relevant_files[0]);
-               }
-               if (!notice.relevant_forms.empty()) {
-                  topic_initial = _read_error_form_id_to_string(notice.relevant_forms[0]);
-                  if (notice.relevant_forms.size() > 1)
-                     topic_sent_to = _read_error_form_id_to_string(notice.relevant_forms[1]);
-               }
-               //
-               text = text.arg(form).arg(file_sent_to).arg(file_initial).arg(topic_initial).arg(topic_sent_to);
             }
             break;
             //

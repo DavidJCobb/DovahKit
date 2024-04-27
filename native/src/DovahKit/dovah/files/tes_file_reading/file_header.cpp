@@ -1,9 +1,11 @@
 #include "file_header.h"
 #include <filesystem>
 #include "../../../helpers/files.h"
-#include "../../detailed_notice.h"
 #include "../../logging.h"
-#include "../../notice_code_list.h"
+
+#include "../../exceptions/file_load_failed.h"
+#include "../../notices/file_load_errors/filesystem_error.h"
+#include "../../notices/file_load_errors/malformed_file_header.h"
 
 #include <QDebug>
 
@@ -91,59 +93,49 @@ namespace dovah::tes_file_reading {
       this->description.clear();
       this->masters.clear();
    }
-   bool file_header_reader::load(const char* path, detailed_notice* error) noexcept {
-      if (error) {
-         error->code = notice_code::none;
-         error->set_cause_file(std::filesystem::path(path).filename().string());
-      }
-      //
+   void file_header_reader::load(const char* path) {
+      this->name = std::filesystem::path(path).filename().string();
+      
       FILE*   file;
       errno_t err = fopen_s(&file, path, "rb");
       if (!file) {
-         if (error) {
-            error->set_errno(err);
-            switch (err) {
-               case ENFILE:
-               case EMFILE:
-               case EINVAL:
-               case ELOOP:
-               case ENAMETOOLONG:
-                  error->code = notice_code::filesystem_error;
-                  break;
-               case EACCES:
-               case EBUSY:
-                  error->code = notice_code::locked_file;
-                  break;
-               case ENOENT:
-               default:
-                  error->code = notice_code::missing_file;
-            }
-         }
-         return false;
+         auto error = std::make_unique<dovah::notices::file_load_errors::filesystem_error>();
+         auto ex    = dovah::exceptions::file_load_failed();
+         
+         error->filename = this->name;
+         error->errno_value = err;
+         
+         ex.details.file_load_error = std::move(error);
+         throw ex;
       }
+
       cobb::file_guard guard(file); // calls fclose for us
-      //
-      this->name = std::filesystem::path(path).filename().string();
+
+      auto _throw_on_malformed = [this, file]() {
+         auto error = std::make_unique<dovah::notices::file_load_errors::malformed_file_header>();
+         auto ex    = dovah::exceptions::file_load_failed();
+         
+         error->filename    = this->name;
+         error->file_offset = ftell(file);
+         
+         ex.details.file_load_error = std::move(error);
+         throw ex;
+      };
+      
       uint32_t recordSize;
       {
          uint32_t signature;
          bool     read = _read(file, signature);
          if (!read || _byteswap_ulong(signature) != 'TES4') {
-            error->code = notice_code::malformed_file;
-            error->set_file_offset(ftell(file));
-            return false;
+            _throw_on_malformed();
          }
       }
       if (!_read(file, recordSize) || !_read(file, this->flags)) {
-         error->code = notice_code::malformed_file;
-         error->set_file_offset(ftell(file));
-         return false;
+         _throw_on_malformed();
       }
       _skip(file, 8); // form ID of TES4 record; version control bytes
       if (!_read(file, this->header_record_version)) {
-         error->code = notice_code::malformed_file;
-         error->set_file_offset(ftell(file));
-         return false;
+         _throw_on_malformed();
       }
       _skip(file, 2); // unknown field
       if (this->name.size() > 4) {  // Force flags based on file extension.
@@ -181,14 +173,11 @@ namespace dovah::tes_file_reading {
                break;
             case 'DATA':
                if (last_subrecord != 'MAST') {
-                  error->code = notice_code::malformed_file;
-                  error->set_file_offset(ftell(file));
-                  return false;
+                  _throw_on_malformed();
                }
                break;
          }
          last_subrecord = subrecord.signature;
       }
-      return true;
    }
 }

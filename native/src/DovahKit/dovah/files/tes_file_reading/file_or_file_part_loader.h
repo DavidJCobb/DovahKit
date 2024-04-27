@@ -28,17 +28,12 @@ namespace dovah::tes_file_reading {
          lo_interface_t load_interface;
          
       protected:
-         object_type next_record_or_group(); // only called during the initial file read
-         bool        next_subrecord(); // called after the initial file read, when loading a form_stub's full content
-         
-      protected:
          void log_load_warning(detailed_notice&);
          void log_load_warning(notices::base_file_load_warning&);
-         void log_load_error(detailed_notice&);
          
          form_stub* make_stub_for_record();
 
-         bool set_stub_parent(form_stub*, bare_form_id_t parentID);
+         void set_stub_parent(form_stub*, bare_form_id_t parentID);
 
          // Send the stub to the (file_load_order). If the stub is invalid, it will be deleted. If the stub is an 
          // override, then it will be deleted and the passed-in pointer will be made to refer to the overridden 

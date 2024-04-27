@@ -1,6 +1,9 @@
-#include "load_task.h"
-#include "../../dovah/core.h"
-#include "../../dovah/files/file_load_order.h"
+#include "./load_task.h"
+#include "dovah/core.h"
+#include "dovah/files/file_load_order.h"
+#include "dovah/exceptions/file_load_failed.h"
+#include "dovah/exceptions/invalid_load_order.h"
+#include "./detailed_notice_dispatcher.h"
 
 namespace DovahKitEditorInternals {
    load_task::load_task(DovahKitCore& ed) : editor(ed) {
@@ -8,8 +11,20 @@ namespace DovahKitEditorInternals {
    }
    void load_task::exec() {
       benchmark.begin();
-      result = editor.load_order->load_queued_files(this->results);
-      benchmark.end();
+      try {
+         result = editor.load_order->load_queued_files();
+         benchmark.end();
+      } catch (const dovah::exceptions::invalid_load_order& ex) {
+         benchmark.end();
+
+         this->exception = std::current_exception();
+         emit failed();
+      } catch (const dovah::exceptions::file_load_failed& ex) {
+         benchmark.end();
+
+         this->exception = std::current_exception();
+         emit failed();
+      }
       if (result) {
          editor.loaded = true;
          //

@@ -3,10 +3,6 @@
 #include <string>
 #include <vector>
 
-namespace dovah {
-   class detailed_notice;
-}
-
 namespace dovah::tes_file_reading {
    class file_header_reader {
       public:
@@ -30,7 +26,7 @@ namespace dovah::tes_file_reading {
          
       public:
          void clear();
-         bool load(const char* path, detailed_notice* out_error_if_any = nullptr) noexcept; // if result.defined() == false, then the load operation succeeded
+         void load(const char* path); // throws on failure
          constexpr bool is_light() const noexcept { return (this->flags & flag::light) != 0; }
          constexpr bool is_master() const noexcept { return (this->flags & flag::master) != 0; }
    };

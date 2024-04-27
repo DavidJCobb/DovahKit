@@ -1,0 +1,18 @@
+#pragma once
+#include "./base_record_load_error.h"
+#include "./base_subrecord_load_error.h"
+//
+#include "./extended_subrecord_marker_is_invalid.h"
+#include "./file_header_lists_too_many_dependencies.h"
+#include "./filesystem_error.h"
+#include "./form_id_is_invalid.h"
+#include "./form_override_has_type_mismatch.h"
+#include "./form_record_present_in_game_setting_group.h"
+#include "./interior_cell_block_group_badly_nested.h"
+#include "./interior_cell_block_has_no_parent_group.h"
+#include "./malformed_file_header.h"
+#include "./parent_form_is_missing.h"
+#include "./record_decompression_failed.h"
+#include "./record_has_invalid_signature.h"
+#include "./record_is_too_large.h"
+#include "./unexpected_nested_group_in_simple_top_group.h"

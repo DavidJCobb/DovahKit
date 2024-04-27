@@ -2,6 +2,9 @@
 #include "file_loader.h"
 #include "../../form_stub.h"
 
+#include "../../exceptions/file_load_failed.h"
+#include "../../notices/base_file_load_error.h"
+
 namespace dovah::tes_file_reading {
    void threaded_load_order_use_info_builder::_execute() {
       //_DEBUGMSG("[dovah::threaded_load_order_use_info_builder] Thread %08X has started processing %d forms.", std::this_thread::get_id(), this->queue.size());
@@ -17,7 +20,15 @@ namespace dovah::tes_file_reading {
       auto& list = this->queue;
       this->progress.maximum = list.size();
       for (auto* stub : list) {
-         stub->build_outbound_refs({}, *this);
+         try {
+            stub->build_outbound_refs({}, *this);
+         } catch (const exceptions::file_load_failed& ex) {
+            if (ex.details.file_load_error) {
+               this->exception.thrown_at_file_offset = ex.details.file_load_error->file_offset;
+            }
+            this->exception.captured = std::current_exception();
+            return;
+         }
          ++this->progress.current;
          #if BENCHMARK_LOAD_ORDER_USE_INFO_BUILD == 1
             ftime(&bench_current);

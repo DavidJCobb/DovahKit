@@ -89,8 +89,8 @@ class DovahKitCore : public QObject {
    signals:
       void dataAbandonImminent(); // we are about to abandon all forms; ditch your pointers or risk memory corruption
       void dataAbandonComplete(); // we have abandoned all forms
-      void dataAcquireComplete(const dovah::tes_file_reading::read_results&); // we have loaded new files and forms
-      void dataAcquireFailed(const dovah::tes_file_reading::read_results&);   // we tried to load new files, but failed
+      void dataAcquireComplete(); // we have loaded new files and forms
+      void dataAcquireFailed(QString error_message); // we tried to load new files, but failed
       
       void fileLoadWarningReceived(const dovah::detailed_notice&);
       void fileLoadStatisticsAvailable(const file_load_stats&);

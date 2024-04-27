@@ -38,7 +38,6 @@ namespace dovah {
    namespace tes_file_reading {
       class file_loader;
       class file_header_reader;
-      class read_results;
    }
    namespace tes_file_writing {
       struct write_config;
@@ -96,8 +95,6 @@ namespace dovah {
             valid,
             out_of_bounds,
             missing_master,
-            null_is_not_allowed,
-            form_type_mismatch,
             injected_partial,
          };
          
@@ -213,7 +210,6 @@ namespace dovah {
             std::atomic<save_load_type> type  = save_load_type::none;
             save_load_flags_t           flags = save_load_flag::none; // helps with UI progress display
             uint8_t loading_index = 0; // which load order index we're loading, or 0 if none; set in (load_queued_files); see (_guidedLoadOrderPrefixFor)
-            tes_file_reading::read_results* current_load_results = nullptr;
          } save_load_state;
          #pragma endregion
          //
@@ -279,7 +275,7 @@ namespace dovah {
          void queue_file(const std::string& name);
          void unqueue_file(const std::string& name);
          void queue_active_file(const std::string& name); // TODO
-         bool load_queued_files(tes_file_reading::read_results& results);
+         bool load_queued_files();
          //
          bool is_loading() const noexcept;
          
@@ -300,7 +296,7 @@ namespace dovah {
          //
          // Notably NOT used for the initial load of hardcoded forms; see _accept_hardcoded_form.
          //
-         form_id_status accept_form_stub(form_stub*&) noexcept;
+         form_id_status accept_form_stub(form_stub*&);
 
          void accept_game_setting(const loaded_file* file, const loaded_game_setting&, bare_form_id_t formID) noexcept;
          #pragma endregion

@@ -5,6 +5,45 @@ extern "C" {
    #include "../../../zlib/zlib.h"
 }
 
+#include "../../exceptions/file_load_failed.h"
+#include "../../notices/file_load_errors/extended_subrecord_marker_is_invalid.h"
+#include "../../notices/file_load_errors/record_decompression_failed.h"
+#include "../../notices/file_load_errors/record_has_invalid_signature.h"
+#include "../../notices/file_load_errors/record_is_too_large.h"
+
+namespace {
+   template<typename T> requires (std::is_base_of_v<dovah::notices::base_file_load_error, T>)
+   void _throw_file_read_error(dovah::tes_file_reading::basic_reader& self, std::unique_ptr<T>& err) {
+      // TODO: CAN'T REPORT THE FAILING FILENAME; FIX THIS WHEN REDESIGNING FILE LOADING POST-LAUNCH
+      //       (if `basic_reader` were a view into a single authoritative file, we'd be able to get that file's name)
+      if (err->file_offset == 0)
+         err->file_offset = self.get_position();
+
+      if constexpr (std::is_base_of_v<dovah::notices::file_load_errors::base_record_load_error, T>) {
+         const auto& record = self.get_current_record();
+         err->record = {
+            .signature     = record.signature(),
+            .local_form_id = record.formID(),
+            // TODO: CAN'T REPORT THE RESOLVED FORM ID; WE'RE TOO LOW-LEVEL TO KNOW IF WE'RE OPENING THIS SUBRECORD AT THE BEHEST OF A FORM STUB
+            //       (perhaps as part of a post-launch rewrite, views into TES files could be given metadata e.g. the "asking" form stub's form ID?)
+         };
+         if constexpr (std::is_base_of_v<dovah::notices::file_load_errors::base_subrecord_load_error, T>) {
+            const auto& subrecord = self.get_current_record();
+            err->subrecord = {
+               .signature = subrecord.signature(),
+               .size      = subrecord.size(),
+
+               .offset_in_record = record.current_offset() - subrecord.offset(),
+            };
+         }
+      }
+
+      auto ex = dovah::exceptions::file_load_failed();
+      ex.details.file_load_error = std::move(err);
+      throw ex;
+   }
+}
+
 namespace dovah::tes_file_reading {
    #pragma region basic stream operations
    void basic_reader::_read_impl(void* buffer, uint32_t size) {
@@ -37,34 +76,25 @@ namespace dovah::tes_file_reading {
    }
    #pragma endregion
 
-   void basic_reader::_reset_last_error() {
-      this->last_error = detailed_notice();
-      this->last_error.type = detailed_notice::notice_type::error;
-   }
-   bool basic_reader::_validate_record_signature() {
+   void basic_reader::_validate_record_signature() {
       auto& record    = this->_record;
       auto  signature = record.signature();
-      if (this->options.log_file_syntax_errors) {
-         if (!this->options.allow_suspicious_record_signatures) {
-            if (form_type_info::signature_is_suspicious(signature)) {
-               this->last_error.code = notice_code::invalid_record_signature;
-               this->last_error.set_file_offset(this->get_position());
-               this->last_error.set_cause_signature(signature);
-               //
-               return false;
-            }
-         }
-         if (!this->options.allow_unknown_record_signatures) {
-            if (form_type_info::signature_to_form_type(signature) == form_type::none) {
-               this->last_error.code = notice_code::invalid_record_signature;
-               this->last_error.set_file_offset(this->get_position());
-               this->last_error.set_cause_signature(signature);
-               //
-               return false;
-            }
+      if (!this->options.log_file_syntax_errors)
+         return;
+
+      if (!this->options.allow_suspicious_record_signatures) {
+         if (form_type_info::signature_is_suspicious(signature)) {
+            auto error = std::make_unique<dovah::notices::file_load_errors::record_has_invalid_signature>();
+            _throw_file_read_error(*this, error);
          }
       }
-      return true;
+      if (!this->options.allow_unknown_record_signatures) {
+         if (form_type_info::signature_to_form_type(signature) == form_type::none) {
+            auto error = std::make_unique<dovah::notices::file_load_errors::record_has_invalid_signature>();
+            _throw_file_read_error(*this, error);
+         }
+      }
+      return;
    }
    bool basic_reader::load_record_at(uint32_t pos) {
       this->reset_parse_state();
@@ -131,8 +161,7 @@ namespace dovah::tes_file_reading {
       record.end = record.body_pos + record.header.size;
       if (this->is_eof())
          return object_type::none;
-      if (!this->_validate_record_signature()) // also logs the appropriate error
-         return object_type::none;
+      this->_validate_record_signature(); // potentially throws
       {
          switch (record.header.signature) {
             case 'CELL':
@@ -150,31 +179,61 @@ namespace dovah::tes_file_reading {
          this->read(decompressed_size);
          record.data.resize(decompressed_size);
          if (decompressed_size) { // zero-size records are allowed, and would be indistinguishable from allocation failures
-            if (record.data.empty()) {
-               this->last_error.code = notice_code::out_of_memory;
-               this->last_error.set_file_offset(pos);
-               this->last_error.set_cause_size(decompressed_size);
-               return object_type::none;
+            if (this->options.log_file_syntax_errors) {
+               assert(!record.data.empty());
             } else {
-               auto input_buffer = malloc(compressed_size);
-               this->read(input_buffer, compressed_size);
-               uint32_t out_size = decompressed_size;
-               uncompress((Bytef*)record.data.raw(), (uLongf*)&out_size, (Bytef*)input_buffer, compressed_size);
-               free(input_buffer);
-               if (out_size != decompressed_size) {
-                  //dovah::logging::print_line("Size mismatch for decompressed record! Offset %08X, expected final size %08X, got size %08X.", record.head_pos, decompressed_size, out_size);
+               using error_type = dovah::notices::file_load_errors::record_decompression_failed;
+
+               auto error = std::make_unique<error_type>(error_type::problem_code::claimed_size_is_too_huge_to_even_try);
+               _throw_file_read_error(*this, error);
+            }
+
+            auto input_buffer = malloc(compressed_size);
+            this->read(input_buffer, compressed_size);
+            uint32_t out_size = decompressed_size;
+            auto result = uncompress((Bytef*)record.data.raw(), (uLongf*)&out_size, (Bytef*)input_buffer, compressed_size);
+            free(input_buffer);
+
+            if (this->options.log_file_syntax_errors) {
+               using error_type = dovah::notices::file_load_errors::record_decompression_failed;
+
+               if (result != Z_OK) {
+                  auto problem = error_type::problem_code::zlib_unknown_error;
+                  switch (result) {
+                     case Z_BUF_ERROR:
+                        problem = error_type::problem_code::data_larger_than_expected;
+                        break;
+                     case Z_MEM_ERROR:
+                        problem = error_type::problem_code::zlib_memory_error;
+                        break;
+                     case Z_DATA_ERROR:
+                        problem = error_type::problem_code::data_corrupt_or_incomplete;
+                        break;
+                  }
+
+                  auto error = std::make_unique<error_type>(problem);
+                  _throw_file_read_error(*this, error);
                }
+               if (out_size != decompressed_size) {
+                  auto error = std::make_unique<error_type>(error_type::problem_code::uncompressed_data_is_not_of_declared_size);
+                  _throw_file_read_error(*this, error);
+               }
+            } else {
+               assert(result == Z_OK);
                assert(out_size == decompressed_size);
             }
+
+            if (out_size != decompressed_size) {
+               //dovah::logging::print_line("Size mismatch for decompressed record! Offset %08X, expected final size %08X, got size %08X.", record.head_pos, decompressed_size, out_size);
+            }
+            assert(out_size == decompressed_size);
          }
       } else {
          record.data.resize(record.header.size);
          if (record.header.size) { // zero-size records are allowed, and would be indistinguishable from allocation failures
             if (record.data.empty()) {
-               this->last_error.code = notice_code::out_of_memory;
-               this->last_error.set_file_offset(pos);
-               this->last_error.set_cause_size(record.header.size);
-               return object_type::none;
+               auto error = std::make_unique<dovah::notices::file_load_errors::record_is_too_large>();
+               _throw_file_read_error(*this, error);
             } else {
                this->read(record.data.raw(), record.header.size);
             }
@@ -204,13 +263,16 @@ namespace dovah::tes_file_reading {
          // An 'XXXX' subrecord is used as a prefix for a subrecord whose size is 
          // larger than what can be represented with the usual two-byte length.
          //
-         if (this->_subrecord.header.size != 4) {
-            this->last_error = detailed_notice();
-            this->last_error.code = notice_code::extended_subrecord_with_no_length;
-            this->last_error.set_file_offset(this->get_position());
-            //
-            this->_subrecord.header.signature = 0;
-            return false;
+         bool marker_is_valid = this->_subrecord.header.size == 4;
+         if (this->options.log_file_syntax_errors) {
+            if (!marker_is_valid) {
+               this->_subrecord.body_start = this->_record.offset - sizeof(size); // since `_throw_file_read_error` will want this info
+
+               auto error = std::make_unique<dovah::notices::file_load_errors::extended_subrecord_marker_is_invalid>();
+               _throw_file_read_error(*this, error);
+            }
+         } else {
+            assert(marker_is_valid);
          }
          static_assert(sizeof(this->_subrecord.header.size) == 4, "XXXX subrecords store a four-byte subrecord length. Alter the struct definition accordingly.");
          this->_record.read(this->_subrecord.header.size); // the contents of the XXXX subrecord are the length

@@ -37,12 +37,19 @@
 #include "form_stub_meta_type.h"
 #include "ui/types/quest_alias.h"
 
+#include "dovah/exceptions/invalid_load_order/active_file_is_master_and_there_are_plugins.h"
+#include "dovah/exceptions/invalid_load_order/cyclical_dependency_between_files.h"
+#include "dovah/exceptions/invalid_load_order/desired_active_file_is_a_dependency.h"
+#include "dovah/exceptions/invalid_load_order/load_order_would_have_too_many_files.h"
+#include "dovah/exceptions/file_load_failed.h"
 #include "dovah/exceptions/form_creation_failed.h"
 #include "dovah/exceptions/form_deletion_failed.h"
 #include "dovah/exceptions/game_change_failed.h"
 #include "dovah/exceptions/game_setting_renumber_failed.h"
+#include "dovah/exceptions/invalid_load_order.h"
 #include "dovah/notices/base_error.h"
 #include "dovah/notices/base_warning.h"
+#include "./helpers/backend_error_to_string.h"
 
 namespace {
    void _on_form_created(dovah::form_stub* stub) {
@@ -225,6 +232,61 @@ void DovahKitCore::set_queued_active_file(const std::filesystem::path& p) {
    this->load_order->queue_active_file(p.string());
 }
 
+namespace {
+   QString _stringify_load_order_exception(const dovah::exceptions::invalid_load_order& ex) {
+      using namespace dovah::exceptions::invalid_load_order_exceptions;
+      if (auto* casted = dynamic_cast<const active_file_is_master_and_there_are_plugins*>(&ex)) {
+         return QObject::tr(
+            "The desired active file is a master, but there are plug-ins in the load order. This "
+            "means it's not possible for the active file to be the last file in the load order."
+         );
+      } else if (auto* casted = dynamic_cast<const cyclical_dependency_between_files*>(&ex)) {
+         QString file = QObject::tr("<unknown>");
+         if (!casted->seen.empty())
+            file = QString::fromStdString(casted->seen.back());
+
+         return QObject::tr(
+            "File %1 is the target of a cyclical dependency."
+         ).arg(file);
+      } else if (auto* casted = dynamic_cast<const desired_active_file_is_a_dependency*>(&ex)) {
+         QString active    = QString::fromStdString(casted->active_file);
+         QString dependent = QString::fromStdString(casted->dependent_file);
+
+         return QObject::tr(
+            "The desired active file, %1, is a dependency of file %2, and so cannot be the last "
+            "file in the load order."
+         ).arg(active).arg(dependent);
+      } else if (auto* casted = dynamic_cast<const load_order_would_have_too_many_files*>(&ex)) {
+         if (casted->file_counts.active_file_dependencies.has_value()) {
+            return QObject::tr(
+               "The load order contains too many files (%1). Saving the active file would be "
+               "impossible, because a single file can have at most %2 dependencies."
+            ).arg(casted->file_counts.active_file_dependencies.value()).arg(254);
+         }
+         if (casted->file_counts.light == 0) {
+            return QObject::tr(
+               "The load order contains too many files: %1 heavy."
+            ).arg(casted->file_counts.heavy);
+         }
+         return QObject::tr(
+            "The load order contains too many files: %1 light and %2 heavy."
+         ).arg(casted->file_counts.light).arg(casted->file_counts.heavy);
+      }
+      return QObject::tr("Unknown problem with the requested load order.");
+   }
+   QString _stringify_file_load_exception(const dovah::exceptions::file_load_failed& ex) {
+      switch (ex.code) {
+         case dovah::exceptions::file_load_failed::error_code::no_filename_specified:
+            return QObject::tr("No filename specified.", "dovah::exceptions::file_load_failed");
+         case dovah::exceptions::file_load_failed::error_code::save_or_load_already_in_progress:
+            return QObject::tr("A save or load operation is already in progress.", "dovah::exceptions::file_load_failed");
+      }
+      if (ex.details.file_load_error) {
+         return editor_helpers::backend_error_to_string(*ex.details.file_load_error);
+      }
+      return QObject::tr("Unknown error.", "dovah::exceptions::file_load_failed");
+   }
+}
 bool DovahKitCore::acquire_load_order_data(bool async) {
    if (this->loading || this->async_loader)
       return false;
@@ -260,7 +322,7 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
       QObject::connect(worker, &DovahKitEditorInternals::load_task::complete, this, [this, worker](file_load_stats stats) {
          if (auto* bsa_list = this->load_order->get_archive_list())
             this->bsa_browse_backend->setArchives(*bsa_list);
-         emit dataAcquireComplete(worker->results);
+         emit dataAcquireComplete();
          emit fileLoadStatisticsAvailable(stats);
          {
             auto bench = cobb::benchmark();
@@ -271,7 +333,17 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
          }
       });
       QObject::connect(worker, &DovahKitEditorInternals::load_task::failed, this, [this, worker]() {
-         emit dataAcquireFailed(worker->results);
+         assert(worker->exception);
+
+         QString error_message = tr("An unknown error occurred.");
+         try {
+            std::rethrow_exception(worker->exception);
+         } catch (const dovah::exceptions::invalid_load_order& ex) {
+            error_message = _stringify_load_order_exception(ex);
+         } catch (const dovah::exceptions::file_load_failed& ex) {
+            error_message = _stringify_file_load_exception(ex);
+         }
+         emit dataAcquireFailed(error_message);
       });
       QObject::connect(worker, &DovahKitEditorInternals::load_task::ended, this, [this, thread]() {
          //
@@ -293,7 +365,7 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
    if (task.result) {
       if (auto* bsa_list = this->load_order->get_archive_list())
          this->bsa_browse_backend->setArchives(*bsa_list);
-      emit dataAcquireComplete(task.results);
+      emit dataAcquireComplete();
       emit fileLoadStatisticsAvailable(task.stats);
       {
          auto bench = cobb::benchmark();
@@ -303,7 +375,7 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
          qDebug("Time to load INIs: %u ms", bench.milliseconds());
       }
    } else {
-      emit dataAcquireFailed(task.results);
+      emit dataAcquireFailed("Loading failed.");
    }
    return task.result;
 }

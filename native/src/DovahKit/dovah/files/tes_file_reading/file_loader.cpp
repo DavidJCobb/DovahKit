@@ -4,6 +4,13 @@
 #include "threads.h"
 #include "../../load_order_interfaces/file_load.h"
 
+#include "../../exceptions/file_load_failed.h"
+#include "../../notices/file_load_errors/file_header_lists_too_many_dependencies.h"
+#include "../../notices/file_load_errors/filesystem_error.h"
+#include "../../notices/file_load_errors/interior_cell_block_group_badly_nested.h"
+#include "../../notices/file_load_errors/interior_cell_block_has_no_parent_group.h"
+#include "../../notices/file_load_errors/malformed_file_header.h"
+
 namespace dovah::tes_file_reading {
    file_loader::file_loader(interface_t& intfc) : file_or_file_part_loader(*this, intfc) {
       for (size_t i = 0; i < threads::basic::recommended_thread_count; ++i) {
@@ -101,9 +108,6 @@ namespace dovah::tes_file_reading {
    }
    #pragma endregion
 
-   void file_loader::abort() noexcept {
-      this->aborted = true;
-   }
    bool file_loader::fetch_record_header(uint32_t pos, tes_file_record_header& out_header, uint32_t& record_decompressed_size) {
       this->reset_parse_state();
       this->set_position(pos);
@@ -127,20 +131,19 @@ namespace dovah::tes_file_reading {
       if (!new_path.empty())
          this->_set_filename(new_path, new_path);
       else if (this->path.empty()) {
-         detailed_notice error;
-         error.code = notice_code::no_filename_specified;
-         this->log_load_error(error);
-         return false;
+         throw dovah::exceptions::file_load_failed(dovah::exceptions::file_load_failed::error_code::no_filename_specified);
       }
-      if (!this->_open_mapped_file()) // logs an error on its own
-         return false;
+      this->_open_mapped_file();
       //
       if (!this->_load_header()) {
-         detailed_notice error;
-         error.code = notice_code::malformed_file;
-         error.set_file_offset(this->get_position());
-         this->log_load_error(error);
-         return false;
+         auto error = std::make_unique<dovah::notices::file_load_errors::malformed_file_header>();
+         auto ex    = dovah::exceptions::file_load_failed();
+         
+         error->filename    = this->get_filename();
+         error->file_offset = this->get_position();
+         
+         ex.details.file_load_error = std::move(error);
+         throw ex;
       }
       {
          object_type ot;
@@ -239,24 +242,25 @@ namespace dovah::tes_file_reading {
                      {
                         {  // Error-checking.
                            auto parent = group.get_parent();
-                           int  err = 0;
-                           if (!parent)
-                              err = 1;
-                           else if (parent->header.type != group::type::forms_of_type)
-                              err = 2;
-                           else if (_byteswap_ulong(parent->header.label) != 'CELL')
-                              err = 3;
-                           if (err) {
-                              detailed_notice error;
-                              error.code = notice_code::interior_cell_block_group_badly_nested;
-                              if (err == 1) {
-                                 error.code = notice_code::interior_cell_block_has_no_parent_group;
-                              }
-                              error.set_file_offset(this->get_position());
-                              this->log_load_error(error);
-                              //
-                              this->abort();
-                              break;
+                           if (!parent) {
+                              auto error = std::make_unique<dovah::notices::file_load_errors::interior_cell_block_has_no_parent_group>();
+                              auto ex    = dovah::exceptions::file_load_failed();
+         
+                              error->filename    = this->get_filename();
+                              error->file_offset = this->get_position();
+         
+                              ex.details.file_load_error = std::move(error);
+                              throw ex;
+                           }
+                           if (parent->header.type != group::type::forms_of_type || _byteswap_ulong(parent->header.label) != 'CELL') {
+                              auto error = std::make_unique<dovah::notices::file_load_errors::interior_cell_block_group_badly_nested>();
+                              auto ex    = dovah::exceptions::file_load_failed();
+         
+                              error->filename    = this->get_filename();
+                              error->file_offset = this->get_position();
+         
+                              ex.details.file_load_error = std::move(error);
+                              throw ex;
                            }
                         }
                         auto* loader = this->_get_nth_thread_of_type<threads::interior_cell>(thread_indices.interior_cell);
@@ -330,8 +334,7 @@ namespace dovah::tes_file_reading {
                auto* stub = this->make_stub_for_record();
                switch (group.header.type) {
                   case group::type::world_children:
-                     if (!this->set_stub_parent(stub, last_worldspace_id))
-                        continue;
+                     this->set_stub_parent(stub, last_worldspace_id);
                      last_world_cell_id = stub->formID;
                      break;
                }
@@ -361,57 +364,68 @@ namespace dovah::tes_file_reading {
       }
       this->_start_threads();
       this->_wait_for_threads();
+      {
+         const size_t no_offset = this->threads.size();
+
+         size_t earliest_offset = no_offset;
+         for (size_t i = 0; i < this->threads.size(); ++i) {
+            auto* thread = this->threads[i];
+            if (!thread->exception.captured)
+               continue;
+
+            if (earliest_offset == no_offset) {
+               earliest_offset = i;
+            } else {
+               if (thread->exception.thrown_at_file_offset < this->threads[earliest_offset]->exception.thrown_at_file_offset)
+                  earliest_offset = i;
+            }
+         }
+         if (earliest_offset != no_offset) {
+            std::rethrow_exception(this->threads[earliest_offset]->exception.captured);
+         }
+      }
       //
       return !this->aborted;
    }
    void file_loader::close() {
-      this->abort();
       this->_wait_for_threads();
       for (auto* thread : this->threads)
          if (thread)
             thread->_on_file_close();
-      this->file = cobb::mapped_file();
+      this->file = {};
       //
       this->file_data = nullptr;
       this->file_size = 0;
       this->loader    = nullptr;
    }
-   bool file_loader::reopen() {
+   void file_loader::reopen() {
       return this->_open_mapped_file();
    }
 
-   bool file_loader::_open_mapped_file() {
-      this->file = cobb::mapped_file();
+   void file_loader::_open_mapped_file() {
+      this->file = {};
       this->file.open(this->path.c_str());
       if (!this->file) {
-         detailed_notice error;
-         error.code    = notice_code::filesystem_error;
-         error.type    = detailed_notice::notice_type::error;
-         error.context = detailed_notice::notice_context::file_load;
-         error.set_winapi_error_code(this->file.get_error());
-         this->log_load_error(error);
-         //
-         this->file = cobb::mapped_file();
-         return false;
+         auto error = std::make_unique<dovah::notices::file_load_errors::filesystem_error>();
+         auto ex    = dovah::exceptions::file_load_failed();
+
+         error->filename     = this->get_filename();
+         error->winapi_error = this->file.get_error();
+
+         this->file = {};
+
+         ex.details.file_load_error = std::move(error);
+         throw ex;
       }
       this->adopt(*this); // update our own (basic_reader) access to the file data
-      return true;
    }
    bool file_loader::_load_header() {
       if (this->next_record_or_group() != object_type::record) {
-         detailed_notice error;
-         error.code = notice_code::malformed_file; // Expected TES4 record; no record found.
-         error.set_file_offset(this->get_position());
-         this->log_load_error(error);
-         return false;
+         return false; // Expected TES4 record.
       }
       auto& r = this->get_current_record();
       if (r.signature() != 'TES4') {
-         detailed_notice error;
-         error.code = notice_code::malformed_file; // Expected TES4 record; got something else.
-         error.set_file_offset(this->get_position());
-         this->log_load_error(error);
-         return false;
+         return false; // Expected TES4 record; got something else.
       }
       {
          auto name = this->get_filename();
@@ -461,11 +475,14 @@ namespace dovah::tes_file_reading {
                      return false; // don't log an error here; caller should catch (return false) and log a catch-all error
                   }
                   if (this->header.masters.size() > 254) {
-                     detailed_notice error;
-                     error.code = notice_code::file_has_too_many_dependencies; // Expected TES4 record; no record found.
-                     error.set_file_offset(this->get_position());
-                     this->log_load_error(error);
-                     return false;
+                     auto error = std::make_unique<dovah::notices::file_load_errors::file_header_lists_too_many_dependencies>();
+                     auto ex    = dovah::exceptions::file_load_failed();
+         
+                     error->filename    = this->get_filename();
+                     error->file_offset = this->get_position();
+         
+                     ex.details.file_load_error = std::move(error);
+                     throw ex;
                   }
                   //
                   // TODO: Have the load process fail if this function encounters any unexpected masters.
@@ -474,10 +491,6 @@ namespace dovah::tes_file_reading {
                break;
             case 'DATA': // always follows a MAST; vestigial; doesn't appear to be used
                if (last_subrecord != 'MAST') {
-                  detailed_notice error;
-                  error.code = notice_code::malformed_file; // Expected TES4 record; no record found.
-                  error.set_file_offset(this->get_position());
-                  this->log_load_error(error);
                   return false;
                } else {
                   auto& last = *this->header.masters.rbegin();

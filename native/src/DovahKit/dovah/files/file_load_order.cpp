@@ -7,7 +7,6 @@
 #include "../form_stub_helpers.h"
 #include "tes_file_reading/file_loader.h"
 #include "tes_file_reading/file_header.h"
-#include "tes_file_reading/results.h"
 #include "tes_file_reading/threaded_load_order_use_info_builder.h"
 #include "tes_file_reading/load_order_persistent_ref_reparenter.h"
 #include "tes_file_writing/file_writer.h"
@@ -23,6 +22,8 @@
 #include "../notice_code_list.h"
 #include <fstream>
 
+#include "../exceptions/invalid_load_order/active_file_is_master_and_there_are_plugins.h"
+#include "../exceptions/file_load_failed.h"
 #include "../exceptions/file_save_failed.h"
 #include "../exceptions/form_creation_failed.h"
 #include "../exceptions/form_deletion_failed.h"
@@ -38,11 +39,17 @@
 #include "../load_order_requests/form_renumber_request.h"
 #include "../load_order_requests/game_setting_edit_request.h"
 #include "../load_order_requests/game_setting_renumber_request.h"
+#include "../notices/file_load_errors/form_id_is_invalid.h"
+#include "../notices/file_load_errors/form_override_has_type_mismatch.h"
+#include "../notices/file_load_warnings/form_initial_record_is_partial.h"
 #include "../notices/file_load_warnings/form_override_has_armo_arma_mismatch.h"
 #include "../notices/file_load_warnings/game_setting_has_multiple_records_in_a_file.h"
 #include "../notices/file_load_warnings/game_setting_name_is_unrecognized.h"
+#include "../notices/file_load_warnings/game_setting_overrides_a_real_form.h"
 #include "../notices/file_load_warnings/game_setting_record_has_bad_form_id.h"
 #include "../notices/file_load_warnings/game_setting_record_has_no_name.h"
+#include "../notices/file_load_warnings/partial_info_override_has_different_parent.h"
+#include "../notices/file_load_warnings/singleton_form_is_redundantly_defined.h"
 #include "../notices/file_load_warnings/the_game_doesnt_load_new_actor_value_infos.h"
 #include "../notices/form_load_warnings/form_reference_type_mismatch.h"
 #include "../notices/base_form_load_warning.h"
@@ -236,8 +243,37 @@ namespace dovah {
       }
       for (auto* thread : builders)
          thread->start();
-      for (auto*& thread : builders)
+      for (auto* thread : builders)
          thread->wait_for();
+      {
+         const size_t no_offset = builders.size();
+
+         size_t earliest_offset = no_offset;
+         for (size_t i = 0; i < builders.size(); ++i) {
+            auto* thread = builders[i];
+            if (!thread->exception.captured)
+               continue;
+
+            if (earliest_offset == no_offset) {
+               earliest_offset = i;
+            } else {
+               if (thread->exception.thrown_at_file_offset < builders[earliest_offset]->exception.thrown_at_file_offset)
+                  earliest_offset = i;
+            }
+         }
+         if (earliest_offset != no_offset) {
+            auto captured = std::move(builders[earliest_offset]->exception.captured);
+
+            // per below
+            auto guard = std::lock_guard(this->use_info_build_threads_lock);
+            for (auto*& entry : builders) {
+               delete entry;
+               entry = nullptr;
+            }
+
+            std::rethrow_exception(captured);
+         }
+      }
       {
          auto guard = std::lock_guard(this->use_info_build_threads_lock);
          for (auto*& entry : builders) {
@@ -276,15 +312,21 @@ namespace dovah {
    void file_load_order::queue_active_file(const std::string& name) {
       this->queued_load.active_file = name;
    }
-   bool file_load_order::load_queued_files(tes_file_reading::read_results& results) {
+   bool file_load_order::load_queued_files() {
       _save_load_lock_guard save_load_lock_guard(*this, save_load_type::is_loading);
       if (!save_load_lock_guard) {
-         results.error.code = notice_code::cannot_load_right_now;
-         return false;
+         throw exceptions::file_load_failed(exceptions::file_load_failed::error_code::save_or_load_already_in_progress);
       }
+
       this->save_load_state.flags = save_load_flag::none;
-      this->save_load_state.current_load_results = &results;
-      //
+      struct _ {
+         ~_() {
+            owner.save_load_state.flags = save_load_flag::none;
+         }
+
+         file_load_order& owner;
+      } _ugly_raii_hack(*this); // ensure fields are reset if an exception is thrown
+      
       if (!this->base_path.empty()) {
          char end = *this->base_path.rbegin();
          if (end != '/' && end != '\\')
@@ -295,11 +337,8 @@ namespace dovah {
       this->normalizer.active_file = this->queued_load.active_file;
       this->normalizer.target_game = this->current_game;
       for (auto it = this->queued_load.files.begin(); it != this->queued_load.files.end(); ++it) {
-         if (!this->normalizer.add(results.error, *it))
-            return false;
+         this->normalizer.add(*it);
       }
-      if (results.failed())
-         return false;
       if (!this->queued_load.active_file.empty()) {  // Force the active file to the end of the load order
          //
          // The active file must be at the end of the load order, and cannot be the master of any 
@@ -319,9 +358,8 @@ namespace dovah {
          auto& name = this->queued_load.active_file;
          bool isMaster = this->normalizer.has_master(name);
          if (isMaster && !this->normalizer.plugins.empty()) {
-            results.error.code = notice_code::active_file_is_master_and_there_are_plugins;
-            results.error.set_cause_file(this->queued_load.active_file);
-            return false;
+            auto ex = exceptions::invalid_load_order_exceptions::active_file_is_master_and_there_are_plugins();
+            throw ex;
          }
          auto* list = &this->normalizer.plugins;
          if (isMaster)
@@ -397,7 +435,7 @@ namespace dovah {
       {
          using list_t = decltype(this->normalizer.masters);
          //
-         auto lambda = [this, &file_load_interface, &results](list_t& list) {
+         auto lambda = [this, &file_load_interface](list_t& list) {
             for (auto* header : list) {
                std::string path = this->base_path + header->name;
                auto* file = new tes_file_reading::file_loader(file_load_interface);
@@ -406,14 +444,12 @@ namespace dovah {
                if (!this->queued_load.active_file.empty() && cobb::strieq_ascii(this->queued_load.active_file, header->name)) {
                   this->active_file = file;
                }
-               if (!file->load(path.c_str())) {
-                  if (!results.failed()) {
-                     results.error.code = notice_code::unknown_error;
-                     results.error.set_cause_file(path);
-                  }
+               try {
+                  file->load(path.c_str());
+               } catch (...) {
                   if (this->archives)
                      this->archives->abort_archive_load();
-                  return;
+                  throw;
                }
                //
                // TODO: Split file loading into these steps:
@@ -432,7 +468,7 @@ namespace dovah {
       this->save_load_state.flags |= save_load_flag::loading_is_complete;
       this->save_load_state.loading_index = 0;
       //
-      this->_build_use_info();
+      this->_build_use_info(); // may throw
       this->_reparent_persistent_references();
       this->save_load_state.flags |= save_load_flag::use_info_build_is_complete;
       //
@@ -493,28 +529,52 @@ namespace dovah {
          }
       }
       //
-      this->save_load_state.current_load_results = nullptr;
-      return !results.failed();
+      return true;
    }
    //
    bool file_load_order::is_loading() const noexcept {
       return this->save_load_state.type == save_load_type::is_loading;
    };
 
-   file_load_order::form_id_status file_load_order::accept_form_stub(form_stub*& stub) noexcept {
+   file_load_order::form_id_status file_load_order::accept_form_stub(form_stub*& stub) {
       std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
-      //
+      
       uint32_t formID;
       auto     result = this->local_formID_to_global_formID(stub, formID);
-      switch (result) {
-         case form_id_status::out_of_bounds:
-         case form_id_status::missing_master:
-            return result;
+      if (result != form_id_status::valid || formID == 0) {
+         using error_type = dovah::notices::file_load_errors::form_id_is_invalid;
+         
+         auto problem = error_type::problem_code::unknown;
+         switch (result) {
+            case file_load_order::form_id_status::missing_master:
+               problem = error_type::problem_code::missing_master;
+               break;
+            case file_load_order::form_id_status::out_of_bounds:
+               problem = error_type::problem_code::out_of_bounds;
+               break;
+            default:
+               if (formID == 0)
+                  problem = error_type::problem_code::zero_is_not_allowed;
+               break;
+         }
+
+         const auto* source_file = stub->get_file_at_index(-1);
+
+         auto error = std::make_unique<error_type>(problem);
+         if (source_file) {
+            error->filename    = source_file->get_filename();
+            error->file_offset = ((const tes_file_reading::basic_reader*)source_file)->get_position(); // TODO: HACK HACK HACK
+         }
+         error->form = {
+            .local_id = stub->formID,
+            .type     = stub->form_type,
+         };
+
+         auto ex = dovah::exceptions::file_load_failed();
+         ex.details.file_load_error = std::move(error);
+         throw ex;
       }
-      if (formID == 0) {
-         return form_id_status::null_is_not_allowed;
-      }
-      //
+      
       auto* new_parent = stub->get_parent_form();
       if (form_stub* target = this->forms.forms[formID]) { // is this an override?
          auto type_a = target->form_type;
@@ -545,30 +605,27 @@ namespace dovah {
                };
                this->_log_warning(notice);
             } else {
-               detailed_notice notice;
-               notice.code               = notice_code::form_override_has_type_mismatch;
-               notice.cause_form.localID = target->formID;
-               notice.cause_form.fixedID = formID;
-               notice.cause_form.type    = type_a;
-               notice.set_flag(detailed_notice::flag::has_cause_form);
-               if (file_a) {
-                  notice.cause_file = file_a->get_filename();
-                  notice.set_flag(detailed_notice::flag::has_cause_file);
-               }
+               auto error = std::make_unique<dovah::notices::file_load_errors::form_override_has_type_mismatch>();
                if (file_b) {
-                  notice.relevant_files.emplace_back() = file_b->get_filename();
+                  error->filename    = file_b->get_filename();
+                  error->file_offset = ((tes_file_reading::basic_reader*)file_b)->get_position();
                }
-               //
-               auto& relevant = notice.relevant_forms.emplace_back();
-               relevant.localID = stub->formID;
-               relevant.fixedID = formID;
-               relevant.type    = type_b;
-               //
-               notice.type = detailed_notice::notice_type::error;
-               notice.context = detailed_notice::notice_context::file_load;
-               this->save_load_state.current_load_results->error = notice;
-               //
-               return form_id_status::form_type_mismatch;
+               error->form_id = formID;
+               error->overriding_form = {
+                  .local_id = stub->formID,
+                  .type     = stub->form_type,
+               };
+               error->overridden_form = {
+                  .type = target->form_type,
+               };
+               if (file_a)
+                  error->overridden_form.source_file = file_a->get_filename();
+               if (file_b)
+                  error->overriding_form.source_file = file_b->get_filename();
+
+               auto ex = dovah::exceptions::file_load_failed();
+               ex.details.file_load_error = std::move(error);
+               throw ex;
             }
          }
          //
@@ -590,25 +647,24 @@ namespace dovah {
                   // sanely at all. Refer to <topic infos' placement in topics' info lists.txt> in our 
                   // internal documentation for details on the chaos.
                   //
-                  detailed_notice warning;
-                  warning.code    = notice_code::partial_info_override_has_different_parent;
-                  warning.context = detailed_notice::notice_context::file_load;
-                  warning.cause_form.localID = stub->formID;
-                  warning.cause_form.fixedID = formID;
-                  warning.cause_form.type    = stub->form_type;
-                  warning.set_flag(detailed_notice::flag::has_cause_form);
-                  assert(!stub->has_multiple_source_files()); // the input stub should've been read by ONE file
-                  warning.set_cause_file(stub->file.pointer->get_filename());
-                  warning.set_file_offset(stub->file.offset);
+                  notices::file_load_warnings::partial_info_override_has_different_parent notice;
+                  {
+                     assert(!stub->has_multiple_source_files()); // the input stub should've been read by ONE file
+                     notice.source_file = stub->file.pointer->get_filename();
+                  }
+                  if (auto* file = stub->get_file_at_index(-1)) {
+                     notice.source_file = file->get_filename();
+                  }
+                  notice.record.local_id  = stub->formID;
+                  notice.record.global_id = formID;
+                  notice.parent_of_overridden = old_parent;
+                  notice.parent_of_overriding = new_parent;
                   if (auto* data = target->get_source_file_info(0)) {
                      if (auto* pointer = data->pointer) {
-                        warning.add_relevant_file(pointer->get_filename());
+                        notice.source_file_for_overridden = pointer->get_filename();
                      }
                   }
-                  warning.add_relevant_form(*old_parent);
-                  if (new_parent)
-                     warning.add_relevant_form(*new_parent);
-                  this->_log_load_warning(warning);
+                  this->_log_warning(notice);
                }
             }
          }
@@ -642,21 +698,19 @@ namespace dovah {
          if (stub->source_file_count() == 1) {
             if (stub->test_record_flags(tes_file_record_header::flag::partial)) {
                bool injected = stub->is_injected();
-               //
-               detailed_notice warning;
-               warning.code = notice_code::form_initial_record_is_partial;
-               if (injected)
-                  warning.code = notice_code::form_initial_record_is_partial_and_injected;
-               warning.cause_form.localID = stub->formID;
-               warning.cause_form.fixedID = formID;
-               warning.cause_form.type    = stub->form_type;
-               warning.set_flag(detailed_notice::flag::has_cause_form);
+
+               notices::file_load_warnings::form_initial_record_is_partial notice;
                if (auto* file = stub->get_file_at_index(-1)) {
-                  warning.cause_file = file->get_filename();
-                  warning.set_flag(detailed_notice::flag::has_cause_file);
+                  notice.source_file = file->get_filename();
                }
-               this->_log_load_warning(warning);
-               //
+               notice.record_is_injected = injected;
+               notice.record = {
+                  .local_id  = stub->formID,
+                  .global_id = formID,
+                  .form_type = stub->form_type,
+               };
+               this->_log_warning(notice);
+
                if (injected) {
                   //
                   // Skyrim will skip a partial record if it is injected and not an override. We'll 
@@ -761,21 +815,15 @@ namespace dovah {
                auto* pf = prior->get_source_file_info();
                auto* sf = stub->get_source_file_info();
                if (pf && sf && pf->pointer == sf->pointer) {
-                  detailed_notice warning;
-                  warning.code               = notice_code::singleton_form_is_redundantly_defined;
-                  warning.cause_form.localID = stub->formID;
-                  warning.cause_form.fixedID = formID;
-                  warning.cause_form.type    = stub->form_type;
-                  warning.set_flag(detailed_notice::flag::has_cause_form);
-                  warning.cause_file = sf->pointer->get_filename();
-                  warning.set_flag(detailed_notice::flag::has_cause_file);
-                  //
-                  auto& relevant = warning.relevant_forms.emplace_back();
-                  relevant.localID = 0;
-                  relevant.fixedID = prior->formID;
-                  relevant.type    = prior->form_type;
-                  //
-                  this->_log_load_warning(warning);
+                  notices::file_load_warnings::singleton_form_is_redundantly_defined notice;
+                  notice.source_file = sf->pointer->get_filename();
+                  notice.previous_form_id = prior->formID;
+                  notice.record = {
+                     .local_id  = stub->formID,
+                     .global_id = formID,
+                     .form_type = stub->form_type,
+                  };
+                  this->_log_warning(notice);
                }
             }
             //
@@ -826,7 +874,7 @@ namespace dovah {
       //
       if (formID) {
          //
-         // Do not allow GMST to override form IDs of other types.
+         // Do not allow GMST to override form IDs of other types; discard the GMST.
          //
          std::lock_guard<std::mutex> guard_for_all_forms(this->forms.lock);
          //
@@ -835,24 +883,12 @@ namespace dovah {
             if (prior->form_type == form_type::setting) {
                prior->_add_file(*const_cast<loaded_file*>(file), 0);
             } else {
-               detailed_notice warning;
-               warning.code               = notice_code::form_override_has_type_mismatch;
-               warning.cause_form.localID = localID;
-               warning.cause_form.fixedID = formID;
-               warning.cause_form.type    = prior->form_type;
-               warning.set_flag(detailed_notice::flag::has_cause_form);
+               auto notice = notices::file_load_warnings::game_setting_overrides_a_real_form(working.name, *prior);
+               notice.source_file = file->get_filename();
                if (auto* prior_file = prior->get_file_at_index(0)) {
-                  warning.cause_file = prior_file->get_filename();
-                  warning.set_flag(detailed_notice::flag::has_cause_file);
+                  notice.overridden_file = prior_file->get_filename();
                }
-               warning.relevant_files.emplace_back() = file->get_filename();
-               //
-               auto& relevant = warning.relevant_forms.emplace_back();
-               relevant.localID = localID;
-               relevant.fixedID = formID;
-               relevant.type    = form_type::setting;
-               //
-               this->_log_load_warning(warning);
+               this->_log_warning(notice);
                return;
             }
          }

@@ -410,7 +410,6 @@
     <ClCompile Include="dovah\files\tes_file_reading\file_part_loader.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\file_threaded_part_loader_base.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\localized_string_file.cpp" />
-    <ClCompile Include="dovah\files\tes_file_reading\results.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\load_order_persistent_ref_reparenter.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\threaded_load_order_use_info_builder.cpp" />
     <ClCompile Include="dovah\files\tes_file_reading\threads.cpp" />
@@ -902,6 +901,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\exceptions\enums\form_creation_error_code.h" />
+    <ClInclude Include="dovah\exceptions\file_load_failed.h" />
     <ClInclude Include="dovah\exceptions\file_save_failed.h" />
     <ClInclude Include="dovah\exceptions\form_creation_failed.h" />
     <ClInclude Include="dovah\exceptions\form_deletion_failed.h" />
@@ -909,6 +909,11 @@
     <ClInclude Include="dovah\exceptions\game_change_failed.h" />
     <ClInclude Include="dovah\exceptions\game_setting_renumber_failed.h" />
     <ClInclude Include="dovah\exceptions\game_setting_value_change_failed.h" />
+    <ClInclude Include="dovah\exceptions\invalid_load_order.h" />
+    <ClInclude Include="dovah\exceptions\invalid_load_order\active_file_is_master_and_there_are_plugins.h" />
+    <ClInclude Include="dovah\exceptions\invalid_load_order\cyclical_dependency_between_files.h" />
+    <ClInclude Include="dovah\exceptions\invalid_load_order\desired_active_file_is_a_dependency.h" />
+    <ClInclude Include="dovah\exceptions\invalid_load_order\load_order_would_have_too_many_files.h" />
     <ClInclude Include="dovah\exceptions\object_reference_move_failed.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
     <ClInclude Include="dovah\game_change_failure_reason.h" />
@@ -923,17 +928,39 @@
     <ClInclude Include="dovah\load_order_requests\game_setting_edit_request.h" />
     <ClInclude Include="dovah\load_order_requests\game_setting_renumber_request.h" />
     <ClInclude Include="dovah\notices\base_error.h" />
+    <ClInclude Include="dovah\notices\base_file_load_error.h" />
     <ClInclude Include="dovah\notices\base_file_load_warning.h" />
     <ClInclude Include="dovah\notices\base_form_load_warning.h" />
     <ClInclude Include="dovah\notices\base_form_save_error.h" />
     <ClInclude Include="dovah\notices\base_form_save_warning.h" />
     <ClInclude Include="dovah\notices\base_warning.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\base_record_load_error.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\base_subrecord_load_error.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\extended_subrecord_marker_is_invalid.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\filesystem_error.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\file_header_lists_too_many_dependencies.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\form_id_is_invalid.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\form_override_has_type_mismatch.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\form_record_present_in_game_setting_group.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\interior_cell_block_group_badly_nested.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\interior_cell_block_has_no_parent_group.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\malformed_file_header.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\parent_form_is_missing.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\record_decompression_failed.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\record_has_invalid_signature.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\record_is_too_large.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\unexpected_nested_group_in_simple_top_group.h" />
+    <ClInclude Include="dovah\notices\file_load_errors\_all.h" />
+    <ClInclude Include="dovah\notices\file_load_warnings\form_initial_record_is_partial.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\form_override_has_armo_arma_mismatch.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\game_setting_has_multiple_records_in_a_file.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\game_setting_name_is_unrecognized.h" />
+    <ClInclude Include="dovah\notices\file_load_warnings\game_setting_overrides_a_real_form.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\game_setting_record_has_no_name.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\game_setting_record_has_bad_form_id.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\game_setting_record_has_unrecognized_subrecord.h" />
+    <ClInclude Include="dovah\notices\file_load_warnings\partial_info_override_has_different_parent.h" />
+    <ClInclude Include="dovah\notices\file_load_warnings\singleton_form_is_redundantly_defined.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\the_game_doesnt_load_new_actor_value_infos.h" />
     <ClInclude Include="dovah\notices\file_load_warnings\_all.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\attack_data\expected_event_subrecord.h" />
@@ -1954,7 +1981,6 @@
     <ClInclude Include="dovah\files\tes_file_reading\file_part_loader.h" />
     <ClInclude Include="dovah\files\tes_file_reading\file_threaded_part_loader_base.h" />
     <ClInclude Include="dovah\files\tes_file_reading\localized_string_file.h" />
-    <ClInclude Include="dovah\files\tes_file_reading\results.h" />
     <ClInclude Include="dovah\files\tes_file_reading\load_order_persistent_ref_reparenter.h" />
     <ClInclude Include="dovah\files\tes_file_reading\threaded_load_order_use_info_builder.h" />
     <ClInclude Include="dovah\files\tes_file_reading\threads.h" />

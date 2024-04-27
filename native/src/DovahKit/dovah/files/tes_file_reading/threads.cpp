@@ -4,6 +4,9 @@
 #include "../../logging.h"
 #include "../../notice_code_list.h"
 
+#include "../../exceptions/file_load_failed.h"
+#include "../../notices/file_load_errors/form_record_present_in_game_setting_group.h"
+#include "../../notices/file_load_errors/unexpected_nested_group_in_simple_top_group.h"
 #include "../../notices/file_load_warnings/game_setting_record_has_unrecognized_subrecord.h"
 
 namespace dovah::tes_file_reading::threads {
@@ -14,10 +17,6 @@ namespace dovah::tes_file_reading::threads {
       auto size = this->queue.size();
       this->progress.maximum = size;
       for (uint32_t i = 0; i < size; i++) {
-         if (this->loader->is_aborted()) {
-            dovah::logging::print_line("[dovah::tes_file_reading::threads::basic] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
-            break;
-         }
          this->progress.current = i;
          auto& desired = this->queue[i];
          this->set_position(desired.pos);
@@ -43,12 +42,14 @@ namespace dovah::tes_file_reading::threads {
                lastGroupLabel = _byteswap_ulong(this->_groups[0].header.label);
                //
                if (this->_groups[1].exists()) {
-                  detailed_notice error;
-                  error.code = notice_code::unexpected_nested_group_in_simple_top_group;
-                  error.set_file_offset(this->get_position());
-                  this->log_load_error(error);
-                  this->loader->abort();
-                  break;
+                  auto error = std::make_unique<dovah::notices::file_load_errors::unexpected_nested_group_in_simple_top_group>();
+                  auto ex    = dovah::exceptions::file_load_failed();
+         
+                  error->filename    = this->loader->get_filename();
+                  error->file_offset = this->get_position();
+         
+                  ex.details.file_load_error = std::move(error);
+                  throw ex;
                }
             }
             if (ot == object_type::record) {
@@ -66,8 +67,7 @@ namespace dovah::tes_file_reading::threads {
                if (stub->form_type == form_type::topic_info) {
                   uint32_t topicID = group.getRawIDOfParentTopic();
                   lo.local_formID_to_global_formID(this->loader, topicID);
-                  if (!this->set_stub_parent(stub, topicID))
-                     continue;
+                  this->set_stub_parent(stub, topicID);
                   if (!topicID)
                      dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->loader->get_filename(), stub->formID);
                }
@@ -112,10 +112,6 @@ namespace dovah::tes_file_reading::threads {
       auto size = this->queue.size();
       this->progress.maximum = size;
       for (uint32_t i = 0; i < size; i++) {
-         if (this->loader->is_aborted()) {
-            dovah::logging::print_line("[dovah::tes_file_reading::threads::basic] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
-            break;
-         }
          this->progress.current = i;
          auto& desired = this->queue[i];
          this->set_position(desired.pos);
@@ -154,8 +150,7 @@ namespace dovah::tes_file_reading::threads {
                if (stub->form_type == form_type::topic_info) {
                   uint32_t topicID = group.getRawIDOfParentTopic();
                   lo.local_formID_to_global_formID(this->loader, topicID);
-                  if (!this->set_stub_parent(stub, topicID))
-                     continue;
+                  this->set_stub_parent(stub, topicID);
                   if (!topicID)
                      dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->loader->get_filename(), stub->formID);
                }
@@ -198,10 +193,6 @@ namespace dovah::tes_file_reading::threads {
       auto size = this->queue.size();
       this->progress.maximum = size;
       for (uint32_t i = 0; i < size; i++) {
-         if (this->loader->is_aborted()) {
-            dovah::logging::print_line("[dovah::tes_file_reading::threads::interior_cell] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
-            break;
-         }
          this->progress.current = i;
          auto& desired = this->queue[i];
          //dovah::logging::print_line("[dovah::tes_file_reading::threads::interior_cell] Thread %08X beginning with interior-cell-block %d at position %08X.", std::this_thread::get_id(), desired.blockNumber, desired.pos);
@@ -240,8 +231,7 @@ namespace dovah::tes_file_reading::threads {
                if (form_type_is_reference(stub->form_type)) {
                   uint32_t cellID = group.getRawIDOfParentCell();
                   lo.local_formID_to_global_formID(this->loader, cellID);
-                  if (!this->set_stub_parent(stub, cellID))
-                     continue;
+                  this->set_stub_parent(stub, cellID);
                   if (!cellID)
                      dovah::logging::print_line("[dovah::tes_file_reading::threads::interior_cell:%s] Reference %08X is not in a cell?", this->loader->get_filename(), stub->formID);
                }
@@ -268,10 +258,6 @@ namespace dovah::tes_file_reading::threads {
       auto size = this->queue.size();
       this->progress.maximum = size;
       for (uint32_t i = 0; i < size; i++) {
-         if (this->loader->is_aborted()) {
-            dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_sub_block] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
-            break;
-         }
          this->progress.current = i;
          auto& desired = this->queue[i];
          //dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_sub_block] Thread %08X beginning with [WRLD:%08X]/(%d, %d)/(%d, %d) at position %08X.", std::this_thread::get_id(), desired.worldspaceID, desired.blockX, desired.blockY, desired.subBlockX, desired.subBlockY, desired.pos);
@@ -305,8 +291,7 @@ namespace dovah::tes_file_reading::threads {
                //
                auto* stub = this->make_stub_for_record();
                if (record.signature() == 'CELL') {
-                  if (!this->set_stub_parent(stub, desired.worldspaceID))
-                     continue;
+                  this->set_stub_parent(stub, desired.worldspaceID);
                }
                switch (group.header.type) {
                   case tes_file_group_type::cell_children:
@@ -315,8 +300,7 @@ namespace dovah::tes_file_reading::threads {
                      {
                         uint32_t cellID = group.getRawIDOfParentCell();
                         lo.local_formID_to_global_formID(this->loader, cellID);
-                        if (!this->set_stub_parent(stub, cellID))
-                           continue;
+                        this->set_stub_parent(stub, cellID);
                         if (!cellID)
                            dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_sub_block:%s] Form %08X is not in a cell?", this->loader->get_filename(), stub->formID);
                      }
@@ -345,10 +329,6 @@ namespace dovah::tes_file_reading::threads {
       auto size = this->queue.size();
       this->progress.maximum = size;
       for (uint32_t i = 0; i < size; i++) {
-         if (this->loader->is_aborted()) {
-            dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_persistent_cell_children] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
-            break;
-         }
          this->progress.current = i;
          auto& desired = this->queue[i];
          //dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_persistent_cell_children] Thread %08X beginning with [WRLD:%08X]/(%d, %d)/(%d, %d) at position %08X.", std::this_thread::get_id(), desired.worldspaceID, desired.blockX, desired.blockY, desired.subBlockX, desired.subBlockY, desired.pos);
@@ -384,8 +364,7 @@ namespace dovah::tes_file_reading::threads {
                if (form_type_is_reference(stub->form_type)) {
                   uint32_t cellID = group.getRawIDOfParentCell();
                   lo.local_formID_to_global_formID(this->loader, cellID);
-                  if (!this->set_stub_parent(stub, cellID))
-                     continue;
+                  this->set_stub_parent(stub, cellID);
                   if (!cellID)
                      dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_persistent_cell_children:%s] Reference %08X is not in a cell?", this->loader->get_filename(), stub->formID);
                }
@@ -412,10 +391,6 @@ namespace dovah::tes_file_reading::threads {
       auto size = this->queue.size();
       this->progress.maximum = size;
       for (uint32_t i = 0; i < size; i++) {
-         if (this->loader->is_aborted()) {
-            dovah::logging::print_line("[dovah::tes_file_reading::threads::game_setting] Thread %08X aborting as requested by owning file.", std::this_thread::get_id());
-            break;
-         }
          this->progress.current = i;
          auto& desired = this->queue[i];
          this->set_position(desired.pos);
@@ -431,28 +406,30 @@ namespace dovah::tes_file_reading::threads {
                if (!first.exists() || first.pos != desired.pos)
                   break;
                if (this->_groups[1].exists()) {
-                  detailed_notice error;
-                  error.code = notice_code::unexpected_nested_group_in_simple_top_group;
-                  error.set_file_offset(this->get_position());
-                  this->log_load_error(error); // also aborts the load
-                  break;
+                  auto error = std::make_unique<dovah::notices::file_load_errors::unexpected_nested_group_in_simple_top_group>();
+                  auto ex    = dovah::exceptions::file_load_failed();
+         
+                  error->filename    = this->loader->get_filename();
+                  error->file_offset = this->get_position();
+         
+                  ex.details.file_load_error = std::move(error);
+                  throw ex;
                }
             }
             if (ot == object_type::record) {
                auto& record = this->get_current_record();
                auto& group  = this->get_current_group();
                if (record.signature() != 'GMST') { // misplaced record
-                  detailed_notice error;
-                  error.code = notice_code::record_found_in_wrong_top_level_group;
-                  error.set_flag(detailed_notice::flag::has_cause_file);
-                  error.cause_form.localID = record.formID();
-                  error.cause_form.type    = form_type_info::signature_to_form_type(record.signature());
-                  error.set_flag(detailed_notice::flag::has_cause_form);
-                  error.set_cause_signature('GMST');
-                  error.set_cause_form_type(form_type::setting);
-                  error.set_file_offset(this->get_position());
-                  this->log_load_error(error); // also aborts the load
-                  break;
+                  auto error = std::make_unique<dovah::notices::file_load_errors::form_record_present_in_game_setting_group>();
+                  auto ex    = dovah::exceptions::file_load_failed();
+         
+                  error->filename    = this->loader->get_filename();
+                  error->file_offset = this->get_position();
+                  error->record.local_form_id = record.formID();
+                  error->record.signature     = record.signature();
+         
+                  ex.details.file_load_error = std::move(error);
+                  throw ex;
                }
                //
                bool found_data = false;

@@ -366,6 +366,8 @@ In practice, there are some holes in this design, stemming in large part from th
 
 The data structures for this feel like spaghetti. They're better than they used to be, but is there anything we can do to improve them further?
 
+One flaw I see (looking into a lot of this machinery on 4/27/2024 while trying to disentangle and rewrite the error handling) is that `file_loader` represents both something which *loads* a file and affords you functions to read from it as a stream, *and* the authoritative "owner" of the actual file data and metadata. This seems wrong. We should have a `dovah::tes::file` class which holds and "owns" the mapped file, and then all the various "loaders" should act like views into this single authoritative file object.
+
 ### Form stubs
 
 The `load` function will fail, returning without loading form data, under the following circumstances:

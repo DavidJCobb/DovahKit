@@ -5,7 +5,6 @@
 #include "../core.h"
 
 namespace dovah {
-   class detailed_notice;
    namespace tes_file_reading {
       class file_header_reader;
    }
@@ -45,10 +44,11 @@ namespace dovah {
          inline uint16_t size() const noexcept {
             return this->masters.size() + this->plugins.size();
          }
-         //
-         bool add(detailed_notice& out_error_if_any, const std::string& name, bool is_master_of_master = false);
+         
+         void add(const std::string& name, bool is_master_of_master = false);
+
          bool contains(const std::string& name) const noexcept;
-         //
+         
          void delete_contents();
    };
 }

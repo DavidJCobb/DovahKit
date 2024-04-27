@@ -26,6 +26,28 @@ namespace editor_helpers {
       constexpr const char* disambig = "backend warnings";
 
       #pragma region file load warnings
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::form_initial_record_is_partial*>(&warning)) {
+            auto subject = QString("[%1:%2]")
+               .arg(editor_helpers::form_type_name_to_string(casted->record.form_type))
+               .arg(editor_helpers::form_id_to_string(casted->record.global_id));
+
+            auto file = QString::fromStdString(casted->source_file);
+            if (file.isEmpty())
+               file = QObject::tr("<unknown file>");
+
+            if (casted->record_is_injected) {
+               return QObject::tr(
+                  "Form %1 in file %2 is flagged as a partial record but is the first loaded record for this form. "
+                  "It's also injected. These three facts combined will cause the game to skip loading this record, "
+                  "so DovahKit is skipping it as well."
+               ).arg(subject).arg(file);
+            }
+
+            return QObject::tr(
+               "Form %1 in file %2 is flagged as a partial record but is the first loaded record for this form. "
+               "The \"partial\" flag will not be honored."
+            ).arg(subject).arg(file);
+         }
          if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::form_override_has_armo_arma_mismatch*>(&warning)) {
             auto overridden_form = form_identifiers_to_string(&casted->overridden_form.stub);
             auto overriding_form = QString("[%1:%2]%3")
@@ -77,6 +99,16 @@ namespace editor_helpers {
             return QObject::tr(
                "Game setting \"%1\" (defined by a GMST form with file-local form ID %2) has an unrecognized name."
             ).arg(name).arg(local_id);
+         }
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::game_setting_overrides_a_real_form*>(&warning)) {
+            QString name      = QString::fromStdString(casted->setting_name);
+            auto    form      = form_identifiers_to_string(&casted->overridden_form);
+            auto    form_file = QString::fromStdString(casted->overridden_file);
+
+            return QObject::tr(
+               "A definition for game setting \"%1\" attempts to override %2 (defined in file %3). This definition "
+               "will not be loaded."
+            ).arg(name).arg(form).arg(form_file);
          }
          if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::game_setting_record_has_bad_form_id*>(&warning)) {
             bool no_name              = casted->setting_name.empty();
@@ -155,6 +187,54 @@ namespace editor_helpers {
                "A game setting record (GMST) for setting \"%1\" with form ID %2 contained unrecognized "
                "subrecord %3."
             ).arg(name).arg(global_id).arg(subrecord);
+         }
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::partial_info_override_has_different_parent*>(&warning)) {
+            auto subject = QString("[%1:%2]")
+               .arg(editor_helpers::form_type_name_to_string(casted->record.form_type))
+               .arg(editor_helpers::form_id_to_string(casted->record.global_id));
+
+            auto override_file = QString::fromStdString(casted->source_file);
+            if (override_file.isEmpty())
+               override_file = QObject::tr("<unknown file>");
+
+            auto original_file = QString::fromStdString(casted->source_file_for_overridden);
+            if (original_file.isEmpty())
+               original_file = QObject::tr("<unknown file>");
+
+            auto parent_prior = form_identifiers_to_string(casted->parent_of_overridden);
+            auto parent_after = form_identifiers_to_string(casted->parent_of_overriding);
+
+            return QObject::tr(
+               "TopicInfo %1, originally defined in file %3, has an override in file %2 that is flagged as partial "
+               "and that moves the TopicInfo from Topic %4 to Topic %5. Skyrim does not properly handle partial-flagged "
+               "TopicInfo overrides that re-parent the TopicInfo; depending on the precise circumstances under which "
+               "this override is loaded, Skyrim may inadvertently associate the TopicInfo with multiple Topics, may "
+               "desynchronize the TopicInfo such that it thinks it's inside of a different Topic than the one it's "
+               "actually in, or may discard an unrelated TopicInfo from the Topic that this TopicInfo has been moved to. "
+               "Though the effect that these issues have on game stability is not known as of this writing, this problem "
+               "should be considered unsafe. DovahKit will interpret this data by re-parenting the TopicInfo as normal, "
+               "but this is just the way the data is interpreted (in lieu of DovahKit actually trying to mimic the game's "
+               "utter confusion) and is not an attempt at repairing the data. If circumstances allow, you should remove "
+               "the \"partial\" flag from this override using xEdit or a similar tool."
+            ).arg(subject).arg(override_file).arg(original_file).arg(parent_prior).arg(parent_after);
+         }
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::singleton_form_is_redundantly_defined*>(&warning)) {
+            auto subject = QString("[%1:%2]")
+               .arg(editor_helpers::form_type_name_to_string(casted->record.form_type))
+               .arg(editor_helpers::form_id_to_string(casted->record.global_id));
+
+            auto prior_id = editor_helpers::form_id_to_string(casted->previous_form_id);
+
+            auto file = QString::fromStdString(casted->source_file);
+            if (file.isEmpty())
+               file = QObject::tr("<unknown file>");
+
+            return QObject::tr(
+               "Form %2 is a \"singleton\" form: the game only allows one form of this type to exist, and treats all "
+               "records of this type as overrides of that one single form, regardless of their form ID. However, this "
+               "particular record is redundant: it exists in file %1, which already defined this singleton form using "
+               "form ID %3."
+            ).arg(file).arg(subject).arg(prior_id);
          }
          if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::the_game_doesnt_load_new_actor_value_infos*>(&warning)) {
             auto subject = QString("[%1:%2]%3")

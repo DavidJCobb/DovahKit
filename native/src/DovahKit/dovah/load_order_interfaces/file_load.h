@@ -19,7 +19,6 @@ namespace dovah::load_order_interfaces {
          file_load_order& owner;
 
          void log_load_warning(detailed_notice&);
-         void log_load_error(detailed_notice&);
 
          void log_warning(const notices::base_file_load_warning&);
 

@@ -1,5 +1,4 @@
 #pragma once
-#include "../../detailed_notice.h"
 #include "elements.h"
 
 namespace dovah {
@@ -35,7 +34,7 @@ namespace dovah::tes_file_reading {
          record    _record;
          subrecord _subrecord;
          uint32_t  last_potential_group_parent = 0; // form ID: CELL, WRLD, DIAL
-         //
+         
          void read(void* buffer, uint32_t size) {
             this->_read_impl(buffer, size);
          }
@@ -57,9 +56,8 @@ namespace dovah::tes_file_reading {
          //
          void _read_impl(void* buffer, uint32_t size);
          //
-         void _reset_last_error();
-         bool _validate_record_signature();
-         //
+         void _validate_record_signature();
+         
       public:
          basic_reader() : _record(*this), _subrecord(*this) {
             for (uint32_t i = 0; i < this->_groups.size(); i++)
@@ -69,7 +67,6 @@ namespace dovah::tes_file_reading {
          const uint8_t*  file_data   = nullptr; // file data to read
          uint32_t        file_size   = 0;
          file_loader*    loader      = nullptr; // optional. needed for loading content that requires a load order
-         detailed_notice last_error;
          struct {
             bool allow_suspicious_record_signatures = false;
             bool allow_unknown_record_signatures    = true;

@@ -13,16 +13,14 @@ namespace dovah::tes_file_reading {
       using lo_interface_t = load_order_interfaces::file_load;
       public:
          //
-         // Subclasses should shadow at least (recommended_thread_count) with the desired number of 
-         // threads of that type. The (heavy_duty_thread_count) is an optional thread count that can 
-         // be used if hardware thread limits allow.
+         // Subclasses should shadow (recommended_thread_count) with the desired number of threads 
+         // of that type.
          //
          static constexpr int recommended_thread_count = 0;
-         static constexpr int heavy_duty_thread_count  = 0; // TODO: currently not used; can we get (file_loader) to take advantage of it?
-         //
+         
       protected:
          virtual void exec() = 0; // thread-local loading behavior should be defined in an override
-         //
+         
          std::thread thread;
          struct {
             //
@@ -34,21 +32,26 @@ namespace dovah::tes_file_reading {
             uint32_t current = 0;
             uint32_t maximum = 0;
          } progress;
-         //
+         
       private:
          static void _thread_handler(file_threaded_part_loader_base* instance);
-         //
+         
          std::atomic<bool> running = false; // no, (std::thread::joinable) is not the same thing; it returns (true) until (std::thread::join) is manually called
-         //
+         
       public:
          file_threaded_part_loader_base(file_loader& owner) : file_part_loader(owner) {}
-         //
+         
          void  start();
          void  wait_for();
          float assess_progress() const noexcept;
          inline bool is_running() const noexcept { return this->running; }
-         //
+         
          inline const std::thread& get_thread_object() const noexcept { return this->thread; }
+
+         struct {
+            std::exception_ptr captured;
+            size_t thrown_at_file_offset = 0;
+         } exception;
    };
 
    template<class C> struct _threaded_loader_recommended_thread_count {
