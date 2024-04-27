@@ -19,6 +19,17 @@ namespace dovah::exceptions {
          file_load_failed() : std::runtime_error("File load failed") {}
          file_load_failed(error_code ec) : std::runtime_error("File load failed"), code(ec) {}
 
+         // See: ./_docs/be careful with unique_ptr members.md
+         file_load_failed(const file_load_failed& src) : std::runtime_error("File load failed") {
+            *this = src;
+         }
+         file_load_failed& operator=(const file_load_failed& src) {
+            this->code = src.code;
+            if (auto* src_error = src.details.file_load_error.get())
+               this->details.file_load_error.reset((notices::base_file_load_error*)src_error->clone());
+            return *this;
+         }
+
          error_code code = error_code::see_details_object;
 
          struct {

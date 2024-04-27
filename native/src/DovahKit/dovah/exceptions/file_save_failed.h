@@ -48,6 +48,18 @@ namespace dovah::exceptions {
       public:
          file_save_failed(error_code ec) : std::runtime_error("File save failed"), code(ec) {}
 
+         // See: ./_docs/be careful with unique_ptr members.md
+         file_save_failed(const file_save_failed& src) : std::runtime_error("File save failed") {
+            *this = src;
+         }
+         file_save_failed& operator=(const file_save_failed& src) {
+            this->code = src.code;
+            this->details.unimplemented_form = src.details.unimplemented_form;
+            if (auto* src_error = src.details.form_save_error.get())
+               this->details.form_save_error.reset((notices::base_form_save_error*)src_error->clone());
+            return *this;
+         }
+
          error_code code;
 
          struct {
