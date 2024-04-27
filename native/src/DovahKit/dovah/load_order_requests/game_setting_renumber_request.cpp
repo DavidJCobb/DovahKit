@@ -8,7 +8,6 @@ namespace dovah {
       this->setting    = other.setting;
       this->desiredID  = other.desiredID;
       this->reservedID = other.reservedID;
-      this->code       = other.code;
       this->done       = other.done;
    }
    game_setting_renumber_request::~game_setting_renumber_request() {

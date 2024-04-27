@@ -69,7 +69,7 @@ namespace dovah::load_order_interfaces {
          bool is_active_file() const noexcept;
             
       protected:
-         form_load(file_load_order& o, const form_stub& t) : owner(o), target_stub(t) {}
+         form_load(file_load_order& o, form_stub& t) : owner(o), target_stub(t) {}
    };
 }
 

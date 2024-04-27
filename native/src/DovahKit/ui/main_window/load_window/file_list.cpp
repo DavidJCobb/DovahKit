@@ -1,12 +1,12 @@
-#include "file_list.h"
+#include "./file_list.h"
 #include <filesystem>
 #include <QDirIterator>
 #include <QHeaderView>
 #include <QLineEdit>
-#include "../../../dovah/files/tes_file_reading/file_header.h"
-#include "../../../editor/core.h"
-
 #include "helpers/windows.h"
+#include "dovah/exceptions/file_load_failed.h"
+#include "dovah/files/tes_file_reading/file_header.h"
+#include "editor/core.h"
 
 #pragma region LoadOrderFileListModel
 LoadOrderFileListModelItem::LoadOrderFileListModelItem(const dovah::tes_file_reading::file_header_reader& header, const QDateTime& created, const QDateTime& modified) {
@@ -251,11 +251,19 @@ void LoadOrderFileList::listFiles(dovah::game g) {
       auto ext  = info.completeSuffix().toLower(); // what the hell kind of name is this?
       if (ext != "esl" && ext != "esm" && ext != "esp")
          continue;
-      if (fh.load(path.toStdString().c_str())) { // TODO: use std::filesystem::path within the internal "dovah" library
-         created  = info.created();
-         modified = info.lastModified();
-         model->insert(fh, created, modified);
+      try {
+         fh.load(path.toStdString().c_str());
+      } catch (const dovah::exceptions::file_load_failed& ex) {
+         //
+         // We don't actually care about error details here, since we're just checking what 
+         // files in the directory are available and seem valid.
+         //
+         fh.clear();
+         continue;
       }
+      created  = info.created();
+      modified = info.lastModified();
+      model->insert(fh, created, modified);
       fh.clear();
    }
    //

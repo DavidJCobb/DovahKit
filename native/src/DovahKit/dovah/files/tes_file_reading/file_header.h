@@ -26,7 +26,7 @@ namespace dovah::tes_file_reading {
          
       public:
          void clear();
-         void load(const char* path); // throws on failure
+         void load(const char* path); // throws `dovah::exceptions::file_load_failed` on failure
          constexpr bool is_light() const noexcept { return (this->flags & flag::light) != 0; }
          constexpr bool is_master() const noexcept { return (this->flags & flag::master) != 0; }
    };
