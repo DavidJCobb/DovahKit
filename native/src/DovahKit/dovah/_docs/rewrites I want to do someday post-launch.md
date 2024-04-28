@@ -11,7 +11,7 @@
     * Currently, `DKPapyrusBoundScriptListPane` can't auto-commit changes to a script directly to a form-working-copy's VMAD, because `DKBoundScriptListModel` only keeps track of the VMAD itself and not the working-copy form (so it can't use `form_reference_t::set`). This means that form-editing dialogs have to manually commit changes (from the UI to the working-copy VMAD) on save. We *could* have the model track the working-copy form in order to allow auto-committing... *or* once the backend rewrite is done and working copies use bare `form_stub*` fields, it'll then be possible to give `DKPapyrusBoundScriptListPane` the ability to optionally auto-commit directly to a working-copy VMAD.
 
 * **Phase 2: Rewrite the renderer.**  
-  The current renderer design is difficult to maintain and not configurable for different use cases. It's not bad at all for, like, the third time I've ever built a renderer and the first time I've ever meaningfully succeeded, but it's not scalable in the ways I need it to be. It's easily the single worst "God object" I've ever written: this is the only time in my entire life that I've had to have *four separate `.cpp` files* for a single header. We need to figure out how best to divide up the renderer's systems and data, and figure out how to specify things like render pass and shader definitions as `constexpr` PODs in order to separate "data" from "code." We also need to make the renderer configurable: right now, it *always* preallocates enough VRAM resources to run the Render Window (i.e. enough to render a large portion of a worldspace), which is beyond excessive for things like previewing a single form or editing an actor's appearance.
+  The current renderer design is difficult to maintain and not configurable for different use cases. It's not bad at all for, like, the third time I've ever built a renderer and the first time I've ever meaningfully succeeded, but it's not scalable in the ways I need it to be. It's easily the single worst "God object" I've ever written: this is the only time in my entire life that I've had to have *four separate `.cpp` files* for a single header. We need to figure out how best to divide up the renderer's systems and data, and figure out how to specify things like render pass and shader definitions as `constexpr` PODs in order to separate "data" from "code." We also need to make the renderer configurable: right now, it *always* preallocates enough VRAM resources to run the Render Window (i.e. enough to render a large portion of a worldspace), which is beyond excessive for things like previewing a single form or editing an actor's appearance; and this, indeed, is why DovahKit will not ship with a Preview Window.
 
   This phase is expected to enable:
 
@@ -19,7 +19,8 @@
   * "Preview" pane shown when editing a form's 3D model (including its texture swaps)
   * Editing ActorBase appearances
     * This is something we'll have to actually lock down on initial release, since having users "fly blind" when editing appearances is straight-up not viable at all.
-    * A bonus feature we could offer here, once actor editing in general is available, is the ability to let the user draw a separate "custom facepaint" PNG file that we automatically bake (i.e. alpha-blend) onto an NPC's exported tintmask.
+    * A bonus feature we could offer here, once actor editing in general is available, is the ability to let the user draw a separate "custom facepaint" image file that we automatically bake (i.e. alpha-blend) onto an NPC's exported tintmask.
+      * ...And a *very far-future, if ever,* idea would be to let the user paint with the mouse directly onto the 3D render of the actor's face, as one can do in Blender.
   * Improvements to the renderer's accuracy (e.g. support for water, EffectShaders, etc.)
   * "Preview" pane for EffectShaders (akin to the unimplemented one in the FO4 CK)
 
@@ -31,6 +32,22 @@
   * Completion of all binds for editing objects
   * Navmesh editing
   * Terrain editing
+
+* **Phase ?: Refactor file loading.**  
+  Not sure where in the process to put this one.
+  
+  `file_load_order` should be renamed to `active_load_order` and made the end product of a load operation, with some temporary "load process" data structure actually handling (and containing the code for) the load operation. Additionally, the classes (and class hierarchy) for actually parsing and loading files is spaghetti. There are plans further below for redesigning all of this.
+
+* **Phase ?: Refactor Dovahscript.**  
+  Not sure where in the process to put this one.
+  
+  Dovahscript currently relies on *lots* of copying and pasting in order to implement the bulk of form access APIs. This means that refactoring how APIs work (e.g. adding new checks or changing internals) will be prohibitively difficult, and adding new APIs involves a lot of boilerplate. Pre-launch, I'm deliberately choosing *not* to fix this, because I don't want to commit to the wrong abstraction or development process. I want to get the APIs mostly feature-complete, if maybe lacking in some robustness and polish, and then -- after all core functionality is working -- look for common patterns and trends, pay careful attention to their edge-cases and exceptions, and *carefully* explore ways to cut down on duplication and boilerplate using metaprogramming.
+
+  This phase is expected to enable, or make it easier to implement, the following features:
+
+  * More ergonomic script APIs, e.g. DovahScript more consistently allowing you to "copy-assign" data sub-structures between forms or form components rather than having to manually copy individual members across data sub-structures.
+  * Potentially, changes to the script engine internals
+    * Currently, Dovahscript runs on a worker thread to limit the damage that an infinite loop in a script can do. I have some pie-in-the-sky ideas for optionally letting Dovahscript run on the main thread, which would make it viable to offer APIs that allow for stronger integration into the editor: think "add-ons" rather than "scripts". (**Do not take this as a promise or even a statement of intent,** but some examples of that kind of integration are attach points for adding scripted UI controls into native windows, and real-time scripted control over the Render Window.) This would require being able to configure the script engine's threading model at run-time, and adding *that* would, in turn, require changes to how basically all form access APIs work -- which, again, would be easier with less code duplication throughout Dovahscript.
 
 # General plans for the backend
 
@@ -52,6 +69,7 @@
     * And ditto for helper functions like `copy_form_reference_list`.
     * Ditto for severing outbound references to a target form, and for clearing data, too.
     * Okay, but does C++ support nestable pointers-to-member, i.e. `&SomeStruct::nestedStruct::member` such that you could use that from a `SomeStruct`?
+      * As of April 2024, I believe the answer is "extremely no." Perhaps a workaround would be to pass both forms and a lambda which, given a form, returns the desired member?
   * If possible, we should set `form_reference_t::operator=(const form_reference_t&) = delete`. This would significantly reduce the room for error when writing forms' boilerplate.
     * Why did we ever even have `operator=` for that? If it's only used during load, then can we replace it with a passkeyed accessor somehow?
   * In my bitstream classes, I implemented "multi-read" and "multi-write" methods: they used variadic template parameters to allow you to read or write fields in bulk. Can we write helper functions that behave similarly, for the various tasks a form might need to perform (i.e. clearing data, severing outbound references to a to-be-deleted form, cloning data, etc.)?
@@ -71,17 +89,17 @@ This would allow GUI code to operate on working copies without having to constan
 
 The namespaces should be:
 
-* `dovah`  
+* **`dovah`**  
   Top-level namespace for the backend.
-  * `form_data`  
+  * **`form_data`**  
     Namespace for form data classes -- one per form type, each templated on a `form_data_config` value.
-  * `form_components`  
+  * **`form_components`**  
     Namespace for form component classes, like VMAD or DEST; these are things that forms would multiply-inherit from in Bethesda's codebase, though we use composition in ours. Each component type would be templated on a `form_data_config` value.
-  * `form_fields`  
+  * **`form_fields`**  
     Namespace for common structs that recur across multiple form types, such as the "color" struct used for ACTI/CNAM and others.
-  * `forms`  
+  * **`forms`**  
     Namespace for loaded forms.
-  * `form_working_copies`  
+  * **`form_working_copies`**  
     Namespace for form working copies.
 
 ```c++
@@ -358,15 +376,51 @@ In practice, there are some holes in this design, stemming in large part from th
 
   The only way I can think of to remedy this while keeping `form_reference_t` more-or-less as-is would be to create custom container implementations that ensure that Use Info is properly tracked on their elements. Notably, the destructors on these containers *should not* perform those sorts of updates because we want to be able to unload the loaded form data. These custom container implementations should support any `T` provided that `T::clear(*loaded_form)` is callable.
 
-  Within form data, these custom containers would be conditional types, i.e. `tracked_form_pointer_list` for a "real" form and `std::vector<form_stub*>` for a working copy.
+  Within form data, these custom containers would be conditional types, i.e. `tracked_form_pointer_vector` for a "real" form and `std::vector<form_stub*>` for a working copy. It's fine for the typenames to be a little wordy, because inside a form data class, they'd be `using`'d as `form_ref_vector`, `form_ref_array<Size>`, and so on.
+
+  * We would of course need to be able to handle lists of sub-structures that themselves contain form refs, though. Could define generic containers that call functions like `T::clear` and so on, and then `using` them as `substruct_vector`, `substruct_array`, and so on?
 
 ## Improve form stub / file handling and loading
 
 ### File loading
 
-The data structures for this feel like spaghetti. They're better than they used to be, but is there anything we can do to improve them further?
+The data structures for this feel like spaghetti. They're better than they used to be back in DovahKit's very early proof-of-concept stage, but they're still years old and poorly designed. Is there anything we can do to improve them further?
 
-One flaw I see (looking into a lot of this machinery on 4/27/2024 while trying to disentangle and rewrite the error handling) is that `file_loader` represents both something which *loads* a file and affords you functions to read from it as a stream, *and* the authoritative "owner" of the actual file data and metadata. This seems wrong. We should have a `dovah::tes::file` class which holds and "owns" the mapped file, and then all the various "loaders" should act like views into this single authoritative file object.
+One major conceptual flaw I see (looking into a lot of this machinery on 4/27/2024 while trying to disentangle and rewrite the error handling) is that `file_loader` represents both something which *loads* a file and affords you functions to read from it as a stream, *and* the authoritative "owner" of the actual file data and metadata. (And describing that in reverse: its base class, `basic_reader`, could be a file *or* a view into a file, with this varying from subclass to subclass; and consequently `basic_reader` itself doesn't know how to get information, e.g. the name, about the file it's actually reading, because it doesn't know whether to "ask itself" or ask something else.) This feels wrong.
+
+We should have a `dovah::tes::file` class which holds and "owns" the mapped file, and then all the various "loaders" should act like views into this single authoritative file object.
+
+Some specific ideas, written down on 4/28/2024:
+
+* **`dovah::tes::file`** as a single TES file, with ownership of a mapped view, and with known information pulled from the header and stored as members. It should not contain or require an owning `file_load_order`. There should not be any functions for actually reading data from the mapped view (e.g. `read` and `unchecked_read`), nor should there be any other "stream" fields like a "current position." Outside code (e.g. `form_stub`s; load processes; etc.) would create a `file_view` (see below) to perform reads.
+
+  * But how, then, do we read the header information so that the `file` can store and report information about itself? Potentially? Have it create and use a throwaway `file_view` (see below) internally.
+
+* **`dovah::load_order_file`** as a subclass of `dovah::tes::file`, which adds an owning `file_load_order&` as well as runtime-specific flags (e.g. "is dummy file for hardcoded forms" and "is dummy file for none-stubs"). This is what a `file_load_order` would store and what `form_stub`s would use in their file list.
+
+  * In the current implementation, `form_stub`s identify their owning load order *via* their files, in order to keep the stubs' memory footprint to a minimum since we have so many of the things around. This is also why we have "dummy files" in the first place: so that `form_stub`s that were never loaded from a "real" file can still reach their owning load order.
+
+* **`dovah::tes::file_view`** as a view into any given `file`. This would be the counterpart to what is currently called `dovah::tes_file_reading::basic_reader`, with state for groups, records, and subrecords, and functions like `load_record_at` and `next_record_or_group`.
+
+  * An advantage of making `file_view` wrap a `file` is that if we encounter a structurally malformed file (e.g. a suspicious record signature, or an ill-formed `XXXX` subrecord), we'll be able to access the file data (most pertinently its name) when we throw an error. Right now, `dovah::tes_file_reading::basic_reader` is actually incapable of providing the filename as diagnostic information in these cases: a `basic_reader` doesn't know if it's a file (`file_loader`) or a view into a file (any other subclass), and consequently, doesn't know how to find its way to *whatever file it's reading* to query that file's name.
+
+  * Perhaps we could even template this and allow some compile-time configuration, e.g. a choice of whether to throw exceptions on invalid data or `assert` correctness instead. (Why would you ever want to `assert` that user-supplied data is well-formed? Because we crawl the files fairly completely during the initial file load, and after that, on-demand form data loads operate on the assumption that the file *definitely is* structurally valid and reads will never throw. Checks for e.g. record signature validity are skipped, and we assert instead of throwing, but this is conditioned on a run-time flag that gets set on the whole file post-file-load. In the new system, a `form_stub` would create disposable `file_view`s for loading each file, and so we may as well move the throw/assert choice to compile-time, no?)
+
+  * And as long as we're rebuilding the logic for reading file content, we may as well add support for endian-flipped files, conditioned behind a `constexpr const bool`. Bethesda themselves have this support: if the file header's signature reads as `4SET`, then they know that the file endianness doesn't match the system's native endianness, and they byteswap every value they read.
+
+    * Why condition it behind a `constexpr bool`? Two reasons. First: if we rewrite the file load system, then we'll want to be able to compare benchmarks as directly to the old system as possible to ensure there's no notable perf hit. We'd want to disable any endian-flip support for these initial tests to ensure the branching and similar doesn't impact performance; then enable it later and measure the performance impact.
+
+    * Endian-flip branches should probably be marked as `[[unlikely]]`.
+
+    * We'd have to audit use info and form load code to ensure that no byte-stitching is done in either place, lest any endian-flipped data break there.
+
+    * How would we test this? We don't have any endian-flipped files, and creating one would be very cumbersome.
+
+* **`dovah::tes::record_reader`** and **`dovah::tes::subrecord_reader`** as the interfaces for reading records, i.e. the replacements for `dovah::tes_file_reading::record` and `dovah::tes_file_reading::subrecord`.
+
+  * The `record_reader` interface shouldn't offer any functions for reading arbitrary data (i.e. no `read` or `unchecked_read` functions). Clients that are given access to a record should be required to obey the file structure (i.e. open, read, and close subrecords). There are internals for file parsing that require pulling data from a record, but those functions could be made internal or the relevant reads could otherwise be done manually.
+
+    This would be an improvement over the current design, wherein form loaders, form use info builders, and any custom parses (e.g. the frontend caching subrecords of interest) can just choose not to obey the file structure -- to pluck arbitrary bytes out of a record without bothering to heed subrecord boundaries.
 
 ### Form stubs
 
@@ -384,7 +438,7 @@ The `load` function will fail, returning without loading form data, under the fo
     * Under what circumstances *can* that file offset be 0? We need to document that, and any other sentinel and uninitialized values within form stubs.
   * `instantiate_hardcoded_form` returns `nullptr`
     * Under what circumstances is this allowed to occur? I assume it's only if we don't have a loaded-form class defined for a given form type, but we should formally document this!
-  * ``create_blank_loaded_form_by_type` returns `nullptr`
+  * `create_blank_loaded_form_by_type` returns `nullptr`
     * Under what circumstances is this allowed to occur? I assume it's only if we don't have a loaded-form class defined for a given form type, but we should formally document this!
 
 As noted in the list above, several of these failure cases should be assertion failures instead; and more rigorous documentation is needed for form stubs, their sentinel values, and when their contents are undefined, too.
@@ -405,65 +459,21 @@ Miscellaneous:
 
 * `form_creation_request::commit` and friends should return a `form_stub&`, so callers don't have to check whether the request succeeded even when it doesn't throw an exception.
 
-## Get rid of notice codes because they suck and are bad
+## Change `dovah::notices::base_error` and its subclasses into exceptions and throw them directly, instead of wrapping them
 
-DovahKit reports all backend warnings and errors via an enum called `dovah::notice_code` and a struct called `dovah::detailed_notice`. The notice codes are similar to WinAPI error codes, and the "detailed notice" struct contains fields for every possible piece of error information that a warning or error could provide.
+Some backstory.
 
-This sucks. We should instead design this similarly to exceptions -- not in the sense of them being thrown, but rather in the sense of:
+When I first implemented DovahKit's backend -- prototyping it circa December 2019 IIRC, so nearly half a decade ago as I write this -- I didn't know that things like `std::current_exception()` existed: I didn't know that you could catch an exception on a worker thread and then re-throw it on the main thread. As a result, the backend originally didn't use exceptions.
 
-* Heap-allocating all "notices"
-* Having a common base class
-* Having subclasses for specific notice types
+Additionally, one design goal was to reduce heap allocations -- a classic case of optimizing too early, and for the wrong thing. (If DovahKit encounters warnings or errors when loading a file, *who cares* about the perf on signalling them? There shouldn't be that many warnings or errors unless the file is outright malformed; and the bulk of the warnings DovahKit is even capable of signalling come after files initially load, when loading a form's full data on demand.) Did I also avoid exceptions as a bad optimization, based on the widely held misconception that they're "slow?" I don't know.
 
-This would remove the dependency on a massive enum (such that anything that emits a notice has to be recompiled if we ever edit the list of possible notices) and would also make most notice objects smaller, at the cost of some memory locality for lists of notices. We shouldn't be emitting *that* many notices during the load process, *especially* since we lazy-load forms (and form loading is where the bulk of possible notices during any sort of loading would come from), so taking a few trips to the heap for emitting notices shouldn't slow things down to any noticeabe degree.
+The "solution" to all of these issues was to use a struct called `detailed_notice`, which contained optional fields for all the information an error could possibly report: filenames, file offsets, form stub pointers, form IDs, the works. Additionally, a `detailed_notice` contained a single error code: a massive enum similar to Win32 error codes. This meant that every warning or error was the same C++ type and the same size: no heap allocation; no polymorphism; and they could be handled uniformly, including by any error-reporting code. This, of course, sucked. It made control flow less clear (already a problem because the file loader was spaghetti; see the "File loading" section above for planned improvements in that regard) and it meant that anything that signals or interprets warning or error codes had to include a single header defining that enum, which is *not great* when you have to add a new warning or error code.
 
-### Analysis
+There was one "benefit" of the system, but I basically didn't use it, and never needed it. A `detailed_notice` could, in theory, be stored for later, without having to heap-allocate it. The Log Window was designed to store them, and it used this to identify duplicate errors and avoid displaying the same error multiple times: even if two errors stringified to identical text, if any error information in the `detailed_notice` differed, then they could be told apart. This is moderately valuable when dealing with loading form data on-demand, since the same form may be loaded multiple times and it'd kind of suck to spam the log with duplicate errors. In practice, however, this... doesn't matter? If we're filtering duplicate messages, then all we really care about is the text. And we never used the stored `detailed_notice` objects for anything else, so if anything, they were just wasting memory.
 
-Within the backend, it looks like all errors pass through these spots:
+As of April 28, 2024, however, that whole system for signalling warnings and errors has been thrown into the dustbin, replaced with "notice" objects and exceptions. Notice objects come in two flavors: subclasses of `base_warning`, and subclasses of `base_error`. They rely on inheritance, so each kind of warning or error contains fields for just the information that's actually relevant (and unless those fields are `std::optional`, they will *always* be present -- no need to check presence flags before using them). Errors are wrapped in subclasses of `std::exception` and then thrown; when thrown from a worker thread, we carry them to the main thread using `std::exception_ptr` and friends.
 
-* `file_load_order::_log_load_warning` and `file_load_order::_log_save_warning` ferry the passed-in `detailed_notice` to whatever (optional) callbacks have been stored on the load order, though only if the notice isn't empty.
-* The classes within `load_order_interfaces` mainly exist as conduits to ferry `detailed_notice`s to the "log warning" functions. There are two additional behaviors, though:
-  * `load_order_interfaces::file_load::log_load_warning` stores the warning in a list (if available) on the `file_load_order`'s "save/load state," before invoking the callback.
-  * `load_order_interfaces::file_load::log_load_error` doesn't pass the error to any callback; instead, the error is stored on the `file_load_order`'s "save/load state" as an error.
-
-**The best plan for this task, then, would be:**
-
-1. Add member functions to `DovahKitCore` that can take a subclassable "warning" object and a subclassable "error" object. The base classes should be polymorphic (i.e. virtual destructor) both to avoid potential leaks and to allow for `dynamic_cast` and `typeid(instance_ref)`.
-1. Add logging callbacks and helper functions to `file_load_order` which work with these new types. Add the requisite functionality to `DovahKitCore` and an overload to `editor_helpers::warning_or_error_to_string` to support handling the new types outside of the backend.
-1. Replace all warnings emitted by form loaders and form component loaders with dedicated warning structs. The overwhelming majority of these will be "warn if wrong type," where some given subrecord is pointed at a form of the wrong type (e.g. an Activator specifying a Quest as its water type; that kind of thing), so in practice we can knock out 196 emitted warnings with just a handful of warning types.
-   * Any notice codes that are converted from notice-code/detailed-notice to dedicated warning classes can also be removed from the code that prints warnings to the UI, which will be a modest but helpful additional reduction in the number of `detailed_notice` search hits.
-1. Modify the `load_order_interfaces` types to support logging the new warning types. Don't add anything for hard errors just yet.
-   * Once that's done, we can then start looking for calls to the detailed-notice logging functions and replacing those one by one.
-1. Investigate each case where `detailed_notice` is used for hard errors, and look into replacing those. This will be a bit of a challenge since `detailed_notice` can be empty, and several processes store a `detailed_notice` member and only track whether they've encountered an error based on whether that member is still empty. We'll have to handle these case-by-case.
-
-Statistics on `detailed_notice`:
-
-* 684 search hits for the classname across all H and CPP files in the project (using Notepad++ to search)
-* Many hits outside of form loaders and form component loaders come from pieces of code setting flags on `detailed_notice` to indicate what informational values are present. The actual number of times we *use* the class will be quite a bit lower.
-* 67 hits are just the class definition itself
-* 66 hits from `file_load_order` (header and CPP)
-* 196 hits come from warnings emitted by form loaders or form component loaders
-* 103 hits come from the function that converts `detailed_notice` instances to UI-printable strings, since many error messages check flags to see if certain information is present. (This is something else we can remove the need for by using class hierarchies and inheritance for warnings: a warning of a given type can *require* certain pertinent information to be present, such that its presence need not be checked for.)
-* 26 more hits come from UI code to display errors and warnings (e.g. during load, or for the log list window).
-* 82 hits come from Qt MOC.
-  * 8 hits come from Qt MOC for DovahKitCore, i.e. where `detailed_notice` is a signal parameter.
-  * 29 hits come from Qt MOC for `detailed_notice_dispatcher`, which IIRC is used to dispatch notices across threads.
-  * 4 hits come from Qt MOC for the log list view.
-  * The above are for Debug; duplicates exist for Release.
-* 23 hits come from `nifDK`. The NIF loading code uses the same design pattern, but a different class: `nifDK::detailed_notice`. These are used exclusively to report load errors, and never warnings.
-  * 1 hit comes from the class definition itself.
-  * 11 hits come from the code for loading NIF files (i.e. the `file` class), which tracks whether it's run into an error via a potentially-empty `nifDK::detailed_notice` member.
-  * 11 more hits from the NIF `file_reader`, which also has an "error" member.
-* That leaves 121 miscellaneous uses in the backend.
-
-Specific places where notice codes are used:
-
-* Data member `basic_reader::last_error`, set by some member functions on the class.
-* Data member `file_writer::error`, set internally when errors occur during saving.
-  * Related: `tes_file_writing::write_results::error`.
-* `file_load_order_normalizer::add(...)`, as a mechanism for returning an error with basic error information. The error is written to via a `detailed_notice&` argument. Notably, this function is recursive, since it has to handle dependencies of dependencies and so on, so it also checks whether the passed-in argument is *already* a logged error.
-* `file_header_reader::load`, where an optional pointer-type out-argument is used to signal errors when reading a file header (e.g. filesystem problem; malformed file).
-* Logging warnings when a form's full data is invalid; done by each individual form loader.
+This is a massive improvement. Took a week or so and it was well worth the effort. However, it's still not perfect. As a relic of the old system, the "error" notices are not exceptions in themselves; they're basically P.O.D.s, which get wrapped (via `std::unique_ptr`) in an exception when thrown. The "error" notices could in theory be stored, but again, we don't do that. **We really should just turn them into exceptions and throw them directly.** Fortunately, that's a much simpler change than, y'know, replacing the entire `detailed_notice` system in order to get to where we are now.
 
 # Outside the backend
 
@@ -495,7 +505,7 @@ The inability to do conditional binds (i.e. move camera if move selection succee
 
 Worldinput doesn't need a redesign, nor does it need to be replaced with scripting.
 
-I said earlier that GUIs limit the ability to compose things compared to a scripting language. However, the hardcoded composition of inputs offered within Worldinput is already highly flexible thanks to me spending, what, four months? [1] on codifying my human intuition into a monstrously complicated set of programmatically enforceable rules. Ditching Worldinput would mean forcing control scheme authors to have to anticipate and account for every single keybind/combination conflict, one by one.
+I said earlier that GUIs limit the ability to compose things compared to a scripting language. However, the hardcoded composition of inputs offered within Worldinput is already highly flexible thanks to me spending, what, four months? [see next section] on codifying my human intuition into a monstrously complicated set of programmatically enforceable rules. Ditching Worldinput would mean forcing control scheme authors to have to anticipate and account for every single keybind/combination conflict, one by one.
 
 #### A history of Worldinput just so I don't forget
 
@@ -522,7 +532,7 @@ These cases helped motivate a redesign of Worldinput (named `worldinput2` until 
 
   Ideally we'd add a "sync/async" option to `DKFormPicker`, with it filling async by default, and then have sync versions on Cell View and friends just so we have fewer changes to test.
 
-* Investigate adding icons for all of the form types. Investigate having these icons show up in the `DKFormPicker`.
+* Investigate adding icons for all of the form types. Investigate having these icons show up in the Object Window.
 
 * `DKGenericListModel` isn't half bad as-is, but for a few issues. We should write a replacement.
 
