@@ -91,17 +91,26 @@ void LogListModel::dataAcquireComplete() {
    int none_stubs = 0;
    DovahKitCore::get().for_each_form_of_type(dovah::form_type::none, [&none_stubs](dovah::form_stub* stub) {
       if (stub->is_none_stub())
+         //
+         // Some "legitimate" form stubs can be none-type, such as the Papyrus Persistence Form, 
+         // so we have to actually check if the none-type stub is a none-stub.
+         //
          ++none_stubs;
       return false;
    });
    if (none_stubs) {
       this->addTextEntry(
          tr("Forms in the loaded files contain dangling references to %1 non-existent form(s). Check the \"Missing\" category in the Object Window for a list of the missing forms' form IDs, and view the Use Info on entries to see what's referring to them. It's normal for official game files to have this problem.", "log window")
-            .arg(none_stubs)
+            .arg(none_stubs),
+         LogListModelItem::Type::Warning,
+         LogListModelItem::Context::FileLoad
       );
    }
-   //
-   this->addTextEntry(tr("All files have been loaded.", "log window"));
+   this->addTextEntry(
+      tr("All files have been loaded.", "log window"),
+      LogListModelItem::Type::Unspecified,
+      LogListModelItem::Context::FileLoad
+   );
 }
 void LogListModel::dataSaveImminent() {
    this->addTextEntry(tr("Saving active file...", "log window"));
@@ -297,12 +306,14 @@ QVariant LogListModel::headerData(int section, Qt::Orientation orientation, int 
    return {};
 }
 
-void LogListModel::addTextEntry(const QString& text) {
+void LogListModel::addTextEntry(const QString& text, LogListModelItem::Type type, LogListModelItem::Context context) {
    auto* item = new item_type(text);
-   //
+   item->metadata.type    = type;
+   item->metadata.context = context;
+   
    auto first_inserted = this->children.size();
    auto last_inserted  = first_inserted;
-   this->beginInsertRows(QModelIndex(), first_inserted, last_inserted);
+   this->beginInsertRows({}, first_inserted, last_inserted);
    this->children.push_back(item);
    this->endInsertRows();
 }

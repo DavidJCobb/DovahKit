@@ -5981,6 +5981,15 @@
     <ClInclude Include="dovah\notices\file_load_warnings\game_setting_value_unreadable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data_swallowed_subrecord.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data_insufficient_rooms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_save_errors\by_form_component\extra_data\room_ref_data\too_many_linked_rooms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6978,6 +6987,7 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\exceptions\_docs\be careful with unique_ptr members.md" />
+    <None Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

@@ -263,12 +263,12 @@ namespace editor_helpers {
                   return QObject::tr(
                      "Unable to load the value of a game setting record (GMST) for setting \"%1\" with file-local form ID %2. "
                      "The game setting's value type (bool/float/int/etc.) is unknown."
-                  ).arg(name).arg(local_id);
+                  ).arg(name).arg(global_id);
                }
                return QObject::tr(
                   "Unable to load the value of a game setting record (GMST) for setting \"%1\" with form ID %2. The game setting's "
                   "value type (bool/float/int/etc.) is unknown."
-               ).arg(name).arg(global_id);
+               ).arg(name).arg(local_id);
             }
             //
             // We should never emit this error for nameless settings, because we know a priori that we can't identify 
@@ -511,6 +511,65 @@ namespace editor_helpers {
                   ).arg(subject).arg(casted->serialized_stage_index).arg(casted->stage_count);
                }
             #pragma endregion
+            #pragma region extra data
+               #pragma region room_ref_data
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::extra_data::room_ref_data_insufficient_rooms*>(&warning)) {
+                     QString subject = form_identifiers_to_string(&casted->subject);
+                     //
+                     return QObject::tr(
+                        "The room-ref-data for %1 declared that it would have %2 linked rooms, but only had %3.",
+                        disambig
+                     ).arg(subject).arg(casted->expected).arg(casted->found);
+                  }
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::extra_data::room_ref_data_swallowed_subrecord*>(&warning)) {
+                     using expected_field_type = std::decay_t<decltype(*casted)>::expected_field_type;
+
+                     QString subject   = form_identifiers_to_string(&casted->subject);
+                     QString expected;
+                     QString signature = cobb::qt::four_cc_to_string(casted->signature_seen);
+                     QString ordinal;
+
+                     switch (casted->expected_field) {
+                        case expected_field_type::imagespace:
+                           expected = QObject::tr("INAM (imagespace");
+                           break;
+                        case expected_field_type::lighting_template:
+                           expected = QObject::tr("LNAM (lighting template");
+                           break;
+                        case expected_field_type::linked_room:
+                           expected = QObject::tr("XLRM (linked room");
+                           break;
+                     }
+
+                     if (casted->expected_field == expected_field_type::linked_room) {
+                        if (casted->signature_seen == 'XRMR') {
+                           return QObject::tr(
+                              "The room-ref-data for %1 is malformed. Subrecord %2 was expected, but subrecord %3 was found.",
+                              disambig
+                           ).arg(subject).arg(expected).arg(signature);
+                        }
+
+                        if (casted->is_nth_linked_room.has_value()) {
+                           ordinal = QString::number(casted->is_nth_linked_room.value());
+                        } else {
+                           ordinal = QObject::tr("?", "XLRM subrecord swallow: missing linked room index");
+                        }
+                        return QObject::tr(
+                           "The room-ref-data for %1 is malformed. Subrecord %2 was expected, but subrecord %3 was found. The game "
+                           "doesn't double-check the signature, so it will blindly swallow the found subrecord for use as linked "
+                           "room #%4.",
+                           disambig
+                        ).arg(subject).arg(expected).arg(signature).arg(ordinal);
+                     }
+
+                     return QObject::tr(
+                        "The room-ref-data for %1 is malformed. Subrecord %2 was expected, but subrecord %3 was found. The game "
+                        "doesn't double-check the signature, so it will blindly swallow the found subrecord.",
+                        disambig
+                     ).arg(subject).arg(expected).arg(signature);
+                  }
+               #pragma endregion
+            #pragma endregion
             #pragma region package event dialogue
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::package_event_dialogue::unrecognized_subrecord*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);
@@ -661,7 +720,7 @@ namespace editor_helpers {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   //
                   return QObject::tr(
-                     "Shout %1 defined %2 words. Shouts must have exactly three words",
+                     "Shout %1 defined %2 words. Shouts must have exactly three words.",
                      disambig
                   ).arg(subject).arg(casted->word_count);
                }

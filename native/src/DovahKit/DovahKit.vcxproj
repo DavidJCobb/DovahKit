@@ -970,6 +970,8 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\attack_data\expected_event_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\container\item_has_bad_owner_form_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\destruction\stage_serialized_index_out_of_bounds.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data_insufficient_rooms.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data_swallowed_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\package_event_dialogue\unrecognized_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\cell_type_not_yet_known.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\data_for_wrong_cell_type.h" />
@@ -989,6 +991,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\_all.h" />
     <ClInclude Include="dovah\notices\form_save_errors\base_list_size_too_large_to_serialize_error.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\destruction\too_many_stages.h" />
+    <ClInclude Include="dovah\notices\form_save_errors\by_form_component\extra_data\room_ref_data\too_many_linked_rooms.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\papyrus\too_many_perk_fragments.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\papyrus\too_many_properties_on_script.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\papyrus\too_many_scene_phase_fragments.h" />
@@ -2437,6 +2440,7 @@
     <None Include="dovah\load_order_interfaces\form_load.inl" />
     <None Include="dovah\load_order_processes\file_save.md" />
     <None Include="dovah\load_order_requests\README.md" />
+    <None Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data.md" />
     <None Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.md" />
     <None Include="dovah\utils\file_prefix.inl" />
     <None Include="dovah\_docs\compiled script files.md" />

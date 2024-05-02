@@ -1,4 +1,6 @@
 #pragma once
+#include <cstdint>
+#include <limits>
 #include "../extra_data.h"
 
 namespace dovah::loaded_forms::components::extra {
@@ -12,14 +14,16 @@ namespace dovah::loaded_forms::components::extra {
                has_lighting_template = 0x08,
             };
          };
-         //
-         uint8_t  linked_room_count = 0; // this is read as a dword
-         uint8_t  flags             = 0; // 
-         uint16_t pad02;                 // 
+
+         static constexpr int max_linked_room_count = std::numeric_limits<uint8_t>::max();
+         
+      public:
+         uint8_t flags = 0;
          form_reference_t lighting_template;
          form_reference_t imagespace;
          std::vector<form_reference_t> linked_rooms;
-         //
+         
+      public:
          virtual extra_data_type get_type() const noexcept { return extra_data_type::room_ref_data; };
          virtual load_result load(tes_subrecord_reader&, load_interface_t&) override;
          virtual bool        load(tes_record_reader&,    load_interface_t&) override;

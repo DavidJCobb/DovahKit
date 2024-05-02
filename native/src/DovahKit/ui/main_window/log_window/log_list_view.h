@@ -110,7 +110,7 @@ class LogListModel : public QAbstractTableModel {
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
       
    public slots:
-      void addTextEntry(const QString&);
+      void addTextEntry(const QString&, LogListModelItem::Type type = LogListModelItem::Type::Unspecified, LogListModelItem::Context context = LogListModelItem::Context::Unspecified);
       void clear();
 };
 

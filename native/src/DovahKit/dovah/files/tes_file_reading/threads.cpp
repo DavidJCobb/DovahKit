@@ -481,6 +481,7 @@ namespace dovah::tes_file_reading::threads {
                   found_data = true;
                   //
                   bool no_read_error = true;
+                  bool type_is_known = true;
                   switch (working.get_type()) {
                      case game_setting_type::boolean:
                         {
@@ -499,6 +500,7 @@ namespace dovah::tes_file_reading::threads {
                         no_read_error = subrecord.read(working.value.s);
                         break;
                      default:
+                        type_is_known = false;
                         if (!working.name.empty()) {
                            notices::file_load_warnings::game_setting_value_type_unknown notice;
                            notice.setting_name = working.name;
@@ -520,7 +522,7 @@ namespace dovah::tes_file_reading::threads {
                      //
                      this->log_load_warning(notice);
                   }
-                  if (!subrecord.is_at_end()) {
+                  if (type_is_known && !subrecord.is_at_end()) {
                      notices::file_load_warnings::game_setting_value_has_extra_content notice;
                      notice.setting_name  = working.name;
                      notice.data_size     = subrecord.size();
