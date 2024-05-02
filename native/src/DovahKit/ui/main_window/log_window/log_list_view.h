@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <QAbstractItemModel>
+#include <QIcon>
 #include <QString>
 #include <QTableView>
 #include "dovah/core.h"
@@ -25,8 +26,10 @@ class LogListModelItem {
       };
       enum class Context {
          Unspecified,
+         FileLoad,
          FormLoad,
          FormSave,
+         FileSave,
       };
 
    public:
@@ -55,9 +58,30 @@ class LogListModel : public QAbstractTableModel {
    public:
       using item_type = LogListModelItem;
 
+      struct Column { // scoped loose enum
+         Column() = delete;
+         enum {
+            Context,
+            Type,
+            Text,
+            File,
+            _COUNT
+         };
+      };
+      static constexpr const size_t ColumnCount = Column::_COUNT;
+
    protected:
       QVector<item_type*> children;
       QHash<dovah::bare_form_id_t, QVector<item_type*>> warnings_cause_by_form; // used to avoid showing duplicate warnings for on-demand form loads
+      struct {
+         struct {
+            QIcon file_load;
+            QIcon file_save;
+            QIcon form_load;
+         } contexts;
+         QIcon error;
+         QIcon warning;
+      } _icons;
       
       bool _has_matching_notice(dovah::bare_form_id_t, QString text) const;
 

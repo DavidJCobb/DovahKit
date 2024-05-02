@@ -6977,6 +6977,7 @@
     <None Include="dovah\form_stub.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="dovah\exceptions\_docs\be careful with unique_ptr members.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

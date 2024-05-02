@@ -1,0 +1,16 @@
+<svg version="1.1" viewBox="0 0 100 100" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <path
+      name="line-outer"
+      d="M 50,5 L 95,25 L 92,75 L 50,95 L 8,75 L 5,25 Z"
+      fill="none"
+      stroke="#0AF"
+      stroke-width="10"
+   />
+   <path
+      name="line-inner"
+      d="M 5,27 L 50,50 L 95,27 M 50,50 L 50,95"
+      fill="none"
+      stroke="#0AF"
+      stroke-width="7.5"
+   />
+</svg>

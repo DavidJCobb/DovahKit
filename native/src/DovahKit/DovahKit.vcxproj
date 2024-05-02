@@ -2410,6 +2410,7 @@
     <None Include="cpp.hint" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\bs_hash.inl" />
+    <None Include="dovah\exceptions\_docs\be careful with unique_ptr members.md" />
     <None Include="dovah\files\bsa\bsa_archive.inl" />
     <None Include="dovah\files\bsa\packed_folder_info.inl" />
     <None Include="dovah\files\bsa\README.md" />

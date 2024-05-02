@@ -20,5 +20,15 @@
         <file>papyrus-status-icons/inherited.png</file>
         <file>papyrus-status-icons/inherited-edited.png</file>
         <file>papyrus-status-icons/removed.png</file>
+        <file>log-window-icons/error-16.png</file>
+        <file>log-window-icons/error-64.png</file>
+        <file>log-window-icons/warning-16.png</file>
+        <file>log-window-icons/warning-64.png</file>
+        <file>log-window-icons/context-file-load-16.png</file>
+        <file>log-window-icons/context-file-load-64.png</file>
+        <file>log-window-icons/context-form-16.png</file>
+        <file>log-window-icons/context-form-64.png</file>
+        <file>log-window-icons/context-file-save-16.png</file>
+        <file>log-window-icons/context-file-save-64.png</file>
     </qresource>
 </RCC>

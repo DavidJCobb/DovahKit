@@ -1,0 +1,77 @@
+<svg version="1.1" viewBox="0 0 64 64" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <defs>
+      <path id="page"
+         d="M 53.5,2.5 L 53.5,61.5 L 10.5,61.5 L 10.5,14.5 L 22.5,2.5 Z"
+      />
+      <path id="dogear"
+         d="M 13,17 L 25,17 L 25,5"
+         stroke-linecap="square"
+         stroke-linejoin="square"
+      />
+      <clipPath id="page-clip">
+         <use href="#page" />
+      </clipPath>
+      <clipPath id="page-inner-rect-clip">
+         <rect
+            x="13"
+            y="5"
+            width="38"
+            height="54"
+         />
+      </clipPath>
+      <linearGradient id="stroke-grad"
+         gradientTransform="rotate(60 0.5 0.5)"
+      >
+         <stop offset="  0%" stop-color="#919191" />
+         <stop offset=" 50%" stop-color="#676767" />
+      </linearGradient>
+      <radialGradient id="page-grad"
+         cx="50%"
+         cy="100%"
+         r="100%"
+      >
+         <stop offset="  0%" stop-color="#EAEAEA" />
+         <stop offset=" 50%" stop-color="#FAFAFA" />
+         <stop offset=" 70%" stop-color="#FFFFFF" />
+      </radialGradient>
+   </defs>
+   <use
+      name="page-base-fill"
+      href="#page"
+      fill="url(#page-grad)"
+   />
+   <line
+      name="gradient-gutter-left"
+      x1="14.5" x2="14.5"
+      y1="64" y2="10"
+      stroke="#FFF"
+      stroke-width="3"
+   />
+   <line
+      name="gradient-gutter-right"
+      x1="49.5" x2="49.5"
+      y1="64" y2="10"
+      stroke="#FFF"
+      stroke-width="3"
+   />
+   <use href="#dogear"
+      name="dogear-shadow"
+      x="2"
+      y="2"
+      stroke="#FAFAFA"
+      stroke-width="5"
+      fill="none"
+   />
+   <use href="#dogear"
+      stroke="#BEBEBE"
+      stroke-width="2.5"
+      fill="#FFF"
+   />
+   <use
+      name="page-stroke"
+      href="#page"
+      stroke="url(#stroke-grad)"
+      stroke-width="5"
+      fill="none"
+   />
+</svg>

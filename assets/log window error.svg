@@ -1,0 +1,21 @@
+<svg version="1.1" viewBox="0 0 100 100" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <circle
+      stroke="none"
+      fill="#D00"
+      cx="50" cy="50" r="50"
+   />
+   <line
+      stroke="#FFF"
+      stroke-width="15"
+      stroke-linecap="square"
+      x1="32.5" x2="67.5"
+      y1="32.5" y2="67.5"
+   />
+   <line
+      stroke="#FFF"
+      stroke-width="15"
+      stroke-linecap="square"
+      x2="32.5" x1="67.5"
+      y1="32.5" y2="67.5"
+   />
+</svg>

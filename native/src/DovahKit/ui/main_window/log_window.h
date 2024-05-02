@@ -8,6 +8,8 @@ class LogWindow : public QWidget {
    public:
       LogWindow(QWidget* parent);
       
-   private:
+   protected:
       Ui::LogWindow ui;
+
+      void _redraw_selected_entry();
 };
