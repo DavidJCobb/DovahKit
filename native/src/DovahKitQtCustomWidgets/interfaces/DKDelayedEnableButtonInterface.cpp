@@ -35,7 +35,7 @@ QString DKDelayedEnableButtonInterface::name() const {
 }
 
 QString DKDelayedEnableButtonInterface::group() const {
-   return "DovahKit";
+   return "DovahKit: General";
 }
 
 QIcon DKDelayedEnableButtonInterface::icon() const {

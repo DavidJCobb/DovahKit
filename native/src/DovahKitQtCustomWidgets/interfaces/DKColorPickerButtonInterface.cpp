@@ -34,7 +34,7 @@ QString DKColorPickerButtonInterface::name() const {
 }
 
 QString DKColorPickerButtonInterface::group() const {
-   return "DovahKit";
+   return "DovahKit: General";
 }
 
 QIcon DKColorPickerButtonInterface::icon() const {

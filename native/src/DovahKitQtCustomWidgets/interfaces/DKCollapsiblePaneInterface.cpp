@@ -48,7 +48,7 @@ QString DKCollapsiblePaneInterface::name() const {
 }
 
 QString DKCollapsiblePaneInterface::group() const {
-   return "DovahKit";
+   return "DovahKit: General";
 }
 
 QIcon DKCollapsiblePaneInterface::icon() const {

@@ -34,7 +34,7 @@ QString DKPapyrusBoundScriptListPaneInterface::name() const {
 }
 
 QString DKPapyrusBoundScriptListPaneInterface::group() const {
-   return "DovahKit";
+   return "DovahKit: Forms and form data";
 }
 
 QIcon DKPapyrusBoundScriptListPaneInterface::icon() const {

@@ -1,0 +1,54 @@
+#pragma once
+#include <string_view>
+#include <QComboBox>
+#include <QWidget>
+
+namespace dovah {
+   class compiled_papyrus_script;
+}
+
+class DKPapyrusFragmentFunctionPicker : public QWidget {
+   Q_OBJECT;
+   public:
+      DKPapyrusFragmentFunctionPicker(QWidget* parent = nullptr);
+
+      #if !defined(QT_DESIGNER_LIB)
+      QString currentScriptname() const noexcept;
+      QString currentFunction() const noexcept;
+      void setCurrentScriptname(const QString&);
+      void setCurrentScriptname(const std::string_view);
+      void setCurrentFunction(const QString&);
+      void setCurrentFunction(const std::string_view);
+      
+      int scriptnameMaxLength() const noexcept;
+      void setScriptnameMaxLength(size_t) noexcept;
+      int functionMaxLength() const noexcept;
+      void setFunctionMaxLength(size_t) noexcept;
+      
+      void addScriptname(const QString&);
+      void clearAvailableScriptnames();
+      void clearCurrentValues();
+      void removeScriptname(const QString&);
+      #endif
+      
+   signals:
+      void currentScriptnameChanged(const QString&);
+      void currentFunctionChanged(const QString&);
+      
+   protected:
+      struct script {
+         QString name;
+         dovah::compiled_papyrus_script* compiled = nullptr;
+      };
+
+      QList<script> scripts;
+      struct {
+         QComboBox* scriptname = nullptr;
+         QComboBox* function   = nullptr;
+      } _subwidgets;
+
+      #if !defined(QT_DESIGNER_LIB)
+      script* _getScriptData(const QString& name);
+      script* _getOrCreateScriptData(const QString& name);
+      #endif
+};

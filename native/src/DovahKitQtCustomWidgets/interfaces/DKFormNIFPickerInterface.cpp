@@ -34,7 +34,7 @@ QString DKFormNIFPickerInterface::name() const {
 }
 
 QString DKFormNIFPickerInterface::group() const {
-   return "DovahKit";
+   return "DovahKit: Forms and form data";
 }
 
 QIcon DKFormNIFPickerInterface::icon() const {

@@ -34,7 +34,7 @@ QString DKCompactObjectReferencePickerInterface::name() const {
 }
 
 QString DKCompactObjectReferencePickerInterface::group() const {
-   return "DovahKit";
+   return "DovahKit: Forms and form data";
 }
 
 QIcon DKCompactObjectReferencePickerInterface::icon() const {

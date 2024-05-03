@@ -55,9 +55,6 @@
     <QtMoc Include="interfaces\DKTextureAssetPaneInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="interfaces\DKObjectReferencePickerInterface.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="interfaces\DKQuestAliasPickerInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -116,6 +113,15 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKCompactObjectReferencePicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKPapyrusFragmentFunctionPicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="interfaces\DKPapyrusFragmentFunctionPickerInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="interfaces\DKObjectReferencePickerInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -208,6 +214,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="interfaces\DKCompactObjectReferencePickerInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKPapyrusFragmentFunctionPicker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="interfaces\DKPapyrusFragmentFunctionPickerInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

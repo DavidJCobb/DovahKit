@@ -2,7 +2,6 @@
 #include <QInputDialog>
 #include <QMenu>
 #include <QMessageBox>
-#include "../../generic/PapyrusFragmentEditor.h"
 #include "../../generic/QStandardItemModelDKEx.h" // enhanced QStandardItemModel
 #include "../../../helpers/qt/basic_bindings.h"
 #include "../../../dovah/core.h"

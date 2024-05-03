@@ -34,7 +34,7 @@ QString DKFormPickerInterface::name() const {
 }
 
 QString DKFormPickerInterface::group() const {
-   return "DovahKit";
+   return "DovahKit: Forms and form data";
 }
 
 QIcon DKFormPickerInterface::icon() const {

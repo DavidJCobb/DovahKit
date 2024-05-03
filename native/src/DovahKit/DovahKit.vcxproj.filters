@@ -576,9 +576,6 @@
     <ClCompile Include="ui\generic\QStandardItemModelDKEx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\generic\PapyrusFragmentEditor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="editor\papyrus_dictionary.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2287,6 +2284,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\widget-dialogs\DKCompactObjectReferencePickerDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKPapyrusFragmentFunctionPicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -6058,9 +6058,6 @@
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_stages.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="ui\generic\PapyrusFragmentEditor.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_objectives.ui">
       <Filter>Form Files</Filter>
     </QtUic>
@@ -6283,9 +6280,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\generic\PapyrusFragmentEditor.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\papyrus_dictionary.h">
@@ -6562,6 +6556,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\widget-dialogs\DKCompactObjectReferencePickerDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKPapyrusFragmentFunctionPicker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

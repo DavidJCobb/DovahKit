@@ -2,7 +2,6 @@
 #include <QInputDialog>
 #include <QMenu>
 #include <QMessageBox>
-#include "../../generic/PapyrusFragmentEditor.h"
 #include "../../generic/QStandardItemModelDKEx.h" // enhanced QStandardItemModel
 #include "../../../helpers/qt/basic_bindings.h"
 #include "../../../dovah/core.h"
@@ -270,19 +269,19 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
       #pragma endregion
       #pragma region Fragment
          {
-            PapyrusFragmentEditor* widget = this->ui.logEntryFragment;
+            auto* widget = this->ui.logEntryFragment;
             widget->setScriptnameMaxLength(std::numeric_limits<uint16_t>::max());
             widget->setFunctionMaxLength(std::numeric_limits<uint16_t>::max());
             auto& papyrus = this->form.script_data;
             for (auto& script : papyrus.scripts)
                widget->addScriptname(script.name.c_str());
             //
-            QObject::connect(widget, &PapyrusFragmentEditor::currentScriptnameChanged, this, [this](const QString& name) {
+            QObject::connect(widget, &DKPapyrusFragmentFunctionPicker::currentScriptnameChanged, this, [this](const QString& name) {
                auto* lo = this->_get_log_entry();
                if (lo) 
                   lo->fragment.filename = name.toStdString().c_str();
             });
-            QObject::connect(widget, &PapyrusFragmentEditor::currentFunctionChanged, this, [this](const QString& name) {
+            QObject::connect(widget, &DKPapyrusFragmentFunctionPicker::currentFunctionChanged, this, [this](const QString& name) {
                auto* lo = this->_get_log_entry();
                if (lo)
                   lo->fragment.function = name.toStdString().c_str();
@@ -561,8 +560,8 @@ void QuestTabStages::_redraw_entry_settings() {
    this->ui.logEntryFlagFail->setChecked(ptr->flags & loaded_t::LogEntry::flag::fail);
    this->ui.logEntryNextQuest->setFormStub(ptr->next_quest_id.get_form_stub());
    this->ui.logEntryText->setPlainText(ptr->journal_text.c_str());
-   this->ui.logEntryFragment->setCurrentScriptname(ptr->fragment.filename.c_str());
-   this->ui.logEntryFragment->setCurrentFunction(ptr->fragment.function.c_str());
+   this->ui.logEntryFragment->setCurrentScriptname(ptr->fragment.filename);
+   this->ui.logEntryFragment->setCurrentFunction(ptr->fragment.function);
    this->ui.logEntryConditions->model()->setTarget(this->stub, ptr->conditions, true);
 }
 

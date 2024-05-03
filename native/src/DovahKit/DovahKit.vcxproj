@@ -819,7 +819,6 @@
     </ClCompile>
     <ClCompile Include="ui\generic\FormsOfTypeCombobox.cpp" />
     <ClCompile Include="ui\generic\ObservableStandardItemModel.cpp" />
-    <ClCompile Include="ui\generic\PapyrusFragmentEditor.cpp" />
     <ClCompile Include="ui\generic\QLinedTreeView.cpp" />
     <ClCompile Include="ui\generic\QSortFilterProxyModelDKEx.cpp" />
     <ClCompile Include="ui\generic\QStandardItemModelDKEx.cpp" />
@@ -873,6 +872,7 @@
     <ClCompile Include="widgets\DKKeyPickerWidget.cpp" />
     <ClCompile Include="widgets\DKObjectReferencePicker.cpp" />
     <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp" />
+    <ClCompile Include="widgets\DKPapyrusFragmentFunctionPicker.cpp" />
     <ClCompile Include="widgets\DKQuestAliasPicker.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
@@ -1020,6 +1020,7 @@
     <QtMoc Include="widgets\DKDelayedEnableButton.h" />
     <QtMoc Include="widgets\DKCompactObjectReferencePicker.h" />
     <QtMoc Include="widgets\widget-dialogs\DKCompactObjectReferencePickerDialog.h" />
+    <QtMoc Include="widgets\DKPapyrusFragmentFunctionPicker.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />
     <QtMoc Include="widgets\DKFormNIFPicker.h" />
@@ -2193,7 +2194,6 @@
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_edit.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_param.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h" />
-    <QtMoc Include="ui\generic\PapyrusFragmentEditor.h" />
     <QtMoc Include="ui\generic\QSortFilterProxyModelDKEx.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_objectives.h" />
     <ClInclude Include="lua.h" />
@@ -2287,7 +2287,6 @@
     <QtUic Include="ui\form_windows\textureset.ui" />
     <QtUic Include="ui\form_windows\voicetype.ui" />
     <QtUic Include="ui\form_windows\word_of_power.ui" />
-    <QtUic Include="ui\generic\PapyrusFragmentEditor.ui" />
     <QtUic Include="ui\main_window.ui" />
     <QtUic Include="ui\main_window\cell_view.ui" />
     <QtUic Include="ui\main_window\default_object_window.ui" />

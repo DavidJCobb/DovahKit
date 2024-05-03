@@ -34,7 +34,7 @@ QString DKQuestAliasPickerInterface::name() const {
 }
 
 QString DKQuestAliasPickerInterface::group() const {
-   return "DovahKit";
+   return "DovahKit: Forms and form data";
 }
 
 QIcon DKQuestAliasPickerInterface::icon() const {

@@ -43,6 +43,9 @@ A widget that can be used to select a single RGB(A) color. It displays as a butt
 with the color drawn on it, and with the hex code for the color rendered as text 
 atop the drawn color.
 
+### DKDelayedEnableButton
+A button that can be set to disable itself and only enable after a timed delay. It can indicate the delay via a spinner icon, a progress bar along the bottom edge, or a simple numeric label.
+
 ### DKFormListPane
 A table widget useful for editing lists of forms, e.g. the list of grasses used by a 
 LandTexture. The widget can optionally display buttons to manipulate its contents 
@@ -77,8 +80,14 @@ top-level Data folder.
 A widget for selecting an ObjectReference form via drop-downs or (eventually) by picking 
 it in the Render Window.
 
+#### DKCompactObjectReferencePicker
+Similar to `DKObjectReferencePicker`, but it displays as a single button that opens a dialog.
+
 ### DKPapyrusBoundScriptListPane
 A panel for editing the scripts bound to a form, or the properties set on those scripts.
+
+### DKPapyrusFragmentFunctionPicker
+Allows a user to specify a scriptname and function name to use as a Papyrus fragment.
 
 ### DKTextureAssetPane
 A frame capable of rendering a game asset &mdash; either a DDS file or a TextureSet 

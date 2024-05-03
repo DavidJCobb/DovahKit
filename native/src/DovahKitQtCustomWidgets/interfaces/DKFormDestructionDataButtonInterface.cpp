@@ -34,7 +34,7 @@ QString DKFormDestructionDataButtonInterface::name() const {
 }
 
 QString DKFormDestructionDataButtonInterface::group() const {
-   return "DovahKit";
+   return "DovahKit: Forms and form data";
 }
 
 QIcon DKFormDestructionDataButtonInterface::icon() const {

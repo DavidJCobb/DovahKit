@@ -34,7 +34,7 @@ QString DKFormListPaneInterface::name() const {
 }
 
 QString DKFormListPaneInterface::group() const {
-   return "DovahKit";
+   return "DovahKit: Forms and form data";
 }
 
 QIcon DKFormListPaneInterface::icon() const {

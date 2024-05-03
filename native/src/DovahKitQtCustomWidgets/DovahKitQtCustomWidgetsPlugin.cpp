@@ -14,6 +14,7 @@
 #include "interfaces/DKFormDestructionDataButtonInterface.h"
 #include "interfaces/DKDelayedEnableButtonInterface.h"
 #include "interfaces/DKCompactObjectReferencePickerInterface.h"
+#include "interfaces/DKPapyrusFragmentFunctionPickerInterface.h"
 
 DovahKitQtCustomWidgetsPlugin::DovahKitQtCustomWidgetsPlugin(QObject* parent) : QObject(parent) {
    widgets.append(new DKCollapsiblePaneInterface(this));
@@ -29,6 +30,7 @@ DovahKitQtCustomWidgetsPlugin::DovahKitQtCustomWidgetsPlugin(QObject* parent) : 
    widgets.append(new DKFormNIFPickerInterface(this));
    widgets.append(new DKFormDestructionDataButtonInterface(this));
    widgets.append(new DKDelayedEnableButtonInterface(this));
+   widgets.append(new DKPapyrusFragmentFunctionPickerInterface(this));
 }
 
 QList<QDesignerCustomWidgetInterface*> DovahKitQtCustomWidgetsPlugin::customWidgets() const {

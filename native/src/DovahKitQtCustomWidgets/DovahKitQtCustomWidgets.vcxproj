@@ -117,6 +117,7 @@
     <ClCompile Include="interfaces\DKGameFilePickerInterface.cpp" />
     <ClCompile Include="interfaces\DKObjectReferencePickerInterface.cpp" />
     <ClCompile Include="interfaces\DKPapyrusBoundScriptListPaneInterface.cpp" />
+    <ClCompile Include="interfaces\DKPapyrusFragmentFunctionPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKQuestAliasPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
@@ -131,6 +132,7 @@
     <ClCompile Include="widgets\DKHeaderView.cpp" />
     <ClCompile Include="widgets\DKObjectReferencePicker.cpp" />
     <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp" />
+    <ClCompile Include="widgets\DKPapyrusFragmentFunctionPicker.cpp" />
     <ClCompile Include="widgets\DKQuestAliasPicker.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
     <None Include="cpp.hint" />
@@ -178,6 +180,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\form_types.h" />
+    <QtMoc Include="widgets\DKPapyrusFragmentFunctionPicker.h" />
     <QtMoc Include="interfaces\DKFormNIFPickerInterface.h" />
     <QtMoc Include="widgets\DKFormNIFPicker.h" />
     <QtMoc Include="widgets\DKFormDestructionDataButton.h" />
@@ -186,6 +189,7 @@
     <QtMoc Include="interfaces\DKDelayedEnableButtonInterface.h" />
     <QtMoc Include="widgets\DKCompactObjectReferencePicker.h" />
     <QtMoc Include="interfaces\DKCompactObjectReferencePickerInterface.h" />
+    <QtMoc Include="interfaces\DKPapyrusFragmentFunctionPickerInterface.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
     <QtMoc Include="widgets\DKObjectReferencePicker.h" />
     <QtMoc Include="widgets\DKQuestAliasPicker.h" />

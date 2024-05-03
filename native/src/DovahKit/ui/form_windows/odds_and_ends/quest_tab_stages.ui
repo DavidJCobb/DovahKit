@@ -183,9 +183,12 @@
          </layout>
         </item>
         <item>
-         <widget class="PapyrusFragmentEditor" name="logEntryFragment" native="true">
-          <property name="focusPolicy">
-           <enum>Qt::TabFocus</enum>
+         <widget class="DKPapyrusFragmentFunctionPicker" name="logEntryFragment">
+          <property name="minimumSize">
+           <size>
+            <width>8</width>
+            <height>0</height>
+           </size>
           </property>
          </widget>
         </item>
@@ -220,15 +223,14 @@
    <header>widgets/DKFormPicker.h</header>
   </customwidget>
   <customwidget>
+   <class>DKPapyrusFragmentFunctionPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKPapyrusFragmentFunctionPicker.h</header>
+  </customwidget>
+  <customwidget>
    <class>ConditionList</class>
    <extends>QWidget</extends>
    <header>condition_list.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>PapyrusFragmentEditor</class>
-   <extends>QWidget</extends>
-   <header>../../generic/PapyrusFragmentEditor.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
@@ -241,7 +243,6 @@
   <tabstop>logEntryText</tabstop>
   <tabstop>logEntryFlagComplete</tabstop>
   <tabstop>logEntryFlagFail</tabstop>
-  <tabstop>logEntryFragment</tabstop>
   <tabstop>logEntryConditions</tabstop>
  </tabstops>
  <resources/>
