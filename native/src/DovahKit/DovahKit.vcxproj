@@ -696,7 +696,6 @@
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
     <ClCompile Include="ui\form_windows\_base.cpp" />
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
-    <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp" />
     <ClCompile Include="ui\generic\QItemSelectionModelEx.cpp" />
     <ClCompile Include="ui\main_window\object_window\filter_info.cpp" />
     <ClCompile Include="ui\main_window\render_window.cpp" />
@@ -825,8 +824,6 @@
     <ClCompile Include="ui\generic\QSortFilterProxyModelDKEx.cpp" />
     <ClCompile Include="ui\generic\QStandardItemModelDKEx.cpp" />
     <ClCompile Include="ui\generic\QTextEncodingValidator.cpp" />
-    <ClCompile Include="ui\generic\RefPickerButton.cpp" />
-    <ClCompile Include="ui\generic\windows\ref_picker_window.cpp" />
     <ClCompile Include="ui\main_window.cpp" />
     <ClCompile Include="ui\main_window\cell_view.cpp" />
     <ClCompile Include="ui\main_window\cell_view\cell_list.cpp" />
@@ -864,6 +861,8 @@
     <ClCompile Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_ini_tests.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
+    <ClCompile Include="widgets\DKCompactObjectReferencePicker.cpp" />
+    <ClCompile Include="widgets\DKDelayedEnableButton.cpp" />
     <ClCompile Include="widgets\DKFormDestructionDataButton.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
     <ClCompile Include="widgets\DKFormNIFPicker.cpp" />
@@ -882,6 +881,7 @@
     <ClCompile Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBSABrowseDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBoundScriptDialog.cpp" />
+    <ClCompile Include="widgets\widget-dialogs\DKCompactObjectReferencePickerDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKFormDestructionDataDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKFormDestructionStageDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKFormNIFPickerDialog.cpp" />
@@ -1017,6 +1017,9 @@
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="ui\utils\bind.h" />
     <ClInclude Include="ui\utils\DKStyledItemDelegate.h" />
+    <QtMoc Include="widgets\DKDelayedEnableButton.h" />
+    <QtMoc Include="widgets\DKCompactObjectReferencePicker.h" />
+    <QtMoc Include="widgets\widget-dialogs\DKCompactObjectReferencePickerDialog.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />
     <QtMoc Include="widgets\DKFormNIFPicker.h" />
@@ -2188,8 +2191,6 @@
     <QtMoc Include="ui\form_windows\quest.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_list.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_edit.h" />
-    <QtMoc Include="ui\generic\RefPickerButton.h" />
-    <QtMoc Include="ui\generic\windows\ref_picker_window.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_param.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h" />
     <QtMoc Include="ui\generic\PapyrusFragmentEditor.h" />
@@ -2215,7 +2216,6 @@
     <ClInclude Include="ui\main_window\_debug_hooks\list_none_stubs.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.h" />
     <QtMoc Include="ui\main_window\delete_form_dialog\delete_form_table.h" />
-    <QtMoc Include="ui\generic\DelayedAvailabilityButton.h" />
     <QtMoc Include="ui\main_window\delete_form_dialog.h" />
     <QtMoc Include="ui\form_windows\cell.h" />
     <ClInclude Include="editor\helpers\make_editor_id_for_duplicate.h" />
@@ -2288,7 +2288,6 @@
     <QtUic Include="ui\form_windows\voicetype.ui" />
     <QtUic Include="ui\form_windows\word_of_power.ui" />
     <QtUic Include="ui\generic\PapyrusFragmentEditor.ui" />
-    <QtUic Include="ui\generic\windows\ref_picker_window.ui" />
     <QtUic Include="ui\main_window.ui" />
     <QtUic Include="ui\main_window\cell_view.ui" />
     <QtUic Include="ui\main_window\default_object_window.ui" />
@@ -2319,6 +2318,7 @@
     <QtUic Include="ui\options_window\options_window.ui" />
     <QtUic Include="ui\options_window\pages\options_page_3d_camera.ui" />
     <QtUic Include="widgets\widget-dialogs\DKBoundScriptDialog.ui" />
+    <QtUic Include="widgets\widget-dialogs\DKCompactObjectReferencePickerDialog.ui" />
     <QtUic Include="widgets\widget-dialogs\DKFormDestructionDataDialog.ui" />
     <QtUic Include="widgets\widget-dialogs\DKFormDestructionStageDialog.ui" />
     <QtUic Include="widgets\widget-dialogs\DKFormNIFPickerDialog.ui" />

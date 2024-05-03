@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tabBasic">
       <attribute name="title">
@@ -404,13 +404,6 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="1" colspan="2">
-        <widget class="RefPickerButton" name="fillFromPredefined">
-         <property name="text">
-          <string>PushButton</string>
-         </property>
-        </widget>
-       </item>
        <item row="6" column="3">
         <widget class="QComboBox" name="createVerb">
          <property name="sizePolicy">
@@ -641,6 +634,9 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="1" colspan="2">
+        <widget class="DKCompactObjectReferencePicker" name="fillFromPredefined"/>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tabPackages">
@@ -820,9 +816,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>RefPickerButton</class>
-   <extends>QPushButton</extends>
-   <header>../../generic/RefPickerButton.h</header>
+   <class>DKCompactObjectReferencePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKCompactObjectReferencePicker.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
@@ -848,7 +844,6 @@
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
   <tabstop>fillTypePredefined</tabstop>
-  <tabstop>fillFromPredefined</tabstop>
   <tabstop>fillTypeUniqueActor</tabstop>
   <tabstop>fillFromUniqueActorBase</tabstop>
   <tabstop>fillTypeLocRefType</tabstop>

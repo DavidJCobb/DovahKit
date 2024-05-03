@@ -22,7 +22,7 @@
     </widget>
    </item>
    <item row="0" column="0" colspan="4">
-    <layout class="QGridLayout" name="layoutRunOn" columnstretch="1,1,1,4,1,0">
+    <layout class="QGridLayout" name="layoutRunOn" columnstretch="1,1,1,4,1">
      <item row="0" column="3">
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
@@ -139,8 +139,8 @@
           <number>0</number>
          </property>
          <item row="0" column="0">
-          <widget class="RefPickerButton" name="runOnButton">
-           <property name="text">
+          <widget class="DKCompactObjectReferencePicker" name="runOnButton">
+           <property name="placeholder">
             <string>Select...</string>
            </property>
           </widget>
@@ -390,19 +390,18 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>DKCompactObjectReferencePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKCompactObjectReferencePicker.h</header>
+  </customwidget>
+  <customwidget>
    <class>FormsOfTypeCombobox</class>
    <extends>QComboBox</extends>
    <header>../../generic/FormsOfTypeCombobox.h</header>
   </customwidget>
-  <customwidget>
-   <class>RefPickerButton</class>
-   <extends>QPushButton</extends>
-   <header>../../generic/RefPickerButton.h</header>
-  </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>runOn</tabstop>
-  <tabstop>runOnButton</tabstop>
   <tabstop>runOnDropdown</tabstop>
   <tabstop>flagSwapSubjectAndTarget</tabstop>
   <tabstop>function</tabstop>

@@ -7,8 +7,8 @@
 #include <QWidget>
 #include "dovah/data/conditions.h"
 #include "dovah/forms/components/conditions.h"
-#include "../../generic/RefPickerButton.h"
 #include "widgets/DKFormPicker.h"
+#include "widgets/DKCompactObjectReferencePicker.h"
 
 class ConditionParameterEditor : public QWidget {
    Q_OBJECT
@@ -46,7 +46,7 @@ class ConditionParameterEditor : public QWidget {
          QLineEdit*           textbox  = nullptr;
          QDoubleSpinBox*      spinbox  = nullptr;
          DKFormPicker*        form     = nullptr;
-         RefPickerButton*     ref      = nullptr;
+         DKCompactObjectReferencePicker* ref = nullptr;
       } subwidgets;
 
       std::array<QSignalBlocker, 6> _getSubwidgetsBlocker();

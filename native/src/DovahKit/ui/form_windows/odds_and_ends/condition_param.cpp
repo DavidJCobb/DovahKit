@@ -74,7 +74,7 @@ ConditionParameterEditor::ConditionParameterEditor(dovah::form_stub& containing_
    lambda(this->subwidgets.textbox  = new QLineEdit);
    lambda(this->subwidgets.spinbox  = new QDoubleSpinBox);
    lambda(this->subwidgets.form     = new DKFormPicker);
-   lambda(this->subwidgets.ref      = new RefPickerButton);
+   lambda(this->subwidgets.ref      = new DKCompactObjectReferencePicker);
    //
    this->subwidgets.spinbox->setRange(std::numeric_limits<float>::min(), std::numeric_limits<float>::max());
    this->subwidgets.form->setAllowNone(true);
@@ -166,8 +166,8 @@ ConditionParameterEditor::ConditionParameterEditor(dovah::form_stub& containing_
       this->_get_parameter().form = stub;
       emit this->valueChanged();
    });
-   QObject::connect(this->subwidgets.ref, &RefPickerButton::valueChanged, this, [this]() {
-      auto* stub = this->subwidgets.ref->value();
+   QObject::connect(this->subwidgets.ref, &DKCompactObjectReferencePicker::refChanged, this, [this]() {
+      auto* stub = this->subwidgets.ref->ref();
       //
       if (this->_is_event_parameter()) {
          if (this->parameter_index == 2) {
@@ -352,7 +352,7 @@ void ConditionParameterEditor::rebuild() {
                const auto blocker = QSignalBlocker(w);
                this->_setCurrentWidget(w);
                //
-               w->setValue(param.form);
+               w->setRef(param.form);
                break;
             } else {
                auto* w = this->subwidgets.form;

@@ -104,7 +104,7 @@
       </widget>
      </item>
      <item>
-      <widget class="DelayedAvailabilityButton" name="buttonOK">
+      <widget class="DKDelayedEnableButton" name="buttonOK">
        <property name="text">
         <string>OK</string>
        </property>
@@ -132,9 +132,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>DelayedAvailabilityButton</class>
-   <extends>QPushButton</extends>
-   <header>../generic/DelayedAvailabilityButton.h</header>
+   <class>DKDelayedEnableButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKDelayedEnableButton.h</header>
   </customwidget>
   <customwidget>
    <class>DeleteFormDialogList</class>
@@ -142,6 +142,12 @@
    <header>delete_form_dialog/delete_form_table.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>formsPendingDelete</tabstop>
+  <tabstop>formsPendingUpdate</tabstop>
+  <tabstop>buttonCancel</tabstop>
+  <tabstop>buttonOK</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

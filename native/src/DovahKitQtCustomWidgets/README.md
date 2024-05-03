@@ -122,3 +122,11 @@ behind a check for the relevant macro:
 
 That macro is automatically defined by Qt whenever Qt's `designer` module is loaded, and 
 that module is only useful when writing plug-ins for Qt Designer.
+
+### Qt Designer integrations
+
+* As of May 2, 2024, it's impossible to add custom widgets to the "Morph into" menu for any widget types, custom or otherwise. The morph menu functionality exists [here](https://code.qt.io/cgit/qt/qttools.git/tree/src/designer/src/lib/shared/morphmenu.cpp?id=18ca583362025df1d62b1f4c7e48237b9a9c019a), and all widget type checks and morph categories are hardcoded.
+
+* A `Q_GADGET` type can't be nested inside of a `Q_OBJECT` type, because it'll cause Qt's MOC to choke and apply the gadget's `Q_PROPERTY`s and the like to the `Q_OBJECT`. Your code will compile right up until anything causes the MOC to run for those types, and then you'll get janky Qt build errors (I say, as if there's any other kind).
+
+* ...but that's fine, because Qt Designer doesn't appear to actually support `Q_GADGET`-type properties on widgets anyway! Their UI and models are perfectly capable of supporting "nested properties," which is how they're able to display things like `QFont` and `QSize` as whole data structures, but literally all of that functionality appears to be hardcoded. So struct-type properties can't actually be made configurable in Qt Designer as of May 2, 2024.

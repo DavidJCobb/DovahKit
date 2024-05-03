@@ -381,9 +381,6 @@
     <ClCompile Include="ui\main_window\delete_form_dialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\generic\DelayedAvailabilityButton.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ui\main_window\delete_form_dialog\delete_form_table.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -529,12 +526,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\form_windows\odds_and_ends\condition_edit.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\generic\windows\ref_picker_window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\generic\RefPickerButton.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\data\story_manager.cpp">
@@ -2287,6 +2278,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\load_order_processes\file_save.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKDelayedEnableButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKCompactObjectReferencePicker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-dialogs\DKCompactObjectReferencePickerDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -6055,9 +6055,6 @@
     <QtUic Include="ui\form_windows\odds_and_ends\condition_edit.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="ui\generic\windows\ref_picker_window.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_stages.ui">
       <Filter>Form Files</Filter>
     </QtUic>
@@ -6157,6 +6154,9 @@
     <QtUic Include="widgets\widget-dialogs\DKFormDestructionStageDialog.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="widgets\widget-dialogs\DKCompactObjectReferencePickerDialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\main_window.h">
@@ -6240,9 +6240,6 @@
     <QtMoc Include="ui\main_window\delete_form_dialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="ui\generic\DelayedAvailabilityButton.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="ui\main_window\delete_form_dialog\delete_form_table.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -6280,12 +6277,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_edit.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\generic\RefPickerButton.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\generic\windows\ref_picker_window.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\odds_and_ends\condition_param.h">
@@ -6562,6 +6553,15 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\widget-dialogs\DKFormDestructionDataDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKDelayedEnableButton.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKCompactObjectReferencePicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\widget-dialogs\DKCompactObjectReferencePickerDialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

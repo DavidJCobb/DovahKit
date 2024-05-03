@@ -6,7 +6,6 @@
 #include "../../../helpers/qt/strings.h"
 #include "../../../editor/core.h"
 #include "../../generic/FormsOfTypeCombobox.h"
-#include "../../generic/RefPickerButton.h"
 #include "../../../dovah/forms/factories/hardcoded.h"
 #include "../../../dovah/data/conditions.h"
 #include "../../../dovah/data/story_manager.h"
@@ -111,7 +110,7 @@ ConditionEditDialog::ConditionEditDialog(dovah::form_stub& containing_form, work
          //
          this->_updateRunOn();
       });
-      QObject::connect(this->ui.runOnButton, &RefPickerButton::valueChanged, this, [this](dovah::form_stub* stub) {
+      QObject::connect(this->ui.runOnButton, &DKCompactObjectReferencePicker::refChanged, this, [this](dovah::form_stub* stub) {
          this->working.run_on.reference = stub;
          if (this->working.run_on.type != condition_t::run_on_type::reference)
             return;
@@ -339,7 +338,7 @@ void ConditionEditDialog::_updateRunOn() {
       case condition_t::run_on_type::linked_ref:
       case condition_t::run_on_type::combat_target:
          {
-            this->ui.runOnButton->setValue(nullptr);
+            this->ui.runOnButton->setRef(nullptr);
             this->ui.runOnDropdown->setEnabled(false);
             this->ui.runOnDropdown->clear();
             this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
@@ -348,7 +347,7 @@ void ConditionEditDialog::_updateRunOn() {
       case condition_t::run_on_type::reference:
          {
             dovah::form_stub* stub = this->working.run_on.reference;
-            this->ui.runOnButton->setValue(stub);
+            this->ui.runOnButton->setRef(stub);
             this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageButton);
             //
             if (stub && stub->formID == dovah::hardcoded_form_ids::PlayerRef) {
@@ -364,7 +363,7 @@ void ConditionEditDialog::_updateRunOn() {
          return;
       case condition_t::run_on_type::quest_alias:
          this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
-         this->ui.runOnButton->setValue(nullptr);
+         this->ui.runOnButton->setRef(nullptr);
          this->ui.runOnDropdown->setEnabled(true);
          this->ui.runOnDropdown->clear();
          this->ui.runOnDropdown->addItem(tr("NONE"), -1);
@@ -381,7 +380,7 @@ void ConditionEditDialog::_updateRunOn() {
          return;
       case condition_t::run_on_type::package_data:
          this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
-         this->ui.runOnButton->setValue(nullptr);
+         this->ui.runOnButton->setRef(nullptr);
          this->ui.runOnDropdown->setEnabled(true);
          this->ui.runOnDropdown->clear();
          this->ui.runOnDropdown->addItem(tr("NONE"), -1);
@@ -396,7 +395,7 @@ void ConditionEditDialog::_updateRunOn() {
          return;
       case condition_t::run_on_type::event_data:
          this->ui.runOnStack->setCurrentWidget(this->ui.runOnPageDropdown);
-         this->ui.runOnButton->setValue(nullptr);
+         this->ui.runOnButton->setRef(nullptr);
          this->ui.runOnDropdown->clear();
          this->ui.runOnDropdown->addItem(tr("NONE"), -1);
          if (auto* q = this->context.get_owning_quest()) {

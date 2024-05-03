@@ -108,6 +108,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="interfaces\DKColorPickerButtonInterface.cpp" />
+    <ClCompile Include="interfaces\DKCompactObjectReferencePickerInterface.cpp" />
+    <ClCompile Include="interfaces\DKDelayedEnableButtonInterface.cpp" />
     <ClCompile Include="interfaces\DKFormDestructionDataButtonInterface.cpp" />
     <ClCompile Include="interfaces\DKFormListPaneInterface.cpp" />
     <ClCompile Include="interfaces\DKFormNIFPickerInterface.cpp" />
@@ -119,6 +121,8 @@
     <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
+    <ClCompile Include="widgets\DKCompactObjectReferencePicker.cpp" />
+    <ClCompile Include="widgets\DKDelayedEnableButton.cpp" />
     <ClCompile Include="widgets\DKFormDestructionDataButton.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
     <ClCompile Include="widgets\DKFormNIFPicker.cpp" />
@@ -178,6 +182,10 @@
     <QtMoc Include="widgets\DKFormNIFPicker.h" />
     <QtMoc Include="widgets\DKFormDestructionDataButton.h" />
     <QtMoc Include="interfaces\DKFormDestructionDataButtonInterface.h" />
+    <QtMoc Include="widgets\DKDelayedEnableButton.h" />
+    <QtMoc Include="interfaces\DKDelayedEnableButtonInterface.h" />
+    <QtMoc Include="widgets\DKCompactObjectReferencePicker.h" />
+    <QtMoc Include="interfaces\DKCompactObjectReferencePickerInterface.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
     <QtMoc Include="widgets\DKObjectReferencePicker.h" />
     <QtMoc Include="widgets\DKQuestAliasPicker.h" />
