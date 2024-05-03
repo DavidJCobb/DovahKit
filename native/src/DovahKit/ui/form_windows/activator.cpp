@@ -8,7 +8,7 @@
 #include "../../incomplete_code_warnings.h"
 static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "The form-editing dialog for Activators is incomplete.");
 
-FormDialogActivator::FormDialogActivator(dovah::form_stub* stub, QWidget* parent) : FormWorkingCopyEditDialogBase(dovah::form_type::activator, stub, parent) {
+FormDialogActivator::FormDialogActivator(dovah::form_stub* stub, QWidget* parent) : FormWorkingCopyEditDialogBase(form_type, stub, parent) {
    form_dialog_helpers::initialize(*this, stub);
    //
    {

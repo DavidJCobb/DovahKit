@@ -29,7 +29,8 @@
 
 class AbstractFormEditDialog;
 namespace form_dialog_helpers {
-   template<class Dialog> void initialize(Dialog&, dovah::form_stub*) requires std::is_base_of_v<AbstractFormEditDialog, Dialog>;
+   template<class Dialog>
+   void initialize(Dialog&, dovah::form_stub*) requires std::is_base_of_v<AbstractFormEditDialog, Dialog>;
 }
 
 class AbstractFormEditDialog : public QDialog {
@@ -45,7 +46,7 @@ class AbstractFormEditDialog : public QDialog {
       virtual void _save_impl() = 0; // save data from the UI into a loaded form
 
    public:
-      constexpr const dovah::form_stub* formStub() const noexcept { return this->stub; }
+      constexpr dovah::form_stub* formStub() const noexcept { return this->stub; }
 
    protected:
       dovah::form_stub* stub = nullptr;
@@ -89,7 +90,8 @@ class FormEditDialogBase : public AbstractFormEditDialog {
    template<class Dialog> friend void form_dialog_helpers::initialize(Dialog&, dovah::form_stub*) requires std::is_base_of_v<AbstractFormEditDialog, Dialog>; \
    public: \
       using loaded_form_type = LOADED_FORM_CLASS; \
-      virtual dovah::form_type formType() const override { return loaded_form_type::form_type; } \
+      static constexpr const dovah::form_type form_type = loaded_form_type::form_type; \
+      virtual dovah::form_type formType() const override { return form_type; } \
    protected: \
       dovah::loaded_form_ptr<loaded_form_type> form;
 ;
@@ -154,4 +156,5 @@ class FormWorkingCopyEditDialogBase : public AbstractFormEditDialog {
 #define DOVAHKIT_FORM_COPY_EDIT_DIALOG(LOADED_FORM_CLASS) \
    template<class Dialog> friend void form_dialog_helpers::initialize(Dialog&, dovah::form_stub*) requires std::is_base_of_v<AbstractFormEditDialog, Dialog>; \
    public: \
-      using loaded_form_type = LOADED_FORM_CLASS;
+      using loaded_form_type = LOADED_FORM_CLASS; \
+      static constexpr const dovah::form_type form_type = loaded_form_type::form_type;

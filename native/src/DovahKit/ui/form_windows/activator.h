@@ -4,8 +4,8 @@
 #include "ui_activator.h"
 
 class FormDialogActivator : public FormWorkingCopyEditDialogBase {
-   Q_OBJECT
-   DOVAHKIT_FORM_COPY_EDIT_DIALOG(dovah::loaded_forms::Activator)
+   Q_OBJECT;
+   DOVAHKIT_FORM_COPY_EDIT_DIALOG(dovah::loaded_forms::Activator);
    public:
       FormDialogActivator(dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
       

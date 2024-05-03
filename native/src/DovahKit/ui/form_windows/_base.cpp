@@ -1,7 +1,8 @@
-#include "_base.h"
-#include "editor/core.h"
+#include "./_base.h"
+#include <cassert>
 #include "dovah/forms/Form.h"
 #include "dovah/forms/components/extra_data/_templates.h"
+#include "editor/core.h"
 
 #pragma region FormEditDialogBase
 FormEditDialogBase::FormEditDialogBase(dovah::form_stub* stub, QWidget* parent) : AbstractFormEditDialog(stub, parent) {}
@@ -64,11 +65,14 @@ void FormEditDialogBase::save_extra_form(dovah::form_stub* stub, extra_data_list
 
 #pragma region FormWorkingCopyEditDialogBase
 FormWorkingCopyEditDialogBase::FormWorkingCopyEditDialogBase(dovah::form_type ft, dovah::form_stub* stub, QWidget* parent) : AbstractFormEditDialog(stub, parent), _allowed_form_type(ft) {
-   if (stub->form_type == ft) {
-      this->stub = stub;
-      this->form = this->stub->load();
+   if (ft == dovah::form_type::reference) {
+      assert(dovah::form_type_is_reference(stub->form_type));
+   } else {
+      assert(stub->form_type == ft);
    }
-   //
+   this->stub = stub;
+   this->form = this->stub->load();
+   
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
       this->form  = nullptr;
@@ -85,7 +89,7 @@ FormWorkingCopyEditDialogBase::FormWorkingCopyEditDialogBase(dovah::form_type ft
          return;
       }
    });
-   //
+   
    QObject::connect(&editor, &DovahKitCore::dataSaveImminent, this, [this]() {
       this->form = nullptr;
    });

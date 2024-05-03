@@ -86,7 +86,7 @@ class DovahKitCore : public QObject {
       void _configure_load_order();
       //
    signals:
-      void dataAbandonImminent(); // we are about to abandon all forms; ditch your pointers or risk memory corruption
+      void dataAbandonImminent(); // we are about to abandon all forms; ditch your pointers or risk memory corruption; contents of any form stubs should be considered garbage/ephemeral
       void dataAbandonComplete(); // we have abandoned all forms
       void dataAcquireComplete(); // we have loaded new files and forms
       void dataAcquireFailed(QString error_message); // we tried to load new files, but failed

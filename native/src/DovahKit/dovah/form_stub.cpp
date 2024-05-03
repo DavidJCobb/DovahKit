@@ -437,6 +437,8 @@ namespace dovah {
 
    #pragma region form stub record flags
    void form_stub::edit_record_flags(uint32_t mask, bool clear_or_set) noexcept {
+      if (!mask)
+         return;
       auto* info = this->_get_source_file_info();
       if (!info)
          return;
@@ -456,10 +458,10 @@ namespace dovah {
          }
          return;
       }
-      if (!clear_or_set)
-         return;
+      auto flags = info->flags;
+      cobb::edit_bit(flags, mask, clear_or_set);
       this->set_edited(true);
-      this->_add_file(*active, 0, mask);
+      this->_add_file(*active, 0, flags);
    }
    #pragma endregion
 
