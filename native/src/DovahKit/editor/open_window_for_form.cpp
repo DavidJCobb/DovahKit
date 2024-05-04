@@ -15,7 +15,7 @@
 #include "../ui/form_windows/word_of_power.h"
 
 namespace {
-   template<typename T> QDialog* _make(dovah::form_stub* f, QWidget* p) {
+   template<typename T> QDialog* _make(dovah::form_stub& f, QWidget* p) {
       return new T(f, p);
    }
 
@@ -68,12 +68,12 @@ namespace {
    #pragma endregion
 }
 
-void open_use_info_dialog_for_form(dovah::form_stub* stub, QWidget* parent) {
+void open_use_info_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
    //
    // First, let's check if there's already a window for this form. If so, we should just 
    // refocus that window instead of opening a new one.
    //
-   auto  formID = stub->formID;
+   auto  formID = stub.formID;
    auto& editor = DovahKitCore::get();
    auto  it     = editor.extant_use_info_dialogs.find(formID);
    if (it != editor.extant_use_info_dialogs.end()) {
@@ -88,8 +88,8 @@ void open_use_info_dialog_for_form(dovah::form_stub* stub, QWidget* parent) {
    // If we made it to here, then there isn't already a window for this form, so let's 
    // open one.
    //
-   auto dialog = new FormUseInfoDialog(stub, parent);
-   editor.extant_use_info_dialogs[stub->formID] = dialog;
+   auto dialog = new FormUseInfoDialog(&stub, parent);
+   editor.extant_use_info_dialogs[stub.formID] = dialog;
    QObject::connect(dialog, &QDialog::finished, &editor, [formID, dialog]() {
       auto& editor = DovahKitCore::get();
       auto& map    = editor.extant_use_info_dialogs;
@@ -101,12 +101,12 @@ void open_use_info_dialog_for_form(dovah::form_stub* stub, QWidget* parent) {
    });
    dialog->show();
 }
-void open_edit_dialog_for_form(dovah::form_stub* stub, QWidget* parent) {
+void open_edit_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
    //
    // First, let's check if there's already a window for this form. If so, we should just 
    // refocus that window instead of opening a new one.
    //
-   auto  formID = stub->formID;
+   auto  formID = stub.formID;
    auto& editor = DovahKitCore::get();
    auto  it     = editor.extant_form_edit_dialogs.find(formID);
    if (it != editor.extant_form_edit_dialogs.end()) {
@@ -123,13 +123,13 @@ void open_edit_dialog_for_form(dovah::form_stub* stub, QWidget* parent) {
    //
    QDialog* opened = nullptr;
    for (auto& pair : factory) {
-      if (pair.first == stub->form_type) {
+      if (pair.first == stub.form_type) {
          opened = (pair.second)(stub, parent);
          break;
       }
    }
    if (opened) {
-      editor.extant_form_edit_dialogs[stub->formID] = opened;
+      editor.extant_form_edit_dialogs[stub.formID] = opened;
       QObject::connect(opened, &QDialog::finished, &editor, [formID, opened]() {
          auto& editor = DovahKitCore::get();
          auto& map    = editor.extant_form_edit_dialogs;
@@ -144,7 +144,7 @@ void open_edit_dialog_for_form(dovah::form_stub* stub, QWidget* parent) {
       return;
    }
    //
-   auto& info = dovah::form_type_info::lookup(stub->form_type);
+   auto& info = dovah::form_type_info::lookup(stub.form_type);
    QString title = QObject::tr("Error: cannot edit %1");
    if (&info == &dovah::form_types[0])
       title = title.arg("unknown type");

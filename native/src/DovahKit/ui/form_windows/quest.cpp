@@ -1,17 +1,17 @@
-#include "quest.h"
-#include "./_base_cpp.h"
+#include "./quest.h"
 #include "dovah/core.h"
 #include "dovah/form_stub_addenda.h"
-#include "helpers/qt/basic_bindings.h"
 #include "./odds_and_ends/quest_tab_stages.h"
 #include "./odds_and_ends/quest_tab_objectives.h"
+
+#include "ui/utils/bind.h"
 
 #include "../../incomplete_code_warnings.h"
 static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "The form-editing dialog for Quests is incomplete.");
 
-FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : FormWorkingCopyEditDialogBase(dovah::form_type::quest, stub, parent) {
-   form_dialog_helpers::initialize(*this, stub);
-   //
+FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
+   initialize(stub);
+   
    this->ui.textDisplayGlobals->setAllowedFormTypes({ dovah::form_type::global });
    {
       using _e = loaded_form_type::quest_type::type;
@@ -76,37 +76,35 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub* stub, QWidget* parent) : Form
       auto* tabbox  = this->ui.tabWidget;
       auto  _insert = [tabbox](int i, QWidget* body) {
          auto* page   = tabbox->widget(i);
-         auto* layout = new QGridLayout;
+         auto* layout = new QGridLayout(page);
          assert(page);
          layout->addWidget(body);
          page->setLayout(layout);
       };
-      //
-      auto& quest = *(loaded_form_type*)this->clone;
-      //
-      _insert(1, (this->tabs.stages     = new QuestTabStages(*stub, quest)));
-      _insert(2, (this->tabs.objectives = new QuestTabObjectives(*stub, quest)));
+      
+      _insert(1, (this->tabs.stages     = new QuestTabStages(stub, *this->form)));
+      _insert(2, (this->tabs.objectives = new QuestTabObjectives(stub, *this->form)));
    }
    #pragma endregion
 }
 void FormDialogQuest::_load_impl() {
    auto& editor  = DovahKitCore::get();
-   auto& working = *this->get_working_copy<loaded_form_type>();
+   auto& working = *this->form;
    //
    #pragma region Basic Data
-      this->ui.editorID->setText(QString::fromStdString(this->stub->get_editor_id()));
-      cobb::qt::bind(this->ui.editorCategory, working.filter);
+      ui::bind(this->ui.editorID, this->editor_id());
+      ui::bind(this->ui.editorCategory, working.filter);
       this->ui.name->setText(editor.convert_localized_string(working.name));
-      cobb::qt::bind(this->ui.questType, working.quest_type);
-      cobb::qt::bind(this->ui.flagAllowRepeatedStages, working.flags, loaded_form_type::quest_flag::allow_repeated_stages);
-      cobb::qt::bind(this->ui.flagExcludeFromDialogueExport, working.flags, loaded_form_type::quest_flag::exclude_from_dialogue_export);
-      cobb::qt::bind(this->ui.flagRunOnce, working.flags, loaded_form_type::quest_flag::run_once);
-      cobb::qt::bind(this->ui.flagStartGameEnabled, working.flags, loaded_form_type::quest_flag::start_game_enabled);
-      cobb::qt::bind(this->ui.flagWarnOnAliasFillFailure, working.flags, loaded_form_type::quest_flag::warn_on_alias_fill_failure);
-      cobb::qt::bind(this->ui.eventType, working.event);
+      ui::bind<loaded_form_type::quest_type::type>(this->ui.questType, working.quest_type);
+      ui::bind(this->ui.flagAllowRepeatedStages,       working.flags, loaded_form_type::quest_flag::allow_repeated_stages);
+      ui::bind(this->ui.flagExcludeFromDialogueExport, working.flags, loaded_form_type::quest_flag::exclude_from_dialogue_export);
+      ui::bind(this->ui.flagRunOnce,                   working.flags, loaded_form_type::quest_flag::run_once);
+      ui::bind(this->ui.flagStartGameEnabled,          working.flags, loaded_form_type::quest_flag::start_game_enabled);
+      ui::bind(this->ui.flagWarnOnAliasFillFailure,    working.flags, loaded_form_type::quest_flag::warn_on_alias_fill_failure);
+      ui::bind<dovah::story_event_code::type>(this->ui.eventType, working.event);
       this->ui.textDisplayGlobals->pullStubs(working.text_display_globals);
-      //
-      cobb::qt::bind(this->ui.priority, working.priority);
+      
+      ui::bind(this->ui.priority, working.priority);
       this->ui.dialogueConditions->model()->setTarget(*this->stub, working.conditions.dialogue);
    #pragma endregion
    #pragma region Stages
@@ -132,9 +130,8 @@ void FormDialogQuest::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
-   auto& working = *this->get_working_copy<loaded_form_type>();
+   auto& working = *this->form;
    //
-   this->stub->editorID = this->ui.editorID->text().toStdString();
    editor.assign_localized_string(working.name, this->ui.name->text());
    this->ui.textDisplayGlobals->commitStubs(working.text_display_globals, working);
 

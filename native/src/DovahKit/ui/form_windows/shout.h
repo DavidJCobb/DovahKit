@@ -3,13 +3,14 @@
 #include "dovah/forms/Shout.h"
 #include "ui_shout.h"
 
-class FormDialogShout : public FormEditDialogBase {
-   Q_OBJECT
-   DOVAHKIT_FORM_EDIT_DIALOG(dovah::loaded_forms::Shout)
+class FormDialogShout :
+   public QDialog,
+   public FormEditDialogMixin<dovah::loaded_forms::Shout, false>
+{
+   Q_OBJECT;
+   DOVAHKIT_FORM_EDIT_DIALOG;
    public:
-      FormDialogShout(dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
-      
-   private slots:
+      FormDialogShout(dovah::form_stub& stub, QWidget* parent = nullptr);
       
    protected:
       Ui::FormDialogShout ui;

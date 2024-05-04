@@ -125,7 +125,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                return;
             auto* form = DovahKitCore::get().get_form(formID);
             if (form)
-               open_edit_dialog_for_form(form, this);
+               open_edit_dialog_for_form(*form, this);
          });
          // Don't clear menu items on aboutToHide; apparently that runs before triggered and deletes the action out from under us, ugh
          /*QObject::connect(this->form_edit_window_menu, &QMenu::aboutToHide, this, [this]() {
@@ -143,7 +143,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
                return;
             auto* form = DovahKitCore::get().get_form(formID);
             if (form)
-               open_use_info_dialog_for_form(form, this);
+               open_use_info_dialog_for_form(*form, this);
          });
          // Don't clear menu items on aboutToHide; apparently that runs before triggered and deletes the action out from under us, ugh
          /*QObject::connect(this->form_uses_window_menu, &QMenu::aboutToHide, this, [this]() {
@@ -332,7 +332,7 @@ void MainWindow::updateFormEditWindowList() {
    this->form_edit_window_menu->clear();
    //
    auto& editor = DovahKitCore::get();
-   editor.for_each_form_edit_dialog([this](AbstractFormEditDialog* dialog) {
+   editor.for_each_form_edit_dialog([this](FormEditDialogInterface* dialog) {
       auto* stub = dialog->formStub();
       if (!stub)
          return false;
@@ -346,7 +346,7 @@ void MainWindow::updateFormEditWindowList() {
       auto* action = new QAction(this->form_edit_window_menu);
       action->setText(label);
       action->setData(stub->formID);
-      QObject::connect(dialog, &QObject::destroyed, action, [action]() {
+      QObject::connect(dialog->asDialog(), &QObject::destroyed, action, [action]() {
          action->setData(0);
          action->deleteLater();
       });

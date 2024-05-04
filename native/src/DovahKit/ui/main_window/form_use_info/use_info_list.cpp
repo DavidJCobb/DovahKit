@@ -458,7 +458,7 @@ FormUseInfoList::FormUseInfoList(QWidget* parent) : QTableView(parent) {
             if (dovah::form_type_is_reference(stub->form_type)) {
                dovahkit::subsystems::worldedit::core::get_or_create().center_on_refr(*stub);
             } else {
-               open_edit_dialog_for_form(data->otherStub, this);
+               open_edit_dialog_for_form(*(data->otherStub), this);
             }
          }
       }

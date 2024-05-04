@@ -1,10 +1,9 @@
-#include "voicetype.h"
-#include "./_base_cpp.h"
+#include "./voicetype.h"
 #include "helpers/bitwise.h"
 
-FormDialogVoicetype::FormDialogVoicetype(dovah::form_stub* stub, QWidget* parent) : FormEditDialogBase(stub, parent) {
-   form_dialog_helpers::initialize(*this, stub);
-   //
+FormDialogVoicetype::FormDialogVoicetype(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
+   initialize(stub);
+   
    this->load();
 }
 void FormDialogVoicetype::_load_impl() {

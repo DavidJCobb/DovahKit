@@ -5,11 +5,14 @@
 #include "dovah/forms/Color.h"
 #include "ui_color.h"
 
-class FormDialogColor : public FormEditDialogBase {
-   Q_OBJECT
-   DOVAHKIT_FORM_EDIT_DIALOG(dovah::loaded_forms::Color)
+class FormDialogColor :
+   public QDialog,
+   public FormEditDialogMixin<dovah::loaded_forms::Color, false>
+{
+   Q_OBJECT;
+   DOVAHKIT_FORM_EDIT_DIALOG;
    public:
-      FormDialogColor(dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
+      FormDialogColor(dovah::form_stub& stub, QWidget* parent = Q_NULLPTR);
       
    private slots:
       

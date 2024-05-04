@@ -9,7 +9,7 @@
 #include "helpers/small_vector.h"
 #include "dovah/form_types.h"
 
-class AbstractFormEditDialog;
+class FormEditDialogInterface;
 class DKFormListPane;
 class DKHeaderView;
 
@@ -64,8 +64,8 @@ namespace dovahkit::subsystems::gui_adjust {
             QPointer<QWidget> widget = nullptr;
          };
 
-         void registerWidget(AbstractFormEditDialog&, cobb::eight_cc widget_id, DKFormListPane&);
-         void registerWidget(AbstractFormEditDialog&, cobb::eight_cc widget_id, DKHeaderView&);
-         void registerWidgets(AbstractFormEditDialog&, std::vector<RegistrationRequest>&&);
+         void registerWidget(FormEditDialogInterface&, cobb::eight_cc widget_id, DKFormListPane&);
+         void registerWidget(FormEditDialogInterface&, cobb::eight_cc widget_id, DKHeaderView&);
+         void registerWidgets(FormEditDialogInterface&, std::vector<RegistrationRequest>&&);
    };
 }

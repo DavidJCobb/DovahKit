@@ -350,8 +350,8 @@ CellRefList::CellRefList(QWidget* parent) : QTableView(parent) {
    QObject::connect(underlying, &model_type::editedFormNoLongerFiltered, this, &CellRefList::editedFormNoLongerFiltered);
 
    QObject::connect(this, &QTableView::doubleClicked, [this](const QModelIndex& index) {
-      if (auto stub = this->formStub())
-         open_edit_dialog_for_form(stub, this);
+      if (auto* stub = this->formStub())
+         open_edit_dialog_for_form(*stub, this);
    });
    {
       auto* sm = this->selectionModel();

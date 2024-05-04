@@ -6,11 +6,14 @@
 #include "dovah/forms/Faction.h"
 #include "ui_cell.h"
 
-class FormDialogCell : public FormEditDialogBase {
-   Q_OBJECT
-   DOVAHKIT_FORM_EDIT_DIALOG(dovah::loaded_forms::Cell)
+class FormDialogCell :
+   public QDialog,
+   public FormEditDialogMixin<dovah::loaded_forms::Cell, false>
+{
+   Q_OBJECT;
+   DOVAHKIT_FORM_EDIT_DIALOG;
    public:
-      FormDialogCell(dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
+      FormDialogCell(dovah::form_stub& stub, QWidget* parent = nullptr);
       
    private slots:
       

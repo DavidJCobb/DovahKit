@@ -1,44 +1,52 @@
 #pragma once
+#include <cstdint>
+#include <string>
+#include <type_traits>
 #include <QDialog>
-#include "dovah/form_stub.h"
 #include "dovah/forms/components/extra_data.h"
+#include "dovah/form_types.h"
 
-/*
-
-   FORM-EDITING DIALOGS
-
-   These dialogs are the principal means through which users can edit forms' 
-   data. Each dialog should subclass FormDialogBaseTemplate, below, and should 
-   use the DOVAHKIT_FORM_EDIT_DIALOG macro on the line after the Q_OBJECT 
-   macro. Additionally, the subclass constructors should begin with a call to 
-   (form_dialog_helpers::initialize), and SHOULD NOT call (setupUi) on their 
-   UI objects, as the initialize function does that for them.
-
-   Dialogs must offer two QPushButtons named "buttonOK" and "buttonCancel", 
-   respectively. They must also have a loaded_form_ptr member named (form).
-
-   The goal of this arrangement is to keep the amount of boilerplate for each 
-   form-editing dialog to a minimum. All behaviors and functionality common 
-   to all form-editing dialogs should be handled by the superclass itself or 
-   by the templated (form_dialog_helpers::initialize) function.
-
-   As for the *reason* for this arrangement: QObject classes cannot be 
-   templated, as that confuses Qt's MOC tools; thus the external function.
-
-*/
-
-class AbstractFormEditDialog;
-namespace form_dialog_helpers {
-   template<class Dialog>
-   void initialize(Dialog&, dovah::form_stub*) requires std::is_base_of_v<AbstractFormEditDialog, Dialog>;
+namespace dovah {
+   class form_stub;
 }
 
-class AbstractFormEditDialog : public QDialog {
-   Q_OBJECT;
-   template<class Dialog> friend void form_dialog_helpers::initialize(Dialog&, dovah::form_stub*) requires std::is_base_of_v<AbstractFormEditDialog, Dialog>;
-   public:
-      AbstractFormEditDialog(dovah::form_stub* stub, QWidget* parent = Q_NULLPTR) : QDialog(parent) {}
-         
+//
+// The class hierarchy and templating here is sort of janky due to the limits of QObject 
+// and Qt's MOC. You can't make templated QObject classes, so we have to split a lot of 
+// functionality apart in weird ways.
+//
+// Form editing dialogs should look like this:
+//
+//    class FormDialogActivator :
+//       public QDialog,
+//       FormEditDialogMixin<dovah::loaded_forms::Activator, true>
+//    {
+//       Q_OBJECT;
+//       DOVAHKIT_FORM_EDIT_DIALOG;
+//       public:
+//          Activator(dovah::form_stub& stub, QWidget* parent = nullptr) : QDialog(parent) {
+//             initialize(stub); // calls Qt's setupUi func for you
+//          
+//             // ... set up your widgets here -- constraints, etc ...
+//          }
+//
+//       protected:
+//          virtual void _load_impl() override {
+//             // copy data from `this->form` into your UI controls here...
+//          }
+//          virtual void _save_impl() override {
+//             // write data from your UI controls into `this->form` here...
+//             // 
+//             // NOTE: for dialogs that operate on a working copy, it's fine to edit 
+//             //       `this->form` in real-time as your UI is interacted with
+//          }
+//    }
+//
+
+// Form-editing dialogs should derive from QDialog first and then from an instantiation 
+// of the `FormEditDialogMixin` template below. They should not derive directly from the 
+// `FormEditDialogInterface` class.
+class FormEditDialogInterface {
    public:
       virtual dovah::form_type formType() const = 0;
    protected:
@@ -48,113 +56,118 @@ class AbstractFormEditDialog : public QDialog {
    public:
       constexpr dovah::form_stub* formStub() const noexcept { return this->stub; }
 
+      inline QDialog* asDialog() {
+         auto* d = dynamic_cast<QDialog*>(this);
+         assert(d);
+         return d;
+      }
+      inline const QDialog* asDialog() const {
+         auto* d = dynamic_cast<const QDialog*>(this);
+         assert(d);
+         return d;
+      }
+
    protected:
       dovah::form_stub* stub = nullptr;
 };
 
-//
-// Base class for an ordinary form editing dialog. Dialogs of this type will retain 
-// a user's desired changes entirely in the UI, as UI state. When the user clicks 
-// "OK," the dialog's save handler (`_save_impl`) will overwrite data in the loaded 
-// form with data from the dialog's UI controls.
-//
-class FormEditDialogBase : public AbstractFormEditDialog {
-   Q_OBJECT
-   private:
-      using extra_data_type = dovah::loaded_forms::components::extra_data_type;
-      using extra_data_list = dovah::loaded_forms::components::extra_data_list;
+template<typename LoadedFormType, bool UsesWorkingCopy = false>
+class FormEditDialogMixin : public FormEditDialogInterface {
    public:
-      FormEditDialogBase(dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
+      using loaded_form_type = LoadedFormType;
+      using mixin_type       = FormEditDialogMixin;
       
-      void load();
-      void save();
+      static constexpr const dovah::form_type form_type         = loaded_form_type::form_type;
+      static constexpr const bool             uses_working_copy = UsesWorkingCopy;
+   
+   private:
+      struct dummy_type {};
       
-   public slots:
-      virtual void accept() override;
-      virtual void reject() override;
+      struct working_copy_stub_info_type {
+         std::string editor_id;
+         uint32_t    record_flags = 0;
+      };
+      
+      void _unload_form_data();
+      void _load_form_data();
+      
+   public:
+      ~FormEditDialogMixin();
+      
+      virtual dovah::form_type formType() const override { return form_type; }
       
    protected:
-      void save_form_id(dovah::form_reference_t& target, dovah::bare_form_id_t);
-      void save_form_id(dovah::form_reference_t& target, dovah::form_stub*);
+      #pragma region Accessors
+      std::string& editor_id();
       
-      // helper/shortcut function ONLY suitable for instances of formID_extra_data
-      void save_extra_form(dovah::bare_form_id_t, extra_data_list&, extra_data_type, bool remove_if_no_form = true);
-      // helper/shortcut function ONLY suitable for instances of formID_extra_data
-      void save_extra_form(dovah::form_stub*,     extra_data_list&, extra_data_type, bool remove_if_no_form = true);
-};
-//
-// Place this next macro inside the class definition for any FormDialogBaseTemplate 
-// subclass, akin to the Q_OBJECT macro.
-//
-#define DOVAHKIT_FORM_EDIT_DIALOG(LOADED_FORM_CLASS) \
-   template<class Dialog> friend void form_dialog_helpers::initialize(Dialog&, dovah::form_stub*) requires std::is_base_of_v<AbstractFormEditDialog, Dialog>; \
-   public: \
-      using loaded_form_type = LOADED_FORM_CLASS; \
-      static constexpr const dovah::form_type form_type = loaded_form_type::form_type; \
-      virtual dovah::form_type formType() const override { return form_type; } \
-   protected: \
-      dovah::loaded_form_ptr<loaded_form_type> form;
-;
-
-//
-// Alternate form editing dialog which relies on a "working copy" of a loaded form. 
-// When the user clicks "OK," dialogs of this type will commit the working copy as 
-// a whole, and use their save handler (`_save_impl`) to commit only changes that 
-// the working copy would not include (i.e. data that is stored on the form stub 
-// itself, such as form flags and the editor ID).
-// 
-// Use this base class when a form's data is too complex to be easily representable 
-// through UI state alone. This base class will save you the need to mirror the full 
-// contents of a form within the dialog's state.
-// 
-// An example of when you might use a base class like this: something like a Quest 
-// form's stages, where the user can make changes to any stage, but only one stage 
-// is visible at a time. You can't track the user's changes through UI state alone 
-// because you have only one set of UI controls for editing any given stage. Without 
-// a working copy of the Quest form, you would have to maintain copies of the stage 
-// data in memory, which isn't viable because stages can refer to other forms, and 
-// form references (`form_reference_t`) must be in a loaded form or working copy.
-//
-class FormWorkingCopyEditDialogBase : public AbstractFormEditDialog {
-   Q_OBJECT
-   private:
-      using form_type = dovah::form_type;
-      using loaded_t  = dovah::loaded_forms::Form;
-   public:
-      FormWorkingCopyEditDialogBase(dovah::form_type, dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
-      ~FormWorkingCopyEditDialogBase();
+      uint32_t get_record_flags() const;
+      bool test_record_flags(uint32_t bits) const;
+      void edit_record_flags(uint32_t bits, bool clear_or_set);
       
-      void load();
-      void save();
-
-      virtual dovah::form_type formType() const override { return this->_allowed_form_type; };
-
-      // When implementing _save_impl, write code to handle only the things that a working copy 
-      // wouldn't include, like form flags and the editor ID.
+      uint32_t& record_flags()
+         #ifndef __INTELLISENSE__
+            //
+            // Spurious IntelliSense errors when subclasses try to call this member function, 
+            // citing that it's unreachable because it's protected. Hiding the `requires` 
+            // clause prevents this though with obvious downsides.
+            //
+            requires (uses_working_copy)
+         #endif
+      ;
+      #pragma endregion
       
-   public slots:
-      virtual void accept() override;
-      virtual void reject() override;
-      
-   private slots:
-      
-   private:
-      const dovah::form_type _allowed_form_type;
    protected:
-      dovah::loaded_form_ptr<loaded_t> form;
-      loaded_t* clone = nullptr; // not safe to access from _save_impl; write to the loaded form directly
+      // Must be called by subclass constructor.
+      void initialize(this auto&& self, dovah::form_stub&);
+   
+   public:
+      void load(); // pull data from a loaded form into the UI
+      void save(); // save data from the UI into a loaded form
+      
+   protected:
+      // The form data to which the dialog's code should make changes.
+      std::conditional_t<
+         uses_working_copy,
+         loaded_form_type*,
+         dovah::loaded_form_ptr<loaded_form_type>
+      > form = {};
+      
+      #pragma region Helpers
+      void write_form_ref(dovah::form_reference_t&, dovah::form_stub*);
+      
+      template<dovah::loaded_forms::components::extra_data_type>
+      void write_extra_form_ref(
+         dovah::loaded_forms::components::extra_data_list&,
+         dovah::form_stub*,
+         bool remove_if_empty = true
+      );
+      #pragma endregion
+      
+   private:
       //
-      template<typename C> C* get_working_copy() const noexcept { return (C*)this->clone; }
+      // For dialogs that use working copies, `form` is a bare pointer to the 
+      // working copy, and `_destination_form` is the "real" loaded form, to 
+      // which we will commit the working copy if the user clicks "OK."
+      //
+      // In other words, `form` is always the thing your dialog is going to 
+      // be writing to, and for working copies, `_destination_form` keeps the 
+      // stub's "real" form data loaded so we can commit to it later.
+      //
+      std::conditional_t<
+         uses_working_copy,
+         dovah::loaded_form_ptr<loaded_form_type>,
+         dummy_type
+      > _destination_form = {};
       
-      virtual void _load_impl() = 0; // pull data from a loaded form into the UI
-      virtual void _save_impl() = 0; // save data from the UI into a loaded form (only for things that a working copy wouldn't include, like form flags and the editor ID)
+      // Automate management of the editor ID and record flags for working copies.
+      std::conditional_t<
+         uses_working_copy,
+         working_copy_stub_info_type,
+         dummy_type
+      > _stub_info = {};
 };
-//
-// Place this next macro inside the class definition for any FormDialogWorkingCopyBase 
-// subclass, akin to the Q_OBJECT macro.
-//
-#define DOVAHKIT_FORM_COPY_EDIT_DIALOG(LOADED_FORM_CLASS) \
-   template<class Dialog> friend void form_dialog_helpers::initialize(Dialog&, dovah::form_stub*) requires std::is_base_of_v<AbstractFormEditDialog, Dialog>; \
-   public: \
-      using loaded_form_type = LOADED_FORM_CLASS; \
-      static constexpr const dovah::form_type form_type = loaded_form_type::form_type;
+
+#define DOVAHKIT_FORM_EDIT_DIALOG \
+   friend mixin_type;
+
+#include "./_base.inl"

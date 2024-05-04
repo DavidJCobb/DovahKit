@@ -1,12 +1,8 @@
-#include "landtexture.h"
-#include "./_base_cpp.h"
+#include "./landtexture.h"
 #include "helpers/bitwise.h"
 
-#include "../../incomplete_code_warnings.h"
-static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "The form-editing dialog for LandTextures is incomplete: the preview pane is not yet functional.");
-
-FormDialogLandTexture::FormDialogLandTexture(dovah::form_stub* stub, QWidget* parent) : FormEditDialogBase(stub, parent) {
-   form_dialog_helpers::initialize(*this, stub);
+FormDialogLandTexture::FormDialogLandTexture(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
+   initialize(stub);
    //
    this->ui.texturesetPreview->setShowAlpha(false);
    this->ui.texturesetPreview->setThrottleEnabled(true);
@@ -48,11 +44,11 @@ void FormDialogLandTexture::_save_impl() {
    auto& editor = DovahKitCore::get();
    //
    this->stub->editorID = this->ui.editorID->text().toStdString();
-   this->save_form_id(this->form->havok.material, this->ui.havokMaterialType->formStub());
+   this->write_form_ref(this->form->havok.material, this->ui.havokMaterialType->formStub());
    this->form->havok.friction    = this->ui.havokFriction->value();
    this->form->havok.restitution = this->ui.havokRestitution->value();
    this->form->specular_exponent = this->ui.specularExponent->value();
-   this->save_form_id(this->form->texture_set, this->ui.textureset->formStub());
+   this->write_form_ref(this->form->texture_set, this->ui.textureset->formStub());
    this->ui.grasses->commitStubs(this->form->grasses, *this->form);
    //
    if (editor.get_current_game() != dovah::game::skyrim_classic) {

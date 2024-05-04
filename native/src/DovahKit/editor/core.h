@@ -41,15 +41,15 @@ namespace DovahKitEditorInternals {
    class load_task;
 }
 
-class AbstractFormEditDialog;
 class DKBSACollectionModelBackend;
+class FormEditDialogInterface;
 class FormUseInfoDialog;
 
 class DovahKitCore : public QObject {
    Q_OBJECT
    friend class DovahKitEditorInternals::load_task;
-   friend void open_use_info_dialog_for_form(dovah::form_stub*, QWidget* parent);
-   friend void open_edit_dialog_for_form(dovah::form_stub*, QWidget* parent);
+   friend void open_use_info_dialog_for_form(dovah::form_stub&, QWidget* parent);
+   friend void open_edit_dialog_for_form(dovah::form_stub&, QWidget* parent);
    public:
       using bare_form_id_t = dovah::bare_form_id_t;
       struct file_load_stats {
@@ -141,7 +141,7 @@ class DovahKitCore : public QObject {
 
       float assess_load_progress() const noexcept;
 
-      bool for_each_form_edit_dialog(std::function<bool(AbstractFormEditDialog*)>);
+      bool for_each_form_edit_dialog(std::function<bool(FormEditDialogInterface*)>);
       bool for_each_form_uses_dialog(std::function<bool(FormUseInfoDialog*)>);
 
       std::vector<const dovah::tes_file_reading::file_loader*> get_loaded_files() const noexcept;

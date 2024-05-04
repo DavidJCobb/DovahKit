@@ -47,6 +47,20 @@ namespace ui {
       });
    }
 
+   //
+   // Bind an enum to a QComboBox, such that you can just store the values as int-type 
+   // user-data without having to set up the enum for Qt's meta-type system. Alternate 
+   // template for when the value is stored as the enum's underlying type.
+   //
+   template<typename Target, typename TargetIntegral> requires (std::is_enum_v<Target> && std::is_same_v<std::underlying_type_t<Target>, TargetIntegral>)
+   void bind(QComboBox* widget, TargetIntegral& target) {
+      static_assert(sizeof(Target) <= sizeof(int), "This template won't work for enums larger than an int.");
+      widget->setCurrentIndex(widget->findData((int)target));
+      QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), widget, [widget, &target](int index) {
+         target = (TargetIntegral)widget->currentData().toInt();
+      });
+   }
+
    template<typename Target> requires std::is_floating_point_v<Target>
    void bind(QDoubleSpinBox* widget, Target& target) {
       widget->setValue(target);

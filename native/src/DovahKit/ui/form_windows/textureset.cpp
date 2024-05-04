@@ -1,10 +1,6 @@
-#include "textureset.h"
-#include "./_base_cpp.h"
+#include "./textureset.h"
 #include "helpers/bitwise.h"
 #include "editor/asset_manager/asset_manager.h"
-
-#include "../../incomplete_code_warnings.h"
-static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "The form-editing dialog for TextureSets is incomplete: the preview pane is not yet functional.");
 
 namespace {
    using decal_type = dovah::loaded_forms::components::decal_data;
@@ -12,9 +8,9 @@ namespace {
    constexpr const bool hide_inapplicable_paths = true;
 }
 
-FormDialogTextureSet::FormDialogTextureSet(dovah::form_stub* stub, QWidget* parent) : FormEditDialogBase(stub, parent) {
-   form_dialog_helpers::initialize(*this, stub);
-   //
+FormDialogTextureSet::FormDialogTextureSet(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
+   initialize(stub);
+   
    QObject::connect(this->ui.flagSpecular, &QCheckBox::toggled, this, [this](bool checked) {
       cobb::edit_bit(this->form->texture_flags, loaded_form_type::texture_set_flag::no_specular_map, !checked);
    });
@@ -26,7 +22,7 @@ FormDialogTextureSet::FormDialogTextureSet(dovah::form_stub* stub, QWidget* pare
       cobb::edit_bit(this->form->texture_flags, loaded_form_type::texture_set_flag::has_model_space_normals, checked);
       this->refreshTextureList();
    });
-   //
+   
    {
       constexpr auto item_flags = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemNeverHasChildren;
       //

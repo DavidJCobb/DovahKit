@@ -5,11 +5,14 @@
 #include "editor/asset_manager/asset.h"
 #include "ui_textureset.h"
 
-class FormDialogTextureSet : public FormEditDialogBase {
-   Q_OBJECT
-   DOVAHKIT_FORM_EDIT_DIALOG(dovah::loaded_forms::TextureSet)
+class FormDialogTextureSet :
+   public QDialog,
+   public FormEditDialogMixin<dovah::loaded_forms::TextureSet, false>
+{
+   Q_OBJECT;
+   DOVAHKIT_FORM_EDIT_DIALOG;
    public:
-      FormDialogTextureSet(dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
+      FormDialogTextureSet(dovah::form_stub& stub, QWidget* parent = nullptr);
       
    public slots:
       void refreshTextureList();

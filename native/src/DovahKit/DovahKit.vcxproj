@@ -694,7 +694,6 @@
     <ClCompile Include="ui\form_windows\textureset.cpp" />
     <ClCompile Include="ui\form_windows\voicetype.cpp" />
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
-    <ClCompile Include="ui\form_windows\_base.cpp" />
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
     <ClCompile Include="ui\generic\QItemSelectionModelEx.cpp" />
     <ClCompile Include="ui\main_window\object_window\filter_info.cpp" />
@@ -2222,14 +2221,13 @@
     <ClInclude Include="helpers\qt\spinbox.h" />
     <ClInclude Include="helpers\qt\vector3.h" />
     <ClInclude Include="helpers\unordered_map.h" />
-    <ClInclude Include="ui\form_windows\_base_cpp.h" />
     <QtMoc Include="ui\generic\impl\_FormsOfTypeComboboxProxy.h" />
     <QtMoc Include="ui\generic\impl\_FormSignatureComboboxProxy.h" />
     <QtMoc Include="ui\generic\FormSignatureCombobox.h" />
     <QtMoc Include="ui\main_window\cell_view\cell_ref_list.h" />
     <QtMoc Include="ui\main_window\cell_view\cell_list.h" />
     <QtMoc Include="ui\main_window\cell_view.h" />
-    <QtMoc Include="ui\form_windows\_base.h" />
+    <ClInclude Include="ui\form_windows\_base.h" />
     <QtMoc Include="ui\main_window\file_metadata_window.h" />
     <QtMoc Include="ui\main_window\save_window.h" />
     <QtMoc Include="ui\main_window\form_use_info\use_info_list.h" />
@@ -2617,9 +2615,11 @@
     <None Include="shaders\util\oit-composite.frag.spv" />
     <None Include="shaders\util\scene-fog-color-far.frag" />
     <None Include="shaders\util\scene-fog-color-far.frag.spv" />
+    <None Include="ui\form_windows\_base.inl" />
     <None Include="ui\models\DKGenericListModel.inl" />
     <None Include="ui\models\DKGenericTreeModel.inl" />
     <None Include="ui\types\papyrus\property_value.inl" />
+    <None Include="ui\_docs\form-editing dialogs.md" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />
     <None Include="vulkan\frame_in_flight.inl" />

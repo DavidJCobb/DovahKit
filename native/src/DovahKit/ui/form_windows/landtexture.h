@@ -3,11 +3,14 @@
 #include "dovah/forms/LandTexture.h"
 #include "ui_landtexture.h"
 
-class FormDialogLandTexture : public FormEditDialogBase {
-   Q_OBJECT
-   DOVAHKIT_FORM_EDIT_DIALOG(dovah::loaded_forms::LandTexture)
+class FormDialogLandTexture :
+   public QDialog,
+   public FormEditDialogMixin<dovah::loaded_forms::LandTexture, false>
+{
+   Q_OBJECT;
+   DOVAHKIT_FORM_EDIT_DIALOG;
    public:
-      FormDialogLandTexture(dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
+      FormDialogLandTexture(dovah::form_stub& stub, QWidget* parent = Q_NULLPTR);
       
    private slots:
       

@@ -85,7 +85,7 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
          auto* model = (DKFormListPaneModel*)view->model();
          auto  data  = (DKFormListPaneModel::Item*)index.internalPointer();
          if (data && data->stub)
-            open_edit_dialog_for_form(data->stub, this);
+            open_edit_dialog_for_form(*(data->stub), this);
       });
    #endif
    view->setSelectionBehavior(QAbstractItemView::SelectRows);

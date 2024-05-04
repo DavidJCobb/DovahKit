@@ -119,7 +119,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
    QObject::connect(this->ui.table, &QTableView::doubleClicked, [this](const QModelIndex& index) {
       auto* stub = _get_selected_form(this->ui.table);
       if (stub && !stub->is_none_stub())
-         open_edit_dialog_for_form(stub, this);
+         open_edit_dialog_for_form(*stub, this);
    });
    //
    #pragma region Context menu
@@ -159,7 +159,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
    QObject::connect(this->_formActionEdit, &QAction::triggered, this, [this]() {
       auto* stub = _get_selected_form(this->ui.table);
       if (stub)
-         open_edit_dialog_for_form(stub, this->parentWidget());
+         open_edit_dialog_for_form(*stub, this->parentWidget());
    });
    QObject::connect(this->_formActionDuplicate, &QAction::triggered, this, [this]() {
       auto* stub = _get_selected_form(this->ui.table);
@@ -173,7 +173,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
    QObject::connect(this->_formActionShowUseInfo, &QAction::triggered, this, [this]() {
       auto* stub = _get_selected_form(this->ui.table);
       if (stub)
-         open_use_info_dialog_for_form(stub, this->parentWidget());
+         open_use_info_dialog_for_form(*stub, this->parentWidget());
    });
    QObject::connect(this->_formActionRenumber, &QAction::triggered, this, [this]() {
       auto* stub = _get_selected_form(this->ui.table);

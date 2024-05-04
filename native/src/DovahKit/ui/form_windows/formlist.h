@@ -3,13 +3,14 @@
 #include "dovah/forms/FormList.h"
 #include "ui_formlist.h"
 
-class FormDialogFormList : public FormEditDialogBase {
-   Q_OBJECT
-   DOVAHKIT_FORM_EDIT_DIALOG(dovah::loaded_forms::FormList)
+class FormDialogFormList :
+   public QDialog,
+   public FormEditDialogMixin<dovah::loaded_forms::FormList, false>
+{
+   Q_OBJECT;
+   DOVAHKIT_FORM_EDIT_DIALOG;
    public:
-      FormDialogFormList(dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
-      
-   private slots:
+      FormDialogFormList(dovah::form_stub& stub, QWidget* parent = Q_NULLPTR);
       
    protected:
       Ui::FormDialogFormList ui;

@@ -219,9 +219,6 @@
     <ClCompile Include="dovah\files\tes_file_reading\file_header.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\form_windows\_base.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\forms\components\interior_lighting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2475,9 +2472,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\files\file_header.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ui\form_windows\_base_cpp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\components\interior_lighting.h">
@@ -5990,6 +5984,9 @@
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\extra_data\room_ref_data\too_many_linked_rooms.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\form_windows\_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6208,9 +6205,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\file_metadata_window.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\form_windows\_base.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\cell_view.h">
@@ -6985,6 +6979,10 @@
     </None>
     <None Include="dovah\exceptions\_docs\be careful with unique_ptr members.md" />
     <None Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data.md" />
+    <None Include="ui\_docs\form-editing dialogs.md" />
+    <None Include="ui\form_windows\_base.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

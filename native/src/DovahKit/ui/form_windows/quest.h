@@ -6,13 +6,14 @@
 class QuestTabStages;
 class QuestTabObjectives;
 
-class FormDialogQuest : public FormWorkingCopyEditDialogBase {
-   Q_OBJECT
-   DOVAHKIT_FORM_COPY_EDIT_DIALOG(dovah::loaded_forms::Quest)
+class FormDialogQuest :
+   public QDialog,
+   public FormEditDialogMixin<dovah::loaded_forms::Quest, true>
+{
+   Q_OBJECT;
+   DOVAHKIT_FORM_EDIT_DIALOG;
    public:
-      FormDialogQuest(dovah::form_stub* stub, QWidget* parent = Q_NULLPTR);
-      
-   private slots:
+      FormDialogQuest(dovah::form_stub& stub, QWidget* parent = Q_NULLPTR);
       
    protected:
       Ui::FormDialogQuest ui;

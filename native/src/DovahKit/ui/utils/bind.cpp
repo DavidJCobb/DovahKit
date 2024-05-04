@@ -18,9 +18,9 @@ namespace ui {
    }
 
    extern void bind(QLineEdit* widget, std::string& target) {
-      widget->setText(QString::fromUtf8(target.c_str()));
+      widget->setText(QString::fromUtf8(QByteArray::fromStdString(target)));
       QObject::connect(widget, &QLineEdit::textChanged, widget, [&target](const QString& value) {
-         target = value.toUtf8().data();
+         target = value.toUtf8().toStdString();
       });
    }
 

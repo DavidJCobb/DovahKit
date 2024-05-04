@@ -1,11 +1,13 @@
-#include "shout_word.h"
-#include "../_base_cpp.h"
-#include "../../../editor/core.h"
+#include "./shout_word.h"
+#include "dovah/core.h"
+#include "editor/core.h"
 
 FormShoutWordEditor::FormShoutWordEditor(QWidget* parent) : QWidget(parent) {
    ui.setupUi(this);
-   this->initialize();
-   //
+
+   this->ui.word->setAllowedFormType(dovah::form_type::word_of_power);
+   this->ui.spell->setAllowedFormType(dovah::form_type::spell);
+
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
       this->form = nullptr;
@@ -17,13 +19,9 @@ FormShoutWordEditor::FormShoutWordEditor(QWidget* parent) : QWidget(parent) {
          this->stub = nullptr;
       }
    });
-   //
+
    this->setFocusPolicy(Qt::FocusPolicy::TabFocus);
    this->setFocusProxy(this->ui.word);
-}
-void FormShoutWordEditor::initialize() {
-   this->ui.word->setAllowedFormType(dovah::form_type::word_of_power);
-   this->ui.spell->setAllowedFormType(dovah::form_type::spell);
 }
 void FormShoutWordEditor::load() {
    if (!this->form)

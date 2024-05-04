@@ -115,7 +115,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          this->cellContextMenu.deleteForm  = new QAction(tr("Delete",      "cell view cell actions"), this->ui.cellList);
          QObject::connect(this->cellContextMenu.edit, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.cellList->formStub())
-               open_edit_dialog_for_form(stub, this->parentWidget());
+               open_edit_dialog_for_form(*stub, this->parentWidget());
          });
          QObject::connect(this->cellContextMenu.duplicate, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.cellList->formStub())
@@ -123,7 +123,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          });
          QObject::connect(this->cellContextMenu.showUseInfo, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.cellList->formStub())
-               open_use_info_dialog_for_form(stub, this->parentWidget());
+               open_use_info_dialog_for_form(*stub, this->parentWidget());
          });
          QObject::connect(this->cellContextMenu.deleteForm, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.cellList->formStub())
@@ -152,7 +152,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          this->refContextMenu.deleteForm  = new QAction(tr("Delete",      "cell view ref actions"), this->ui.referenceList);
          QObject::connect(this->refContextMenu.edit, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.referenceList->formStub())
-               open_edit_dialog_for_form(stub, this->parentWidget());
+               open_edit_dialog_for_form(*stub, this->parentWidget());
          });
          QObject::connect(this->refContextMenu.duplicate, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.referenceList->formStub())
@@ -160,7 +160,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          });
          QObject::connect(this->refContextMenu.showUseInfo, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.referenceList->formStub())
-               open_use_info_dialog_for_form(stub, this->parentWidget());
+               open_use_info_dialog_for_form(*stub, this->parentWidget());
          });
          QObject::connect(this->refContextMenu.deleteForm, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.referenceList->formStub())

@@ -43,7 +43,7 @@ namespace dovahkit::subsystems::gui_adjust {
       item.listviews.push_back(prefs);
    }
 
-   void core::registerWidget(AbstractFormEditDialog& dialog, cobb::eight_cc widget_id, DKFormListPane& widget) {
+   void core::registerWidget(FormEditDialogInterface& dialog, cobb::eight_cc widget_id, DKFormListPane& widget) {
       auto* hv = widget.horizontalHeader();
       if (!hv)
          return;
@@ -51,11 +51,14 @@ namespace dovahkit::subsystems::gui_adjust {
          return this->registerWidget(dialog, widget_id, *dkhv);
       qDebug("[gui_adjust] Failed to register widget...");
    }
-   void core::registerWidget(AbstractFormEditDialog& dialog, cobb::eight_cc widget_id, DKHeaderView& hv) {
-      auto ft = dialog.formType();
+   void core::registerWidget(FormEditDialogInterface& intfc, cobb::eight_cc widget_id, DKHeaderView& hv) {
+      auto* dialog = dynamic_cast<QDialog*>(&intfc);
+      assert(dialog != nullptr);
+
+      auto ft = intfc.formType();
 
       QPointer phv = &hv; // in case the header view is deleted for some reason before its window closes
-      QObject::connect(&dialog, &QDialog::finished, this, [this, ft, widget_id, phv](int result) {
+      QObject::connect(dialog, &QDialog::finished, this, [this, ft, widget_id, phv](int result) {
          list_view_prefs prefs;
          prefs.uid = widget_id;
          prefs.store(*phv);
@@ -75,8 +78,12 @@ namespace dovahkit::subsystems::gui_adjust {
          }
       }
    }
-   void core::registerWidgets(AbstractFormEditDialog& dialog, std::vector<RegistrationRequest>&& entries) {
-      auto ft = dialog.formType();
+   void core::registerWidgets(FormEditDialogInterface& intfc, std::vector<RegistrationRequest>&& entries) {
+      auto* dialog = dynamic_cast<QDialog*>(&intfc);
+      assert(dialog != nullptr);
+
+
+      auto ft = intfc.formType();
 
       //
       // Look up and apply any already-stored prefs:
@@ -112,7 +119,7 @@ namespace dovahkit::subsystems::gui_adjust {
       //
       // Store changes in prefs once the dialog is closed:
       //
-      QObject::connect(&dialog, &QDialog::finished, this, [this, ft, list = std::move(entries)](int result) {
+      QObject::connect(dialog, &QDialog::finished, this, [this, ft, list = std::move(entries)](int result) {
          for (const auto& item : list) {
             if (!item.widget)
                continue;

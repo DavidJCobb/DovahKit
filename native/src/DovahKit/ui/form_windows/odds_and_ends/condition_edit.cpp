@@ -1,15 +1,16 @@
-#include "condition_edit.h"
+#include "./condition_edit.h"
 #include <QShowEvent>
 #include <QStandardItemModel>
-#include "../../../helpers/qt/basic_bindings.h"
-#include "../../../helpers/qt/spinbox.h"
-#include "../../../helpers/qt/strings.h"
-#include "../../../editor/core.h"
+#include "helpers/qt/basic_bindings.h"
+#include "helpers/qt/spinbox.h"
+#include "helpers/qt/strings.h"
+#include "editor/core.h"
 #include "../../generic/FormsOfTypeCombobox.h"
-#include "../../../dovah/forms/factories/hardcoded.h"
-#include "../../../dovah/data/conditions.h"
-#include "../../../dovah/data/story_manager.h"
-#include "../../../dovah/forms/Quest.h"
+
+#include "dovah/forms/factories/hardcoded.h"
+#include "dovah/data/conditions.h"
+#include "dovah/data/story_manager.h"
+#include "dovah/forms/Quest.h"
 
 namespace {
    constexpr int RunOnTypeRole           = Qt::ItemDataRole::UserRole;
