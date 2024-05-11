@@ -507,9 +507,6 @@
     <ClCompile Include="ui\form_windows\quest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\form_windows\odds_and_ends\condition_list.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="helpers\qt\basic_bindings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -522,9 +519,6 @@
     <ClCompile Include="editor\helpers\actor_value_index_to_name.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\form_windows\odds_and_ends\condition_edit.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\data\story_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -532,12 +526,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\data\conditions.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\form_windows\odds_and_ends\condition_param.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\forms\Topic.cpp">
@@ -2286,6 +2274,21 @@
     <ClCompile Include="widgets\DKPapyrusFragmentFunctionPicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\DKConditionList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-models\DKConditionListModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\conditions\context.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\conditions\working_condition.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-dialogs\DKConditionEditDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -2853,9 +2856,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\Package.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\data\conditions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\Topic.h">
@@ -5987,6 +5987,51 @@
     <ClInclude Include="ui\form_windows\_base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\types\conditions\condition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\conditions\run_on_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\conditions\comparison_operator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\conditions\parameter_underlying_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\conditions\parameter_typeinfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\conditions\all_parameter_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\conditions\function_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\conditions\all_function_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\conditions\event_function.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\conditions\event_parameters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\conditions\parameter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\conditions\working_parameter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\conditions\context.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\conditions\working_condition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\conditions\working_comparison.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6044,12 +6089,6 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\quest.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-    <QtUic Include="ui\form_windows\odds_and_ends\condition_list.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-    <QtUic Include="ui\form_windows\odds_and_ends\condition_edit.ui">
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_stages.ui">
@@ -6149,6 +6188,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="widgets\widget-dialogs\DKCompactObjectReferencePickerDialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="widgets\widget-dialogs\DKConditionEditDialog.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -6262,15 +6304,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\quest.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\form_windows\odds_and_ends\condition_list.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\form_windows\odds_and_ends\condition_edit.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\form_windows\odds_and_ends\condition_param.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h">
@@ -6553,6 +6586,15 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKPapyrusFragmentFunctionPicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKConditionList.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\widget-models\DKConditionListModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\widget-dialogs\DKConditionEditDialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -6983,6 +7025,8 @@
     <None Include="ui\form_windows\_base.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="dovah\data\conditions\all_parameter_types.md" />
+    <None Include="dovah\data\conditions\all_function_info.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

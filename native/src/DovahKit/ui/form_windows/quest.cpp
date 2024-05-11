@@ -105,7 +105,7 @@ void FormDialogQuest::_load_impl() {
       this->ui.textDisplayGlobals->pullStubs(working.text_display_globals);
       
       ui::bind(this->ui.priority, working.priority);
-      this->ui.dialogueConditions->model()->setTarget(*this->stub, working.conditions.dialogue);
+      this->ui.dialogueConditions->importFrom(*this->form, working.conditions.dialogue);
    #pragma endregion
    #pragma region Stages
 
@@ -134,6 +134,7 @@ void FormDialogQuest::_save_impl() {
    //
    editor.assign_localized_string(working.name, this->ui.name->text());
    this->ui.textDisplayGlobals->commitStubs(working.text_display_globals, working);
+   this->ui.dialogueConditions->exportTo(*this->form, working.conditions.dialogue);
 
    // TODO: EVERYTHING THAT DOESN'T MODIFY THE WORKING COPY IN REAL-TIME
 }

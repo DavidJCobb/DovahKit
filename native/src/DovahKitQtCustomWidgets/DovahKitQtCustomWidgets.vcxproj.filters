@@ -124,6 +124,12 @@
     <QtMoc Include="interfaces\DKObjectReferencePickerInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="widgets\DKConditionList.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="interfaces\DKConditionListInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="interfaces\DKCollapsiblePaneInterface.cpp">
@@ -220,6 +226,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="interfaces\DKPapyrusFragmentFunctionPickerInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKConditionList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="interfaces\DKConditionListInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

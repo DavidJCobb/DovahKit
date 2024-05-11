@@ -3,10 +3,11 @@
 #include <QMenu>
 #include <QMessageBox>
 #include "../../generic/QStandardItemModelDKEx.h" // enhanced QStandardItemModel
-#include "../../../helpers/qt/basic_bindings.h"
-#include "../../../dovah/core.h"
-#include "../../../editor/core.h"
-#include "../../../editor/helpers/stringify_conditions.h"
+#include "helpers/qt/basic_bindings.h"
+#include "dovah/forms/components/conditions/context.h"
+#include "dovah/core.h"
+#include "editor/core.h"
+#include "editor/helpers/stringify_conditions.h"
 
 namespace {
    constexpr int no_stage = -1;
@@ -155,7 +156,12 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
          //
          // Redraw log entries in the table if the fields we list in the table are edited:
          //
-         QObject::connect(this->ui.logEntryConditions, &ConditionList::conditionEdited, this, &QuestTabStages::redrawEntryListSelectedItem);
+         QObject::connect(this->ui.logEntryConditions, &DKConditionList::changeAttempted, this, [this]() {
+            if (auto* t = this->_get_log_entry()) {
+               this->ui.logEntryConditions->exportTo(this->form, t->conditions);
+            }
+            this->redrawEntryListSelectedItem();
+         });
       }
       #pragma region Context menu
       this->context_menu_actions.log_entry_list.insert   = new QAction(tr("New..."), this->ui.logEntries);
@@ -312,7 +318,7 @@ void QuestTabStages::deactivate() {
    QObject::disconnect(this->ui.logEntryFlagComplete);
    QObject::disconnect(this->ui.logEntryFlagFail);
    QObject::disconnect(this->ui.logEntryNextQuest);
-   this->ui.logEntryConditions->model()->clearTarget();
+   this->ui.logEntryConditions->clear();
    QObject::disconnect(this->ui.logEntryFragment);
 }
 void QuestTabStages::redrawEntryListSelectedItem() {
@@ -341,7 +347,7 @@ void QuestTabStages::redrawEntryListSelectedItem() {
    auto* col1 = model->item(row, 1);
    if (!col0 || !col1)
       return;
-   auto  ctx  = dovah::loaded_forms::components::condition_context(this->stub, true);
+   auto  ctx  = dovah::loaded_forms::components::conditions::context(this->stub, true);
    col0->setText(entry->journal_text.c_str());
    col1->setText(editor_helpers::stringify_condition_list(entry->conditions, ctx));
 }
@@ -515,7 +521,7 @@ void QuestTabStages::_redraw_entry_list() {
    if (!ptr)
       return;
    //
-   auto  ctx  = dovah::loaded_forms::components::condition_context(this->stub, true);
+   auto  ctx  = dovah::loaded_forms::components::conditions::context(this->stub, true);
    auto& list = ptr->entries;
    auto  size = list.size();
    QModelIndex prior;
@@ -550,7 +556,7 @@ void QuestTabStages::_redraw_entry_settings() {
       this->ui.logEntryFlagComplete->setChecked(false);
       this->ui.logEntryFlagFail->setChecked(false);
       this->ui.logEntryNextQuest->setFormStub(nullptr);
-      this->ui.logEntryConditions->model()->clearTarget();
+      this->ui.logEntryConditions->clear();
       this->ui.logEntryText->clear();
       this->ui.logEntryFragment->clearCurrentValues();
       return;
@@ -562,7 +568,7 @@ void QuestTabStages::_redraw_entry_settings() {
    this->ui.logEntryText->setPlainText(ptr->journal_text.c_str());
    this->ui.logEntryFragment->setCurrentScriptname(ptr->fragment.filename);
    this->ui.logEntryFragment->setCurrentFunction(ptr->fragment.function);
-   this->ui.logEntryConditions->model()->setTarget(this->stub, ptr->conditions, true);
+   this->ui.logEntryConditions->importFrom(this->form, ptr->conditions);
 }
 
 void QuestTabStages::showEvent(QShowEvent* event) {

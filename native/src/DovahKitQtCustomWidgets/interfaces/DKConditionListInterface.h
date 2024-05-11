@@ -2,11 +2,11 @@
 
 #include <QtUiPlugin/QDesignerCustomWidgetInterface>
 
-class DKDelayedEnableButtonInterface : public QObject, public QDesignerCustomWidgetInterface {
+class DKConditionListInterface : public QObject, public QDesignerCustomWidgetInterface {
    Q_OBJECT
    Q_INTERFACES(QDesignerCustomWidgetInterface)
    public:
-      DKDelayedEnableButtonInterface(QObject* parent = Q_NULLPTR);
+      DKConditionListInterface(QObject* parent = Q_NULLPTR);
 
       bool isContainer() const;
       bool isInitialized() const;

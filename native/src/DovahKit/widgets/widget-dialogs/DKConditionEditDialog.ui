@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ConditionEditDialog</class>
- <widget class="QDialog" name="ConditionEditDialog">
+ <class>DKConditionEditDialog</class>
+ <widget class="QDialog" name="DKConditionEditDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -369,20 +369,32 @@
           <number>0</number>
          </property>
          <item row="0" column="0">
-          <widget class="FormsOfTypeCombobox" name="operandGlobal"/>
+          <widget class="DKFormPicker" name="operandGlobal"/>
          </item>
         </layout>
        </widget>
       </widget>
      </item>
      <item row="1" column="3" colspan="2">
-      <widget class="QWidget" name="param1Holder" native="true"/>
+      <widget class="QWidget" name="param1Holder" native="true">
+       <property name="focusPolicy">
+        <enum>Qt::TabFocus</enum>
+       </property>
+      </widget>
      </item>
      <item row="2" column="3" colspan="2">
-      <widget class="QWidget" name="param2Holder" native="true"/>
+      <widget class="QWidget" name="param2Holder" native="true">
+       <property name="focusPolicy">
+        <enum>Qt::TabFocus</enum>
+       </property>
+      </widget>
      </item>
      <item row="3" column="3" colspan="2">
-      <widget class="QWidget" name="param3Holder" native="true"/>
+      <widget class="QWidget" name="param3Holder" native="true">
+       <property name="focusPolicy">
+        <enum>Qt::TabFocus</enum>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -395,9 +407,9 @@
    <header>widgets/DKCompactObjectReferencePicker.h</header>
   </customwidget>
   <customwidget>
-   <class>FormsOfTypeCombobox</class>
-   <extends>QComboBox</extends>
-   <header>../../generic/FormsOfTypeCombobox.h</header>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
@@ -406,8 +418,17 @@
   <tabstop>flagSwapSubjectAndTarget</tabstop>
   <tabstop>function</tabstop>
   <tabstop>filterFunction</tabstop>
-  <tabstop>operandGlobal</tabstop>
+  <tabstop>paramFlags</tabstop>
+  <tabstop>param1Holder</tabstop>
+  <tabstop>param2Holder</tabstop>
+  <tabstop>param3Holder</tabstop>
+  <tabstop>runOnButton</tabstop>
+  <tabstop>op</tabstop>
+  <tabstop>operandConstant</tabstop>
+  <tabstop>flagCompareToGlobal</tabstop>
   <tabstop>flagOr</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
  </tabstops>
  <resources/>
  <connections/>

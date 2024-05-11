@@ -134,6 +134,8 @@
     <ClCompile Include="dovah\exceptions\form_creation_failed.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.tests.cpp" />
+    <ClCompile Include="dovah\forms\components\conditions\context.cpp" />
+    <ClCompile Include="dovah\forms\components\conditions\working_condition.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attached_script.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attachment_data.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attachment_header.cpp" />
@@ -389,7 +391,6 @@
     <ClCompile Include="dovah\bs_hash.cpp" />
     <ClCompile Include="dovah\core.cpp" />
     <ClCompile Include="dovah\data\actor_values.cpp" />
-    <ClCompile Include="dovah\data\conditions.cpp" />
     <ClCompile Include="dovah\data\default_objects.cpp" />
     <ClCompile Include="dovah\data\game_settings.cpp" />
     <ClCompile Include="dovah\data\ini_settings.cpp" />
@@ -683,9 +684,6 @@
     <ClCompile Include="ui\form_windows\color.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
     <ClCompile Include="ui\form_windows\landtexture.cpp" />
-    <ClCompile Include="ui\form_windows\odds_and_ends\condition_edit.cpp" />
-    <ClCompile Include="ui\form_windows\odds_and_ends\condition_list.cpp" />
-    <ClCompile Include="ui\form_windows\odds_and_ends\condition_param.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_objectives.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_stages.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
@@ -860,6 +858,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\qt_ini_tests.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
     <ClCompile Include="widgets\DKCompactObjectReferencePicker.cpp" />
+    <ClCompile Include="widgets\DKConditionList.cpp" />
     <ClCompile Include="widgets\DKDelayedEnableButton.cpp" />
     <ClCompile Include="widgets\DKFormDestructionDataButton.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
@@ -881,6 +880,12 @@
     <ClCompile Include="widgets\widget-dialogs\DKBSABrowseDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBoundScriptDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKCompactObjectReferencePickerDialog.cpp" />
+    <ClCompile Include="widgets\widget-dialogs\DKConditionEditDialog.cpp">
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
+    </ClCompile>
     <ClCompile Include="widgets\widget-dialogs\DKFormDestructionDataDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKFormDestructionStageDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKFormNIFPickerDialog.cpp" />
@@ -890,6 +895,7 @@
     <ClCompile Include="widgets\widget-models\DKBoundScriptListModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKBoundScriptModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKBSACollectionModel.cpp" />
+    <ClCompile Include="widgets\widget-models\DKConditionListModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormDestructionStageListModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.cpp" />
@@ -897,6 +903,14 @@
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovah\data\conditions\all_function_info.h" />
+    <ClInclude Include="dovah\data\conditions\all_parameter_types.h" />
+    <ClInclude Include="dovah\data\conditions\comparison_operator.h" />
+    <ClInclude Include="dovah\data\conditions\event_function.h" />
+    <ClInclude Include="dovah\data\conditions\function_info.h" />
+    <ClInclude Include="dovah\data\conditions\parameter_typeinfo.h" />
+    <ClInclude Include="dovah\data\conditions\parameter_underlying_type.h" />
+    <ClInclude Include="dovah\data\conditions\run_on_type.h" />
     <ClInclude Include="dovah\exceptions\default_object_assign_failed.h" />
     <ClInclude Include="dovah\exceptions\enums\form_creation_error_code.h" />
     <ClInclude Include="dovah\exceptions\file_load_failed.h" />
@@ -913,6 +927,12 @@
     <ClInclude Include="dovah\exceptions\invalid_load_order\desired_active_file_is_a_dependency.h" />
     <ClInclude Include="dovah\exceptions\invalid_load_order\load_order_would_have_too_many_files.h" />
     <ClInclude Include="dovah\exceptions\object_reference_move_failed.h" />
+    <ClInclude Include="dovah\forms\components\conditions\working_comparison.h" />
+    <ClInclude Include="dovah\forms\components\conditions\context.h" />
+    <ClInclude Include="dovah\forms\components\conditions\event_parameters.h" />
+    <ClInclude Include="dovah\forms\components\conditions\parameter.h" />
+    <ClInclude Include="dovah\forms\components\conditions\working_condition.h" />
+    <ClInclude Include="dovah\forms\components\conditions\working_parameter.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
     <ClInclude Include="dovah\game_change_failure_reason.h" />
     <ClInclude Include="dovah\load_order_interfaces\file_load.h" />
@@ -1014,12 +1034,16 @@
     <ClInclude Include="nif\utils\find_all_retexturable_blocks.h" />
     <ClInclude Include="nif\utils\precache_nif_info.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
+    <ClInclude Include="ui\types\conditions\condition.h" />
     <ClInclude Include="ui\utils\bind.h" />
     <ClInclude Include="ui\utils\DKStyledItemDelegate.h" />
     <QtMoc Include="widgets\DKDelayedEnableButton.h" />
     <QtMoc Include="widgets\DKCompactObjectReferencePicker.h" />
     <QtMoc Include="widgets\widget-dialogs\DKCompactObjectReferencePickerDialog.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentFunctionPicker.h" />
+    <QtMoc Include="widgets\DKConditionList.h" />
+    <QtMoc Include="widgets\widget-models\DKConditionListModel.h" />
+    <QtMoc Include="widgets\widget-dialogs\DKConditionEditDialog.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />
     <QtMoc Include="widgets\DKFormNIFPicker.h" />
@@ -1970,7 +1994,6 @@
     <ClInclude Include="dovah\bs_hash.h" />
     <ClInclude Include="dovah\core.h" />
     <ClInclude Include="dovah\data\actor_values.h" />
-    <ClInclude Include="dovah\data\conditions.h" />
     <ClInclude Include="dovah\data\default_objects.h" />
     <ClInclude Include="dovah\data\game_settings.h" />
     <ClInclude Include="dovah\data\ini_settings.h" />
@@ -2189,9 +2212,6 @@
     <QtMoc Include="ui\main_window\default_object_window\default_object_list.h" />
     <QtMoc Include="ui\form_windows\formlist.h" />
     <QtMoc Include="ui\form_windows\quest.h" />
-    <QtMoc Include="ui\form_windows\odds_and_ends\condition_list.h" />
-    <QtMoc Include="ui\form_windows\odds_and_ends\condition_edit.h" />
-    <QtMoc Include="ui\form_windows\odds_and_ends\condition_param.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_stages.h" />
     <QtMoc Include="ui\generic\QSortFilterProxyModelDKEx.h" />
     <QtMoc Include="ui\form_windows\odds_and_ends\quest_tab_objectives.h" />
@@ -2271,8 +2291,6 @@
     <QtUic Include="ui\form_windows\color.ui" />
     <QtUic Include="ui\form_windows\formlist.ui" />
     <QtUic Include="ui\form_windows\landtexture.ui" />
-    <QtUic Include="ui\form_windows\odds_and_ends\condition_edit.ui" />
-    <QtUic Include="ui\form_windows\odds_and_ends\condition_list.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\inventory_data.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\quest_alias_location.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\quest_alias_reference.ui" />
@@ -2314,6 +2332,7 @@
     <QtUic Include="ui\options_window\worldinput_bind_editor.ui" />
     <QtUic Include="ui\options_window\options_window.ui" />
     <QtUic Include="ui\options_window\pages\options_page_3d_camera.ui" />
+    <QtUic Include="widgets\widget-dialogs\DKConditionEditDialog.ui" />
     <QtUic Include="widgets\widget-dialogs\DKBoundScriptDialog.ui" />
     <QtUic Include="widgets\widget-dialogs\DKCompactObjectReferencePickerDialog.ui" />
     <QtUic Include="widgets\widget-dialogs\DKFormDestructionDataDialog.ui" />
@@ -2410,6 +2429,8 @@
     <None Include="cpp.hint" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\bs_hash.inl" />
+    <None Include="dovah\data\conditions\all_function_info.md" />
+    <None Include="dovah\data\conditions\all_parameter_types.md" />
     <None Include="dovah\exceptions\_docs\be careful with unique_ptr members.md" />
     <None Include="dovah\files\bsa\bsa_archive.inl" />
     <None Include="dovah\files\bsa\packed_folder_info.inl" />

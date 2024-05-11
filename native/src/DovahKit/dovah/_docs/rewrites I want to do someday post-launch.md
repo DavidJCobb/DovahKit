@@ -47,7 +47,7 @@
 
   * More ergonomic script APIs, e.g. DovahScript more consistently allowing you to "copy-assign" data sub-structures between forms or form components rather than having to manually copy individual members across data sub-structures.
   * Potentially, changes to the script engine internals
-    * Currently, Dovahscript runs on a worker thread to limit the damage that an infinite loop in a script can do. I have some pie-in-the-sky ideas for optionally letting Dovahscript run on the main thread, which would make it viable to offer APIs that allow for stronger integration into the editor: think "add-ons" rather than "scripts". (**Do not take this as a promise or even a statement of intent,** but some examples of that kind of integration are attach points for adding scripted UI controls into native windows, and real-time scripted control over the Render Window.) This would require being able to configure the script engine's threading model at run-time, and adding *that* would, in turn, require changes to how basically all form access APIs work -- which, again, would be easier with less code duplication throughout Dovahscript.
+    * Currently, Dovahscript runs on a worker thread to limit the damage that an infinite loop in a script can do. *[EDIT: That isn't the sole benefit, and a worker thread may not be required to achieve it. See Dovahscript's section below.]* I have some pie-in-the-sky ideas for optionally letting Dovahscript run on the main thread, which would make it viable to offer APIs that allow for stronger integration into the editor: think "add-ons" rather than "scripts". (**Do not take this as a promise or even a statement of intent,** but some examples of that kind of integration are attach points for adding scripted UI controls into native windows, and real-time scripted control over the Render Window.) This would require being able to configure the script engine's threading model at run-time, and adding *that* would, in turn, require changes to how basically all form access APIs work -- which, again, would be easier with less code duplication throughout Dovahscript.
 
 # General plans for the backend
 
@@ -376,9 +376,282 @@ In practice, there are some holes in this design, stemming in large part from th
 
   The only way I can think of to remedy this while keeping `form_reference_t` more-or-less as-is would be to create custom container implementations that ensure that Use Info is properly tracked on their elements. Notably, the destructors on these containers *should not* perform those sorts of updates because we want to be able to unload the loaded form data. These custom container implementations should support any `T` provided that `T::clear(*loaded_form)` is callable.
 
-  Within form data, these custom containers would be conditional types, i.e. `tracked_form_pointer_vector` for a "real" form and `std::vector<form_stub*>` for a working copy. It's fine for the typenames to be a little wordy, because inside a form data class, they'd be `using`'d as `form_ref_vector`, `form_ref_array<Size>`, and so on.
+  Within form data, these custom containers would be conditional types, i.e. `tracked_form_pointer_vector` for a "real" form and `std::vector<form_stub*>` for a working copy. It's fine for the typenames to be a little wordy, because inside a form data class, they'd be `using`'d as `form_ref_list`, `form_ref_array<Size>`, and so on.
 
-  * We would of course need to be able to handle lists of sub-structures that themselves contain form refs, though. Could define generic containers that call functions like `T::clear` and so on, and then `using` them as `substruct_vector`, `substruct_array`, and so on?
+  * We would of course need to be able to handle lists of sub-structures that themselves contain form refs, though. Could define generic containers that call functions like `T::clear` and so on, and then `using` them as `substruct_vector<T>`, `substruct_array<T>`, and so on?
+
+### Conditions
+
+As of 5/10/2024, I've recently rewritten how conditions are handled both on the backend and in helper structs for the frontend. However, there are still improvements that can be made. First, some background and some terms:
+
+* The type system for condition parameters works as follows. We have first the `parameter_underlying_type`, an enum which describes the basic primitive value types: signed integer, unsigned integer, float, form, string, et cetera. Then, we have more detailed `parameter_typeinfo`s, which are full constexpr data structures that describe more specific information.
+  
+  For example, `parameter_underlying_type::form` means that the parameter's value is a form stub pointer. However, there are multiple typeinfos that are built on this underlying type: `BaseForm`, `InventoryItem`, `VoiceType`, and so on. Condition functions list typeinfos as their argument types; those typeinfos list their underlying types; and we use the underlying types to know what to store for any given parameter.
+
+Currently, a condition parameter looks like this (non-`std` namespaces removed for brevity):
+
+```c++
+struct parameter {
+   union {
+      uint32_t dword = 0;
+      float    float32;
+      int32_t  integer;
+   };
+   form_reference_t form;
+   std::string      string;
+      
+   parameter_underlying_type underlying = parameter_underlying_type::none;
+};
+```
+
+Meanwhile, the "working" struct, intended to make modification by frontends easier, looks like this:
+
+```c++
+using working_parameter = std::variant<
+   std::monostate,
+   uint32_t,   // alias, event, int_unsigned, package_data, quest_stage
+   char,       // character
+   float,      // float32
+   int32_t,    // enumeration, int_signed
+   form_stub*, // form
+   std::string // string
+>;
+```
+
+The "working" struct looks cleaner, but in practice, you need to query the containing condition to find the `parameter_underlying_type` for the parameter (given the condition function to which it is a parameter). As indicated by the comments, several of the C++-level types represent multiple `parameter_underlying_type`s; for example, `uint32_t` can be: an unsigned integer; the ID of an alias on the condition's owning quest; the index of a package-data on the condition's owning package; or, if this isn't the first parameter, it can be the ID of a quest stage, belonging to the quest indicated by the previous-sibling parameter.
+
+In other words, it's a "split variant," where you need to consult two pieces of information to identify the meaning of the value inside: the variant's current contained type; and the value of a `parameter_underlying_type` enum. Worse: the enum isn't retained as state *on the parameter*, but rather is deduced from separate state (the condition function ID) on the containing condition.
+
+#### Unifying the split variant
+
+Once we're doing the above refactor for in-memory form data, it'll be more viable to unify all of these approaches, and to have them work consistently between the backend and the frontend. Consider:
+
+```c++
+template<form_data_config Config>
+class parameter {
+   public:
+      using form_ref = std::conditional_t<
+         Config.track_use_info,
+         tracked_form_pointer, // called `form_reference_t` in current codebase
+         form_stub*
+      >;
+
+   private:
+      using _map_entry = cobb::type_containers::map_v_to_t_entry;
+
+   protected:
+      // NOTE: This helper type doesn't exist yet. It would map values to types.
+      using map_types_to_enum = cobb::type_containers::map_v_to_t<
+         _map_entry<parameter_underlying_type::none,         uint32_t>,
+         _map_entry<parameter_underlying_type::alias,        uint32_t>,
+         _map_entry<parameter_underlying_type::character,    char>,
+         _map_entry<parameter_underlying_type::float32,      float>,
+         _map_entry<parameter_underlying_type::int_signed,   int32_t>,
+         _map_entry<parameter_underlying_type::int_unsigned, uint32_t>,
+         _map_entry<parameter_underlying_type::form,         form_ref>,
+         _map_entry<parameter_underlying_type::package_data, uint32_t>,
+         _map_entry<parameter_underlying_type::string,       std::string>,
+         _map_entry<parameter_underlying_type::quest_stage,  uint32_t>
+      >;
+
+  public:
+      template<parameter_underlying_type Key>
+      using value_type_for = map_types_to_enum::value_type_for<Key>;
+
+   protected:
+      union {
+         char        character;
+         uint32_t    dword    = 0;
+         int32_t     integer;
+         float       float32;
+         form_ref    form;
+         std::string string;
+      } _value;
+      parameter_underlying_type _raw_type = parameter_underlying_type::none;
+
+      template<parameter_underlying_type Requested>
+      const value_type_for<Requested>* _pointer() const {
+         return _static_cast<const value_type_for<Requested>*>(this->_value);
+      }
+
+      constexpr void _clear() {
+         if (this->_raw_type == parameter_underlying_type::none)
+            return;
+         map_types_to_enum::for_each_until_true([this]<auto Key, typename ValueType>() {
+            if (Key == this->_raw_type) {
+               std::destroy_at(_pointer<ValueType>());
+               return true;
+            }
+            return false;
+         });
+         this->_raw_type = parameter_underlying_type::none;
+      }
+
+   public:
+      constexpr ~parameter() {
+         this->_clear();
+      }
+
+      template<parameter_underlying_type Requested>
+      constexpr bool is() const noexcept {
+         return this->_raw_type == Requested;
+      }
+
+      template<parameter_underlying_type Requested>
+      constexpr const value_type_for<Requested>& get() const {
+         if (!is<Requested>())
+            throw exceptions::bad_condition_parameter_access(Requested, _raw_type);
+         return *_pointer<Requested>();
+      }
+      template<parameter_underlying_type Requested>
+      constexpr value_type_for<Requested>& get() {
+         return const_cast<value_type_for<Requested>&>(std::as_const(*this).get<Requested>());
+      }
+
+      template<parameter_underlying_type Requested>
+      constexpr void set(const value_type_for<Requested>& v) {
+         if (!is<Requested>())
+            this->_clear();
+         this->_raw_type = Requested;
+         construct_at(_pointer<Requested>(), v);
+      }
+};
+```
+
+(Methods omitted for brevity include `operator==`, copy and move functions, and so on.)
+
+Usage would look like this:
+
+```
+parameter& param = ...;
+
+if (param.is<parameter_underlying_type::float32>()) {
+   float f = param.get<parameter_underlying_type::float32>();
+}
+param.set<parameter_underlying_type::int_signed>(5);
+```
+
+One could potentially even add a `convert_or_clear` operator which, given a requested type, would convert the current value to that type if possible or reset the parameter to an empty/zero value of the requested type otherwise. This would mainly handle conversion between the various numeric types (`float`, `int_signed`, `int_unsigned`).
+
+#### Enhancements
+
+Now, the exact class proposed above isn't perfect. We're still acting in terms of the `parameter_underlying_type`, so any two condition parameter types with the same underlying-type would be considered interconvertible. This is most problematic when dealing with enumerations and form stubs: two enumeration types will have different sets of values, and should not be considered interconvertible; and form stubs should be validated against the typeinfo's allowed form types.
+
+There is a way around this. Consider:
+
+```c++
+template<form_data_config Config>
+class parameter {
+   //
+   // Non-data members omitted for brevity.
+   //
+   protected:
+      union {
+         char        character;
+         uint32_t    dword    = 0;
+         int32_t     integer;
+         float       float32;
+         form_ref    form;
+         std::string string;
+      } _value;
+
+      parameter_underlying_type _raw_type = parameter_underlying_type::none;
+
+      // Index into the `conditions::all_parameter_types` array.
+      uint8_t _typeinfo_id = 0;
+};
+```
+
+We'd have to either include the "all typeinfos" array *or* make the setter (and any "convert-or-clear" function) non-`constexpr`, but this gives us the means to enforce per-typeinfo constraints when setting a parameter's value.
+
+(This does have some limitations. There are two cases where the values allowed in a condition's second parameter depend on the value current present in its first parameter: certain VATS enums; and the quest stage parameter type, where the first parameter is the quest and the second parameter is one of its stages. We have the VATS enums abstracted as "union typeinfos," while the quest stage case is hardcoded into the places where we actually enforce it (which isn't everywhere, as that would require loading the quest's full data into memory). If we want to enforce full data integrity, then we could offer a `set` function that takes a non-const pointer to the next parameter, so that if the next parameter is of a "dependent" type, we can update its own value in response to the current parameter's value changing.)
+
+(Also, **to maintain data integrity**, any member functions that can change the parameter's type would have to be made private on the tracked-use-info `parameter` class, with the tracked-use-info `condition` class being a `friend` of the tracked-use-info `parameter` class. Arguably, `parameter` should have separate member functions for "set of same type" and "force type and set." Arguably we could even do the same for the "working" parameter type, but **it's especially critical for the tracked-use-info type** because any tracked `form_ref`s in the form data need to be, uh, existent. Like, say you manage to stuff a form-ref into a parameter that should (based on the containing condition's condition function ID) hold a float, *while use info is being tracked*, and then save the file: so we serialize the parameter (how we even do that doesn't matter for this problem), and then if the form unloads and reloads, now we expect a float to be there, so we don't read the parameter as a form, and now we've got a "phantom use" stuck in the form's use info.)
+
+#### One last sketch...
+
+```c++
+template<form_data_config Config>
+class parameter {
+   //
+   // pretend we have a bunch of the stuff from up above e.g. the k/v map here too
+   //
+   public:
+      using value_variant = std::variant<
+         char,
+         uint32_t,
+         int32_t,
+         float,
+         form_ref,
+         std::string
+      >;
+
+   protected:
+      union {
+         char        character;
+         uint32_t    dword    = 0;
+         int32_t     integer;
+         float       float32;
+         form_ref    form;
+         std::string string;
+      } _value;
+
+      parameter_underlying_type _raw_type = parameter_underlying_type::none;
+
+      // Index into the `conditions::all_parameter_types` array.
+      uint8_t _typeinfo_id = 0;
+
+   public:
+      // Checks typeinfo without resolving union types.
+      const parameter_typeinfo* get_raw_typeinfo() const;
+
+      const parameter_typeinfo* get_typeinfo() const;
+
+   public:
+      // Returns `true` if the value of `next` is modified.
+      template<parameter_underlying_type Desired>
+      bool set_value(const value_type_for<Desired>& v, parameter* next) {
+         if (!is<Desired>()) {
+            throw exceptions::bad_condition_parameter_modify(Desired, this->_raw_type);
+         }
+         *_pointer<Requested>() = v;
+
+         if (!next)
+            return false;
+         auto* next_typeinfo = next->get_raw_typeinfo();
+         if (!next_typeinfo || !next->is_union())
+            return false;
+
+         auto* this_typeinfo = this->get_typeinfo();
+         assert(this->typeinfo != nullptr);
+         
+         auto* resolved = next_typeinfo->resolve_union_type(*this_typeinfo, v);
+         if (resolved == next->get_typeinfo())
+            return false;
+
+         // TODO: Don't use 0; use the first entry in `resolved`'s enumeration.
+         next->set_value((int32_t)0, nullptr);
+         return true;
+      };
+
+      template<typename T>
+      void set_type(const parameter_typeinfo& typeinfo) {
+         //
+         // ... if this would change the type, force the value to zero/falsy ...
+         //
+      }
+
+      template<typename T>
+      void set_type_and_value(const parameter_typeinfo& typeinfo, const T& v) {
+         if (typeinfo.underlying_type != map_types_to_enum::key_for<T>) {
+            throw exceptions::bad_condition_parameter_modify(Desired, this->_raw_type);
+         }
+         //
+         // ... if this would change the type, force the value to zero/falsy ...
+         //
+      }
+};
+```
 
 ## Improve form stub / file handling and loading
 
@@ -390,7 +663,7 @@ One major conceptual flaw I see (looking into a lot of this machinery on 4/27/20
 
 We should have a `dovah::tes::file` class which holds and "owns" the mapped file, and then all the various "loaders" should act like views into this single authoritative file object.
 
-Some specific ideas, written down on 4/28/2024:
+Some specific ideas, first written down on 4/28/2024:
 
 * **`dovah::tes::file`** as a single TES file, with ownership of a mapped view, and with known information pulled from the header and stored as members. It should not contain or require an owning `file_load_order`. There should not be any functions for actually reading data from the mapped view (e.g. `read` and `unchecked_read`), nor should there be any other "stream" fields like a "current position." Outside code (e.g. `form_stub`s; load processes; etc.) would create a `file_view` (see below) to perform reads.
 
@@ -405,6 +678,8 @@ Some specific ideas, written down on 4/28/2024:
   * An advantage of making `file_view` wrap a `file` is that if we encounter a structurally malformed file (e.g. a suspicious record signature, or an ill-formed `XXXX` subrecord), we'll be able to access the file data (most pertinently its name) when we throw an error. Right now, `dovah::tes_file_reading::basic_reader` is actually incapable of providing the filename as diagnostic information in these cases: a `basic_reader` doesn't know if it's a file (`file_loader`) or a view into a file (any other subclass), and consequently, doesn't know how to find its way to *whatever file it's reading* to query that file's name.
 
   * Perhaps we could even template this and allow some compile-time configuration, e.g. a choice of whether to throw exceptions on invalid data or `assert` correctness instead. (Why would you ever want to `assert` that user-supplied data is well-formed? Because we crawl the files fairly completely during the initial file load, and after that, on-demand form data loads operate on the assumption that the file *definitely is* structurally valid and reads will never throw. Checks for e.g. record signature validity are skipped, and we assert instead of throwing, but this is conditioned on a run-time flag that gets set on the whole file post-file-load. In the new system, a `form_stub` would create disposable `file_view`s for loading each file, and so we may as well move the throw/assert choice to compile-time, no?)
+
+    * We may even want to go the extra mile and have a `record_view`, so that stubs can create views on the stack without burning extra stack space on e.g. machinery to track GRUPs.
 
   * And as long as we're rebuilding the logic for reading file content, we may as well add support for endian-flipped files, conditioned behind a `constexpr const bool`. Bethesda themselves have this support: if the file header's signature reads as `4SET`, then they know that the file endianness doesn't match the system's native endianness, and they byteswap every value they read.
 
@@ -449,7 +724,7 @@ There are also cases where a form stub has "unresolved" or "in-progress" values 
 
 Hm... I don't like its name and I don't like that it's stored in the `dovah/files/` directory.
 
-I think `active_load_order` might be a better name. This would better distinguish it from the general concept of a "load order," while also matching the term "active file" and being clearer about the class's purpose: it holds all of the loaded data associated with a load order; it's the DovahKit counterpart to Bethesda's `TESDataHandler`.
+I think `active_load_order` might be a better name. This would better distinguish it from the general concept of a "load order," while also matching the term "active file" and being clearer about the class's purpose: it holds all of the loaded data associated with a load order; it's the DovahKit counterpart to Bethesda's `TESDataHandler`. We could then repurpose the name "file load order" for the class that we currently call something like "load order normalizer."
 
 One thing I'd really like to do is do a better job of separating out all the machinery related to loading and saving. It'd be nice if `active_load_order` would just retain the loaded data, and defer to temporary data structures for the actual load and save operations &mdash; perhaps something like `dovah::load_order_serialization::load_process` and `dovah::load_order_serialization::save_process`. Passkeys could grant them appropriate access to the `active_load_order` internals.
 
@@ -461,7 +736,7 @@ Miscellaneous:
 
 ## Change `dovah::notices::base_error` and its subclasses into exceptions and throw them directly, instead of wrapping them
 
-Some backstory.
+Some backstory:
 
 When I first implemented DovahKit's backend -- prototyping it circa December 2019 IIRC, so nearly half a decade ago as I write this -- I didn't know that things like `std::current_exception()` existed: I didn't know that you could catch an exception on a worker thread and then re-throw it on the main thread. As a result, the backend originally didn't use exceptions.
 
@@ -489,9 +764,9 @@ A GUI simply cannot represent entirely arbitrary compositions of transformations
 
 ### Challenge 2: conditions
 
-Another problem with the current system is that there's no way to do conditional binds, e.g. "Attempt to move the selection, and only if that movement succeeds, move the camera commensurately," which is the movement behavior in <i>Halo: Reach</i> when an object is selected. This is because we minimize (and often avoid) heap allocation within the control system by relying on a tuple of "requests," one per tool; when the same tool is invoked multiple times within a single frame, we either merge all of its requests into one, or have one supersede all of the others. This in turn means that there can be no ordering between tools &mdash; no way to *know* that one tool was definitely activated before another.
+Another problem with the current system is that there's no way to do conditional binds, e.g. "Attempt to move the selection, and only if that movement succeeds, move the camera commensurately," which is the movement behavior in <i>Halo: Reach</i> when an object is selected. There are two reasons for this. The first reason is that we minimize (and often avoid) heap allocation within the control system by relying on a tuple of "requests," one per tool; when the same tool is invoked multiple times within a single frame, we either merge all of its requests into one, or have one supersede all of the others. This in turn means that there can be no ordering between tools &mdash; no way to *know* that one tool was definitely activated before another. The second reason is that there's no way for tools to return any sort of "results," much less accept any such results as input. The only inputs that a tool can accept are the options accompanying the keybind, and in some cases the specific states of the input device (e.g. the direction and magnitude of a joystick or mouse movement).
 
-The current workaround is yet more hardcoded position: an "also move camera" checkbox on the "move selection" tool, for example.
+The current workaround is yet more hardcoded composition: an "also move camera" checkbox on the "move selection" tool, for example.
 
 This is another issue that a scripting language could solve, but forcing end users to work out (and often recreate) the full logic for every single tool and sequence of tools is, again, less than ideal.
 
@@ -499,7 +774,7 @@ This is another issue that a scripting language could solve, but forcing end use
 
 "Tool duplication," where the only difference between a handful of tools is what transformations we're composing, could be solved through subcategorization, e.g. "Move Selection > By Gizmo Axis Drag"
 
-The inability to do conditional binds (i.e. move camera if move selection succeeds) without hardcoded composition is a problem, but could be solved in other ways (e.g. ordered operations, at the cost of heap allocation and freeing per frame, rather than merged ones; could pre-allocate, etc., to ease perf burdens).
+The inability to do conditional binds (i.e. move camera if move selection succeeds) without hardcoded composition is a problem, ~~but could be solved in other ways (e.g. ordered operations, at the cost of heap allocation and freeing per frame, rather than merged ones; could pre-allocate, etc., to ease perf burdens)~~. (This doesn't work for "move camera if move selection succeeds," because moving the selection may only *partially* succeed: you may try to move the selection 100 units to the left, but it only goes 70 and then hits some boundary that we can't let it cross e.g. the max coordinate threshold in an interior cell. How do we ferry the amount by which it moved into the "move camera" bind, so that the camera movement matches the selection movement? Again: having tools return results isn't part of the design, much less having one tool take the results of another (i.e. *any other*) tool as input.)
 
 ### A note about Worldinput
 
@@ -507,13 +782,17 @@ Worldinput doesn't need a redesign, nor does it need to be replaced with scripti
 
 I said earlier that GUIs limit the ability to compose things compared to a scripting language. However, the hardcoded composition of inputs offered within Worldinput is already highly flexible thanks to me spending, what, four months? [see next section] on codifying my human intuition into a monstrously complicated set of programmatically enforceable rules. Ditching Worldinput would mean forcing control scheme authors to have to anticipate and account for every single keybind/combination conflict, one by one.
 
+The one thing I don't like about Worldinput is that it's organized around key-ups rather than key-downs. This may make inputs feel less responsive, and it also complicates designing things like distinguishing double-clicks from single-clicks. However, it's the easiest way to distinguish presses from long-presses. I'm tempted to revisit this someday and see what a key-down-oriented system would be like (and whether it'd be an improvement), but that would require writing an entirely new spec and meticulously testing various input cases against it.
+
+(Whether we focus on key-ups or key-downs, there will still be some responsiveness delays wherever press/long-press or press/hold binds conflict. This is fine: responsiveness delays in the case of ambiguous inputs aren't unique to us. To give one example, Windows Explorer has certain cases where a single-click and a double-click will trigger mutually exclusive actions, and they handle this by delaying the single-click action until after the double-click timing window elapses. When a file is already selected, a single-click on its name triggers renaming, while a double-click opens the file.)
+
 #### A history of Worldinput just so I don't forget
 
 Just so I have it in full:
 
 The planning for DovahKit's first system for handling Render Window input, "DK3D," began circa mid-November 2021; implementation efforts began circa December, with my focus alternating between developing input handling and developing DovahKit's 3D renderer. By late February 2022, it was possible to load interior cells with ACTI and STAT forms visible and lit by a single global directional light; and it was possible to fly the camera around in them using a gamepad. (Shadows came in early March.)
 
-Present-day Worldinput has a concept of mapping button combinations to "tools" with options; this basic idea was present back in DK3D. Plans to rename DK3D to "Worldinput" were made in late February 2022, but the renderer remained the primary focus of development. Going solely by where I was keeping planning notes at the time, and *not* by the commit history, only in November 2022 was Worldinput's first incarnation finally reorganized, and at around this time it became the primary focus of development. By December, the notion of storing tool requests in a tuple was implemented. Initial GUI design efforts began circa December 2022, with those designs drawing inspiration from AntiMicro's button combo editor.
+Present-day Worldinput has a concept of mapping button combinations to "tools" with options; this basic idea was present back in DK3D. Plans to rename DK3D to "Worldinput" were made in late February 2022, but the renderer remained the primary focus of development. Going solely by where I was keeping planning notes at the time, and *not* by the commit history, only in November 2022 was Worldinput's first incarnation finally reorganized, and at around this time it became the primary focus of development. By December, the notion of storing tool requests in a tuple (coalescing requests of the same type, and avoiding a heap-allocated list that may need to reallocate multiple times) was implemented. Initial GUI design efforts began circa December 2022, with those designs drawing inspiration from AntiMicro's button combo editor.
 
 By January 2023, Worldinput's first incarnation proved fatally flawed:
 
@@ -524,7 +803,7 @@ By January 2023, Worldinput's first incarnation proved fatally flawed:
     "Where all this gets tricky is that if we treat clicking and dragging as a modifier [key/button] and a vector input, then you can't activate any other modifier keys while the operation is in progress. Using Windows Notepad as an example, it'd be as if drag-selecting text prevented you from using the Ctrl + S shortcut."
 * It was around this time that I also discovered that some Creation Kit functions (e.g. editing depth bias, scale, etc., by mouse dragging with certain keys held) could be swapped between, seamlessly, by pressing and releasing individual non-modifier keys. That rendered the original node tree concept entirely unsalvageable: these Creation Kit binds would've been utterly impossible to replicate in this system.
 
-These cases helped motivate a redesign of Worldinput (named `worldinput2` until its completion; now the complete and "canonical" "Worldinput") beginning circa early February 2023. Planning happened in earnest (in the form of writing a spec) from 2/28/2023 to 5/10/2023 for the bulk of the latest design, with additional work occurring every week or two in September through October 2023.
+These cases helped motivate a redesign of Worldinput (named `worldinput2` until its completion; now the complete and "canonical" "Worldinput") beginning circa early February 2023. Planning happened in earnest (in the form of writing a massive spec) from 2/28/2023 to 5/10/2023 for the bulk of the latest design, with additional work occurring every week or two in September through October 2023.
 
 ## UI
 
@@ -548,6 +827,14 @@ These cases helped motivate a redesign of Worldinput (named `worldinput2` until 
 
 ## Dovahscript
 
+* Do we really *need* to run this on a worker thread in order to allow the user to force-kill scripts that hit a loop?
+  
+  * No, really, think about it. It's not safe to just terminate a thread willy-nilly, because you'll fail to free resources, fail to release locks, and so on... which is why we *don't*. We use a feature built into the Lua interpreter -- the instruction count hook -- to make the script periodically pause and check if an "abort" bool has been set. The only time Dovahscript would ever *truly* be unresponsive would be if native code ran into an infinite loop or otherwise stalled out due to being told to do something silly, and if that ever happens, then we're boned even with the alternate thread, because IIRC the main thread won't commit to killing Dovahscript until the script thread acknowledges the abort. So why can't the whole script run on the main thread? It'd remove the need for locking when reading form data.
+
+    * Running on the main thread would mean that Dovahscript and the Render Window would be competing for time each tick.
+
+    * Even with the instruction hook, Lua operations could potentially still "run hot" enough to decrease UI responsiveness on the main thread. This is pure speculation but perhaps that could interfere with the user actually carrying out the UI interactions needed to force-kill an especially busy and processing-heavy script?
+
 ### Form accessors and boilerplate
 
 * To the fullest extent possible, accessors to form properties should rely on templates to reduce copy-and-paste boilerplate.
@@ -555,3 +842,13 @@ These cases helped motivate a redesign of Worldinput (named `worldinput2` until 
 * Getters and setters for a form's parent should rely on templates to reduce boilerplate. Currently, each form capable of having parents (`cell`, `objectreference`, `topic_info`) has to define its own `parent` getters and setters.
 
   * A complication with this is that the accessors have different names: `cell.parent_world`; `objectreference.parent_cell`; and `topic_info.parent`. (There's also `topic_info.parent_quest`, but that just accesses the parent DIAL form and invokes a getter on that.) Plus, setters aren't always available e.g. I don't think you can set `cell.parent_world`.
+
+### Main thread context ("add-ons")
+
+If we make it possible to run scripts on the main thread at least conditionally, then that would potentially allow us to improve integration between Lua scripts and the rest of the editor. For example, it might be possible to trigger a Lua script from within the Render Window, or have a Lua script "pilot" the Render Window for the user. We could potentially even go the extra mile and add hooks for extending the native GUI with Lua, though since the native GUI is, uh, native, we would obviously only be able to offer the things it *occurs* to us to offer. **This would be the difference between "scripts" and "add-ons."**
+
+Most form windows have bespoke designs, and none of them have menubars, toolbars, or status bars, so it's hard to really envision any points where Lua scripts could extend the windows. Even if we gate Lua GUIs behind a button or something similar, where would we put those buttons?
+
+One potential extension hook would be context menus for forms in the Object Window: allowing Lua add-ons to add context menu entries and handlers for different forms, form types, and so on, which could open Lua-powered dialogs or just run Lua scripts silently in the background.
+
+I'd need a *lot* of detailed use cases for Lua add-ons before I even begin to design a system for them, because committing to the wrong abstraction -- in something meant to be a platform for user-end extensibility -- would be a devastating mistake here.

@@ -2,11 +2,12 @@
 #include <QInputDialog>
 #include <QMenu>
 #include <QMessageBox>
+#include "helpers/qt/basic_bindings.h"
 #include "../../generic/QStandardItemModelDKEx.h" // enhanced QStandardItemModel
-#include "../../../helpers/qt/basic_bindings.h"
-#include "../../../dovah/core.h"
-#include "../../../editor/core.h"
-#include "../../../editor/helpers/stringify_conditions.h"
+#include "dovah/forms/components/conditions/context.h"
+#include "dovah/core.h"
+#include "editor/core.h"
+#include "editor/helpers/stringify_conditions.h"
 
 namespace {
    constexpr int no_stage = -1;
@@ -198,7 +199,12 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
          QObject::connect(widget->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
             this->_redraw_target_settings();
          });
-         QObject::connect(this->ui.targetConditions, &ConditionList::conditionEdited, this, &QuestTabObjectives::redrawTargetListSelectedItemConditions);
+         QObject::connect(this->ui.targetConditions, &DKConditionList::changeAttempted, this, [this]() {
+            if (auto* t = this->_get_target()) {
+               this->ui.targetConditions->exportTo(this->form, t->conditions);
+            }
+            this->redrawTargetListSelectedItemConditions();
+         });
       }
       #pragma region Context menu
       this->context_menu_actions.target_list.insert   = new QAction(tr("New..."),    this->ui.targets);
@@ -327,7 +333,7 @@ void QuestTabObjectives::deactivate() {
    QObject::disconnect(this->ui.targets);
    QObject::disconnect(this->ui.targetAlias);
    QObject::disconnect(this->ui.targetFlagIgnoreLocks);
-   this->ui.targetConditions->model()->clearTarget();
+   this->ui.targetConditions->clear();
 }
 
 void QuestTabObjectives::redrawObjectiveListSelectedItemText() {
@@ -394,7 +400,7 @@ void QuestTabObjectives::redrawTargetListSelectedItemConditions() {
    auto* col1 = model->item(row, 1);
    if (!col1)
       return;
-   auto  ctx  = dovah::loaded_forms::components::condition_context(this->stub, true);
+   auto  ctx  = dovah::loaded_forms::components::conditions::context(this->stub, true);
    col1->setText(editor_helpers::stringify_condition_list(target->conditions, ctx));
 }
 
@@ -568,7 +574,7 @@ void QuestTabObjectives::_redraw_target_list() {
    if (!ptr)
       return;
    //
-   auto  ctx  = dovah::loaded_forms::components::condition_context(this->stub, true);
+   auto  ctx  = dovah::loaded_forms::components::conditions::context(this->stub, true);
    auto& list = ptr->targets;
    auto  size = list.size();
    QModelIndex prior;
@@ -596,13 +602,13 @@ void QuestTabObjectives::_redraw_target_settings() {
    if (!ptr) {
       this->ui.targetFlagIgnoreLocks->setChecked(false);
       this->ui.targetAlias->setCurrentIndex(this->ui.targetAlias->findData(-1));
-      this->ui.targetConditions->model()->clearTarget();
+      this->ui.targetConditions->clear();
       return;
    }
    //
    this->ui.targetFlagIgnoreLocks->setChecked(ptr->flags & loaded_t::Target::flag::marker_pathing_ignores_locks);
    this->ui.targetAlias->setCurrentIndex(this->ui.targetAlias->findData(ptr->aliasID));
-   this->ui.targetConditions->model()->setTarget(this->stub, ptr->conditions, true);
+   this->ui.targetConditions->importFrom(this->form, ptr->conditions);
 }
 
 void QuestTabObjectives::showEvent(QShowEvent* event) {

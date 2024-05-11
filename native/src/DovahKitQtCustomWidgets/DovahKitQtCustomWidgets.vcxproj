@@ -109,6 +109,7 @@
   <ItemGroup>
     <ClCompile Include="interfaces\DKColorPickerButtonInterface.cpp" />
     <ClCompile Include="interfaces\DKCompactObjectReferencePickerInterface.cpp" />
+    <ClCompile Include="interfaces\DKConditionListInterface.cpp" />
     <ClCompile Include="interfaces\DKDelayedEnableButtonInterface.cpp" />
     <ClCompile Include="interfaces\DKFormDestructionDataButtonInterface.cpp" />
     <ClCompile Include="interfaces\DKFormListPaneInterface.cpp" />
@@ -123,6 +124,7 @@
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
     <ClCompile Include="widgets\DKCompactObjectReferencePicker.cpp" />
+    <ClCompile Include="widgets\DKConditionList.cpp" />
     <ClCompile Include="widgets\DKDelayedEnableButton.cpp" />
     <ClCompile Include="widgets\DKFormDestructionDataButton.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
@@ -190,6 +192,8 @@
     <QtMoc Include="widgets\DKCompactObjectReferencePicker.h" />
     <QtMoc Include="interfaces\DKCompactObjectReferencePickerInterface.h" />
     <QtMoc Include="interfaces\DKPapyrusFragmentFunctionPickerInterface.h" />
+    <QtMoc Include="widgets\DKConditionList.h" />
+    <QtMoc Include="interfaces\DKConditionListInterface.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
     <QtMoc Include="widgets\DKObjectReferencePicker.h" />
     <QtMoc Include="widgets\DKQuestAliasPicker.h" />

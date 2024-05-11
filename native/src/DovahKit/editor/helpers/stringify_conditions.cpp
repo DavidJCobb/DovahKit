@@ -1,32 +1,40 @@
-#include "stringify_conditions.h"
-#include "stringify_condition_argument.h"
+#include "./stringify_conditions.h"
+#include "./stringify_condition_argument.h"
 #include "../core.h"
 #include <QObject>
-#include "../../dovah/data/story_manager.h"
-#include "../../dovah/forms/Package.h"
-#include "../../dovah/forms/Quest.h"
+#include "dovah/data/conditions/comparison_operator.h"
+#include "dovah/data/conditions/function_info.h"
+#include "dovah/data/conditions/run_on_type.h"
+#include "dovah/data/story_manager.h"
+#include "dovah/forms/Package.h"
+#include "dovah/forms/Quest.h"
+#include "dovah/form_stub.h"
 
 namespace {
+   namespace conditions {
+      using namespace dovah::conditions;
+      using namespace dovah::loaded_forms::components::conditions;
+   }
    using condition = dovah::loaded_forms::components::condition;
 }
 
 namespace editor_helpers {
    extern QString stringify_condition(
       const dovah::loaded_forms::components::condition& cnd,
-      const dovah::loaded_forms::components::condition_context& ctx
+      const dovah::loaded_forms::components::conditions::context& ctx
    ) {
       QString out;
       auto& editor = DovahKitCore::get();
       auto& rod    = cnd.get_run_on_data();
       //
       switch (rod.type) {
-         case condition::run_on_type::subject:
+         case conditions::run_on_type::subject:
             out += QObject::tr("Subject");
             break;
-         case condition::run_on_type::target:
+         case conditions::run_on_type::target:
             out += QObject::tr("Target");
             break;
-         case condition::run_on_type::reference:
+         case conditions::run_on_type::reference:
             if (auto* stub = rod.reference.get_form_stub()) {
                if (!stub->is_none_stub()) {
                   auto* edid = stub->get_editor_id();
@@ -42,13 +50,13 @@ namespace editor_helpers {
                out += QObject::tr("NONE", "condition - missing run-on ref");
             }
             break;
-         case condition::run_on_type::combat_target:
+         case conditions::run_on_type::combat_target:
             out += QObject::tr("Combat Target");
             break;
-         case condition::run_on_type::linked_ref:
+         case conditions::run_on_type::linked_ref:
             out += QObject::tr("Linked Ref");
             break;
-         case condition::run_on_type::quest_alias:
+         case conditions::run_on_type::quest_alias:
             if (auto* q = ctx.get_owning_quest()) {
                auto* alias = q->lookup_alias_by_id(rod.index);
                if (alias)
@@ -59,10 +67,10 @@ namespace editor_helpers {
                out += QObject::tr("Alias #%1").arg(rod.index);
             }
             break;
-         case condition::run_on_type::package_data:
+         case conditions::run_on_type::package_data:
             out += QObject::tr("Package Data #%1").arg(rod.index);
             break;
-         case condition::run_on_type::event_data:
+         case conditions::run_on_type::event_data:
             if (auto* q = ctx.get_owning_quest()) {
                auto  code = q->event;
                auto* def  = dovah::story_event_definition::lookup(code);
@@ -83,7 +91,7 @@ namespace editor_helpers {
       //
       auto* func = cnd.get_function();
       if (func)
-         out += func->name;
+         out += QString::fromUtf8(QByteArray(func->name.data(), func->name.size()));
       else
          out += QObject::tr("?%1", "unknown condition function").arg(cnd.get_function_id());
       out += QObject::tr("(", "condition arg delimiter - open");
@@ -101,43 +109,43 @@ namespace editor_helpers {
       auto& cmp = cnd.get_comparison();
       out += QObject::tr(" ", "condition operator padding");
       switch (cmp.op) {
-         case condition::operator_type::equal:
+         case conditions::comparison_operator::equal:
             out += QObject::tr("==", "condition operator");
             break;
-         case condition::operator_type::not_equal:
+         case conditions::comparison_operator::not_equal:
             out += QObject::tr("!=", "condition operator");
             break;
-         case condition::operator_type::greater:
+         case conditions::comparison_operator::greater:
             out += QObject::tr(">", "condition operator");
             break;
-         case condition::operator_type::greater_or_equal:
+         case conditions::comparison_operator::greater_or_equal:
             out += QObject::tr(">=", "condition operator");
             break;
-         case condition::operator_type::less:
+         case conditions::comparison_operator::less:
             out += QObject::tr("<", "condition operator");
             break;
-         case condition::operator_type::less_or_equal:
+         case conditions::comparison_operator::less_or_equal:
             out += QObject::tr("<=", "condition operator");
             break;
       }
       out += QObject::tr(" ", "condition operator padding");
       //
-      if (cnd.get_flags() & condition::flag::compare_to_global) {
-         auto* stub = cmp.operand.global.get_form_stub();
+      if (std::holds_alternative<dovah::form_reference_t>(cmp.operand)) {
+         const auto* stub = std::get<dovah::form_reference_t>(cmp.operand).get_form_stub();
          if (stub && !stub->is_none_stub()) {
             out += stub->get_editor_id();
          } else {
             out += QObject::tr("NONE", "condition - missing global");
          }
       } else {
-         out += QString::number(cmp.operand.constant);
+         out += QString::number(std::get<float>(cmp.operand));
       }
       return out;
    }
 
    extern QString stringify_condition_list(
       const dovah::loaded_forms::components::condition_list& list,
-      const dovah::loaded_forms::components::condition_context& ctx
+      const dovah::loaded_forms::components::conditions::context& ctx
    ) {
       QString out;
       size_t  size = list.size();
