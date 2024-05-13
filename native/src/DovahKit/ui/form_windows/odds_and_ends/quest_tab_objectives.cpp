@@ -29,7 +29,14 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
          widget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
          widget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
          widget->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
-         //
+
+         {  // The default QStandardItem is draggable and editable; disable this.
+            auto* proto = new QStandardItem;
+            proto->setFlags(Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable | Qt::ItemNeverHasChildren);
+            proto->setTextAlignment(Qt::AlignmentFlag::AlignLeft | Qt::AlignmentFlag::AlignBaseline);
+            model->setItemPrototype(proto);
+         }
+         
          auto* header = widget->horizontalHeader();
          header->setDefaultAlignment(Qt::AlignLeft);
          header->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
@@ -42,7 +49,7 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
             vh->setVisible(false);
             vh->setDefaultSectionSize(vh->minimumSectionSize());
          }
-         //
+         
          QObject::connect(widget->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
             this->_redraw_objective_settings();
             this->_redraw_target_list();
@@ -183,7 +190,14 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
          widget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
          widget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
          widget->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
-         //
+
+         {  // The default QStandardItem is draggable and editable; disable this.
+            auto* proto = new QStandardItem;
+            proto->setFlags(Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable | Qt::ItemNeverHasChildren);
+            proto->setTextAlignment(Qt::AlignmentFlag::AlignLeft | Qt::AlignmentFlag::AlignBaseline);
+            model->setItemPrototype(proto);
+         }
+         
          auto* header = widget->horizontalHeader();
          header->setDefaultAlignment(Qt::AlignLeft);
          header->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
@@ -195,7 +209,7 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
             vh->setVisible(false);
             vh->setDefaultSectionSize(vh->minimumSectionSize());
          }
-         //
+         
          QObject::connect(widget->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
             this->_redraw_target_settings();
          });
@@ -531,6 +545,8 @@ void QuestTabObjectives::_redraw_objective_list() {
       col0->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
       col0->setData((int)obj.index, Qt::UserRole);
       col1->setData((int)obj.index, Qt::UserRole); // *sigh* having absolutely everything be per-cell and not per-row is annoying
+      col0->setFlags(Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
+      col1->setFlags(Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
       model->appendRow({ col0, col1 });
       //
       if (obj.index == prior_id)
@@ -582,6 +598,8 @@ void QuestTabObjectives::_redraw_target_list() {
       auto& target = list[i];
       auto* col0   = new QStandardItem(this->_get_alias_name(target.aliasID));
       auto* col1   = new QStandardItem(editor_helpers::stringify_condition_list(target.conditions, ctx));
+      col0->setFlags(Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
+      col1->setFlags(Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
       model->appendRow({ col0, col1 });
       //
       if (i == index)

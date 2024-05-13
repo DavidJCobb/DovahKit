@@ -459,7 +459,17 @@ namespace dovah::loaded_forms::components {
                auto& dst = this->parameters[i];
                auto& src = source.parameters[i];
                
-               switch (this->get_argument_underlying_type(i)) {
+               auto* typeinfo   = this->get_argument_type(i);
+               auto  underlying = this->get_argument_underlying_type(i);
+               if (typeinfo->is_union() && i > 0) {
+                  typeinfo = typeinfo->resolve_union_type(*this->get_argument_type(i - 1), this->parameters[i - 1].dword);
+                  if (typeinfo)
+                     underlying = typeinfo->underlying_type;
+               }
+               switch (underlying) {
+                  case dovah::conditions::parameter_underlying_type::none:
+                     dst.dword = 0;
+                     break;
                   case dovah::conditions::parameter_underlying_type::character:
                      dst.dword = std::get<char>(src);
                      break;
@@ -480,6 +490,7 @@ namespace dovah::loaded_forms::components {
                      dst.dword = std::get<uint32_t>(src);
                      break;
                }
+               dst.underlying = underlying;
             }
          }
          
@@ -500,8 +511,10 @@ namespace dovah::loaded_forms::components {
          this->run_on.type = source.run_on.type;
          if (auto* ref_ptr = std::get_if<form_stub*>(&source.run_on.entity)) {
             this->run_on.reference.set(my_owner, *ref_ptr);
+         } else if (auto* casted = std::get_if<uint32_t>(&source.run_on.entity)) {
+            this->run_on.index = *casted;
          } else {
-            this->run_on.index = std::get<uint32_t>(source.run_on.entity);
+            this->run_on.index = 0;
          }
       }
    #pragma endregion

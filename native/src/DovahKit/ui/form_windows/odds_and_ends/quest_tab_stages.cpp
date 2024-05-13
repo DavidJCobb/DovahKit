@@ -25,7 +25,14 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
          model->setSortRole(Qt::UserRole);
          widget->setModel(model);
          widget->setUniformItemSizes(true);
-         //
+
+         {  // The default QStandardItem is draggable and editable; disable this.
+            auto* proto = new QStandardItem;
+            proto->setFlags(Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable | Qt::ItemNeverHasChildren);
+            proto->setTextAlignment(Qt::AlignmentFlag::AlignLeft | Qt::AlignmentFlag::AlignBaseline);
+            model->setItemPrototype(proto);
+         }
+         
          QObject::connect(widget->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
             this->_redraw_stage_settings();
             this->_redraw_entry_list();
@@ -137,7 +144,14 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
          model->setHorizontalHeaderLabels({ tr("Journal Text"), tr("Conditions") });
          widget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
          widget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-         //
+
+         {  // The default QStandardItem is draggable and editable; disable this.
+            auto* proto = new QStandardItem;
+            proto->setFlags(Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable | Qt::ItemNeverHasChildren);
+            proto->setTextAlignment(Qt::AlignmentFlag::AlignLeft | Qt::AlignmentFlag::AlignBaseline);
+            model->setItemPrototype(proto);
+         }
+         
          auto* header = widget->horizontalHeader();
          header->setDefaultAlignment(Qt::AlignLeft);
          header->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
@@ -149,7 +163,7 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
             vh->setVisible(false);
             vh->setDefaultSectionSize(vh->minimumSectionSize());
          }
-         //
+         
          QObject::connect(widget->selectionModel(), &QItemSelectionModel::currentChanged, this, [this](const QModelIndex& current, const QModelIndex& previous) {
             this->_redraw_entry_settings();
          });
@@ -478,6 +492,7 @@ void QuestTabStages::_redraw_stage_list() {
       item->setData((int)stage.index, Qt::UserRole);
       item->setText(QString::number(stage.index));
       item->setTextAlignment(Qt::AlignRight);
+      item->setFlags(Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
       model->appendRow(item);
       //
       if (stage.index == prior_id)
@@ -529,6 +544,8 @@ void QuestTabStages::_redraw_entry_list() {
       auto& entry = list[i];
       auto* col0  = new QStandardItem(entry.journal_text.c_str());
       auto* col1  = new QStandardItem(editor_helpers::stringify_condition_list(entry.conditions, ctx));
+      col0->setFlags(Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
+      col1->setFlags(Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
       model->appendRow({ col0, col1 });
       //
       if (i == index)

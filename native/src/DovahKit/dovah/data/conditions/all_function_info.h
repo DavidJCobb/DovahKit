@@ -189,7 +189,7 @@ namespace dovah::conditions {
       function_info(365, "IsChild"),
       function_info(366, "GetStolenItemValueNoCrime",               parameter_types::Faction),
       function_info(367, "GetLastPlayerAction"),
-      function_info(368, "IsPlayerActionActive",                    parameter_types::Integer), // arg type needs verification
+      function_info(368, "IsPlayerActionActive",                    parameter_types::Integer),
       function_info(370, "IsTalkingActivatorActor",                 parameter_types::Actor),
       function_info(372, "IsInList",                                parameter_types::FormList),
       function_info(373, "GetStolenItemValue",                      parameter_types::Faction),
@@ -218,12 +218,12 @@ namespace dovah::conditions {
       function_info(432, "GetIsObjectType",                         parameter_types::FormType),
       function_info(434, "GetDialogueEmotion"),
       function_info(435, "GetDialogueEmotionValue"),
-      function_info(437, "GetIsCreatureType",                       parameter_types::Integer), // double-check this
+      function_info(437, "GetIsCreatureType",                       parameter_types::Integer),
       function_info(444, "GetInCurrentLocFormList",                 parameter_types::FormList),
       function_info(445, "GetInZone",                               parameter_types::EncounterZone),
       function_info(446, "GetVelocity",                             parameter_types::Axis),
       function_info(447, "GetGraphVariableFloat",                   parameter_types::String),
-      function_info(448, "HasPerk",                                 parameter_types::Perk,              parameter_types::Integer), // second arg type is not known
+      function_info(448, "HasPerk",                                 parameter_types::Perk),
       function_info(449, "GetFactionRelation",                      parameter_types::Actor),
       function_info(450, "IsLastIdlePlayed",                        parameter_types::Idle),
       function_info(453, "GetPlayerTeammate"),
@@ -309,7 +309,7 @@ namespace dovah::conditions {
       function_info(608, "GetKeywordDataForAlias",                  parameter_types::Alias,             parameter_types::Keyword),
       function_info(610, "LocAliasHasKeyword",                      parameter_types::Alias,             parameter_types::Keyword),
       function_info(611, "IsNullPackageData",                       parameter_types::PackageData),
-      function_info(612, "GetNumericPackageData",                   parameter_types::Integer), // TODO: verify
+      function_info(612, "GetNumericPackageData",                   parameter_types::PackageData),
       function_info(613, "IsFurnitureAnimType",                     parameter_types::FurnitureAnim),
       function_info(614, "IsFurnitureEntryType",                    parameter_types::FurnitureEntry),
       function_info(615, "GetHighestRelationshipRank"),

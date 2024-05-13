@@ -12,6 +12,8 @@ DKCompactObjectReferencePickerDialog::DKCompactObjectReferencePickerDialog(QWidg
       auto* form   = editor.get_form(dovah::hardcoded_form_ids::PlayerRef);
       this->ui.refPicker->setRef(form);
    });
+   QObject::connect(this->ui.buttonOK,     &QPushButton::clicked, this, &QDialog::accept);
+   QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
 }
 
 

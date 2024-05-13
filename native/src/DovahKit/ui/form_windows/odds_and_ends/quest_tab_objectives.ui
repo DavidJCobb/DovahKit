@@ -141,7 +141,14 @@
     <widget class="QTableView" name="objectives"/>
    </item>
    <item row="2" column="0">
-    <widget class="QTableView" name="targets"/>
+    <widget class="QTableView" name="targets">
+     <property name="wordWrap">
+      <bool>false</bool>
+     </property>
+     <property name="cornerButtonEnabled">
+      <bool>false</bool>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

@@ -1,5 +1,6 @@
 #include "./DKConditionEditDialog.h"
 #include <optional>
+#include <string_view>
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QGridLayout>
@@ -26,12 +27,35 @@
 #include "dovah/forms/Package.h"
 #include "dovah/forms/Quest.h"
 
+// for special cases: GetVMQuestVariable
+#include "dovah/files/bsa/bsa_archived_file.h"
+#include "dovah/files/papyrus/compiled_script.h"
+#include "editor/subsystems/assets.h"
+#include "editor/subsystems/form_info_cache/core.h"
+#include "editor/subsystems/papyrus/core.h"
+
 namespace {
    constexpr int RunOnTypeRole           = Qt::ItemDataRole::UserRole;
    constexpr int RunOnFormIDRole         = Qt::ItemDataRole::UserRole + 1;
    constexpr int RunOnPlayerSentinelRole = Qt::ItemDataRole::UserRole + 2;
 
    using parameter_type_override = dovah::loaded_forms::components::conditions::parameter_type_override;
+
+   namespace special_case_functions {
+      constexpr const auto _lookup_function_id_by_name(std::string_view name) {
+         for (const auto& info : dovah::conditions::all_vanilla_function_info)
+            if (info.name == name)
+               return info.id;
+         throw;
+      }
+
+      constexpr const auto GetVMQuestVariable    = _lookup_function_id_by_name("GetVMQuestVariable");
+      constexpr const auto GetVMScriptVariable   = _lookup_function_id_by_name("GetVMScriptVariable");
+      constexpr const auto IsInCombat            = _lookup_function_id_by_name("IsInCombat");
+      constexpr const auto IsLimbGone            = _lookup_function_id_by_name("IsLimbGone");
+      constexpr const auto IsPlayerActionActive  = _lookup_function_id_by_name("IsPlayerActionActive");
+      constexpr const auto IsSceneActionComplete = _lookup_function_id_by_name("IsSceneActionComplete");
+   }
 }
 
 bool DKConditionEditDialog::_FunctionListProxy::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const {
@@ -82,7 +106,33 @@ DKConditionEditDialog::DKConditionEditDialog(dovah::form_stub& containing_form, 
 
       param.stack->setCurrentWidget(param.blank);
 
-      QObject::connect(param.combobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, i, stack = param.stack](int index) {
+      param.combobox->setEditable(false);
+      param.combobox->setInsertPolicy(QComboBox::InsertPolicy::NoInsert);
+
+      QObject::connect(param.combobox, QOverload<int>::of(&QComboBox::activated), this, [this, i, stack = param.stack](int index) {
+         //
+         // NOTE:
+         // 
+         // Normally, we'd use QComboBox::currentIndexChanged, which fires only when the combobox's 
+         // selected index changed. Here, though, we're using QComboBox::activated, which fires when 
+         // the user selects any item, even if that item is already selected. Why?
+         // 
+         // Well, some special-cased condition functions allow users to type arbitrary values into 
+         // the combobox. So consider this edge-case, because Qt's design spec evidently didn't:
+         // 
+         //  - User opens a condition for editing.
+         //  - User types a new value into the combobox.
+         //  - User saves the condition.
+         //  - User opens the condition for editing again.
+         //  - We restore the combobox's edit-text,...
+         //  = ...but because the insert-policy is NoInsert, we're not actually adding an item,...
+         //  = ...so the current index is 0.
+         //  - User selects the first (i.e. zeroth) item in the combobox.
+         // 
+         // In that scenario, the user has changed the selection from custom text to a specific item 
+         // in the combobox... but that item was already the "current index," so `currentIndexChanged` 
+         // never fires.
+         //
          auto* widget = (QComboBox*)sender();
          if (stack->currentWidget() != widget || !widget->isEnabled())
             return;
@@ -608,6 +658,273 @@ void DKConditionEditDialog::_on_parameter_changed(size_t index, QVariant value) 
       }
    }
 }
+
+void DKConditionEditDialog::_renew_combobox_edit_handler(size_t index) {
+   auto& param = this->parameters[index];
+   if (!param.combobox->isEditable())
+      return;
+
+   QObject::connect(param.combobox->lineEdit(), &QLineEdit::editingFinished, this, [this, index, stack = param.stack, widget = param.combobox]() {
+      if (stack->currentWidget() != widget || !widget->isEnabled())
+         return;
+      if (!widget->isEditable())
+         return;
+      if (widget->lineEdit()->text().isEmpty()) {
+         QVariant value;
+         {
+            auto data = widget->currentData();
+            if (data.isNull()) {
+               value = index;
+            } else {
+               value = data;
+            }
+         }
+         this->_on_parameter_changed(index, value);
+         return;
+      }
+      QVariant value;
+      {
+         auto text         = widget->currentText();
+         auto desired_type = QMetaType::Void;
+
+         // Vile hack to know what data type to use:
+         if (widget->count() > 0) {
+            bool success    = false;
+            auto basis_data = widget->itemData(0); // base it on the first item's data's type
+            desired_type = (decltype(desired_type)) basis_data.type(); // cast needed for QVariant's historical jank
+         }
+
+         bool success = false;
+         switch (desired_type) {
+            case QMetaType::Int:
+            case QMetaType::Long:
+            case QMetaType::Short:
+            case QMetaType::UInt:
+            case QMetaType::ULong:
+            case QMetaType::UShort:
+               value = text.toInt(&success);
+               break;
+            case QMetaType::Double:
+            case QMetaType::Float:
+               value = text.toFloat(&success);
+               break;
+            case QMetaType::QString:
+               success = true;
+               value   = text;
+               break;
+         }
+         if (!success) {
+            if (!text.isEmpty()) {
+               QApplication::beep();
+            }
+            return;
+         }
+      }
+      this->_on_parameter_changed(index, value);
+   });
+
+}
+bool DKConditionEditDialog::_update_parameter_ui_for_special_case(size_t index) {
+   using underlying_type = dovah::conditions::parameter_underlying_type;
+
+   if (index >= 2) {
+      return false;
+   }
+   const auto& value      = this->_value.parameters[index];
+   const auto* typeinfo   = this->_value.get_effective_argument_typeinfo(index);
+   const auto  underlying = typeinfo ? typeinfo->underlying_type : underlying_type::none;
+
+   auto& param = this->parameters[index];
+   //
+   const auto blockers = std::array{
+      QSignalBlocker(param.combobox),
+      QSignalBlocker(param.form),
+      QSignalBlocker(param.ref),
+      QSignalBlocker(param.spinbox),
+      QSignalBlocker(param.textbox),
+   };
+
+   auto function_id = this->_value.function;
+
+   if (function_id == special_case_functions::GetVMQuestVariable || function_id == special_case_functions::GetVMScriptVariable) {
+      if (index != 1 || underlying != underlying_type::string)
+         return false;
+
+      auto& prev_value = this->_value.parameters[index - 1];
+      if (!std::holds_alternative<dovah::form_stub*>(prev_value))
+         return false;
+
+      auto* subject = std::get<dovah::form_stub*>(prev_value);
+      auto* widget  = param.combobox;
+      widget->clear();
+      widget->setEditable(false);
+      if (!subject) {
+         widget->setEnabled(false);
+      } else {
+         widget->setEnabled(true);
+
+         auto& assets  = dovahkit::subsystems::assets::get();
+         auto& fic     = dovahkit::subsystems::form_info_cache::core::get();
+         auto  scripts = fic.get_scripts_attached_to_form(*subject);
+         if (!scripts.empty()) {
+            for (const auto* script : scripts) {
+               bool conditional = false;
+               if (script->info.loose.has_value())
+                  conditional = script->info.loose.value().flags.conditional;
+               else if (script->info.packed.has_value())
+                  conditional = script->info.packed.value().flags.conditional;
+
+               if (!conditional)
+                  continue;
+               
+               //
+               // The script itself is flagged as conditional, so it is allowed to have 
+               // conditional-flagged properties.
+               //
+
+               dovah::compiled_papyrus_script data;
+               {
+                  std::filesystem::path path("scripts/");
+                  path /= script->name + ".pex";
+
+                  auto* file = assets.lookup_game_asset(path);
+                  if (!file)
+                     continue;
+                  try {
+                     data.read_file(file->data(), file->size());
+                     delete file;
+                  } catch (dovah::compiled_papyrus_script::read_exception& e) {
+                     delete file;
+                     continue;
+                  }
+               }
+
+               uint32_t conditional_mask = 0;
+               for (const auto& flag : data.user_flags) {
+                  if (dovah::papyrus::helpers::name_equals(flag.name, "conditional")) {
+                     conditional_mask = flag.to_mask();
+                     break;
+                  }
+               }
+               if (!conditional_mask)
+                  continue;
+
+
+               for (const auto& object : data.objects) {
+                  if (!dovah::papyrus::helpers::name_equals(object.name, script->name)) // guard against multi-PEXs
+                     continue;
+                  for (const auto& prop : object.properties) {
+                     if (!(prop.property_flags & conditional_mask))
+                        continue;
+
+                     auto& autovar_name = prop.autovar_name;
+                     if (autovar_name.empty())
+                        continue;
+                     QString text = QString::fromUtf8(QByteArray(autovar_name.data(), autovar_name.size()));
+                     widget->addItem(text, text);
+                  }
+               }
+            }
+            //
+            // Done scanning all attached scripts for conditional properties.
+            //
+         }
+         //
+         // Done handling all attached scripts.
+         //
+         widget->addItem(tr(" NONE", "Papyrus property auto-variable name - 'none' option"), QString(""));
+         widget->model()->sort(0, Qt::AscendingOrder);
+
+         int i = -1;
+         if (std::holds_alternative<std::string>(value)) {
+            const auto& str = std::get<std::string>(value);
+            QString prior = QString::fromUtf8(QByteArray(str.data(), str.size()));
+
+            i = widget->findData(prior);
+         } else {
+            i = widget->findData(QString(""));
+         }
+         if (i >= 0)
+            widget->setCurrentIndex(i);
+      }
+      param.stack->setCurrentWidget(widget);
+      return true;
+   }
+   if (function_id == special_case_functions::IsInCombat) {
+      //
+      // TODO: The single Integer parameter is a bool: if non-zero, then the condition checks whether 
+      //       the actor is ignoring combat, and if so, returns 0 instead of 1 even if the actor is 
+      //       currently in combat.
+      // 
+      //       We should render it as a checkbox with a label e.g. "Only if not ignoring." Of course, 
+      //       we have no code for checkbox args, and we'd have to figure out how to truncate the 
+      //       label (and let the user hover over it for a tooltip revealing its full value).
+      //
+   }
+   if (function_id == special_case_functions::IsLimbGone) {
+      auto* widget = param.combobox;
+      widget->clear();
+      widget->setEditable(true);
+      widget->addItem(tr("Torso",    "IsLimbGone value"), (int32_t)0);
+      widget->addItem(tr("Head",     "IsLimbGone value"), (int32_t)1);
+      widget->addItem(tr("Eye",      "IsLimbGone value"), (int32_t)2);
+      widget->addItem(tr("Look At",  "IsLimbGone value"), (int32_t)3);
+      widget->addItem(tr("Fly Grab", "IsLimbGone value"), (int32_t)4);
+      widget->addItem(tr("Saddle",   "IsLimbGone value"), (int32_t)5);
+      if (std::holds_alternative<int32_t>(value)) {
+         auto limb = std::get<int32_t>(value);
+
+         int i = widget->findData(limb);
+         if (i >= 0)
+            widget->setCurrentIndex(i);
+         else
+            widget->setEditText(QString::number(limb));
+      }
+      param.stack->setCurrentWidget(widget);
+      return true;
+   }
+   if (function_id == special_case_functions::IsPlayerActionActive) {
+      auto* widget = param.combobox;
+      widget->clear();
+      widget->setEditable(true);
+      int32_t raw = 0;
+      widget->addItem(tr("Swing Melee Weapon",    "PLAYER_ACTION"), (int32_t)raw++);
+      widget->addItem(tr("Cast Spell",            "PLAYER_ACTION"), (int32_t)raw++);
+      widget->addItem(tr("Shooting Bow",          "PLAYER_ACTION"), (int32_t)raw++);
+      widget->addItem(tr("Grabbing (Z-Key) Ref",  "PLAYER_ACTION"), (int32_t)raw++);
+      widget->addItem(tr("Knocking Over Objects", "PLAYER_ACTION"), (int32_t)raw++);
+      widget->addItem(tr("Standing on Furniture", "PLAYER_ACTION"), (int32_t)raw++);
+      widget->addItem(tr("Zoomed-In Aim",         "PLAYER_ACTION"), (int32_t)raw++);
+      widget->addItem(tr("Destroy Object",        "PLAYER_ACTION"), (int32_t)raw++);
+      widget->addItem(tr("Locked Object",         "PLAYER_ACTION"), (int32_t)raw++);
+      widget->addItem(tr("Pickpocket Crosshair",  "PLAYER_ACTION"), (int32_t)raw++);
+      widget->addItem(tr("Cast Self Spell",       "PLAYER_ACTION"), (int32_t)raw++);
+      widget->addItem(tr("Shout",                 "PLAYER_ACTION"), (int32_t)raw++);
+      widget->addItem(tr("Actor Collision",       "PLAYER_ACTION"), (int32_t)raw++);
+      if (std::holds_alternative<int32_t>(value)) {
+         auto action_value = std::get<int32_t>(value);
+
+         int i = widget->findData(action_value);
+         if (i >= 0)
+            widget->setCurrentIndex(i);
+         else
+            widget->setEditText(QString::number(action_value));
+      }
+      param.stack->setCurrentWidget(widget);
+      return true;
+   }
+   if (function_id == special_case_functions::IsSceneActionComplete) {
+      //
+      // TODO: First parameter is a Scene form; second parameter is the index of an action in that 
+      //       scene. When we can load Scenes, show a drop-down of the actions instead of a spinbox.
+      // 
+      // TODO: Should we handle GetStageDone's quest stage parameter the same way, and remove the 
+      //       "quest stage" type that's built into the condition internals?
+      //
+   }
+   return false;
+}
+//
 void DKConditionEditDialog::_update_parameter_ui(size_t index) {
    auto& param = this->parameters[index];
 
@@ -813,6 +1130,10 @@ void DKConditionEditDialog::_update_parameter_ui(size_t index) {
       param.stack->setCurrentWidget(param.blank);
       return;
    }
+   if (this->_update_parameter_ui_for_special_case(index)) {
+      this->_renew_combobox_edit_handler(index);
+      return;
+   }
 
    const auto blockers = std::array{
       QSignalBlocker(param.combobox),
@@ -821,6 +1142,7 @@ void DKConditionEditDialog::_update_parameter_ui(size_t index) {
       QSignalBlocker(param.spinbox),
       QSignalBlocker(param.textbox),
    };
+   param.combobox->setEditable(false); // clean this up in case `_update_parameter_ui_for_special_case` changed it
 
    bool underlying_type_unchanged = param.last_shown_type == typeinfo->underlying_type;
 
@@ -921,22 +1243,57 @@ void DKConditionEditDialog::_update_parameter_ui(size_t index) {
          break;
       case underlying_type::form:
          {
-            auto* widget = param.form;
+            bool all_allowed_types_are_refs = true;
 
-            QList<dovah::form_type> list;
-            typeinfo->for_each_allowed_form_type([&list](dovah::form_type ft) {
-               list.push_back(ft);
-            });
-            widget->setAllowedFormTypes(list);
+            QList<dovah::form_type> allowed_types;
+            typeinfo->for_each_allowed_form_type([&allowed_types, &all_allowed_types_are_refs](dovah::form_type ft) {
+               allowed_types.push_back(ft);
 
-            if (std::holds_alternative<dovah::form_stub*>(value)) {
-               auto* stub = std::get<dovah::form_stub*>(value);
-               if (stub && list.contains(stub->form_type)) {
-                  widget->setFormStub(stub);
+               if (!dovah::form_type_is_reference(ft)) {
+                  all_allowed_types_are_refs = false;
                }
-            }
+            });
+            if (allowed_types.empty())
+               all_allowed_types_are_refs = false;
 
-            param.stack->setCurrentWidget(widget);
+            if (all_allowed_types_are_refs) {
+               auto* widget = param.ref;
+               if (allowed_types.size() == 1) {
+                  //
+                  // As of this writing, there are no cases of condition arg types that limit to 
+                  // multiple specific REFR types. The only specific REFR types that exist are 
+                  // actors, placed hazards, and placed projectiles.
+                  // 
+                  // That said, we probably should give DKCompactObjectReferencePicker the ability 
+                  // to limit to multiple form types -- and the non-compact version too, if it 
+                  // can't already do that.
+                  //
+                  widget->setRequiredFormType(allowed_types[0]);
+               } else {
+                  widget->setRequiredFormType(dovah::form_type::reference);
+               }
+
+               if (std::holds_alternative<dovah::form_stub*>(value)) {
+                  auto* stub = std::get<dovah::form_stub*>(value);
+                  if (stub && allowed_types.contains(stub->form_type)) {
+                     widget->setRef(stub);
+                  }
+               }
+
+               param.stack->setCurrentWidget(widget);
+            } else {
+               auto* widget = param.form;
+               widget->setAllowedFormTypes(allowed_types);
+
+               if (std::holds_alternative<dovah::form_stub*>(value)) {
+                  auto* stub = std::get<dovah::form_stub*>(value);
+                  if (stub && (allowed_types.empty() || allowed_types.contains(stub->form_type))) {
+                     widget->setFormStub(stub);
+                  }
+               }
+
+               param.stack->setCurrentWidget(widget);
+            }
          }
          break;
       case underlying_type::int_signed:
@@ -980,6 +1337,12 @@ void DKConditionEditDialog::_update_parameter_ui(size_t index) {
                if (quest) {
                   widget->setEnabled(true);
                   this->_quest_stages_to_combobox(*quest, widget, underlying_type_unchanged);
+                  //
+                  if (std::holds_alternative<uint32_t>(value)) {
+                     auto i = widget->findData(std::get<uint32_t>(value));
+                     if (i >= 0)
+                        widget->setCurrentIndex(i);
+                  }
                } else {
                   widget->setEnabled(false);
                }
@@ -1010,10 +1373,13 @@ void DKConditionEditDialog::_update_parameter_ui(size_t index) {
             } else {
                widget->setText({});
             }
+
+            param.stack->setCurrentWidget(widget);
          }
          break;
    }
 }
+
 void DKConditionEditDialog::_update_all_parameters_ui() {
    this->_update_parameter_ui(0);
    this->_update_parameter_ui(1);
@@ -1021,13 +1387,6 @@ void DKConditionEditDialog::_update_all_parameters_ui() {
 }
 
 void DKConditionEditDialog::_quest_stages_to_combobox(dovah::form_stub& quest, QComboBox* widget, bool maintain_selection) {
-   std::optional<uint32_t> selection;
-   if (maintain_selection) {
-      auto data = widget->currentData();
-      if (data.isValid())
-         selection = data.toInt();
-   }
-
    widget->clear();
 
    using loaded_form_type = dovah::loaded_forms::Quest;
@@ -1051,12 +1410,6 @@ void DKConditionEditDialog::_quest_stages_to_combobox(dovah::form_stub& quest, Q
 
    for (auto& stage : src->stages) {
       widget->addItem(QString::number(stage.index), stage.index);
-   }
-
-   if (selection.has_value()) {
-      auto i = widget->findData(selection.value());
-      if (i >= 0)
-         widget->setCurrentIndex(i);
    }
 }
 

@@ -11,6 +11,7 @@
 #include "ui/types/conditions/condition.h"
 
 namespace dovah::conditions {
+   class function_info;
    class parameter_typeinfo;
 }
 
@@ -70,6 +71,9 @@ class DKConditionEditDialog : public QDialog {
       void _update_run_on_ui();
 
       void _on_parameter_changed(size_t index, QVariant);
+
+      void _renew_combobox_edit_handler(size_t index);
+      bool _update_parameter_ui_for_special_case(size_t index); // returns `true` if special case applied
       void _update_parameter_ui(size_t index);
       void _update_all_parameters_ui();
 
