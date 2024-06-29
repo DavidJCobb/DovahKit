@@ -63,7 +63,6 @@ namespace dovah::loaded_forms::components {
             switch (underlying) {
                using enum dovah::conditions::parameter_underlying_type;
                case alias:
-               case event:
                case int_unsigned:
                case package_data:
                case quest_stage:

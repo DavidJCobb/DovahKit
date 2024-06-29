@@ -49,7 +49,10 @@ namespace dovah::loaded_forms::components::papyrus {
          );
          intfc.throw_save_error(notice);
       }
-      subrecord.write(this->status);
+      if (header.version >= 4) {
+         uint8_t v = (uint8_t)this->status;
+         subrecord.write(v);
+      }
       subrecord.write(count);
       for(auto& prop : this->properties)
          prop.save(header, subrecord, intfc);

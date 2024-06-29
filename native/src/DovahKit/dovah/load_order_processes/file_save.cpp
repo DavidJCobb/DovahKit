@@ -269,7 +269,7 @@ namespace dovah::load_order_processes {
       std::vector<form_stub*> stubs_to_remove;
       for (auto& pair : active_load_order.active_file_forms.forms) {
          bare_form_id_t id = pair.first;
-         if (writer.fixup_data.form_stubs.contains(id))
+         if (!writer.fixup_data.form_stubs.contains(id))
             stubs_to_remove.push_back(pair.second); // removing can invalidate iterators, which would break this loop
       }
       size_t only_none_stubs_past_this_point = stubs_to_remove.size();

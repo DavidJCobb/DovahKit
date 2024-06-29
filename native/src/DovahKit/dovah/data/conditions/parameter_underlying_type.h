@@ -6,7 +6,6 @@ namespace dovah::conditions {
       alias,        // ID of any alias on the condition's owning quest
       character,    // single-byte character, e.g. a 3D axis 'X' 'Y' or 'Z'
       enumeration,
-      event,        // dword 0xXXXXYYYY where X is the event member and Y is the event function
       float32,
       form,
       int_signed,

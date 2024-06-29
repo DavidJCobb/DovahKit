@@ -2,6 +2,7 @@
 #include "helpers/strings.h"
 #include "helpers/windows_ini.h"
 #pragma warning(disable: 5105)
+#include <windows.h>
 #include "Shlobj.h"
 
 namespace dovah::utils {

@@ -624,7 +624,6 @@ namespace dovah::conditions::parameter_types {
    inline constexpr const auto EffectItem        = parameter_typeinfo("Effect Item",         _form_type_lists::EffectItem);
    inline constexpr const auto EncounterZone     = parameter_typeinfo("Encounter Zone",      form_type::encounter_zone);
    inline constexpr const auto EquipType         = parameter_typeinfo("Equip Type (Deprecated/Broken)", parameter_underlying_type::int_unsigned);
-   inline constexpr const auto Event             = parameter_typeinfo("Event",               parameter_underlying_type::event);
    inline constexpr const auto EventData         = parameter_typeinfo("Event Data",          parameter_underlying_type::form);
    inline constexpr const auto Faction           = parameter_typeinfo("Faction",             form_type::faction);
    inline constexpr const auto Float             = parameter_typeinfo("Float",               parameter_underlying_type::float32);

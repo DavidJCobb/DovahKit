@@ -254,7 +254,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
          #undef OpenMutex
          #undef OpenSemaphore
          #undef OpenWaitableTimer
-         #undef SleepConditionVariableSR
       #pragma endregion
       #pragma region Winbase.h
          #undef AccessCheckAndAuditAlarm
@@ -736,12 +735,15 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
       #pragma push_macro("MAKE_WIN32_ALIAS")
       #pragma push_macro("MAKE_WIN32_ALIAS_A_ONLY")
+      #pragma push_macro("MAKE_WIN32_ALIAS_W_ONLY")
       #if UNICODE
-         #define MAKE_WIN32_ALIAS(Name) extern decltype(Name##W)& Name;
+         #define MAKE_WIN32_ALIAS(Name)        extern decltype(Name##W)& Name;
          #define MAKE_WIN32_ALIAS_A_ONLY(Name) ;
+         #define MAKE_WIN32_ALIAS_W_ONLY(Name) extern decltype(Name##W)& Name;
       #else
-         #define MAKE_WIN32_ALIAS(Name) extern decltype(Name##A)& Name;
+         #define MAKE_WIN32_ALIAS(Name)        extern decltype(Name##A)& Name;
          #define MAKE_WIN32_ALIAS_A_ONLY(Name) extern decltype(Name##A)& Name;
+         #define MAKE_WIN32_ALIAS_W_ONLY(Name) extern decltype(Name##W)& Name;
       #endif
          
       //
@@ -868,7 +870,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
          MAKE_WIN32_ALIAS(OpenMutex)
          MAKE_WIN32_ALIAS(OpenSemaphore)
          MAKE_WIN32_ALIAS(OpenWaitableTimer)
-         MAKE_WIN32_ALIAS(SleepConditionVariableSR)
       #pragma endregion
       #pragma region Winbase.h (excluding Libloaderapi.h and Synchapi.h)
          #pragma region Security and Identity
@@ -919,8 +920,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
          MAKE_WIN32_ALIAS(CreateMailslot)
          MAKE_WIN32_ALIAS(CreateNamedPipe)
          MAKE_WIN32_ALIAS(CreatePrivateNamespace)
-         MAKE_WIN32_ALIAS(CreateProcessWithLogon)
-         MAKE_WIN32_ALIAS(CreateProcessWithToken)
+         MAKE_WIN32_ALIAS_W_ONLY(CreateProcessWithLogon)
+         MAKE_WIN32_ALIAS_W_ONLY(CreateProcessWithToken)
          MAKE_WIN32_ALIAS(CreateSymbolicLink)
          MAKE_WIN32_ALIAS(CreateSymbolicLinkTransacted)
          MAKE_WIN32_ALIAS(DecryptFile)
@@ -935,9 +936,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
          MAKE_WIN32_ALIAS(FileEncryptionStatus)
          MAKE_WIN32_ALIAS(FindActCtxSectionString)
          MAKE_WIN32_ALIAS(FindAtom)
-         MAKE_WIN32_ALIAS(FindFirstFileNameTransacted)
+         MAKE_WIN32_ALIAS_W_ONLY(FindFirstFileNameTransacted)
          MAKE_WIN32_ALIAS(FindFirstFileTransacted)
-         MAKE_WIN32_ALIAS(FindFirstStreamTransacted)
+         MAKE_WIN32_ALIAS_W_ONLY(FindFirstStreamTransacted)
          MAKE_WIN32_ALIAS(FindFirstVolume)
          MAKE_WIN32_ALIAS(FindFirstVolumeMountPoint)
          MAKE_WIN32_ALIAS(FindNextVolume)
@@ -986,12 +987,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
          MAKE_WIN32_ALIAS(OpenFileMapping)
          MAKE_WIN32_ALIAS(OpenJobObject)
          MAKE_WIN32_ALIAS(OpenPrivateNamespace)
-         MAKE_WIN32_ALIAS(QueryActCtxSettings)
-         MAKE_WIN32_ALIAS(QueryActCtx)
+         MAKE_WIN32_ALIAS_W_ONLY(QueryActCtxSettings)
+         MAKE_WIN32_ALIAS_W_ONLY(QueryActCtx)
          MAKE_WIN32_ALIAS(QueryDosDevice)
          MAKE_WIN32_ALIAS(QueryFullProcessImageName)
-         MAKE_WIN32_ALIAS(ReadDirectoryChangesEx)
-         MAKE_WIN32_ALIAS(ReadDirectoryChanges)
+         MAKE_WIN32_ALIAS_W_ONLY(ReadDirectoryChangesEx)
+         MAKE_WIN32_ALIAS_W_ONLY(ReadDirectoryChanges)
          MAKE_WIN32_ALIAS(ReadEventLog)
          MAKE_WIN32_ALIAS(RegisterEventSource)
          MAKE_WIN32_ALIAS(RemoveDirectoryTransacted)

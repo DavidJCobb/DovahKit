@@ -621,6 +621,14 @@ namespace dovah::loaded_forms {
          #pragma region Quest fragments
          void Quest::LogEntry::script_fragment::load(tes_subrecord_reader& subrecord) {
             assert(subrecord.signature() == 'VMAD');
+            if (!subrecord.is_in_bounds(
+               sizeof(stage_id) +
+               sizeof(unknown02) +
+               sizeof(entry_index) +
+               sizeof(unknown08)
+            )) {
+               return;
+            }
             subrecord.unchecked_read(this->stage_id);
             subrecord.unchecked_read(this->unknown02);
             subrecord.unchecked_read(this->entry_index);
@@ -894,7 +902,7 @@ namespace dovah::loaded_forms {
                   // Load unknown field that is only present when log entries are present, but that is 
                   // highly consequential to whether alias script data is even loaded:
                   //
-                  subrecord.unchecked_read(this->script_fragment_root.unknown);
+                  subrecord.read(this->script_fragment_root.unknown);
                   //
                   // Load log entry fragment data:
                   //

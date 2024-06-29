@@ -279,8 +279,9 @@ void ActiveFileSaveDialog::commit() {
          tr("Error", "save error"),
          text
       );
-      if (requires_reload)
+      if (requires_reload) {
          editor.abandon_data();
+      }
 
       this->reject();
       return;

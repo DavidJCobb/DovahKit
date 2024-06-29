@@ -113,7 +113,6 @@ namespace dovah::loaded_forms::components::conditions {
             switch (underlying) {
                using enum dovah::conditions::parameter_underlying_type;
                case alias:
-               case event:
                case int_unsigned:
                case package_data:
                case quest_stage:
@@ -148,7 +147,7 @@ namespace dovah::loaded_forms::components::conditions {
       return true;
    }
 
-   const dovah::conditions::parameter_typeinfo* working_condition::get_argument_typeinfo(size_t index) const noexcept {
+   const dovah::conditions::parameter_typeinfo* working_condition::get_argument_typeinfo(size_t index) const {
       if (index >= std::tuple_size_v<decltype(parameters)>)
          throw std::out_of_range("condition parameter index out of range");
 
@@ -332,9 +331,6 @@ namespace dovah::loaded_forms::components::conditions {
          case enumeration:
             assert(typeinfo->enumeration_info.has_value());
             parameter = (int32_t)typeinfo->enumeration_info.value().members[0].value;
-            break;
-         case event:
-            parameter = uint32_t{};
             break;
          case float32:
             parameter = (float)0.0F;
