@@ -628,9 +628,6 @@ void DKConditionEditDialog::_on_parameter_changed(size_t index, QVariant value) 
       case underlying_type::enumeration:
          this->_value.parameters[index] = (int32_t)value.value<int>();
          break;
-      case underlying_type::event:
-         this->_value.parameters[index] = (uint32_t)value.value<int>();
-         break;
       case underlying_type::float32:
          this->_value.parameters[index] = value.value<float>();
          break;
@@ -717,6 +714,7 @@ void DKConditionEditDialog::_renew_combobox_edit_handler(size_t index) {
             if (!text.isEmpty()) {
                QApplication::beep();
             }
+            this->_update_parameter_ui(index); // revert the value to a valid one
             return;
          }
       }
@@ -865,12 +863,12 @@ bool DKConditionEditDialog::_update_parameter_ui_for_special_case(size_t index) 
       auto* widget = param.combobox;
       widget->clear();
       widget->setEditable(true);
-      widget->addItem(tr("Torso",    "IsLimbGone value"), (int32_t)0);
-      widget->addItem(tr("Head",     "IsLimbGone value"), (int32_t)1);
-      widget->addItem(tr("Eye",      "IsLimbGone value"), (int32_t)2);
-      widget->addItem(tr("Look At",  "IsLimbGone value"), (int32_t)3);
-      widget->addItem(tr("Fly Grab", "IsLimbGone value"), (int32_t)4);
-      widget->addItem(tr("Saddle",   "IsLimbGone value"), (int32_t)5);
+      widget->addItem(tr("0 (Torso)",    "IsLimbGone value"), (int32_t)0);
+      widget->addItem(tr("1 (Head)",     "IsLimbGone value"), (int32_t)1);
+      widget->addItem(tr("2 (Eye)",      "IsLimbGone value"), (int32_t)2);
+      widget->addItem(tr("3 (Look At)",  "IsLimbGone value"), (int32_t)3);
+      widget->addItem(tr("4 (Fly Grab)", "IsLimbGone value"), (int32_t)4);
+      widget->addItem(tr("5 (Saddle)",   "IsLimbGone value"), (int32_t)5);
       if (std::holds_alternative<int32_t>(value)) {
          auto limb = std::get<int32_t>(value);
 
@@ -1225,9 +1223,6 @@ void DKConditionEditDialog::_update_parameter_ui(size_t index) {
                widget->setEnabled(false);
             }
          }
-         break;
-      case underlying_type::event: // TODO: actually, is this even used anywhere? lol
-         param.stack->setCurrentWidget(param.blank);
          break;
       case underlying_type::float32:
          {

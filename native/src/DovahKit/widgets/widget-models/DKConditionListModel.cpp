@@ -13,6 +13,25 @@
 #include "dovah/forms/Package.h"
 #include "dovah/forms/Quest.h"
 
+
+namespace {
+   namespace special_case_functions {
+      constexpr const auto _lookup_function_id_by_name(std::string_view name) {
+         for (const auto& info : dovah::conditions::all_vanilla_function_info)
+            if (info.name == name)
+               return info.id;
+         throw;
+      }
+
+      constexpr const auto GetVMQuestVariable    = _lookup_function_id_by_name("GetVMQuestVariable");
+      constexpr const auto GetVMScriptVariable   = _lookup_function_id_by_name("GetVMScriptVariable");
+      constexpr const auto IsInCombat            = _lookup_function_id_by_name("IsInCombat");
+      constexpr const auto IsLimbGone            = _lookup_function_id_by_name("IsLimbGone");
+      constexpr const auto IsPlayerActionActive  = _lookup_function_id_by_name("IsPlayerActionActive");
+      constexpr const auto IsSceneActionComplete = _lookup_function_id_by_name("IsSceneActionComplete");
+   }
+}
+
 DKConditionListModel::DKConditionListModel(QObject* parent) : DKGenericListModel(parent) {
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &DKConditionListModel::clear);
@@ -102,6 +121,54 @@ QString DKConditionListModel::_stringify_condition_parameter(const Condition& co
    }
 
    auto& parameter = condition.parameters[i];
+
+   #pragma region Special-case functions
+   if (condition.function == special_case_functions::IsSceneActionComplete) {
+      //
+      // TODO: First parameter is a Scene form; second parameter is the index of an action in that 
+      //       scene. When we can load Scenes, show a drop-down of the actions instead of a spinbox.
+      // 
+      // TODO: Should we handle GetStageDone's quest stage parameter the same way, and remove the 
+      //       "quest stage" type that's built into the condition internals?
+      //
+   }
+   if (auto* casted = std::get_if<int32_t>(&parameter)) {
+      auto value = *casted;
+      if (condition.function == special_case_functions::IsLimbGone) {
+         static constexpr const auto names = std::array{
+            "Torso",
+            "Head",
+            "Eye",
+            "Look At",
+            "Fly Grab",
+            "Saddle",
+         };
+         if (value < names.size()) {
+            return tr("%1 (%2)", "IsLimbGone special-case names").arg(value).arg(names[value]);
+         }
+      } else if (condition.function == special_case_functions::IsPlayerActionActive) {
+         static const auto names = std::array{
+            tr("Swing Melee Weapon",    "PLAYER_ACTION"),
+            tr("Cast Spell",            "PLAYER_ACTION"),
+            tr("Shooting Bow",          "PLAYER_ACTION"),
+            tr("Grabbing (Z-Key) Ref",  "PLAYER_ACTION"),
+            tr("Knocking Over Objects", "PLAYER_ACTION"),
+            tr("Standing on Furniture", "PLAYER_ACTION"),
+            tr("Zoomed-In Aim",         "PLAYER_ACTION"),
+            tr("Destroy Object",        "PLAYER_ACTION"),
+            tr("Locked Object",         "PLAYER_ACTION"),
+            tr("Pickpocket Crosshair",  "PLAYER_ACTION"),
+            tr("Cast Self Spell",       "PLAYER_ACTION"),
+            tr("Shout",                 "PLAYER_ACTION"),
+            tr("Actor Collision",       "PLAYER_ACTION"),
+         };
+         if (value < names.size()) {
+            return names[value];
+         }
+      }
+   }
+   #pragma endregion
+
    if (condition.get_argument_typeinfo(i) == &dovah::conditions::parameter_types::ActorValue) {
       if (auto* casted = std::get_if<uint32_t>(&parameter)) {
          QString out = editor_helpers::actor_value_index_to_name(*casted);

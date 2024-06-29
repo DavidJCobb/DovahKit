@@ -75,13 +75,12 @@ namespace dovahkit::subsystems::worldinput::algorithms {
       //
       std::vector<key_in_press_node> keys_p;
 
+      struct result {
+         frame_status status = frame_status::inactive;
+         timestamp_t  timestamp = zero_timestamp;
+      };
       auto key_gathering_subalgorithm = [&keys_p, current_time, &device](const group& current) {
-         struct result {
-            frame_status status    = frame_status::inactive;
-            timestamp_t  timestamp = zero_timestamp;
-         };
-
-         auto recurse = [&](const group& current, auto& recurse) -> result {
+         auto recurse = [&keys_p, current_time, &device](this auto& recurse, const group& current) -> struct result {
             if (current.type == group_type::single_control) {
                auto bs = device.get_state_of(current.button);
                if (bs.is_down()) {
@@ -95,7 +94,7 @@ namespace dovahkit::subsystems::worldinput::algorithms {
                size_t previous_start     = keys_p.size();
                for (const auto* child : current.children) {
                   size_t prior_count = keys_p.size();
-                  auto   result      = recurse(*child, recurse);
+                  auto   result      = recurse(*child);
                   if (result.status == frame_status::down) {
                      if (result.timestamp < previous_timestamp) {
                         keys_p.resize(prior_count);
@@ -122,7 +121,7 @@ namespace dovahkit::subsystems::worldinput::algorithms {
                auto most_recent  = zero_timestamp;
                for (const auto* child : current.children) {
                   size_t prior_count = keys_p.size();
-                  auto   result      = recurse(*child, recurse);
+                  auto   result      = recurse(*child);
                   if (result.status != frame_status::down)
                      any_not_down = true;
                   if (result.timestamp > most_recent) {
@@ -155,7 +154,7 @@ namespace dovahkit::subsystems::worldinput::algorithms {
                }
                //
                const auto& child = current.current_item();
-               auto result = recurse(child, recurse);
+               auto result = recurse(child);
                if (result.status == frame_status::down && &child == current.children.back()) {
                   return { frame_status::down, current_time };
                }
@@ -163,7 +162,7 @@ namespace dovahkit::subsystems::worldinput::algorithms {
             }
             cobb::unreachable();
          };
-         recurse(current, recurse);
+         recurse(current);
       };
       key_gathering_subalgorithm(*(press.input_sequence.root));
 
