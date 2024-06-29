@@ -661,12 +661,18 @@ void DKConditionEditDialog::_renew_combobox_edit_handler(size_t index) {
    if (!param.combobox->isEditable())
       return;
 
-   QObject::connect(param.combobox->lineEdit(), &QLineEdit::editingFinished, this, [this, index, stack = param.stack, widget = param.combobox]() {
+   auto* line = param.combobox->lineEdit();
+   if (!line)
+      return;
+
+   QObject::disconnect(line, &QLineEdit::editingFinished, this, nullptr); // ensure signal never stacks
+   QObject::connect(line, &QLineEdit::editingFinished, this, [this, index, stack = param.stack, widget = param.combobox]() {
       if (stack->currentWidget() != widget || !widget->isEnabled())
          return;
       if (!widget->isEditable())
          return;
-      if (widget->lineEdit()->text().isEmpty()) {
+
+      auto _fallback_to_combobox = [this, index, widget]() {
          QVariant value;
          {
             auto data = widget->currentData();
@@ -677,12 +683,30 @@ void DKConditionEditDialog::_renew_combobox_edit_handler(size_t index) {
             }
          }
          this->_on_parameter_changed(index, value);
+      };
+
+      if (widget->lineEdit()->text().isEmpty()) {
+         _fallback_to_combobox();
          return;
       }
       QVariant value;
       {
          auto text         = widget->currentText();
          auto desired_type = QMetaType::Void;
+
+         {
+            //
+            // Handle exact matches for known values:
+            //
+            auto i = widget->currentIndex();
+            if (i >= 0) {
+               auto item_text = widget->itemText(i);
+               if (text == item_text) {
+                  _fallback_to_combobox();
+                  return;
+               }
+            }
+         }
 
          // Vile hack to know what data type to use:
          if (widget->count() > 0) {
@@ -699,11 +723,35 @@ void DKConditionEditDialog::_renew_combobox_edit_handler(size_t index) {
             case QMetaType::UInt:
             case QMetaType::ULong:
             case QMetaType::UShort:
+               text  = text.trimmed();
                value = text.toInt(&success);
+               if (!success) {
+                  //
+                  // Many known values are formatted like "0 (Torso)" and such. Convert them 
+                  // over in a "friendly" way, e.g. "0 (Trso)" -> 0.
+                  //
+                  auto i = text.indexOf(' ');
+                  if (i >= 0) {
+                     text  = text.left(i);
+                     value = text.toInt(&success);
+                  }
+               }
                break;
             case QMetaType::Double:
             case QMetaType::Float:
+               text  = text.trimmed();
                value = text.toFloat(&success);
+               if (!success) {
+                  //
+                  // Many known values are formatted like "0 (Torso)" and such. Convert them 
+                  // over in a "friendly" way, e.g. "0 (Trso)" -> 0.
+                  //
+                  auto i = text.indexOf(' ');
+                  if (i >= 0) {
+                     text  = text.left(i);
+                     value = text.toFloat(&success);
+                  }
+               }
                break;
             case QMetaType::QString:
                success = true;
@@ -713,6 +761,12 @@ void DKConditionEditDialog::_renew_combobox_edit_handler(size_t index) {
          if (!success) {
             if (!text.isEmpty()) {
                QApplication::beep();
+               //
+               // Windows' `MessageBeep` API can fail if called too rapidly. And I mean, like,
+               // until the system is restarted. If it gets called too rapidly due to a bug, 
+               // we may never know... unless we flood the console too.
+               //
+               qDebug("BEEP");
             }
             this->_update_parameter_ui(index); // revert the value to a valid one
             return;
