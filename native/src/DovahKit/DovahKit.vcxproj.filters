@@ -2289,6 +2289,12 @@
     <ClCompile Include="widgets\widget-dialogs\DKConditionEditDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\types\logging\log_item.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\message_log\dovahkit_message_log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6032,6 +6038,18 @@
     <ClInclude Include="dovah\forms\components\conditions\working_comparison.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\types\logging\log_item_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\logging\log_item_context.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\logging\log_item.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\message_log\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6595,6 +6613,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\widget-dialogs\DKConditionEditDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\subsystems\message_log\dovahkit_message_log.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

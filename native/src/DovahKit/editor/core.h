@@ -92,14 +92,11 @@ class DovahKitCore : public QObject {
       void dataAcquireFailed(QString error_message); // we tried to load new files, but failed
       
       void fileLoadStatisticsAvailable(const file_load_stats&);
-
-      void backendErrorReceived(const dovah::notices::base_error&);
-      void backendWarningReceived(const dovah::notices::base_warning&);
       
       void formModificationImminent(dovah::form_stub*); // emit this before changing a form, so that listeners can update any Use Info they are displaying
       void formModified(dovah::form_stub*); // you should emit this manually when you change a form in a way that other windows/widgets might need to know about, e.g. changing the editor ID
       void formCreated(dovah::form_stub*);
-      //
+      
       void formWorkingCopyCommitImminent(dovah::form_stub*); // committing a working copy implies its deletion, by the way
       void formWorkingCopyCommitComplete(dovah::form_stub*);
       void formWorkingCopyDeleteImminent(dovah::form_stub*); // not emitted if the form itself is deleted, data is abandoned, etc.
@@ -107,12 +104,13 @@ class DovahKitCore : public QObject {
       void questWorkingCopyStagesAltered(dovah::form_stub*);
       void questWorkingCopyAliasesAltered(dovah::form_stub*);
       void packageWorkingCopyPackageDataAltered(dovah::form_stub*);
-      //
-      void formDeletionImminent(dovah::form_stub*, bool will_be_flagged);
-      void formDeletionComplete(dovah::bare_form_id_t, bool will_be_flagged);
-      //
+      
+      // Signals for form deletion. The form will either be deleted from memory, or will merely have 
+      // the "deleted" record flag set on it while being retained in memory.
+      void formDeletionImminent(dovah::form_stub*, bool just_being_flagged);
+      void formDeletionComplete(dovah::bare_form_id_t, bool just_being_flagged);
+      
       void formRenumbered(dovah::form_stub*, bare_form_id_t oldID, bare_form_id_t newID);
-      //
       void formsRenumberedEnMasse();
       
       void gameSettingValueChanged(const char* name);

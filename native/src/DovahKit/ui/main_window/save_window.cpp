@@ -7,6 +7,7 @@
 #include "dovah/files/tes_file_writing/results.h"
 #include "editor/core.h"
 #include "editor/helpers/backend_error_to_string.h"
+#include "editor/subsystems/message_log/core.h"
 #include "../main_window.h"
 
 #include "editor/ini/main.h"
@@ -205,10 +206,13 @@ void ActiveFileSaveDialog::commit() {
             .arg(forms_we_cant_save.size()),
          QMessageBox::YesToAll | QMessageBox::Cancel
       );
-      if (choice == QMessageBox::Cancel)
+      if (choice == QMessageBox::Cancel) {
          return;
+      }
    }
-   //
+
+   auto& logging = dovahkit::subsystems::message_log::core::get_or_create();
+   
    dovah::tes_file_writing::write_results results;
    try {
       editor.save_active_file(filename, config, results);
@@ -242,6 +246,9 @@ void ActiveFileSaveDialog::commit() {
       }
 
       QString text = QString("Unable to save the file. %1").arg(message);
+      //
+      logging.addLogItem(ui::types::log_item(text, ui::types::log_item_type::error, ui::types::log_item_context::file_save));
+      //
       QMessageBox::critical(
          this,
          tr("Error", "save error"),
@@ -274,6 +281,9 @@ void ActiveFileSaveDialog::commit() {
       }
 
       QString text = QString("Unable to save the file. %1").arg(message);
+      //
+      logging.addLogItem(ui::types::log_item(text, ui::types::log_item_type::error, ui::types::log_item_context::file_save));
+      //
       QMessageBox::critical(
          this,
          tr("Error", "save error"),
@@ -288,9 +298,12 @@ void ActiveFileSaveDialog::commit() {
    }
    if (results.saved_to_temporary_file) {
       QString message = tr("A minor problem occurred: DovahKit was unable to replace the old active file with the newly-written data. Your work has been saved to %1.").arg(results.filename.c_str());
+      //
+      logging.addLogItem(ui::types::log_item(message, ui::types::log_item_type::warning, ui::types::log_item_context::file_save));
+      //
       QMessageBox::critical(
          this,
-         tr("Warning", "save error"),
+         tr("Warning", "save warning"),
          message
       );
    }

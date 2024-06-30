@@ -168,6 +168,7 @@
     <ClCompile Include="editor\subsystems\form_info_cache\quest_vmad_skimmer.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\threaded_builder.cpp" />
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
+    <ClCompile Include="editor\subsystems\message_log\dovahkit_message_log.cpp" />
     <ClCompile Include="editor\subsystems\options\dovahkit_options.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\known_script.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\known_script_ptr.cpp" />
@@ -749,6 +750,7 @@
     <ClCompile Include="ui\options_window\worldedit_tools\options\turn_camera.cpp" />
     <ClCompile Include="ui\options_window\worldinput_bind_editor.cpp" />
     <ClCompile Include="ui\options_window\worldinput_scheme_editor.cpp" />
+    <ClCompile Include="ui\types\logging\log_item.cpp" />
     <ClCompile Include="ui\types\nif_for_form.cpp" />
     <ClCompile Include="ui\types\papyrus\property_value.cpp" />
     <ClCompile Include="ui\utils\bind.cpp" />
@@ -1031,12 +1033,17 @@
     <ClInclude Include="editor\helpers\backend_error_to_string.h" />
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
+    <QtMoc Include="editor\subsystems\message_log\dovahkit_message_log.h" />
+    <ClInclude Include="editor\subsystems\message_log\core.h" />
     <ClInclude Include="helpers\hashing\crc32.h" />
     <ClInclude Include="nif\blocks\BSValueNode.h" />
     <ClInclude Include="nif\utils\find_all_retexturable_blocks.h" />
     <ClInclude Include="nif\utils\precache_nif_info.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="ui\types\conditions\condition.h" />
+    <ClInclude Include="ui\types\logging\log_item.h" />
+    <ClInclude Include="ui\types\logging\log_item_context.h" />
+    <ClInclude Include="ui\types\logging\log_item_type.h" />
     <ClInclude Include="ui\utils\bind.h" />
     <ClInclude Include="ui\utils\DKStyledItemDelegate.h" />
     <QtMoc Include="widgets\DKDelayedEnableButton.h" />

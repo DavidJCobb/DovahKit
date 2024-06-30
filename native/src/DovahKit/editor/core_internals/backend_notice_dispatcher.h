@@ -7,6 +7,11 @@ namespace dovah::notices {
 }
 
 namespace DovahKitEditorInternals {
+   //
+   // Class which can be used to copy backend error and warning info from worker 
+   // threads to the main thread, by round-tripping it through Qt's signal/slot 
+   // system: the core establishes a QueuedConnection to this singleton's signals.
+   //
    class backend_notice_dispatcher : public QObject {
       Q_OBJECT
       public:

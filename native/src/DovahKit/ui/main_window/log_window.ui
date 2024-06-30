@@ -15,7 +15,7 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <widget class="LogList" name="list">
+    <widget class="QTableView" name="list">
      <property name="selectionBehavior">
       <enum>QAbstractItemView::SelectRows</enum>
      </property>
@@ -102,7 +102,7 @@
         <x>0</x>
         <y>0</y>
         <width>499</width>
-        <height>69</height>
+        <height>68</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_2">
@@ -125,13 +125,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>LogList</class>
-   <extends>QTableView</extends>
-   <header>log_window/log_list_view.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

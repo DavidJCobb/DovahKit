@@ -1,13 +1,49 @@
 #include "log_window.h"
 #include <optional>
 #include <QClipboard>
+#include "widgets/DKHeaderView.h"
 #include "./log_window/log_list_view.h"
 
 LogWindow::LogWindow(QWidget* parent) : QWidget(parent) {
    ui.setupUi(this);
    
-   this->ui.list->setAlternatingRowColors(true);
-   this->ui.list->setWordWrap(true);
+   this->_model = new LogListModel(this);
+   {
+      constexpr const size_t icon_size = 16;
+
+      auto* widget = this->ui.list;
+      widget->setModel(this->_model);
+      widget->setIconSize({ icon_size, icon_size });
+      //
+      // Headers:
+      //
+      {
+         auto metrics = QFontMetrics(widget->font());
+         if (auto* vh = widget->verticalHeader()) {
+            vh->setDefaultSectionSize(metrics.height()); // nix the janky padding QTableView adds to rows by default (wow! what a good widget!)
+         }
+         {
+            auto* header = new DKHeaderView(Qt::Orientation::Horizontal, this);
+            header->setFlexResizeEnabled(true);
+            widget->setHorizontalHeader(header);
+
+            header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
+            header->setMinimumSectionSize(2);
+            header->setColumnFlex(LogListModel::Column::Type,    0, 0, icon_size + 8);
+            header->setColumnFlex(LogListModel::Column::Context, 0, 0, icon_size + 8);
+            header->setColumnFlex(LogListModel::Column::Text,    1, 1, 2);
+            header->setColumnFlex(LogListModel::Column::File,    0, 0, metrics.boundingRect("Dragonborn.esm").width() * 1.5F + 4);
+            header->setSectionResizeMode(LogListModel::Column::Text, QHeaderView::Interactive);
+            header->setSectionResizeMode(LogListModel::Column::File, QHeaderView::Interactive);
+            header->setStretchLastSection(false);
+         }
+      }
+      //
+      // Misc:
+      //
+      widget->setAlternatingRowColors(true);
+      widget->setWordWrap(true);
+   }
    
    if (auto* sm = this->ui.list->selectionModel()) {
       QObject::connect(sm, &QItemSelectionModel::currentRowChanged, this, &LogWindow::_redraw_selected_entry);

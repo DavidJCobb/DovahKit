@@ -29,6 +29,7 @@
 #include "subsystems/game_inis.h"
 #include "asset_manager/asset_manager.h"
 #include "subsystems/form_info_cache/core.h"
+#include "subsystems/message_log/core.h"
 #include "subsystems/options/core.h"
 #include "subsystems/papyrus/core.h"
 
@@ -105,7 +106,7 @@ DovahKitCore::DovahKitCore() {
          &dispatcher_t::receivedWarning,
          this,
          [this](dovah::notices::base_warning* cloned) {
-            emit this->backendWarningReceived(*cloned);
+            emit dovahkit::subsystems::message_log::core::get_or_create().backendWarningReceived(*cloned);
             delete cloned;
          },
          Qt::QueuedConnection
@@ -115,7 +116,7 @@ DovahKitCore::DovahKitCore() {
          &dispatcher_t::receivedError,
          this,
          [this](dovah::notices::base_error* cloned) {
-            emit this->backendErrorReceived(*cloned);
+            emit dovahkit::subsystems::message_log::core::get_or_create().backendErrorReceived(*cloned);
             delete cloned;
          },
          Qt::QueuedConnection

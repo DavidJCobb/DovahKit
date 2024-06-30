@@ -3,60 +3,18 @@
 #include <QAbstractItemModel>
 #include <QIcon>
 #include <QString>
-#include <QTableView>
 #include "dovah/core.h"
+#include "ui/types/logging/log_item.h"
 
 namespace dovah::notices {
    class base_error;
    class base_warning;
 }
 
-class LogListModel;
-class LogListModelItem {
-   //
-   // Given a model which displays all users of a form, this item represents a 
-   // user form (as opposed to the used form).
-   //
-   friend LogListModel;
-   public:
-      enum class Type {
-         Unspecified,
-         Warning,
-         Error,
-      };
-      enum class Context {
-         Unspecified,
-         FileLoad,
-         FormLoad,
-         FormSave,
-         FileSave,
-      };
-
-   public:
-      enum class type_t {
-         text,
-      };
-      
-      struct {
-         Type    type    = Type::Unspecified;
-         Context context = Context::Unspecified;
-      } metadata;
-      type_t  type = type_t::text;
-      QString text;
-      QString file;
-      
-      LogListModelItem() {}
-      LogListModelItem(const QString&);
-      LogListModelItem(const dovah::notices::base_error&);
-      LogListModelItem(const dovah::notices::base_warning&);
-      
-      bool empty() const noexcept;
-};
-
 class LogListModel : public QAbstractTableModel {
    Q_OBJECT
    public:
-      using item_type = LogListModelItem;
+      using item_type = ui::types::log_item;
 
       struct Column { // scoped loose enum
          Column() = delete;
@@ -87,8 +45,11 @@ class LogListModel : public QAbstractTableModel {
 
    protected slots:
       void dataAcquireComplete();
+      void dataAbandonImminent();
       void dataSaveImminent();
       void dataSaveComplete();
+      void formRenumbered(dovah::form_stub*, dovah::bare_form_id_t, dovah::bare_form_id_t);
+      void formDeletionImminent(dovah::form_stub*, bool);
 
       void errorReceived(const dovah::notices::base_error&);
       void warningReceived(const dovah::notices::base_warning&);
@@ -108,16 +69,17 @@ class LogListModel : public QAbstractTableModel {
       inline const item_type* row(int rowIndex) const noexcept;
       
       QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+
+   protected:
+      void _appendLogItem(item_type*); // takes ownership
+
+      template<typename... Args>
+      void _createLogItem(Args&&... args) {
+         this->_appendLogItem(new item_type(std::forward<Args>(args)...));
+      }
       
    public slots:
-      void addTextEntry(const QString&, LogListModelItem::Type type = LogListModelItem::Type::Unspecified, LogListModelItem::Context context = LogListModelItem::Context::Unspecified);
+      void addLogItem(item_type&&);
+      void addLogItem(const item_type&);
       void clear();
-};
-
-class LogList : public QTableView {
-   Q_OBJECT
-   public:
-      LogList(QWidget* parent);
-      using model_type      = LogListModel;
-      using model_item_type = model_type::item_type;
 };

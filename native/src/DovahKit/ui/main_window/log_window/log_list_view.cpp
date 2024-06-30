@@ -7,48 +7,10 @@
 #include "editor/open_window_for_form.h"
 #include "editor/helpers/backend_error_to_string.h"
 #include "editor/helpers/backend_warning_to_string.h"
+#include "editor/subsystems/message_log/core.h"
 
-#include "dovah/notices/base_file_load_error.h"
-#include "dovah/notices/base_file_load_warning.h"
 #include "dovah/notices/base_form_load_warning.h"
 #include "dovah/notices/base_form_save_error.h"
-#include "dovah/notices/base_form_save_warning.h"
-
-#pragma region LogListModelItem
-LogListModelItem::LogListModelItem(const QString& t) {
-   this->type = type_t::text;
-   this->text = t;
-}
-LogListModelItem::LogListModelItem(const dovah::notices::base_error& notice) {
-   this->metadata.type = Type::Error;
-   this->text = editor_helpers::backend_error_to_string(notice);
-
-   if (auto* casted = dynamic_cast<const dovah::notices::base_form_save_error*>(&notice)) {
-      this->metadata.context = Context::FormSave;
-   } else if (auto* casted = dynamic_cast<const dovah::notices::base_file_load_error*>(&notice)) {
-      this->metadata.context = Context::FileLoad;
-      this->file = QString::fromUtf8(QByteArray::fromStdString(casted->filename));
-   }
-}
-LogListModelItem::LogListModelItem(const dovah::notices::base_warning& notice) {
-   this->metadata.type = Type::Warning;
-   this->text = editor_helpers::backend_warning_to_string(notice);
-
-   if (auto* casted = dynamic_cast<const dovah::notices::base_form_load_warning*>(&notice)) {
-      this->metadata.context = Context::FormLoad;
-      this->file = QString::fromUtf8(QByteArray::fromStdString(casted->record_info.source_file));
-   } else if (auto* casted = dynamic_cast<const dovah::notices::base_form_save_warning*>(&notice)) {
-      this->metadata.context = Context::FormSave;
-   } else if (auto* casted = dynamic_cast<const dovah::notices::base_file_load_warning*>(&notice)) {
-      this->metadata.context = Context::FileLoad;
-      this->file = QString::fromUtf8(QByteArray::fromStdString(casted->source_file));
-   }
-}
-
-bool LogListModelItem::empty() const noexcept {
-   return this->text.isEmpty();
-}
-#pragma endregion
 
 #pragma region LogListModel
 LogListModel::LogListModel(QObject* parent) : QAbstractTableModel(parent) {
@@ -78,13 +40,22 @@ LogListModel::LogListModel(QObject* parent) : QAbstractTableModel(parent) {
       icon.addFile(":/icons/log-window-icons/context-form-64.png", { 64, 64 });
    }
 
-   auto& editor = DovahKitCore::get();
+   using logging_subsystem = dovahkit::subsystems::message_log::core;
+
+   auto& editor  = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAcquireComplete,     this, &LogListModel::dataAcquireComplete);
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,     this, &LogListModel::dataAbandonImminent);
    QObject::connect(&editor, &DovahKitCore::dataSaveImminent,        this, &LogListModel::dataSaveImminent);
    QObject::connect(&editor, &DovahKitCore::dataSaveComplete,        this, &LogListModel::dataSaveComplete);
+   QObject::connect(&editor, &DovahKitCore::formRenumbered,          this, &LogListModel::formRenumbered);
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent,    this, &LogListModel::formDeletionImminent);
 
-   QObject::connect(&editor, &DovahKitCore::backendErrorReceived,   this, &LogListModel::errorReceived);
-   QObject::connect(&editor, &DovahKitCore::backendWarningReceived, this, &LogListModel::warningReceived);
+   auto& logging = logging_subsystem::get_or_create();
+   QObject::connect(&logging, &logging_subsystem::backendErrorReceived,   this, &LogListModel::errorReceived);
+   QObject::connect(&logging, &logging_subsystem::backendWarningReceived, this, &LogListModel::warningReceived);
+   QObject::connect(&logging, &logging_subsystem::logItemReceived, this, [this](const item_type& item) {
+      this->addLogItem(item);
+   });
 }
 
 void LogListModel::dataAcquireComplete() {
@@ -99,24 +70,58 @@ void LogListModel::dataAcquireComplete() {
       return false;
    });
    if (none_stubs) {
-      this->addTextEntry(
+      this->_createLogItem(
          tr("Forms in the loaded files contain dangling references to %1 non-existent form(s). Check the \"Missing\" category in the Object Window for a list of the missing forms' form IDs, and view the Use Info on entries to see what's referring to them. It's normal for official game files to have this problem.", "log window")
             .arg(none_stubs),
-         LogListModelItem::Type::Warning,
-         LogListModelItem::Context::FileLoad
+         ui::types::log_item_type::warning,
+         ui::types::log_item_context::file_load
       );
    }
-   this->addTextEntry(
+   this->_createLogItem(
       tr("All files have been loaded.", "log window"),
-      LogListModelItem::Type::Unspecified,
-      LogListModelItem::Context::FileLoad
+      ui::types::log_item_type::message,
+      ui::types::log_item_context::file_load
    );
 }
+void LogListModel::dataAbandonImminent() {
+   //
+   // Don't batch warnings across load orders.
+   //
+   this->warnings_cause_by_form.clear();
+}
 void LogListModel::dataSaveImminent() {
-   this->addTextEntry(tr("Saving active file...", "log window"));
+   this->_createLogItem(tr("Saving active file...", "log window"));
 }
 void LogListModel::dataSaveComplete() {
-   this->addTextEntry(tr("The active file has been successfully saved.", "log window"));
+   this->_createLogItem(tr("The active file has been successfully saved.", "log window"));
+}
+void LogListModel::formRenumbered(dovah::form_stub*, dovah::bare_form_id_t prior, dovah::bare_form_id_t after) {
+   //
+   // We suppress identical warnings for the same form. Ensure that we properly keep
+   // track of forms being renumbered (since we use form IDs as our map key).
+   //
+   auto& store = this->warnings_cause_by_form;
+   auto  it    = store.find(prior);
+   if (it == store.end())
+      return;
+
+   auto value = std::move(*it);
+   store.erase(it);
+   store.insert(after, std::move(value));
+}
+void LogListModel::formDeletionImminent(dovah::form_stub* stub, bool just_being_flagged) {
+   //
+   // We suppress identical warnings for the same form. Ensure that if a new form is 
+   // created with the same ID, and somehow ends up having the same problems, that we
+   // do treat it as a separate form.
+   //
+   if (just_being_flagged)
+      return;
+   auto& store = this->warnings_cause_by_form;
+   auto  it    = store.find(stub->formID);
+   if (it == store.end())
+      return;
+   store.erase(it);
 }
 
 bool LogListModel::_has_matching_notice(dovah::bare_form_id_t form_id, QString text) const {
@@ -144,11 +149,11 @@ void LogListModel::errorReceived(const dovah::notices::base_error& notice) {
       form_id = casted->subject.formID;
    }
 
-   auto text = editor_helpers::backend_error_to_string(notice);
-   if (text.isEmpty())
-      return;
-
    auto* item = new item_type(notice);
+   if (item->empty()) [[unlikely]] {
+      delete item;
+      return;
+   }
    
    auto first_inserted = this->children.size();
    auto last_inserted  = first_inserted;
@@ -174,16 +179,14 @@ void LogListModel::warningReceived(const dovah::notices::base_warning& notice) {
    auto text = editor_helpers::backend_warning_to_string(notice);
    if (text.isEmpty())
       return;
-   /*//
-   //
-   // TODO: This doesn't account for "load order" boundaries: if the same warning text 
-   //       and form ID occur across different load orders, then the latter would be lost.
-   //
-   //       Do we really need this?
-   //
+
    if (this->_has_matching_notice(form_id, text))
+      //
+      // We may receive warnings during on-demand loading of a form. If the user loads the
+      // form, unloads it, and reloads it again, let's maybe avoid showing them duplicates
+      // of the same warnings, yeah?
+      //
       return;
-   //*/
 
    auto* item = new item_type(notice);
    
@@ -226,50 +229,49 @@ Qt::ItemFlags LogListModel::flags(const QModelIndex& index) const {
 }
 QVariant LogListModel::data(const QModelIndex& index, int role) const {
    if (!index.isValid())
-      return QVariant();
-   auto item   = (item_type*)index.internalPointer();
-   auto column = index.column();
-   switch (column) {
+      return {};
+   const auto* item = (item_type*)index.internalPointer();
+   switch (index.column()) {
       case Column::Context:
          if (role == Qt::DecorationRole) {
-            switch (item->metadata.context) {
-               case LogListModelItem::Context::FileLoad:
+            switch (item->context) {
+               case ui::types::log_item_context::file_load:
                   return this->_icons.contexts.file_load;
-               case LogListModelItem::Context::FileSave:
+               case ui::types::log_item_context::file_save:
                   return this->_icons.contexts.file_save;
-               case LogListModelItem::Context::FormLoad:
+               case ui::types::log_item_context::form_load:
                   return this->_icons.contexts.form_load;
-               case LogListModelItem::Context::FormSave:
+               case ui::types::log_item_context::form_save:
                   return this->_icons.contexts.form_load; // TODO: Differentiate
             }
          }
          if (role == Qt::ToolTipRole) {
-            switch (item->metadata.context) {
-               case LogListModelItem::Context::FileLoad:
+            switch (item->context) {
+               case ui::types::log_item_context::file_load:
                   return tr("Initial file load");
-               case LogListModelItem::Context::FileSave:
+               case ui::types::log_item_context::file_save:
                   return tr("File save");
-               case LogListModelItem::Context::FormLoad:
+               case ui::types::log_item_context::form_load:
                   return tr("Form data full load");
-               case LogListModelItem::Context::FormSave:
+               case ui::types::log_item_context::form_save:
                   return tr("Form data save");
             }
          }
          break;
       case Column::Type:
          if (role == Qt::DecorationRole) {
-            switch (item->metadata.type) {
-               case LogListModelItem::Type::Error:
+            switch (item->type) {
+               case ui::types::log_item_type::error:
                   return this->_icons.error;
-               case LogListModelItem::Type::Warning:
+               case ui::types::log_item_type::warning:
                   return this->_icons.warning;
             }
          }
          if (role == Qt::ToolTipRole) {
-            switch (item->metadata.type) {
-               case LogListModelItem::Type::Error:
+            switch (item->type) {
+               case ui::types::log_item_type::error:
                   return tr("Error");
-               case LogListModelItem::Type::Warning:
+               case ui::types::log_item_type::warning:
                   return tr("Warning");
             }
          }
@@ -283,7 +285,7 @@ QVariant LogListModel::data(const QModelIndex& index, int role) const {
             return item->file;
          break;
    }
-   return QVariant();
+   return {};
 }
 inline const LogListModel::item_type* LogListModel::row(int rowIndex) const noexcept {
    return this->children.value(rowIndex);
@@ -306,16 +308,21 @@ QVariant LogListModel::headerData(int section, Qt::Orientation orientation, int 
    return {};
 }
 
-void LogListModel::addTextEntry(const QString& text, LogListModelItem::Type type, LogListModelItem::Context context) {
-   auto* item = new item_type(text);
-   item->metadata.type    = type;
-   item->metadata.context = context;
-   
+void LogListModel::_appendLogItem(item_type* item) {
    auto first_inserted = this->children.size();
    auto last_inserted  = first_inserted;
    this->beginInsertRows({}, first_inserted, last_inserted);
    this->children.push_back(item);
    this->endInsertRows();
+}
+
+void LogListModel::addLogItem(item_type&& src) {
+   auto* item = new item_type(std::move(src));
+   this->_appendLogItem(item);
+}
+void LogListModel::addLogItem(const item_type& src) {
+   auto* item = new item_type(src);
+   this->_appendLogItem(item);
 }
 void LogListModel::clear() {
    this->beginResetModel();
@@ -325,34 +332,4 @@ void LogListModel::clear() {
    this->warnings_cause_by_form.clear();
    this->endResetModel();
 }
-#pragma endregion
-
-#pragma region LogList
-LogList::LogList(QWidget* parent) : QTableView(parent) {
-   this->setModel(new model_type(this));
-
-   auto metrics = QFontMetrics(this->font());
-
-   if (auto* vh = this->verticalHeader()) {
-      vh->setDefaultSectionSize(metrics.height()); // nix the janky padding QTableView adds to rows by default (wow! what a good widget!)
-   }
-
-   constexpr const size_t icon_size = 16;
-
-   this->setIconSize({ icon_size, icon_size });
-
-   auto* header = new DKHeaderView(Qt::Orientation::Horizontal, this);
-   header->setFlexResizeEnabled(true);
-   this->setHorizontalHeader(header);
-
-   header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
-   header->setMinimumSectionSize(2);
-   header->setColumnFlex(LogListModel::Column::Type,    0, 0, icon_size + 8);
-   header->setColumnFlex(LogListModel::Column::Context, 0, 0, icon_size + 8);
-   header->setColumnFlex(LogListModel::Column::Text,    1, 1, 2);
-   header->setColumnFlex(LogListModel::Column::File,    0, 0, metrics.boundingRect("Dragonborn.esm").width() * 1.5F + 4);
-   header->setSectionResizeMode(LogListModel::Column::Text, QHeaderView::Interactive);
-   header->setSectionResizeMode(LogListModel::Column::File, QHeaderView::Interactive);
-   header->setStretchLastSection(false);
-};
 #pragma endregion
