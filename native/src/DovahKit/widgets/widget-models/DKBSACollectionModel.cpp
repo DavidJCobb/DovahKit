@@ -594,8 +594,6 @@ bool DKBSACollectionModel::isFolder(const QModelIndex& index) const noexcept {
       return folder->subfolders.size() + folder->files.size();
    }
    int DKBSACollectionModel::columnCount(const QModelIndex& item) const {
-      if (!item.isValid())
-         return 0;
       return 1;
    }
    Qt::ItemFlags DKBSACollectionModel::flags(const QModelIndex& index) const {
