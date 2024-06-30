@@ -12,6 +12,7 @@ QVariant DKFormDestructionStageListModel::data_of(const node_type& node, Qt::Ite
             case Column::FlagDestroy:
             case Column::FlagDisable:
             case Column::FlagIgnoreExternal:
+            case Column::ModelDamageStage:
                return (int)(Qt::AlignHCenter | Qt::AlignVCenter);
          }
          return {};
@@ -37,6 +38,8 @@ QVariant DKFormDestructionStageListModel::data_of(const node_type& node, Qt::Ite
                return node.health_percent;
             case Column::SelfDPS:
                return node.self_damage_rate;
+            case Column::ModelDamageStage:
+               return node.damage_stage;
             case Column::Debris:
                if (auto* stub = node.debris) // keep blank if NONE
                   return QVariant::fromValue(stub);
@@ -186,9 +189,10 @@ decltype(DKFormDestructionStageListModel::_nodes)::iterator DKFormDestructionSta
 
 // Return true if `a` should be sorted before `b`.
 /*static*/ bool DKFormDestructionStageListModel::_sort_nodes(const node_type* a, const node_type* b) {
-   if (a->health_percent > b->health_percent)
-      return true;
-   if (a->damage_stage < b->damage_stage)
-      return true;
-   return false;
+   if (a->health_percent == b->health_percent) {
+      if (a->damage_stage < b->damage_stage)
+         return true;
+      return false;
+   }
+   return a->health_percent > b->health_percent;
 }

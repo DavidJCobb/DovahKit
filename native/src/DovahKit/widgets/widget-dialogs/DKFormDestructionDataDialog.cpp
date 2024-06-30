@@ -1,5 +1,6 @@
 #include "./DKFormDestructionDataDialog.h"
 #include <QKeyEvent>
+#include <QMenu>
 #include "./DKFormDestructionStageDialog.h"
 #include "../widget-models/DKFormDestructionStageListModel.h"
 #include "../DKHeaderView.h"
@@ -43,18 +44,8 @@ DKFormDestructionDataDialog::DKFormDestructionDataDialog(QWidget* parent) : QDia
             this->_selectRow(new_qmi);
       });
    }
-   QObject::connect(this->ui.stageButtonAdd, &QPushButton::clicked, this, [this]() {
-      auto* dialog = new DKFormDestructionStageDialog(this);
-      auto  result = dialog->exec();
-      dialog->deleteLater();
-      if (result == QDialog::DialogCode::Rejected)
-         return;
-
-      auto qmi = this->_model->insertStage(dialog->value());
-      if (qmi.isValid())
-         this->_selectRow(qmi);
-   });
-   QObject::connect(this->ui.stageButtonEdit, &QPushButton::clicked, this, &DKFormDestructionDataDialog::_editSelectedStage);
+   QObject::connect(this->ui.stageButtonAdd,    &QPushButton::clicked, this, &DKFormDestructionDataDialog::_addNewStage);
+   QObject::connect(this->ui.stageButtonEdit,   &QPushButton::clicked, this, &DKFormDestructionDataDialog::_editSelectedStage);
    QObject::connect(this->ui.stageButtonDelete, &QPushButton::clicked, this, &DKFormDestructionDataDialog::_deleteSelectedStage);
 
    QObject::connect(this->ui.enabled, &QCheckBox::toggled, this, [this](bool checked) {
@@ -68,6 +59,37 @@ DKFormDestructionDataDialog::DKFormDestructionDataDialog(QWidget* parent) : QDia
 
    QObject::connect(this->ui.buttonOK,     &QPushButton::clicked, this, &QDialog::accept);
    QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
+
+   #pragma region Context menu
+   this->_context.add  = new QAction(tr("New stage...",  "destruction stage list context menu"), this->ui.stages);
+   this->_context.edit = new QAction(tr("Edit stage...", "destruction stage list context menu"), this->ui.stages);
+   this->_context.del  = new QAction(tr("Delete stage",  "destruction stage list context menu"), this->ui.stages);
+   QObject::connect(this->_context.add,  &QAction::triggered, this, &DKFormDestructionDataDialog::_addNewStage);
+   QObject::connect(this->_context.edit, &QAction::triggered, this, &DKFormDestructionDataDialog::_editSelectedStage);
+   QObject::connect(this->_context.del,  &QAction::triggered, this, &DKFormDestructionDataDialog::_deleteSelectedStage);
+
+   this->ui.stages->setContextMenuPolicy(Qt::CustomContextMenu);
+   QObject::connect(this->ui.stages, &QWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
+      auto* opener = this->ui.stages;
+
+      bool has_selection = false;
+      if (auto* sm = this->ui.stages->selectionModel()) {
+         has_selection = !sm->selectedRows().empty();
+      }
+      
+      this->_context.edit->setVisible(has_selection);
+      this->_context.del->setVisible(has_selection);
+      
+      QMenu menu(opener);
+      menu.addAction(this->_context.add);
+      menu.addAction(this->_context.edit);
+      menu.addAction(this->_context.del);
+      //
+      if (menu.isEmpty())
+         return; // don't show a menu if all of its contents are disabled or hidden
+      menu.exec(opener->mapToGlobal(pos));
+   });
+   #pragma endregion
 }
 
 std::optional<DKFormDestructionDataDialog::DestructionData> DKFormDestructionDataDialog::data() const {
@@ -122,6 +144,17 @@ void DKFormDestructionDataDialog::setData(const std::optional<DestructionData>& 
    return false;
 }
 
+void DKFormDestructionDataDialog::_addNewStage() {
+   auto* dialog = new DKFormDestructionStageDialog(this);
+   auto  result = dialog->exec();
+   dialog->deleteLater();
+   if (result == QDialog::DialogCode::Rejected)
+      return;
+
+   auto qmi = this->_model->insertStage(dialog->value());
+   if (qmi.isValid())
+      this->_selectRow(qmi);
+}
 void DKFormDestructionDataDialog::_deleteSelectedStage() {
    auto* sm = this->ui.stages->selectionModel();
    if (!sm)

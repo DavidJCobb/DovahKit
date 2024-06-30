@@ -9,7 +9,10 @@
 namespace dovah::loaded_forms {
    void Cell::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
+      //
       if (intfc.is_partial_record) // TESObjectCELL::LoadPartial is a no-op.
+         return;
+      if (!intfc.is_winning_record)
          return;
       //
       form_id_t formID;

@@ -25,8 +25,16 @@ void FormTableModelItem::update() {
    this->editorID  = QString::fromUtf8(stub->get_editor_id());
    this->formID    = stub->formID;
    this->userCount = stub->inbound.size();
-   //
-   this->is_active   = stub->is_edited_or_in_active_file() && !stub->test_record_flags(dovah::tes_file_record_header::flag::partial);
+   
+   this->is_active = false;
+   if (!stub->test_record_flags(dovah::tes_file_record_header::flag::partial)) {
+      if (stub->is_edited())
+         this->is_active = true;
+      else {
+         this->is_active = stub->get_owning_load_order().is_defined_or_overridden_in_active_file(*stub);
+      }
+   }
+
    this->is_injected = stub->is_injected();
    this->is_none     = stub->is_none_stub();
 }

@@ -5,6 +5,9 @@ namespace dovah::loaded_forms {
    void ActorBase::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
+      if (!intfc.is_winning_record)
+         return;
+      //
       uint8_t  esp1B = 0;
       uint16_t espF8 = 0;
       form_reference_t form_id;

@@ -25,10 +25,11 @@ namespace dovah::loaded_forms::components {
    }
 
    void destruction_stage_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
-      constexpr const auto no_stage = std::numeric_limits<size_t>::max();
+      if (!intfc.is_winning_record)
+         return;
 
-      size_t  last_loaded_stage  = no_stage;
-      size_t  nth_dstd_subrecord = 0; // for error reporting
+      auto& last_loaded_stage  = this->_load_state.in_stage;
+      auto& nth_dstd_subrecord = this->_load_state.nth_dstd_subrecord; // for error reporting
 
       auto _handle_dest = [this, &subrecord, &intfc]() {
          if (subrecord.size() != 8) {
@@ -121,7 +122,7 @@ namespace dovah::loaded_forms::components {
                }
                break;
             case 'DSTF': // end marker
-               last_loaded_stage = no_stage;
+               last_loaded_stage = _not_in_a_stage;
                break;
          }
       #endif
@@ -206,9 +207,10 @@ namespace dovah::loaded_forms::components {
          //
          auto& model = stage.replacementModel;
          model.save(record, intfc, 'DMDL', 'DMDT', 'DMDS');
+
+         auto& DSTF = record.open_next_subrecord('DSTF');
+         DSTF.close();
       }
-      auto& DSTF = record.open_next_subrecord('DSTF');
-      DSTF.close();
    }
    void destruction_stage_data::clone_from(const destruction_stage_data& other, loaded_forms::Form& my_owner) noexcept {
       this->health = other.health;

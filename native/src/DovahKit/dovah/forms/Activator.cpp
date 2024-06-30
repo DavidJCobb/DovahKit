@@ -5,6 +5,9 @@ namespace dovah::loaded_forms {
    void Activator::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
+      if (!intfc.is_winning_record)
+         return;
+      //
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
@@ -169,9 +172,11 @@ namespace dovah::loaded_forms {
       auto& OBND = record.open_next_subrecord('OBND');
       this->bounds.save(OBND, intfc);
       OBND.close();
-      auto& FULL = record.open_next_subrecord('FULL');
-      FULL.write(this->name);
-      FULL.close();
+      if (!this->name.empty()) {
+         auto& FULL = record.open_next_subrecord('FULL');
+         FULL.write(this->name);
+         FULL.close();
+      }
       this->model.save(record, intfc, 'MODL', 'MODT', 'MODS');
       if (this->destruction_data.has_value())
          this->destruction_data.value().save(record, intfc);

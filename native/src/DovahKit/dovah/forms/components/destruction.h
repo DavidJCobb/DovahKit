@@ -67,6 +67,23 @@ namespace dovah {
             void clone_from(const destruction_stage_data& original, loaded_forms::Form& owner_of_clone) noexcept;
             void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
             void clear(loaded_forms::Form& my_owner);
+
+         protected:
+            static constexpr const size_t _not_in_a_stage = std::numeric_limits<size_t>::max();
+
+            struct {
+               //
+               // Our `load` function is called once per subrecord, and for some subrecords,
+               // we need to remember what we saw in previous subrecords.
+               // 
+               // This workaround will break if we ever have to coalesce destruction stage 
+               // data across multiple files, but Bethesda doesn't appear to ever do that --
+               // only the winning record should ever matter for DEST and friends -- so this 
+               // should be fine for now.
+               //
+               size_t nth_dstd_subrecord = 0;
+               size_t in_stage = _not_in_a_stage;
+            } _load_state;
       };
    }
 }
