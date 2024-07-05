@@ -34,7 +34,7 @@ QString DKTextureAssetPaneInterface::name() const {
 }
 
 QString DKTextureAssetPaneInterface::group() const {
-   return "DovahKit: Forms and form data";
+   return "DovahKit: Game asset selection";
 }
 
 QIcon DKTextureAssetPaneInterface::icon() const {

@@ -16,11 +16,10 @@ namespace dovah::loaded_forms {
          static constexpr const enum form_type form_type = form_type::misc_item;
          MiscItem(const constructor_params& c) : Form(form_type, c) {};
 
-         enum note_type : uint8_t {
-            sound = 0,
-            text  = 1,
-            image = 2,
-            voice = 3
+         struct form_flag : public Form::form_flag {
+            enum : uint32_t {
+               non_playable = 0x00000004,
+            };
          };
 
          components::object_bounds bounds; // OBND

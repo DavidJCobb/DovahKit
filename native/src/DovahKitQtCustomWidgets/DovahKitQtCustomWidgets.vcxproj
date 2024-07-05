@@ -116,6 +116,7 @@
     <ClCompile Include="interfaces\DKFormNIFPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKFormPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKGameFilePickerInterface.cpp" />
+    <ClCompile Include="interfaces\DKNavmeshGenerationImportOptionPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKObjectReferencePickerInterface.cpp" />
     <ClCompile Include="interfaces\DKPapyrusBoundScriptListPaneInterface.cpp" />
     <ClCompile Include="interfaces\DKPapyrusFragmentFunctionPickerInterface.cpp" />
@@ -132,6 +133,7 @@
     <ClCompile Include="widgets\DKFormPicker.cpp" />
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
+    <ClCompile Include="widgets\DKNavmeshGenerationImportOptionPicker.cpp" />
     <ClCompile Include="widgets\DKObjectReferencePicker.cpp" />
     <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp" />
     <ClCompile Include="widgets\DKPapyrusFragmentFunctionPicker.cpp" />
@@ -182,6 +184,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\form_types.h" />
+    <QtMoc Include="interfaces\DKNavmeshGenerationImportOptionPickerInterface.h" />
+    <QtMoc Include="widgets\DKNavmeshGenerationImportOptionPicker.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentFunctionPicker.h" />
     <QtMoc Include="interfaces\DKFormNIFPickerInterface.h" />
     <QtMoc Include="widgets\DKFormNIFPicker.h" />

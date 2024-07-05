@@ -807,6 +807,8 @@ These cases helped motivate a redesign of Worldinput (named `worldinput2` until 
 
 ## UI
 
+* Move `ui::types::log_item` and friends to `dovahkit::subsystems::message_log::...`.
+
 * Investigate replacing `FormSignatureCombobox` and `FormsOfTypeCombobox` with `DKFormPicker`. Where are they used? I know offhand they're used in the Cell View window, and I don't remember if that's because they pre-date the old `FormPicker` or because I wanted a non-async control for simplicity's sake.
 
   Ideally we'd add a "sync/async" option to `DKFormPicker`, with it filling async by default, and then have sync versions on Cell View and friends just so we have fewer changes to test.

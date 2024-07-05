@@ -8,6 +8,7 @@
 #include "widgets/DKColorPickerButton.h"
 #include "widgets/DKFormPicker.h"
 #include "widgets/DKFormListPane.h"
+#include "widgets/DKNavmeshGenerationImportOptionPicker.h"
 
 namespace ui {
    extern void bind(QCheckBox* widget, bool& target) {
@@ -52,6 +53,13 @@ namespace ui {
       widget->setFormStub(dst.get_form_stub());
       QObject::connect(widget, &DKFormPicker::formChanged, widget, [&dst, &dst_owner](dovah::form_stub* value) {
          dst.set(dst_owner, value);
+      });
+   }
+
+   extern void bind(DKNavmeshGenerationImportOptionPicker* widget, uint32_t& record_flags) {
+      widget->setValueByMask(record_flags);
+      QObject::connect(widget, &DKNavmeshGenerationImportOptionPicker::valueChanged, widget, [widget, &record_flags](auto value) {
+         widget->writeValueToMask(record_flags);
       });
    }
 }

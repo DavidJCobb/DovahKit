@@ -16,23 +16,27 @@
 #include "interfaces/DKCompactObjectReferencePickerInterface.h"
 #include "interfaces/DKPapyrusFragmentFunctionPickerInterface.h"
 #include "interfaces/DKConditionListInterface.h"
+#include "interfaces/DKNavmeshGenerationImportOptionPickerInterface.h"
 
 DovahKitQtCustomWidgetsPlugin::DovahKitQtCustomWidgetsPlugin(QObject* parent) : QObject(parent) {
    widgets.append(new DKCollapsiblePaneInterface(this));
    widgets.append(new DKColorPickerButtonInterface(this));
+   widgets.append(new DKDelayedEnableButtonInterface(this));
+
+   widgets.append(new DKFormPickerInterface(this));
    widgets.append(new DKFormListPaneInterface(this));
-   widgets.append(new DKGameFilePickerInterface(this));
-   widgets.append(new DKTextureAssetPaneInterface(this));
    widgets.append(new DKObjectReferencePickerInterface(this));
    widgets.append(new DKCompactObjectReferencePickerInterface(this));
    widgets.append(new DKQuestAliasPickerInterface(this));
-   widgets.append(new DKFormPickerInterface(this));
-   widgets.append(new DKPapyrusBoundScriptListPaneInterface(this));
-   widgets.append(new DKFormNIFPickerInterface(this));
    widgets.append(new DKFormDestructionDataButtonInterface(this));
-   widgets.append(new DKDelayedEnableButtonInterface(this));
+   widgets.append(new DKPapyrusBoundScriptListPaneInterface(this));
    widgets.append(new DKPapyrusFragmentFunctionPickerInterface(this));
    widgets.append(new DKConditionListInterface(this));
+   widgets.append(new DKNavmeshGenerationImportOptionPickerInterface(this));
+
+   widgets.append(new DKGameFilePickerInterface(this));
+   widgets.append(new DKFormNIFPickerInterface(this));
+   widgets.append(new DKTextureAssetPaneInterface(this));
 }
 
 QList<QDesignerCustomWidgetInterface*> DovahKitQtCustomWidgetsPlugin::customWidgets() const {

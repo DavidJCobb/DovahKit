@@ -19,6 +19,7 @@ namespace dovah{
 }
 class DKColorPickerButton;
 class DKFormPicker;
+class DKNavmeshGenerationImportOptionPicker;
 
 namespace ui {
    extern void bind(QCheckBox*, bool&);
@@ -31,6 +32,20 @@ namespace ui {
             target |= mask;
          else
             target &= ~mask;
+      });
+   }
+
+   //
+   // Bind the opposite of a checkbox's state to a given flag.
+   //
+   template<typename Target, typename Mask>
+   void bind_inverse(QCheckBox* widget, Target& target, Mask mask) {
+      widget->setChecked((target & mask) == 0);
+      QObject::connect(widget, &QCheckBox::stateChanged, widget, [&target, mask](int state) {
+         if (state == Qt::CheckState::Checked)
+            target &= ~mask;
+         else
+            target |= mask;
       });
    }
    
@@ -90,4 +105,6 @@ namespace ui {
    //
    // This function will assert that the form you pass in is a working copy!
    extern void bind(DKFormPicker*, dovah::form_reference_t& dst, dovah::loaded_forms::Form& dst_owner);
+
+   extern void bind(DKNavmeshGenerationImportOptionPicker*, uint32_t& record_flags);
 }

@@ -6,8 +6,11 @@
 #include "../ui/form_windows/activator.h"
 #include "../ui/form_windows/cell.h"
 #include "../ui/form_windows/color.h"
+#include "../ui/form_windows/door.h"
+#include "../ui/form_windows/flora.h"
 #include "../ui/form_windows/formlist.h"
 #include "../ui/form_windows/landtexture.h"
+#include "../ui/form_windows/misc_item.h"
 #include "../ui/form_windows/quest.h"
 #include "../ui/form_windows/shout.h"
 #include "../ui/form_windows/textureset.h"
@@ -23,8 +26,11 @@ namespace {
       std::pair{ dovah::form_type::activator,     _make<FormDialogActivator> },
       std::pair{ dovah::form_type::cell,          _make<FormDialogCell> },
       std::pair{ dovah::form_type::color,         _make<FormDialogColor> },
+      std::pair{ dovah::form_type::door,          _make<FormDialogDoor> },
+      std::pair{ dovah::form_type::flora,         _make<FormDialogFlora> },
       std::pair{ dovah::form_type::formlist,      _make<FormDialogFormList> },
       std::pair{ dovah::form_type::land_texture,  _make<FormDialogLandTexture> },
+      std::pair{ dovah::form_type::misc_item,     _make<FormDialogMiscItem> },
       std::pair{ dovah::form_type::quest,         _make<FormDialogQuest> },
       std::pair{ dovah::form_type::shout,         _make<FormDialogShout> },
       std::pair{ dovah::form_type::texture_set,   _make<FormDialogTextureSet> },

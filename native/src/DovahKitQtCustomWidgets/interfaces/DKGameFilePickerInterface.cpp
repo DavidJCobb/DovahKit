@@ -34,7 +34,7 @@ QString DKGameFilePickerInterface::name() const {
 }
 
 QString DKGameFilePickerInterface::group() const {
-   return "DovahKit: Forms and form data";
+   return "DovahKit: Game asset selection";
 }
 
 QIcon DKGameFilePickerInterface::icon() const {

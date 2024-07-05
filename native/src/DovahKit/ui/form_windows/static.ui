@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogStatic</class>
+ <widget class="QDialog" name="FormDialogStatic">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>438</width>
+    <height>384</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Static</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="editorIDLayout">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="flagsAndLODLayout">
+     <item row="3" column="0">
+      <widget class="QCheckBox" name="flagHasHighDetailLODTexture">
+       <property name="text">
+        <string>High-Detail LOD Texture</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QCheckBox" name="flagObstacle">
+       <property name="text">
+        <string>Obstacle</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QCheckBox" name="flagHasLocalizedTextures">
+       <property name="text">
+        <string>Has Localized Textures</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1" colspan="2">
+      <widget class="QCheckBox" name="flagAddOnLODObject">
+       <property name="text">
+        <string>Add-On LOD Object</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QCheckBox" name="flagIsMarker">
+       <property name="whatsThis">
+        <string>If this is checked, then refs of this object will be invisible in-game, cannot be scaled, and can be used as enable state parents for other refs.</string>
+       </property>
+       <property name="text">
+        <string>Is Marker</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QCheckBox" name="flagNeverFades">
+       <property name="whatsThis">
+        <string>If this option is checked, and a ref using this base form has the &quot;Is Full LOD&quot; option checked, then that ref won't fade out of view at a distance.</string>
+       </property>
+       <property name="text">
+        <string>Never Fades</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QCheckBox" name="flagHasDistantLOD">
+       <property name="whatsThis">
+        <string>If this is checked, and if distant LOD meshes have been set for this object, then it will be visible outside of the loaded cell grid (i.e. uGridsToLoad).</string>
+       </property>
+       <property name="text">
+        <string>Has Distant LOD</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1" colspan="2">
+      <widget class="QPushButton" name="buttonSpecifyLODMeshes">
+       <property name="text">
+        <string>Specify distant LOD meshes...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QCheckBox" name="flagOnLocalMap">
+       <property name="whatsThis">
+        <string>If this is checked, the object will be visible on the player's Local Map.</string>
+       </property>
+       <property name="text">
+        <string>On Local Map</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QCheckBox" name="flagHasTreeLOD">
+       <property name="text">
+        <string>Has Tree LOD</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagShowInWorldMap">
+       <property name="text">
+        <string>Show in World Map (must be in sky cell)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="QCheckBox" name="flagHasCurrents">
+       <property name="text">
+        <string>Has Currents</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="modelLayout">
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Model:</string>
+       </property>
+       <property name="buddy">
+        <cstring>model</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="DKFormNIFPicker" name="model"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="directionalMaterialGroupbox">
+     <property name="whatsThis">
+      <string>Apply a material effect (i.e. a texture) to the object, coating surfaces of the object that face a given direction. This can be useful for covering objects in snow, ashfall, and similar effects.</string>
+     </property>
+     <property name="title">
+      <string>Directional material</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Max angle (30-120):</string>
+        </property>
+        <property name="buddy">
+         <cstring>directionalMaterialAngle</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Material:</string>
+        </property>
+        <property name="buddy">
+         <cstring>directionalMaterial</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="directionalMaterialAngle"/>
+      </item>
+      <item row="0" column="1">
+       <widget class="DKFormPicker" name="directionalMaterial"/>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <widget class="QCheckBox" name="directionalMaterialIsSnow">
+        <property name="text">
+         <string>Is Snow</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Navmesh generation import option:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="DKNavmeshGenerationImportOptionPicker" name="navmeshGeneration"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKNavmeshGenerationImportOptionPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKNavmeshGenerationImportOptionPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>flagOnLocalMap</tabstop>
+  <tabstop>flagObstacle</tabstop>
+  <tabstop>flagIsMarker</tabstop>
+  <tabstop>flagHasLocalizedTextures</tabstop>
+  <tabstop>flagHasTreeLOD</tabstop>
+  <tabstop>flagNeverFades</tabstop>
+  <tabstop>flagHasDistantLOD</tabstop>
+  <tabstop>buttonSpecifyLODMeshes</tabstop>
+  <tabstop>flagHasHighDetailLODTexture</tabstop>
+  <tabstop>flagAddOnLODObject</tabstop>
+  <tabstop>flagShowInWorldMap</tabstop>
+  <tabstop>flagHasCurrents</tabstop>
+  <tabstop>model</tabstop>
+  <tabstop>directionalMaterial</tabstop>
+  <tabstop>directionalMaterialAngle</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

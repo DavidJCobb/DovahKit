@@ -1,0 +1,803 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>502</width>
+    <height>631</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_7">
+   <item row="0" column="0">
+    <layout class="QVBoxLayout" name="leftCol">
+     <item>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Name:</string>
+         </property>
+         <property name="buddy">
+          <cstring>name</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="name"/>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="editorID"/>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Light:</string>
+         </property>
+         <property name="buddy">
+          <cstring>light</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Model:</string>
+         </property>
+         <property name="buddy">
+          <cstring>model</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Type:</string>
+         </property>
+         <property name="buddy">
+          <cstring>type</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="DKFormNIFPicker" name="model"/>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Editor ID:</string>
+         </property>
+         <property name="buddy">
+          <cstring>editorID</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QComboBox" name="type">
+         <property name="whatsThis">
+          <string>&lt;p&gt;The projectile's type; this determines a lot of its hardcoded behavior.&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;Missile&lt;/b&gt; projectiles are the most appropriate for anything that travels in a straight line.&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;Lobbers&lt;/b&gt; were originally designed for grenades and mines in Fallout 3, and are used for runes in Skyrim.&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;Beams&lt;/b&gt; are the most appropriate for lightning spells.&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;Flames&lt;/b&gt; are used for any spells that produce a spray of projectiles.&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;Cones&lt;/b&gt; are ideal for most Shouts.&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;Barriers&lt;/b&gt; aren't used in Skyrim.&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;Arrows&lt;/b&gt; should be used for arrows i.e. pointy sticks what get fired from bows and crossbows.&lt;/p&gt;</string>
+         </property>
+         <item>
+          <property name="text">
+           <string>Missile</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Lobber</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Beam</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Flame</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Cone</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Barrier</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Arrow</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="DKFormPicker" name="light"/>
+       </item>
+       <item row="4" column="0" colspan="2">
+        <widget class="DKFormDestructionDataButton" name="destructionData"/>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="Line" name="line">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Decal Data:</string>
+         </property>
+         <property name="buddy">
+          <cstring>decalData</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Default Source:</string>
+         </property>
+         <property name="buddy">
+          <cstring>defaultWeaponSource</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="DKFormPicker" name="defaultWeaponSource"/>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Flyby Sound:</string>
+         </property>
+         <property name="buddy">
+          <cstring>flybySound</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="DKFormPicker" name="decalData"/>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QCheckBox" name="flagSupersonic">
+         <property name="whatsThis">
+          <string>If this is checked, then the flyby sound emanates only from the point on the projectile's path that is closest to the listener, like a bullet. If this is unchecked, then the sound emanates from the projectile itself, as it moves along its path.</string>
+         </property>
+         <property name="text">
+          <string>Supersonic</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="DKFormPicker" name="flybySound">
+         <property name="whatsThis">
+          <string>The sound that is emitted in a loop as the projectile flies by the listener.</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="1" column="1">
+        <widget class="QDoubleSpinBox" name="speed">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLabel" name="label_16">
+         <property name="text">
+          <string>Cone Spread:</string>
+         </property>
+         <property name="buddy">
+          <cstring>coneSpread</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_15">
+         <property name="text">
+          <string>Fade Duration:</string>
+         </property>
+         <property name="buddy">
+          <cstring>fadeDuration</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="detectionLoudness">
+         <item>
+          <property name="text">
+           <string>Loud</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Normal</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Silent</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_12">
+         <property name="text">
+          <string>Range:</string>
+         </property>
+         <property name="buddy">
+          <cstring>range</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="QLabel" name="label_17">
+         <property name="text">
+          <string>Collision Radius:</string>
+         </property>
+         <property name="buddy">
+          <cstring>collisionRadius</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Gravity:</string>
+         </property>
+         <property name="buddy">
+          <cstring>gravity</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>Speed:</string>
+         </property>
+         <property name="buddy">
+          <cstring>speed</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_10">
+         <property name="text">
+          <string>Detection Loudness:</string>
+         </property>
+         <property name="buddy">
+          <cstring>detectionLoudness</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_13">
+         <property name="text">
+          <string>Impact Force:</string>
+         </property>
+         <property name="buddy">
+          <cstring>impactForce</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>Tracer Chance:</string>
+         </property>
+         <property name="buddy">
+          <cstring>tracerChance</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="0">
+        <widget class="QLabel" name="label_18">
+         <property name="text">
+          <string>Lifetime:</string>
+         </property>
+         <property name="buddy">
+          <cstring>lifetime</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QDoubleSpinBox" name="gravity">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QDoubleSpinBox" name="range">
+         <property name="whatsThis">
+          <string>The maximum distance the projectile will fire.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QDoubleSpinBox" name="impactForce">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QDoubleSpinBox" name="tracerChance">
+         <property name="whatsThis">
+          <string>The probability that a projectile object will be drawn to the screen. This was implemented for the sake of bullets in Fallout 3, and it's recommended to set it to zero for typical projectiles in Skyrim.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QDoubleSpinBox" name="fadeDuration">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="1">
+        <widget class="QDoubleSpinBox" name="coneSpread">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="1">
+        <widget class="QDoubleSpinBox" name="collisionRadius">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="1">
+        <widget class="QDoubleSpinBox" name="lifetime">
+         <property name="whatsThis">
+          <string>How long the projectile remains alive. The value &quot;zero&quot; means &quot;unlimited.&quot; Note that other forces can still cause the projectile to despawn sooner, e.g. missiles exploding on impact.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="1">
+    <layout class="QVBoxLayout" name="rightCol">
+     <item>
+      <widget class="QGroupBox" name="muzzleFlash">
+       <property name="whatsThis">
+        <string>Control whether a visual effect is emitted from the tip of whatever weapon fires this projectile.</string>
+       </property>
+       <property name="title">
+        <string>Muzzle Flash</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_24">
+          <property name="text">
+           <string>Duration:</string>
+          </property>
+          <property name="buddy">
+           <cstring>muzzleFlashDuration</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_19">
+          <property name="text">
+           <string>Light:</string>
+          </property>
+          <property name="buddy">
+           <cstring>muzzleFlashLight</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="DKFormPicker" name="muzzleFlashLight"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_25">
+          <property name="text">
+           <string>Effect:</string>
+          </property>
+          <property name="buddy">
+           <cstring>muzzleFlashEffect</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="DKFormNIFPicker" name="muzzleFlashEffect"/>
+        </item>
+        <item row="2" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="muzzleFlashDuration">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <double>1000.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="explosionSettings">
+       <property name="title">
+        <string>Explosion</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_5">
+        <item row="0" column="1">
+         <widget class="DKFormPicker" name="explosionForm"/>
+        </item>
+        <item row="1" column="0" colspan="2">
+         <widget class="QRadioButton" name="explosionTriggerImpact">
+          <property name="text">
+           <string>Trigger on Impact</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_20">
+          <property name="text">
+           <string>Type:</string>
+          </property>
+          <property name="buddy">
+           <cstring>explosionForm</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="2">
+         <widget class="QRadioButton" name="explosionTriggerAlt">
+          <property name="text">
+           <string>Alternate Trigger</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0" colspan="2">
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="explosionTimer">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_21">
+            <property name="text">
+             <string>Timer:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="buddy">
+             <cstring>explosionTimer</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_22">
+            <property name="text">
+             <string>Proximity:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="buddy">
+             <cstring>explosionProximity</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="explosionProximity">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_23">
+            <property name="text">
+             <string>Countdown Sound:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="buddy">
+             <cstring>explosionCountdownSound</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="DKFormPicker" name="explosionCountdownSound"/>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <layout class="QGridLayout" name="gridLayout_8">
+       <item row="0" column="1">
+        <widget class="DKFormPicker" name="collisionLayer"/>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QCheckBox" name="flagCanBeDisarmed">
+         <property name="whatsThis">
+          <string>If this is checked, then the projectile can be disarmed after it has been placed in the world. In Fallout, this was used for landmines, which were implemented as projectiles (yes, even once they were planted and armed).</string>
+         </property>
+         <property name="text">
+          <string>Can Be Disarmed</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_27">
+         <property name="text">
+          <string>Disarm Sound:</string>
+         </property>
+         <property name="buddy">
+          <cstring>disarmSound</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="DKFormPicker" name="disarmSound">
+         <property name="whatsThis">
+          <string>Sound to be played when a projectile of this type is disarmed.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0" colspan="2">
+        <widget class="QCheckBox" name="flagPassThroughSmallTransparent">
+         <property name="whatsThis">
+          <string>If checked, then this projectile can pass through the Small Transparent collision layer, no matter what collision layer the projectile itself is on. In Fallout, this would've been used for things like allowing the player to shoot through chain-link fences.</string>
+         </property>
+         <property name="text">
+          <string>Pass Through Small Transparent</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0" colspan="2">
+        <widget class="QCheckBox" name="flagDisableCombatAimCorrection">
+         <property name="text">
+          <string>Disable Projectile Magnetism to Targets</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0" colspan="2">
+        <widget class="QCheckBox" name="flagCanBePickedUp">
+         <property name="text">
+          <string>Can Be Picked Up</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_26">
+         <property name="text">
+          <string>Collision Layer:</string>
+         </property>
+         <property name="buddy">
+          <cstring>collisionLayer</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QCheckBox" name="flagHitscan">
+         <property name="whatsThis">
+          <string>If this is checked, then the projectile hits its targed instantly, without ever being visible on-screen.</string>
+         </property>
+         <property name="text">
+          <string>Hitscan (visible in VATS only)</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="QCheckBox" name="flagCritPinsLimbs">
+         <property name="whatsThis">
+          <string>If this is checked, and a projectile of this type severs a target's limb, the projectile can pin the severed limb to whatever surface it [the projectile] hits afterward.</string>
+         </property>
+         <property name="text">
+          <string>Crit Effect: Pins Limbs</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLabel" name="label_28">
+           <property name="text">
+            <string>Relaunch Interval:</string>
+           </property>
+           <property name="buddy">
+            <cstring>relaunchInterval</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDoubleSpinBox" name="relaunchInterval">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormDestructionDataButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormDestructionDataButton.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>type</tabstop>
+  <tabstop>model</tabstop>
+  <tabstop>destructionData</tabstop>
+  <tabstop>light</tabstop>
+  <tabstop>defaultWeaponSource</tabstop>
+  <tabstop>decalData</tabstop>
+  <tabstop>flagSupersonic</tabstop>
+  <tabstop>flybySound</tabstop>
+  <tabstop>detectionLoudness</tabstop>
+  <tabstop>speed</tabstop>
+  <tabstop>gravity</tabstop>
+  <tabstop>range</tabstop>
+  <tabstop>impactForce</tabstop>
+  <tabstop>tracerChance</tabstop>
+  <tabstop>fadeDuration</tabstop>
+  <tabstop>coneSpread</tabstop>
+  <tabstop>collisionRadius</tabstop>
+  <tabstop>lifetime</tabstop>
+  <tabstop>muzzleFlash</tabstop>
+  <tabstop>muzzleFlashLight</tabstop>
+  <tabstop>muzzleFlashEffect</tabstop>
+  <tabstop>muzzleFlashDuration</tabstop>
+  <tabstop>explosionSettings</tabstop>
+  <tabstop>explosionForm</tabstop>
+  <tabstop>explosionTriggerImpact</tabstop>
+  <tabstop>explosionTriggerAlt</tabstop>
+  <tabstop>explosionTimer</tabstop>
+  <tabstop>explosionProximity</tabstop>
+  <tabstop>explosionCountdownSound</tabstop>
+  <tabstop>collisionLayer</tabstop>
+  <tabstop>flagHitscan</tabstop>
+  <tabstop>flagCanBeDisarmed</tabstop>
+  <tabstop>disarmSound</tabstop>
+  <tabstop>flagCanBePickedUp</tabstop>
+  <tabstop>flagCritPinsLimbs</tabstop>
+  <tabstop>flagPassThroughSmallTransparent</tabstop>
+  <tabstop>flagDisableCombatAimCorrection</tabstop>
+  <tabstop>relaunchInterval</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

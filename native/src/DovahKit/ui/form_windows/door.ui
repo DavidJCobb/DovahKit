@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogDoor</class>
+ <widget class="QDialog" name="FormDialogDoor">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>791</width>
+    <height>398</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Door</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,0,0,0">
+   <property name="horizontalSpacing">
+    <number>12</number>
+   </property>
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="basicDataLayout">
+     <property name="horizontalSpacing">
+      <number>6</number>
+     </property>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="DKFormNIFPicker" name="model">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="name"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Name:</string>
+       </property>
+       <property name="buddy">
+        <cstring>name</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Model:</string>
+       </property>
+       <property name="buddy">
+        <cstring>model</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <widget class="DKFormDestructionDataButton" name="destructionData"/>
+     </item>
+     <item row="4" column="0" colspan="2">
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>8</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="1">
+    <layout class="QVBoxLayout" name="soundsLayout">
+     <item>
+      <widget class="QGroupBox" name="soundsGroupbox">
+       <property name="title">
+        <string>Sounds</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="1">
+         <widget class="DKFormPicker" name="soundOpen"/>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Open:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundOpen</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Close:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundClose</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Loop:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundLoop</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="DKFormPicker" name="soundClose"/>
+        </item>
+        <item row="2" column="1">
+         <widget class="DKFormPicker" name="soundLoop"/>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>8</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="2" rowspan="4">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="DKPapyrusBoundScriptListPane" name="scriptListPane"/>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="buttonsLayout">
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonOK">
+         <property name="text">
+          <string>OK</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonCancel">
+         <property name="text">
+          <string>Cancel</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <layout class="QGridLayout" name="flagsLayout">
+     <item row="1" column="1">
+      <widget class="QCheckBox" name="flagHidden">
+       <property name="text">
+        <string>Hidden from Map</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QCheckBox" name="flagIsMarker">
+       <property name="text">
+        <string>Is Marker</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QCheckBox" name="flagSlidingDoor">
+       <property name="text">
+        <string>Sliding Door</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QCheckBox" name="flagRandomAnimStart">
+       <property name="text">
+        <string>Random Anim Start</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QCheckBox" name="flagAutomaticDoor">
+       <property name="whatsThis">
+        <string>If this is checked, for a load door, then the player will be automatically taken through the load door when they move close enough to it. (The exact distance needed is controlled by the fAutoDoorActivateDistance game setting.)</string>
+       </property>
+       <property name="text">
+        <string>Automatic Door</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QCheckBox" name="flagMinUse">
+       <property name="whatsThis">
+        <string>If this is checked, then the game will ignore this door when trying to show the player a quest marker guiding them to their quest target, and NPCs will avoid using this door to reach their destination if any alternative exists.</string>
+       </property>
+       <property name="text">
+        <string>Minimal Use</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagNoCombatSearch">
+       <property name="whatsThis">
+        <string>If this is checked, then NPCs will not attempt to open this door when searching for enemies in combat.</string>
+       </property>
+       <property name="text">
+        <string>Do Not Open in Combat Search</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="3" column="0" colspan="2">
+    <layout class="QVBoxLayout" name="randomTeleportLayout" stretch="0">
+     <item>
+      <widget class="QGroupBox" name="groupBox">
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Normally, load doors are linked one-to-one: you manually connect two specific door refs together. However, it's possible to create a pool of load doors that have no pre-set destination, but rather are connected randomly during play the first time the player interacts with them (with these connections being baked into the savegame). Doors will have this random connection behavior if their base forms have any entries in this list here.&lt;/p&gt;&lt;p&gt;Destination &amp;quot;spaces&amp;quot; can be worldspaces or interior cells. When the player interacts with a &amp;quot;source door,&amp;quot; the game will check its destination spaces in a random order and connect the source door to the first valid &amp;quot;destination door&amp;quot; it finds. A door can be a destination door if it: isn't already connected to any other door; isn't deleted, disabled, or destroyed; isn't in the same space as the source door; and has random destinations of its own, which include the space that contains the source door. (That is: potential sources and potential destinations must refer to each others' containing worldspaces or interior cells via their base forms.) If the game can't find a suitable destination door, then the source door will be inoperable, displaying the message, &amp;quot;This door leads nowhere.&amp;quot;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Be warned that the official Creation Kit isn't capable of properly (re-)saving this list, so using this feature will make it impossible to edit your mod using the Creation Kit.&lt;/span&gt; Due to a programming mistake, the Creation Kit will get stuck in an infinite loop and crash while trying to save a door base form that has random destinations, leaving a corrupted mod file behind.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="title">
+        <string>Randomly teleports to these interiors/worldspaces only:</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="DKFormListPane" name="randomDestinations"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>&lt;span style=&quot; font-weight:600;&quot;&gt;WARNING:&lt;/span&gt; The official Creation Kit isn't compatible with this feature due to a bug, and cannot properly (re-)save mods which use it. When trying to save doors with random destinations, the CK will corrupt your file and crash.</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0" colspan="2">
+    <spacer name="verticalSpacer_3">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>4</width>
+       <height>4</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKPapyrusBoundScriptListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKPapyrusBoundScriptListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormDestructionDataButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormDestructionDataButton.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>model</tabstop>
+  <tabstop>destructionData</tabstop>
+  <tabstop>soundOpen</tabstop>
+  <tabstop>soundClose</tabstop>
+  <tabstop>soundLoop</tabstop>
+  <tabstop>flagRandomAnimStart</tabstop>
+  <tabstop>flagSlidingDoor</tabstop>
+  <tabstop>flagAutomaticDoor</tabstop>
+  <tabstop>flagIsMarker</tabstop>
+  <tabstop>flagHidden</tabstop>
+  <tabstop>flagMinUse</tabstop>
+  <tabstop>flagNoCombatSearch</tabstop>
+  <tabstop>randomDestinations</tabstop>
+  <tabstop>scriptListPane</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
