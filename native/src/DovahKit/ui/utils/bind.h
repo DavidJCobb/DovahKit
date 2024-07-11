@@ -1,10 +1,13 @@
 #pragma once
+#include <bit>
 #include <string>
 #include <type_traits>
 #include <vector>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDoubleSpinBox>
+#include <QGroupBox>
+#include <QRadioButton>
 #include <QSpinBox>
 #include <QLineEdit>
 
@@ -19,16 +22,29 @@ namespace dovah{
 }
 class DKColorPickerButton;
 class DKFormPicker;
+class DKGameFilePicker;
 class DKNavmeshGenerationImportOptionPicker;
 
 namespace ui {
    extern void bind(QCheckBox*, bool&);
+   extern void bind(QGroupBox*, bool&);
 
    template<typename Target, typename Mask>
    void bind(QCheckBox* widget, Target& target, Mask mask) {
       widget->setChecked((target & mask) != 0);
       QObject::connect(widget, &QCheckBox::stateChanged, widget, [&target, mask](int state) {
          if (state == Qt::CheckState::Checked)
+            target |= mask;
+         else
+            target &= ~mask;
+      });
+   }
+   //
+   template<typename Target, typename Mask>
+   void bind(QGroupBox* widget, Target& target, Mask mask) {
+      widget->setChecked((target & mask) != 0);
+      QObject::connect(widget, &QGroupBox::toggled, widget, [&target, mask](bool checked) {
+         if (checked)
             target |= mask;
          else
             target &= ~mask;
@@ -47,6 +63,72 @@ namespace ui {
          else
             target |= mask;
       });
+   }
+   //
+   template<typename Target, typename Mask>
+   void bind_inverse(QGroupBox* widget, Target& target, Mask mask) {
+      widget->setChecked((target & mask) == 0);
+      QObject::connect(widget, &QGroupBox::toggled, widget, [&target, mask](bool checked) {
+         if (checked)
+            target &= ~mask;
+         else
+            target |= mask;
+      });
+   }
+
+   //
+   // Bind a list of radio buttons to some, but not all, of the bits in a flags mask. 
+   // A call to this function will generally look like this:
+   // 
+   //    ui::bind(
+   //       target_flags_mask,
+   //       std::array{
+   //          std::pair{ this->ui.radioButtonA, 0x0010 },
+   //          std::pair{ this->ui.radioButtonB, 0x0100 },
+   //          std::pair{ this->ui.radioButtonC, 0x0110 },
+   //          std::pair{ nullptr,               0x1000 }, // perhaps this value isn't exposed in the UI yet
+   //       }
+   //    );
+   //
+   template<typename Target, typename Mask, size_t Count>
+   void bind_flags(Target& target, const std::array<std::pair<QRadioButton*, Mask>, Count>& pair) {
+      Mask all_bits = 0;
+      for (const auto& item : pair)
+         all_bits |= item.second;
+
+      QRadioButton* target_widget   = nullptr;
+      size_t        target_bitcount = 0;
+
+      for (const auto& item : pair) {
+         auto* widget = item.first;
+         auto  value  = item.second;
+         if (!widget)
+            continue;
+
+         QObject::connect(widget, &QRadioButton::toggled, widget, [all_bits, value, &target](bool checked) {
+            if (!checked)
+               return;
+            target &= ~all_bits;
+            target |= value;
+         });
+
+         //
+         // We want to set the currently checked radio button to the widget whose value 
+         // best matches the set bits in the target value. A value matches if all of its
+         // bits are set; the best match is the match that has the most set bits.
+         //
+         size_t bits_set = target & value;
+         if (bits_set == value) {
+            auto pc = std::popcount(value);
+            if (pc > target_bitcount) {
+               target_bitcount = pc;
+               target_widget   = widget;
+            }
+         }
+      }
+      if (target_widget) {
+         target_widget->setChecked(true);
+      }
    }
    
    //
@@ -105,6 +187,8 @@ namespace ui {
    //
    // This function will assert that the form you pass in is a working copy!
    extern void bind(DKFormPicker*, dovah::form_reference_t& dst, dovah::loaded_forms::Form& dst_owner);
+   
+   extern void bind(DKGameFilePicker*, std::string&);
 
    extern void bind(DKNavmeshGenerationImportOptionPicker*, uint32_t& record_flags);
 }

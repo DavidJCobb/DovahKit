@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>FormDialogLight</class>
+ <widget class="QDialog" name="FormDialogLight">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,27 +11,49 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Light</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_5" columnstretch="1,1">
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="leftCol">
      <item>
       <layout class="QGridLayout" name="generalLayout">
-       <item row="6" column="3">
-        <widget class="QDoubleSpinBox" name="falloffExponent">
-         <property name="whatsThis">
-          <string>For spotlights only, controls the rate at which the light's brightness falls off.</string>
+       <item row="4" column="0" colspan="4">
+        <widget class="DKFormDestructionDataButton" name="destructionData"/>
+       </item>
+       <item row="5" column="1">
+        <widget class="DKColorPickerButton" name="color"/>
+       </item>
+       <item row="8" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Radius:</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
-         <property name="decimals">
-          <number>4</number>
+         <property name="buddy">
+          <cstring>radius</cstring>
          </property>
         </widget>
        </item>
-       <item row="5" column="1" colspan="3">
+       <item row="5" column="2">
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>Fade:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="buddy">
+          <cstring>fade</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1" colspan="3">
+        <widget class="DKFormNIFPicker" name="model"/>
+       </item>
+       <item row="6" column="1" colspan="3">
         <widget class="QComboBox" name="lightType">
          <item>
           <property name="text">
@@ -55,43 +77,7 @@
          </item>
         </widget>
        </item>
-       <item row="7" column="1">
-        <widget class="QDoubleSpinBox" name="radius">
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="maximum">
-          <double>10000.000000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="label_5">
-         <property name="text">
-          <string>Type:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="buddy">
-          <cstring>lightType</cstring>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="2">
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>Falloff exp.:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="buddy">
-          <cstring>falloffExponent</cstring>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
+       <item row="3" column="0">
         <widget class="QLabel" name="label_6">
          <property name="text">
           <string>Model:</string>
@@ -101,61 +87,6 @@
          </property>
          <property name="buddy">
           <cstring>model</cstring>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="4">
-        <widget class="DKFormDestructionDataButton" name="destructionData"/>
-       </item>
-       <item row="6" column="1">
-        <widget class="QDoubleSpinBox" name="FOV">
-         <property name="whatsThis">
-          <string>For spotlights only, control the angle over which light is emitted.</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="maximum">
-          <double>179.900000000000006</double>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Radius:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="buddy">
-          <cstring>radius</cstring>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="2">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Near clip:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="buddy">
-          <cstring>nearClip</cstring>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0">
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>FOV:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="buddy">
-          <cstring>FOV</cstring>
          </property>
         </widget>
        </item>
@@ -172,7 +103,82 @@
          </property>
         </widget>
        </item>
+       <item row="8" column="2">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Near clip:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="buddy">
+          <cstring>nearClip</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Type:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="buddy">
+          <cstring>lightType</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="1">
+        <widget class="QDoubleSpinBox" name="FOV">
+         <property name="whatsThis">
+          <string>For spotlights only, control the angle over which light is emitted.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="maximum">
+          <double>179.900000000000006</double>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>FOV:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="buddy">
+          <cstring>FOV</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="1">
+        <widget class="QSpinBox" name="radius">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="maximum">
+          <number>999999</number>
+         </property>
+        </widget>
+       </item>
        <item row="7" column="3">
+        <widget class="QDoubleSpinBox" name="falloffExponent">
+         <property name="whatsThis">
+          <string>For spotlights only, controls the rate at which the light's brightness falls off.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="decimals">
+          <number>4</number>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="3">
         <widget class="QDoubleSpinBox" name="nearClip">
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -185,13 +191,23 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="1" colspan="3">
-        <widget class="DKFormNIFPicker" name="model"/>
+       <item row="7" column="2">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Falloff exp.:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="buddy">
+          <cstring>falloffExponent</cstring>
+         </property>
+        </widget>
        </item>
        <item row="1" column="1" colspan="3">
         <widget class="QLineEdit" name="editorID"/>
        </item>
-       <item row="4" column="0">
+       <item row="5" column="0">
         <widget class="QLabel" name="label_8">
          <property name="text">
           <string>Color:</string>
@@ -204,23 +220,7 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
-        <widget class="DKColorPickerButton" name="color"/>
-       </item>
-       <item row="4" column="2">
-        <widget class="QLabel" name="label_9">
-         <property name="text">
-          <string>Fade:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="buddy">
-          <cstring>fade</cstring>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="3">
+       <item row="5" column="3">
         <widget class="QDoubleSpinBox" name="fade">
          <property name="whatsThis">
           <string>Control the light's maximum brightness.</string>
@@ -241,83 +241,6 @@
         <string>Flicker effect</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_3">
-        <item row="3" column="1">
-         <widget class="QDoubleSpinBox" name="flickerMovementAmplitude">
-          <property name="whatsThis">
-           <string>Flicker effects don't just change a light's brightness; they make minor changes to the position that light is being emitted from. The INI setting fFlickerMovement determines the baseline amount of movement, and this per-form value scales that distance further.</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="label_10">
-          <property name="text">
-           <string>Movement Amplitude:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-          <property name="buddy">
-           <cstring>flickerMovementAmplitude</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QDoubleSpinBox" name="flickerIntensityAmplitude">
-          <property name="whatsThis">
-           <string>Control how much the brightness can dip below its base value.</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0" colspan="2">
-         <layout class="QHBoxLayout" name="flickerTypeLayout">
-          <item>
-           <widget class="QRadioButton" name="flickerTypeNone">
-            <property name="whatsThis">
-             <string>Disables all variance-over-time in the light's brightness.</string>
-            </property>
-            <property name="text">
-             <string>None</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="flickerTypeFlicker">
-            <property name="whatsThis">
-             <string>Adds an irregular flickering effect to the light's brightness.</string>
-            </property>
-            <property name="text">
-             <string>Flicker</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="flickerTypePulse">
-            <property name="whatsThis">
-             <string>Causes the light to grow brighter and darker on a regularly paced cycle.</string>
-            </property>
-            <property name="text">
-             <string>Pulse</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="1" column="1">
-         <widget class="QDoubleSpinBox" name="flickerPeriod">
-          <property name="whatsThis">
-           <string>The length (in seconds) of the flicker effect's cycle.</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="0">
          <widget class="QLabel" name="label_11">
           <property name="text">
@@ -331,6 +254,52 @@
           </property>
          </widget>
         </item>
+        <item row="1" column="1">
+         <widget class="QDoubleSpinBox" name="flickerPeriod">
+          <property name="whatsThis">
+           <string>The length (in seconds) of the flicker effect's cycle.</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QDoubleSpinBox" name="flickerMovementAmplitude">
+          <property name="whatsThis">
+           <string>Flicker effects don't just change a light's brightness; they make minor changes to the position that light is being emitted from. The INI setting fFlickerMovement determines the baseline amount of movement, and this per-form value scales that distance further.</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_19">
+          <property name="text">
+           <string>Type:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="buddy">
+           <cstring>flickerType</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QDoubleSpinBox" name="flickerIntensityAmplitude">
+          <property name="whatsThis">
+           <string>Control how much the brightness can dip below its base value.</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="flickerType"/>
+        </item>
         <item row="2" column="0">
          <widget class="QLabel" name="label_12">
           <property name="text">
@@ -341,6 +310,19 @@
           </property>
           <property name="buddy">
            <cstring>flickerIntensityAmplitude</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>Movement Amplitude:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="buddy">
+           <cstring>flickerMovementAmplitude</cstring>
           </property>
          </widget>
         </item>
@@ -468,20 +450,7 @@
         </item>
         <item row="1" column="0" colspan="4">
          <layout class="QGridLayout" name="gridLayout_7">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_16">
-            <property name="text">
-             <string>Inventory icon:</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="buddy">
-             <cstring>inventoryIcon</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
+          <item row="2" column="0">
            <widget class="QLabel" name="label_17">
             <property name="text">
              <string>Message icon:</string>
@@ -494,19 +463,52 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="DKGameFilePicker" name="inventoryIcon">
+          <item row="2" column="1">
+           <widget class="DKGameFilePicker" name="messageIcon">
             <property name="whatsThis">
              <string>Unused.</string>
             </property>
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="DKGameFilePicker" name="messageIcon">
+           <widget class="DKGameFilePicker" name="inventoryIcon">
             <property name="whatsThis">
              <string>Unused.</string>
             </property>
            </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_16">
+            <property name="text">
+             <string>Inventory icon:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="buddy">
+             <cstring>inventoryIcon</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_18">
+            <property name="text">
+             <string>Name:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="buddy">
+             <cstring>name</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <layout class="QHBoxLayout" name="nameLayout">
+            <item>
+             <widget class="QLineEdit" name="name"/>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>
@@ -517,26 +519,17 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
-         <widget class="QDoubleSpinBox" name="time">
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-          <property name="specialValueText">
-           <string>∞</string>
-          </property>
-          <property name="minimum">
-           <double>-1.000000000000000</double>
-          </property>
-          <property name="value">
-           <double>0.000000000000000</double>
-          </property>
-         </widget>
-        </item>
         <item row="3" column="2" colspan="2">
          <widget class="QCheckBox" name="timeIsUnlimited">
           <property name="text">
            <string>Unlimited</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QSpinBox" name="time">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -601,9 +594,9 @@
    <header>widgets/DKColorPickerButton.h</header>
   </customwidget>
   <customwidget>
-   <class>DKGameFilePicker</class>
+   <class>DKFormDestructionDataButton</class>
    <extends>QWidget</extends>
-   <header>widgets/DKGameFilePicker.h</header>
+   <header>widgets/DKFormDestructionDataButton.h</header>
   </customwidget>
   <customwidget>
    <class>DKPapyrusBoundScriptListPane</class>
@@ -611,14 +604,14 @@
    <header>widgets/DKPapyrusBoundScriptListPane.h</header>
   </customwidget>
   <customwidget>
+   <class>DKGameFilePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKGameFilePicker.h</header>
+  </customwidget>
+  <customwidget>
    <class>DKFormNIFPicker</class>
    <extends>QWidget</extends>
    <header>widgets/DKFormNIFPicker.h</header>
-  </customwidget>
-  <customwidget>
-   <class>DKFormDestructionDataButton</class>
-   <extends>QWidget</extends>
-   <header>widgets/DKFormDestructionDataButton.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
@@ -632,9 +625,7 @@
   <tabstop>falloffExponent</tabstop>
   <tabstop>radius</tabstop>
   <tabstop>nearClip</tabstop>
-  <tabstop>flickerTypeNone</tabstop>
-  <tabstop>flickerTypeFlicker</tabstop>
-  <tabstop>flickerTypePulse</tabstop>
+  <tabstop>flickerType</tabstop>
   <tabstop>flickerPeriod</tabstop>
   <tabstop>flickerIntensityAmplitude</tabstop>
   <tabstop>flickerMovementAmplitude</tabstop>
@@ -643,10 +634,13 @@
   <tabstop>flagPortalStrict</tabstop>
   <tabstop>itemInfo</tabstop>
   <tabstop>flagItemOffByDefault</tabstop>
+  <tabstop>name</tabstop>
   <tabstop>inventoryIcon</tabstop>
   <tabstop>messageIcon</tabstop>
   <tabstop>weight</tabstop>
   <tabstop>value</tabstop>
+  <tabstop>time</tabstop>
+  <tabstop>timeIsUnlimited</tabstop>
   <tabstop>scriptListPane</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>

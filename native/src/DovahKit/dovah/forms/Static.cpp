@@ -1,6 +1,8 @@
 #include "Static.h"
 #include "_common_cpp.h"
 
+#include "../notices/form_save_errors/unprefixed_string_is_too_long_to_serialize.h"
+
 namespace dovah::loaded_forms {
    void Static::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
@@ -41,8 +43,8 @@ namespace dovah::loaded_forms {
             case 'MNAM':
                {
                   for (auto& item : this->distant_lod_paths) {
-                     item.resize(256);
-                     subrecord.read(item.data(), 256);
+                     item.resize(max_lod_mesh_path_length);
+                     subrecord.read(item.data(), max_lod_mesh_path_length);
                      //
                      auto i = item.find('\0');
                      if (i != std::string::npos)
@@ -127,7 +129,17 @@ namespace dovah::loaded_forms {
       {
          auto& MNAM = record.open_next_subrecord('MNAM');
          for (auto& item : this->distant_lod_paths) {
-            size_t size = (std::min)(item.size(), size_t(255));
+            size_t size = item.size();
+            if (size >= max_lod_mesh_path_length) {
+               auto notice = notices::form_save_errors::unprefixed_string_is_too_long_to_serialize(
+                  *intfc.target_stub,
+                  size,
+                  max_lod_mesh_path_length,
+                  MNAM.signature()
+               );
+               intfc.throw_save_error(notice);
+               return;
+            }
             MNAM.write(item.data(), size);
             MNAM.skip_bytes(256 - size);
          }

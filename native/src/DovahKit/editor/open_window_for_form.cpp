@@ -10,9 +10,11 @@
 #include "../ui/form_windows/flora.h"
 #include "../ui/form_windows/formlist.h"
 #include "../ui/form_windows/landtexture.h"
+#include "../ui/form_windows/light.h"
 #include "../ui/form_windows/misc_item.h"
 #include "../ui/form_windows/quest.h"
 #include "../ui/form_windows/shout.h"
+#include "../ui/form_windows/static.h"
 #include "../ui/form_windows/textureset.h"
 #include "../ui/form_windows/voicetype.h"
 #include "../ui/form_windows/word_of_power.h"
@@ -30,9 +32,11 @@ namespace {
       std::pair{ dovah::form_type::flora,         _make<FormDialogFlora> },
       std::pair{ dovah::form_type::formlist,      _make<FormDialogFormList> },
       std::pair{ dovah::form_type::land_texture,  _make<FormDialogLandTexture> },
+      std::pair{ dovah::form_type::light,         _make<FormDialogLight> },
       std::pair{ dovah::form_type::misc_item,     _make<FormDialogMiscItem> },
       std::pair{ dovah::form_type::quest,         _make<FormDialogQuest> },
       std::pair{ dovah::form_type::shout,         _make<FormDialogShout> },
+      std::pair{ dovah::form_type::statik,        _make<FormDialogStatic> },
       std::pair{ dovah::form_type::texture_set,   _make<FormDialogTextureSet> },
       std::pair{ dovah::form_type::voicetype,     _make<FormDialogVoicetype> },
       std::pair{ dovah::form_type::word_of_power, _make<FormDialogWordOfPower> },

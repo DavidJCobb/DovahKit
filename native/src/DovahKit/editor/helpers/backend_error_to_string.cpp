@@ -285,6 +285,18 @@ namespace editor_helpers {
                   disambig
                ).arg(subject).arg(subrecord).arg(casted->size).arg(casted->max_serializable_size);
             }
+            if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::unprefixed_string_is_too_long_to_serialize*>(&warning)) {
+               QString subrecord = cobb::qt::four_cc_to_string(casted->subrecord_signature);
+               
+               QString format = QObject::tr("Failed to serialize %1 subrecord %2: a string had length %3, but the maximum supported length is %4.", disambig);
+               if (casted->subject.form_type == dovah::form_type::statik) {
+                  if (casted->subrecord_signature == 'MNAM') {
+                     format = QObject::tr("Failed to serialize one of the LOD mesh paths for %1: a string had length %3, but the maximum supported length is %4.", disambig);
+                  }
+               }
+
+               return format.arg(subject).arg(subrecord).arg(casted->size).arg(casted->max_serializable_size);
+            }
             //
             #pragma region by form component
                #pragma region destruction data

@@ -38,27 +38,18 @@ namespace dovah::loaded_forms {
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
                break;
+            case 'ICON':
+               subrecord.read(this->item_data.icons.inventory);
+               break;
+            case 'MICO':
+               subrecord.read(this->item_data.icons.message);
+               break;
             case 'DATA':
                {
                   subrecord.read(this->time);
                   subrecord.read(this->radius);
                   this->color.load(subrecord);
                   subrecord.read(this->light_flags);
-                  {
-                     this->light_type = engine_light_type::omni;
-                     //
-                     auto f = this->light_flags;
-                     if ((f & light_flag::type_spot) != 0)
-                        this->light_type = engine_light_type::spot;
-                     if ((f & light_flag::type_spot_shadow) != 0)
-                        this->light_type = engine_light_type::spot_shadow;
-                     if ((f & light_flag::type_hemi_shadow) != 0)
-                        this->light_type = engine_light_type::hemi_shadow;
-                     if ((f & light_flag::type_omni_shadow) != 0)
-                        this->light_type = engine_light_type::omni_shadow;
-                     //
-                     this->light_flags &= ~light_flag::all_types;
-                  }
                   subrecord.read(this->falloff_exponent);
                   subrecord.read(this->fov);
                   subrecord.read(this->near_clip);
@@ -80,6 +71,40 @@ namespace dovah::loaded_forms {
             default:
                intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
+         }
+      }
+
+      {
+         auto& src = this->light_flags;
+         { // Map emitter type.
+            auto& dst = this->light_type;
+
+            dst = emitter_type::omni;
+            if ((src & internal_light_flag::type_spot) != 0)
+               dst = emitter_type::spot;
+            if ((src & internal_light_flag::type_spot_shadow) != 0)
+               dst = emitter_type::spot_shadow;
+            if ((src & internal_light_flag::type_hemi_shadow) != 0)
+               dst = emitter_type::hemi_shadow;
+            if ((src & internal_light_flag::type_omni_shadow) != 0)
+               dst = emitter_type::omni_shadow;
+
+            src &= ~internal_light_flag::all_light_types;
+         }
+         { // Map flicker type.
+            auto& dst = this->flicker.type;
+
+            dst = flicker_type::none;
+            if ((src & internal_light_flag::flicker) != 0)
+               dst = flicker_type::flicker;
+            if ((src & internal_light_flag::flicker_slow) != 0)
+               dst = flicker_type::flicker_slow;
+            if ((src & internal_light_flag::pulse) != 0)
+               dst = flicker_type::pulse;
+            if ((src & internal_light_flag::pulse_slow) != 0)
+               dst = flicker_type::pulse_slow;
+
+            src &= ~internal_light_flag::all_flicker_types;
          }
       }
    }
@@ -133,8 +158,11 @@ namespace dovah::loaded_forms {
       assert(out->type == form_type);
       auto copy = (Light*)out;
 
+      copy->item_data.name   = this->item_data.name;
+      copy->item_data.value  = this->item_data.value;
+      copy->item_data.weight = this->item_data.weight;
       copy->item_data.sound.set(*copy, this->item_data.sound);
-      copy->item_data = this->item_data;
+      copy->item_data.icons  = this->item_data.icons;
       //
       copy->color       = this->color;
       copy->fade        = this->fade;
@@ -164,6 +192,8 @@ namespace dovah::loaded_forms {
       }
    }
    void Light::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      constexpr const bool save_data_even_if_CK_would_skip = true;
+
       this->script_data.save(record, intfc);
       auto& OBND = record.open_next_subrecord('OBND');
       this->bounds.save(OBND, intfc);
@@ -171,32 +201,65 @@ namespace dovah::loaded_forms {
       this->model.save(record, intfc, 'MODL', 'MODT', 'MODS');
       if (this->destruction_data.has_value())
          this->destruction_data.value().save(record, intfc);
-      auto& FULL = record.open_next_subrecord('FULL');
-      FULL.write(this->item_data.name);
-      FULL.close();
-      record.write_string_subrecord('ICON', this->item_data.icon);
+      if (save_data_even_if_CK_would_skip || (this->light_flags & light_flag::can_be_carried)) {
+         auto& FULL = record.open_next_subrecord('FULL');
+         FULL.write(this->item_data.name);
+         FULL.close();
+         if (!this->item_data.icons.inventory.empty())
+            record.write_string_subrecord('ICON', this->item_data.icons.inventory);
+         if (!this->item_data.icons.message.empty())
+            record.write_string_subrecord('MICO', this->item_data.icons.message);
+      }
       auto& DATA = record.open_next_subrecord('DATA');
-      DATA.write(this->time);
+      if (save_data_even_if_CK_would_skip || (this->light_flags & light_flag::can_be_carried)) {
+         DATA.write(this->time);
+      } else {
+         DATA.write((decltype(this->time)) unlimited_duration);
+      }
       DATA.write(this->radius);
       this->color.save(DATA);
       {
-         auto f = this->light_flags & ~light_flag::all_types;
+         auto f = this->light_flags;
+         f &= ~internal_light_flag::all_flicker_types;
+         f &= ~internal_light_flag::all_light_types;
          switch (this->light_type) {
-            using enum engine_light_type;
+            using enum emitter_type;
             case omni:
                break;
             case omni_shadow:
-               f |= light_flag::type_omni_shadow;
+               f |= internal_light_flag::type_omni_shadow;
                break;
             case hemi_shadow:
-               f |= light_flag::type_hemi_shadow;
+               f |= internal_light_flag::type_hemi_shadow;
                break;
             case spot:
-               f |= light_flag::type_spot;
+               f |= internal_light_flag::type_spot;
                break;
             case spot_shadow:
-               f |= light_flag::type_spot_shadow;
+               f |= internal_light_flag::type_spot_shadow;
                break;
+         }
+         switch (this->flicker.type) {
+            using enum flicker_type;
+            case none:
+               break;
+            case flicker:
+               f |= internal_light_flag::flicker;
+               break;
+            case flicker_slow:
+               f |= internal_light_flag::flicker_slow;
+               break;
+            case pulse:
+               f |= internal_light_flag::pulse;
+               break;
+            case pulse_slow:
+               f |= internal_light_flag::pulse_slow;
+               break;
+         }
+         if constexpr (!save_data_even_if_CK_would_skip) {
+            if (!(this->light_flags & light_flag::can_be_carried)) {
+               f &= ~light_flag::off_by_default;
+            }
          }
          DATA.write(f);
       }
@@ -228,17 +291,15 @@ namespace dovah::loaded_forms {
       //
       this->flicker = decltype(flicker)();
       this->fade    = 1.0F;
-      this->time    = 0.0F;
-      this->radius  = 128;
+      this->time    = unlimited_duration;
+      this->radius  = 16;
       this->color   = { 255, 255, 255, 255 };
       this->falloff_exponent = 1.0;
       this->fov = 90;
-      this->near_clip = 0;
+      this->near_clip = 0.001;
       //
       this->light_flags = 0;
-      this->light_type  = engine_light_type::omni;
-      
-
+      this->light_type  = emitter_type::omni;
    }
    void Light::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);

@@ -15,6 +15,7 @@ class FormSubdialogStaticLODMeshes : public QDialog {
          QCheckBox*        enabled   = nullptr;
          DKGameFilePicker* model     = nullptr; // must not be nullptr
          QPushButton*      propagate = nullptr;
+         QString           last_good_path;
       };
 
    public:
@@ -24,7 +25,6 @@ class FormSubdialogStaticLODMeshes : public QDialog {
       PathList getPaths() const;
 
    public slots:
-      void autoPopulate();
       void propagateFrom(size_t);
       void updateLevelStates();
       

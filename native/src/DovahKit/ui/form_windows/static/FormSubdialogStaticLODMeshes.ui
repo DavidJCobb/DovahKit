@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>731</width>
+    <width>660</width>
     <height>155</height>
    </rect>
   </property>
@@ -69,48 +69,12 @@
    </item>
    <item row="0" column="1">
     <layout class="QGridLayout" name="dataLayout">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_3">
+     <item row="3" column="0">
+      <widget class="QCheckBox" name="lv3Enable">
        <property name="text">
-        <string>Level 0</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        <string>Level 3</string>
        </property>
       </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="DKGameFilePicker" name="lv0File"/>
-     </item>
-     <item row="0" column="2">
-      <widget class="QPushButton" name="lv0Propagate">
-       <property name="text">
-        <string>Propagate L0</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="DKGameFilePicker" name="lv2File"/>
-     </item>
-     <item row="3" column="1">
-      <widget class="DKGameFilePicker" name="lv3File"/>
-     </item>
-     <item row="1" column="0">
-      <widget class="QCheckBox" name="lv1Enable">
-       <property name="text">
-        <string>Level 1</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="2">
-      <widget class="QPushButton" name="lv2Propagate">
-       <property name="text">
-        <string>Propagate L2</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="DKGameFilePicker" name="lv1File"/>
      </item>
      <item row="2" column="0">
       <widget class="QCheckBox" name="lv2Enable">
@@ -119,10 +83,19 @@
        </property>
       </widget>
      </item>
-     <item row="3" column="0">
-      <widget class="QCheckBox" name="lv3Enable">
+     <item row="1" column="1">
+      <widget class="DKGameFilePicker" name="lv1File"/>
+     </item>
+     <item row="0" column="1">
+      <widget class="DKGameFilePicker" name="lv0File"/>
+     </item>
+     <item row="3" column="1">
+      <widget class="DKGameFilePicker" name="lv3File"/>
+     </item>
+     <item row="0" column="2">
+      <widget class="QPushButton" name="lv0Propagate">
        <property name="text">
-        <string>Level 3</string>
+        <string>Propagate L0</string>
        </property>
       </widget>
      </item>
@@ -133,10 +106,30 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="3">
-      <widget class="QPushButton" name="buttonAutoPopulate">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_3">
        <property name="text">
-        <string>Auto-populate</string>
+        <string>Level 0</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="DKGameFilePicker" name="lv2File"/>
+     </item>
+     <item row="2" column="2">
+      <widget class="QPushButton" name="lv2Propagate">
+       <property name="text">
+        <string>Propagate L2</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QCheckBox" name="lv1Enable">
+       <property name="text">
+        <string>Level 1</string>
        </property>
       </widget>
      </item>

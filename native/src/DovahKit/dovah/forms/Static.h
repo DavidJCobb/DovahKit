@@ -13,6 +13,8 @@ namespace dovah::loaded_forms {
          static constexpr const enum form_type form_type = form_type::statik;
          Static(const constructor_params& c) : Form(form_type, c) {};
 
+         static constexpr const size_t max_lod_mesh_path_length = 260; // MAX_PATH
+
          struct form_flag : public Form::form_flag {
             enum : uint32_t {
                never_fades               = 0x00000004,

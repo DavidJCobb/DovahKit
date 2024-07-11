@@ -689,6 +689,7 @@
     <ClCompile Include="ui\form_windows\flora.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
     <ClCompile Include="ui\form_windows\landtexture.cpp" />
+    <ClCompile Include="ui\form_windows\light.cpp" />
     <ClCompile Include="ui\form_windows\misc_item.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_objectives.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_stages.cpp" />
@@ -696,6 +697,7 @@
     <ClCompile Include="ui\form_windows\quest.cpp" />
     <ClCompile Include="ui\form_windows\shout.cpp" />
     <ClCompile Include="ui\form_windows\static.cpp" />
+    <ClCompile Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.cpp" />
     <ClCompile Include="ui\form_windows\textureset.cpp" />
     <ClCompile Include="ui\form_windows\voicetype.cpp" />
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
@@ -1028,6 +1030,7 @@
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\quest\too_many_log_entry_papyrus_fragments.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\quest\too_many_scripted_aliases.h" />
     <ClInclude Include="dovah\notices\form_save_errors\length_prefixed_string_is_too_long_to_serialize.h" />
+    <ClInclude Include="dovah\notices\form_save_errors\unprefixed_string_is_too_long_to_serialize.h" />
     <ClInclude Include="dovah\notices\form_save_errors\_all.h" />
     <ClInclude Include="dovah\notices\form_save_errors\form_type_is_unimplemented.h" />
     <ClInclude Include="dovah\notices\form_save_warnings\not_yet_implemented.h" />
@@ -1048,6 +1051,8 @@
     <QtMoc Include="ui\form_windows\door.h" />
     <QtMoc Include="ui\form_windows\flora.h" />
     <QtMoc Include="ui\form_windows\static.h" />
+    <QtMoc Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.h" />
+    <ClInclude Include="ui\form_windows\light.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="ui\types\conditions\condition.h" />
     <ClInclude Include="ui\types\logging\log_item.h" />

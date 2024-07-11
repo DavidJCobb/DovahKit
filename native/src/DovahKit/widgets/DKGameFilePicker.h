@@ -7,8 +7,9 @@
 // 
 // Different parts of the game use marginally different path formats, such as showing the 
 // Data directory or omitting the top-level directory (e.g. meshes or textures). Within 
-// the context of this widget, the "path" is the full path without the Data directory, 
-// and the "raw path" is the path in whatever underlying format you've chosen.
+// the context of this widget, the "path" is the selected path as per the format you've 
+// chosen (e.g. omitting the Data directory or the entire path stem), while the "raw path" 
+// is the full path, from and including the Data directory.
 // 
 // TODO: Should probably switch those around, or just rethink the naming on this generally.
 //

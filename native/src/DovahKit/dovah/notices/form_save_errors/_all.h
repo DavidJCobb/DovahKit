@@ -2,6 +2,7 @@
 #include "./base_list_size_too_large_to_serialize_error.h"
 #include "./form_type_is_unimplemented.h"
 #include "./length_prefixed_string_is_too_long_to_serialize.h"
+#include "./unprefixed_string_is_too_long_to_serialize.h"
 #pragma region by form component
    #include "./by_form_component/destruction/too_many_stages.h"
    #include "./by_form_component/extra_data/room_ref_data/too_many_linked_rooms.h"

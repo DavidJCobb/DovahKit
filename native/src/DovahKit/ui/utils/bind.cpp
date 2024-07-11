@@ -8,6 +8,7 @@
 #include "widgets/DKColorPickerButton.h"
 #include "widgets/DKFormPicker.h"
 #include "widgets/DKFormListPane.h"
+#include "widgets/DKGameFilePicker.h"
 #include "widgets/DKNavmeshGenerationImportOptionPicker.h"
 
 namespace ui {
@@ -15,6 +16,12 @@ namespace ui {
       widget->setChecked(target);
       QObject::connect(widget, &QCheckBox::stateChanged, widget, [&target](int state) {
          target = state == Qt::CheckState::Checked;
+      });
+   }
+   extern void bind(QGroupBox* widget, bool& target) {
+      widget->setChecked(target);
+      QObject::connect(widget, &QGroupBox::toggled, widget, [&target](bool checked) {
+         target = checked;
       });
    }
 
@@ -53,6 +60,13 @@ namespace ui {
       widget->setFormStub(dst.get_form_stub());
       QObject::connect(widget, &DKFormPicker::formChanged, widget, [&dst, &dst_owner](dovah::form_stub* value) {
          dst.set(dst_owner, value);
+      });
+   }
+
+   extern void bind(DKGameFilePicker* widget, std::string& dst) {
+      widget->setPath(QString::fromStdString(dst));
+      QObject::connect(widget, &DKGameFilePicker::pathChanged, widget, [&dst](const QString& path) {
+         dst = path.toStdString();
       });
    }
 

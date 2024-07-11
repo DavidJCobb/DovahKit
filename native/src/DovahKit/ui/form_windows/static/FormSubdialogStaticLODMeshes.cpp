@@ -1,4 +1,6 @@
 #include "./FormSubdialogStaticLODMeshes.h"
+#include <QMessageBox>
+#include "dovah/forms/Static.h"
 
 FormSubdialogStaticLODMeshes::FormSubdialogStaticLODMeshes(QWidget* parent) : QDialog(parent) {
    this->ui.setupUi(this);
@@ -32,7 +34,19 @@ FormSubdialogStaticLODMeshes::FormSubdialogStaticLODMeshes(QWidget* parent) : QD
       }
 
       here.model->setStandardConfiguration(DKGameFilePicker::StandardConfiguration::Meshes);
-      QObject::connect(here.model, &DKGameFilePicker::pathChanged, this, &FormSubdialogStaticLODMeshes::updateLevelStates);
+      QObject::connect(here.model, &DKGameFilePicker::pathChanged, this, [this, i, widget = here.model](QString path) {
+         if (path.size() >= dovah::loaded_forms::Static::max_lod_mesh_path_length) {
+            widget->setPath(this->level_widgets[i].last_good_path);
+            QMessageBox::critical(
+               this,
+               tr("Error"),
+               tr("The maximum path length is %1.").arg(dovah::loaded_forms::Static::max_lod_mesh_path_length)
+            );
+            return;
+         }
+         this->level_widgets[i].last_good_path = path;
+         this->updateLevelStates();
+      });
 
       if (here.propagate) {
          QObject::connect(here.propagate, &QPushButton::clicked, this, [this, i]() {
@@ -40,7 +54,6 @@ FormSubdialogStaticLODMeshes::FormSubdialogStaticLODMeshes(QWidget* parent) : QD
          });
       }
    }
-   QObject::connect(this->ui.buttonAutoPopulate, &QPushButton::clicked, this, &FormSubdialogStaticLODMeshes::autoPopulate);
 }
 
 void FormSubdialogStaticLODMeshes::setPaths(const PathList& src) {
@@ -66,7 +79,12 @@ void FormSubdialogStaticLODMeshes::setPaths(const PathList& src) {
       } else {
          if (widgets.enabled)
             widgets.enabled->setChecked(true);
-         widgets.model->setPath(QString::fromStdString(src[i]));
+
+         auto path = QString::fromStdString(src[i]);
+         if (path.size() < dovah::loaded_forms::Static::max_lod_mesh_path_length) {
+            widgets.last_good_path = path;
+            widgets.model->setPath(path);
+         }
       }
    }
    this->updateLevelStates();
@@ -82,17 +100,6 @@ FormSubdialogStaticLODMeshes::PathList FormSubdialogStaticLODMeshes::getPaths() 
    return out;
 }
 
-void FormSubdialogStaticLODMeshes::autoPopulate() {
-   static_assert(false, "TODO: Implement this");
-   //
-   // I've reverse-engineered and documented the logic for this here:
-   //  - https://ck.uesp.net/wiki/Talk:Static#LOD_meshes%3A_Auto-populate
-   // 
-   // However, I'm not sure we should run it quite the same way. (At the very least, we should 
-   // condition that behind a userpref). I think we should maintain the same base path for the
-   // mesh (i.e. for `foo/bar/baz.nif`, search for `LOD/foo/bar/baz_LOD.nif` and friends).
-   //
-}
 void FormSubdialogStaticLODMeshes::propagateFrom(size_t src) {
    if (src >= this->level_widgets.size())
       return;
