@@ -6,10 +6,12 @@
 #include "dovah/forms/Form.h" // for working copies
 #include "dovah/core.h" // form_reference_t
 #include "widgets/DKColorPickerButton.h"
+#include "widgets/DKCompactObjectReferencePicker.h"
 #include "widgets/DKFormPicker.h"
 #include "widgets/DKFormListPane.h"
 #include "widgets/DKGameFilePicker.h"
 #include "widgets/DKNavmeshGenerationImportOptionPicker.h"
+#include "widgets/DKObjectReferencePicker.h"
 
 namespace ui {
    extern void bind(QCheckBox* widget, bool& target) {
@@ -59,6 +61,20 @@ namespace ui {
       assert(dst_owner.is_working_copy && "This function was created to make things easier for the (messy) form-working-copy system. Don't use it for real forms.");
       widget->setFormStub(dst.get_form_stub());
       QObject::connect(widget, &DKFormPicker::formChanged, widget, [&dst, &dst_owner](dovah::form_stub* value) {
+         dst.set(dst_owner, value);
+      });
+   }
+   extern void bind(DKCompactObjectReferencePicker* widget, dovah::form_reference_t& dst, dovah::loaded_forms::Form& dst_owner) {
+      assert(dst_owner.is_working_copy && "This function was created to make things easier for the (messy) form-working-copy system. Don't use it for real forms.");
+      widget->setRef(dst.get_form_stub());
+      QObject::connect(widget, &DKCompactObjectReferencePicker::refChanged, widget, [&dst, &dst_owner](dovah::form_stub* value) {
+         dst.set(dst_owner, value);
+      });
+   }
+   extern void bind(DKObjectReferencePicker* widget, dovah::form_reference_t& dst, dovah::loaded_forms::Form& dst_owner) {
+      assert(dst_owner.is_working_copy && "This function was created to make things easier for the (messy) form-working-copy system. Don't use it for real forms.");
+      widget->setRef(dst.get_form_stub());
+      QObject::connect(widget, &DKObjectReferencePicker::refChanged, widget, [&dst, &dst_owner](dovah::form_stub* value) {
          dst.set(dst_owner, value);
       });
    }

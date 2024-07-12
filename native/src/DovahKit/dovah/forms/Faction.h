@@ -38,13 +38,14 @@ namespace dovah::loaded_forms {
             neutral = 0,
             enemy   = 1,
             ally    = 2,
-            Friend  = 3, // keyword ugh
+            friend_ = 3, // keyword ugh
          };
 
          struct rank {
             uint32_t id; // RNAM
             localized_string title_masc; // MNAM
             localized_string title_fem;  // FNAM
+            std::string insignia; // INAM // texture path
          };
          struct relationship {
             form_reference_t other;

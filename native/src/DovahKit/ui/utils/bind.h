@@ -21,9 +21,11 @@ namespace dovah{
    class form_stub;
 }
 class DKColorPickerButton;
+class DKCompactObjectReferencePicker;
 class DKFormPicker;
 class DKGameFilePicker;
 class DKNavmeshGenerationImportOptionPicker;
+class DKObjectReferencePicker;
 
 namespace ui {
    extern void bind(QCheckBox*, bool&);
@@ -187,6 +189,8 @@ namespace ui {
    //
    // This function will assert that the form you pass in is a working copy!
    extern void bind(DKFormPicker*, dovah::form_reference_t& dst, dovah::loaded_forms::Form& dst_owner);
+   extern void bind(DKCompactObjectReferencePicker*, dovah::form_reference_t& dst, dovah::loaded_forms::Form& dst_owner);
+   extern void bind(DKObjectReferencePicker*, dovah::form_reference_t& dst, dovah::loaded_forms::Form& dst_owner);
    
    extern void bind(DKGameFilePicker*, std::string&);
 

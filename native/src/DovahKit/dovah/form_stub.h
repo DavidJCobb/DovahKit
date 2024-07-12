@@ -64,9 +64,6 @@ namespace dovah {
    //    inbound references from their child forms.
    //
    struct use_info_entry {
-      enum class outbound_type {
-         i_am_reference_of,
-      };
       struct flag {
          flag() = delete;
          enum type : uint8_t {

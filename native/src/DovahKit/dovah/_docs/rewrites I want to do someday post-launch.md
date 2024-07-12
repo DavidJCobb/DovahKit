@@ -827,6 +827,10 @@ These cases helped motivate a redesign of Worldinput (named `worldinput2` until 
 
 * The code for this is pretty messy just in general. Tempted to do a full rebuild but it's not worth the devtime right now.
 
+### Form UIs
+
+* **Faction:** When closing the dialog via the "OK" button, check if there are multiple reactions to the same faction, or multiple ranks with the same ID. Warn the user that we'll coalesce the two (TODO: coalesce ranks) if they continue, and give them the opportunity to cancel closing the dialog and fix the lists.
+
 ## Dovahscript
 
 * Do we really *need* to run this on a worker thread in order to allow the user to force-kill scripts that hit a loop?

@@ -108,6 +108,10 @@ namespace dovah::loaded_forms {
                if (!this->ranks.empty())
                   subrecord.read(this->ranks.back().title_masc);
                break;
+            case 'INAM':
+               if (!this->ranks.empty())
+                  subrecord.read(this->ranks.back().insignia);
+               break;
             case 'VEND':
                subrecord.read(this->vendor_list);
                intfc.warn_if_ref_is_wrong_type(this->vendor_list, form_type::formlist, subrecord.signature());
@@ -215,7 +219,7 @@ namespace dovah::loaded_forms {
       copy->name = this->name;
       {
          size_t size = this->relationships.size();
-         copy->relationships.reserve(size);
+         copy->relationships.resize(size);
          for (size_t i = 0; i < size; ++i) {
             auto& entry = copy->relationships[i];
             auto& from  = this->relationships[i];
@@ -298,6 +302,9 @@ namespace dovah::loaded_forms {
             auto& subrecord = record.open_next_subrecord('FNAM');
             subrecord.write(r.title_fem);
             subrecord.close();
+         }
+         if (!r.insignia.empty()) {
+            record.write_string_subrecord('INAM', r.insignia);
          }
       }
       if (this->vendor_list)

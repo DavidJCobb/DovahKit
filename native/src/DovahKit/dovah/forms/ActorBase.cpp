@@ -310,10 +310,22 @@ namespace dovah::loaded_forms {
                break;
             case 'SNAM':
                if (subrecord.is_in_bounds(5)) {
-                  auto& entry = this->faction_memberships.emplace_back();
-                  subrecord.unchecked_read(entry.faction);
-                  subrecord.unchecked_read(entry.rank);
-                  intfc.warn_if_ref_is_wrong_type(entry.faction, form_type::faction, subrecord.signature());
+                  faction_membership item;
+                  subrecord.unchecked_read(item.faction);
+                  subrecord.unchecked_read(item.rank);
+                  intfc.warn_if_ref_is_wrong_type(item.faction, form_type::faction, subrecord.signature());
+
+                  bool found = false;
+                  for (auto& prior : this->faction_memberships) {
+                     if (prior.faction == item.faction) {
+                        found = true;
+                        prior.rank = item.rank;
+                        break;
+                     }
+                  }
+                  if (!found) {
+                     this->faction_memberships.push_back(item);
+                  }
                }
                break;
             case 'WNAM':

@@ -48,6 +48,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
    //
    DKVulkanView* view = new DKVulkanView(this);
    view->setInputHandlingEnabled(true);
+   view->setDesiredFrameDelay(17); // roughly 60 FPS
    //
    layout->addWidget(view, 1);
    view->setFocus(); // default focus within this window

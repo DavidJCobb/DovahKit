@@ -278,7 +278,7 @@ namespace dovah::loaded_forms {
          } template_data;
          //
          std::vector<creature_sound> creature_sounds;
-         form_reference_t crime_faction; // CRIF
+         form_reference_t crime_faction; // CRIF // Must be in the `faction_memberships` list and must have the `track_crime` faction flag.
          form_reference_t death_item; // INAM
          std::vector<faction_membership> faction_memberships; // SNAM[]
          uint8_t geared_up_weapons = 0; // DNAM+0x30 // unused

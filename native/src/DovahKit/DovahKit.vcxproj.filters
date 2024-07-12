@@ -2316,6 +2316,15 @@
     <ClCompile Include="ui\form_windows\light.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\note.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\faction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\models\forms\FactionMembersModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6074,7 +6083,10 @@
     <ClInclude Include="dovah\notices\form_save_errors\unprefixed_string_is_too_long_to_serialize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\form_windows\light.h">
+    <ClInclude Include="ui\models\forms\FactionMembersModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\set_range.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -6257,6 +6269,12 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\note.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\faction.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -6682,6 +6700,15 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\faction.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\light.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\note.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

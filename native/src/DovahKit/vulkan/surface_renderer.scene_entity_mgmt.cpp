@@ -359,7 +359,7 @@ namespace vulkanDK {
       params.type = rendered_light::light_type::omni;
       {
          switch (loaded_base->light_type) {
-            using enum dovah::loaded_forms::Light::engine_light_type;
+            using enum dovah::loaded_forms::Light::emitter_type;
             case omni:
                params.type = rendered_light::light_type::omni;
                break;

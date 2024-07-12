@@ -686,11 +686,13 @@
     <ClCompile Include="ui\form_windows\cell.cpp" />
     <ClCompile Include="ui\form_windows\color.cpp" />
     <ClCompile Include="ui\form_windows\door.cpp" />
+    <ClCompile Include="ui\form_windows\faction.cpp" />
     <ClCompile Include="ui\form_windows\flora.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
     <ClCompile Include="ui\form_windows\landtexture.cpp" />
     <ClCompile Include="ui\form_windows\light.cpp" />
     <ClCompile Include="ui\form_windows\misc_item.cpp" />
+    <ClCompile Include="ui\form_windows\note.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_objectives.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_stages.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
@@ -732,6 +734,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput_serialization.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
+    <ClCompile Include="ui\models\forms\FactionMembersModel.cpp" />
     <ClCompile Include="ui\models\papyrus\DKAddPapyrusScriptModel.cpp" />
     <ClCompile Include="ui\models\papyrus\DKAllPapyrusScriptsModel.cpp" />
     <ClCompile Include="ui\models\worldedit\EditGizmoColorSchemeModel.cpp" />
@@ -1052,8 +1055,11 @@
     <QtMoc Include="ui\form_windows\flora.h" />
     <QtMoc Include="ui\form_windows\static.h" />
     <QtMoc Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.h" />
-    <ClInclude Include="ui\form_windows\light.h" />
+    <QtMoc Include="ui\form_windows\faction.h" />
+    <QtMoc Include="ui\form_windows\light.h" />
+    <QtMoc Include="ui\form_windows\note.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
+    <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
     <ClInclude Include="ui\types\conditions\condition.h" />
     <ClInclude Include="ui\types\logging\log_item.h" />
     <ClInclude Include="ui\types\logging\log_item_context.h" />
@@ -1068,6 +1074,7 @@
     <QtMoc Include="widgets\widget-models\DKConditionListModel.h" />
     <QtMoc Include="widgets\widget-dialogs\DKConditionEditDialog.h" />
     <QtMoc Include="widgets\DKNavmeshGenerationImportOptionPicker.h" />
+    <ClInclude Include="ui\utils\set_range.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />
     <QtMoc Include="widgets\DKFormNIFPicker.h" />
@@ -2314,11 +2321,13 @@
     <QtUic Include="ui\form_windows\cell.ui" />
     <QtUic Include="ui\form_windows\color.ui" />
     <QtUic Include="ui\form_windows\door.ui" />
+    <QtUic Include="ui\form_windows\faction.ui" />
     <QtUic Include="ui\form_windows\flora.ui" />
     <QtUic Include="ui\form_windows\formlist.ui" />
     <QtUic Include="ui\form_windows\landtexture.ui" />
     <QtUic Include="ui\form_windows\light.ui" />
     <QtUic Include="ui\form_windows\misc_item.ui" />
+    <QtUic Include="ui\form_windows\note.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\inventory_data.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\quest_alias_location.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\quest_alias_reference.ui" />
