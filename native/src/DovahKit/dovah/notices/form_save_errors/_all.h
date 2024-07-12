@@ -6,6 +6,7 @@
 #pragma region by form component
    #include "./by_form_component/destruction/too_many_stages.h"
    #include "./by_form_component/extra_data/room_ref_data/too_many_linked_rooms.h"
+   #include "./by_form_component/leveled_list/too_many_entries.h"
    #include "./by_form_component/papyrus/too_many_perk_fragments.h"
    #include "./by_form_component/papyrus/too_many_properties_on_script.h"
    #include "./by_form_component/papyrus/too_many_scene_phase_fragments.h"

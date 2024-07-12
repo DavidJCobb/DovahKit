@@ -1,14 +1,6 @@
 #include "container.h"
 #include "../_common_cpp.h"
 
-#include "../../notices/form_load_warnings/by_form_component/container/item_has_bad_owner_form_type.h"
-
-namespace {
-   namespace specific_load_warnings {
-      using namespace dovah::notices::form_load_warnings::by_component::container;
-   }
-}
-
 namespace dovah::loaded_forms::components {
    void container_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       if (subrecord.signature() == 'CNTO') { // CoNTainer Object
@@ -26,26 +18,7 @@ namespace dovah::loaded_forms::components {
          if (!this->entries.size())
             return;
          auto& entry = this->entries.back();
-         if (subrecord.read(entry.ownership.owner)) {
-            auto ownerStub = subrecord.lookup_form_by_id(entry.ownership.owner);
-            intfc.warn_if_ref_is_wrong_type(entry.ownership.owner, std::array{ form_type::actor_base, form_type::faction }, subrecord.signature());
-            if (ownerStub && ownerStub->form_type == form_type::actor_base) {
-               subrecord.unchecked_read(entry.ownership.global);
-               intfc.warn_if_ref_is_wrong_type(entry.ownership.global, form_type::global, subrecord.signature());
-            } else {
-               subrecord.unchecked_read(entry.ownership.faction_rank);
-               //
-               if (ownerStub && ownerStub->form_type != form_type::faction) {
-                  specific_load_warnings::item_has_bad_owner_form_type notice(
-                     const_cast<form_stub&>(intfc.target_stub),
-                     *ownerStub
-                  );
-                  intfc.log_load_warning(notice);
-               }
-            }
-            entry.condition.present = true;
-            subrecord.unchecked_read(entry.condition.value);
-         }
+         entry.extra_data.load(subrecord, intfc);
          return;
       }
       if (subrecord.signature() == 'COCT') {
@@ -71,21 +44,7 @@ namespace dovah::loaded_forms::components {
          CNTO.write(entry.item);
          CNTO.write(entry.count);
          CNTO.close();
-         if (entry.ownership.owner || entry.condition.present) {
-            auto& COED = record.open_next_subrecord('COED');
-            COED.write(entry.ownership.owner);
-            if (auto* stub = entry.ownership.owner.get_form_stub()) {
-               if (stub->form_type == form_type::actor_base) {
-                  COED.write(entry.ownership.global);
-               } else {
-                  COED.write(entry.ownership.faction_rank);
-               }
-            } else {
-               COED.write(uint32_t(0));
-            }
-            COED.write(entry.condition.value);
-            COED.close();
-         }
+         entry.extra_data.save(record, intfc);
       }
       return true;
    }
@@ -136,25 +95,20 @@ namespace dovah::loaded_forms::components {
          //
          entry.item.set(my_owner, from.item);
          entry.count = from.count;
-         entry.ownership.owner.set(my_owner, from.ownership.owner);
-         entry.ownership.faction_rank = from.ownership.faction_rank;
-         entry.ownership.global.set(my_owner, from.ownership.global);
-         entry.condition = from.condition;
+         entry.extra_data.clone_from(from.extra_data, my_owner);
       }
    }
    void container_data::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       bare_form_id_t formID = target.formID;
       for (auto& entry : this->entries) {
          entry.item.clear_if(my_owner, target);
-         entry.ownership.owner.clear_if(my_owner, target);
-         entry.ownership.global.clear_if(my_owner, target);
+         entry.extra_data.sever_outbound_references_to(target, my_owner);
       }
    }
    void container_data::clear(loaded_forms::Form& my_owner) {
       for (auto& entry : this->entries) {
          entry.item.set(my_owner, nullptr);
-         entry.ownership.owner.set(my_owner, nullptr);
-         entry.ownership.global.set(my_owner, nullptr);
+         entry.extra_data.clear(my_owner);
       }
       this->entries.clear();
    }

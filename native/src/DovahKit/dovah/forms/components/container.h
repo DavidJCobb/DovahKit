@@ -1,22 +1,13 @@
 #pragma once
 #include <vector>
 #include "../_common.h"
+#include "../structs/container_object_extra_data.h"
 
 namespace dovah::loaded_forms::components {
    struct container_entry {
-      // CNTO:
-      form_reference_t item;
-      int32_t count = 0;
-      // COED:
-      struct {
-         form_reference_t owner;
-         form_reference_t global; // for NPC_ owners
-         int32_t          faction_rank = 0; // for FACT owners
-      } ownership;
-      struct {
-         float value;
-         bool  present = false;
-      } condition; // item health
+      form_reference_t item;      // CNTO+0
+      int32_t          count = 0; // CNTO+4
+      structs::container_object_extra_data extra_data; // COED
    };
    struct container_data {
       std::vector<container_entry> entries;

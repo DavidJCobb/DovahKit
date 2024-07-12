@@ -317,6 +317,14 @@ namespace editor_helpers {
                      }
                   #pragma endregion
                #pragma endregion
+               #pragma region leveled list
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::by_component::leveled_list::too_many_entries*>(&warning)) {
+                     return QObject::tr(
+                        "Leveled list data for form %1 contains %2 entries, but the file format can only encode %3 stages.",
+                        disambig
+                     ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
+                  }
+               #pragma endregion
                #pragma region papyrus
                   if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::by_component::papyrus::too_many_perk_fragments*>(&warning)) {
                      return QObject::tr(

@@ -570,6 +570,21 @@ namespace editor_helpers {
                   }
                #pragma endregion
             #pragma endregion
+            #pragma region leveled list
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::leveled_list::leading_coed_bleedthrough*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "The leveled list data in form %1 contained a COED (Container Object Extra Data) subrecord before any "
+                     "of its LVLO (Leveled Object) subrecords. This data will not load properly in-game due to a bug in how "
+                     "some leveled lists are loaded. When the game loads this form, it may accidentally apply this wayward "
+                     "COED subrecord to the last entry in the previous leveled list that was loaded, if that leveled list is "
+                     "of the same type and if its last entry had no COED (i.e. owner or health changes). DovahKit will instead "
+                     "skip loading this wayward COED subrecord, which seems to have been what Bethesda intended.",
+                     disambig
+                  ).arg(subject);
+               }
+            #pragma endregion
             #pragma region package event dialogue
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::package_event_dialogue::unrecognized_subrecord*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);

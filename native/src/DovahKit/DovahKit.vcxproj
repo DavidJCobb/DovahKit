@@ -138,6 +138,7 @@
     <ClCompile Include="dovah\files\pex\parsers\full.tests.cpp" />
     <ClCompile Include="dovah\forms\components\conditions\context.cpp" />
     <ClCompile Include="dovah\forms\components\conditions\working_condition.cpp" />
+    <ClCompile Include="dovah\forms\components\leveled_list.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attached_script.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attachment_data.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attachment_header.cpp" />
@@ -148,6 +149,10 @@
     <ClCompile Include="dovah\forms\components\papyrus\property.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\property_object_value.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\property_value.cpp" />
+    <ClCompile Include="dovah\forms\LeveledCharacter.cpp" />
+    <ClCompile Include="dovah\forms\LeveledItem.cpp" />
+    <ClCompile Include="dovah\forms\LeveledSpell.cpp" />
+    <ClCompile Include="dovah\forms\structs\container_object_extra_data.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\file_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_save.cpp" />
@@ -919,6 +924,7 @@
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovah\data\all_carryable_form_types.h" />
     <ClInclude Include="dovah\data\conditions\all_function_info.h" />
     <ClInclude Include="dovah\data\conditions\all_parameter_types.h" />
     <ClInclude Include="dovah\data\conditions\comparison_operator.h" />
@@ -949,6 +955,11 @@
     <ClInclude Include="dovah\forms\components\conditions\parameter.h" />
     <ClInclude Include="dovah\forms\components\conditions\working_condition.h" />
     <ClInclude Include="dovah\forms\components\conditions\working_parameter.h" />
+    <ClInclude Include="dovah\forms\components\leveled_list.h" />
+    <ClInclude Include="dovah\forms\LeveledCharacter.h" />
+    <ClInclude Include="dovah\forms\LeveledItem.h" />
+    <ClInclude Include="dovah\forms\LeveledSpell.h" />
+    <ClInclude Include="dovah\forms\structs\container_object_extra_data.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
     <ClInclude Include="dovah\game_change_failure_reason.h" />
     <ClInclude Include="dovah\load_order_interfaces\file_load.h" />
@@ -1007,6 +1018,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\destruction\stage_serialized_index_out_of_bounds.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data_insufficient_rooms.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data_swallowed_subrecord.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\leveled_list\leading_coed_bleedthrough.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\package_event_dialogue\unrecognized_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\cell_type_not_yet_known.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\data_for_wrong_cell_type.h" />
@@ -1027,6 +1039,7 @@
     <ClInclude Include="dovah\notices\form_save_errors\base_list_size_too_large_to_serialize_error.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\destruction\too_many_stages.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\extra_data\room_ref_data\too_many_linked_rooms.h" />
+    <ClInclude Include="dovah\notices\form_save_errors\by_form_component\leveled_list\too_many_entries.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\papyrus\too_many_perk_fragments.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\papyrus\too_many_properties_on_script.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\papyrus\too_many_scene_phase_fragments.h" />
@@ -2330,6 +2343,9 @@
     <QtUic Include="ui\form_windows\flora.ui" />
     <QtUic Include="ui\form_windows\formlist.ui" />
     <QtUic Include="ui\form_windows\landtexture.ui" />
+    <QtUic Include="ui\form_windows\leveled_character.ui" />
+    <QtUic Include="ui\form_windows\leveled_item.ui" />
+    <QtUic Include="ui\form_windows\leveled_spell.ui" />
     <QtUic Include="ui\form_windows\light.ui" />
     <QtUic Include="ui\form_windows\misc_item.ui" />
     <QtUic Include="ui\form_windows\note.ui" />
