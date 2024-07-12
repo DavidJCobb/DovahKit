@@ -821,7 +821,7 @@
              </widget>
             </item>
             <item row="1" column="1" colspan="2">
-             <layout class="QHBoxLayout" name="layoutVendorLoc" stretch="1,0">
+             <layout class="QHBoxLayout" name="layoutVendorLoc" stretch="1">
               <item>
                <widget class="QPushButton" name="buttonEditVendorLoc">
                 <property name="sizePolicy">
@@ -832,19 +832,6 @@
                 </property>
                 <property name="text">
                  <string>Edit...</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="buttonViewVendorLoc">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>View</string>
                 </property>
                </widget>
               </item>
@@ -1072,7 +1059,6 @@
   <tabstop>vendorHourStart</tabstop>
   <tabstop>vendorHourEnd</tabstop>
   <tabstop>buttonEditVendorLoc</tabstop>
-  <tabstop>buttonViewVendorLoc</tabstop>
   <tabstop>vendorLocRadius</tabstop>
   <tabstop>vendorWaresInclExcl</tabstop>
   <tabstop>vendorWaresList</tabstop>

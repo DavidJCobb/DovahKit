@@ -687,6 +687,7 @@
     <ClCompile Include="ui\form_windows\color.cpp" />
     <ClCompile Include="ui\form_windows\door.cpp" />
     <ClCompile Include="ui\form_windows\faction.cpp" />
+    <ClCompile Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.cpp" />
     <ClCompile Include="ui\form_windows\flora.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
     <ClCompile Include="ui\form_windows\landtexture.cpp" />
@@ -1059,6 +1060,7 @@
     <QtMoc Include="ui\form_windows\faction.h" />
     <QtMoc Include="ui\form_windows\light.h" />
     <QtMoc Include="ui\form_windows\note.h" />
+    <QtMoc Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
     <ClInclude Include="ui\types\conditions\condition.h" />
@@ -2324,6 +2326,7 @@
     <QtUic Include="ui\form_windows\color.ui" />
     <QtUic Include="ui\form_windows\door.ui" />
     <QtUic Include="ui\form_windows\faction.ui" />
+    <QtUic Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.ui" />
     <QtUic Include="ui\form_windows\flora.ui" />
     <QtUic Include="ui\form_windows\formlist.ui" />
     <QtUic Include="ui\form_windows\landtexture.ui" />

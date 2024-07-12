@@ -8,6 +8,7 @@
 #include "editor/form_stub_meta_type.h" // for QVariant::fromValue on a form stub
 
 #include "ui/models/forms/FactionMembersModel.h"
+#include "./faction/FormSubdialogFactionVendorLocation.h"
 
 #pragma region Models
    #pragma region Interfaction relationships
@@ -400,6 +401,9 @@ FormDialogFaction::FormDialogFaction(dovah::form_stub& stub, QWidget* parent) : 
             (FactionReaction) id
          );
       });
+
+      // force UI enable state updates:
+      sel_model->currentChanged({}, {});
    }
    {  // Member list
       auto* view = this->ui.membersView;
@@ -533,6 +537,9 @@ FormDialogFaction::FormDialogFaction(dovah::form_stub& stub, QWidget* parent) : 
             model->setRankData(index.row(), data);
             this->ui.rankEditInsigniaPreview->setAsset(this->ui.rankEditInsignia->rawPath()); // use rawPath to add any needed path prefixes
          });
+
+         // force UI enable state updates:
+         sel_model->currentChanged({}, {});
       }
    }
    {  // Crime tab
@@ -620,7 +627,16 @@ void FormDialogFaction::_load_impl() {
 
       ui::bind(this->ui.vendorHourStart, working.vendor_data.start_hour);
       ui::bind(this->ui.vendorHourEnd,   working.vendor_data.end_hour);
-      ui::bind(this->ui.vendorLocRadius,         working.vendor_data.radius);
+      ui::bind(this->ui.vendorLocRadius, working.vendor_data.radius);
+      QObject::connect(this->ui.buttonEditVendorLoc, &QPushButton::clicked, this, [this]() {
+         auto* dialog = new FormSubdialogFactionVendorLocation(this);
+         dialog->importFrom(this->form->package_location_vendor);
+         auto result = dialog->exec();
+         if (result == QDialog::Accepted) {
+            dialog->commitTo(*this->form, this->form->package_location_vendor);
+         }
+         dialog->deleteLater();
+      });
       {
          auto* widget = this->ui.vendorWaresInclExcl;
          widget->setCurrentIndex(widget->findData(this->form->vendor_data.vendor_list_is_blacklist));
