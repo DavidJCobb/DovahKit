@@ -10,6 +10,7 @@
    #include "dovah/core.h"
    #include "./widget-models/DKRefsInCellModel.h"
 #endif
+#include "./DKComboBox.h"
 #include "./DKFormPicker.h"
 
 namespace dovah {
@@ -76,7 +77,7 @@ class DKObjectReferencePicker : public QWidget {
          QLineEdit*   ref_filter_string   = nullptr;
 
          DKFormPicker* cell = nullptr;
-         QComboBox*    refr = nullptr;
+         DKComboBox*   refr = nullptr;
       } subwidgets;
       struct {
          bool allow_none_ref       = true;

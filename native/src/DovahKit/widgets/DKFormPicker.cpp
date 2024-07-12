@@ -14,6 +14,7 @@
 
    #include "./widget-models/DKFormPicker/DKFormPickerModel.h"
 #endif
+#include "./DKComboBox.h"
 
 #if !defined(QT_DESIGNER_LIB)
    namespace {
@@ -74,7 +75,7 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
    this->setLayout(layout);
    
    this->_subwidgets.type = new QComboBox(this);
-   this->_subwidgets.form = new QComboBox(this);
+   this->_subwidgets.form = new DKComboBox(this);
    this->_subwidgets.form->setDisabled(true);
    layout->addWidget(this->_subwidgets.type, 0);
    layout->addWidget(this->_subwidgets.form, 1);
@@ -89,7 +90,8 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
    //
    {
       auto* combobox = this->_subwidgets.form;
-      combobox->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+      combobox->setSizeAdjustPolicy(QComboBox::AdjustToContentsOnFirstShow);
+      combobox->setAutoResizeEnabled(false); // DKComboBox: force the combobox to let its contents be truncated
       auto* view = qobject_cast<QListView*>(combobox->view());
       if (view) { // condition, just in case the library internals change later
          view->setUniformItemSizes(true);
@@ -293,6 +295,10 @@ void DKFormPicker::setFormStub(dovah::form_stub* stub) noexcept {
    if (index >= 0) {
       subwidget->setCurrentIndex(index);
       emit this->formChanged(stub);
+   } else {
+      if (auto* model = this->_rawModel())
+         if (model->isFilling())
+            emit this->formChanged(stub); // Assume we're going to succeed. If we fail, we'll emit formChanged when correcting ourselves.
    }
 }
 void DKFormPicker::setDefaultForm(dovah::form_stub* stub) noexcept {

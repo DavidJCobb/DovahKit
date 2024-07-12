@@ -870,6 +870,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_ini_tests.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
+    <ClCompile Include="widgets\DKComboBox.cpp" />
     <ClCompile Include="widgets\DKCompactObjectReferencePicker.cpp" />
     <ClCompile Include="widgets\DKConditionList.cpp" />
     <ClCompile Include="widgets\DKDelayedEnableButton.cpp" />
@@ -1075,6 +1076,7 @@
     <QtMoc Include="widgets\widget-dialogs\DKConditionEditDialog.h" />
     <QtMoc Include="widgets\DKNavmeshGenerationImportOptionPicker.h" />
     <ClInclude Include="ui\utils\set_range.h" />
+    <QtMoc Include="widgets\DKComboBox.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />
     <QtMoc Include="widgets\DKFormNIFPicker.h" />

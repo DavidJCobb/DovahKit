@@ -13,6 +13,7 @@ namespace dovah {
 namespace ui::impl::DKFormPicker {
    class Model;
 }
+class DKComboBox;
 class QComboBox;
 
 class DKFormPicker : public QWidget {
@@ -94,8 +95,8 @@ class DKFormPicker : public QWidget {
          dovah::form_stub* last_force_included_form = nullptr;
       } _state;
       struct {
-         QComboBox* form = nullptr;
-         QComboBox* type = nullptr;
+         DKComboBox* form = nullptr;
+         QComboBox*  type = nullptr;
       } _subwidgets;
       #if !defined(QT_DESIGNER_LIB)
          //

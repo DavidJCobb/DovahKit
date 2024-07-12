@@ -87,7 +87,7 @@
    <item row="2" column="0" colspan="2">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tabGeneral">
       <attribute name="title">
@@ -927,6 +927,12 @@
             <layout class="QVBoxLayout" name="verticalLayout_4">
              <item>
               <widget class="DKObjectReferencePicker" name="vendorChest">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="whatsThis">
                 <string>Merchants don't store their goods for sale in their own inventories. Rather, they store their goods in physical containers (which are usually hidden out of bounds to prevent theft by container). These containers are defined per faction, not per individual merchant NPC.</string>
                </property>

@@ -511,7 +511,7 @@ FormDialogFaction::FormDialogFaction(dovah::form_stub& stub, QWidget* parent) : 
             if (!src)
                return;
             auto data = *src;
-            editor.assign_localized_string(data.title_fem, this->ui.name->text());
+            editor.assign_localized_string(data.title_fem, this->ui.rankEditNameF->text());
             model->setRankData(index.row(), data);
          });
          QObject::connect(this->ui.rankEditNameM, &QLineEdit::textChanged, this, [this, &editor, model, sel_model](QString text) {
@@ -520,7 +520,7 @@ FormDialogFaction::FormDialogFaction(dovah::form_stub& stub, QWidget* parent) : 
             if (!src)
                return;
             auto data = *src;
-            editor.assign_localized_string(data.title_masc, this->ui.name->text());
+            editor.assign_localized_string(data.title_masc, this->ui.rankEditNameM->text());
             model->setRankData(index.row(), data);
          });
          QObject::connect(this->ui.rankEditInsignia, &DKGameFilePicker::pathChanged, this, [this, model, sel_model](QString path) {

@@ -24,7 +24,7 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
    auto* layout = new QGridLayout(this);
    layout->setContentsMargins(0, 0, 0, 0);
 
-   this->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
+   this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
    this->subwidgets.labels.cell   = new QLabel(tr("Cell:"), this);
    this->subwidgets.labels.filter = new QLabel(tr("Filter refs:"), this);
@@ -63,7 +63,8 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
       #endif
    }
    {
-      auto* widget = this->subwidgets.refr = new QComboBox(this);
+      auto* widget = this->subwidgets.refr = new DKComboBox(this);
+      widget->setAutoResizeEnabled(false); // DKComboBox: force the combobox to let its contents be truncated
       #if !defined(QT_DESIGNER_LIB)
          auto* model = new DKRefsInCellModel(widget);
          widget->setModel(model);
