@@ -42,6 +42,15 @@ namespace dovah::loaded_forms::components {
             std::optional<structs::container_object_extra_data> item_extra_data;
          };
 
+         // For use by the function to preview a leveled list.
+         struct generated_preview_entry {
+            form_stub* form   = nullptr;
+            uint32_t   count  = 0;
+            float      health = 1;
+            form_stub* owner  = nullptr;
+         };
+
+         // For use by the containing form's `generate_use_info` function.
          struct use_info_builder {
             bare_form_id_t global = 0;
 
@@ -84,8 +93,21 @@ namespace dovah::loaded_forms::components {
 
          bool allows_form_type(form_type) const;
          [[nodiscard]] std::vector<form_type> legal_form_types() const;
+
+         enum class selection_mode {
+            use_default_behavior,             // Medium, Hard
+            vary_levels_only_when_cumulative, // Easy
+            always_vary_levels,               // None
+            prefer_first_above_cap,           // Very Hard
+         };
+         std::vector<generated_preview_entry> generate_preview(selection_mode, int16_t level, int16_t count = 1) const;
          
+      public:
          void load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc);
+
+         // You must call this after the load step.
+         void post_load();
+
          void save(tes_record_writer&, load_order_interfaces::form_save&);
          static void generate_use_info(tes_subrecord_reader&, use_info_builder&);
          void clone_from(const leveled_list& original, loaded_forms::Form& my_containing_form) noexcept;

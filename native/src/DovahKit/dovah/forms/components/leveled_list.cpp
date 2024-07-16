@@ -4,6 +4,12 @@
 #include "../../notices/form_load_warnings/by_form_component/leveled_list/leading_coed_bleedthrough.h"
 #include "../../notices/form_save_errors/by_form_component/leveled_list/too_many_entries.h"
 
+// For previewing the leveled list's contents.
+#include <ctime>
+#include <cstdlib>
+#include <random>
+#include "../_component_access.h"
+
 namespace {
    namespace specific_load_warnings {
       using namespace dovah::notices::form_load_warnings::by_component::leveled_list;
@@ -32,6 +38,262 @@ namespace dovah::loaded_forms::components {
          for (size_t i = 0; i < src.count; ++i)
             out[i] = src.list[i];
       }
+      return out;
+   }
+
+   namespace {
+      bool _is_leveled_list(dovah::form_stub& stub) {
+         switch (stub.form_type) {
+            case dovah::form_type::leveled_character:
+            case dovah::form_type::leveled_item:
+            case dovah::form_type::leveled_spell:
+               return true;
+         }
+         return false;
+      }
+      bool _check_chance_none(const leveled_list& subject, std::mt19937& rng) { // return true if we should generate stuff
+         uint8_t percentage = subject.chance_none.percentage;
+         if (subject.chance_none.global) {
+            // TODO
+         }
+         if (percentage > 0)
+            if (rng() % 100 < percentage)
+               return false;
+         return true;
+      }
+
+      leveled_list::generated_preview_entry _generate_preview_single_impl(
+         leveled_list::selection_mode mode,
+         bool process_nested_lists,
+         const leveled_list& subject,
+         int16_t level,
+         int16_t count,
+         std::mt19937& rng
+      ) {
+         using selection_mode = leveled_list::selection_mode;
+
+         if (!_check_chance_none(subject, rng))
+            return {};
+
+         leveled_list::generated_preview_entry out;
+
+         //
+         // TODO: Special Loot formula here!
+         //
+
+         int min_level = level;
+         int max_level = level;
+         {
+            bool cumulative = subject.flags & leveled_list::flag::calculate_from_all_levels_below_player;
+            if (
+               (cumulative && (mode == selection_mode::vary_levels_only_when_cumulative || mode == selection_mode::always_vary_levels))
+               ||
+               (!cumulative && mode == selection_mode::always_vary_levels)
+            ) {
+               uint32_t level_difference_max = 0; // TODO: this varies by form type, and is based on GMSTs
+               if (level_difference_max) {
+                  min_level = level - level_difference_max;
+               } else {
+                  min_level = -1;
+               }
+            }
+         }
+
+         bool   has_exceeded_cap     = false;
+         bool   within_desired_range = false;
+         size_t eligible_range_start = -1;
+         size_t eligible_range_size  = 0;
+         size_t range_basis_level    = 0;
+         for (size_t i = 0; i < subject.entries.size(); ++i) {
+            auto& entry = subject.entries[i];
+            if (entry.level > max_level) {
+               if (has_exceeded_cap || mode != selection_mode::prefer_first_above_cap) {
+                  break;
+               }
+               //
+               // We're using the selection mode wherein we prefer the first list item we 
+               // see that exceeds our upper bound (i.e. Very Hard difficulty); and we are 
+               // *just now seeing* the first list item to exceed that bound.
+               //
+               if (min_level == max_level) {
+                  //
+                  // If we wanted an exact level match, then clear the range of previously 
+                  // seen list items (so that we disregard any exact matches we actually 
+                  // did find), and start a new range at our current list item.
+                  //
+                  eligible_range_start = -1;
+                  eligible_range_size  = 0;
+                  range_basis_level    = 0;
+               }
+               max_level = entry.level;
+               //
+               // Oh, and make sure we don't do all this twice.
+               //
+               has_exceeded_cap = true;
+               //
+               // Then, fall through.
+               //
+            }
+
+            if (
+               (entry.level <= range_basis_level) // Condition A
+               ||
+               (range_basis_level && within_desired_range) // Condition B
+            ) {
+               //
+               // Expand the range of eligible list items to include the current list item.
+               //
+               ++eligible_range_size;
+            } else {
+               //
+               // If we haven't reached the minimum usable level yet (!B), then every time 
+               // we see a level higher than any we've seen before (!A), we should clear the 
+               // range of eligible list items, and start a new range.
+               //
+               if (entry.level >= min_level)
+                  within_desired_range = true;
+               eligible_range_start = i;
+               eligible_range_size  = 0;
+               range_basis_level    = entry.level;
+            }
+         }
+
+         if (eligible_range_start == -1 || eligible_range_size == 0)
+            return {};
+
+         size_t i = (rng() % (eligible_range_size + 1)) + eligible_range_start;
+         assert(i < subject.entries.size());
+         const auto& entry = subject.entries[i];
+         
+         out.form  = entry.form.get_form_stub();
+         out.count = entry.count;
+         if (entry.item_extra_data.has_value()) {
+            auto& src = entry.item_extra_data.value();
+            out.health = src.health;
+            out.owner  = src.ownership.get_owner();
+         }
+         if (process_nested_lists && out.form) {
+            if (_is_leveled_list(*out.form)) {
+               auto  loaded = out.form->load();
+               auto* nested = component_access::get_leveled_list(loaded);
+               if (nested) {
+                  auto inner = _generate_preview_single_impl(mode, process_nested_lists, *nested, level, count, rng);
+                  out.form  = inner.form;
+                  out.count = (out.count * inner.count) & 0xFFFF;
+                  if (inner.health != 1 || inner.owner) {
+                     out.health = inner.health;
+                     out.owner  = inner.owner;
+                  }
+               }
+            }
+         }
+         return out;
+      }
+      void _generate_preview_impl(leveled_list::selection_mode mode, const leveled_list& subject, int16_t level, int16_t count, std::vector<leveled_list::generated_preview_entry>& out, std::mt19937& rng) {
+         if (count < 0)
+            return;
+
+         if (!(subject.flags & leveled_list::flag::calculate_from_all_levels_below_player)) {
+            uint32_t highest = 0;
+            for (auto& entry : subject.entries)
+               if (entry.level > highest)
+                  highest = entry.level;
+            if (highest < level)
+               level = highest;
+         }
+
+         auto _generate_one_from_this = [mode, &subject, level, count, &rng, &out]() {
+            auto generated = _generate_preview_single_impl(mode, false, subject, level, count, rng);
+            if (generated.count <= 0 || !generated.form)
+               return;
+            if (_is_leveled_list(*generated.form)) {
+               auto  loaded = generated.form->load();
+               auto* nested = component_access::get_leveled_list(loaded);
+               if (nested)
+                  _generate_preview_impl(mode, *nested, level, generated.count, out, rng);
+            } else {
+               // TODO: validate form type of `generated.form` and skip if not valid?
+               out.push_back(generated);
+            }
+         };
+
+         if (subject.flags & leveled_list::flag::calculate_for_each_item_in_count) {
+            //
+            // Each result object should be generated independently.
+            //
+            if (count == 0)
+               return;
+            for (size_t i = 0; i < count; ++i) {
+               _generate_one_from_this();
+            }
+         } else {
+            //
+            // Generate a single result object with `count` many instances. If the chosen 
+            // leveled list entry(s) is a nested leveled list, multiply the count of its 
+            // result by this stack frame's `count` argument.
+            //
+            if (subject.flags & leveled_list::flag::use_all) {
+               //
+               // Individually generate every single item in the leveled list as a result,
+               // if "chance none" passes.
+               // 
+               // We're not using `_generate_one_from_this` in this branch, because we're 
+               // not generating a single item nor multiple items one at a time; as such, 
+               // we need to run the "Chance None" roll ourselves.
+               //
+               if (_check_chance_none(subject, rng)) {
+                  for (auto& entry : subject.entries) {
+                     auto* stub = entry.form.get_form_stub();
+                     if (!stub || !entry.count)
+                        continue;
+                     if (_is_leveled_list(*stub)) {
+                        auto  loaded = stub->load();
+                        auto* nested = component_access::get_leveled_list(loaded);
+                        if (nested)
+                           _generate_preview_impl(mode, *nested, level, entry.count, out, rng);
+                        continue;
+                     }
+                     out.push_back(leveled_list::generated_preview_entry{
+                        .form  = stub,
+                        .count = (uint32_t)entry.count,
+                     });
+                     if (entry.item_extra_data.has_value()) {
+                        auto& src = entry.item_extra_data.value();
+                        auto& dst = out.back();
+                        dst.health = src.health;
+                        dst.owner  = src.ownership.get_owner();
+                     }
+                  }
+               }
+            } else {
+               //
+               // Normal, flagless leveled list behavior: pick a single entry to generate.
+               //
+               _generate_one_from_this();
+            }
+            //
+            // In the "calculate for each item in count" branch, we generate items one at 
+            // a time, `count` many times. In this branch, however, we've generated all of 
+            // the items at once, so now we need to multiply their counts by `count`.
+            //
+            for (auto& item : out) {
+               item.count *= count;
+            }
+         }
+      }
+   }
+   std::vector<leveled_list::generated_preview_entry> leveled_list::generate_preview(selection_mode mode, int16_t level, int16_t count) const {
+      std::vector<leveled_list::generated_preview_entry> out;
+
+      if (level < 0)
+         level = 0;
+      if (count < 0)
+         return out;
+
+      std::mt19937 rng;
+      rng.seed(std::time(nullptr));
+
+      _generate_preview_impl(mode, *this, level, count, out, rng);
       return out;
    }
 
@@ -114,6 +376,15 @@ namespace dovah::loaded_forms::components {
             break;
       }
    }
+
+   void leveled_list::post_load() {
+      // The game sorts these in ascending order on load, and the game's leveled list logic 
+      // breaks if somehow they are not sorted.
+      std::sort(this->entries.begin(), this->entries.end(), [](const auto& a, const auto& b) {
+         return a.level < b.level;
+      });
+   }
+
    void leveled_list::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& LVLD = record.open_next_subrecord('LVLD');
       LVLD.write(this->chance_none.percentage);

@@ -696,6 +696,7 @@
     <ClCompile Include="ui\form_windows\flora.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
     <ClCompile Include="ui\form_windows\landtexture.cpp" />
+    <ClCompile Include="ui\form_windows\leveled_item.cpp" />
     <ClCompile Include="ui\form_windows\light.cpp" />
     <ClCompile Include="ui\form_windows\misc_item.cpp" />
     <ClCompile Include="ui\form_windows\note.cpp" />
@@ -741,6 +742,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput_serialization.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
     <ClCompile Include="ui\models\forms\FactionMembersModel.cpp" />
+    <ClCompile Include="ui\models\forms\LeveledListModel.cpp" />
     <ClCompile Include="ui\models\papyrus\DKAddPapyrusScriptModel.cpp" />
     <ClCompile Include="ui\models\papyrus\DKAllPapyrusScriptsModel.cpp" />
     <ClCompile Include="ui\models\worldedit\EditGizmoColorSchemeModel.cpp" />
@@ -1074,8 +1076,10 @@
     <QtMoc Include="ui\form_windows\light.h" />
     <QtMoc Include="ui\form_windows\note.h" />
     <QtMoc Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.h" />
+    <QtMoc Include="ui\form_windows\leveled_item.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
+    <QtMoc Include="ui\models\forms\LeveledListModel.h" />
     <ClInclude Include="ui\types\conditions\condition.h" />
     <ClInclude Include="ui\types\logging\log_item.h" />
     <ClInclude Include="ui\types\logging\log_item_context.h" />
