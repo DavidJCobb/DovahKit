@@ -75,6 +75,9 @@ namespace dovah::loaded_forms::components {
             size_t           count = 0;
          } _allowed_form_types;
          const char* _level_difference_gmst_name = nullptr;
+         struct {
+            size_t last_loaded_entry = (size_t)-1;
+         } _cross_subrecord_load_state;
 
          template<size_t Count>
          constexpr void _set_allowed_form_types(const std::array<form_type, Count>& src) {
@@ -86,7 +89,7 @@ namespace dovah::loaded_forms::components {
          flags_t flags = 0;
          std::vector<entry> entries;
          struct {
-            form_reference_t global = {};
+            form_reference_t global     = {}; // value of the global should be in the range [0.0, 100.0] and will be truncated
             uint8_t          percentage = 0;
          } chance_none;
 
@@ -98,10 +101,6 @@ namespace dovah::loaded_forms::components {
          
       public:
          void load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc);
-
-         // You must call this after the load step.
-         void post_load();
-
          void save(tes_record_writer&, load_order_interfaces::form_save&);
          static void generate_use_info(tes_subrecord_reader&, use_info_builder&);
          void clone_from(const leveled_list& original, loaded_forms::Form& my_containing_form) noexcept;

@@ -68,13 +68,23 @@ namespace dovah::loaded_forms::components {
                subrecord.read(data.form);
                subrecord.read(data.count);
                subrecord.skip_bytes(2);
-
-               this->entries.push_back(entry{
+               
+               //
+               // Insert the new entry into the list, maintaining sorting.
+               //
+               size_t at = 0;
+               for (; at < this->entries.size(); ++at) {
+                  const auto& prior = this->entries[at];
+                  if (prior.level > at)
+                     break;
+               }
+               this->_cross_subrecord_load_state.last_loaded_entry = at; // remember which entry the next COED should affect
+               auto it = this->entries.insert(this->entries.begin() + at, {
                   .count = data.count,
                   .level = data.level,
                });
-
-               auto& new_entry  = this->entries.back();
+               assert(it != this->entries.end());
+               auto& new_entry  = *it;
                auto* entry_form = data.form.get_form_stub();
                new_entry.form.unmanaged_set(entry_form);
 
@@ -88,7 +98,7 @@ namespace dovah::loaded_forms::components {
             }
             break;
          case 'COED':
-            if (this->entries.empty()) {
+            if (this->entries.empty() || this->_cross_subrecord_load_state.last_loaded_entry == (size_t)-1) {
                specific_load_warnings::leading_coed_bleedthrough notice(intfc.target_stub);
                intfc.log_load_warning(notice);
                //
@@ -98,7 +108,7 @@ namespace dovah::loaded_forms::components {
                break;
             }
             {
-               auto& entry = this->entries.back();
+               auto& entry = this->entries[this->_cross_subrecord_load_state.last_loaded_entry];
                auto& dst   = entry.item_extra_data;
                if (dst.has_value()) {
                   //
@@ -111,18 +121,10 @@ namespace dovah::loaded_forms::components {
                   dst.emplace().load(subrecord, intfc);
                }
             }
+            this->_cross_subrecord_load_state.last_loaded_entry = (size_t)-1;
             break;
       }
    }
-
-   void leveled_list::post_load() {
-      // The game sorts these in ascending order on load, and the game's leveled list logic 
-      // breaks if somehow they are not sorted.
-      std::sort(this->entries.begin(), this->entries.end(), [](const auto& a, const auto& b) {
-         return a.level < b.level;
-      });
-   }
-
    void leveled_list::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       auto& LVLD = record.open_next_subrecord('LVLD');
       LVLD.write(this->chance_none.percentage);

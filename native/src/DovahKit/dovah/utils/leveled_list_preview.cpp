@@ -3,12 +3,17 @@
 #include <cstdlib>
 #include "../forms/components/leveled_list.h"
 #include "../forms/_component_access.h"
+#include "../forms/Global.h"
 
 namespace dovah {
    bool leveled_list_preview::_check_chance_none(const _component_type& subject) const {
       uint8_t percentage = subject.chance_none.percentage;
-      if (subject.chance_none.global) {
-         // TODO
+      if (auto* stub = subject.chance_none.global.get_form_stub()) {
+         if (stub->form_type == form_type::global) {
+            auto loaded = stub->load().ptr_cast<loaded_forms::Global>();
+            if (loaded)
+               percentage = (int32_t)loaded->value & 0xFF;
+         }
       }
       if (percentage > 0)
          if (this->rng() % 100 < percentage)
@@ -317,6 +322,53 @@ namespace dovah {
       this->rng.seed(std::time(nullptr));
 
       this->_generate_into_list(leveled_list, this->input_level, this->input_count, out);
+
+      //
+      // If multiple entries have the same form, health, and owner, then merge them together.
+      //
+      bool any_to_remove = false;
+      for (size_t i = 0; i < out.size(); ++i) {
+         auto& a = out[i];
+         if (!any_to_remove && (a.count == 0 || a.form == nullptr)) {
+            any_to_remove = true;
+            continue;
+         }
+         for (size_t j = i + 1; j < out.size(); ++j) {
+            auto& b = out[j];
+            if (b.count == 0 || b.form == nullptr) {
+               continue;
+            }
+
+            if (a.form != b.form)
+               continue;
+            if (a.extra.has_value() != b.extra.has_value())
+               continue;
+            if (a.extra.has_value()) {
+               auto& a_ex = a.extra.value();
+               auto& b_ex = b.extra.value();
+               if (a_ex.health != b_ex.health)
+                  continue;
+               if (a_ex.owner != b_ex.owner)
+                  continue;
+            }
+
+            // Items are equal except for their counts. Merge them.
+            a.count += b.count;
+            b.count = 0;
+            b.form  = nullptr;
+            any_to_remove = true;
+         }
+      }
+      if (any_to_remove) {
+         std::erase_if(out, [](const auto& entry) {
+            if (entry.count == 0)
+               return true;
+            if (entry.form == nullptr)
+               return true;
+            return false;
+         });
+      }
+
       return out;
    }
 }

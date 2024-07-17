@@ -13,12 +13,25 @@
 #include "../DefaultObjectManager.h"
 #include "../Form.h"
 #include "../FormList.h"
+#include "../Global.h"
 #include "../Static.h"
 #include "../TextureSet.h"
 #include "../Voicetype.h"
 #include "../Worldspace.h"
 
 namespace dovah {
+   namespace {
+      constexpr const auto hardcoded_global_values = std::array{
+         std::pair{ hardcoded_form_ids::GameYear,       77 },
+         std::pair{ hardcoded_form_ids::GameMonth,       7 },
+         std::pair{ hardcoded_form_ids::GameDay,        17 },
+         std::pair{ hardcoded_form_ids::GameHour,       12 },
+         std::pair{ hardcoded_form_ids::GameDaysPassed,  1 },
+         std::pair{ hardcoded_form_ids::TimeScale,      30 },
+         std::pair{ hardcoded_form_ids::PlayCredits,     0 },
+      };
+   }
+
    extern loaded_forms::Form* instantiate_hardcoded_form(form_stub& stub) {
       assert(stub.form == nullptr && "Why are we trying to create a loaded-form instance for a stub (for a hardcoded form) that already has one?");
       //
@@ -96,6 +109,20 @@ namespace dovah {
             break;
          case 0x038:
             ((loaded_forms::Static*)form)->model.model_path = "MarkerX.nif";
+            break;
+         default:
+            {
+               bool done = false;
+               for (const auto& pair : hardcoded_global_values) {
+                  if (stub.formID == pair.first) {
+                     ((loaded_forms::Global*)form)->value = pair.second;
+                     done = true;
+                     break;
+                  }
+               }
+               if (done)
+                  break;
+            }
             break;
       }
       return form;
@@ -306,7 +333,7 @@ namespace dovah {
       }
       {  // [BPTD:01C]"PlayerBodyPartData"
          auto stub = new form_stub();
-         stub->formID    = 0x01C;
+         stub->formID    = hardcoded_form_ids::PlayerBodyPartData;
          stub->form_type = form_type_info::signature_to_form_type('BPTD');
          stub->editorID  = "PlayerBodyPartData";
          lo._accept_hardcoded_form(stub);
@@ -427,7 +454,7 @@ namespace dovah {
       }
       {  // [GLOB:035]"GameYear"
          auto stub = new form_stub();
-         stub->formID    = 0x035;
+         stub->formID    = hardcoded_form_ids::GameYear;
          stub->form_type = form_type_info::signature_to_form_type('GLOB');
          stub->editorID  = "GameYear";
          // Value: 77
@@ -435,7 +462,7 @@ namespace dovah {
       }
       {  // [GLOB:036]"GameMonth"
          auto stub = new form_stub();
-         stub->formID    = 0x036;
+         stub->formID    = hardcoded_form_ids::GameMonth;
          stub->form_type = form_type_info::signature_to_form_type('GLOB');
          stub->editorID  = "GameMonth";
          // Value: 7
@@ -443,7 +470,7 @@ namespace dovah {
       }
       {  // [GLOB:037]"GameDay"
          auto stub = new form_stub();
-         stub->formID    = 0x037;
+         stub->formID    = hardcoded_form_ids::GameDay;
          stub->form_type = form_type_info::signature_to_form_type('GLOB');
          stub->editorID  = "GameDay";
          // Value: 17
@@ -451,7 +478,7 @@ namespace dovah {
       }
       {  // [GLOB:038]"GameHour"
          auto stub = new form_stub();
-         stub->formID    = 0x038;
+         stub->formID    = hardcoded_form_ids::GameHour;
          stub->form_type = form_type_info::signature_to_form_type('GLOB');
          stub->editorID  = "GameHour";
          // Value: 12
@@ -459,7 +486,7 @@ namespace dovah {
       }
       {  // [GLOB:039]"GameDaysPassed"
          auto stub = new form_stub();
-         stub->formID    = 0x039;
+         stub->formID    = hardcoded_form_ids::GameDaysPassed;
          stub->form_type = form_type_info::signature_to_form_type('GLOB');
          stub->editorID  = "GameDaysPassed";
          // Value: 1
@@ -467,7 +494,7 @@ namespace dovah {
       }
       {  // [GLOB:03A]"TimeScale"
          auto stub = new form_stub();
-         stub->formID    = 0x03A;
+         stub->formID    = hardcoded_form_ids::TimeScale;
          stub->form_type = form_type_info::signature_to_form_type('GLOB');
          stub->editorID  = "TimeScale";
          // Value: 30
@@ -485,7 +512,7 @@ namespace dovah {
       }
       {  // [WRLD:03C]"DefaultWorld"
          auto stub = new form_stub();
-         stub->formID    = 0x03C;
+         stub->formID    = hardcoded_form_ids::DefaultWorld;
          stub->form_type = form_type_info::signature_to_form_type('WRLD');
          stub->editorID  = "DefaultWorld";
          //
@@ -532,7 +559,7 @@ namespace dovah {
       }
       {  // [GLOB:063]"PlayCredits"
          auto stub = new form_stub();
-         stub->formID    = 0x063;
+         stub->formID    = hardcoded_form_ids::PlayCredits;
          stub->form_type = form_type_info::signature_to_form_type('GLOB');
          stub->editorID  = "PlayCredits";
          // Value: 0

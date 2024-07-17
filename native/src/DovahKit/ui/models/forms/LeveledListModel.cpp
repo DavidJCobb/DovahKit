@@ -181,12 +181,18 @@ LeveledListModel::~LeveledListModel() {
          if (list.size() + count > backend_type::max_entry_count)
             return false;
 
+         uint16_t level = 1;
+         if (!list.empty()) {
+            level = list.back()->level;
+         }
+
          this->beginInsertRows({}, row, row + count - 1);
          list.insert(list.begin() + row, count, nullptr);
          assert(list[row]             == nullptr);
          assert(list[row + count - 1] == nullptr);
          for (size_t i = 0; i < count; ++i) {
-            list[row + i] = new LeveledObject;
+            auto* item = list[row + i] = new LeveledObject;
+            item->level = level;
          }
          this->endInsertRows();
          return true;
@@ -319,6 +325,10 @@ void LeveledListModel::importFrom(const backend_type& component) {
       if (auto* stub = dst->ownership.owner)
          dst->cached.ownerEditorID = QString::fromStdString(stub->editorID);
    }
+   std::stable_sort(this->_items.begin(), this->_items.end(), [this](const auto* a, const auto* b) {
+      if (a->level < b->level)
+         return true;
+   });
 
    this->endResetModel();
 }
@@ -391,6 +401,8 @@ void LeveledListModel::setData(size_t row, const LeveledObject& src) {
          col_change_end = col;
    };
 
+   uint16_t prior_level = dst.level;
+
    if (src.count != dst.count) {
       dst.count = src.count;
       _update_column_range(Column::Count);
@@ -425,6 +437,10 @@ void LeveledListModel::setData(size_t row, const LeveledObject& src) {
    auto tl = this->index(row, col_change_start, {});
    auto br = this->index(row, col_change_end,   {});
    emit dataChanged(tl, br, typical_roles_to_notify_changes_for);
+
+   if (prior_level != dst.level) {
+      this->_sort();
+   }
 }
 
 void LeveledListModel::_clear() {
@@ -433,4 +449,59 @@ void LeveledListModel::_clear() {
       delete item;
    this->_items.clear();
    this->endResetModel();
+}
+void LeveledListModel::_sort() {
+   emit layoutAboutToBeChanged({}, QAbstractItemModel::LayoutChangeHint::VerticalSortHint);
+
+   size_t size = this->_items.size();
+
+   //
+   // Figure out our sorting. Don't sort the list directly; rather, make a list of all its 
+   // indices and sort that. You'll see why.
+   //
+   QVector<size_t> mapping;
+   mapping.resize(size);
+   for (size_t i = 0; i < size; ++i)
+      mapping[i] = i;
+   //
+   std::stable_sort(mapping.begin(), mapping.end(), [this](const size_t i, const size_t j) {
+      const auto& a = *this->_items[i];
+      const auto& b = *this->_items[j];
+      return a.level < b.level;
+   });
+
+   //
+   // Prepare to update all extant QPersistentModelIndexes pointing to our model. This is 
+   // why we needed to sort the indices: so we can tell, given an "old" index, where the 
+   // "new" index is.
+   //
+   QModelIndexList map_from = this->persistentIndexList();
+   QModelIndexList map_to;
+   for (auto& pqmi : map_from) {
+      int row_prior = pqmi.row();
+      int row_after;
+      if (row_prior > size) {
+         row_after = -1;
+      } else {
+         row_after = mapping[row_prior];
+      }
+      map_to.push_back(this->index(row_after, 0, {}));
+   }
+
+   //
+   // Actually sort our list.
+   //
+   std::vector<LeveledObject*> sorted;
+   sorted.resize(size);
+   for (size_t i = 0; i < size; ++i) {
+      sorted[i] = this->_items[mapping[i]];
+   }
+   std::swap(this->_items, sorted);
+
+   //
+   // Update the QPMIs now.
+   //
+   this->changePersistentIndexList(map_from, map_to);
+
+   emit layoutChanged();
 }

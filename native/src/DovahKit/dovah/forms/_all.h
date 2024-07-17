@@ -17,6 +17,7 @@
    #include "Faction.h"
    #include "Flora.h"
    #include "FormList.h"
+   #include "Global.h"
    #include "Landscape.h"
    #include "LandTexture.h"
    #include "LeveledCharacter.h"
@@ -56,6 +57,7 @@ namespace dovah {
       loaded_forms::Faction,
       loaded_forms::Flora,
       loaded_forms::FormList,
+      loaded_forms::Global,
       loaded_forms::Landscape,
       loaded_forms::LandTexture,
       loaded_forms::Light,

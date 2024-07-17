@@ -117,4 +117,5 @@ class LeveledListModel : public QAbstractItemModel {
       bool _show_container_item_fields = true;
 
       void _clear();
+      void _sort();
 };

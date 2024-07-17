@@ -10,7 +10,9 @@
 #include "../ui/form_windows/faction.h"
 #include "../ui/form_windows/flora.h"
 #include "../ui/form_windows/formlist.h"
+#include "../ui/form_windows/global.h"
 #include "../ui/form_windows/landtexture.h"
+#include "../ui/form_windows/leveled_item.h"
 #include "../ui/form_windows/light.h"
 #include "../ui/form_windows/misc_item.h"
 #include "../ui/form_windows/note.h"
@@ -34,7 +36,9 @@ namespace {
       std::pair{ dovah::form_type::faction,       _make<FormDialogFaction> },
       std::pair{ dovah::form_type::flora,         _make<FormDialogFlora> },
       std::pair{ dovah::form_type::formlist,      _make<FormDialogFormList> },
+      std::pair{ dovah::form_type::global,        _make<FormDialogGlobal> },
       std::pair{ dovah::form_type::land_texture,  _make<FormDialogLandTexture> },
+      std::pair{ dovah::form_type::leveled_item,  _make<FormDialogLeveledItem> },
       std::pair{ dovah::form_type::light,         _make<FormDialogLight> },
       std::pair{ dovah::form_type::misc_item,     _make<FormDialogMiscItem> },
       std::pair{ dovah::form_type::note,          _make<FormDialogNote> },

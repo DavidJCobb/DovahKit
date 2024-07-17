@@ -149,6 +149,7 @@
     <ClCompile Include="dovah\forms\components\papyrus\property.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\property_object_value.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\property_value.cpp" />
+    <ClCompile Include="dovah\forms\Global.cpp" />
     <ClCompile Include="dovah\forms\LeveledCharacter.cpp" />
     <ClCompile Include="dovah\forms\LeveledItem.cpp" />
     <ClCompile Include="dovah\forms\LeveledSpell.cpp" />
@@ -696,6 +697,7 @@
     <ClCompile Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.cpp" />
     <ClCompile Include="ui\form_windows\flora.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
+    <ClCompile Include="ui\form_windows\global.cpp" />
     <ClCompile Include="ui\form_windows\landtexture.cpp" />
     <ClCompile Include="ui\form_windows\leveled_item.cpp" />
     <ClCompile Include="ui\form_windows\leveled_lists\LeveledListPreviewResultsWindow.cpp" />
@@ -960,6 +962,7 @@
     <ClInclude Include="dovah\forms\components\conditions\working_condition.h" />
     <ClInclude Include="dovah\forms\components\conditions\working_parameter.h" />
     <ClInclude Include="dovah\forms\components\leveled_list.h" />
+    <ClInclude Include="dovah\forms\Global.h" />
     <ClInclude Include="dovah\forms\LeveledCharacter.h" />
     <ClInclude Include="dovah\forms\LeveledItem.h" />
     <ClInclude Include="dovah\forms\LeveledSpell.h" />
@@ -1081,6 +1084,7 @@
     <QtMoc Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.h" />
     <QtMoc Include="ui\form_windows\leveled_item.h" />
     <QtMoc Include="ui\form_windows\leveled_lists\LeveledListPreviewResultsWindow.h" />
+    <QtMoc Include="ui\form_windows\global.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
     <QtMoc Include="ui\models\forms\LeveledListModel.h" />
@@ -2350,6 +2354,7 @@
     <QtUic Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.ui" />
     <QtUic Include="ui\form_windows\flora.ui" />
     <QtUic Include="ui\form_windows\formlist.ui" />
+    <QtUic Include="ui\form_windows\global.ui" />
     <QtUic Include="ui\form_windows\landtexture.ui" />
     <QtUic Include="ui\form_windows\leveled_character.ui" />
     <QtUic Include="ui\form_windows\leveled_item.ui" />
