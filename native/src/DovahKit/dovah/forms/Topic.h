@@ -4,7 +4,6 @@
 #include <vector>
 #include "Form.h"
 #include "_common.h"
-#include "components/bounds.h"
 #include "components/conditions.h"
 #include "components/papyrus.h"
 
@@ -320,7 +319,6 @@ namespace dovah::loaded_forms {
          } data; // DATA
          float    priority = 50.0F;  // PNAM
          uint32_t subtype  = 'CUST'; // SNAM // in-game, the game uses whichever subtype between DATA and SNAM was loaded last
-         components::object_bounds object_bounds; // OBND. recognized, but probably discarded at run-time.
          components::papyrus_attachment_data script_data; // VMAD
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);

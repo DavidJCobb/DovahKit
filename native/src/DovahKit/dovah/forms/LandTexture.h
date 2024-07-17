@@ -5,7 +5,6 @@
 #include <vector>
 #include "Form.h"
 #include "_common.h"
-#include "components/bounds.h"
 #include "components/papyrus.h"
 
 namespace dovah::loaded_forms {
@@ -33,7 +32,6 @@ namespace dovah::loaded_forms {
          remaster_flags_t remaster_flags = 0;
          //
          components::papyrus_attachment_data script_data;
-         components::object_bounds bounds;
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);

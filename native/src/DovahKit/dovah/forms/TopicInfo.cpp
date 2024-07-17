@@ -258,7 +258,12 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'OBND':
-               this->object_bounds.load(subrecord, intfc);
+               //
+               // The loader checks for this and passes it to a virtual function on TESForm 
+               // that's responsible for loading it. However, this form doesn't derive from 
+               // TESBoundObject, so the TESForm implementation of that virtual function (a 
+               // no-op) isn't overridden and therefore the data is not retained in memory.
+               //
                break;
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
@@ -443,7 +448,6 @@ namespace dovah::loaded_forms {
          copy->responses.emplace_back().clone_from(r, *copy);
       //
       copy->override_topic_text = this->override_topic_text;
-      copy->object_bounds = this->object_bounds;
       copy->script_data.clone_from(this->script_data, *copy);
    }
    /*virtual*/ void TopicInfo::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
@@ -559,7 +563,6 @@ namespace dovah::loaded_forms {
       for (auto& l : this->legacy_scripts)
          l.clear(*this);
       this->override_topic_text.reset();
-      this->object_bounds.clear();
       this->script_data.clear(*this);
    }
 }

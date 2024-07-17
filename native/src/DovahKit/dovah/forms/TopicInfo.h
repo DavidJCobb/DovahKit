@@ -4,7 +4,6 @@
 #include <vector>
 #include "Form.h"
 #include "_common.h"
-#include "components/bounds.h"
 #include "components/conditions.h"
 #include "components/legacy_script.h"
 #include "components/papyrus.h"
@@ -165,7 +164,6 @@ namespace dovah::loaded_forms {
          } conditions; // CTDA
          std::vector<response> responses;
          localized_string override_topic_text; // RNAM (Prompt)
-         components::object_bounds object_bounds; // OBND. recognized, but probably discarded at run-time.
          components::papyrus_attachment_data script_data; // VMAD
          std::vector<components::legacy_script> legacy_scripts;
 

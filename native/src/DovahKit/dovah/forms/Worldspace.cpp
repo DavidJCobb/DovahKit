@@ -164,8 +164,12 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'OBND':
-               this->has_object_bounds = true;
-               this->object_bounds.load(subrecord, intfc);
+               //
+               // The loader checks for this and passes it to a virtual function on TESForm 
+               // that's responsible for loading it. However, this form doesn't derive from 
+               // TESBoundObject, so the TESForm implementation of that virtual function (a 
+               // no-op) isn't overridden and therefore the data is not retained in memory.
+               //
                break;
             case 'FULL':
                subrecord.read(this->name);
@@ -309,9 +313,6 @@ namespace dovah::loaded_forms {
             case 'VMAD':
                components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
-            case 'OBND': // bounds
-               components::object_bounds::generate_use_info(subrecord, uib);
-               break;
             case 'CNAM': // climate
                subrecord.read(climate);
                break;
@@ -395,8 +396,6 @@ namespace dovah::loaded_forms {
       copy->hd_lod_diffuse_texture = this->hd_lod_diffuse_texture;
       copy->hd_lod_normal_texture = this->hd_lod_normal_texture;
       copy->offset_data = this->offset_data;
-      copy->has_object_bounds = this->has_object_bounds;
-      copy->object_bounds = this->object_bounds;
       copy->script_data.clone_from(this->script_data, *copy);
    }
    void Worldspace::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
@@ -558,11 +557,6 @@ namespace dovah::loaded_forms {
          //
       }
       //
-      if (this->has_object_bounds) {
-         auto& subrecord = record.open_next_subrecord('OBND');
-         this->object_bounds.save(subrecord, intfc);
-         subrecord.close();
-      }
       this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
    }
    void Worldspace::_sever_outbound_references_impl(form_stub& other) noexcept {
@@ -615,8 +609,6 @@ namespace dovah::loaded_forms {
       this->water_environment_map.clear();
       this->offset_data.clear();
       //
-      this->has_object_bounds = false;
-      this->object_bounds.clear();
       this->script_data.clear(*this);
    }
 }

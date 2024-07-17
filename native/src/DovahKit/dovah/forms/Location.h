@@ -4,7 +4,6 @@
 #include <vector>
 #include "Form.h"
 #include "_common.h"
-#include "components/bounds.h"
 #include "components/keyword_list.h"
 #include "components/papyrus.h"
 #include "structs/color_dword.h"
@@ -53,7 +52,6 @@ namespace dovah::loaded_forms {
             bool removed_by_active_file = false;
          };
 
-         components::object_bounds bounds;   // OBND
          components::keyword_list  keywords; // KWDA[KSIZ+]
          components::papyrus_attachment_data script_data; // VMAD
          std::vector<enable_point>       enable_points;   // ACEP/LCEP // RCEP removes

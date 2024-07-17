@@ -17,7 +17,12 @@ namespace dovah::loaded_forms {
                this->script_data.load(subrecord, intfc);
                break;
             case 'OBND':
-               this->bounds.load(subrecord, intfc);
+               //
+               // The loader checks for this and passes it to a virtual function on TESForm 
+               // that's responsible for loading it. However, TESGlobal doesn't derive from 
+               // TESBoundObject, so the TESForm implementation of that virtual function (a 
+               // no-op) isn't overridden and therefore the data is not retained in memory.
+               //
                break;
             case 'TNAM':
                if (subrecord.read(this->texture_set)) {
@@ -109,7 +114,6 @@ namespace dovah::loaded_forms {
       auto* copy = (LandTexture*)out;
       
       copy->script_data.clone_from(this->script_data, *copy);
-      copy->bounds = this->bounds;
       copy->texture_set.set(*copy, this->texture_set);
       copy->havok.material.set(*copy, this->havok.material);
       copy->havok.friction    = this->havok.friction;
@@ -120,11 +124,6 @@ namespace dovah::loaded_forms {
    }
    void LandTexture::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
-      if (!this->bounds.is_zero()) {
-         auto& OBND = record.open_next_subrecord('OBND');
-         this->bounds.save(OBND, intfc);
-         OBND.close();
-      }
       record.write_formID_subrecord('TNAM', this->texture_set,    true);
       record.write_formID_subrecord('MNAM', this->havok.material, true);
       //

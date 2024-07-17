@@ -143,8 +143,12 @@ namespace dovah::loaded_forms {
                this->vendor_conditions.read_next(subrecord.get_containing_record(), intfc);
                break;
             case 'OBND':
-               this->has_object_bounds = true;
-               this->object_bounds.load(subrecord, intfc);
+               //
+               // The loader checks for this and passes it to a virtual function on TESForm 
+               // that's responsible for loading it. However, this form doesn't derive from 
+               // TESBoundObject, so the TESForm implementation of that virtual function (a 
+               // no-op) isn't overridden and therefore the data is not retained in memory.
+               //
                break;
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
@@ -247,8 +251,6 @@ namespace dovah::loaded_forms {
       copy->vendor_data = this->vendor_data;
       copy->package_location_vendor.clone_from(this->package_location_vendor, *copy);
       copy->vendor_conditions.append_all_of(*copy, this->vendor_conditions);
-      copy->has_object_bounds = this->has_object_bounds;
-      copy->object_bounds = this->object_bounds;
       copy->script_data.clone_from(this->script_data, *copy);
    }
    void Faction::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
@@ -328,12 +330,6 @@ namespace dovah::loaded_forms {
       CITC.close();
       for (auto& condition : this->vendor_conditions)
          condition.save(record, intfc);
-      //
-      if (this->has_object_bounds) {
-         auto& subrecord = record.open_next_subrecord('OBND');
-         this->object_bounds.save(subrecord, intfc);
-         subrecord.close();
-      }
       this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
    }
    void Faction::_sever_outbound_references_impl(form_stub& other) noexcept {
@@ -393,8 +389,6 @@ namespace dovah::loaded_forms {
       this->package_location_vendor.clear(*this);
       this->vendor_conditions.clear(*this);
       //
-      this->has_object_bounds = false;
-      this->object_bounds.clear();
       this->script_data.clear(*this);
    }
 }

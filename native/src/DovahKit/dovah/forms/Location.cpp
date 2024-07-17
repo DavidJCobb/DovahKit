@@ -17,6 +17,14 @@ namespace dovah::loaded_forms {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
          switch (subrecord.signature()) {
+            case 'OBND':
+               //
+               // The loader checks for this and passes it to a virtual function on TESForm 
+               // that's responsible for loading it. However, this form doesn't derive from 
+               // TESBoundObject, so the TESForm implementation of that virtual function (a 
+               // no-op) isn't overridden and therefore the data is not retained in memory.
+               //
+               break;
             #pragma region Enable points
             case 'ACEP':
                [[fallthrough]];
