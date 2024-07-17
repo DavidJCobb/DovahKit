@@ -2352,6 +2352,12 @@
     <ClCompile Include="ui\form_windows\leveled_item.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\utils\leveled_list_preview.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\leveled_lists\LeveledListPreviewResultsWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6140,6 +6146,9 @@
     <ClInclude Include="dovah\forms\LeveledCharacter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\utils\leveled_list_preview.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6784,6 +6793,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\leveled_item.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\leveled_lists\LeveledListPreviewResultsWindow.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

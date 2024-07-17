@@ -5,6 +5,7 @@
 #include <optional>
 #include <type_traits>
 #include <vector>
+#include "helpers/compile_time_strings/cs.h"
 #include "helpers/type_traits/is_std_array.h"
 #include "dovah/data/all_carryable_form_types.h"
 #include "../structs/container_object_extra_data.h"
@@ -70,17 +71,15 @@ namespace dovah::loaded_forms::components {
             // constexpr arrays shared across all leveled lists of like type, rather 
             // than each leveled list instance having to keep its own std::vector, etc..
             //
-            form_type* list  = nullptr;
-            size_t     count = 0;
+            const form_type* list  = nullptr;
+            size_t           count = 0;
          } _allowed_form_types;
+         const char* _level_difference_gmst_name = nullptr;
 
          template<size_t Count>
          constexpr void _set_allowed_form_types(const std::array<form_type, Count>& src) {
-            if (src.size() == 0) {
-               this->_allowed_form_types = { nullptr, 0 };
-               return;
-            }
-            this->_allowed_form_types = { src.data(), src.size() };
+            if (src.size())
+               this->_allowed_form_types = decltype(_allowed_form_types){ src.data(), src.size() };
          }
 
       public:
@@ -93,14 +92,9 @@ namespace dovah::loaded_forms::components {
 
          bool allows_form_type(form_type) const;
          [[nodiscard]] std::vector<form_type> legal_form_types() const;
-
-         enum class selection_mode {
-            use_default_behavior,             // Medium, Hard
-            vary_levels_only_when_cumulative, // Easy
-            always_vary_levels,               // None
-            prefer_first_above_cap,           // Very Hard
-         };
-         std::vector<generated_preview_entry> generate_preview(selection_mode, int16_t level, int16_t count = 1) const;
+         constexpr const char* get_level_difference_setting_name() const {
+            return this->_level_difference_gmst_name;
+         }
          
       public:
          void load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc);
@@ -115,8 +109,8 @@ namespace dovah::loaded_forms::components {
          void clear(loaded_forms::Form& my_containing_form);
    };
 
-   namespace _impl::leveled_list {
-      template<const auto& Array> requires cobb::is_std_array<std::decay_t<decltype(Array)>>
+   namespace _impl::_leveled_list {
+      template<const auto& Array, const cobb::cs GMST> requires cobb::is_std_array<std::decay_t<decltype(Array)>>
       class leveled_list_template : public leveled_list {
          protected:
             static constexpr const auto _allowed = Array;
@@ -124,14 +118,15 @@ namespace dovah::loaded_forms::components {
          public:
             leveled_list_template() {
                this->_set_allowed_form_types(_allowed);
+               this->_level_difference_gmst_name = GMST.c_str();
             }
       };
 
       constexpr const auto character_types = std::array{ form_type::actor_base };
-      constexpr const auto spell_types = std::array{ form_type::spell };
+      constexpr const auto spell_types     = std::array{ form_type::spell };
    }
    
-   using leveled_character_list = _impl::leveled_list::leveled_list_template<_impl::leveled_list::character_types>;
-   using leveled_item_list      = _impl::leveled_list::leveled_list_template<all_carryable_form_types>;
-   using leveled_spell_list     = _impl::leveled_list::leveled_list_template<_impl::leveled_list::spell_types>;
+   using leveled_character_list = _impl::_leveled_list::leveled_list_template<_impl::_leveled_list::character_types, cobb::cs("iLevCharLevelDifferenceMax")>;
+   using leveled_item_list      = _impl::_leveled_list::leveled_list_template<all_carryable_form_types,              cobb::cs("iLevItemLevelDifferenceMax")>;
+   using leveled_spell_list     = _impl::_leveled_list::leveled_list_template<_impl::_leveled_list::spell_types,     cobb::cs("")>;
 }

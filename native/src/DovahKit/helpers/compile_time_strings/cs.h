@@ -9,7 +9,7 @@ namespace cobb {
    //
    template<size_t Size> // includes the null terminator
    class cs {
-      private:
+      public: // "structural class types" usable as template parameter types cannot have protected or private members >_>
          std::array<char, Size> _data = {};
 
       public:

@@ -163,6 +163,7 @@
     <ClCompile Include="dovah\load_order_requests\form_renumber_request.cpp" />
     <ClCompile Include="dovah\load_order_requests\game_setting_edit_request.cpp" />
     <ClCompile Include="dovah\load_order_requests\game_setting_renumber_request.cpp" />
+    <ClCompile Include="dovah\utils\leveled_list_preview.cpp" />
     <ClCompile Include="dovah\utils\refs_need_persistence_checker.cpp" />
     <ClCompile Include="editor\helpers\backend_error_to_string.cpp" />
     <ClCompile Include="editor\helpers\form_stub_drag_drop.cpp" />
@@ -697,6 +698,7 @@
     <ClCompile Include="ui\form_windows\formlist.cpp" />
     <ClCompile Include="ui\form_windows\landtexture.cpp" />
     <ClCompile Include="ui\form_windows\leveled_item.cpp" />
+    <ClCompile Include="ui\form_windows\leveled_lists\LeveledListPreviewResultsWindow.cpp" />
     <ClCompile Include="ui\form_windows\light.cpp" />
     <ClCompile Include="ui\form_windows\misc_item.cpp" />
     <ClCompile Include="ui\form_windows\note.cpp" />
@@ -1058,6 +1060,7 @@
     <ClInclude Include="dovah\notices\_all_warnings.h" />
     <ClInclude Include="dovah\notices\_util.define.h" />
     <ClInclude Include="dovah\notices\_util.undef.h" />
+    <ClInclude Include="dovah\utils\leveled_list_preview.h" />
     <ClInclude Include="editor\helpers\backend_error_to_string.h" />
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
@@ -1077,6 +1080,7 @@
     <QtMoc Include="ui\form_windows\note.h" />
     <QtMoc Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.h" />
     <QtMoc Include="ui\form_windows\leveled_item.h" />
+    <QtMoc Include="ui\form_windows\leveled_lists\LeveledListPreviewResultsWindow.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
     <QtMoc Include="ui\models\forms\LeveledListModel.h" />

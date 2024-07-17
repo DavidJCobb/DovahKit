@@ -3,6 +3,7 @@
 #include "dovah/forms/components/leveled_list.h"
 #include "dovah/form_stub.h"
 #include "editor/core.h"
+#include "editor/form_stub_meta_type.h"
 
 namespace {
    static const QVector<int> typical_roles_to_notify_changes_for = { Qt::DisplayRole, Qt::ToolTipRole };
@@ -158,7 +159,7 @@ LeveledListModel::~LeveledListModel() {
                switch (column) {
                   case Column::Level:
                   case Column::Count:
-                     return (int)(Qt::AlignRight | Qt::AlignBaseline);
+                     return (int)(Qt::AlignRight | Qt::AlignVCenter);
                }
                break;
          }
@@ -312,6 +313,11 @@ void LeveledListModel::importFrom(const backend_type& component) {
          dst->ownership.global = src_coed.ownership.get_global();
          dst->ownership.rank   = src_coed.ownership.get_rank();
       }
+
+      if (auto* stub = dst->form)
+         dst->cached.editorID = QString::fromStdString(stub->editorID);
+      if (auto* stub = dst->ownership.owner)
+         dst->cached.ownerEditorID = QString::fromStdString(stub->editorID);
    }
 
    this->endResetModel();

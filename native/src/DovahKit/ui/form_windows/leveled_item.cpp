@@ -1,10 +1,12 @@
 #include "./leveled_item.h"
 #include <limits>
 #include "dovah/core.h"
+#include "dovah/utils/leveled_list_preview.h"
 #include "ui/models/forms/LeveledListModel.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
-#include "editor/form_stub_meta_type.h"
+#include "widgets/DKHeaderView.h"
+#include "./leveled_lists/LeveledListPreviewResultsWindow.h"
 
 FormDialogLeveledItem::FormDialogLeveledItem(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
@@ -47,7 +49,23 @@ FormDialogLeveledItem::FormDialogLeveledItem(dovah::form_stub& stub, QWidget* pa
       view->setModel(model);
       auto* sel_model = view->selectionModel();
 
-      if (auto* header = view->horizontalHeader()) {
+      {
+         auto* header = new DKHeaderView(Qt::Horizontal, view);
+         header->setFlexResizeEnabled(true);
+         view->setHorizontalHeader(header);
+         //
+         auto metrics = QFontMetrics(view->font());
+         header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
+         header->setColumnFlex(LeveledListModel::Column::Level,  0, 0, metrics.boundingRect("99").width() * 1.5F + 4);
+         header->setColumnFlex(LeveledListModel::Column::Count,  0, 0, metrics.boundingRect("9999").width() * 1.5F + 4);
+         header->setColumnFlex(LeveledListModel::Column::Form,   2, 0);
+         header->setColumnFlex(LeveledListModel::Column::Health, 0, 0, metrics.boundingRect("100%").width() * 1.5F + 4);
+         header->setColumnFlex(LeveledListModel::Column::Owner,  1, 0);
+         header->setSectionResizeMode(LeveledListModel::Column::Level,  QHeaderView::Interactive);
+         header->setSectionResizeMode(LeveledListModel::Column::Count,  QHeaderView::Interactive);
+         header->setSectionResizeMode(LeveledListModel::Column::Form,   QHeaderView::Interactive);
+         header->setSectionResizeMode(LeveledListModel::Column::Health, QHeaderView::Interactive);
+         header->setSectionResizeMode(LeveledListModel::Column::Owner,  QHeaderView::Interactive);
          header->setStretchLastSection(false);
       }
       if (auto* header = view->verticalHeader()) {
@@ -64,6 +82,8 @@ FormDialogLeveledItem::FormDialogLeveledItem(dovah::form_stub& stub, QWidget* pa
             QSignalBlocker(this->ui.entryLevel),
             QSignalBlocker(this->ui.entryCount),
             QSignalBlocker(this->ui.entryHealth),
+            QSignalBlocker(this->ui.entryOwnerTypeActorBase),
+            QSignalBlocker(this->ui.entryOwnerTypeFaction),
             QSignalBlocker(this->ui.entryOwnerActorBase),
             QSignalBlocker(this->ui.entryOwnerFaction),
             QSignalBlocker(this->ui.entryOwnerGlobal),
@@ -110,6 +130,7 @@ FormDialogLeveledItem::FormDialogLeveledItem(dovah::form_stub& stub, QWidget* pa
          this->ui.entryOwnerGlobal->setFormStub(data->ownership.global);
          this->ui.entryOwnerRank->setValue(data->ownership.rank);
       });
+      QObject::connect(this->ui.entryForm, &DKFormPicker::formChanged, this, &FormDialogLeveledItem::_overwrite_selected_leveled_object);
       QObject::connect(this->ui.entryLevel, QOverload<int>::of(&QSpinBox::valueChanged), this, &FormDialogLeveledItem::_overwrite_selected_leveled_object);
       QObject::connect(this->ui.entryCount, QOverload<int>::of(&QSpinBox::valueChanged), this, &FormDialogLeveledItem::_overwrite_selected_leveled_object);
       QObject::connect(this->ui.entryHealth, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &FormDialogLeveledItem::_overwrite_selected_leveled_object);
@@ -133,6 +154,10 @@ FormDialogLeveledItem::FormDialogLeveledItem(dovah::form_stub& stub, QWidget* pa
 
    ui::set_range<uint16_t>(this->ui.previewCount);
    ui::set_range<uint16_t>(this->ui.previewLevel);
+   //
+   this->ui.previewCount->setValue(1);
+   this->ui.previewLevel->setValue(1);
+   //
    QObject::connect(this->ui.buttonPreviewLLCalc, &QPushButton::clicked, this, [this]() {
       using backend_type = typename LeveledListModel::backend_type;
 
@@ -143,19 +168,27 @@ FormDialogLeveledItem::FormDialogLeveledItem(dovah::form_stub& stub, QWidget* pa
       // to the working copy. It's fine -- it's just a working copy.
       this->_model->commitTo(working, working.leveled_list_data);
 
-      auto results = working.leveled_list_data.generate_preview(
-         backend_type::selection_mode::use_default_behavior,
-         this->ui.previewLevel->value(),
-         this->ui.previewCount->value()
-      );
+      dovah::leveled_list_preview preview;
+      preview.prepare_game_settings(this->formStub()->get_owning_load_order(), working.leveled_list_data);
+      preview.input_count  = this->ui.previewCount->value();
+      preview.input_level  = this->ui.previewLevel->value();
+      preview.player_level = preview.input_level;
+      preview.use_special_loot_formula = this->ui.flagSpecialLoot->isChecked();
+      auto results = preview.generate(working.leveled_list_data);
 
-      static_assert(false, "TODO: display results");
+      auto* window = new LeveledListPreviewResultsWindow(this);
+      window->setContents(results);
+      window->show();
    });
 
    this->load(); // this creates the working copy.
 }
 
 void FormDialogLeveledItem::_overwrite_selected_leveled_object() {
+   #if _DEBUG
+      auto* _widget_what_triggered_this_here_call = sender();
+   #endif
+
    auto* view      = this->ui.view;
    auto* model     = this->_model;
    auto* sel_model = view->selectionModel();

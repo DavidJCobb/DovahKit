@@ -103,9 +103,11 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
    // Handle our comboboxes changing.
    #if !defined(QT_DESIGNER_LIB)
       QObject::connect(this->_subwidgets.type, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
+         if (!this->isSplittingTypes())
+            return;
+
          if (auto* stub = this->formStub())
             this->_prior_selections[stub->form_type] = stub;
-         //
          this->_updateForms();
       });
       QObject::connect(this->_subwidgets.form, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
@@ -204,7 +206,7 @@ void DKFormPicker::setAllowedFormTypes(QList<dovah::form_type> t) noexcept {
    //
    const auto blocker0 = QSignalBlocker(this->_subwidgets.type);
    const auto blocker1 = QSignalBlocker(this->_subwidgets.form);
-   this->_setIsSplittingTypes(this->_shouldSplitTypes());
+   this->_updateTypePicker();
    this->_updateForms();
 }
 void DKFormPicker::setSplitTypesWhenMany(bool b) noexcept {
@@ -290,6 +292,13 @@ void DKFormPicker::setFormStub(dovah::form_stub* stub) noexcept {
    const auto blocker   = QSignalBlocker(subwidget);
 
    this->_updateForceIncludedForm(stub);
+   if (stub) {
+      auto* c_type = this->_subwidgets.type;
+      int   index  = c_type->findData((int)stub->form_type);
+      if (index >= 0) {
+         c_type->setCurrentIndex(index);
+      }
+   }
    
    int index = subwidget->findData(QVariant::fromValue(stub), model_type::FormStubRole);
    if (index >= 0) {
@@ -345,13 +354,14 @@ bool DKFormPicker::_wouldAllowFormStub(const dovah::form_stub& stub) const {
 #endif
 
 void DKFormPicker::_setIsSplittingTypes(bool s) noexcept {
+   if (this->_state.is_splitting_types == s)
+      return;
    this->_state.is_splitting_types = s;
    this->_subwidgets.type->setVisible(s);
    this->setFocusProxy(s ? this->_subwidgets.type : this->_subwidgets.form); // needed to prevent tabbing from breaking when the "type" subwidget is hidden
    if (s)
       this->_updateTypePicker();
-   else
-      this->_updateForms();
+   this->_updateForms();
 }
 void DKFormPicker::_setSubwidgetEnableState(bool s) {
    this->_subwidgets.type->setEnabled(s);
