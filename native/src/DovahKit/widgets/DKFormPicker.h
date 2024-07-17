@@ -85,7 +85,7 @@ class DKFormPicker : public QWidget {
          #endif
       } _properties;
       struct {
-         bool is_splitting_types = false;
+         bool is_splitting_types = true;
          bool needs_initial_fill = false;
 
          // DKFormPickers choose not to list certain forms, e.g. unnamed exterior cells. 

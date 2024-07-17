@@ -452,7 +452,6 @@ FormDialogFaction::FormDialogFaction(dovah::form_stub& stub, QWidget* parent) : 
             menu->addAction(action_remove);
 
             view->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
-            view->installEventFilter(this);
 
             QObject::connect(action_add, &QAction::triggered, this, [this, model, sel_model]() {
                auto qmi = model->addItem();

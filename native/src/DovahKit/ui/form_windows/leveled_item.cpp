@@ -1,5 +1,6 @@
 #include "./leveled_item.h"
 #include <limits>
+#include <QKeyEvent>
 #include "dovah/core.h"
 #include "dovah/utils/leveled_list_preview.h"
 #include "ui/models/forms/LeveledListModel.h"
@@ -102,6 +103,27 @@ FormDialogLeveledItem::FormDialogLeveledItem(dovah::form_stub& stub, QWidget* pa
             return;
          }
 
+         if (data->form) {
+            bool has_health = false;
+            bool has_owner  = true;
+            switch (data->form->form_type) {
+               case dovah::form_type::leveled_item:
+               case dovah::form_type::leveled_character:
+               case dovah::form_type::leveled_spell:
+                  has_owner = false;
+                  break;
+               case dovah::form_type::armor:
+               case dovah::form_type::weapon:
+                  has_health = true;
+                  break;
+            }
+            this->ui.entryHealth->setEnabled(has_health);
+            this->ui.entryOwnerGroupbox->setEnabled(has_owner);
+         } else {
+            this->ui.entryHealth->setEnabled(false);
+            this->ui.entryOwnerGroupbox->setEnabled(false);
+         }
+
          this->ui.entryForm->setFormStub(data->form);
          this->ui.entryLevel->setValue(data->level);
          this->ui.entryCount->setValue(data->count);
@@ -143,6 +165,40 @@ FormDialogLeveledItem::FormDialogLeveledItem(dovah::form_stub& stub, QWidget* pa
 
       // force UI enable state updates:
       sel_model->currentChanged({}, {});
+
+      {
+         auto* menu = this->_view_context = new QMenu(this);
+
+         auto* action_new = new QAction(tr("Add entry"), menu);
+         QObject::connect(action_new, &QAction::triggered, this, [this]() {
+            auto at = this->_model->rowCount();
+            if (this->_model->insertRows(at, 1)) {
+               auto  qmi       = this->_model->index(at, 0, {});
+               auto* sel_model = this->ui.view->selectionModel();
+               sel_model->setCurrentIndex(qmi, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+            }
+         });
+         menu->addAction(action_new);
+
+         auto* action_delete = new QAction(tr("Remove entry"), menu);
+         QObject::connect(action_delete, &QAction::triggered, this, [this]() {
+            auto* sel_model = this->ui.view->selectionModel();
+            auto  qmi       = sel_model->currentIndex();
+            this->_model->removeRow(qmi.row());
+         });
+         menu->addAction(action_delete);
+
+         QObject::connect(menu, &QMenu::aboutToShow, this, [this, action_delete]() {
+            auto* sel_model = this->ui.view->selectionModel();
+            auto  qmi       = sel_model->currentIndex();
+            action_delete->setVisible(qmi.isValid());
+         });
+
+         view->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+         QObject::connect(view, &QWidget::customContextMenuRequested, this, [this](const QPoint& pos) {
+            this->_view_context->exec(this->ui.view->mapToGlobal(pos));
+         });
+      }
    }
 
    QObject::connect(this->ui.entryOwnerTypeActorBase, &QRadioButton::toggled, this, [this](bool checked) {
@@ -250,4 +306,19 @@ void FormDialogLeveledItem::_save_impl() {
    auto& working = *this->form;
    
    this->_model->commitTo(working, working.leveled_list_data);
+}
+
+/*virtual*/ bool FormDialogLeveledItem::eventFilter(QObject* watched, QEvent* event) /*override*/ {
+   if (watched == this->ui.view) {
+      if (event->type() == QEvent::Type::KeyPress) {
+         auto* casted = (QKeyEvent*)event;
+         if (casted->key() == Qt::Key::Key_Delete) {
+            auto* sel_model = this->ui.view->selectionModel();
+            auto  qmi       = sel_model->currentIndex();
+            this->_model->removeRow(qmi.row());
+            return true;
+         }
+      }
+   }
+   return false;
 }

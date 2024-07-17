@@ -196,6 +196,7 @@ void DKFormPicker::addAllowedFormType(dovah::form_type ft) {
    const auto blocker0 = QSignalBlocker(this->_subwidgets.type);
    const auto blocker1 = QSignalBlocker(this->_subwidgets.form);
    this->_setIsSplittingTypes(this->_shouldSplitTypes());
+   this->_updateTypePicker();
    this->_updateForms();
 }
 void DKFormPicker::setAllowedFormTypes(QList<dovah::form_type> t) noexcept {
@@ -206,6 +207,7 @@ void DKFormPicker::setAllowedFormTypes(QList<dovah::form_type> t) noexcept {
    //
    const auto blocker0 = QSignalBlocker(this->_subwidgets.type);
    const auto blocker1 = QSignalBlocker(this->_subwidgets.form);
+   this->_setIsSplittingTypes(this->_shouldSplitTypes());
    this->_updateTypePicker();
    this->_updateForms();
 }
