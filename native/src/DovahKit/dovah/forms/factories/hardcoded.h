@@ -36,7 +36,7 @@ namespace dovah {
       static constexpr bare_form_id_t GameDaysPassed     = 0x039;
       static constexpr bare_form_id_t TimeScale          = 0x03A;
       static constexpr bare_form_id_t XMarker            = 0x03B;
-      static constexpr bare_form_id_t DefaultWorld       = 0x033;
+      static constexpr bare_form_id_t DefaultWorld       = 0x03C;
       static constexpr bare_form_id_t PlayCredits        = 0x063;
    }
 }
