@@ -174,7 +174,14 @@ FormDialogLeveledItem::FormDialogLeveledItem(dovah::form_stub& stub, QWidget* pa
             if (this->_model->insertRows(at, 1)) {
                auto  qmi       = this->_model->index(at, 0, {});
                auto* sel_model = this->ui.view->selectionModel();
-               sel_model->setCurrentIndex(qmi, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+               //sel_model->setCurrentIndex(qmi, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+
+               auto tl = qmi.siblingAtColumn(0);
+               auto br = qmi.siblingAtColumn(this->_model->columnCount() - 1);
+               sel_model->select(
+                  QItemSelection{ tl, br },
+                  QItemSelectionModel::SelectionFlag::ClearAndSelect
+               );
             }
          });
          menu->addAction(action_new);
@@ -182,15 +189,19 @@ FormDialogLeveledItem::FormDialogLeveledItem(dovah::form_stub& stub, QWidget* pa
          auto* action_delete = new QAction(tr("Remove entry"), menu);
          QObject::connect(action_delete, &QAction::triggered, this, [this]() {
             auto* sel_model = this->ui.view->selectionModel();
-            auto  qmi       = sel_model->currentIndex();
-            this->_model->removeRow(qmi.row());
+            auto  rows      = sel_model->selectedRows();
+            if (rows.empty())
+               return;
+            this->_model->removeRow(rows[0].row());
          });
          menu->addAction(action_delete);
 
          QObject::connect(menu, &QMenu::aboutToShow, this, [this, action_delete]() {
             auto* sel_model = this->ui.view->selectionModel();
-            auto  qmi       = sel_model->currentIndex();
-            action_delete->setVisible(qmi.isValid());
+            auto  rows      = sel_model->selectedRows();
+            if (rows.empty())
+               return;
+            action_delete->setVisible(rows[0].isValid());
          });
 
          view->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
@@ -248,7 +259,10 @@ void FormDialogLeveledItem::_overwrite_selected_leveled_object() {
    auto* model     = this->_model;
    auto* sel_model = view->selectionModel();
 
-   auto row = sel_model->currentIndex().row();
+   auto rows = sel_model->selectedRows();
+   if (rows.empty())
+      return;
+   auto row = rows[0].row();
    if (row < 0)
       return;
 
@@ -257,6 +271,7 @@ void FormDialogLeveledItem::_overwrite_selected_leveled_object() {
       return;
 
    LeveledListModel::LeveledObject dst;
+   dst.form   = this->ui.entryForm->formStub();
    dst.level  = this->ui.entryLevel->value();
    dst.count  = this->ui.entryCount->value();
    dst.health = this->ui.entryHealth->value();
@@ -268,7 +283,18 @@ void FormDialogLeveledItem::_overwrite_selected_leveled_object() {
    dst.ownership.global = this->ui.entryOwnerGlobal->formStub();
    dst.ownership.rank   = this->ui.entryOwnerRank->value();
 
+   auto qpmi = QPersistentModelIndex(rows[0]);
    model->setData(row, dst);
+   //
+   // In case the level was changed and the row was moved:
+   //
+   auto new_qmi = QModelIndex(qpmi);
+   auto tl = new_qmi.siblingAtColumn(0);
+   auto br = new_qmi.siblingAtColumn(this->_model->columnCount() - 1);
+   sel_model->select(
+      QItemSelection{ tl, br },
+      QItemSelectionModel::SelectionFlag::ClearAndSelect
+   );
 }
 
 void FormDialogLeveledItem::_load_impl() {
@@ -313,8 +339,10 @@ void FormDialogLeveledItem::_save_impl() {
          auto* casted = (QKeyEvent*)event;
          if (casted->key() == Qt::Key::Key_Delete) {
             auto* sel_model = this->ui.view->selectionModel();
-            auto  qmi       = sel_model->currentIndex();
-            this->_model->removeRow(qmi.row());
+            auto  rows      = sel_model->selectedRows();
+            if (rows.empty())
+               return false;
+            this->_model->removeRow(rows[0].row());
             return true;
          }
       }

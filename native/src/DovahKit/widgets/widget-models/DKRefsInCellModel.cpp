@@ -482,13 +482,16 @@ void DKRefsInCellModel::_sort() {
    QModelIndexList map_to;
    for (auto& pqmi : map_from) {
       int row_prior = pqmi.row();
-      int row_after;
-      if (row_prior > size) {
-         row_after = -1;
-      } else {
-         row_after = mapping[row_prior];
+      int row_after = -1;
+      if (row_prior >= 0 && row_prior < size) {
+         for (size_t i = 0; i < size; ++i) {
+            if (mapping[i] == row_prior) {
+               row_after = i;
+               break;
+            }
+         }
       }
-      map_to.push_back(this->index(row_after, 0, {}));
+      map_to.push_back(this->index(row_after, pqmi.column(), {}));
    }
 
    //

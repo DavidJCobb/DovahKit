@@ -182,8 +182,8 @@ LeveledListModel::~LeveledListModel() {
             return false;
 
          uint16_t level = 1;
-         if (!list.empty()) {
-            level = list.back()->level;
+         for (size_t i = 0; i < row; ++i) {
+            level = list[i]->level;
          }
 
          this->beginInsertRows({}, row, row + count - 1);
@@ -236,6 +236,8 @@ LeveledListModel::~LeveledListModel() {
             value_form = value.value<dovah::form_stub*>();
          }
 
+         auto prior_level = item->level;
+
          switch (column) {
             case Column::Level:
                if (value_uint16_t.has_value()) {
@@ -280,6 +282,9 @@ LeveledListModel::~LeveledListModel() {
          }
          if (changed) {
             emit dataChanged(index, index, typical_roles_to_notify_changes_for);
+            if (prior_level != item->level) {
+               this->_sort();
+            }
             return true;
          }
          return false;
@@ -328,6 +333,7 @@ void LeveledListModel::importFrom(const backend_type& component) {
    std::stable_sort(this->_items.begin(), this->_items.end(), [this](const auto* a, const auto* b) {
       if (a->level < b->level)
          return true;
+      return false;
    });
 
    this->endResetModel();
@@ -412,13 +418,16 @@ void LeveledListModel::setData(size_t row, const LeveledObject& src) {
       _update_column_range(Column::Level);
    }
    if (src.form != dst.form) {
-      if (dst.form && this->allowsFormType(dst.form->form_type)) {
+      if (src.form && this->allowsFormType(src.form->form_type)) {
          dst.form = src.form;
+         dst.cached.editorID = QString::fromStdString(dst.form->editorID);
          _update_column_range(Column::Form);
       }
    }
    if (src.ownership.owner != dst.ownership.owner) {
       dst.ownership.owner = src.ownership.owner;
+      if (auto* stub = dst.ownership.owner)
+         dst.cached.ownerEditorID = QString::fromStdString(stub->editorID);
       _update_column_range(Column::Owner);
    }
    dst.ownership.global = src.ownership.global;
@@ -479,13 +488,16 @@ void LeveledListModel::_sort() {
    QModelIndexList map_to;
    for (auto& pqmi : map_from) {
       int row_prior = pqmi.row();
-      int row_after;
-      if (row_prior > size) {
-         row_after = -1;
-      } else {
-         row_after = mapping[row_prior];
+      int row_after = -1;
+      if (row_prior >= 0 && row_prior < size) {
+         for (size_t i = 0; i < size; ++i) {
+            if (mapping[i] == row_prior) {
+               row_after = i;
+               break;
+            }
+         }
       }
-      map_to.push_back(this->index(row_after, 0, {}));
+      map_to.push_back(this->createIndex(row_after, pqmi.column(), pqmi.internalPointer()));
    }
 
    //
@@ -503,5 +515,5 @@ void LeveledListModel::_sort() {
    //
    this->changePersistentIndexList(map_from, map_to);
 
-   emit layoutChanged();
+   emit layoutChanged({}, QAbstractItemModel::LayoutChangeHint::VerticalSortHint);
 }
