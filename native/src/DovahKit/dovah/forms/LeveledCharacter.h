@@ -13,7 +13,7 @@ namespace dovah::loaded_forms {
          LeveledCharacter(const constructor_params& c) : Form(form_type, c) {};
 
          components::object_bounds bounds; // OBND
-         components::leveled_spell_list leveled_list_data;
+         components::leveled_character_list leveled_list_data;
          components::model_ts model; // MODL, MODT, MODS
          components::papyrus_attachment_data script_data; // VMAD
 

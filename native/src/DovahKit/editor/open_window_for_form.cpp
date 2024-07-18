@@ -12,7 +12,9 @@
 #include "../ui/form_windows/formlist.h"
 #include "../ui/form_windows/global.h"
 #include "../ui/form_windows/landtexture.h"
+#include "../ui/form_windows/leveled_character.h"
 #include "../ui/form_windows/leveled_item.h"
+#include "../ui/form_windows/leveled_spell.h"
 #include "../ui/form_windows/light.h"
 #include "../ui/form_windows/misc_item.h"
 #include "../ui/form_windows/note.h"
@@ -29,25 +31,27 @@ namespace {
    }
 
    constexpr std::array factory = {
-      std::pair{ dovah::form_type::activator,     _make<FormDialogActivator> },
-      std::pair{ dovah::form_type::cell,          _make<FormDialogCell> },
-      std::pair{ dovah::form_type::color,         _make<FormDialogColor> },
-      std::pair{ dovah::form_type::door,          _make<FormDialogDoor> },
-      std::pair{ dovah::form_type::faction,       _make<FormDialogFaction> },
-      std::pair{ dovah::form_type::flora,         _make<FormDialogFlora> },
-      std::pair{ dovah::form_type::formlist,      _make<FormDialogFormList> },
-      std::pair{ dovah::form_type::global,        _make<FormDialogGlobal> },
-      std::pair{ dovah::form_type::land_texture,  _make<FormDialogLandTexture> },
-      std::pair{ dovah::form_type::leveled_item,  _make<FormDialogLeveledItem> },
-      std::pair{ dovah::form_type::light,         _make<FormDialogLight> },
-      std::pair{ dovah::form_type::misc_item,     _make<FormDialogMiscItem> },
-      std::pair{ dovah::form_type::note,          _make<FormDialogNote> },
-      std::pair{ dovah::form_type::quest,         _make<FormDialogQuest> },
-      std::pair{ dovah::form_type::shout,         _make<FormDialogShout> },
-      std::pair{ dovah::form_type::statik,        _make<FormDialogStatic> },
-      std::pair{ dovah::form_type::texture_set,   _make<FormDialogTextureSet> },
-      std::pair{ dovah::form_type::voicetype,     _make<FormDialogVoicetype> },
-      std::pair{ dovah::form_type::word_of_power, _make<FormDialogWordOfPower> },
+      std::pair{ dovah::form_type::activator,         _make<FormDialogActivator> },
+      std::pair{ dovah::form_type::cell,              _make<FormDialogCell> },
+      std::pair{ dovah::form_type::color,             _make<FormDialogColor> },
+      std::pair{ dovah::form_type::door,              _make<FormDialogDoor> },
+      std::pair{ dovah::form_type::faction,           _make<FormDialogFaction> },
+      std::pair{ dovah::form_type::flora,             _make<FormDialogFlora> },
+      std::pair{ dovah::form_type::formlist,          _make<FormDialogFormList> },
+      std::pair{ dovah::form_type::global,            _make<FormDialogGlobal> },
+      std::pair{ dovah::form_type::land_texture,      _make<FormDialogLandTexture> },
+      std::pair{ dovah::form_type::leveled_character, _make<FormDialogLeveledCharacter> },
+      std::pair{ dovah::form_type::leveled_item,      _make<FormDialogLeveledItem> },
+      std::pair{ dovah::form_type::leveled_spell,     _make<FormDialogLeveledSpell> },
+      std::pair{ dovah::form_type::light,             _make<FormDialogLight> },
+      std::pair{ dovah::form_type::misc_item,         _make<FormDialogMiscItem> },
+      std::pair{ dovah::form_type::note,              _make<FormDialogNote> },
+      std::pair{ dovah::form_type::quest,             _make<FormDialogQuest> },
+      std::pair{ dovah::form_type::shout,             _make<FormDialogShout> },
+      std::pair{ dovah::form_type::statik,            _make<FormDialogStatic> },
+      std::pair{ dovah::form_type::texture_set,       _make<FormDialogTextureSet> },
+      std::pair{ dovah::form_type::voicetype,         _make<FormDialogVoicetype> },
+      std::pair{ dovah::form_type::word_of_power,     _make<FormDialogWordOfPower> },
    };
 
    #pragma region Compile-time sanity checks

@@ -699,8 +699,10 @@
     <ClCompile Include="ui\form_windows\formlist.cpp" />
     <ClCompile Include="ui\form_windows\global.cpp" />
     <ClCompile Include="ui\form_windows\landtexture.cpp" />
+    <ClCompile Include="ui\form_windows\leveled_character.cpp" />
     <ClCompile Include="ui\form_windows\leveled_item.cpp" />
     <ClCompile Include="ui\form_windows\leveled_lists\LeveledListPreviewResultsWindow.cpp" />
+    <ClCompile Include="ui\form_windows\leveled_spell.cpp" />
     <ClCompile Include="ui\form_windows\light.cpp" />
     <ClCompile Include="ui\form_windows\misc_item.cpp" />
     <ClCompile Include="ui\form_windows\note.cpp" />
@@ -1085,6 +1087,9 @@
     <QtMoc Include="ui\form_windows\leveled_item.h" />
     <QtMoc Include="ui\form_windows\leveled_lists\LeveledListPreviewResultsWindow.h" />
     <QtMoc Include="ui\form_windows\global.h" />
+    <QtMoc Include="ui\form_windows\leveled_character.h" />
+    <ClInclude Include="ui\form_windows\leveled_lists\LeveledListEditDialogHelpers.h" />
+    <QtMoc Include="ui\form_windows\leveled_spell.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
     <QtMoc Include="ui\models\forms\LeveledListModel.h" />

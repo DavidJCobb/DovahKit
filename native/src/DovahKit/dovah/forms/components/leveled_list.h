@@ -121,8 +121,8 @@ namespace dovah::loaded_forms::components {
             }
       };
 
-      constexpr const auto character_types = std::array{ form_type::actor_base };
-      constexpr const auto spell_types     = std::array{ form_type::spell };
+      constexpr const auto character_types = std::array{ form_type::actor_base, form_type::leveled_character };
+      constexpr const auto spell_types     = std::array{ form_type::spell,      form_type::leveled_spell };
    }
    
    using leveled_character_list = _impl::_leveled_list::leveled_list_template<_impl::_leveled_list::character_types, cobb::cs("iLevCharLevelDifferenceMax")>;
