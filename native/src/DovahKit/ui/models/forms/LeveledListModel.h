@@ -17,7 +17,8 @@ namespace dovah {
 class LeveledListModel : public QAbstractItemModel {
    Q_OBJECT;
    public:
-      static constexpr const float normal_item_health = 100.0F;
+      static constexpr const float normal_item_health  = 1.0F;
+      static constexpr const float health_display_mult = 100; // multiply health by this amount when displaying it in the UI
 
       struct LeveledObject {
          dovah::form_stub* form = nullptr;
@@ -25,7 +26,7 @@ class LeveledListModel : public QAbstractItemModel {
          uint16_t count  = 0;
 
          // COED fields:
-         float    health = normal_item_health;
+         float health = normal_item_health;
          struct {
             dovah::form_stub* owner  = nullptr;
             dovah::form_stub* global = nullptr;

@@ -8,6 +8,11 @@
 #include "widgets/DKHeaderView.h"
 #include "./leveled_lists/LeveledListPreviewResultsWindow.h"
 
+namespace {
+   // Multiply the health value by this when displaying it.
+   constexpr const float health_display_mult = 100;
+}
+
 FormDialogLeveledItem::FormDialogLeveledItem(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
 
@@ -126,7 +131,7 @@ FormDialogLeveledItem::FormDialogLeveledItem(dovah::form_stub& stub, QWidget* pa
          this->ui.entryForm->setFormStub(data->form);
          this->ui.entryLevel->setValue(data->level);
          this->ui.entryCount->setValue(data->count);
-         this->ui.entryHealth->setValue(data->health);
+         this->ui.entryHealth->setValue(data->health * health_display_mult);
          {
             auto  type = dovah::form_type::none;
             auto* stub = data->ownership.owner;
@@ -209,6 +214,9 @@ FormDialogLeveledItem::FormDialogLeveledItem(dovah::form_stub& stub, QWidget* pa
             this->_view_context->exec(this->ui.view->mapToGlobal(pos));
          });
       }
+
+      // hook the Del key
+      view->installEventFilter(this);
    }
 
    QObject::connect(this->ui.entryOwnerTypeActorBase, &QRadioButton::toggled, this, [this](bool checked) {
@@ -274,7 +282,7 @@ void FormDialogLeveledItem::_overwrite_selected_leveled_object() {
    dst.form   = this->ui.entryForm->formStub();
    dst.level  = this->ui.entryLevel->value();
    dst.count  = this->ui.entryCount->value();
-   dst.health = this->ui.entryHealth->value();
+   dst.health = this->ui.entryHealth->value() / health_display_mult;
    if (this->ui.entryOwnerTypeActorBase->isChecked()) {
       dst.ownership.owner = this->ui.entryOwnerActorBase->formStub();
    } else {

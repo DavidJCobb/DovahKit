@@ -152,7 +152,7 @@ LeveledListModel::~LeveledListModel() {
                   case Column::Owner:
                      return item->cached.ownerEditorID;
                   case Column::Health:
-                     return item->health;
+                     return item->health * health_display_mult;
                }
                break;
             case Qt::TextAlignmentRole:
