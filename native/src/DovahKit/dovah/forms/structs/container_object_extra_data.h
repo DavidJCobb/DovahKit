@@ -59,6 +59,14 @@ namespace dovah::loaded_forms::structs {
       public:
          float             health = 1.0F; // percentage
          ownership_variant ownership;
+
+         constexpr bool is_default() const noexcept {
+            if (this->health != 1.0F)
+               return false;
+            if (this->ownership.get_owner())
+               return false;
+            return true;
+         }
          
          void load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc);
          void save(tes_record_writer&, load_order_interfaces::form_save&) const;

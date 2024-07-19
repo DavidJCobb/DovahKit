@@ -17,6 +17,9 @@ DKNavmeshGenerationImportOptionPicker::DKNavmeshGenerationImportOptionPicker(QWi
    QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
       emit this->valueChanged(this->getValue());
    });
+
+   this->setFocusPolicy(Qt::FocusPolicy::TabFocus);
+   this->setFocusProxy(widget);
 }
 
 DKNavmeshGenerationImportOptionPicker::Value DKNavmeshGenerationImportOptionPicker::getValue() const {

@@ -889,6 +889,7 @@
     <ClCompile Include="widgets\DKConditionList.cpp" />
     <ClCompile Include="widgets\DKDelayedEnableButton.cpp" />
     <ClCompile Include="widgets\DKFormDestructionDataButton.cpp" />
+    <ClCompile Include="widgets\DKFormInventory.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
     <ClCompile Include="widgets\DKFormNIFPicker.cpp" />
     <ClCompile Include="widgets\DKFormPicker.cpp" />
@@ -917,6 +918,7 @@
     </ClCompile>
     <ClCompile Include="widgets\widget-dialogs\DKFormDestructionDataDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKFormDestructionStageDialog.cpp" />
+    <ClCompile Include="widgets\widget-dialogs\DKFormInventoryPreviewDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKFormNIFPickerDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.cpp" />
     <ClCompile Include="widgets\widget-models\bound-scripts\property.cpp" />
@@ -926,6 +928,7 @@
     <ClCompile Include="widgets\widget-models\DKBSACollectionModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKConditionListModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormDestructionStageListModel.cpp" />
+    <ClCompile Include="widgets\widget-models\DKFormInventoryModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.cpp" />
@@ -1069,6 +1072,7 @@
     <ClInclude Include="editor\helpers\backend_error_to_string.h" />
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
+    <QtMoc Include="widgets\widget-models\DKFormInventoryModel.h" />
     <QtMoc Include="editor\subsystems\message_log\dovahkit_message_log.h" />
     <ClInclude Include="editor\subsystems\message_log\core.h" />
     <ClInclude Include="helpers\hashing\crc32.h" />
@@ -1109,6 +1113,8 @@
     <QtMoc Include="widgets\DKNavmeshGenerationImportOptionPicker.h" />
     <ClInclude Include="ui\utils\set_range.h" />
     <QtMoc Include="widgets\DKComboBox.h" />
+    <QtMoc Include="widgets\DKFormInventory.h" />
+    <QtMoc Include="widgets\widget-dialogs\DKFormInventoryPreviewDialog.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />
     <QtMoc Include="widgets\DKFormNIFPicker.h" />
@@ -2354,6 +2360,7 @@
     <QtUic Include="ui\form_windows\activator.ui" />
     <QtUic Include="ui\form_windows\cell.ui" />
     <QtUic Include="ui\form_windows\color.ui" />
+    <QtUic Include="ui\form_windows\container.ui" />
     <QtUic Include="ui\form_windows\door.ui" />
     <QtUic Include="ui\form_windows\faction.ui" />
     <QtUic Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.ui" />

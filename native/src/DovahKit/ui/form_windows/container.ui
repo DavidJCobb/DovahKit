@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogContainer</class>
+ <widget class="QDialog" name="FormDialogContainer">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>872</width>
+    <height>404</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Container</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout" columnstretch="1,1,1">
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="leftCol">
+     <item row="5" column="0" colspan="2">
+      <widget class="DKFormDestructionDataButton" name="destructionData"/>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="name"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="DKFormNIFPicker" name="model"/>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Model:</string>
+       </property>
+       <property name="buddy">
+        <cstring>model</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="QSpinBox" name="weight">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0" colspan="2">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Navmesh Generation Import Option:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="DKNavmeshGenerationImportOptionPicker" name="navmeshGeneration"/>
+       </item>
+      </layout>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="flagRandomAnimStart">
+         <property name="text">
+          <string>Random Anim Start</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QCheckBox" name="flagObstacle">
+         <property name="text">
+          <string>Obstacle</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCheckBox" name="flagRespawns">
+         <property name="text">
+          <string>Respawns</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QCheckBox" name="flagShowOwner">
+         <property name="text">
+          <string>Show Owner</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Name:</string>
+       </property>
+       <property name="buddy">
+        <cstring>name</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Weight:</string>
+       </property>
+       <property name="buddy">
+        <cstring>weight</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="0" colspan="2">
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="7" column="0" colspan="2">
+      <widget class="QGroupBox" name="groupBox">
+       <property name="title">
+        <string>Sounds</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="1" column="0" colspan="2">
+         <widget class="QCheckBox" name="flagSoundsEvenWhenAnims">
+          <property name="text">
+           <string>Allow sounds when container animations exist</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_7">
+          <property name="text">
+           <string>Close:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundClose</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>Open:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundOpen</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="DKFormPicker" name="soundClose"/>
+        </item>
+        <item row="2" column="1">
+         <widget class="DKFormPicker" name="soundOpen"/>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0" colspan="3">
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="1">
+    <layout class="QVBoxLayout" name="centerCol">
+     <item>
+      <widget class="QGroupBox" name="groupBox_2">
+       <property name="title">
+        <string>Item List</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="2">
+    <layout class="QVBoxLayout" name="rightCol">
+     <item>
+      <widget class="DKPapyrusBoundScriptListPane" name="scriptListPane"/>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormDestructionDataButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormDestructionDataButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKPapyrusBoundScriptListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKPapyrusBoundScriptListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKNavmeshGenerationImportOptionPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKNavmeshGenerationImportOptionPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>weight</tabstop>
+  <tabstop>flagRandomAnimStart</tabstop>
+  <tabstop>flagObstacle</tabstop>
+  <tabstop>flagRespawns</tabstop>
+  <tabstop>flagShowOwner</tabstop>
+  <tabstop>model</tabstop>
+  <tabstop>destructionData</tabstop>
+  <tabstop>flagSoundsEvenWhenAnims</tabstop>
+  <tabstop>soundOpen</tabstop>
+  <tabstop>soundClose</tabstop>
+  <tabstop>scriptListPane</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

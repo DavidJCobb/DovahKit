@@ -2370,6 +2370,15 @@
     <ClCompile Include="ui\form_windows\leveled_spell.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\DKFormInventory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-models\DKFormInventoryModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-dialogs\DKFormInventoryPreviewDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6370,6 +6379,9 @@
     <QtUic Include="ui\form_windows\global.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="ui\form_windows\container.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\main_window.h">
@@ -6826,6 +6838,15 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\leveled_spell.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKFormInventory.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\widget-models\DKFormInventoryModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\widget-dialogs\DKFormInventoryPreviewDialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
