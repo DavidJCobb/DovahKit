@@ -388,14 +388,16 @@ void DKFormPicker::_updateForceIncludedForm(dovah::form_stub* stub) {
    auto* prior = this->_state.last_force_included_form;
    if (prior == stub)
       return;
-
-   auto* model = this->_rawModel();
-   if (prior) {
-      model->setFormNeverDefaultExcluded(*prior, false);
-   }
-   if (stub) {
-      model->setFormNeverDefaultExcluded(*stub, true);
-   }
+   
+   #if !defined(QT_DESIGNER_LIB)
+      auto* model = this->_rawModel();
+      if (prior) {
+         model->setFormNeverDefaultExcluded(*prior, false);
+      }
+      if (stub) {
+         model->setFormNeverDefaultExcluded(*stub, true);
+      }
+   #endif
    this->_state.last_force_included_form = stub;
 }
 void DKFormPicker::_updateForms() {

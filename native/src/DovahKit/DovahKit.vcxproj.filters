@@ -2355,9 +2355,6 @@
     <ClCompile Include="dovah\utils\leveled_list_preview.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\form_windows\leveled_lists\LeveledListPreviewResultsWindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\forms\Global.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2370,16 +2367,19 @@
     <ClCompile Include="ui\form_windows\leveled_spell.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKFormInventory.cpp">
+    <ClCompile Include="widgets\DKFormInventoryWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\widget-models\DKFormInventoryModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\widget-dialogs\DKFormInventoryPreviewDialog.cpp">
+    <ClCompile Include="widgets\widget-dialogs\DKLeveledListPreviewDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\ui_form_inventory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-models\DKLeveledListPreviewModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -6822,9 +6822,6 @@
     <QtMoc Include="ui\form_windows\note.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKComboBox.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -6832,9 +6829,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\leveled_item.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\form_windows\leveled_lists\LeveledListPreviewResultsWindow.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\global.h">
@@ -6846,13 +6840,19 @@
     <QtMoc Include="ui\form_windows\leveled_spell.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKFormInventory.h">
+    <QtMoc Include="widgets\DKFormInventoryWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\widget-models\DKFormInventoryModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\widget-dialogs\DKFormInventoryPreviewDialog.h">
+    <QtMoc Include="widgets\widget-dialogs\DKLeveledListPreviewDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\widget-models\DKLeveledListPreviewModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKComboBox.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

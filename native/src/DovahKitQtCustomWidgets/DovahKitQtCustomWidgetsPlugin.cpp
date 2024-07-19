@@ -17,6 +17,7 @@
 #include "interfaces/DKPapyrusFragmentFunctionPickerInterface.h"
 #include "interfaces/DKConditionListInterface.h"
 #include "interfaces/DKNavmeshGenerationImportOptionPickerInterface.h"
+#include "interfaces/DKFormInventoryWidgetInterface.h"
 
 DovahKitQtCustomWidgetsPlugin::DovahKitQtCustomWidgetsPlugin(QObject* parent) : QObject(parent) {
    widgets.append(new DKCollapsiblePaneInterface(this));
@@ -32,6 +33,7 @@ DovahKitQtCustomWidgetsPlugin::DovahKitQtCustomWidgetsPlugin(QObject* parent) : 
    widgets.append(new DKPapyrusBoundScriptListPaneInterface(this));
    widgets.append(new DKPapyrusFragmentFunctionPickerInterface(this));
    widgets.append(new DKConditionListInterface(this));
+   widgets.append(new DKFormInventoryWidgetInterface(this));
    widgets.append(new DKNavmeshGenerationImportOptionPickerInterface(this));
 
    widgets.append(new DKGameFilePickerInterface(this));

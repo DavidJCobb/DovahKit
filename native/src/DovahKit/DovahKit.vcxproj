@@ -701,7 +701,6 @@
     <ClCompile Include="ui\form_windows\landtexture.cpp" />
     <ClCompile Include="ui\form_windows\leveled_character.cpp" />
     <ClCompile Include="ui\form_windows\leveled_item.cpp" />
-    <ClCompile Include="ui\form_windows\leveled_lists\LeveledListPreviewResultsWindow.cpp" />
     <ClCompile Include="ui\form_windows\leveled_spell.cpp" />
     <ClCompile Include="ui\form_windows\light.cpp" />
     <ClCompile Include="ui\form_windows\misc_item.cpp" />
@@ -890,7 +889,7 @@
     <ClCompile Include="widgets\DKConditionList.cpp" />
     <ClCompile Include="widgets\DKDelayedEnableButton.cpp" />
     <ClCompile Include="widgets\DKFormDestructionDataButton.cpp" />
-    <ClCompile Include="widgets\DKFormInventory.cpp" />
+    <ClCompile Include="widgets\DKFormInventoryWidget.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
     <ClCompile Include="widgets\DKFormNIFPicker.cpp" />
     <ClCompile Include="widgets\DKFormPicker.cpp" />
@@ -919,7 +918,7 @@
     </ClCompile>
     <ClCompile Include="widgets\widget-dialogs\DKFormDestructionDataDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKFormDestructionStageDialog.cpp" />
-    <ClCompile Include="widgets\widget-dialogs\DKFormInventoryPreviewDialog.cpp" />
+    <ClCompile Include="widgets\widget-dialogs\DKLeveledListPreviewDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKFormNIFPickerDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.cpp" />
     <ClCompile Include="widgets\widget-models\bound-scripts\property.cpp" />
@@ -933,6 +932,7 @@
     <ClCompile Include="widgets\widget-models\DKFormListPaneModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.cpp" />
+    <ClCompile Include="widgets\widget-models\DKLeveledListPreviewModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -1073,6 +1073,7 @@
     <ClInclude Include="editor\helpers\backend_error_to_string.h" />
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
+    <QtMoc Include="widgets\widget-models\DKLeveledListPreviewModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormInventoryModel.h" />
     <QtMoc Include="editor\subsystems\message_log\dovahkit_message_log.h" />
     <ClInclude Include="editor\subsystems\message_log\core.h" />
@@ -1090,7 +1091,6 @@
     <QtMoc Include="ui\form_windows\note.h" />
     <QtMoc Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.h" />
     <QtMoc Include="ui\form_windows\leveled_item.h" />
-    <QtMoc Include="ui\form_windows\leveled_lists\LeveledListPreviewResultsWindow.h" />
     <QtMoc Include="ui\form_windows\global.h" />
     <QtMoc Include="ui\form_windows\leveled_character.h" />
     <ClInclude Include="ui\form_windows\leveled_lists\LeveledListEditDialogHelpers.h" />
@@ -1115,8 +1115,8 @@
     <QtMoc Include="widgets\DKNavmeshGenerationImportOptionPicker.h" />
     <ClInclude Include="ui\utils\set_range.h" />
     <QtMoc Include="widgets\DKComboBox.h" />
-    <QtMoc Include="widgets\DKFormInventory.h" />
-    <QtMoc Include="widgets\widget-dialogs\DKFormInventoryPreviewDialog.h" />
+    <QtMoc Include="widgets\DKFormInventoryWidget.h" />
+    <QtMoc Include="widgets\widget-dialogs\DKLeveledListPreviewDialog.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />
     <QtMoc Include="widgets\DKFormNIFPicker.h" />

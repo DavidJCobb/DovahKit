@@ -1,4 +1,4 @@
-#include "./DKFormInventory.h"
+#include "./DKFormInventoryWidget.h"
 #include <array>
 #include <limits>
 #include <QBoxLayout>
@@ -20,15 +20,30 @@
 
    // Dummy model, so that the widget displays the right tableview column 
    // headers when placed and previewed in Qt Designer.
-   class _DummyModel : public QAbstractItemModel {
+   class _DummyModel final : public QAbstractItemModel {
       public:
          using QAbstractItemModel::QAbstractItemModel;
 
-         virtual int columnCount(const QModelIndex& item) const override final {
+         #pragma region No-ops
+            virtual QModelIndex index(int row, int column, const QModelIndex& parent = {}) const override {
+               return {};
+            }
+            virtual QModelIndex parent(const QModelIndex& child) const override {
+               return {};
+            }
+            virtual QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override {
+               return {};
+            }
+         #pragma endregion
+            
+         virtual int rowCount(const QModelIndex& item) const override {
+            return 0;
+         }
+         virtual int columnCount(const QModelIndex& item) const override {
             return 5;
          }
          virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const override {
-            if (orientation != Qt::orientation::Horizontal)
+            if (orientation != Qt::Orientation::Horizontal)
                return {};
             if (role != Qt::DisplayRole && role != Qt::ToolTipRole)
                return {};
@@ -49,7 +64,7 @@
    };
 #endif
 
-DKFormInventory::DKFormInventory(QWidget* parent) : QWidget(parent) {
+DKFormInventoryWidget::DKFormInventoryWidget(QWidget* parent) : QWidget(parent) {
    auto& ui = this->_subwidgets;
 
    //
@@ -62,6 +77,8 @@ DKFormInventory::DKFormInventory(QWidget* parent) : QWidget(parent) {
       deets->setLayout(layout);
       layout->setContentsMargins(0, 0, 0, 0);
 
+      size_t column_count = 4;
+
       ui.current_item   = new DKFormPicker(this);
       ui.current_count  = new QSpinBox(this);
       ui.current_health = new QDoubleSpinBox(this);
@@ -70,7 +87,7 @@ DKFormInventory::DKFormInventory(QWidget* parent) : QWidget(parent) {
          auto* widget = ui.current_item;
          label->setBuddy(widget);
          layout->addWidget(label,  0, 0);
-         layout->addWidget(widget, 0, 1);
+         layout->addWidget(widget, 0, 1, 1, column_count - 1);
       }
       {
          auto* label  = new QLabel(tr("Count:"), deets);
@@ -83,11 +100,11 @@ DKFormInventory::DKFormInventory(QWidget* parent) : QWidget(parent) {
          auto* label  = new QLabel(tr("Health:"), deets);
          auto* widget = ui.current_health;
          label->setBuddy(widget);
-         layout->addWidget(label,  2, 0);
-         layout->addWidget(widget, 2, 1);
+         layout->addWidget(label,  1, 2, Qt::AlignmentFlag::AlignRight);
+         layout->addWidget(widget, 1, 3);
       }
-      layout->setColumnStretch(0, 0);
       layout->setColumnStretch(1, 1);
+      layout->setColumnStretch(3, 1);
 
       // Ownership
       auto* owner_group = ui.current_owner = new QGroupBox(tr("Owner:"), this);
@@ -125,7 +142,7 @@ DKFormInventory::DKFormInventory(QWidget* parent) : QWidget(parent) {
             layout->addWidget(widget, 3, 2);
          }
       }
-      layout->addWidget(owner_group, 3, 0, 1, 2);
+      layout->addWidget(owner_group, 3, 0, 1, column_count);
       
       {  // Preview container
          auto* container = ui.preview_container = new QWidget(this);
@@ -150,7 +167,7 @@ DKFormInventory::DKFormInventory(QWidget* parent) : QWidget(parent) {
          container->setFocusProxy(ui.preview_button);
          this->setTabOrder(ui.preview_button, ui.preview_level);
       }
-      layout->addWidget(ui.preview_container, 4, 0, 1, 2);
+      layout->addWidget(ui.preview_container, 4, 0, 1, column_count);
    }
    //
    auto* layout = new QBoxLayout(QBoxLayout::Direction::TopToBottom, this);
@@ -216,6 +233,26 @@ DKFormInventory::DKFormInventory(QWidget* parent) : QWidget(parent) {
    ui.current_health->setRange(0, std::numeric_limits<float>::max());
    ui.current_health->setValue(100);
    ui.current_health->setAlignment(Qt::AlignmentFlag::AlignRight | Qt::AlignmentFlag::AlignVCenter);
+   {  // Layout tweaks for spinboxes
+      //
+      // Spinboxes define their size hint and minimum size hint to ensure that 
+      // nothing that would ever be displayed inside would be truncated. This 
+      // means that our "health" spinbox has a larger minimum size than the 
+      // "count" spinbox (since it has a maximum of FLT_MAX i.e. eleventy-two 
+      // million or whatever).
+      // 
+      // However, "health" values will generally be near 100, and I'd rather 
+      // have the column widths be balanced between the two... so let's force 
+      // the "health" spinbox to borrow the "count" spinbox's minimum size.
+      // 
+      ui.current_health->setMinimumSize(ui.current_count->minimumSizeHint());
+      //
+      // Let's also ensure that the sizeHint() isn't what's treated as the 
+      // minimum (which is the default size policy).
+      //
+      ui.current_count->setSizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Fixed);
+      ui.current_health->setSizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Fixed);
+   }
    //
    ui.current_owner_actor->setAllowedFormType(dovah::form_type::actor_base);
    ui.current_owner_faction->setAllowedFormType(dovah::form_type::faction);
@@ -266,23 +303,23 @@ DKFormInventory::DKFormInventory(QWidget* parent) : QWidget(parent) {
       }
 
       #if !defined(QT_DESIGNER_LIB)
-         QObject::connect(ui.current_owner_type_actor,   &QRadioButton::toggled, this, &DKFormInventory::_writeEntryToModel);
-         QObject::connect(ui.current_owner_type_faction, &QRadioButton::toggled, this, &DKFormInventory::_writeEntryToModel);
+         QObject::connect(ui.current_owner_type_actor,   &QRadioButton::toggled, this, &DKFormInventoryWidget::_writeEntryToModel);
+         QObject::connect(ui.current_owner_type_faction, &QRadioButton::toggled, this, &DKFormInventoryWidget::_writeEntryToModel);
       #endif
    }
 
    #if !defined(QT_DESIGNER_LIB)
-   QObject::connect(this->_subwidgets.preview_button, &QPushButton::clicked, this, &DKFormInventory::_preview);
+   QObject::connect(this->_subwidgets.preview_button, &QPushButton::clicked, this, &DKFormInventoryWidget::_preview);
    //
-   QObject::connect(this->_subwidgets.view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &DKFormInventory::_pullEntryFromModel);
+   QObject::connect(this->_subwidgets.view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &DKFormInventoryWidget::_pullEntryFromModel);
    //
-   QObject::connect(this->_subwidgets.current_item,           &DKFormPicker::formChanged,                  this, &DKFormInventory::_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_count,          QOverload<int>::of(&QSpinBox::valueChanged), this, &DKFormInventory::_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_health,         QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &DKFormInventory::_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_owner_actor,    &DKFormPicker::formChanged, this, &DKFormInventory::_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_owner_faction,  &DKFormPicker::formChanged, this, &DKFormInventory::_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_owner_global,   &DKFormPicker::formChanged, this, &DKFormInventory::_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_owner_rank,     QOverload<int>::of(&QSpinBox::valueChanged), this, &DKFormInventory::_writeEntryToModel);
+   QObject::connect(this->_subwidgets.current_item,           &DKFormPicker::formChanged,                  this, &DKFormInventoryWidget::_writeEntryToModel);
+   QObject::connect(this->_subwidgets.current_count,          QOverload<int>::of(&QSpinBox::valueChanged), this, &DKFormInventoryWidget::_writeEntryToModel);
+   QObject::connect(this->_subwidgets.current_health,         QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &DKFormInventoryWidget::_writeEntryToModel);
+   QObject::connect(this->_subwidgets.current_owner_actor,    &DKFormPicker::formChanged, this, &DKFormInventoryWidget::_writeEntryToModel);
+   QObject::connect(this->_subwidgets.current_owner_faction,  &DKFormPicker::formChanged, this, &DKFormInventoryWidget::_writeEntryToModel);
+   QObject::connect(this->_subwidgets.current_owner_global,   &DKFormPicker::formChanged, this, &DKFormInventoryWidget::_writeEntryToModel);
+   QObject::connect(this->_subwidgets.current_owner_rank,     QOverload<int>::of(&QSpinBox::valueChanged), this, &DKFormInventoryWidget::_writeEntryToModel);
    #endif
 
    this->_rebuildLayout();
@@ -291,7 +328,7 @@ DKFormInventory::DKFormInventory(QWidget* parent) : QWidget(parent) {
    #endif
 }
 
-void DKFormInventory::setOrientation(Qt::Orientation v) {
+void DKFormInventoryWidget::setOrientation(Qt::Orientation v) {
    if (this->_state.orientation == v)
       return;
    this->_state.orientation = v;
@@ -299,16 +336,16 @@ void DKFormInventory::setOrientation(Qt::Orientation v) {
 }
 
 #if !defined(QT_DESIGNER_LIB)
-void DKFormInventory::initializeFrom(const dovah::loaded_forms::components::container_data& component) {
+void DKFormInventoryWidget::initializeFrom(const dovah::loaded_forms::components::container_data& component) {
    this->_model->importFrom(component);
 }
-void DKFormInventory::commitTo(dovah::loaded_forms::components::container_data& component, dovah::loaded_forms::Form& component_containing_form) {
+void DKFormInventoryWidget::commitTo(dovah::loaded_forms::components::container_data& component, dovah::loaded_forms::Form& component_containing_form) {
    this->_model->commitTo(component_containing_form, component);
 }
 #endif
 
 #if !defined(QT_DESIGNER_LIB)
-void DKFormInventory::_preview() {
+void DKFormInventoryWidget::_preview() {
    std::vector<dovah::leveled_list_preview::entry> results;
    {
       auto level = this->_subwidgets.preview_level->value();
@@ -381,7 +418,7 @@ void DKFormInventory::_preview() {
    window->setContents(results);
    window->show();
 }
-void DKFormInventory::_pullEntryFromModel() {
+void DKFormInventoryWidget::_pullEntryFromModel() {
    auto blockers = std::array{
       QSignalBlocker(this->_subwidgets.current_item),
       QSignalBlocker(this->_subwidgets.current_count),
@@ -460,7 +497,7 @@ void DKFormInventory::_pullEntryFromModel() {
    this->_subwidgets.current_owner_global->setFormStub(data->ownership.global);
    this->_subwidgets.current_owner_rank->setValue(data->ownership.rank);
 }
-void DKFormInventory::_writeEntryToModel() {
+void DKFormInventoryWidget::_writeEntryToModel() {
    auto* view      = this->_subwidgets.view;
    auto* model     = this->_model;
    auto* sel_model = view->selectionModel();
@@ -502,7 +539,7 @@ void DKFormInventory::_writeEntryToModel() {
    );
 }
 #endif
-void DKFormInventory::_rebuildLayout() {
+void DKFormInventoryWidget::_rebuildLayout() {
    auto* layout = dynamic_cast<QBoxLayout*>(this->layout());
    if (!layout)
       return;

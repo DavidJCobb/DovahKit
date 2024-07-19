@@ -23,11 +23,11 @@ namespace dovah {
 class DKFormInventoryModel;
 #endif
 
-class DKFormInventory : public QWidget {
+class DKFormInventoryWidget : public QWidget {
    Q_OBJECT;
    Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation DESIGNABLE true);
    public:
-      DKFormInventory(QWidget* parent = nullptr);
+      DKFormInventoryWidget(QWidget* parent = nullptr);
 
       constexpr Qt::Orientation orientation() const noexcept { return this->_state.orientation; }
       void setOrientation(Qt::Orientation);

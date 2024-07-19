@@ -10,7 +10,7 @@
 */
 #include <concepts>
 #include <QCheckBox>
-#include <QDoubleSPinBox>
+#include <QDoubleSpinBox>
 #include <QKeyEvent>
 #include <QSpinBox>
 #include "widgets/DKFormPicker.h"
@@ -20,8 +20,8 @@
 
 #include "dovah/core.h"
 #include "dovah/utils/leveled_list_preview.h"
+#include "widgets/widget-dialogs/DKLeveledListPreviewDialog.h"
 #include "ui/models/forms/LeveledListModel.h"
-#include "./LeveledListPreviewResultsWindow.h"
 
 namespace impl {
    template<typename Ui>
@@ -441,7 +441,7 @@ struct LeveledListEditDialogHelpers {
             }
             auto results = preview.generate(working.leveled_list_data);
 
-            auto* window = new LeveledListPreviewResultsWindow(&self);
+            auto* window = new DKLeveledListPreviewDialog(&self);
             window->setContents(results);
             window->show();
          });

@@ -43,8 +43,17 @@ A widget that can be used to select a single RGB(A) color. It displays as a butt
 with the color drawn on it, and with the hex code for the color rendered as text 
 atop the drawn color.
 
+### DKConditionList
+A widget for editing a list of conditions (CTDA) on a form.
+
 ### DKDelayedEnableButton
 A button that can be set to disable itself and only enable after a timed delay. It can indicate the delay via a spinner icon, a progress bar along the bottom edge, or a simple numeric label.
+
+### DKFormDestructionDataButton
+A button that opens a dialog to edit a form's destruction stage data.
+
+### DKFormInventoryWidget
+A widget for editing a container's initial inventory.
 
 ### DKFormListPane
 A table widget useful for editing lists of forms, e.g. the list of grasses used by a 
@@ -88,6 +97,9 @@ A panel for editing the scripts bound to a form, or the properties set on those 
 
 ### DKPapyrusFragmentFunctionPicker
 Allows a user to specify a scriptname and function name to use as a Papyrus fragment.
+
+### DKNavmeshGenerationImportOptionPicker
+A combobox for a form's navmesh generation import option.
 
 ### DKTextureAssetPane
 A frame capable of rendering a game asset &mdash; either a DDS file or a TextureSet 

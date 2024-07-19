@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>872</width>
+    <width>1075</width>
     <height>404</height>
    </rect>
   </property>
@@ -61,6 +61,9 @@
         <widget class="QLabel" name="label_5">
          <property name="text">
           <string>Navmesh Generation Import Option:</string>
+         </property>
+         <property name="buddy">
+          <cstring>navmeshGeneration</cstring>
          </property>
         </widget>
        </item>
@@ -229,6 +232,11 @@
        <property name="title">
         <string>Item List</string>
        </property>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="DKFormInventoryWidget" name="inventory"/>
+        </item>
+       </layout>
       </widget>
      </item>
     </layout>
@@ -259,6 +267,11 @@
    <header>widgets/DKPapyrusBoundScriptListPane.h</header>
   </customwidget>
   <customwidget>
+   <class>DKFormInventoryWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormInventoryWidget.h</header>
+  </customwidget>
+  <customwidget>
    <class>DKNavmeshGenerationImportOptionPicker</class>
    <extends>QWidget</extends>
    <header>widgets/DKNavmeshGenerationImportOptionPicker.h</header>
@@ -279,9 +292,11 @@
   <tabstop>flagShowOwner</tabstop>
   <tabstop>model</tabstop>
   <tabstop>destructionData</tabstop>
+  <tabstop>navmeshGeneration</tabstop>
   <tabstop>flagSoundsEvenWhenAnims</tabstop>
   <tabstop>soundOpen</tabstop>
   <tabstop>soundClose</tabstop>
+  <tabstop>inventory</tabstop>
   <tabstop>scriptListPane</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>

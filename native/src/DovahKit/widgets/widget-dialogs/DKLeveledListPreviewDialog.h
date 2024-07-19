@@ -4,20 +4,10 @@
 #include <QTableView>
 #include "dovah/utils/leveled_list_preview.h"
 
-class LeveledListPreviewResultsWindow : public QDialog {
+class DKLeveledListPreviewDialog : public QDialog {
    Q_OBJECT;
    public:
-      LeveledListPreviewResultsWindow(QWidget* parent = nullptr);
-
-      struct Column {
-         Column() = delete;
-         enum {
-            Count,
-            Form,
-            Health,
-            Owner
-         };
-      };
+      DKLeveledListPreviewDialog(QWidget* parent = nullptr);
 
       void setContents(const std::vector<dovah::leveled_list_preview::entry>&);
 

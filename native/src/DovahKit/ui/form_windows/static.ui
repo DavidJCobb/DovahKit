@@ -200,6 +200,9 @@
        <property name="text">
         <string>Navmesh generation import option:</string>
        </property>
+       <property name="buddy">
+        <cstring>navmeshGeneration</cstring>
+       </property>
       </widget>
      </item>
      <item>
@@ -287,6 +290,8 @@
   <tabstop>model</tabstop>
   <tabstop>directionalMaterial</tabstop>
   <tabstop>directionalMaterialAngle</tabstop>
+  <tabstop>directionalMaterialIsSnow</tabstop>
+  <tabstop>navmeshGeneration</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
  </tabstops>

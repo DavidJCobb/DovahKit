@@ -73,6 +73,9 @@
        <property name="text">
         <string>Navmesh generation:</string>
        </property>
+       <property name="buddy">
+        <cstring>navmeshGeneration</cstring>
+       </property>
       </widget>
      </item>
      <item row="7" column="0" colspan="2">
@@ -395,6 +398,7 @@
   <tabstop>destructionData</tabstop>
   <tabstop>soundActivate</tabstop>
   <tabstop>soundLooping</tabstop>
+  <tabstop>navmeshGeneration</tabstop>
   <tabstop>waterType</tabstop>
   <tabstop>flagNoDisplacement</tabstop>
   <tabstop>activateTextOverride</tabstop>

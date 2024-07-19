@@ -14,6 +14,7 @@
 
    #include "./widget-models/DKFormPicker/DKFormPickerModel.h"
 #endif
+#include "./DKComboBox.h"
 
 #if !defined(QT_DESIGNER_LIB)
    namespace {
@@ -74,7 +75,7 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
    this->setLayout(layout);
    
    this->_subwidgets.type = new QComboBox(this);
-   this->_subwidgets.form = new QComboBox(this);
+   this->_subwidgets.form = new DKComboBox(this);
    this->_subwidgets.form->setDisabled(true);
    layout->addWidget(this->_subwidgets.type, 0);
    layout->addWidget(this->_subwidgets.form, 1);
@@ -89,7 +90,8 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
    //
    {
       auto* combobox = this->_subwidgets.form;
-      combobox->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+      combobox->setSizeAdjustPolicy(QComboBox::AdjustToContentsOnFirstShow);
+      combobox->setAutoResizeEnabled(false); // DKComboBox: force the combobox to let its contents be truncated
       auto* view = qobject_cast<QListView*>(combobox->view());
       if (view) { // condition, just in case the library internals change later
          view->setUniformItemSizes(true);
@@ -101,9 +103,11 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
    // Handle our comboboxes changing.
    #if !defined(QT_DESIGNER_LIB)
       QObject::connect(this->_subwidgets.type, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
+         if (!this->isSplittingTypes())
+            return;
+
          if (auto* stub = this->formStub())
             this->_prior_selections[stub->form_type] = stub;
-         //
          this->_updateForms();
       });
       QObject::connect(this->_subwidgets.form, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
@@ -192,6 +196,7 @@ void DKFormPicker::addAllowedFormType(dovah::form_type ft) {
    const auto blocker0 = QSignalBlocker(this->_subwidgets.type);
    const auto blocker1 = QSignalBlocker(this->_subwidgets.form);
    this->_setIsSplittingTypes(this->_shouldSplitTypes());
+   this->_updateTypePicker();
    this->_updateForms();
 }
 void DKFormPicker::setAllowedFormTypes(QList<dovah::form_type> t) noexcept {
@@ -203,6 +208,7 @@ void DKFormPicker::setAllowedFormTypes(QList<dovah::form_type> t) noexcept {
    const auto blocker0 = QSignalBlocker(this->_subwidgets.type);
    const auto blocker1 = QSignalBlocker(this->_subwidgets.form);
    this->_setIsSplittingTypes(this->_shouldSplitTypes());
+   this->_updateTypePicker();
    this->_updateForms();
 }
 void DKFormPicker::setSplitTypesWhenMany(bool b) noexcept {
@@ -266,8 +272,10 @@ void DKFormPicker::setRequiredAliasScriptname(std::string_view s) {
 
 #if !defined(QT_DESIGNER_LIB)
 void DKFormPicker::setFormStub(dovah::form_stub* stub) noexcept {
-   if (this->_value == stub)
+   if (this->_value == stub) {
+      this->_updateForceIncludedForm(stub);
       return;
+   }
    if (!stub) {
       if (!this->allowNone()) {
          if (this->_default)
@@ -278,15 +286,30 @@ void DKFormPicker::setFormStub(dovah::form_stub* stub) noexcept {
       if (!this->_wouldAllowFormStub(*stub))
          return;
    }
+
    this->_value = stub;
    this->_prior_selections.clear();
-   //
-   auto* subwidget = this->_subwidgets.form;
-   int   index     = subwidget->findData(QVariant::fromValue(stub), model_type::FormStubRole);
+
+   auto*      subwidget = this->_subwidgets.form;
+   const auto blocker   = QSignalBlocker(subwidget);
+
+   this->_updateForceIncludedForm(stub);
+   if (stub) {
+      auto* c_type = this->_subwidgets.type;
+      int   index  = c_type->findData((int)stub->form_type);
+      if (index >= 0) {
+         c_type->setCurrentIndex(index);
+      }
+   }
+   
+   int index = subwidget->findData(QVariant::fromValue(stub), model_type::FormStubRole);
    if (index >= 0) {
-      const auto blocker = QSignalBlocker(subwidget);
       subwidget->setCurrentIndex(index);
       emit this->formChanged(stub);
+   } else {
+      if (auto* model = this->_rawModel())
+         if (model->isFilling())
+            emit this->formChanged(stub); // Assume we're going to succeed. If we fail, we'll emit formChanged when correcting ourselves.
    }
 }
 void DKFormPicker::setDefaultForm(dovah::form_stub* stub) noexcept {
@@ -333,13 +356,14 @@ bool DKFormPicker::_wouldAllowFormStub(const dovah::form_stub& stub) const {
 #endif
 
 void DKFormPicker::_setIsSplittingTypes(bool s) noexcept {
+   if (this->_state.is_splitting_types == s)
+      return;
    this->_state.is_splitting_types = s;
    this->_subwidgets.type->setVisible(s);
    this->setFocusProxy(s ? this->_subwidgets.type : this->_subwidgets.form); // needed to prevent tabbing from breaking when the "type" subwidget is hidden
    if (s)
       this->_updateTypePicker();
-   else
-      this->_updateForms();
+   this->_updateForms();
 }
 void DKFormPicker::_setSubwidgetEnableState(bool s) {
    this->_subwidgets.type->setEnabled(s);
@@ -360,6 +384,22 @@ bool DKFormPicker::_shouldSplitTypes() const noexcept {
       return true;
    return false;
 }
+void DKFormPicker::_updateForceIncludedForm(dovah::form_stub* stub) {
+   auto* prior = this->_state.last_force_included_form;
+   if (prior == stub)
+      return;
+
+   #if !defined(QT_DESIGNER_LIB)
+      auto* model = this->_rawModel();
+      if (prior) {
+         model->setFormNeverDefaultExcluded(*prior, false);
+      }
+      if (stub) {
+         model->setFormNeverDefaultExcluded(*stub, true);
+      }
+   #endif
+   this->_state.last_force_included_form = stub;
+}
 void DKFormPicker::_updateForms() {
    this->_state.needs_initial_fill = false;
 
@@ -369,6 +409,13 @@ void DKFormPicker::_updateForms() {
       auto* model  = this->_rawModel();
    
       const auto blocker = QSignalBlocker(c_form);
+
+      if (stub) {
+         bool retain = this->_wouldAllowFormStub(*stub);
+         this->_updateForceIncludedForm(retain ? stub : nullptr);
+      } else {
+         this->_updateForceIncludedForm(nullptr);
+      }
 
       model_type::filter_parameters params;
       params.allow_none            = this->allowNone();

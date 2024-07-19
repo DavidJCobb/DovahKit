@@ -136,6 +136,15 @@
     <QtMoc Include="widgets\DKNavmeshGenerationImportOptionPicker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="widgets\DKFormInventoryWidget.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="interfaces\DKFormInventoryWidgetInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKComboBox.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="interfaces\DKCollapsiblePaneInterface.cpp">
@@ -244,6 +253,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="interfaces\DKNavmeshGenerationImportOptionPickerInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="interfaces\DKFormInventoryWidgetInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKComboBox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKFormInventoryWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
