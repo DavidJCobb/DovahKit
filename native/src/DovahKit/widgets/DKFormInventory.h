@@ -25,6 +25,7 @@ class DKFormInventoryModel;
 
 class DKFormInventory : public QWidget {
    Q_OBJECT;
+   Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation DESIGNABLE true);
    public:
       DKFormInventory(QWidget* parent = nullptr);
 
@@ -54,10 +55,9 @@ class DKFormInventory : public QWidget {
          QRadioButton* current_owner_type_actor   = nullptr;
          QRadioButton* current_owner_type_faction = nullptr;
 
-         QWidget*     preview_container   = nullptr;
-         QPushButton* preview_button      = nullptr;
-         QLabel*      preview_level_label = nullptr;
-         QSpinBox*    preview_level       = nullptr;
+         QWidget*     preview_container = nullptr;
+         QPushButton* preview_button    = nullptr;
+         QSpinBox*    preview_level     = nullptr;
       } _subwidgets;
       struct {
          Qt::Orientation orientation = Qt::Orientation::Vertical;

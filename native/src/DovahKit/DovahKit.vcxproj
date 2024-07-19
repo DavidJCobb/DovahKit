@@ -737,6 +737,7 @@
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_form_inventory.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_key_picker.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_ref_picker.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
@@ -1094,6 +1095,7 @@
     <QtMoc Include="ui\form_windows\leveled_character.h" />
     <ClInclude Include="ui\form_windows\leveled_lists\LeveledListEditDialogHelpers.h" />
     <QtMoc Include="ui\form_windows\leveled_spell.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
     <QtMoc Include="ui\models\forms\LeveledListModel.h" />

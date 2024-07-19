@@ -2379,6 +2379,9 @@
     <ClCompile Include="widgets\widget-dialogs\DKFormInventoryPreviewDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_form_inventory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6174,6 +6177,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\form_windows\leveled_lists\LeveledListEditDialogHelpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,4 +1,5 @@
 #include "./DKFormInventory.h"
+#include <array>
 #include <limits>
 #include <QBoxLayout>
 #include <QGridLayout>
@@ -16,6 +17,9 @@
 
 #if defined(QT_DESIGNER_LIB)
    #include <QAbstractItemModel>
+
+   // Dummy model, so that the widget displays the right tableview column 
+   // headers when placed and previewed in Qt Designer.
    class _DummyModel : public QAbstractItemModel {
       public:
          using QAbstractItemModel::QAbstractItemModel;
@@ -46,27 +50,185 @@
 #endif
 
 DKFormInventory::DKFormInventory(QWidget* parent) : QWidget(parent) {
+   auto& ui = this->_subwidgets;
+
+   //
+   // Create widgets and establish layout:
+   //
+   ui.view = new QTableView(this);
+   {
+      auto* deets  = ui.details_pane = new QWidget(this);
+      auto* layout = new QGridLayout(deets);
+      deets->setLayout(layout);
+      layout->setContentsMargins(0, 0, 0, 0);
+
+      ui.current_item   = new DKFormPicker(this);
+      ui.current_count  = new QSpinBox(this);
+      ui.current_health = new QDoubleSpinBox(this);
+      {
+         auto* label  = new QLabel(tr("Object:"), deets);
+         auto* widget = ui.current_item;
+         label->setBuddy(widget);
+         layout->addWidget(label,  0, 0);
+         layout->addWidget(widget, 0, 1);
+      }
+      {
+         auto* label  = new QLabel(tr("Count:"), deets);
+         auto* widget = ui.current_count;
+         label->setBuddy(widget);
+         layout->addWidget(label,  1, 0);
+         layout->addWidget(widget, 1, 1);
+      }
+      {
+         auto* label  = new QLabel(tr("Health:"), deets);
+         auto* widget = ui.current_health;
+         label->setBuddy(widget);
+         layout->addWidget(label,  2, 0);
+         layout->addWidget(widget, 2, 1);
+      }
+      layout->setColumnStretch(0, 0);
+      layout->setColumnStretch(1, 1);
+
+      // Ownership
+      auto* owner_group = ui.current_owner = new QGroupBox(tr("Owner:"), this);
+      ui.current_owner_type_actor   = new QRadioButton(tr("NPC:"),     owner_group);
+      ui.current_owner_type_faction = new QRadioButton(tr("Faction:"), owner_group);
+      ui.current_owner_actor        = new DKFormPicker(owner_group);
+      ui.current_owner_faction      = new DKFormPicker(owner_group);
+      ui.current_owner_global       = new DKFormPicker(owner_group);
+      ui.current_owner_rank         = new QSpinBox(owner_group);
+      {
+         auto* layout = new QGridLayout(owner_group);
+         owner_group->setLayout(layout);
+         
+         auto* v_line = new QFrame(owner_group);
+         v_line->setFrameShape(QFrame::VLine);
+         v_line->setFrameShadow(QFrame::Sunken);
+
+         layout->addWidget(ui.current_owner_type_actor,   0, 0);
+         layout->addWidget(ui.current_owner_actor,        1, 0);
+         {
+            auto* label  = new QLabel(tr("Global:"), owner_group);
+            auto* widget = ui.current_owner_global;
+            label->setBuddy(widget);
+            layout->addWidget(label,  2, 0);
+            layout->addWidget(widget, 3, 0);
+         }
+         layout->addWidget(v_line, 0, 1, 4, 1);
+         layout->addWidget(ui.current_owner_type_faction, 0, 2);
+         layout->addWidget(ui.current_owner_faction,      1, 2);
+         {
+            auto* label  = new QLabel(tr("Required rank:"), owner_group);
+            auto* widget = ui.current_owner_rank;
+            label->setBuddy(widget);
+            layout->addWidget(label,  2, 2);
+            layout->addWidget(widget, 3, 2);
+         }
+      }
+      layout->addWidget(owner_group, 3, 0, 1, 2);
+      
+      {  // Preview container
+         auto* container = ui.preview_container = new QWidget(this);
+         auto* layout = new QHBoxLayout(container);
+         layout->setContentsMargins(0, 0, 0, 0);
+         container->setLayout(layout);
+
+         ui.preview_button = new QPushButton(tr("Preview Calculated Result"), container);
+         ui.preview_level  = new QSpinBox(container);
+
+         layout->addWidget(ui.preview_button, 1);
+         {
+            auto* label  = new QLabel(tr("Preview Level:"), container);
+            auto* widget = ui.preview_level;
+            label->setBuddy(widget);
+            layout->addWidget(label);
+            layout->addWidget(widget);
+         }
+         layout->addStretch(1);
+
+         container->setFocusPolicy(Qt::FocusPolicy::TabFocus);
+         container->setFocusProxy(ui.preview_button);
+         this->setTabOrder(ui.preview_button, ui.preview_level);
+      }
+      layout->addWidget(ui.preview_container, 4, 0, 1, 2);
+   }
+   //
    auto* layout = new QBoxLayout(QBoxLayout::Direction::TopToBottom, this);
    layout->setContentsMargins(0, 0, 0, 0);
    this->setLayout(layout);
+   layout->addWidget(ui.view);
+   layout->addWidget(ui.details_pane);
 
+   //
+   // Focus and tab order:
+   //
+   this->setFocusPolicy(Qt::FocusPolicy::TabFocus);
+   this->setFocusProxy(ui.view);
+   QWidget::setTabOrder(ui.view, ui.details_pane);
+   //
+   ui.details_pane->setFocusPolicy(Qt::FocusPolicy::TabFocus);
+   ui.details_pane->setFocusProxy(ui.current_item);
+   {
+      auto widgets = std::array<QWidget*, 10>{
+         ui.current_item,
+         ui.current_count,
+         ui.current_health,
+         ui.current_owner_type_actor,
+         ui.current_owner_actor,
+         ui.current_owner_global,
+         ui.current_owner_type_faction,
+         ui.current_owner_faction,
+         ui.current_owner_rank,
+         ui.preview_container
+      };
+      for (size_t i = 0; i + 1 < widgets.size(); ++i)
+         QWidget::setTabOrder(widgets[i], widgets[i + 1]);
+   }
+
+   #pragma region "What's this?" text
+      //: "What's this?" text for changing an item's health.
+      ui.current_health->setWhatsThis(tr("For weapons and armor, the condition they're in. Values above 100% produce the same effects as tempering the item using the Smithing skill.", "what's this?"));
+
+      //: "What's this?" text for changing an owned item's required rank.
+      ui.current_owner_rank->setWhatsThis(tr("If the item's owner is a faction, then NPCs must have this rank or greater within the faction in order to share in ownership of the item.", "what's this?"));
+
+      //: "What's this?" text for changing an owned item's requirement global.
+      ui.current_owner_global->setWhatsThis(tr("Unused. The ability to associate a Global with per-actor ownership was introduced in Fallout 3, but was unused even in that game, and its purpose -- beyond limiting when or how the actor is considered the item's owner, somehow -- is unknown.", "what's this?"));
+
+      //: "What's this?" text for the "Preview Calculated Result" button.
+      ui.preview_button->setWhatsThis(tr("Given the level of a hypothetical player or encounter zone, compute the results of any LeveledItems in this container, and show the container's (potential) resulting inventory.", "what's this?"));
+   #pragma endregion
+
+   //
+   // Create model and configure widgets:
+   //
    #if !defined(QT_DESIGNER_LIB)
       this->_model = new DKFormInventoryModel(this);
    #endif
-
-   this->_subwidgets.current_item = new DKFormPicker(this);
-   this->_subwidgets.current_count = new QSpinBox(this);
-   this->_subwidgets.current_health = new QDoubleSpinBox(this);
    //
    #if !defined(QT_DESIGNER_LIB)
       for (auto ft : dovah::all_carryable_form_types)
-         this->_subwidgets.current_item->addAllowedFormType(ft);
+         ui.current_item->addAllowedFormType(ft);
    #endif
-   this->_subwidgets.current_count->setRange(0, std::numeric_limits<uint16_t>::max());
-   this->_subwidgets.current_health->setRange(0, std::numeric_limits<float>::max());
-
+   ui.current_count->setRange(0, std::numeric_limits<uint16_t>::max());
+   ui.current_count->setValue(1);
+   ui.current_count->setAlignment(Qt::AlignmentFlag::AlignRight | Qt::AlignmentFlag::AlignVCenter);
+   ui.current_health->setRange(0, std::numeric_limits<float>::max());
+   ui.current_health->setValue(100);
+   ui.current_health->setAlignment(Qt::AlignmentFlag::AlignRight | Qt::AlignmentFlag::AlignVCenter);
+   //
+   ui.current_owner_actor->setAllowedFormType(dovah::form_type::actor_base);
+   ui.current_owner_faction->setAllowedFormType(dovah::form_type::faction);
+   ui.current_owner_global->setAllowedFormType(dovah::form_type::global);
+   ui.current_owner_rank->setRange(0, std::numeric_limits<uint16_t>::max());
+   ui.current_owner_rank->setAlignment(Qt::AlignmentFlag::AlignRight | Qt::AlignmentFlag::AlignVCenter);
+   //
+   ui.preview_level->setRange(0, std::numeric_limits<uint16_t>::max());
+   ui.preview_level->setValue(1);
+   ui.preview_level->setAlignment(Qt::AlignmentFlag::AlignRight | Qt::AlignmentFlag::AlignVCenter);
+   //
    {
-      auto* view = this->_subwidgets.view = new QTableView(this);
+      auto* view = ui.view;
       #if !defined(QT_DESIGNER_LIB)
          view->setModel(this->_model);
       #else
@@ -92,8 +254,8 @@ DKFormInventory::DKFormInventory(QWidget* parent) : QWidget(parent) {
          header->setMinimumSectionSize(2);
          header->setColumnFlex(0, 0, 0, metrics.boundingRect("999").width() * 1.5F + 4);
          header->setColumnFlex(1, 2, 0);
-         header->setColumnFlex(2, 0, 0, metrics.boundingRect("100%").width() * 1.5F + 4);
-         header->setColumnFlex(3, 1, 0);
+         header->setColumnFlex(2, 1, 0);
+         header->setColumnFlex(3, 0, 0, metrics.boundingRect("100%").width() * 1.5F + 4);
          header->setColumnFlex(4, 0, 0, metrics.boundingRect("99999").width() * 1.5F + 4);
          header->setSectionResizeMode(0, QHeaderView::Interactive);
          header->setSectionResizeMode(1, QHeaderView::Interactive);
@@ -103,122 +265,30 @@ DKFormInventory::DKFormInventory(QWidget* parent) : QWidget(parent) {
          header->setStretchLastSection(false);
       }
 
-      auto* groupbox = this->_subwidgets.current_owner = new QGroupBox(this);
-      auto* layout   = new QGridLayout(groupbox);
-      groupbox->setLayout(layout);
-
-      this->_subwidgets.current_owner_actor   = new DKFormPicker(groupbox);
-      this->_subwidgets.current_owner_faction = new DKFormPicker(groupbox);
-      this->_subwidgets.current_owner_global  = new DKFormPicker(groupbox);
-      this->_subwidgets.current_owner_rank    = new QSpinBox(groupbox);
-      //
-      this->_subwidgets.current_owner_actor->setAllowedFormType(dovah::form_type::actor_base);
-      this->_subwidgets.current_owner_faction->setAllowedFormType(dovah::form_type::faction);
-      this->_subwidgets.current_owner_global->setAllowedFormType(dovah::form_type::global);
-      this->_subwidgets.current_owner_rank->setRange(0, std::numeric_limits<uint16_t>::max());
-
-      auto* radio_actor   = this->_subwidgets.current_owner_type_actor = new QRadioButton(tr("NPC:"), groupbox);
-      auto* radio_faction = this->_subwidgets.current_owner_type_faction = new QRadioButton(tr("Faction:"), groupbox);
       #if !defined(QT_DESIGNER_LIB)
-         QObject::connect(radio_actor,   &QRadioButton::toggled, this, &_writeEntryToModel);
-         QObject::connect(radio_faction, &QRadioButton::toggled, this, &_writeEntryToModel);
+         QObject::connect(ui.current_owner_type_actor,   &QRadioButton::toggled, this, &DKFormInventory::_writeEntryToModel);
+         QObject::connect(ui.current_owner_type_faction, &QRadioButton::toggled, this, &DKFormInventory::_writeEntryToModel);
       #endif
-
-      layout->addWidget(radio_actor,   0, 0);
-      layout->addWidget(this->_subwidgets.current_owner_actor, 0, 1);
-
-      auto* v_line = new QFrame(groupbox);
-      v_line->setFrameShape(QFrame::VLine);
-      v_line->setFrameShadow(QFrame::Sunken);
-      layout->addWidget(v_line, 0, 1, 4, 1);
-
-      layout->addWidget(radio_faction, 2, 0);
-      layout->addWidget(this->_subwidgets.current_owner_faction, 2, 1);
-
-      {
-         auto* label = new QLabel(tr("Global:"), groupbox);
-         layout->addWidget(label, 0, 2);
-         layout->addWidget(this->_subwidgets.current_owner_global, 0, 3);
-         label->setBuddy(this->_subwidgets.current_owner_global);
-      }
-      {
-         auto* label = new QLabel(tr("Rank:"), groupbox);
-         layout->addWidget(label, 2, 2);
-         layout->addWidget(this->_subwidgets.current_owner_rank, 2, 3);
-         label->setBuddy(this->_subwidgets.current_owner_rank);
-      }
    }
-   {  // Preview container
-      auto* container = this->_subwidgets.preview_container = new QWidget(this);
-
-      this->_subwidgets.preview_button = new QPushButton(tr("Preview Calculated Result"), container);
-
-      this->_subwidgets.preview_level_label = new QLabel(tr("Level:"), container);
-      this->_subwidgets.preview_level = new QSpinBox(container);
-      this->_subwidgets.preview_level_label->setBuddy(this->_subwidgets.preview_level);
-      this->_subwidgets.preview_level->setRange(0, std::numeric_limits<uint16_t>::max());
-
-      auto* layout = new QHBoxLayout(container);
-      container->setLayout(layout);
-      layout->addWidget(this->_subwidgets.preview_container);
-      layout->addWidget(this->_subwidgets.preview_level_label);
-      layout->addWidget(this->_subwidgets.preview_level);
-      layout->setStretch(0, 1);
-
-      container->setFocusPolicy(Qt::FocusPolicy::TabFocus);
-      container->setFocusProxy(this->_subwidgets.preview_button);
-      this->setTabOrder(this->_subwidgets.preview_button, this->_subwidgets.preview_level);
-   }
-
-   auto* deets = this->_subwidgets.details_pane = new QWidget(this);
-   {
-      auto* layout = new QGridLayout(deets);
-      layout->setContentsMargins(0, 0, 0, 0);
-      deets->setLayout(layout);
-
-      {
-         auto* label = new QLabel(tr("Object:"), deets);
-         layout->addWidget(label, 0, 0);
-         layout->addWidget(this->_subwidgets.current_item, 1, 0);
-         label->setBuddy(this->_subwidgets.current_item);
-      }
-      {
-         auto* label = new QLabel(tr("Count:"), deets);
-         layout->addWidget(label, 0, 1);
-         layout->addWidget(this->_subwidgets.current_count, 1, 1);
-         label->setBuddy(this->_subwidgets.current_count);
-      }
-      {
-         auto* label = new QLabel(tr("Health:"), deets);
-         layout->addWidget(label, 0, 2);
-         layout->addWidget(this->_subwidgets.current_health, 1, 2);
-         label->setBuddy(this->_subwidgets.current_health);
-      }
-      layout->addWidget(this->_subwidgets.current_owner, 2, 0, 1, 3);
-
-      layout->setColumnStretch(0, 2);
-      layout->setColumnStretch(1, 1);
-      layout->setColumnStretch(2, 1);
-   }
-
-   this->setFocusPolicy(Qt::FocusPolicy::TabFocus);
-   this->setFocusProxy(this->_subwidgets.view);
 
    #if !defined(QT_DESIGNER_LIB)
    QObject::connect(this->_subwidgets.preview_button, &QPushButton::clicked, this, &DKFormInventory::_preview);
    //
-   QObject::connect(this->_subwidgets.view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &_pullEntryFromModel);
+   QObject::connect(this->_subwidgets.view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &DKFormInventory::_pullEntryFromModel);
    //
-   QObject::connect(this->_subwidgets.current_item,           &DKFormPicker::formChanged,                  this, &_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_count,          QOverload<int>::of(&QSpinBox::valueChanged), this, &_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_health,         QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_owner_actor,    &DKFormPicker::formChanged, this, &_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_owner_faction,  &DKFormPicker::formChanged, this, &_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_owner_global,   &DKFormPicker::formChanged, this, &_writeEntryToModel);
-   QObject::connect(this->_subwidgets.current_owner_rank,     QOverload<int>::of(&QSpinBox::valueChanged), this, &_writeEntryToModel);
+   QObject::connect(this->_subwidgets.current_item,           &DKFormPicker::formChanged,                  this, &DKFormInventory::_writeEntryToModel);
+   QObject::connect(this->_subwidgets.current_count,          QOverload<int>::of(&QSpinBox::valueChanged), this, &DKFormInventory::_writeEntryToModel);
+   QObject::connect(this->_subwidgets.current_health,         QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &DKFormInventory::_writeEntryToModel);
+   QObject::connect(this->_subwidgets.current_owner_actor,    &DKFormPicker::formChanged, this, &DKFormInventory::_writeEntryToModel);
+   QObject::connect(this->_subwidgets.current_owner_faction,  &DKFormPicker::formChanged, this, &DKFormInventory::_writeEntryToModel);
+   QObject::connect(this->_subwidgets.current_owner_global,   &DKFormPicker::formChanged, this, &DKFormInventory::_writeEntryToModel);
+   QObject::connect(this->_subwidgets.current_owner_rank,     QOverload<int>::of(&QSpinBox::valueChanged), this, &DKFormInventory::_writeEntryToModel);
    #endif
 
    this->_rebuildLayout();
+   #if !defined(QT_DESIGNER_LIB)
+      this->_pullEntryFromModel(); // set initial control enable states
+   #endif
 }
 
 void DKFormInventory::setOrientation(Qt::Orientation v) {

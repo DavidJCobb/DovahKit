@@ -20,8 +20,8 @@ class DKFormInventoryModel : public QAbstractItemModel {
       static constexpr const float health_display_mult = 100; // multiply health by this amount when displaying it in the UI
 
       struct InventoryObject {
-         dovah::form_stub* form   = nullptr;
-         uint16_t          count  = 0;
+         dovah::form_stub* form  = nullptr;
+         uint16_t          count = 0;
 
          // COED fields:
          float health = 1;

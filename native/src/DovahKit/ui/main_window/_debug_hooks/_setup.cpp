@@ -34,6 +34,7 @@
 #include "script_attachment_query_from_cache.h"
 #include "filter_object_selection_by_scriptname.h"
 #include "ui_bound_script.h"
+#include "ui_form_inventory.h"
 
 namespace DovahKitDebug {
    using all_features = cobb::class_list<
@@ -68,7 +69,8 @@ namespace DovahKitDebug {
       features::form_info_cache,
       features::script_attachment_query_from_cache,
       features::filter_object_selection_by_scriptname,
-      features::ui_bound_script//,
+      features::ui_bound_script,
+      features::ui_form_inventory//,
    >;
 
    template<typename T> struct _add_functor {

@@ -184,6 +184,11 @@ DKFormInventoryModel::~DKFormInventoryModel() {
                   case Column::Health:
                      return item->health * health_display_mult;
                   case Column::Value:
+                     if (auto* stub = item->form) {
+                        if (stub->form_type == dovah::form_type::leveled_item) {
+                           return tr("?", "value column for LeveledItem");
+                        }
+                     }
                      return item->cached.value * item->count;
                }
                break;
@@ -272,11 +277,6 @@ void DKFormInventoryModel::importFrom(const backend_type& component) {
       if (auto* stub = dst->ownership.owner)
          dst->cached.ownerEditorID = QString::fromStdString(stub->editorID);
    }
-   std::stable_sort(this->_items.begin(), this->_items.end(), [this](const auto* a, const auto* b) {
-      if (a->level < b->level)
-         return true;
-      return false;
-   });
 
    this->endResetModel();
 }
