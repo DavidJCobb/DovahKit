@@ -692,6 +692,7 @@
     <ClCompile Include="ui\form_windows\activator.cpp" />
     <ClCompile Include="ui\form_windows\cell.cpp" />
     <ClCompile Include="ui\form_windows\color.cpp" />
+    <ClCompile Include="ui\form_windows\container.cpp" />
     <ClCompile Include="ui\form_windows\door.cpp" />
     <ClCompile Include="ui\form_windows\faction.cpp" />
     <ClCompile Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.cpp" />
@@ -1093,6 +1094,7 @@
     <QtMoc Include="ui\form_windows\leveled_item.h" />
     <QtMoc Include="ui\form_windows\global.h" />
     <QtMoc Include="ui\form_windows\leveled_character.h" />
+    <QtMoc Include="ui\form_windows\container.h" />
     <ClInclude Include="ui\form_windows\leveled_lists\LeveledListEditDialogHelpers.h" />
     <QtMoc Include="ui\form_windows\leveled_spell.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h" />

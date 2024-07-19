@@ -6,6 +6,7 @@
 #include "../ui/form_windows/activator.h"
 #include "../ui/form_windows/cell.h"
 #include "../ui/form_windows/color.h"
+#include "../ui/form_windows/container.h"
 #include "../ui/form_windows/door.h"
 #include "../ui/form_windows/faction.h"
 #include "../ui/form_windows/flora.h"
@@ -34,6 +35,7 @@ namespace {
       std::pair{ dovah::form_type::activator,         _make<FormDialogActivator> },
       std::pair{ dovah::form_type::cell,              _make<FormDialogCell> },
       std::pair{ dovah::form_type::color,             _make<FormDialogColor> },
+      std::pair{ dovah::form_type::container,         _make<FormDialogContainer> },
       std::pair{ dovah::form_type::door,              _make<FormDialogDoor> },
       std::pair{ dovah::form_type::faction,           _make<FormDialogFaction> },
       std::pair{ dovah::form_type::flora,             _make<FormDialogFlora> },
