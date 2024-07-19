@@ -12,6 +12,7 @@ class FormDialogLeveledItem :
 {
    Q_OBJECT;
    DOVAHKIT_FORM_EDIT_DIALOG;
+   friend class LeveledListEditDialogHelpers;
    public:
       FormDialogLeveledItem(dovah::form_stub& stub, QWidget* parent = nullptr);
       

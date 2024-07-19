@@ -23,6 +23,16 @@ namespace dovah::loaded_forms {
             };
          };
          using container_flags_t = std::underlying_type_t<container_flag::type>;
+         
+         struct form_flag : public Form::form_flag {
+            enum : uint32_t {
+               random_anim_start         = 0x00010000,
+               obstacle                  = 0x02000000,
+               navmesh_generation_filter = 0x04000000,
+               navmesh_generation_obb    = 0x08000000,
+               navmesh_generation_ground = 0x40000000,
+            };
+         };
 
          components::papyrus_attachment_data script_data;
          components::object_bounds bounds;

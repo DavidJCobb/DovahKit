@@ -55,7 +55,7 @@ namespace dovah::loaded_forms::structs {
          return;
       }
       {
-         auto* owner_stub = subrecord.lookup_form_by_id(this->ownership._owner);
+         auto* owner_stub = this->ownership._owner.get_form_stub();
          intfc.warn_if_ref_is_wrong_type(this->ownership._owner, std::array{ form_type::actor_base, form_type::faction }, subrecord.signature());
          if (owner_stub) {
             switch (owner_stub->form_type) {

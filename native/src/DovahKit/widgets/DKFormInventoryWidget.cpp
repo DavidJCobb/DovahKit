@@ -11,7 +11,7 @@
    #include "dovah/forms/components/leveled_list.h"
    #include "dovah/forms/LeveledItem.h"
    #include "dovah/utils/leveled_list_preview.h"
-   #include "./widget-dialogs/DKFormInventoryPreviewDialog.h"
+   #include "./widget-dialogs/DKLeveledListPreviewDialog.h"
    #include "./widget-models/DKFormInventoryModel.h"
 #endif
 
@@ -273,7 +273,7 @@ DKFormInventoryWidget::DKFormInventoryWidget(QWidget* parent) : QWidget(parent) 
       #endif
       {
          view->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
-         view->setSelectionMode(QAbstractItemView::SelectionMode::NoSelection);
+         view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
          view->setCornerButtonEnabled(false);
          view->setAcceptDrops(false);
 
@@ -289,7 +289,7 @@ DKFormInventoryWidget::DKFormInventoryWidget(QWidget* parent) : QWidget(parent) 
          auto metrics = QFontMetrics(view->font());
          header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
          header->setMinimumSectionSize(2);
-         header->setColumnFlex(0, 0, 0, metrics.boundingRect("999").width() * 1.5F + 4);
+         header->setColumnFlex(0, 0, 0, metrics.boundingRect("99999").width() * 1.5F + 4);
          header->setColumnFlex(1, 2, 0);
          header->setColumnFlex(2, 1, 0);
          header->setColumnFlex(3, 0, 0, metrics.boundingRect("100%").width() * 1.5F + 4);
@@ -400,8 +400,13 @@ void DKFormInventoryWidget::_preview() {
                   if (coalesced)
                      continue;
                   results.push_back(src);
+                  continue;
                }
+               continue;
             }
+            #if _DEBUG
+               __debugbreak(); // Why didn't this form load?
+            #endif
          }
          results.push_back(dovah::leveled_list_preview::entry{
             .form  = entry->form,
@@ -414,7 +419,7 @@ void DKFormInventoryWidget::_preview() {
       }
    }
 
-   auto* window = new DKFormInventoryPreviewDialog(this);
+   auto* window = new DKLeveledListPreviewDialog(this);
    window->setContents(results);
    window->show();
 }
