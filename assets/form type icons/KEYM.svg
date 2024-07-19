@@ -1,0 +1,17 @@
+<svg version="1.1" viewBox="0 0 100 100" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <defs>
+      <g id="key-shape">
+         <circle cx="25" cy="75" r="15" stroke="currentColor" fill="none" />
+         <path
+            d="M 36,64 L 75,25 L 65,15 M 62.5,37.5 L 55,30"
+            stroke="currentColor"
+            stroke-linecap="square"
+            fill="none"
+         />
+      </g>
+   </defs>
+   <g transform="translate(5 0)">
+      <use href="#key-shape" color="#000" stroke-width="20" />
+      <use href="#key-shape" color="#FF0" stroke-width="10" />
+   </g>
+</svg>

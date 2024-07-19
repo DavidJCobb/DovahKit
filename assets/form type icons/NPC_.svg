@@ -1,0 +1,9 @@
+<svg version="1.1" viewBox="0 0 100 100" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <path
+      d="M 0 100 Q 0 84 15 82 Q 30 79 35 74 Q 39 70 37 66 Q 19 60 20 30 a 1 1 0 1 1 60 0 Q 81 60 63 66 Q 61 70 65 74 Q 70 79 85 82 Q 100 84 100 100 Z"
+      fill="#000"
+      stroke="none"
+   />
+   <circle fill="#FFF" r="8" cx="37" cy="35" />
+   <circle fill="#FFF" r="8" cx="63" cy="35" />
+</svg>

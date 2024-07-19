@@ -1,0 +1,82 @@
+<svg version="1.1" viewBox="0 0 100 100" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <style><![CDATA[
+#cyan-grads {
+   stop {
+      stop-color: #000;
+      &:first-child {
+         stop-color: #0FF;
+      }
+   }
+}
+polygon, use, text {
+   stroke: none;
+}
+g {
+   isolation: isolate;
+   &>* {
+      mix-blend-mode: screen;
+   }
+}
+   ]]></style>
+   <defs>
+      <polygon id="poly" points="50,0 100,50 50,100 0,50" />
+      <radialGradient id="vertex-a" cx="0" cy="0.5" r="0.75">
+         <stop offset="0%" stop-color="#00F" />
+         <stop offset="100%" stop-color="#000" />
+      </radialGradient>
+      <radialGradient id="vertex-b" cx="0.5" cy="1.0" r="0.75">
+         <stop offset="0%" stop-color="#F00" />
+         <stop offset="100%" stop-color="#000" />
+      </radialGradient>
+      <radialGradient id="vertex-c" cx="1" cy="0.5" r="0.75">
+         <stop offset="0%" stop-color="#FA0" />
+         <stop offset="100%" stop-color="#000" />
+      </radialGradient>
+      <radialGradient id="vertex-d" cx="0.5" cy="0" r="0.75">
+         <stop offset="0%" stop-color="#0F0" />
+         <stop offset="100%" stop-color="#000" />
+      </radialGradient>
+      
+      <defs id="cyan-grads">
+         <linearGradient id="cyan-a" gradientUnits="userSpaceOnUse" x1="50" y1="35" x2="0" y2="0">
+            <stop offset="10%" stop-color="#0FF" />
+            <stop offset="50%" stop-color="#0000" />
+         </linearGradient>
+         <linearGradient id="cyan-b" href="#cyan-a" x2="100">
+            <stop offset="10%" stop-color="#0FF" />
+            <stop offset="50%" stop-color="#0000" />
+         </linearGradient>
+         <linearGradient id="cyan-c" href="#cyan-a" y2="100">
+            <stop offset="10%" stop-color="#0FF" />
+            <stop offset="50%" stop-color="#0000" />
+         </linearGradient>
+         <linearGradient id="cyan-d" href="#cyan-a" x2="100" y2="100">
+            <stop offset="10%" stop-color="#0FF" />
+            <stop offset="50%" stop-color="#0000" />
+         </linearGradient>
+      </defs>
+   </defs>
+   <g>
+      <use href="#poly" fill="url(#vertex-a)" />
+      <use href="#poly" fill="url(#vertex-b)" />
+      <use href="#poly" fill="url(#vertex-c)" />
+      <use href="#poly" fill="url(#vertex-d)" />
+      <g>
+         <use href="#poly" fill="#000" />
+         <polygon points="50,0 50,35 0,50" fill="url(#cyan-a)" />
+         <polygon points="50,0 50,35 100,50" fill="url(#cyan-b)" />
+         <polygon points="50,100 50,35 0,50" fill="url(#cyan-c)" />
+         <polygon points="50,100 50,35 100,50" fill="url(#cyan-d)" />
+      </g>
+   </g>
+   <text
+      x="50" y="50"
+      fill="white"
+     
+      font-family="Times New Roman"
+      font-size="80px"
+      font-weight="bold"
+      text-anchor="middle"
+      dominant-baseline="central"
+   >?</text>
+</svg>

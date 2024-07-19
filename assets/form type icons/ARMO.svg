@@ -1,0 +1,20 @@
+<svg version="1.1" viewBox="0 0 100 100" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <defs>
+      <path id="shirt-shape"
+         d="M 5 28 L 28 5 L 72 5 L 95 28 L 79 46 L 71 40 L 71 75 L 29 75 L 29 40 L 21 46 Z"
+         stroke-width="7.5"
+      />
+      <mask id="inner-clip">
+         <rect x="0" y="0" width="100" height="100" fill="#000" />
+         <use href="#shirt-shape" fill="#FFF" stroke="#000" />
+      </mask>
+   </defs>
+   <g transform="translate(0 10)">
+      <use href="#shirt-shape" fill="#8CF" stroke="#000" />
+      <g mask="url(#inner-clip)">
+         <rect x="32.75" y="28" width="34.25" height="10" fill="#FFE" />
+         <rect x="32.75" y="48" width="34.25" height="10" fill="#FFE" />
+         <circle cx="50" cy="10" r="12" fill="#466" />
+      </g>
+   </g>
+</svg>

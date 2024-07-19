@@ -1,0 +1,23 @@
+<svg version="1.1" viewBox="0 0 100 100" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <defs>
+      <linearGradient id="grad" x1="1" y1="0" x2="0" y2="1">
+         <stop stop-color="#FFF" offset="35%" />
+         <stop stop-color="#DDE0EE" offset="55%" />
+      </linearGradient>
+   </defs>
+   <g transform="translate(15 2.5) rotate(45)">
+      <rect id="handle"
+         x="2.5" y="2.5" width="35" height="15"
+         fill="#860"
+         stroke="#000"
+         stroke-width="5"
+      />
+      <path id="blade"
+         d="M 0 0 Q 39 -2 80 0 Q 68 24 20 24 Q 21 6 0 10 Z"
+         fill="url(#grad)"
+         stroke="#000"
+         stroke-width="5"
+         transform="translate(37.5 5)"
+      />
+   </g>
+</svg>

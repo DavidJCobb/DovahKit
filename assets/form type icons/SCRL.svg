@@ -1,0 +1,87 @@
+<svg version="1.1" viewBox="0 0 100 100" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <g>
+      <path id="page-entire"
+         d="M 2.5 82.5 l 10 0 L 12.5 12.5 q 0 -10 10 -10 L 87.5 2.5 q 10 0 10 10 l 0 5 l -20 0 L 77.5 87.5 q 0 10 -10 10 L 12.5 97.5 q -10 0 -10 -10 Z"
+         fill="#ECA"
+         stroke-width="5"
+         stroke="#000"
+      />
+      <path id="page-inner-lines"
+         d="M 2.5 82.5 L 57.5 82.5 l 0 5 q 0 10 10 10 M 87.5 2.5 q -10 0 -10 10 l 0 5 l 20 0"
+         fill="none"
+         stroke-width="5"
+         stroke="#000"
+      />
+      <path id="writing"
+         d="
+            M 25,20
+            l 40,0
+            m -40,15
+            l 40,0
+            m -40,15
+            l 40,0
+            m -40,15
+            l 40,0
+         "
+         fill="none"
+         stroke-width="5"
+         stroke="rgba(64,32,0,0.6)"
+      />
+      
+      <script><![CDATA[
+{
+   const CURL_RADIUS  = 10;
+   const CURL_HEIGHT  =  5;
+   const STROKE_WIDTH = +document.getElementById("page-entire").getAttribute("stroke-width");
+   
+   const STROKE_HW = STROKE_WIDTH / 2;
+   
+   const PAGE_X     = CURL_RADIUS + STROKE_HW;
+   const PAGE_WIDTH = 100 - STROKE_HW - PAGE_X - CURL_RADIUS*2;
+   
+   {
+      let node = document.getElementById("page-entire");
+      let path = `
+         M ${STROKE_HW} ${100 - STROKE_HW - CURL_RADIUS - CURL_HEIGHT}
+         l ${CURL_RADIUS} 0
+         L ${STROKE_HW + CURL_RADIUS} ${STROKE_HW + CURL_RADIUS}
+         q ${0} ${-CURL_RADIUS}
+           ${CURL_RADIUS} ${-CURL_RADIUS}
+         L ${100 - STROKE_HW - CURL_RADIUS} ${STROKE_HW}
+         q ${CURL_RADIUS} ${0}
+           ${CURL_RADIUS} ${CURL_RADIUS}
+         l 0 ${CURL_HEIGHT}
+         l ${-CURL_RADIUS*2} 0
+         L ${100 - STROKE_HW - CURL_RADIUS*2} ${100 - STROKE_HW - CURL_RADIUS}
+         q ${0} ${CURL_RADIUS}
+           ${-CURL_RADIUS} ${CURL_RADIUS}
+         L ${STROKE_HW + CURL_RADIUS} ${100 - STROKE_HW}
+         q ${-CURL_RADIUS} ${0}
+           ${-CURL_RADIUS} ${-CURL_RADIUS}
+         Z
+      `;
+      path = path.trim().replaceAll(/\s+/g, " ");
+      node.setAttribute("d", path);
+   }
+   {
+      let node = document.getElementById("page-inner-lines");
+      let path = `
+         M ${STROKE_HW} ${100 - STROKE_HW - CURL_RADIUS - CURL_HEIGHT}
+         L ${100 - STROKE_HW - CURL_RADIUS*4} ${100 - STROKE_HW - CURL_RADIUS - CURL_HEIGHT}
+         l 0 ${CURL_HEIGHT}
+         q ${0} ${CURL_RADIUS}
+           ${CURL_RADIUS} ${CURL_RADIUS}
+         
+         M ${100 - STROKE_HW - CURL_RADIUS} ${STROKE_HW}
+         q ${-CURL_RADIUS} ${0}
+           ${-CURL_RADIUS} ${CURL_RADIUS}
+         l 0 ${CURL_HEIGHT}
+         l ${CURL_RADIUS*2} 0
+      `;
+      path = path.trim().replaceAll(/\s+/g, " ");
+      node.setAttribute("d", path);
+   }
+}
+      ]]></script>
+   </g>
+</svg>

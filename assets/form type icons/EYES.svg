@@ -1,0 +1,33 @@
+<svg version="1.1" viewBox="0 0 100 100" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <defs>
+      <path
+         id="eye-path"
+         d="M 5 50 Q 45 -5 95 50 Q 45 100 5 50 Z"
+      />
+      <clipPath id="eye-clip">
+         <use href="#eye-path" />
+      </clipPath>
+   </defs>
+   <path
+      id="eyelashes"
+      d="M 92 47 Q 96 42 96 35 Q 90 37 82 38 z M 80 36 Q 83 31 82 23 Q 77 27 70 29 z"
+      fill="#000"
+      stroke="#000"
+      stroke-width="4"
+   />
+   <use
+      href="#eye-path"
+      stroke="none"
+      fill="#FFF"
+   />
+   <g clip-path="#eye-clip">
+      <circle cx="49" cy="49" r="22" fill="#6AF" stroke="#248" stroke-width="4" />
+      <circle cx="49" cy="49" r="10" fill="#000" />
+   </g>
+   <use
+      href="#eye-path"
+      stroke="#000"
+      stroke-width="10"
+      fill="none"
+   />
+</svg>

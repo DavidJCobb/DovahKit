@@ -1,0 +1,58 @@
+<svg version="1.1" viewBox="0 0 100 100" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+   <defs>
+      <path
+         id="eye-path"
+         d="M 5 52 Q 55 6 95 65 Q 88 65 83 70 Q 45 100 5 52 Z"
+      />
+      <clipPath id="eye-clip">
+         <use href="#eye-path" />
+      </clipPath>
+   </defs>
+   <path
+      id="eye-bag"
+      d="M 90,75 Q 80,100 25,95"
+      stroke="#0005"
+      stroke-width="4"
+      fill="none"
+   />
+   <g id="eye-main" transform="translate(0 0)">
+      <!-- sclera color -->
+      <use
+         href="#eye-path"
+         stroke="none"
+         fill="#FFF"
+      />
+      
+      <path
+         id="eye-fold"
+         d="M 5 48 Q 55 6 100 70"
+         stroke="#0008"
+         stroke-width="4"
+         fill="none"
+         transform="translate(0 -15)"
+      />
+      <path
+         id="eyelashes"
+         d="M 6 51 L 1 39 L 11 40 L 6 28 L 19 32 L 20 22 L 29 29 L 31 22 L 38 28 L 41 23 L 47 28 L 50 24 L 55 31 L 28 36 Z"
+         fill="#000"
+      />
+      
+      <!-- iris and pupil -->
+      <g clip-path="#eye-clip" transform="translate(50 56)">
+         <circle cx="0" cy="0" r="22" fill="#6AF" stroke="#248" stroke-width="4" />
+         <circle cx="0" cy="0" r="10" fill="#000" />
+         
+         <!-- specular -->
+         <circle cx="10" cy="-5" r="6" fill="#FFF" />
+         <circle cx="-10" cy="5" r="3" fill="#FFF" />
+      </g>
+      
+      <!-- eye outline -->
+      <use
+         href="#eye-path"
+         stroke="#000"
+         stroke-width="10"
+         fill="none"
+      />
+   </g>
+</svg>
