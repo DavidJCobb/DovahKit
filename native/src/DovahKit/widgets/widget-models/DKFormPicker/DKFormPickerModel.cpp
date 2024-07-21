@@ -398,6 +398,10 @@ namespace ui::impl::DKFormPicker {
                return false;
          }
          if (item.stub) {
+            if (this->_custom_filter) {
+               if (!this->_custom_filter->form_matches(*item.stub))
+                  return false;
+            }
             bool check_form_script  = !params.scriptname.empty();
             bool check_alias_script = (item.type == dovah::form_type::quest && !params.scriptname_on_aliases.empty());
             if (check_form_script || check_alias_script) {
@@ -665,6 +669,62 @@ namespace ui::impl::DKFormPicker {
          }
       }
 
+      void Model::_force_recheck_filter(const dovah::form_stub& stub) {
+         const auto* item = shared_datastore::get().item_for_stub(&stub);
+         if (!item)
+            return;
+
+         auto& of = this->_ongoing_fill;
+
+         const bool  is_fetching_data = (of.stage == _fill_stage::currently_filling || of.stage == _fill_stage::currently_sorting);
+         const auto& params = is_fetching_data ? of.params : this->_last_completed_fill_params;
+
+         bool show = this->_entry_matches_params(*item, params);
+         if (show)
+            if (item->default_exclude_from_listings && !this->willNeverDefaultExcludeForm(*item->stub))
+               show = false;
+         
+         if (is_fetching_data) {
+            auto it = std::find(of.unsorted.begin(), of.unsorted.end(), item);
+            if (it != of.unsorted.end()) {
+               if (!show)
+                  of.unsorted.erase(it);
+               return;
+            }
+            //
+            // No branch for if the desired form isn't present in the unsorted list. It's possible 
+            // that we just haven't grabbed it yet, so we don't want to add it to the list here and 
+            // potentially end up with duplicates in that list.
+            //
+
+            if (of.stage != _fill_stage::currently_sorting)
+               return;
+
+            //
+            // If we're sorting, then we need to remove to-be-excluded forms from the sorted list. 
+            // Moreover, we're done grabbing forms, so if our form isn't in either list, then we 
+            // need to add it to the unsorted list (where it'll eventually be pulled into the right 
+            // spot in the sorted list).
+            //
+
+            it = std::find(this->_items.begin(), this->_items.end(), item);
+            if (it == this->_items.end()) {
+               if (show)
+                  of.unsorted.push_back(item);
+            } else {
+               if (!show)
+                  this->_items.erase(it);
+            }
+            return;
+         }
+
+         if (!show) {
+            this->_force_remove_item(*item);
+         } else {
+            this->_force_insert_item(*item);
+         }
+      }
+
       void Model::_force_insert_item(const item_type& item, bool emit_model_sync_signals) {
          if (this->_contains_item(item))
             return;
@@ -768,6 +828,23 @@ namespace ui::impl::DKFormPicker {
          if (!item || !item->default_exclude_from_listings)
             return;
          this->_on_item_exclusion_state_changed(*item, !force_include);
+      }
+
+      DKFormPickerCustomFilter* Model::customFilter() const {
+         return this->_custom_filter;
+      }
+      void Model::setCustomFilter(DKFormPickerCustomFilter* v) {
+         if (this->_custom_filter == v)
+            return;
+         this->_custom_filter = v;
+         this->forceRefill();
+      }
+
+      void Model::forceRefill() {
+         this->_refill(this->isFilling() ? this->_ongoing_fill.params : this->_last_completed_fill_params);
+      }
+      void Model::forceRecheckFilterOn(const dovah::form_stub& stub) {
+         this->_force_recheck_filter(stub);
       }
    #pragma endregion
 }

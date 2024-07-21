@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogRelationship</class>
+ <widget class="QDialog" name="FormDialogRelationship">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>313</width>
+    <height>206</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Relationship</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Editor ID:</string>
+     </property>
+     <property name="buddy">
+      <cstring>editorID</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QLineEdit" name="editorID"/>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Referrer:</string>
+     </property>
+     <property name="buddy">
+      <cstring>referrer</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Referent:</string>
+     </property>
+     <property name="buddy">
+      <cstring>referent</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Affinity:</string>
+     </property>
+     <property name="buddy">
+      <cstring>relationship</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Association Type:</string>
+     </property>
+     <property name="buddy">
+      <cstring>associationType</cstring>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QCheckBox" name="flagSecret">
+     <property name="whatsThis">
+      <string>Unused. The game loads this flag, but no conditions or Papyrus flags expose it, so there's not really anything you can do with it.</string>
+     </property>
+     <property name="text">
+      <string>Secret</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="1">
+    <widget class="DKFormPicker" name="referrer">
+     <property name="whatsThis">
+      <string>&lt;p&gt;Some association types, like parent/child, have directionality, whereas other association types, like sibling/sibling, do not. For association types with directionality, the referrer is the person that refers to someone, whereas the referent is the person to whom they refer.&lt;/p&gt;
+&lt;p&gt;For example, if an association type defines a &quot;parent/child&quot; relationship, then the referrer would be the parent, and the child would be the referent. If the association type is instead defined as a &quot;child/parent&quot; relationship, then the child is the referrer and the parent is the referent.&lt;/p&gt;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="DKFormPicker" name="referent">
+     <property name="whatsThis">
+      <string>&lt;p&gt;Some association types, like parent/child, have directionality, whereas other association types, like sibling/sibling, do not. For association types with directionality, the referrer is the person that refers to someone, whereas the referent is the person to whom they refer.&lt;/p&gt;
+&lt;p&gt;For example, if an association type defines a &quot;parent/child&quot; relationship, then the referrer would be the parent, and the child would be the referent. If the association type is instead defined as a &quot;child/parent&quot; relationship, then the child is the referrer and the parent is the referent.&lt;/p&gt;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="DKFormPicker" name="associationType"/>
+   </item>
+   <item row="3" column="1">
+    <widget class="QComboBox" name="relationship">
+     <property name="whatsThis">
+      <string>&lt;p&gt;Define how much these characters like or dislike each other. This influences how likely actors are to enter combat on each other's behalf, or against each other, based on the actors' baseline AI settings. Relationships are sorted by intensity: all relationships above Acquaintance are positive, with those higher in the list being more intense; and all relationships below Acquaintance are negative, with those lower in the list being more intense.&lt;/p&gt;
+&lt;p&gt;A few notes:&lt;/p&gt;
+&lt;ul&gt;
+   &lt;li&gt;&lt;p&gt;The thresholds at which combat behaviors change are Ally and above, Friend and above, and Enemy and below.&lt;/p&gt;&lt;/li&gt;
+   &lt;li&gt;&lt;p&gt;Family members are typically set to be Allies of each other.&lt;/p&gt;&lt;/li&gt;
+   &lt;li&gt;&lt;p&gt;The Lover relationship is used for romantic partners. It is not necessarily stronger than Ally, since again, combat settings treat the two as equivalent.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;</string>
+     </property>
+     <item>
+      <property name="text">
+       <string>Lover</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Ally</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Confidant</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Friend</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Acquaintance</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Rival</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Foe</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Enemy</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Archnemesis</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>referrer</tabstop>
+  <tabstop>referent</tabstop>
+  <tabstop>relationship</tabstop>
+  <tabstop>associationType</tabstop>
+  <tabstop>flagSecret</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

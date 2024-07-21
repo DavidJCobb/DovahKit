@@ -4,6 +4,7 @@
 #include "core.h"
 #include "../ui/main_window/form_use_info.h"
 #include "../ui/form_windows/activator.h"
+#include "../ui/form_windows/association_type.h"
 #include "../ui/form_windows/cell.h"
 #include "../ui/form_windows/color.h"
 #include "../ui/form_windows/container.h"
@@ -12,6 +13,7 @@
 #include "../ui/form_windows/flora.h"
 #include "../ui/form_windows/formlist.h"
 #include "../ui/form_windows/global.h"
+#include "../ui/form_windows/head_part.h"
 #include "../ui/form_windows/landtexture.h"
 #include "../ui/form_windows/leveled_character.h"
 #include "../ui/form_windows/leveled_item.h"
@@ -19,7 +21,9 @@
 #include "../ui/form_windows/light.h"
 #include "../ui/form_windows/misc_item.h"
 #include "../ui/form_windows/note.h"
+#include "../ui/form_windows/outfit.h"
 #include "../ui/form_windows/quest.h"
+#include "../ui/form_windows/relationship.h"
 #include "../ui/form_windows/shout.h"
 #include "../ui/form_windows/static.h"
 #include "../ui/form_windows/textureset.h"
@@ -33,6 +37,7 @@ namespace {
 
    constexpr std::array factory = {
       std::pair{ dovah::form_type::activator,         _make<FormDialogActivator> },
+      std::pair{ dovah::form_type::association_type,  _make<FormDialogAssociationType> },
       std::pair{ dovah::form_type::cell,              _make<FormDialogCell> },
       std::pair{ dovah::form_type::color,             _make<FormDialogColor> },
       std::pair{ dovah::form_type::container,         _make<FormDialogContainer> },
@@ -41,6 +46,7 @@ namespace {
       std::pair{ dovah::form_type::flora,             _make<FormDialogFlora> },
       std::pair{ dovah::form_type::formlist,          _make<FormDialogFormList> },
       std::pair{ dovah::form_type::global,            _make<FormDialogGlobal> },
+      std::pair{ dovah::form_type::head_part,         _make<FormDialogHeadPart> },
       std::pair{ dovah::form_type::land_texture,      _make<FormDialogLandTexture> },
       std::pair{ dovah::form_type::leveled_character, _make<FormDialogLeveledCharacter> },
       std::pair{ dovah::form_type::leveled_item,      _make<FormDialogLeveledItem> },
@@ -48,7 +54,9 @@ namespace {
       std::pair{ dovah::form_type::light,             _make<FormDialogLight> },
       std::pair{ dovah::form_type::misc_item,         _make<FormDialogMiscItem> },
       std::pair{ dovah::form_type::note,              _make<FormDialogNote> },
+      std::pair{ dovah::form_type::outfit,            _make<FormDialogOutfit> },
       std::pair{ dovah::form_type::quest,             _make<FormDialogQuest> },
+      std::pair{ dovah::form_type::relationship,      _make<FormDialogRelationship> },
       std::pair{ dovah::form_type::shout,             _make<FormDialogShout> },
       std::pair{ dovah::form_type::statik,            _make<FormDialogStatic> },
       std::pair{ dovah::form_type::texture_set,       _make<FormDialogTextureSet> },

@@ -1,0 +1,20 @@
+#pragma once
+#include "./_base.h"
+#include "dovah/forms/Outfit.h"
+#include "ui_outfit.h"
+
+class FormDialogOutfit :
+   public QDialog,
+   public FormEditDialogMixin<dovah::loaded_forms::Outfit, false>
+{
+   Q_OBJECT;
+   DOVAHKIT_FORM_EDIT_DIALOG;
+   public:
+      FormDialogOutfit(dovah::form_stub& stub, QWidget* parent = Q_NULLPTR);
+      
+   protected:
+      Ui::FormDialogOutfit ui;
+      
+      virtual void _load_impl() override;
+      virtual void _save_impl() override;
+};

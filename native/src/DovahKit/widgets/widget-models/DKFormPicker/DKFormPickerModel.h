@@ -2,6 +2,7 @@
 #if defined(QT_DESIGNER_LIB)
    #error This model relies on DovahKit to run. Do not include it when compiling the Qt Designer plug-in.
 #endif
+#include <functional>
 #include <optional>
 #include <string>
 #include <vector>
@@ -9,6 +10,7 @@
 #include <QElapsedTimer>
 #include <QTimer>
 #include "dovah/form_types.h"
+#include "../../widget-data/DKFormPickerCustomFilter.h"
 
 namespace dovah {
    class form_stub;
@@ -73,6 +75,8 @@ namespace ui::impl::DKFormPicker {
          };
 
       public:
+         using filter_function_type = std::function<bool(const dovah::form_stub*)>;
+
          struct filter_parameters {
             bool                    allow_none = true;
             QList<dovah::form_type> form_types;
@@ -89,6 +93,7 @@ namespace ui::impl::DKFormPicker {
       protected:
          std::vector<const item_type*>        _items;
          std::vector<const dovah::form_stub*> _force_included_forms;
+         DKFormPickerCustomFilter* _custom_filter = nullptr;
          filter_parameters _last_completed_fill_params;
          struct {
             filter_parameters params;
@@ -143,6 +148,8 @@ namespace ui::impl::DKFormPicker {
 
          void _on_item_exclusion_state_changed(const item_type&, bool exclude_now);
 
+         void _force_recheck_filter(const dovah::form_stub&);
+
          void _force_insert_item(const item_type&, bool emit_model_sync_signals = true);
          void _force_remove_item(const item_type&, bool emit_model_sync_signals = true);
 
@@ -162,6 +169,12 @@ namespace ui::impl::DKFormPicker {
 
          bool willNeverDefaultExcludeForm(dovah::form_stub&) const;
          void setFormNeverDefaultExcluded(dovah::form_stub&, bool force_include);
+
+         DKFormPickerCustomFilter* customFilter() const;
+         void setCustomFilter(DKFormPickerCustomFilter*);
+
+         void forceRefill();
+         void forceRecheckFilterOn(const dovah::form_stub&);
 
       signals:
          void beforeFilled();

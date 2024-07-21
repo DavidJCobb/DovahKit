@@ -55,17 +55,21 @@ namespace dovahkit::subsystems::form_info_cache {
          void cachedDataBuilt(); // emitted when all data is built
          void cachedDataCleared(); // emitted when all data is cleared
 
+         void cachedHeadPartChanged(dovah::form_stub&);
          void cachedModelPathChanged(dovah::form_stub&, QString old_value, QString new_value);
          void cachedQuestFilterChanged(dovah::form_stub&, QString old_value, QString new_value);
          void cachedScriptsChanged(dovah::form_stub&);
+         void cachedVoicetypeChanged(dovah::form_stub&);
 
       public:
          QString get_form_model_path(const dovah::form_stub&) const;
          QString get_quest_filter(const dovah::form_stub&) const;
+         const cached_head_part_info* get_head_part_info(const dovah::form_stub& head_part) const;
+         const cached_voicetype_info* get_voicetype_info(const dovah::form_stub& voicetype) const;
 
          script_attach_state form_script_attachment(const dovah::form_stub&, std::string_view scriptname) const;
          bool quest_has_alias_with_script(const dovah::form_stub&, std::string_view scriptname) const;
-
+         //
          std::vector<const subsystems::papyrus::known_script*> get_scripts_attached_to_form(const dovah::form_stub&) const;
          std::vector<const subsystems::papyrus::known_script*> get_scripts_attached_to_quest_aliases(const dovah::form_stub& quest) const;
 
@@ -80,6 +84,12 @@ namespace dovahkit::subsystems::form_info_cache {
          void for_all_quest_filters(Functor&& functor) {
             for (auto path : this->_cache.quest_filters)
                functor(path);
+         }
+         
+         template<typename Functor> requires std::is_invocable_v<Functor, const cached_head_part_info&>
+         void for_all_head_parts(Functor&& functor) {
+            for (const auto& info : this->_cache.head_parts)
+               functor(info);
          }
    };
 }

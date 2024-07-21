@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogHeadPart</class>
+ <widget class="QDialog" name="FormDialogHeadPart">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>370</width>
+    <height>562</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>HeadPart</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Type:</string>
+       </property>
+       <property name="buddy">
+        <cstring>type</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QComboBox" name="sex">
+       <item>
+        <property name="text">
+         <string>Any</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Female</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Male</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Name:</string>
+       </property>
+       <property name="buddy">
+        <cstring>name</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="name"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="type">
+       <property name="whatsThis">
+        <string>&lt;p&gt;This setting controls what part of a character's face this HeadPart defines.&lt;/p&gt;
+&lt;p&gt;Most of these types are self-explanatory &amp;mdash; eyes, eyebrows, and whatnot &amp;mdash; but it's worth clarifying that &quot;Face&quot; defines an entire head NIF for an actor to use. The &quot;Misc&quot; type is generally used for HeadParts that exist only to serve as &quot;extra parts&quot; for other HeadParts (e.g. hairline meshes for hairstyles).&lt;/p&gt;</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Misc</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Face</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Eyes</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Hair</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Facial Hair</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Scar</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Eyebrows</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Sex:</string>
+       </property>
+       <property name="buddy">
+        <cstring>sex</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Races:</string>
+       </property>
+       <property name="buddy">
+        <cstring>validRaces</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="DKFormPicker" name="validRaces">
+       <property name="whatsThis">
+        <string>Specify a FormList of races that this HeadPart is compatible with. Actors of those races will be able to use the HeadPart. If you don't specify a list here, then the HeadPart will be usable by actors of any race.</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QCheckBox" name="flagPlayable">
+       <property name="text">
+        <string>Playable</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="flagUseSolidTint">
+       <property name="text">
+        <string>Use solid tint</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="1">
+      <widget class="DKFormNIFPicker" name="model"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Model:</string>
+       </property>
+       <property name="buddy">
+        <cstring>model</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Tri:</string>
+       </property>
+       <property name="buddy">
+        <cstring>tri</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>Race Morph:</string>
+       </property>
+       <property name="buddy">
+        <cstring>raceMorph</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_10">
+       <property name="text">
+        <string>Texture Set:</string>
+       </property>
+       <property name="buddy">
+        <cstring>textureSet</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>Chargen Morph:</string>
+       </property>
+       <property name="buddy">
+        <cstring>charGenMorph</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="DKGameFilePicker" name="tri"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="DKGameFilePicker" name="raceMorph">
+       <property name="whatsThis">
+        <string>Specify a *.tri file that defines morphs per race. If your HeadPart doesn't need race-specific morphs, you can leave this blank.
+
+An example of how to use this: in vanilla Skyrim, human and elf races all share the same head models: FemaleHead.nif and MaleHead.nif. Each race has its own HeadPart that shares that same model, using the FemaleHeadRaces.tri file to apply race-specific facial changes such as elves' gaunt cheeks and Dark Elves' brow ridge.</string>
+       </property>
+       <property name="pathFormat">
+        <enum>DKGameFilePicker::OmitPathStem</enum>
+       </property>
+       <property name="pathStem">
+        <string notr="true">meshes</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="DKGameFilePicker" name="charGenMorph">
+       <property name="pathFormat">
+        <enum>DKGameFilePicker::OmitPathStem</enum>
+       </property>
+       <property name="pathStem">
+        <string notr="true">meshes</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_11">
+       <property name="text">
+        <string>Color:</string>
+       </property>
+       <property name="buddy">
+        <cstring>color</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="DKFormPicker" name="color"/>
+     </item>
+     <item row="5" column="1">
+      <widget class="DKFormPicker" name="textureSet">
+       <property name="whatsThis">
+        <string>An optional TextureSet that can be used to override the model's default textures.
+
+In the vanilla game, there exists a separate HeadPart for every eye color. They all use the same few NIFs, relying on this TextureSet to override the texture and change the eye color.</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="whatsThis">
+      <string>&lt;p&gt;Ordinarily, a HeadPart can only specify a single model (and morphs for it). If you need to use multiple NIFs, the solution is to create one HeadPart for each NIF: have the main HeadPart list the others as &quot;extra parts,&quot; and have those others be flagged as &quot;extra parts.&quot;&lt;/p&gt;
+&lt;p&gt;As an example: several hairstyles in the vanilla game have two HeadParts: a &quot;hair&quot; model, and a &quot;hairline&quot; model. The hairline model is molded directly to the character's head and uses alpha blending. The hairline is flagged as an extra part, and is listed in the hair part's &quot;extra parts&quot; list.&lt;/p&gt;</string>
+     </property>
+     <property name="title">
+      <string>Extra Parts</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QCheckBox" name="flagIsExtraPart">
+        <property name="text">
+         <string>Is Extra Part</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="DKFormListPane" name="extraParts">
+        <property name="showFormTypes">
+         <bool>false</bool>
+        </property>
+        <property name="showMoveButtons">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKGameFilePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKGameFilePicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>type</tabstop>
+  <tabstop>validRaces</tabstop>
+  <tabstop>sex</tabstop>
+  <tabstop>flagPlayable</tabstop>
+  <tabstop>flagUseSolidTint</tabstop>
+  <tabstop>model</tabstop>
+  <tabstop>tri</tabstop>
+  <tabstop>raceMorph</tabstop>
+  <tabstop>charGenMorph</tabstop>
+  <tabstop>color</tabstop>
+  <tabstop>textureSet</tabstop>
+  <tabstop>flagIsExtraPart</tabstop>
+  <tabstop>extraParts</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

@@ -678,6 +678,16 @@ namespace editor_helpers {
                   ).arg(subject).arg(casted->quad).arg(layer);
                }
             #pragma endregion
+            #pragma region head part
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::head_part::invalid_morph_type*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "HeadPart %1 contained a morph with an invalid type %2.",
+                     disambig
+                  ).arg(subject).arg(casted->morph_type);
+               }
+            #pragma endregion
             #pragma region note
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::note::non_texture_note_includes_texture_path*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);

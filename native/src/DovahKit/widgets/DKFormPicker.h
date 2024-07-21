@@ -3,9 +3,13 @@
 #include <QList>
 #include <QWidget>
 #if !defined(QT_DESIGNER_LIB)
+   #include <functional>
    #include "dovah/core.h"
 #endif
 #include "dovah/form_types.h"
+#if !defined(QT_DESIGNER_LIB)
+   #include "./widget-data/DKFormPickerCustomFilter.h"
+#endif
 
 namespace dovah {
    class form_stub;
@@ -24,6 +28,10 @@ class DKFormPicker : public QWidget {
    Q_PROPERTY(QString requiredScriptname      READ requiredScriptname      WRITE setRequiredScriptname      DESIGNABLE true);
    Q_PROPERTY(QString requiredAliasScriptname READ requiredAliasScriptname WRITE setRequiredAliasScriptname DESIGNABLE true);
    Q_PROPERTY(bool    splitTypesWhenMany      READ splitTypesWhenMany      WRITE setSplitTypesWhenMany      DESIGNABLE true);
+   public:
+      #if !defined(QT_DESIGNER_LIB)
+         using ExtraFilterFunction = std::function<bool(const dovah::form_stub*)>;
+      #endif
    public:
       DKFormPicker(QWidget* parent = nullptr);
       
@@ -66,6 +74,11 @@ class DKFormPicker : public QWidget {
       #endif
 
       constexpr bool isSplittingTypes() const noexcept { return this->_state.is_splitting_types; }
+
+      #if !defined(QT_DESIGNER_LIB)
+         DKFormPickerCustomFilter* customFilter() const;
+         void setCustomFilter(DKFormPickerCustomFilter* v);
+      #endif
 
    protected:
       #if !defined(QT_DESIGNER_LIB)

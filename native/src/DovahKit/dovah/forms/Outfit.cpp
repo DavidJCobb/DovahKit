@@ -1,8 +1,8 @@
-#include "FormList.h"
+#include "Outfit.h"
 #include "_common_cpp.h"
 
 namespace dovah::loaded_forms {
-   void FormList::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+   void Outfit::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
       if (!intfc.is_winning_record)
@@ -24,9 +24,11 @@ namespace dovah::loaded_forms {
                // no-op) isn't overridden and therefore the data is not retained in memory.
                //
                break;
-            case 'LNAM': // list entry
-               if (subrecord.read(formID))
+            case 'INAM': // list entry
+               while (subrecord.read(formID)) {
+                  intfc.warn_if_ref_is_wrong_type(formID, std::array{ form_type::armor, form_type::leveled_item }, subrecord.signature());
                   this->contents.push_back(formID);
+               }
                break;
             default:
                intfc.warn_on_unrecognized_subrecord(subrecord);
@@ -34,10 +36,10 @@ namespace dovah::loaded_forms {
          }
       }
    }
-   /*static*/ void FormList::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+   /*static*/ void Outfit::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       if (!uib.is_final_file())
          //
-         // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)
+         // There is no data in this form type that is coalesced across multiple files.
          //
          return;
       //
@@ -47,16 +49,16 @@ namespace dovah::loaded_forms {
             case 'VMAD':
                components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
-            case 'LNAM': // list entry
-               if (subrecord.read(formID))
+            case 'INAM': // list entry
+               while (subrecord.read(formID))
                   uib.add_outbound_reference(formID);
                break;
          }
       }
    }
-   void FormList::_clone_impl(Form* out) const noexcept {
+   void Outfit::_clone_impl(Form* out) const noexcept {
       assert(out->type == form_type);
-      auto copy = (FormList*)out;
+      auto copy = (Outfit*)out;
       
       copy->script_data.clone_from(this->script_data, *copy);
       //
@@ -65,16 +67,20 @@ namespace dovah::loaded_forms {
       for (size_t i = 0; i < size; ++i)
          copy->contents[i].set(*copy, this->contents[i]);
    }
-   void FormList::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Outfit::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
-      for (auto& entry : this->contents)
-         record.write_formID_subrecord('LNAM', entry);
+      if (!this->contents.empty()) {
+         auto& INAM = record.open_next_subrecord('INAM');
+         for(auto& entry : this->contents)
+            INAM.write(entry);
+         INAM.close();
+      }
    }
-   void FormList::_clear_impl() noexcept {
+   void Outfit::_clear_impl() noexcept {
       this->script_data.clear(*this);
       clear_form_reference_list(this->contents, *this);
    }
-   void FormList::_sever_outbound_references_impl(form_stub& other) noexcept {
+   void Outfit::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);
       //
       std::vector<form_reference_t> replacement;

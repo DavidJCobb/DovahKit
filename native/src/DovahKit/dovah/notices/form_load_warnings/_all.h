@@ -14,6 +14,7 @@
    #include "./by_form_type/cell/cell_type_not_yet_known.h"
    #include "./by_form_type/cell/data_for_wrong_cell_type.h"
    #include "./by_form_type/dialogue_branch/mishandled_owning_quest_id.h"
+   #include "./by_form_type/head_part/invalid_morph_type.h"
    #include "./by_form_type/landscape/excess_layers_per_quad.h"
    #include "./by_form_type/landscape/invalid_quad_for_land_texture.h"
    #include "./by_form_type/note/non_texture_note_includes_texture_path.h"

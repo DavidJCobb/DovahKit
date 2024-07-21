@@ -1,0 +1,3940 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogActorBase</class>
+ <widget class="QDialog" name="FormDialogActorBase">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1069</width>
+    <height>741</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Actor</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,1">
+   <item row="0" column="0" rowspan="2">
+    <layout class="QGridLayout" name="leftCol">
+     <item row="6" column="0" colspan="2">
+      <widget class="QGroupBox" name="groupBox">
+       <property name="whatsThis">
+        <string>You can optionally have this Actor definition borrow data from another Actor definition instead of using its own data. This removes the need to keep multiple actor definitions in synch by hand. Use the checkboxes to control what data is borrowed.</string>
+       </property>
+       <property name="title">
+        <string>Template Data</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout" columnstretch="0,1,0">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Actor Base:</string>
+          </property>
+          <property name="buddy">
+           <cstring>templateActor</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="DKFormPicker" name="templateActor">
+          <property name="whatsThis">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QPushButton" name="buttonEditTemplateActor">
+          <property name="text">
+           <string>Edit</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="3">
+         <widget class="QWidget" name="templateUseFlagContainer" native="true">
+          <layout class="QGridLayout" name="templateFlags">
+           <item row="2" column="0">
+            <widget class="QCheckBox" name="templateUseScripts">
+             <property name="text">
+              <string>Use Scripts</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QCheckBox" name="templateUseFactions">
+             <property name="text">
+              <string>Use Factions</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="templateUseTraits">
+             <property name="text">
+              <string>Use Traits</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QCheckBox" name="templateUseStats">
+             <property name="text">
+              <string>Use Stats</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="templateUseAIData">
+             <property name="text">
+              <string>Use AI Data</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QCheckBox" name="templateUseSpellList">
+             <property name="text">
+              <string>Use Spell List</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QCheckBox" name="templateUseAIPackages">
+             <property name="text">
+              <string>Use AI Packages</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QCheckBox" name="templateUseDefaultPackages">
+             <property name="accessibleName">
+              <string>Use Default AI Package List</string>
+             </property>
+             <property name="text">
+              <string>Use Def. Pkg. List</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QCheckBox" name="templateUseAttackData">
+             <property name="text">
+              <string>Use Attack Data</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QCheckBox" name="templateUseInventory">
+             <property name="text">
+              <string>Use Inventory</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QCheckBox" name="templateUseBaseData">
+             <property name="text">
+              <string>Use Base Data</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="2">
+            <widget class="QCheckBox" name="templateUseKeywords">
+             <property name="text">
+              <string>Use Keywords</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="name"/>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <layout class="QGridLayout" name="layoutFlags">
+       <item row="3" column="0">
+        <widget class="QCheckBox" name="flagRespawn">
+         <property name="whatsThis">
+          <string>If this box is checked, then refs that use this Actor Base as their base form will resurrect (unless they start dead) and reset when their parent cell resets.</string>
+         </property>
+         <property name="text">
+          <string>Respawn</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QCheckBox" name="flagSimple">
+         <property name="whatsThis">
+          <string>Simple actors don't use face animations or morphs, and aren't tracked by the Story Manager's &quot;assault&quot; and &quot;death&quot; events.</string>
+         </property>
+         <property name="text">
+          <string>Simple Actor</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QCheckBox" name="flagSummonable">
+         <property name="whatsThis">
+          <string>Control whether this actor can be summoned using a Summon Actor magic effect.</string>
+         </property>
+         <property name="text">
+          <string>Summonable</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="flagProtected">
+         <property name="whatsThis">
+          <string>Protected actors cannot be killed by anyone except the player. If their health is brought to or below zero by any other force, they will enter the &quot;bleedout&quot; state instead.</string>
+         </property>
+         <property name="text">
+          <string>Protected</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QCheckBox" name="flagUnique">
+         <property name="text">
+          <string>Unique</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QCheckBox" name="flagInvulnerable">
+         <property name="whatsThis">
+          <string>Invulnerable actors are immune to damage. The difference between this and the &quot;Is Ghost&quot; checkbox is that invulnerable actors can still be physically hit by projectiles and attacks; they just take no damage.</string>
+         </property>
+         <property name="text">
+          <string>Invulnerable</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QCheckBox" name="flagDoesntBleed">
+         <property name="text">
+          <string>Doesn't Bleed</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="flagPreset">
+         <property name="text">
+          <string>Is CharGen Preset</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCheckBox" name="flagEssential">
+         <property name="whatsThis">
+          <string>Essential actors are incapable of dying. When their health drops to or below zero, they will enter a state called &quot;bleedout,&quot; where they drop to their knees and are unable to act. They will recover once their health regenerates back above zero. Note that checking this box will make an actor permanently essential; you can make actors temporarily essential using Quest Aliases.</string>
+         </property>
+         <property name="text">
+          <string>Essential</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QCheckBox" name="flagGhost">
+         <property name="whatsThis">
+          <string>If this box is checked, then this actor cannot be struck by weapons or projectiles. Weapons and projectiles will move through them without impacting them or triggering any reaction.</string>
+         </property>
+         <property name="text">
+          <string>Is Ghost</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="QCheckBox" name="flagDoesntAffectStealthMeter">
+         <property name="text">
+          <string>Doesn't Affect Stealth Meter</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Name:</string>
+       </property>
+       <property name="buddy">
+        <cstring>name</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0" colspan="2">
+      <widget class="DKPapyrusBoundScriptListPane" name="scriptListPane"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Short Name:</string>
+       </property>
+       <property name="buddy">
+        <cstring>shortName</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="shortName">
+       <property name="whatsThis">
+        <string>A shortened version of the actor's name. For example, you might use the &quot;Name&quot; field for their full name, and the &quot;Short Name&quot; field for their given name only.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0" colspan="2">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="DKFormDestructionDataButton" name="destructionData"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonShowFilteredDialogue">
+         <property name="text">
+          <string>Dialogue</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="1">
+    <widget class="QTabWidget" name="tabbox">
+     <property name="currentIndex">
+      <number>6</number>
+     </property>
+     <widget class="QWidget" name="tabTraits">
+      <attribute name="title">
+       <string>Traits</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_5">
+       <item row="0" column="1" rowspan="5">
+        <spacer name="horizontalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>321</width>
+           <height>598</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="4" column="0">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>322</width>
+           <height>319</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="0">
+        <layout class="QGridLayout" name="gridLayout_3" columnstretch="0,1,0,0,1">
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_11">
+           <property name="text">
+            <string>Sex:</string>
+           </property>
+           <property name="buddy">
+            <cstring>sex</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>Skin:</string>
+           </property>
+           <property name="buddy">
+            <cstring>skin</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" colspan="4">
+          <widget class="DKFormPicker" name="skin"/>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>Race:</string>
+           </property>
+           <property name="buddy">
+            <cstring>race</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="sex">
+           <property name="whatsThis">
+            <string>Control the body model, animation, pronouns, and available voice types used by this actor.</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>Male</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Female</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QDoubleSpinBox" name="height">
+           <property name="whatsThis">
+            <string>This is nominally a multiplier applied to the actor's height, but in practice it scales their entire model.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>Height Mult.:</string>
+           </property>
+           <property name="buddy">
+            <cstring>height</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="4">
+          <widget class="QDoubleSpinBox" name="bodyWeight">
+           <property name="whatsThis">
+            <string>Control the actor's body weight. This is a purely visual setting, and works by interpolating between a &quot;minimum weight&quot; and &quot;maximum weight&quot; model.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="decimals">
+            <number>4</number>
+           </property>
+           <property name="maximum">
+            <double>100.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="3">
+          <widget class="QLabel" name="label_12">
+           <property name="text">
+            <string>Weight:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="buddy">
+            <cstring>bodyWeight</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" colspan="4">
+          <widget class="DKFormPicker" name="race"/>
+         </item>
+         <item row="3" column="2">
+          <spacer name="horizontalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>16</width>
+             <height>8</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="2" column="2" colspan="3">
+          <widget class="QCheckBox" name="flagOppositeGenderAnims">
+           <property name="whatsThis">
+            <string>If this is checked, then when the actor plays an animation that varies by sex, they will use the animations for the opposite sex. One example use case that Bethesda describes is to reduce the hip sway in a tough female bandit's walk.</string>
+           </property>
+           <property name="text">
+            <string>Opposite-Sex Animations</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="farawayGroupbox">
+         <property name="whatsThis">
+          <string>You can override the character model used to render the actor when they're far away.</string>
+         </property>
+         <property name="title">
+          <string>Far Away Model</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Skin:</string>
+            </property>
+            <property name="buddy">
+             <cstring>farawaySkin</cstring>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="DKFormPicker" name="farawaySkin"/>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>Distance:</string>
+            </property>
+            <property name="buddy">
+             <cstring>farawayDistance</cstring>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="farawayDistance">
+            <property name="whatsThis">
+             <string/>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <double>4096.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_15">
+           <property name="text">
+            <string>Death Item:</string>
+           </property>
+           <property name="buddy">
+            <cstring>deathItem</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_13">
+           <property name="text">
+            <string>Voice Type:</string>
+           </property>
+           <property name="buddy">
+            <cstring>voicetype</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <spacer name="horizontalSpacer_5">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>16</width>
+             <height>8</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_14">
+           <property name="text">
+            <string>Weapon List:</string>
+           </property>
+           <property name="buddy">
+            <cstring>weaponList</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" colspan="4">
+          <widget class="DKFormPicker" name="weaponList">
+           <property name="whatsThis">
+            <string>Unused.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1" colspan="4">
+          <widget class="DKFormPicker" name="deathItem">
+           <property name="whatsThis">
+            <string>Control what leveled item, if any, is spawned into this actor's inventory when they die.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="4">
+          <widget class="QSpinBox" name="dispositionBase">
+           <property name="whatsThis">
+            <string>Unused.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="minimum">
+            <number>-32768</number>
+           </property>
+           <property name="maximum">
+            <number>32767</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_16">
+           <property name="text">
+            <string>Karma:</string>
+           </property>
+           <property name="buddy">
+            <cstring>karma</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="karma">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="whatsThis">
+            <string>Unused. Skyrim doesn't even appear to have any place to store this data, despite the Creation Kit having UI for it.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="3">
+          <widget class="QLabel" name="label_17">
+           <property name="text">
+            <string>Disposition Base:</string>
+           </property>
+           <property name="buddy">
+            <cstring>dispositionBase</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" colspan="4">
+          <widget class="DKFormPicker" name="voicetype">
+           <property name="whatsThis">
+            <string>The actor's voice. Dialogue sound files are divided by voice type.</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabStats">
+      <attribute name="title">
+       <string>Stats</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_9" rowstretch="0,0,1,1,200">
+       <item row="3" column="1">
+        <widget class="QGroupBox" name="groupBox_3">
+         <property name="title">
+          <string>Skills</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <widget class="QTableView" name="statsTable"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <layout class="QGridLayout" name="layoutStatsAttributes">
+         <item row="8" column="1">
+          <widget class="QDoubleSpinBox" name="statsMagickaCalcFinal">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="label_22">
+           <property name="text">
+            <string>Base Magicka:</string>
+           </property>
+           <property name="buddy">
+            <cstring>statsMagickaCalcBase</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0" colspan="2">
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>8</width>
+             <height>16</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="10" column="0">
+          <widget class="QLabel" name="label_24">
+           <property name="text">
+            <string>Stamina Offset:</string>
+           </property>
+           <property name="buddy">
+            <cstring>statsStaminaOffset</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_20">
+           <property name="text">
+            <string>Calculated Health:</string>
+           </property>
+           <property name="buddy">
+            <cstring>statsHealthCalcFinal</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0">
+          <widget class="QLabel" name="label_23">
+           <property name="text">
+            <string>Calculated Magicka:</string>
+           </property>
+           <property name="buddy">
+            <cstring>statsMagickaCalcFinal</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QDoubleSpinBox" name="statsMagickaCalcBase">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QDoubleSpinBox" name="statsHealthCalcBase">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" colspan="2">
+          <widget class="QCheckBox" name="flagAutoCalcStats">
+           <property name="text">
+            <string>Auto-calc stats</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QDoubleSpinBox" name="statsHealthCalcFinal">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QDoubleSpinBox" name="statsHealthOffset">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="1">
+          <widget class="QDoubleSpinBox" name="statsStaminaOffset">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_19">
+           <property name="text">
+            <string>Base Health:</string>
+           </property>
+           <property name="buddy">
+            <cstring>statsHealthCalcBase</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="0">
+          <widget class="QLabel" name="label_25">
+           <property name="text">
+            <string>Base Stamina:</string>
+           </property>
+           <property name="buddy">
+            <cstring>statsStaminaCalcBase</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="1">
+          <widget class="QDoubleSpinBox" name="statsStaminaCalcBase">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QDoubleSpinBox" name="statsMagickaOffset">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="1">
+          <widget class="QDoubleSpinBox" name="statsStaminaCalcFinal">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="0">
+          <widget class="QLabel" name="label_26">
+           <property name="text">
+            <string>Calculated Stamina:</string>
+           </property>
+           <property name="buddy">
+            <cstring>statsStaminaCalcFinal</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="label_21">
+           <property name="text">
+            <string>Magicka Offset:</string>
+           </property>
+           <property name="buddy">
+            <cstring>statsMagickaOffset</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_18">
+           <property name="text">
+            <string>Health Offset:</string>
+           </property>
+           <property name="buddy">
+            <cstring>statsHealthOffset</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="0" colspan="2">
+          <spacer name="verticalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>16</width>
+             <height>16</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="0" colspan="2">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QLabel" name="label_30">
+             <property name="text">
+              <string>Class:</string>
+             </property>
+             <property name="buddy">
+              <cstring>statsClass</cstring>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_8">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>16</width>
+               <height>8</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="DKFormPicker" name="statsClass">
+             <property name="whatsThis">
+              <string>An actor's class determines their skill and attribute progression.</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item row="4" column="0">
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>158</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="1">
+        <spacer name="verticalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Expanding</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>8</width>
+           <height>16</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="0" rowspan="3">
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
+          <string>Leveling Data</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_7">
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="levelCalcMin">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_27">
+            <property name="text">
+             <string>Level:</string>
+            </property>
+            <property name="buddy">
+             <cstring>level</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_28">
+            <property name="text">
+             <string>Calc Min:</string>
+            </property>
+            <property name="buddy">
+             <cstring>levelCalcMin</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QLabel" name="label_29">
+            <property name="text">
+             <string>Calc Max:</string>
+            </property>
+            <property name="buddy">
+             <cstring>levelCalcMax</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <widget class="QSpinBox" name="levelCalcMax">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3" colspan="2">
+           <widget class="QCheckBox" name="flagPCLevelMult">
+            <property name="whatsThis">
+             <string>If this is checked, then instead of setting the actor's level, you can set a multiplier, minimum, and maximum. The actor's level will be the player's level, times the multiplier, clamped to the minimum and maximum.</string>
+            </property>
+            <property name="text">
+             <string>PC Level Mult</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="level">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2" rowspan="2">
+           <spacer name="horizontalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>16</width>
+              <height>16</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="1" rowspan="2">
+        <layout class="QGridLayout" name="gridLayout_8">
+         <item row="1" column="3">
+          <spacer name="horizontalSpacer_9">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_31">
+           <property name="text">
+            <string>Speed:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="buddy">
+            <cstring>speedPercentage</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QDoubleSpinBox" name="bleedoutOverrideThreshold">
+           <property name="whatsThis">
+            <string>You can optionally control the health percentage at which the actor enters a &quot;bleedout&quot; state.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QDoubleSpinBox" name="speedPercentage">
+           <property name="whatsThis">
+            <string>Scale the actor's movement speed. Note that actor animations are designed around their normal movement speeds, so changing this value may lead to visual oddities.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="suffix">
+            <string>%</string>
+           </property>
+           <property name="maximum">
+            <double>1000.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>100.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <spacer name="horizontalSpacer_10">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>0</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="1" column="0" colspan="2">
+          <widget class="QCheckBox" name="flagBleedoutOverride">
+           <property name="text">
+            <string>Bleedout override:</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabFactions">
+      <attribute name="title">
+       <string>Factions</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <widget class="QTableView" name="factionsTable"/>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <widget class="QPushButton" name="buttonFactionAdd">
+             <property name="text">
+              <string>Add</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="buttonFactionRemove">
+             <property name="text">
+              <string>Remove</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_5">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_4">
+         <property name="title">
+          <string>Edit selected faction</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QLabel" name="label_32">
+            <property name="text">
+             <string>Faction:</string>
+            </property>
+            <property name="buddy">
+             <cstring>currentFactionForm</cstring>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="DKFormPicker" name="currentFactionForm"/>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_11">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>16</width>
+              <height>8</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_33">
+            <property name="text">
+             <string>Rank:</string>
+            </property>
+            <property name="buddy">
+             <cstring>currentFactionRank</cstring>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="currentFactionRank">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="minimum">
+             <number>-1</number>
+            </property>
+            <property name="maximum">
+             <number>127</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="gridLayout_6" columnstretch="0,1">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_34">
+           <property name="text">
+            <string>Crime Faction:</string>
+           </property>
+           <property name="buddy">
+            <cstring>crimeFaction</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="crimeFaction">
+           <property name="whatsThis">
+            <string>Crimes committed against an actor will be reported to the actor's Crime Faction, and the player will incur a bounty with that faction. An actor's Crime Faction must be a faction that the actor is a member of, and it must be a faction that actually tracks crimes.</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabRelationships">
+      <attribute name="title">
+       <string>Relationships</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QLabel" name="label_35">
+         <property name="text">
+          <string>Each relationship between two actors is its own form. Right-click below to create a new relationship, or to edit an existing relationship that includes this actor.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTableView" name="relationshipsTable"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabKeywords">
+      <attribute name="title">
+       <string>Keywords</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="DKFormListPane" name="keywords">
+         <property name="showFormTypes">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabAIData">
+      <attribute name="title">
+       <string>AI Data</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_13" rowstretch="0,0,1" columnstretch="2,2,1">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="aiPersonalityGroupbox">
+         <property name="title">
+          <string>Personality</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_10">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_36">
+            <property name="text">
+             <string>Mood:</string>
+            </property>
+            <property name="buddy">
+             <cstring>mood</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="aiEnergy">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="DKFormPicker" name="giftFilter"/>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="mood">
+            <item>
+             <property name="text">
+              <string>Neutral</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Angry</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Afraid</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Happy</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Sad</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Surprised</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Puzzled</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Disgusted</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_39">
+            <property name="text">
+             <string>Gift Filter:</string>
+            </property>
+            <property name="buddy">
+             <cstring>giftFilter</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_37">
+            <property name="text">
+             <string>Energy:</string>
+            </property>
+            <property name="buddy">
+             <cstring>aiEnergy</cstring>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="1" rowspan="2">
+        <widget class="QGroupBox" name="aiCombatGroupbox">
+         <property name="title">
+          <string>Combat and Crime</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_11">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_40">
+            <property name="text">
+             <string>Aggression:</string>
+            </property>
+            <property name="buddy">
+             <cstring>aggression</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QComboBox" name="assistance">
+            <property name="sizeAdjustPolicy">
+             <enum>QComboBox::AdjustToContents</enum>
+            </property>
+            <item>
+             <property name="text">
+              <string>Helps Nobody</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Helps Allies</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Helps Friends and Allies</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="aggression">
+            <property name="whatsThis">
+             <string>&lt;p&gt;Controls how likely the actor is to attack nearby characters.&lt;/p&gt;
+&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Unaggressive&lt;/span&gt; actors don't attack anyone unless provoked.&lt;/p&gt;
+&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Aggressive&lt;/span&gt; actors attack enemies on sight.&lt;/p&gt;
+&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Very Aggressive&lt;/span&gt; actors attack enemy and neutral characters on sight.&lt;/p&gt;
+&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Frenzied&lt;/span&gt; actors attack everyone on sight.&lt;/p&gt;</string>
+            </property>
+            <item>
+             <property name="text">
+              <string>Unaggressive</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Aggressive</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Very Aggressive</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Frenzied</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_38">
+            <property name="text">
+             <string>Morality:</string>
+            </property>
+            <property name="buddy">
+             <cstring>morality</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QComboBox" name="morality">
+            <property name="whatsThis">
+             <string>When this actor is acting as the player's follower, their Morality controls what orders they're willing to obey from the player.</string>
+            </property>
+            <property name="sizeAdjustPolicy">
+             <enum>QComboBox::AdjustToContents</enum>
+            </property>
+            <item>
+             <property name="text">
+              <string>Any Crime</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Violence Against Enemies</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Property Crimes Only</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>No Crime</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_42">
+            <property name="text">
+             <string>Assistance:</string>
+            </property>
+            <property name="buddy">
+             <cstring>assistance</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_41">
+            <property name="text">
+             <string>Confidence:</string>
+            </property>
+            <property name="buddy">
+             <cstring>confidence</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="confidence">
+            <property name="whatsThis">
+             <string>&lt;p&gt;Control how likely the actor is to flee from combat.&lt;/p&gt;
+&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cowardly&lt;/span&gt; actors never engage in combat, and always avoid or flee from threats.&lt;/p&gt;
+&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Cautious&lt;/span&gt; actors avoid or flee from any threat they aren't certain they can defeat.&lt;/p&gt;
+&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Average&lt;/span&gt; actors avoid or flee from threats if outmatched.&lt;/p&gt;
+&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Brave&lt;/span&gt; actors avoid or flee from threats only if severely outmatched.&lt;/p&gt;
+&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Foolhardy&lt;/span&gt; actors never avoid or flee from a threat.&lt;/p&gt;</string>
+            </property>
+            <item>
+             <property name="text">
+              <string>Cowardly</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Cautious</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Average</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Brave</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Foolhardy</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QGroupBox" name="aggroRadii">
+            <property name="title">
+             <string>Aggro Radius Behavior</string>
+            </property>
+            <property name="checkable">
+             <bool>false</bool>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_12" columnstretch="0,0,1">
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_44">
+               <property name="text">
+                <string>Warn/Attack:</string>
+               </property>
+               <property name="buddy">
+                <cstring>aggroRadiusWarnAttack</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_45">
+               <property name="text">
+                <string>Attack:</string>
+               </property>
+               <property name="buddy">
+                <cstring>aggroRadiusAttack</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_43">
+               <property name="text">
+                <string>Warn:</string>
+               </property>
+               <property name="buddy">
+                <cstring>aggroRadiusWarn</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <spacer name="horizontalSpacer_13">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>16</width>
+                 <height>8</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="0" column="2">
+              <widget class="QSpinBox" name="aggroRadiusWarn">
+               <property name="whatsThis">
+                <string>This actor will warn other characters to back off if they enter this radius.</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="maximum">
+                <number>65535</number>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QSpinBox" name="aggroRadiusWarnAttack">
+               <property name="whatsThis">
+                <string>This actor will briefly warn other characters that enter this radius, and attack them if they remain.</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="maximum">
+                <number>65535</number>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2">
+              <widget class="QSpinBox" name="aggroRadiusAttack">
+               <property name="whatsThis">
+                <string>This actor will attack other characters that enter this radius.</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="maximum">
+                <number>65535</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <spacer name="horizontalSpacer_12">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>126</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="0">
+        <spacer name="verticalSpacer_8">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>145</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="0">
+        <spacer name="verticalSpacer_7">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>339</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="1">
+        <spacer name="verticalSpacer_9">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>339</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabAIPackages">
+      <attribute name="title">
+       <string>AI Packages</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_15">
+       <item row="0" column="0" colspan="2">
+        <widget class="QGroupBox" name="groupBox_5">
+         <property name="title">
+          <string>Packages</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <item>
+           <widget class="QTableWidget" name="packageTable">
+            <property name="whatsThis">
+             <string>&lt;p&gt;If an actor is not in combat or a similar interrupt state, they will periodically evaluate their AI packages and decide what to do. They'll search through all of their AI packages and execute the first package they find whose conditions are met. They check the following lists of packages, from top to bottom:&lt;/p&gt;
+&lt;ul&gt;
+   &lt;li&gt;Packages associated with any Quest Aliases that refer to the actor.&lt;/li&gt;
+   &lt;li&gt;Actor-specific packages (this listview).&lt;/li&gt;
+   &lt;li&gt;The actor's Default Package List (below).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;If there are no usable packages, then the actor will just stand around doing nothing.&lt;/p&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_6">
+            <item>
+             <widget class="QPushButton" name="buttonAIPackageAdd">
+              <property name="text">
+               <string>Add</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonAIPackageMoveUp">
+              <property name="text">
+               <string>Move Up</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonAIPackageMoveDown">
+              <property name="text">
+               <string>Move Down</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonAIPackageRemove">
+              <property name="text">
+               <string>Remove</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_10">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="defaultPackagesGroupbox">
+         <property name="title">
+          <string>Default Package Lists</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_14">
+          <item row="6" column="1">
+           <widget class="DKFormPicker" name="packageListCombat">
+            <property name="whatsThis">
+             <string>Actors who enter combat will suspend all AI behavior until combat has ended. You can't control their behavior while in combat. However, if an actor is about to enter combat and this list contains a usable package, then they'll execute the first usable package instead of entering combat.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_50">
+            <property name="text">
+             <string>Combat:</string>
+            </property>
+            <property name="buddy">
+             <cstring>packageListCombat</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_48">
+            <property name="text">
+             <string>Observe Dead Body:</string>
+            </property>
+            <property name="buddy">
+             <cstring>packageListObserveCorpse</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_49">
+            <property name="text">
+             <string>Guard Warn:</string>
+            </property>
+            <property name="buddy">
+             <cstring>packageListGuardWarn</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="DKFormPicker" name="packageListDefault">
+            <property name="whatsThis">
+             <string>A list of packages that the actor will use whenever there are no usable actor-specific packages. Often, this list just consists of the &quot;default master package,&quot; which has common actor behaviors implemented.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="DKFormPicker" name="packageListSpectator">
+            <property name="whatsThis">
+             <string>Actors who witness combat without participating in it become spectators. They'll suspend their normal AI behavior and execute the first usable package in this list; if no packages in this list are usable, then they'll fall back to hardcoded spectator behavior (usually fleeing).</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="DKFormPicker" name="packageListObserveCorpse">
+            <property name="whatsThis">
+             <string>Actors who discover a dead body will suspend their normal AI behavior and execute the first usable package in this list; if no packages in this list are usable, then they'll fall back to hardcoded behavior (usually approaching and inspecting the corpse).</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="Line" name="line_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="DKFormPicker" name="packageListGuardWarn">
+            <property name="whatsThis">
+             <string>Actors who are running a Guard package and enter the Warn behavior will execute the first usable package in this list; if no packages in this list are usable, then they'll fall back to the default Warn behavior.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_46">
+            <property name="text">
+             <string>Defaults:</string>
+            </property>
+            <property name="buddy">
+             <cstring>packageListDefault</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_47">
+            <property name="text">
+             <string>Spectator:</string>
+            </property>
+            <property name="buddy">
+             <cstring>packageListSpectator</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="QLabel" name="label_51">
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Overrides:</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <spacer name="horizontalSpacer_14">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>321</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabInventory">
+      <attribute name="title">
+       <string>Inventory</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_17">
+       <item row="1" column="1" rowspan="2">
+        <widget class="QGroupBox" name="groupBox_8">
+         <property name="title">
+          <string>Inventory</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_7">
+          <item>
+           <widget class="DKFormInventoryWidget" name="inventory"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <spacer name="verticalSpacer_12">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>117</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="3" column="1">
+        <spacer name="verticalSpacer_11">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>116</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupBox_7">
+         <property name="title">
+          <string>Outfits</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_16">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_52">
+            <property name="text">
+             <string>Default:</string>
+            </property>
+            <property name="buddy">
+             <cstring>outfitDefault</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="DKFormPicker" name="outfitSleep">
+            <property name="whatsThis">
+             <string>Unused.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="DKFormListPane" name="outfitItemsPreview">
+            <property name="whatsThis">
+             <string>A list of items in the actor's default outfit. This is just a preview; to change the list, you have to edit the Outfit form.</string>
+            </property>
+            <property name="showMoveButtons">
+             <bool>false</bool>
+            </property>
+            <property name="showRemoveButton">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="DKFormPicker" name="outfitDefault">
+            <property name="whatsThis">
+             <string>Outfit forms are used to assign armor and clothing to an actor. Actors will usually only wear the clothing specified in their outfit.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="QLabel" name="label_54">
+            <property name="text">
+             <string>Items from outfits:</string>
+            </property>
+            <property name="buddy">
+             <cstring>outfitItemsPreview</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_53">
+            <property name="text">
+             <string>Sleep:</string>
+            </property>
+            <property name="buddy">
+             <cstring>outfitSleep</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <item>
+             <widget class="QLabel" name="label_55">
+              <property name="text">
+               <string>Geared Up Weapons:</string>
+              </property>
+              <property name="buddy">
+               <cstring>gearedUpWeapons</cstring>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="gearedUpWeapons">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="maximum">
+               <number>255</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="label_56">
+         <property name="text">
+          <string>This tab allows you to control the items that are present in an actor's inventory when they initially spawn. Initial items can be added from other sources as well, such as Quest Aliases or (if the actor spawns dead) the actor's Death Item.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabSpells">
+      <attribute name="title">
+       <string>Magic and Perks</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_10">
+       <item>
+        <widget class="QGroupBox" name="groupBox_9">
+         <property name="title">
+          <string>Spells</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_9">
+          <item>
+           <widget class="QLabel" name="label_57">
+            <property name="text">
+             <string>This list sets the actor's initial spells and shouts.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="DKFormListPane" name="spells"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_10">
+         <property name="title">
+          <string>Perks</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_8">
+          <item>
+           <widget class="DKFormListPane" name="perks"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabSounds">
+      <attribute name="title">
+       <string>Sounds</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_20">
+       <item row="0" column="0">
+        <layout class="QGridLayout" name="gridLayout_18">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_59">
+           <property name="text">
+            <string>Inherits Sounds From:</string>
+           </property>
+           <property name="buddy">
+            <cstring>inheritSoundsFrom</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_58">
+           <property name="text">
+            <string>Sound Level:</string>
+           </property>
+           <property name="buddy">
+            <cstring>soundLevel</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="DKFormPicker" name="inheritSoundsFrom"/>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="soundLevel">
+           <property name="currentIndex">
+            <number>1</number>
+           </property>
+           <item>
+            <property name="text">
+             <string>Silent</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Normal</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Loud</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Very Loud</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="0" column="1">
+        <spacer name="horizontalSpacer_15">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>321</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QGroupBox" name="groupBox_11">
+         <property name="title">
+          <string>Creature Sounds</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_19">
+          <item row="0" column="0">
+           <widget class="QTableWidget" name="creatureSoundsTable"/>
+          </item>
+          <item row="0" column="1">
+           <layout class="QVBoxLayout" name="verticalLayout_11">
+            <item>
+             <widget class="QPushButton" name="buttonCreaSoundAdd">
+              <property name="text">
+               <string>Add</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonCreaSoundRemove">
+              <property name="text">
+               <string>Remove</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_13">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <item>
+             <widget class="QLabel" name="label_60">
+              <property name="text">
+               <string>Type:</string>
+              </property>
+              <property name="buddy">
+               <cstring>currentCreaSoundType</cstring>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="currentCreaSoundType">
+              <item>
+               <property name="text">
+                <string>Idle</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Aware</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Attack</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Hit</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Death</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Weapon</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Movement Loop</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Conscious Loop</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_16">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>16</width>
+                <height>8</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_61">
+              <property name="text">
+               <string>Chance:</string>
+              </property>
+              <property name="buddy">
+               <cstring>currentCreaSoundChance</cstring>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="currentCreaSoundChance">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="suffix">
+               <string>%</string>
+              </property>
+              <property name="maximum">
+               <number>100</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_62">
+              <property name="text">
+               <string>Sound:</string>
+              </property>
+              <property name="buddy">
+               <cstring>currentCreaSoundForm</cstring>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_17">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>16</width>
+                <height>8</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="DKFormPicker" name="currentCreaSoundForm"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabAttackData">
+      <attribute name="title">
+       <string>Attack Data</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_13">
+       <item>
+        <widget class="QLabel" name="label_63">
+         <property name="text">
+          <string>This tab allows you to override attack data associated with events in a Race's behavior graph.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_10">
+         <item>
+          <widget class="QLabel" name="label_75">
+           <property name="text">
+            <string>Attack Race:</string>
+           </property>
+           <property name="buddy">
+            <cstring>attackDataRace</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="DKFormPicker" name="attackDataRace"/>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <item>
+          <widget class="QTableView" name="attackDataTable"/>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_12">
+           <item>
+            <widget class="QPushButton" name="buttonAttackDataOverrideAdd">
+             <property name="text">
+              <string>Add</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="buttonAttackDataOverrideRemove">
+             <property name="text">
+              <string>Remove</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_14">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="attackDataLeftCol">
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_70">
+           <property name="text">
+            <string>Stagger:</string>
+           </property>
+           <property name="buddy">
+            <cstring>attackDataSelStagger</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1" alignment="Qt::AlignLeft">
+          <widget class="QDoubleSpinBox" name="attackDataSelRecoveryTime">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="maximum">
+            <double>340282299999999994960115009090224128000.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <spacer name="horizontalSpacer_18">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>16</width>
+             <height>8</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="5" column="1" alignment="Qt::AlignLeft">
+          <widget class="QDoubleSpinBox" name="attackDataSelStaminaMult">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="maximum">
+            <double>340282299999999994960115009090224128000.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" alignment="Qt::AlignLeft">
+          <widget class="QDoubleSpinBox" name="attackDataSelDamageMult">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="maximum">
+            <double>340282299999999994960115009090224128000.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_64">
+           <property name="text">
+            <string>Event:</string>
+           </property>
+           <property name="buddy">
+            <cstring>attackDataSelEvent</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_72">
+           <property name="text">
+            <string>Stamina Cost Mult:</string>
+           </property>
+           <property name="buddy">
+            <cstring>attackDataSelStaminaMult</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_68">
+           <property name="text">
+            <string>Damage Mult:</string>
+           </property>
+           <property name="buddy">
+            <cstring>attackDataSelDamageMult</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_69">
+           <property name="text">
+            <string>Attack Chance:</string>
+           </property>
+           <property name="buddy">
+            <cstring>attackDataSelChance</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="label_74">
+           <property name="text">
+            <string>Attack Type:</string>
+           </property>
+           <property name="buddy">
+            <cstring>attackDataSelKeyword</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QLabel" name="label_65">
+           <property name="text">
+            <string>Attack Angle:</string>
+           </property>
+           <property name="buddy">
+            <cstring>attackDataSelAngleAttack</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="label_73">
+           <property name="text">
+            <string>Attack Spell:</string>
+           </property>
+           <property name="buddy">
+            <cstring>attackDataSelSpell</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QLabel" name="label_66">
+           <property name="text">
+            <string>Angle Range:</string>
+           </property>
+           <property name="buddy">
+            <cstring>attackDataSelAngleStrike</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="3">
+          <widget class="QLabel" name="label_67">
+           <property name="text">
+            <string>Knockdown:</string>
+           </property>
+           <property name="buddy">
+            <cstring>attackDataSelKnockdown</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="attackDataSelEvent">
+           <property name="whatsThis">
+            <string>The behavior graph event associated with this attack.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_71">
+           <property name="text">
+            <string>Recovery Time:</string>
+           </property>
+           <property name="buddy">
+            <cstring>attackDataSelRecoveryTime</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1" alignment="Qt::AlignLeft">
+          <widget class="QDoubleSpinBox" name="attackDataSelStagger">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="maximum">
+            <double>340282299999999994960115009090224128000.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1" alignment="Qt::AlignLeft">
+          <widget class="QDoubleSpinBox" name="attackDataSelChance">
+           <property name="whatsThis">
+            <string>The chance that the actor will use this attack.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="maximum">
+            <double>340282299999999994960115009090224128000.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QDoubleSpinBox" name="attackDataSelAngleAttack">
+           <property name="whatsThis">
+            <string>The direction of the attack relative to the attacking actor. A value of 180 degrees, for example, would cause the attack to travel backwards from the actor.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="minimum">
+            <double>-360.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>360.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="4">
+          <widget class="QDoubleSpinBox" name="attackDataSelAngleStrike">
+           <property name="whatsThis">
+            <string>The angle tolerance on the attack. For example, a value of 35 means that targets within ±35 degrees of the Attack Angle would be hit by the attack.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="minimum">
+            <double>-360.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>360.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="4">
+          <widget class="QDoubleSpinBox" name="attackDataSelKnockdown">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="maximum">
+            <double>340282299999999994960115009090224128000.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="DKFormPicker" name="attackDataSelSpell">
+           <property name="whatsThis">
+            <string>A spell that will be applied to targets hit by this attack.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="DKFormPicker" name="attackDataSelKeyword">
+           <property name="whatsThis">
+            <string>A keyword which identifies the attack type. Used by perks.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="3" colspan="2">
+          <widget class="QCheckBox" name="attackDataSelFlagPower">
+           <property name="whatsThis">
+            <string>If this is checked, then the attack is a Power Attack: the actor can only perform it if they have enough Stamina, and it will use that amount of Stamina.</string>
+           </property>
+           <property name="text">
+            <string>Power Attack</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="3" colspan="2">
+          <widget class="QCheckBox" name="attackDataSelFlagIgnoreWeapon">
+           <property name="whatsThis">
+            <string>If checked, this attack will ignore the damage formula for the actor's weapon.</string>
+           </property>
+           <property name="text">
+            <string>Ignore Weapon</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="3" colspan="2">
+          <widget class="QCheckBox" name="attackDataSelFlagBash">
+           <property name="text">
+            <string>Bash Attack</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="3" colspan="2">
+          <widget class="QCheckBox" name="attackDataSelFlagLeft">
+           <property name="text">
+            <string>Lefthanded Attack</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="3" colspan="2">
+          <widget class="QCheckBox" name="attackDataSelFlagRotating">
+           <property name="whatsThis">
+            <string>Indicates whether this attack rotates the actor's character controller (i.e. their movement and physics).</string>
+           </property>
+           <property name="text">
+            <string>Rotating Attack</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabFaceParts">
+      <attribute name="title">
+       <string>Face Parts</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_22">
+       <item row="1" column="1">
+        <widget class="QGroupBox" name="groupBox_12">
+         <property name="title">
+          <string>Edit selected face tint:</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_21">
+          <item row="1" column="1" colspan="2">
+           <widget class="DKColorPickerButton" name="faceTintColorCustom"/>
+          </item>
+          <item row="0" column="1" colspan="2">
+           <widget class="QComboBox" name="faceTintColorPreset">
+            <property name="whatsThis">
+             <string>You can choose a preset Color form to use for this face tint. The colors available for any given tint layer are defined in the actor's Race form.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QRadioButton" name="faceTintColorUseCustom">
+            <property name="text">
+             <string>Use Custom Color:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QRadioButton" name="faceTintColorUsePreset">
+            <property name="text">
+             <string>Use Preset Color:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="3">
+           <widget class="QWidget" name="horizontalWidget_11" native="true">
+            <property name="whatsThis">
+             <string>This is basically the opacity of this tint layer. A value of 0 means that the tint layer isn't blended onto the actor's face at all, while a value of 1 is the strongest possible tint.</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_11">
+             <item>
+              <widget class="QLabel" name="label_79">
+               <property name="text">
+                <string>Interpolation value:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSlider" name="faceTintColorInterpolationSlider">
+               <property name="maximum">
+                <number>1000</number>
+               </property>
+               <property name="value">
+                <number>1000</number>
+               </property>
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="tickPosition">
+                <enum>QSlider::TicksBelow</enum>
+               </property>
+               <property name="tickInterval">
+                <number>100</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QDoubleSpinBox" name="faceTintColorInterpolation">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="maximum">
+                <double>1.000000000000000</double>
+               </property>
+               <property name="value">
+                <double>0.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0" rowspan="2">
+        <layout class="QVBoxLayout" name="verticalLayout_14">
+         <item>
+          <widget class="QLabel" name="label_76">
+           <property name="text">
+            <string>Face Tint Layers:</string>
+           </property>
+           <property name="buddy">
+            <cstring>faceTintLayerTable</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QTableView" name="faceTintLayerTable">
+           <property name="whatsThis">
+            <string>The actor's face texture will be blended with a &quot;tint mask&quot; generated while editing the actor. The tint mask is generated by blending multiple &quot;tint layer.&quot; Tint layers are defined as texture files in an actor's Race form, and are blended using the colors and interpolation values specified in the actor data.</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="1">
+        <layout class="QVBoxLayout" name="verticalLayout_15">
+         <item>
+          <spacer name="verticalSpacer_15">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>16</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_77">
+           <property name="text">
+            <string>Base Head Parts:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_16">
+           <item>
+            <widget class="QTableView" name="baseHeadPartsTable"/>
+           </item>
+           <item>
+            <widget class="QComboBox" name="baseHeadPartPicker"/>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="Line" name="line_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_78">
+           <property name="text">
+            <string>Additional Head Parts:</string>
+           </property>
+           <property name="buddy">
+            <cstring>additionalHeadParts</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="DKFormListPane" name="additionalHeadParts"/>
+         </item>
+        </layout>
+       </item>
+       <item row="0" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="0,2,0,0,2,1,0">
+         <item>
+          <widget class="QLabel" name="label_80">
+           <property name="text">
+            <string>Face Complexion:</string>
+           </property>
+           <property name="buddy">
+            <cstring>faceComplexion</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="faceComplexion">
+           <property name="whatsThis">
+            <string>Select the base TextureSet used for the actor's face. The available options are defined in the actor's Race form.</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_19">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>16</width>
+             <height>8</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_81">
+           <property name="text">
+            <string>Hair Color:</string>
+           </property>
+           <property name="buddy">
+            <cstring>hairColor</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="hairColor">
+           <property name="whatsThis">
+            <string>Select the Color form used to control the actor's hair color. The available options are defined in the actor's Race form.</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_20">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonFacePartsImport">
+           <property name="whatsThis">
+            <string>In-game, you can create a character and use the SavePCFace console command to save your face customizations to a *.npc file. This button allows you to import such files, overwriting this actor's face data entirely.</string>
+           </property>
+           <property name="text">
+            <string>Import</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabFaceMorphs">
+      <attribute name="title">
+       <string>Face Morphs</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_30" rowstretch="0,0,1">
+       <item row="0" column="0" rowspan="2">
+        <layout class="QVBoxLayout" name="verticalLayout_17">
+         <item>
+          <widget class="QGroupBox" name="groupBox_13">
+           <property name="title">
+            <string>Brow</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_23">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_82">
+              <property name="text">
+               <string>Height:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphBrowHeight</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QSlider" name="faceMorphBrowHeight">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_83">
+              <property name="text">
+               <string>Width:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphBrowWidth</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSlider" name="faceMorphBrowWidth">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_84">
+              <property name="text">
+               <string>Depth:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphBrowDepth</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSlider" name="faceMorphBrowDepth">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_14">
+           <property name="title">
+            <string>Chin</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_24">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_85">
+              <property name="text">
+               <string>Width:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphChinWidth</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QSlider" name="faceMorphChinWidth">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_86">
+              <property name="text">
+               <string>Length:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphChinLength</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSlider" name="faceMorphChinLength">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_87">
+              <property name="text">
+               <string>Depth:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphChinDepth</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSlider" name="faceMorphChinDepth">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_18">
+           <property name="title">
+            <string>Cheekbones</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_28">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_98">
+              <property name="text">
+               <string>Height:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphCheekbonesHeight</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QSlider" name="faceMorphCheekbonesHeight">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSlider" name="faceMorphCheekbonesWidth">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_99">
+              <property name="text">
+               <string>Width:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphCheekbonesWidth</cstring>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_19">
+           <property name="title">
+            <string>Nose</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_29">
+            <item row="1" column="1">
+             <widget class="QSlider" name="faceMorphNoseLength">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_101">
+              <property name="text">
+               <string>Height:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphNoseHeight</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSlider" name="faceMorphNoseHeight">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_100">
+              <property name="text">
+               <string>Length:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphNoseLength</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_102">
+              <property name="text">
+               <string>Type:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphNoseForm</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="faceMorphNoseForm">
+              <property name="whatsThis">
+               <string>Choose a HeadPart to use for this actor's mouth. A HeadPart will appear in this list if it's marked as a nose part usable by the actor's race.</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="0" column="1">
+        <layout class="QVBoxLayout" name="verticalLayout_18">
+         <item>
+          <widget class="QGroupBox" name="groupBox_17">
+           <property name="title">
+            <string>Mouth</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_27">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_95">
+              <property name="text">
+               <string>Type:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphMouthForm</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_96">
+              <property name="text">
+               <string>Height:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphMouthHeight</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSlider" name="faceMorphMouthHeight">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_97">
+              <property name="text">
+               <string>Depth:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphMouthDepth</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSlider" name="faceMorphMouthDepth">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="faceMorphMouthForm">
+              <property name="whatsThis">
+               <string>Choose a HeadPart to use for this actor's mouth. A HeadPart will appear in this list if it's marked as a mouth part usable by the actor's race.</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_15">
+           <property name="title">
+            <string>Jaw</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_25">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_88">
+              <property name="text">
+               <string>Height:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphJawHeight</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QSlider" name="faceMorphJawHeight">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_89">
+              <property name="text">
+               <string>Width:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphJawWidth</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSlider" name="faceMorphJawWidth">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_90">
+              <property name="text">
+               <string>Depth:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphJawDepth</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSlider" name="faceMorphJawDepth">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_16">
+           <property name="title">
+            <string>Eyes</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_26">
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_92">
+              <property name="text">
+               <string>Width:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphEyesWidth</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QSlider" name="faceMorphEyesDepth">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QSlider" name="faceMorphEyesWidth">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QSlider" name="faceMorphEyesHeight">
+              <property name="minimum">
+               <number>-1000</number>
+              </property>
+              <property name="maximum">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_93">
+              <property name="text">
+               <string>Depth:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphEyesDepth</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_91">
+              <property name="text">
+               <string>Height:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphEyesHeight</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_94">
+              <property name="text">
+               <string>Type:</string>
+              </property>
+              <property name="buddy">
+               <cstring>faceMorphEyesForm</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="faceMorphEyesForm">
+              <property name="whatsThis">
+               <string>Choose a HeadPart to use for this actor's mouth. A HeadPart will appear in this list if it's marked as an eyes part usable by the actor's race.</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="1">
+        <spacer name="verticalSpacer_17">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>45</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="0">
+        <spacer name="verticalSpacer_16">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>218</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="1" alignment="Qt::AlignRight|Qt::AlignBottom">
+        <widget class="QPushButton" name="buttonResetFaceMorphs">
+         <property name="text">
+          <string>Reset All</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabFaceAnimPreview">
+      <attribute name="title">
+       <string>Face Anim Preview</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_31">
+       <item row="0" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_13">
+         <item>
+          <widget class="QLabel" name="label_105">
+           <property name="text">
+            <string>Expression:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="faceAnimExpression">
+           <property name="sizeAdjustPolicy">
+            <enum>QComboBox::AdjustToContents</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_22">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonFaceAnimReset">
+           <property name="text">
+            <string>Reset</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="0" column="2">
+        <spacer name="horizontalSpacer_21">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>124</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="0">
+        <layout class="QVBoxLayout" name="verticalLayout_19">
+         <item>
+          <widget class="QLabel" name="label_103">
+           <property name="text">
+            <string>Phonemes:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QTableView" name="faceAnimPhonemeTable"/>
+         </item>
+         <item>
+          <widget class="QSlider" name="faceAnimPhonemeSlider">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="1">
+        <layout class="QVBoxLayout" name="verticalLayout_20">
+         <item>
+          <widget class="QLabel" name="label_104">
+           <property name="text">
+            <string>Modifiers:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QTableView" name="faceAnimModifierTable"/>
+         </item>
+         <item>
+          <widget class="QSlider" name="faceAnimModifierSlider">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="1">
+    <widget class="QWidget" name="horizontalWidget_3" native="true">
+     <layout class="QHBoxLayout" name="layoutPreviewOptions">
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Preview:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="previewTypeFull">
+        <property name="text">
+         <string>Full</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="previewTypeHead">
+        <property name="text">
+         <string>Head</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKColorPickerButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKColorPickerButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormDestructionDataButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormDestructionDataButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKPapyrusBoundScriptListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKPapyrusBoundScriptListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormInventoryWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormInventoryWidget.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>shortName</tabstop>
+  <tabstop>flagPreset</tabstop>
+  <tabstop>flagSummonable</tabstop>
+  <tabstop>flagEssential</tabstop>
+  <tabstop>flagGhost</tabstop>
+  <tabstop>flagProtected</tabstop>
+  <tabstop>flagInvulnerable</tabstop>
+  <tabstop>flagRespawn</tabstop>
+  <tabstop>flagDoesntBleed</tabstop>
+  <tabstop>flagUnique</tabstop>
+  <tabstop>flagSimple</tabstop>
+  <tabstop>flagDoesntAffectStealthMeter</tabstop>
+  <tabstop>destructionData</tabstop>
+  <tabstop>buttonShowFilteredDialogue</tabstop>
+  <tabstop>scriptListPane</tabstop>
+  <tabstop>templateActor</tabstop>
+  <tabstop>buttonEditTemplateActor</tabstop>
+  <tabstop>templateUseTraits</tabstop>
+  <tabstop>templateUseStats</tabstop>
+  <tabstop>templateUseScripts</tabstop>
+  <tabstop>templateUseFactions</tabstop>
+  <tabstop>templateUseAIData</tabstop>
+  <tabstop>templateUseAIPackages</tabstop>
+  <tabstop>templateUseDefaultPackages</tabstop>
+  <tabstop>templateUseAttackData</tabstop>
+  <tabstop>templateUseSpellList</tabstop>
+  <tabstop>templateUseInventory</tabstop>
+  <tabstop>templateUseBaseData</tabstop>
+  <tabstop>templateUseKeywords</tabstop>
+  <tabstop>tabbox</tabstop>
+  <tabstop>race</tabstop>
+  <tabstop>skin</tabstop>
+  <tabstop>sex</tabstop>
+  <tabstop>flagOppositeGenderAnims</tabstop>
+  <tabstop>height</tabstop>
+  <tabstop>bodyWeight</tabstop>
+  <tabstop>farawaySkin</tabstop>
+  <tabstop>farawayDistance</tabstop>
+  <tabstop>voicetype</tabstop>
+  <tabstop>weaponList</tabstop>
+  <tabstop>karma</tabstop>
+  <tabstop>dispositionBase</tabstop>
+  <tabstop>deathItem</tabstop>
+  <tabstop>level</tabstop>
+  <tabstop>flagPCLevelMult</tabstop>
+  <tabstop>levelCalcMin</tabstop>
+  <tabstop>levelCalcMax</tabstop>
+  <tabstop>speedPercentage</tabstop>
+  <tabstop>flagBleedoutOverride</tabstop>
+  <tabstop>bleedoutOverrideThreshold</tabstop>
+  <tabstop>statsClass</tabstop>
+  <tabstop>flagAutoCalcStats</tabstop>
+  <tabstop>statsHealthOffset</tabstop>
+  <tabstop>statsMagickaOffset</tabstop>
+  <tabstop>statsStaminaOffset</tabstop>
+  <tabstop>statsHealthCalcBase</tabstop>
+  <tabstop>statsMagickaCalcBase</tabstop>
+  <tabstop>statsStaminaCalcBase</tabstop>
+  <tabstop>statsHealthCalcFinal</tabstop>
+  <tabstop>statsMagickaCalcFinal</tabstop>
+  <tabstop>statsStaminaCalcFinal</tabstop>
+  <tabstop>statsTable</tabstop>
+  <tabstop>factionsTable</tabstop>
+  <tabstop>buttonFactionAdd</tabstop>
+  <tabstop>buttonFactionRemove</tabstop>
+  <tabstop>currentFactionForm</tabstop>
+  <tabstop>currentFactionRank</tabstop>
+  <tabstop>crimeFaction</tabstop>
+  <tabstop>relationshipsTable</tabstop>
+  <tabstop>keywords</tabstop>
+  <tabstop>mood</tabstop>
+  <tabstop>aiEnergy</tabstop>
+  <tabstop>giftFilter</tabstop>
+  <tabstop>aggression</tabstop>
+  <tabstop>confidence</tabstop>
+  <tabstop>assistance</tabstop>
+  <tabstop>morality</tabstop>
+  <tabstop>aggroRadiusWarn</tabstop>
+  <tabstop>aggroRadiusWarnAttack</tabstop>
+  <tabstop>aggroRadiusAttack</tabstop>
+  <tabstop>packageTable</tabstop>
+  <tabstop>buttonAIPackageAdd</tabstop>
+  <tabstop>buttonAIPackageMoveUp</tabstop>
+  <tabstop>buttonAIPackageMoveDown</tabstop>
+  <tabstop>buttonAIPackageRemove</tabstop>
+  <tabstop>packageListDefault</tabstop>
+  <tabstop>packageListSpectator</tabstop>
+  <tabstop>packageListObserveCorpse</tabstop>
+  <tabstop>packageListGuardWarn</tabstop>
+  <tabstop>packageListCombat</tabstop>
+  <tabstop>outfitDefault</tabstop>
+  <tabstop>outfitSleep</tabstop>
+  <tabstop>outfitItemsPreview</tabstop>
+  <tabstop>gearedUpWeapons</tabstop>
+  <tabstop>inventory</tabstop>
+  <tabstop>spells</tabstop>
+  <tabstop>perks</tabstop>
+  <tabstop>soundLevel</tabstop>
+  <tabstop>inheritSoundsFrom</tabstop>
+  <tabstop>buttonCreaSoundAdd</tabstop>
+  <tabstop>buttonCreaSoundRemove</tabstop>
+  <tabstop>creatureSoundsTable</tabstop>
+  <tabstop>currentCreaSoundType</tabstop>
+  <tabstop>currentCreaSoundChance</tabstop>
+  <tabstop>currentCreaSoundForm</tabstop>
+  <tabstop>attackDataRace</tabstop>
+  <tabstop>attackDataTable</tabstop>
+  <tabstop>buttonAttackDataOverrideAdd</tabstop>
+  <tabstop>buttonAttackDataOverrideRemove</tabstop>
+  <tabstop>attackDataSelEvent</tabstop>
+  <tabstop>attackDataSelDamageMult</tabstop>
+  <tabstop>attackDataSelChance</tabstop>
+  <tabstop>attackDataSelStagger</tabstop>
+  <tabstop>attackDataSelRecoveryTime</tabstop>
+  <tabstop>attackDataSelStaminaMult</tabstop>
+  <tabstop>attackDataSelSpell</tabstop>
+  <tabstop>attackDataSelKeyword</tabstop>
+  <tabstop>attackDataSelAngleAttack</tabstop>
+  <tabstop>attackDataSelAngleStrike</tabstop>
+  <tabstop>attackDataSelKnockdown</tabstop>
+  <tabstop>attackDataSelFlagPower</tabstop>
+  <tabstop>attackDataSelFlagIgnoreWeapon</tabstop>
+  <tabstop>attackDataSelFlagBash</tabstop>
+  <tabstop>attackDataSelFlagLeft</tabstop>
+  <tabstop>attackDataSelFlagRotating</tabstop>
+  <tabstop>faceComplexion</tabstop>
+  <tabstop>hairColor</tabstop>
+  <tabstop>buttonFacePartsImport</tabstop>
+  <tabstop>faceTintLayerTable</tabstop>
+  <tabstop>faceTintColorUsePreset</tabstop>
+  <tabstop>faceTintColorPreset</tabstop>
+  <tabstop>faceTintColorUseCustom</tabstop>
+  <tabstop>faceTintColorCustom</tabstop>
+  <tabstop>faceTintColorInterpolationSlider</tabstop>
+  <tabstop>faceTintColorInterpolation</tabstop>
+  <tabstop>baseHeadPartsTable</tabstop>
+  <tabstop>baseHeadPartPicker</tabstop>
+  <tabstop>additionalHeadParts</tabstop>
+  <tabstop>faceMorphBrowHeight</tabstop>
+  <tabstop>faceMorphBrowWidth</tabstop>
+  <tabstop>faceMorphBrowDepth</tabstop>
+  <tabstop>faceMorphChinWidth</tabstop>
+  <tabstop>faceMorphChinLength</tabstop>
+  <tabstop>faceMorphChinDepth</tabstop>
+  <tabstop>faceMorphCheekbonesHeight</tabstop>
+  <tabstop>faceMorphCheekbonesWidth</tabstop>
+  <tabstop>faceMorphNoseForm</tabstop>
+  <tabstop>faceMorphNoseLength</tabstop>
+  <tabstop>faceMorphNoseHeight</tabstop>
+  <tabstop>faceMorphMouthForm</tabstop>
+  <tabstop>faceMorphMouthHeight</tabstop>
+  <tabstop>faceMorphMouthDepth</tabstop>
+  <tabstop>faceMorphJawHeight</tabstop>
+  <tabstop>faceMorphJawWidth</tabstop>
+  <tabstop>faceMorphJawDepth</tabstop>
+  <tabstop>faceMorphEyesForm</tabstop>
+  <tabstop>faceMorphEyesHeight</tabstop>
+  <tabstop>faceMorphEyesWidth</tabstop>
+  <tabstop>faceMorphEyesDepth</tabstop>
+  <tabstop>buttonResetFaceMorphs</tabstop>
+  <tabstop>previewTypeFull</tabstop>
+  <tabstop>previewTypeHead</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

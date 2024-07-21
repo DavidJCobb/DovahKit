@@ -8,7 +8,9 @@
    #include "Activator.h"
    #include "Actor.h"
    #include "ActorBase.h"
+   #include "AssociationType.h"
    #include "Cell.h"
+   #include "Class.h"
    #include "Color.h"
    #include "Container.h"
    #include "DefaultObjectManager.h"
@@ -18,6 +20,7 @@
    #include "Flora.h"
    #include "FormList.h"
    #include "Global.h"
+   #include "HeadPart.h"
    #include "Landscape.h"
    #include "LandTexture.h"
    #include "LeveledCharacter.h"
@@ -29,8 +32,10 @@
    #include "MiscItem.h"
    #include "Note.h"
    #include "ObjectReference.h"
+   #include "Outfit.h"
    #include "Package.h"
    #include "Quest.h"
+   #include "Relationship.h"
    #include "Static.h"
    #include "Shout.h"
    #include "TextureSet.h"
@@ -48,7 +53,9 @@ namespace dovah {
       loaded_forms::Activator,
       loaded_forms::Actor,
       loaded_forms::ActorBase,
+      loaded_forms::AssociationType,
       loaded_forms::Cell,
+      loaded_forms::Class,
       loaded_forms::Color,
       loaded_forms::Container,
       loaded_forms::DefaultObjectManager,
@@ -58,6 +65,7 @@ namespace dovah {
       loaded_forms::Flora,
       loaded_forms::FormList,
       loaded_forms::Global,
+      loaded_forms::HeadPart,
       loaded_forms::Landscape,
       loaded_forms::LandTexture,
       loaded_forms::Light,
@@ -68,8 +76,10 @@ namespace dovah {
       loaded_forms::MiscItem,
       loaded_forms::Note,
       loaded_forms::ObjectReference,
+      loaded_forms::Outfit,
       loaded_forms::Package,
       loaded_forms::Quest,
+      loaded_forms::Relationship,
       loaded_forms::Static,
       loaded_forms::Shout,
       loaded_forms::TextureSet,

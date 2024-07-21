@@ -15,8 +15,10 @@
 
 #include "dovah/load_order_interfaces/form_load.h"
 #include "./cacheable_traits/attached_scripts.h"
+#include "./cacheable_traits/head_part_info.h"
 #include "./cacheable_traits/model_path.h"
 #include "./cacheable_traits/quest_filter.h"
+#include "./cacheable_traits/voicetype_info.h"
 #include "./cacheable_trait.h"
 #include "./quest_vmad_skimmer.h"
 
@@ -44,6 +46,9 @@ namespace {
       // For now, handwritten branches work just fine.
       //
       if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::attached_scripts::form_class_is_of_interest<Current>) {
+         return true;
+      }
+      if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::head_part_info::form_class_is_of_interest<Current>) {
          return true;
       }
       if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::model_path::form_class_is_of_interest<Current>) {
@@ -74,11 +79,17 @@ namespace {
          if constexpr (!cacheable_traits::attached_scripts::form_type_is_of_interest(FormType)) {
             seen |= cacheable_trait::attached_scripts;
          }
+         if constexpr (!cacheable_traits::head_part_info::form_type_is_of_interest(FormType)) {
+            seen |= cacheable_trait::head_part_info;
+         }
          if constexpr (!cacheable_traits::model_path::form_type_is_of_interest(FormType)) {
             seen |= cacheable_trait::model_path;
          }
          if constexpr (!cacheable_traits::quest_filter::form_type_is_of_interest(FormType)) {
             seen |= cacheable_trait::quest_filter;
+         }
+         if constexpr (!cacheable_traits::voicetype_info::form_type_is_of_interest(FormType)) {
+            seen |= cacheable_trait::voicetype_info;
          }
       }
 
@@ -88,6 +99,12 @@ namespace {
          quest_vmad_skimmer,
          uint8_t // dummy type
       > quest_skimmer;
+
+      std::conditional_t<
+         (FormType == dovah::form_type::head_part),
+         cached_head_part_info,
+         uint8_t // dummy type
+      > head_part_info = {};
 
       while (auto& subrecord = record.next_subrecord()) {
 
@@ -124,6 +141,9 @@ namespace {
                }
             }
          }
+         if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(FormType)) {
+            head_part_info.skim_subrecord(subrecord);
+         }
          if constexpr (cacheable_traits::model_path::form_type_is_of_interest(FormType)) {
             if (signature == 'MODL') {
                std::string raw;
@@ -155,6 +175,9 @@ namespace {
          if (!quest_skimmer.empty())
             cache.attached_scripts.threadedInsert(stub, quest_skimmer.bake());
       }
+      if constexpr (FormType == dovah::form_type::head_part) {
+         cache.head_parts.threadedInsert(stub, std::move(head_part_info));
+      }
    }
 
    template<typename LoadedForm>
@@ -184,6 +207,22 @@ namespace {
          }
          if (changed)
             emit core.cachedQuestFilterChanged(stub, prior, value);
+      }
+
+      if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(LoadedForm::form_type)) {
+         auto& dst_list = cache.head_parts;
+         auto  dst_it   = dst_list.find(stub);
+         if (dst_it) {
+            auto& dst = *dst_it;
+            if (dst.update(loaded)) {
+               emit core.cachedHeadPartChanged(stub);
+            }
+         } else {
+            cached_head_part_info info;
+            info.update(loaded);
+            dst_list.insert(std::move(info));
+            emit core.cachedHeadPartChanged(stub);
+         }
       }
 
       if constexpr (cacheable_traits::model_path::form_type_is_of_interest(LoadedForm::form_type)) {
@@ -288,6 +327,26 @@ namespace dovahkit::subsystems::form_info_cache {
                   emit this->cachedQuestFilterChanged(*stub, result.value(), {});
                }
             }
+
+            if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(Current::form_type)) {
+               this->_cache.head_parts.takeAndReport(*stub);
+               //
+               // Don't emit a "head part changed" signal for this. HeadParts with blank info 
+               // would be mistaken for HeadParts that have no restrictions and are available 
+               // on all actors. Instead, clients should also hook formDeletionImminent and 
+               // handle loss of the HeadPart on their own.
+               //
+            }
+            if constexpr (cacheable_traits::head_part_info::form_type_is_referred_to(Current::form_type)) {
+               auto& map = this->_cache.head_parts;
+               for (auto it = map.keyValueBegin(); it != map.keyValueEnd(); ++it) {
+                  auto& info = it->second;
+                  if (info.sever_outbound_references_to(stub)) {
+                     emit this->cachedHeadPartChanged(*(dovah::form_stub*)it->first);
+                  }
+               }
+            }
+
             if constexpr (cacheable_traits::model_path::form_type_is_of_interest(Current::form_type)) {
                auto result = this->_cache.model_paths.takeAndReport(*stub);
                if (result.has_value()) {
@@ -384,6 +443,16 @@ namespace dovahkit::subsystems::form_info_cache {
       if (stub.form_type != dovah::form_type::quest)
          return {};
       return this->_cache.quest_filters.value(&stub);
+   }
+   const cached_head_part_info* core::get_head_part_info(const dovah::form_stub& stub) const {
+      if (stub.form_type != dovah::form_type::head_part)
+         return nullptr;
+      return &this->_cache.head_parts.value(&stub);
+   }
+   const cached_voicetype_info* core::get_voicetype_info(const dovah::form_stub& stub) const {
+      if (stub.form_type != dovah::form_type::voicetype)
+         return nullptr;
+      return &this->_cache.voicetypes.value(&stub);
    }
 
    script_attach_state core::form_script_attachment(const dovah::form_stub& stub, std::string_view scriptname) const {
