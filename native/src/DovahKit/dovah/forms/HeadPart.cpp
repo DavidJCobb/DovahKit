@@ -138,7 +138,7 @@ namespace dovah::loaded_forms {
             case 'MODS':
             case 'MODT':
             case 'MOSD':
-               components::model::generate_use_info(subrecord, uib); // redundant TESModel subrecords just append more texture replacement entries, without clearing those already in the list
+               decltype(model)::generate_use_info(subrecord, uib); // redundant TESModel subrecords just append more texture replacement entries, without clearing those already in the list
                break;
             case 'DATA':
             case 'PNAM':

@@ -14,21 +14,21 @@ namespace dovah::loaded_forms::components {
       auto& subrecord = record.get_current_subrecord();
       auto  signature = subrecord.signature();
       switch (signature) {
-         case 'ATKR':
-         case 'ATKD':
-         case 'ATKE':
+         case subrecord_signature_race:
+         case subrecord_signature_data:
+         case subrecord_signature_event:
             break;
          default: // invalid
             assert(false && "Why was attack_data::load called on a subrecord it's not built to handle?");
       }
       //
-      if (signature == 'ATKR') {
+      if (signature == subrecord_signature_race) {
          if (subrecord.read(this->race)) {
             intfc.warn_if_ref_is_wrong_type(this->race, form_type::race, subrecord.signature());
          }
          return;
       }
-      if (signature == 'ATKD') {
+      if (signature == subrecord_signature_data) {
          auto& dst = this->attacks.emplace_back();
          if (subrecord.is_in_bounds(0x2C)) {
             subrecord.unchecked_read(dst.damage_mult);
@@ -54,7 +54,7 @@ namespace dovah::loaded_forms::components {
          // even if they did detect a mismatch.
          //
          auto& next = record.next_subrecord();
-         if (next.signature() != 'ATKE') {
+         if (next.signature() != subrecord_signature_event) {
             specific_load_warnings::expected_event_subrecord notice(
                const_cast<form_stub&>(intfc.target_stub),
                next.signature()
@@ -64,7 +64,7 @@ namespace dovah::loaded_forms::components {
          subrecord.read(dst.event);
          return;
       }
-      if (signature == 'ATKE') {
+      if (signature == subrecord_signature_event) {
          if (this->attacks.empty()) {
             this->attacks.emplace_back();
          }
@@ -74,12 +74,12 @@ namespace dovah::loaded_forms::components {
       }
    }
    void attack_data::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
-      record.write_formID_subrecord('ATKR', this->race, true);
+      record.write_formID_subrecord(subrecord_signature_race, this->race, true);
       //
       // TODO: under what conditions do we write ATKD+ATKE?
       //
       for (const auto& entry : this->attacks) {
-         auto& ATKD = record.open_next_subrecord('ATKD');
+         auto& ATKD = record.open_next_subrecord(subrecord_signature_data);
          ATKD.write(entry.damage_mult);
          ATKD.write(entry.attack_chance);
          ATKD.write(entry.attack_spell);
@@ -92,7 +92,7 @@ namespace dovah::loaded_forms::components {
          ATKD.write(entry.recovery_time);
          ATKD.write(entry.stamina_mult);
          ATKD.close();
-         record.write_string_subrecord('ATKE', entry.event);
+         record.write_string_subrecord(subrecord_signature_event, entry.event);
       }
    }
    void attack_data::clone_from(const attack_data& original, loaded_forms::Form& owner_of_clone) noexcept {
@@ -146,20 +146,20 @@ namespace dovah::loaded_forms::components {
       auto& subrecord = record.get_current_subrecord();
       auto  signature = subrecord.signature();
       switch (signature) {
-         case 'ATKR':
-         case 'ATKD':
-         case 'ATKE':
+         case subrecord_signature_race:
+         case subrecord_signature_data:
+         case subrecord_signature_event:
             break;
          default: // invalid
             assert(false && "Why was attack_data::generate_use_info called on a subrecord it's not built to handle?");
       }
       //
       form_id_t form_id;
-      if (signature == 'ATKR') {
+      if (signature == subrecord_signature_race) {
          subrecord.read(this->race);
          return;
       }
-      if (signature == 'ATKD') {
+      if (signature == subrecord_signature_data) {
          if (subrecord.is_in_bounds(0x2C)) {
             subrecord.skip_bytes(8);
             subrecord.read(form_id);

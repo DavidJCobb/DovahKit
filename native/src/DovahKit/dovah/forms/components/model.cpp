@@ -26,12 +26,16 @@ namespace {
 }
 
 namespace dovah::loaded_forms::components {
+   void model::load_model_path(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+      subrecord.read(this->model_path);
+   }
+
    bool model::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       switch (subrecord.signature()) {
          case 'MODL':
          case 'MOD2':
          case 'DMDL': // for model path
-            subrecord.read(this->model_path);
+            this->load_model_path(subrecord, intfc);
             return true;
          case 'MODT':
          case 'MO2T':

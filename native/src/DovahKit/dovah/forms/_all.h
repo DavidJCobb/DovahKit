@@ -35,6 +35,7 @@
    #include "Outfit.h"
    #include "Package.h"
    #include "Quest.h"
+   #include "Race.h"
    #include "Relationship.h"
    #include "Static.h"
    #include "Shout.h"
@@ -79,6 +80,7 @@ namespace dovah {
       loaded_forms::Outfit,
       loaded_forms::Package,
       loaded_forms::Quest,
+      loaded_forms::Race,
       loaded_forms::Relationship,
       loaded_forms::Static,
       loaded_forms::Shout,

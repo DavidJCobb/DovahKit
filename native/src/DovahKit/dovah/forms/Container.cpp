@@ -88,7 +88,7 @@ namespace dovah::loaded_forms {
             case 'MODL':
             case 'MODT':
             case 'MODS':
-               components::model::generate_use_info(subrecord, uib);
+               decltype(model)::generate_use_info(subrecord, uib);
                break;
             case 'COCT':
             case 'CNTO':

@@ -216,6 +216,9 @@
        </item>
        <item row="0" column="0">
         <widget class="QCheckBox" name="flagPreset">
+         <property name="whatsThis">
+          <string>This checkbox doesn't directly make an actor count as a preset usable by the player, but within the Creation Kit, it does influence whether the actor is categorized under &quot;Presets&quot; in the Object Window's tree view.</string>
+         </property>
          <property name="text">
           <string>Is CharGen Preset</string>
          </property>
@@ -312,7 +315,7 @@
    <item row="0" column="1">
     <widget class="QTabWidget" name="tabbox">
      <property name="currentIndex">
-      <number>6</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tabTraits">
       <attribute name="title">

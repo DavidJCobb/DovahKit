@@ -19,8 +19,8 @@ namespace dovah::loaded_forms {
                break;
                //
             #pragma region Components
-            case 'ATKD': // not checking for ATKE is intentional. the NPC_ loader doesn't check for it, so if it appears anywhere other than after ATKD (such that the ATKD loader handles it), then it is unrecognized
-            case 'ATKR':
+            case components::attack_data::subrecord_signature_race:
+            case components::attack_data::subrecord_signature_data:
                this->attack_data.load(record, intfc);
                break;
             case 'COCT':
@@ -38,9 +38,13 @@ namespace dovah::loaded_forms {
                   this->destruction_data.emplace();
                this->destruction_data.value().load(subrecord, intfc);
                break;
-            case 'KSIZ':
-            case 'KWDA':
+            case components::keyword_list::subrecord_signature_count:
+            case components::keyword_list::subrecord_signature_array:
                this->keywords.load(subrecord, intfc);
+               break;
+            case components::spell_list::subrecord_signature_count:
+            case components::spell_list::subrecord_signature_entry:
+               this->spells.load(subrecord, intfc);
                break;
             case 'OBND':
                this->bounds.load(subrecord, intfc);
@@ -104,21 +108,6 @@ namespace dovah::loaded_forms {
                if (subrecord.read(form_id)) {
                   this->perks.push_back(form_id);
                   intfc.warn_if_ref_is_wrong_type(form_id, form_type::perk, subrecord.signature());
-               }
-               break;
-            #pragma endregion
-            #pragma region Spells (TESSpellList)
-            case 'SPCT':
-               {
-                  uint32_t size;
-                  if (subrecord.read(size))
-                     this->spells.reserve(size);
-               }
-               break;
-            case 'SPLO':
-               if (subrecord.read(form_id)) {
-                  this->spells.push_back(form_id);
-                  intfc.warn_if_ref_is_wrong_type(form_id, form_type::spell, subrecord.signature());
                }
                break;
             #pragma endregion
@@ -493,8 +482,9 @@ namespace dovah::loaded_forms {
                break;
                //
             #pragma region Components
-            case 'ATKD': // not checking for ATKE is intentional. the NPC_ loader doesn't check for it, so if it appears anywhere other than after ATKD (such that the ATKD loader handles it), then it is unrecognized
-            case 'ATKR':
+            case components::attack_data::subrecord_signature_race:
+            case components::attack_data::subrecord_signature_data:
+            case components::attack_data::subrecord_signature_event:
                attack_data.read(record);
                break;
             case 'COCT':
@@ -510,9 +500,13 @@ namespace dovah::loaded_forms {
             case 'DSTF': // destruction stage end marker
                components::destruction_stage_data::generate_use_info(subrecord, destruction_uib);
                break;
-            case 'KSIZ':
-            case 'KWDA':
+            case components::keyword_list::subrecord_signature_count:
+            case components::keyword_list::subrecord_signature_array:
                components::keyword_list::generate_use_info(subrecord, uib);
+               break;
+            case components::spell_list::subrecord_signature_count:
+            case components::spell_list::subrecord_signature_entry:
+               components::spell_list::generate_use_info(subrecord, uib);
                break;
             case 'OBND':
                components::object_bounds::generate_use_info(subrecord, uib);
@@ -558,10 +552,8 @@ namespace dovah::loaded_forms {
             #pragma endregion
                //
             case 'PRKZ': // perk count (analogous to std::vector::reserve)
-            case 'SPCT': // spell count (analogous to std::vector::reserve)
                break;
             case 'PRKR': // perk
-            case 'SPLO': // spell
             case 'SNAM': // faction relationship (form ID + a byte that we can ignore here)
             case 'HEAD': // found via disassembly; identical to PNAM
                [[fallthrough]];
@@ -662,6 +654,7 @@ namespace dovah::loaded_forms {
       copy->inventory.clone_from(this->inventory, *copy);
       copy->keywords.clone_from(this->keywords, *copy);
       copy->script_data.clone_from(this->script_data, *copy);
+      copy->spells.clone_from(this->spells, *copy);
 
       copy->name        = this->name;
       copy->short_name  = this->short_name;
@@ -754,7 +747,6 @@ namespace dovah::loaded_forms {
       copy->gift_filter.set(*copy, this->gift_filter);
       copy_form_reference_list(*copy, copy->perks, this->perks);
       copy->sound_level = this->sound_level;
-      copy_form_reference_list(*copy, copy->spells, this->spells);
       copy->texture_lighting = this->texture_lighting;
       copy->tint_layers = this->tint_layers;
       copy->voicetype.set(*copy, this->voicetype);
@@ -807,16 +799,7 @@ namespace dovah::loaded_forms {
       record.write_formID_subrecord('VTCK', this->voicetype, true);
       record.write_formID_subrecord('TPLT', this->template_data.actor, true);
       record.write_formID_subrecord('RNAM', this->race);
-      if (!this->spells.empty()) {
-         {
-            auto& SPCT = record.open_next_subrecord('SPCT');
-            SPCT.write((uint32_t)this->spells.size());
-            SPCT.close();
-         }
-         for (const auto& entry : this->spells) {
-            record.write_formID_subrecord('SPLO', entry);
-         }
-      }
+      this->spells.save(record, intfc);
       if (this->destruction_data.has_value())
          this->destruction_data.value().save(record, intfc);
       record.write_formID_subrecord('WNAM', this->worn_armor, true);
@@ -1013,6 +996,7 @@ namespace dovah::loaded_forms {
       this->inventory.sever_outbound_references_to(other, *this);
       this->keywords.sever_outbound_references_to(other, *this);
       this->script_data.sever_outbound_references_to(other, *this);
+      this->spells.sever_outbound_references_to(other, *this);
 
       this->race.clear_if(*this, other);
       {  // ai
@@ -1076,7 +1060,6 @@ namespace dovah::loaded_forms {
       }
       this->gift_filter.clear_if(*this, other);
       remove_form_from_reference_list(this->perks,  other, *this);
-      remove_form_from_reference_list(this->spells, other, *this);
       this->voicetype.clear_if(*this, other);
       this->worn_armor.clear_if(*this, other);
    }
@@ -1091,6 +1074,7 @@ namespace dovah::loaded_forms {
       this->inventory.clear(*this);
       this->keywords.clear(*this);
       this->script_data.clear(*this);
+      this->spells.clear(*this);
 
       this->name.reset();
       this->short_name.reset();
@@ -1176,7 +1160,6 @@ namespace dovah::loaded_forms {
       this->gift_filter.set(*this, nullptr);
       clear_form_reference_list(this->perks, *this);
       this->sound_level = 0;
-      clear_form_reference_list(this->spells, *this);
       this->texture_lighting = {};
       this->tint_layers.clear();
       this->voicetype.set(*this, nullptr);

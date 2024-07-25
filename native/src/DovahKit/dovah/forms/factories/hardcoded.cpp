@@ -101,6 +101,9 @@ namespace dovah {
          case hardcoded_form_ids::PlayerRef: // PlayerRef
             ((loaded_forms::Actor*)form)->base_form.unmanaged_set(lo.get_form(form_type::actor_base, 0x007)); // PlayerRef's base form is Player
             break;
+         case hardcoded_form_ids::AdultFemaleVoice1:
+            ((loaded_forms::Voicetype*)form)->voicetype_flags |= loaded_forms::Voicetype::voicetype_flag::female;
+            break;
          case hardcoded_form_ids::COCMarkerHeading:
             ((loaded_forms::Static*)form)->model.model_path = "MarkerCOCHeading.nif";
             break;
@@ -405,7 +408,7 @@ namespace dovah {
       }
       {  // [VTYP:02D]"AdultMaleVoice1"
          auto stub = new form_stub();
-         stub->formID    = 0x02D;
+         stub->formID    = hardcoded_form_ids::AdultMaleVoice1;
          stub->form_type = form_type_info::signature_to_form_type('VTYP');
          stub->editorID  = "AdultMaleVoice1";
          //
@@ -413,7 +416,7 @@ namespace dovah {
       }
       {  // [VTYP:02E]"AdultFemaleVoice1"
          auto stub = new form_stub();
-         stub->formID    = 0x02E;
+         stub->formID    = hardcoded_form_ids::AdultFemaleVoice1;
          stub->form_type = form_type_info::signature_to_form_type('VTYP');
          stub->editorID  = "AdultFemaleVoice1";
          //

@@ -6,11 +6,11 @@ namespace dovah::loaded_forms::components {
       uint32_t keywordSize = 0;
       form_reference_t formID;
       switch (subrecord.signature()) {
-         case 'KSIZ':
+         case subrecord_signature_count:
             if (subrecord.read(keywordSize))
                this->forms.reserve(keywordSize);
             break;
-         case 'KWDA':
+         case subrecord_signature_array:
             if (!keywordSize)
                keywordSize = subrecord.size() / 4;
             for (uint32_t i = 0; i < keywordSize; i++) {
@@ -26,9 +26,9 @@ namespace dovah::loaded_forms::components {
       uint32_t  keywordSize = 0;
       form_id_t formID;
       switch (subrecord.signature()) {
-         case 'KSIZ':
+         case subrecord_signature_count:
             break;
-         case 'KWDA':
+         case subrecord_signature_array:
             keywordSize = subrecord.size() / 4;
             for (uint32_t i = 0; i < keywordSize; i++)
                if (subrecord.read(formID))
@@ -40,10 +40,10 @@ namespace dovah::loaded_forms::components {
       uint32_t size = this->forms.size();
       if (!size)
          return;
-      auto& KSIZ = record.open_next_subrecord('KSIZ');
+      auto& KSIZ = record.open_next_subrecord(subrecord_signature_count);
       KSIZ.write(size);
       KSIZ.close();
-      auto& KWDA = record.open_next_subrecord('KWDA');
+      auto& KWDA = record.open_next_subrecord(subrecord_signature_array);
       for (auto& k : this->forms)
          KWDA.write(k);
       KWDA.close();
@@ -52,11 +52,7 @@ namespace dovah::loaded_forms::components {
       clear_form_reference_list(this->forms, my_owner);
    }
    void keyword_list::clone_from(const keyword_list& other, loaded_forms::Form& my_owner) noexcept {
-      size_t size = other.forms.size();
-      this->clear(my_owner);
-      this->forms.resize(size);
-      for (size_t i = 0; i < size; ++i)
-         this->forms[i].set(my_owner, other.forms[i]);
+      copy_form_reference_list(my_owner, this->forms, other.forms);
    }
    void keyword_list::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       remove_form_from_reference_list(this->forms, target, my_owner);

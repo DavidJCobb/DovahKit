@@ -1,10 +1,9 @@
 #pragma once
 #include <bit>
 #include <cstdint>
-#include <intrin.h>
+#include <cstring> // memset
 #include <limits>
 #include <type_traits>
-#include "cpuinfo.h"
 
 namespace cobb {
    template<uint32_t count> class bitset {
@@ -62,6 +61,10 @@ namespace cobb {
       public:
          constexpr bitset() {
             this->clear();
+         }
+
+         constexpr size_t size() const noexcept {
+            return count;
          }
          
          constexpr bool all() const noexcept {
@@ -192,6 +195,21 @@ namespace cobb {
                }
             }
             return -1;
+         }
+
+         template<typename T> requires std::is_integral_v<T>
+         constexpr T get_span(size_t offset) const {
+            T out = {};
+            if (offset % 32 == 0) {
+               out = this->data[offset / 32];
+            } else {
+               size_t n = offset / 32;
+               size_t s = offset % 32;
+
+               out = this->data[n] >> s;
+               out |= this->data[n + 1] << (32 - s);
+            }
+            return out;
          }
 
          reference operator[](size_t i) {

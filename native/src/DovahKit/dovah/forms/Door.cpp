@@ -103,7 +103,7 @@ namespace dovah::loaded_forms {
             case 'MODS':
             case 'MODD':
             case 'MOSD':
-               components::model::generate_use_info(subrecord, uib);
+               decltype(model)::generate_use_info(subrecord, uib);
                break;
             case 'DEST': // destruction stage header
             case 'DSTD': // destruction stage data

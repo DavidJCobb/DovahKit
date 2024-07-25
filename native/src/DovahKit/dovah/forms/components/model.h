@@ -27,6 +27,9 @@ namespace dovah::loaded_forms::components {
          precached_nif_info precached_info; // MODT (used to be just texture hashes, in past games)
          facegen_flags_t    facegen_flags = 0; // MODD
          
+         // Special-case load functions for when alternate subrecord signatures are used (e.g. RACE/ANAM).
+         void load_model_path(tes_subrecord_reader&, load_order_interfaces::form_load&);
+
          bool load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc); // returns (true) if the subrecord is recognized and handled
          static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
          void save(tes_subrecord_writer&, load_order_interfaces::form_save&); // open the subrecord before calling
@@ -53,6 +56,7 @@ namespace dovah::loaded_forms::components {
          bool load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc); // returns (true) if the subrecord is recognized and handled
          static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
          void save(tes_subrecord_writer&, load_order_interfaces::form_save&); // open the subrecord before calling
+         void save(tes_record_writer&, load_order_interfaces::form_save&, uint32_t signature_path, uint32_t signature_hash) = delete;
          void save(tes_record_writer&, load_order_interfaces::form_save&, uint32_t signature_path, uint32_t signature_hash, uint32_t signature_swap); // opens the subrecords, etc., for you
          //
          void clear(loaded_forms::Form& my_owner);

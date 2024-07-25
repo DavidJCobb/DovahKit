@@ -37,8 +37,8 @@ namespace dovah::loaded_forms {
                if (subrecord.read(formID))
                   uib.add_outbound_reference(formID);
                break;
-            case 'KSIZ':
-            case 'KWDA':
+            case components::keyword_list::subrecord_signature_count:
+            case components::keyword_list::subrecord_signature_array:
                components::keyword_list::generate_use_info(subrecord, uib);
                break;
             case 'DATA':

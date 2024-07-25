@@ -47,8 +47,8 @@ namespace dovah::loaded_forms {
                   this->destruction_data.emplace();
                this->destruction_data.value().load(subrecord, intfc);
                break;
-            case 'KSIZ':
-            case 'KWDA':
+            case components::keyword_list::subrecord_signature_count:
+            case components::keyword_list::subrecord_signature_array:
                this->keywords.load(subrecord, intfc);
                break;
             case 'DATA':
@@ -93,7 +93,7 @@ namespace dovah::loaded_forms {
             case 'MODS':
             case 'MODT':
             case 'MOSD':
-               components::model::generate_use_info(subrecord, uib); // redundant TESModel subrecords just append more texture replacement entries, without clearing those already in the list
+               decltype(model)::generate_use_info(subrecord, uib); // redundant TESModel subrecords just append more texture replacement entries, without clearing those already in the list
                break;
             case 'ICON':
             case 'MICO':

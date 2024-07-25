@@ -40,7 +40,7 @@ namespace ui {
          spinbox<Widget> &&
          arithmetic<Value> &&
          (floating_point_spinbox<Widget>    || !std::is_floating_point_v<Widget>) && // Need a floating-point spinbox for float values.
-         (!std::is_same_v<Widget, QSpinBox> || std::numeric_limits<Value>::max() < std::numeric_limits<int>::max()) // QSpinBox is capped to the range of the int type.
+         (!std::is_same_v<Widget, QSpinBox> || std::numeric_limits<Value>::max() <= std::numeric_limits<int>::max()) // QSpinBox is capped to the range of the int type.
       ;
 
       template<spinbox Widget>

@@ -27,6 +27,8 @@ namespace dovah {
       static constexpr bare_form_id_t PlayerBodyPartData = 0x01C;
       static constexpr bare_form_id_t RoomMarker         = 0x01F;
       static constexpr bare_form_id_t NullTextureSet     = 0x028;
+      static constexpr bare_form_id_t AdultMaleVoice1    = 0x02D;
+      static constexpr bare_form_id_t AdultFemaleVoice1  = 0x02E;
       static constexpr bare_form_id_t COCMarkerHeading   = 0x032;
       static constexpr bare_form_id_t XMarkerHeading     = 0x034;
       static constexpr bare_form_id_t GameYear           = 0x035;

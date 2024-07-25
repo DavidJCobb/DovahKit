@@ -1,0 +1,3349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogRace</class>
+ <widget class="QDialog" name="FormDialogRace">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>766</width>
+    <height>867</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Race</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0">
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0">
+    <widget class="QTabWidget" name="tabbox">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tabGeneral">
+      <attribute name="title">
+       <string>General</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_9">
+       <item row="4" column="0" colspan="3">
+        <widget class="QGroupBox" name="groupBox_7">
+         <property name="title">
+          <string>Flags</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_10">
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="flagAllowPickpocket">
+            <property name="whatsThis">
+             <string>If this is checked, then the player can pickpocket actors of this race.</string>
+            </property>
+            <property name="text">
+             <string>Can Be Pickpocketed</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QCheckBox" name="flagChild">
+            <property name="whatsThis">
+             <string>Races that are flagged as &quot;Child&quot; races will have hardcoded behaviors suitable for child characters, such as limitations on what activators can use (for the sake of age-appropriate animations) and an inability to die (for the sake of the developers' restraint in storytelling).</string>
+            </property>
+            <property name="text">
+             <string>Child</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QCheckBox" name="flagAllowPlayerDialogue">
+            <property name="whatsThis">
+             <string>Control whether the player is allowed to talk to actors of this race.</string>
+            </property>
+            <property name="text">
+             <string>Allow Player Dialogue</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QCheckBox" name="flagMultipleMembraneShaders">
+            <property name="text">
+             <string>Allow Multiple Membrane Shaders</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="flagPlayable">
+            <property name="whatsThis">
+             <string>Control whether the player is allowed to use this race in character creation.</string>
+            </property>
+            <property name="text">
+             <string>Playable</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QCheckBox" name="flagCannotOpenDoors">
+            <property name="whatsThis">
+             <string>If this is checked, then actors of this race cannot open doors. This is generally appropriate for wildlife and monster races.</string>
+            </property>
+            <property name="text">
+             <string>Can't Open Doors</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QCheckBox" name="flagAllowRagdollCollision">
+            <property name="text">
+             <string>Allow Ragdoll Collision</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QCheckBox" name="flagFaceGenHead">
+            <property name="text">
+             <string>FaceGen Head</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QCheckBox" name="flagNoKnockdowns">
+            <property name="whatsThis">
+             <string>If this is checked, then actors of this race cannot be knocked down and put into a ragdoll state.</string>
+            </property>
+            <property name="text">
+             <string>Can't Be Knocked Down</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QCheckBox" name="flagNoShadow">
+            <property name="whatsThis">
+             <string>If this is checked, then actors of this race do not cast shadows.</string>
+            </property>
+            <property name="text">
+             <string>Never Casts Shadows</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QCheckBox" name="flagSpellsAlignWithMagicNode">
+            <property name="text">
+             <string>Spells Align with Magic Node</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="3">
+           <widget class="QCheckBox" name="flagCanPickUpItems">
+            <property name="whatsThis">
+             <string>Control whether actors of this race are able to pick up items. Actors may want to pick up items for a variety of reasons, including if they see a nearby weapon that may be useful when retaliating against a strong attacker.</string>
+            </property>
+            <property name="text">
+             <string>Can Pick Up Items</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="6" column="0" rowspan="2" colspan="2">
+        <widget class="QGroupBox" name="groupBox_8">
+         <property name="title">
+          <string>Basic Movement Options</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_11">
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="flagWalks">
+            <property name="whatsThis">
+             <string>Indicates that actors of this race can walk, run, or sprint on the ground.</string>
+            </property>
+            <property name="text">
+             <string>Walks</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QCheckBox" name="flagWorldRaycastsForIK">
+            <property name="text">
+             <string>Use World Raycasts for IK</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QCheckBox" name="flagAlwaysProxyController">
+            <property name="text">
+             <string>Always Use Proxy Controller</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QCheckBox" name="flagAvoidsRoads">
+            <property name="text">
+             <string>Avoids Roads</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QCheckBox" name="flagFlies">
+            <property name="whatsThis">
+             <string>Indicates that actors of this race can fly, animations permitting.</string>
+            </property>
+            <property name="text">
+             <string>Flies</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QCheckBox" name="flagNotPushable">
+            <property name="whatsThis">
+             <string>If checked, objects and the player can't shove actors of this race.</string>
+            </property>
+            <property name="text">
+             <string>Not Pushable</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="QCheckBox" name="flagUsesHeadtrackAnims">
+            <property name="text">
+             <string>Uses Headtracking Animations</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="flagImmobile">
+            <property name="text">
+             <string>Immobile</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QCheckBox" name="flagNoWaterCombat">
+            <property name="whatsThis">
+             <string>Control whether actors of this race can attack or cast spells while swimming.</string>
+            </property>
+            <property name="text">
+             <string>No Combat in Water</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QCheckBox" name="flagTiltRoll">
+            <property name="whatsThis">
+             <string>&lt;p&gt;This checkbox controls whether actors of this race are allowed to tilt sideways (i.e. whether they're allowed to rotate about their local Y-axis). If not, the game will ensure that their Y-axis rotation is always zero.&lt;/p&gt;
+&lt;p&gt;This is generally left unchecked for bipeds and quadrupeds, to keep them upright, while being checked for insectoid races, like spiders and chauruses.&lt;/p&gt;</string>
+            </property>
+            <property name="text">
+             <string>Tilt Left/Right</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="flagSwims">
+            <property name="whatsThis">
+             <string>Indicates whether actors of this race can swim. If a race &lt;em&gt;only&lt;/em&gt; has Swims checked, then actors of that race can't leave the water. If a race &lt;em&gt;doesn't&lt;/em&gt; have Swims checked, then actors of that race can't swim, but may be able to pass over areas of deep water without swimming (e.g. by using Waterwalking).</string>
+            </property>
+            <property name="text">
+             <string>Swims</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QCheckBox" name="flagNoRotateToHeadtrack">
+            <property name="text">
+             <string>No Rotating to Headtrack</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QCheckBox" name="flagTiltPitch">
+            <property name="whatsThis">
+             <string>&lt;p&gt;This checkbox controls whether actors of this race are allowed to pitch forward and backward (i.e. whether they're allowed to rotate about their local X-axis). If not, the game will ensure that their X-axis rotation is always zero.&lt;/p&gt;
+&lt;p&gt;This is generally left unchecked for bipeds, to keep them upright, while being checked for quadrupeds and insectoid races, like horses, spiders, and chauruses.&lt;/p&gt;</string>
+            </property>
+            <property name="text">
+             <string>Tilt Front/Back</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="7" column="2">
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
+          <string>Mount Data</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_8">
+          <item row="0" column="0">
+           <widget class="QGroupBox" name="groupBox_3">
+            <property name="whatsThis">
+             <string>When an actor (the &quot;rider&quot;) attempts to climb onto and ride actors of this race (the &quot;mount&quot;), the rider will be snapped to this position relative to the mount, for their mounting animation. The coordinate system is the same as usual for actors: positive-X points to the right, positive-Y points forward, and positive-Z points up.</string>
+            </property>
+            <property name="title">
+             <string>Mounted Offset</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_5">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_8">
+               <property name="text">
+                <string>X:</string>
+               </property>
+               <property name="buddy">
+                <cstring>mountOffsetX</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="mountOffsetX">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="mountOffsetY">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="mountOffsetZ">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_9">
+               <property name="text">
+                <string>Y:</string>
+               </property>
+               <property name="buddy">
+                <cstring>mountOffsetY</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_10">
+               <property name="text">
+                <string>Z:</string>
+               </property>
+               <property name="buddy">
+                <cstring>mountOffsetZ</cstring>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QGroupBox" name="groupBox_5">
+            <property name="whatsThis">
+             <string>An offset applied to the camera position, when the player is riding actors of this race. The offset is camera-relative.</string>
+            </property>
+            <property name="title">
+             <string>Camera Offset</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_7">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_14">
+               <property name="text">
+                <string>X:</string>
+               </property>
+               <property name="buddy">
+                <cstring>mountCamOffsetX</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="mountCamOffsetX">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="mountCamOffsetY">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="mountCamOffsetZ">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_15">
+               <property name="text">
+                <string>Y:</string>
+               </property>
+               <property name="buddy">
+                <cstring>mountCamOffsetY</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_16">
+               <property name="text">
+                <string>Z:</string>
+               </property>
+               <property name="buddy">
+                <cstring>mountCamOffsetZ</cstring>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QGroupBox" name="groupBox_4">
+            <property name="title">
+             <string>Dismount Offset</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_6">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_11">
+               <property name="text">
+                <string>X:</string>
+               </property>
+               <property name="buddy">
+                <cstring>dismountOffsetX</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="dismountOffsetX">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="dismountOffsetY">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="dismountOffsetZ">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_12">
+               <property name="text">
+                <string>Y:</string>
+               </property>
+               <property name="buddy">
+                <cstring>dismountOffsetY</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_13">
+               <property name="text">
+                <string>Z:</string>
+               </property>
+               <property name="buddy">
+                <cstring>dismountOffsetZ</cstring>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="3">
+           <widget class="QCheckBox" name="flagAllowMountedCombat">
+            <property name="text">
+             <string>Allow Combat</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QGroupBox" name="skillBonusGroupbox">
+         <property name="whatsThis">
+          <string>Each race can have a starting bonus in up to seven skills, applied to all actors of that race. Bonuses are a flat increase in each respective stat.</string>
+         </property>
+         <property name="title">
+          <string>Skill Bonuses</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="0">
+           <widget class="QComboBox" name="skillBonus01Skill"/>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="skillBonus01Value">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QComboBox" name="skillBonus02Skill"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="skillBonus02Value">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QComboBox" name="skillBonus03Skill"/>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="skillBonus03Value">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QComboBox" name="skillBonus04Skill"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QSpinBox" name="skillBonus04Value">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QComboBox" name="skillBonus05Skill"/>
+          </item>
+          <item row="4" column="1">
+           <widget class="QSpinBox" name="skillBonus05Value">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QComboBox" name="skillBonus06Skill"/>
+          </item>
+          <item row="5" column="1">
+           <widget class="QSpinBox" name="skillBonus06Value">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QComboBox" name="skillBonus07Skill"/>
+          </item>
+          <item row="6" column="1">
+           <widget class="QSpinBox" name="skillBonus07Value">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QGroupBox" name="groupBox_9">
+         <property name="title">
+          <string>Inherit</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_12">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_17">
+            <property name="text">
+             <string>Morph Race:</string>
+            </property>
+            <property name="buddy">
+             <cstring>morphRace</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="DKFormPicker" name="morphRace">
+            <property name="whatsThis">
+             <string>If you select a Morph Race, then this race will inherit HeadParts and face morph data from that race.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_18">
+            <property name="text">
+             <string>Armor Race:</string>
+            </property>
+            <property name="buddy">
+             <cstring>armorRace</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="DKFormPicker" name="armorRace">
+            <property name="whatsThis">
+             <string>If you select an Armor Race, then this race will be able to wear all of the armor that that race can wear.</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Attributes</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Starting Health:</string>
+            </property>
+            <property name="buddy">
+             <cstring>attrBaseH</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="attrBaseH">
+            <property name="whatsThis">
+             <string>The amount of health that Level 1 actors of this race will have.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Health Regen:</string>
+            </property>
+            <property name="buddy">
+             <cstring>attrRegenH</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Magicka Regen:</string>
+            </property>
+            <property name="buddy">
+             <cstring>attrRegenM</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Starting Magicka:</string>
+            </property>
+            <property name="buddy">
+             <cstring>attrBaseM</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="attrBaseS">
+            <property name="whatsThis">
+             <string>The amount of stamina that Level 1 actors of this race will have.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QDoubleSpinBox" name="attrRegenM">
+            <property name="whatsThis">
+             <string>The percentage of their max magicka that actors of this race regenerate every second.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QDoubleSpinBox" name="attrRegenS">
+            <property name="whatsThis">
+             <string>The percentage of their max stamina that actors of this race regenerate every second.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Starting Stamina:</string>
+            </property>
+            <property name="buddy">
+             <cstring>attrBaseS</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>Stamina Regen:</string>
+            </property>
+            <property name="buddy">
+             <cstring>attrRegenS</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="attrBaseM">
+            <property name="whatsThis">
+             <string>The amount of magicka that Level 1 actors of this race will have.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QDoubleSpinBox" name="attrRegenH">
+            <property name="whatsThis">
+             <string>The percentage of their max health that actors of this race regenerate every second.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagRegenInCombat">
+            <property name="whatsThis">
+             <string>Control whether actors of this race can regen health during combat. This is generally enabled for playable races.</string>
+            </property>
+            <property name="text">
+             <string>Regen Health in Combat</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="5" column="2" rowspan="2">
+        <widget class="QGroupBox" name="groupBox_6">
+         <property name="title">
+          <string>Spells</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <widget class="DKFormListPane" name="abilities">
+            <property name="whatsThis">
+             <string>Spells that all actors of this race have.</string>
+            </property>
+            <property name="showFormTypes">
+             <bool>false</bool>
+            </property>
+            <property name="showMoveButtons">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="2" rowspan="2">
+        <widget class="QGroupBox" name="groupBox_10">
+         <property name="title">
+          <string>Miscellaneous</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_13">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>Flight Radius:</string>
+            </property>
+            <property name="buddy">
+             <cstring>flightRadius</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="flightRadius">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="creatureSize">
+            <property name="whatsThis">
+             <string>Set this race's approximate size. This influences detection, knockback, and similar calculations.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_19">
+            <property name="text">
+             <string>Size (combat and detection):</string>
+            </property>
+            <property name="buddy">
+             <cstring>creatureSize</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_50">
+            <property name="text">
+             <string>Base Carry Capacity:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="baseCarryCapacity">
+            <property name="whatsThis">
+             <string>The carry capacity that Level 1 actors of this race will have.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="2">
+        <spacer name="verticalSpacer_14">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>8</width>
+           <height>8</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabBody">
+      <attribute name="title">
+       <string>Body</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_17" rowstretch="0,0,1">
+       <item row="0" column="0" colspan="2">
+        <layout class="QGridLayout" name="gridLayout_14" columnstretch="0,0,0,0,0">
+         <item row="0" column="1">
+          <widget class="QDoubleSpinBox" name="mass"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_33">
+           <property name="text">
+            <string>Body Part Data:</string>
+           </property>
+           <property name="buddy">
+            <cstring>bodyPartData</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="DKFormPicker" name="bodyPartData"/>
+         </item>
+         <item row="1" column="3">
+          <widget class="QLabel" name="label_26">
+           <property name="text">
+            <string>Skin:</string>
+           </property>
+           <property name="buddy">
+            <cstring>skin</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="4">
+          <widget class="DKFormPicker" name="skin">
+           <property name="whatsThis">
+            <string>Races define 3D models for actors' animation skeleton, but not for their appearance. Most actors' appearances are determined by an Armor form (and by extension, race-specific ArmorAddon forms) that they use as a &quot;skin,&quot; with FaceGen actors additionally relying on HeadParts for their heads and faces. If an actor doesn't specify their own skin, they will use their race's skin.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_23">
+           <property name="text">
+            <string>Mass:</string>
+           </property>
+           <property name="buddy">
+            <cstring>mass</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>16</width>
+             <height>8</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="1" rowspan="2">
+        <widget class="QGroupBox" name="groupBox_11">
+         <property name="whatsThis">
+          <string>&lt;p&gt;Skyrim's body and armor system allows each race to define up to 32 slots for biped objects. (These are commonly called &quot;body slots.&quot;) Bethesda, writing in the Creation Kit wiki, says that the slots' numbers &quot;correspond to the W coordinates set and exported from 3DS Max,&quot; which is part of why they're numbered from 30 through 61.&lt;/p&gt;
+&lt;p&gt;There are two main uses for body slots: Armors, and ArmorAddons. Each Armor can specify the body slots that it is equipped to, and an actor won't be able to equip multiple Armors that equip to the same slots. Additionally, an ArmorAddon can specify body slots that it covers or replaces, and body partitions in a NIF can specify body slots.&lt;/p&gt;
+&lt;p&gt;Here, you can define information about how this race uses the 32 available body slots. You can:&lt;/p&gt;
+&lt;ul&gt;
+   &lt;li&gt;Specify a name for each body slot your race uses.&lt;/li&gt;
+   &lt;li&gt;Specify which body slots are associated with an actor's equipped shield.&lt;/li&gt;
+   &lt;li&gt;Specify which body slots are associated with HeadParts related to an actor's head and hair.&lt;/li&gt;
+   &lt;li&gt;Specify which body slots should be visible to players in first-person, when playing as this race.&lt;/li&gt;
+&lt;/ul&gt;</string>
+         </property>
+         <property name="title">
+          <string>Biped Object Data</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_16">
+          <item row="4" column="0">
+           <widget class="QListView" name="bipedSlotNames"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="label_32">
+            <property name="text">
+             <string>Visible in First Person:</string>
+            </property>
+            <property name="buddy">
+             <cstring>bipedSlotsFirstPerson</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_31">
+            <property name="text">
+             <string>Slot Names</string>
+            </property>
+            <property name="buddy">
+             <cstring>bipedSlotNames</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <layout class="QGridLayout" name="gridLayout_22" columnstretch="0,0,1">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_29">
+              <property name="text">
+               <string>Body Slot:</string>
+              </property>
+              <property name="buddy">
+               <cstring>bipedSlotBody</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="2">
+             <widget class="QComboBox" name="bipedSlotShield"/>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_30">
+              <property name="text">
+               <string>Shield Slot:</string>
+              </property>
+              <property name="buddy">
+               <cstring>bipedSlotShield</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <spacer name="horizontalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>16</width>
+                <height>8</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_80">
+              <property name="text">
+               <string>Head Slot:</string>
+              </property>
+              <property name="buddy">
+               <cstring>bipedSlotHead</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QComboBox" name="bipedSlotHead"/>
+            </item>
+            <item row="0" column="2">
+             <widget class="QComboBox" name="bipedSlotBody"/>
+            </item>
+            <item row="1" column="2">
+             <widget class="QComboBox" name="bipedSlotHair"/>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_81">
+              <property name="text">
+               <string>Hair Slot:</string>
+              </property>
+              <property name="buddy">
+               <cstring>bipedSlotHair</cstring>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="4" column="1">
+           <widget class="QListView" name="bipedSlotsFirstPerson"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>467</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="0">
+        <widget class="QTabWidget" name="bodyBySex">
+         <property name="currentIndex">
+          <number>0</number>
+         </property>
+         <widget class="QWidget" name="tabBodyF">
+          <attribute name="title">
+           <string>Female</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_15">
+           <item row="0" column="4">
+            <widget class="QDoubleSpinBox" name="bodyWeightF">
+             <property name="whatsThis">
+              <string>Control the default body weight for actors of this race. This is purely visual.</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="suffix">
+              <string>%</string>
+             </property>
+             <property name="maximum">
+              <double>100.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="0">
+            <widget class="QLabel" name="label_28">
+             <property name="text">
+              <string>Default Voicetype:</string>
+             </property>
+             <property name="buddy">
+              <cstring>voicetypeF</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1" colspan="4">
+            <widget class="DKFormNIFPicker" name="skeletonF">
+             <property name="whatsThis">
+              <string>Specify an animation skeleton (*.nif) for actors of this race and sex.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QLabel" name="label_22">
+             <property name="text">
+              <string>Default Body Weight:</string>
+             </property>
+             <property name="buddy">
+              <cstring>bodyWeightF</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1" colspan="2">
+            <widget class="QDoubleSpinBox" name="heightMultF">
+             <property name="whatsThis">
+              <string>This value nominally scales the height for actors of this race and sex. In reality, it scales their entire size.</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="value">
+              <double>1.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_24">
+             <property name="text">
+              <string>Skeleton:</string>
+             </property>
+             <property name="buddy">
+              <cstring>skeletonF</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_25">
+             <property name="text">
+              <string>Body Texture:</string>
+             </property>
+             <property name="buddy">
+              <cstring>bodyTextureF</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="1" colspan="4">
+            <widget class="DKFormPicker" name="voicetypeF">
+             <property name="whatsThis">
+              <string>Specify the default voicetype for female actors of this race. Female actors can only use female voicetypes. If you don't specify a voicetype, the hardcoded AdultFemaleVoice1 form will be used.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0">
+            <widget class="QLabel" name="label_27">
+             <property name="text">
+              <string>Decapitate Armor:</string>
+             </property>
+             <property name="buddy">
+              <cstring>decapArmorF</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1" colspan="4">
+            <widget class="DKFormPicker" name="decapArmorF">
+             <property name="whatsThis">
+              <string>When an actor is decapitated, the game will cut their skin mesh at the neck, based on vertex weights. If that were all the game did, however, then you'd see jagged edges following vertex boundaries, akin to cutting a piece of paper along a dotted zig-zagged line. Instead, the game will force the decapitated actor to equip a special Armor (often called a &quot;gore cap&quot;) that resembles two bloody stumps: one on the neck side and one on the head side. Here, you can specify that Armor, per sex.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_21">
+             <property name="text">
+              <string>Height:</string>
+             </property>
+             <property name="buddy">
+              <cstring>heightMultF</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1" colspan="4">
+            <widget class="DKFormNIFPicker" name="bodyTextureF">
+             <property name="whatsThis">
+              <string>&lt;p&gt;This field is no longer used. It's a leftover from Oblivion, which used *.egt files to control FaceGen-related textures.&lt;/p&gt;
+&lt;p&gt;In Skyrim, the baseline visuals for an actor's body are determined by an Armor form designed to be used as a &quot;skin.&quot; If you wish to modify a race's textures, you should edit the Armor and ArmorAddons that make up their skin. Note that it's common for multiple races to use the same ArmorAddons to provide their skins.&lt;/p&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_99">
+             <property name="text">
+              <string>Behavior Graph:</string>
+             </property>
+             <property name="buddy">
+              <cstring>behaviorGraphF</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1" colspan="4">
+            <widget class="DKFormNIFPicker" name="behaviorGraphF">
+             <property name="whatsThis">
+              <string>Specify a Havok behavior graph (*.hkx) file for actors of this race and sex. Behavior graphs contain animation definitions, allowing animations to accept parameters that vary at run-time and emit events that the game engine can react to. Race behavior graphs are sex-differentiated because per-sex behavior graphs can include or override animations in general behavior graph files, e.g. to provide male and female actors with different walk cycles.</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabBodyM">
+          <attribute name="title">
+           <string>Male</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_24">
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_51">
+             <property name="text">
+              <string>Decapitate Armor:</string>
+             </property>
+             <property name="buddy">
+              <cstring>decapArmorM</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QDoubleSpinBox" name="bodyWeightM">
+             <property name="whatsThis">
+              <string>Control the default body weight for actors of this race. This is purely visual.</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="suffix">
+              <string>%</string>
+             </property>
+             <property name="maximum">
+              <double>100.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_48">
+             <property name="text">
+              <string>Skeleton:</string>
+             </property>
+             <property name="buddy">
+              <cstring>skeletonM</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_49">
+             <property name="text">
+              <string>Height:</string>
+             </property>
+             <property name="buddy">
+              <cstring>heightMultM</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QLabel" name="label_46">
+             <property name="text">
+              <string>Default Body Weight:</string>
+             </property>
+             <property name="buddy">
+              <cstring>bodyWeightM</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1" colspan="3">
+            <widget class="DKFormNIFPicker" name="bodyTextureM">
+             <property name="whatsThis">
+              <string>&lt;p&gt;This field is no longer used. It's a leftover from Oblivion, which used *.egt files to control FaceGen-related textures.&lt;/p&gt;
+&lt;p&gt;In Skyrim, the baseline visuals for an actor's body are determined by an Armor form designed to be used as a &quot;skin.&quot; If you wish to modify a race's textures, you should edit the Armor and ArmorAddons that make up their skin. Note that it's common for multiple races to use the same ArmorAddons to provide their skins.&lt;/p&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_52">
+             <property name="text">
+              <string>Default Voicetype:</string>
+             </property>
+             <property name="buddy">
+              <cstring>voicetypeM</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_100">
+             <property name="text">
+              <string>Behavior Graph:</string>
+             </property>
+             <property name="buddy">
+              <cstring>behaviorGraphM</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1" colspan="3">
+            <widget class="DKFormNIFPicker" name="behaviorGraphM">
+             <property name="whatsThis">
+              <string>Specify a Havok behavior graph (*.hkx) file for actors of this race and sex. Behavior graphs contain animation definitions, allowing animations to accept parameters that vary at run-time and emit events that the game engine can react to. Race behavior graphs are sex-differentiated because per-sex behavior graphs can include or override animations in general behavior graph files, e.g. to provide male and female actors with different walk cycles.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QDoubleSpinBox" name="heightMultM">
+             <property name="whatsThis">
+              <string>This value nominally scales the height for actors of this race and sex. In reality, it scales their entire size.</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="value">
+              <double>1.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_47">
+             <property name="text">
+              <string>Body Texture:</string>
+             </property>
+             <property name="buddy">
+              <cstring>bodyTextureM</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1" colspan="3">
+            <widget class="DKFormPicker" name="voicetypeM">
+             <property name="whatsThis">
+              <string>Specify the default voicetype for male actors of this race. Male actors can only use male voicetypes. If you don't specify a voicetype, the hardcoded AdultMaleVoice1 form will be used.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1" colspan="3">
+            <widget class="DKFormNIFPicker" name="skeletonM">
+             <property name="whatsThis">
+              <string>Specify an animation skeleton (*.nif) for actors of this race and sex.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1" colspan="3">
+            <widget class="DKFormPicker" name="decapArmorM">
+             <property name="whatsThis">
+              <string>When an actor is decapitated, the game will cut their skin mesh at the neck, based on vertex weights. If that were all the game did, however, then you'd see jagged edges following vertex boundaries, akin to cutting a piece of paper along a dotted zig-zagged line. Instead, the game will force the decapitated actor to equip a special Armor (often called a &quot;gore cap&quot;) that resembles two bloody stumps: one on the neck side and one on the head side. Here, you can specify that Armor, per sex.</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabBlood">
+      <attribute name="title">
+       <string>Blood</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_21" rowstretch="0,0,0,1">
+       <item row="0" column="0" colspan="2">
+        <widget class="QGroupBox" name="groupBox_12">
+         <property name="title">
+          <string>When we are hit:</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_18">
+          <item row="0" column="3">
+           <widget class="QCheckBox" name="flagBloodSpray">
+            <property name="whatsThis">
+             <string>Control whether a blood spray is visible when actors of this race are attacked.</string>
+            </property>
+            <property name="text">
+             <string>Blood Spray</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="DKFormPicker" name="decapBloodArt">
+            <property name="whatsThis">
+             <string>The art effect used for blood spray graphics, when actors of this race are decapitated.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_34">
+            <property name="text">
+             <string>Impact Material Type:</string>
+            </property>
+            <property name="buddy">
+             <cstring>impactMaterialType</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QCheckBox" name="flagBloodDecal">
+            <property name="whatsThis">
+             <string>Control whether actors of this race leave bloodstains on nearby surfaces when attacked.</string>
+            </property>
+            <property name="text">
+             <string>Blood Decal</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="DKFormPicker" name="impactMaterialType"/>
+          </item>
+          <item row="2" column="3">
+           <widget class="QCheckBox" name="flagWeaponBlood">
+            <property name="whatsThis">
+             <string>Control whether actors of this race leave bloodstains on an attacker's weapon.</string>
+            </property>
+            <property name="text">
+             <string>Weapon Blood</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_35">
+            <property name="text">
+             <string>Decapitation Blood Art:</string>
+            </property>
+            <property name="buddy">
+             <cstring>decapBloodArt</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>16</width>
+              <height>8</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupBox_13">
+         <property name="title">
+          <string>When we hit something else with a melee:</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_19">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_36">
+            <property name="text">
+             <string>Impact Data Set:</string>
+            </property>
+            <property name="buddy">
+             <cstring>impactDataSet</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="DKFormPicker" name="impactDataSet"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="1" rowspan="2">
+        <widget class="QGroupBox" name="groupBox_14">
+         <property name="title">
+          <string>Sounds made when looted:</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_20">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_37">
+            <property name="text">
+             <string>Open Corpse:</string>
+            </property>
+            <property name="buddy">
+             <cstring>soundOpen</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="DKFormPicker" name="soundOpen">
+            <property name="whatsThis">
+             <string>Sound played when the player opens the Container Menu on dead actors of this race.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_38">
+            <property name="text">
+             <string>Close Corpse:</string>
+            </property>
+            <property name="buddy">
+             <cstring>soundClose</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="DKFormPicker" name="soundClose">
+            <property name="whatsThis">
+             <string>Sound played when the player closes the Container Menu on dead actors of this race.</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>19</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="3" column="1">
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>525</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabText">
+      <attribute name="title">
+       <string>Text</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_25">
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_54">
+         <property name="text">
+          <string>Description:</string>
+         </property>
+         <property name="buddy">
+          <cstring>description</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_53">
+         <property name="text">
+          <string>Name:</string>
+         </property>
+         <property name="buddy">
+          <cstring>name</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QPlainTextEdit" name="description">
+         <property name="whatsThis">
+          <string>You can write a text description for this race. If the race is playable, this description will be shown to players in the character customization menus. If the race isn't playable and isn't ever meant to be — for example, races used for invisible, zero-size, zero-collision actors as part of scripting hacks — you can use this to stash development notes.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="name"/>
+       </item>
+       <item row="3" column="0" colspan="2">
+        <spacer name="verticalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabMovement">
+      <attribute name="title">
+       <string>Movement Speeds</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_29" rowstretch="0,1,0,2">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBox_15">
+         <property name="title">
+          <string>Acceleration and Deceleration</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_26">
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="accelerationRate">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="angularAccelerationRate">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_55">
+            <property name="text">
+             <string>Acceleration Rate:</string>
+            </property>
+            <property name="buddy">
+             <cstring>accelerationRate</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_57">
+            <property name="text">
+             <string>Angular Acceleration Rate:</string>
+            </property>
+            <property name="buddy">
+             <cstring>angularAccelerationRate</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagUseAdvancedAvoidance">
+            <property name="whatsThis">
+             <string>According to Bethesda's documentation, this option allows an actor to use &quot;velocity obstacles&quot; for avoiding obstacles when pathfinding, giving a &quot;smoother result.&quot; The option only works for bipeds. If it's disabled, actors of this race will use a simpler pathfinding method.</string>
+            </property>
+            <property name="text">
+             <string>Use Advanced Obstacle Avoidance</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QDoubleSpinBox" name="angularTolerance">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_56">
+            <property name="text">
+             <string>Deceleration Rate:</string>
+            </property>
+            <property name="buddy">
+             <cstring>decelerationRate</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLabel" name="label_58">
+            <property name="text">
+             <string>Angular Tolerance:</string>
+            </property>
+            <property name="buddy">
+             <cstring>angularTolerance</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="decelerationRate">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <spacer name="horizontalSpacer_6">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>16</width>
+              <height>8</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="1" column="3" rowspan="3" colspan="2">
+           <widget class="QFrame" name="frame">
+            <property name="frameShape">
+             <enum>QFrame::StyledPanel</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_27">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_59">
+               <property name="text">
+                <string>These are the times in seconds that it takes for the actor to reach their full movement or rotation speed.</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="1" rowspan="2">
+        <widget class="QGroupBox" name="groupBox_17">
+         <property name="title">
+          <string>Base Movement Defaults</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QTableView" name="movementTypeList"/>
+          </item>
+          <item>
+           <widget class="DKFormPicker" name="movementTypePicker"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <spacer name="verticalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>109</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QGroupBox" name="groupBox_16">
+         <property name="title">
+          <string>Movement Data Overrides</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,0,1">
+          <item>
+           <widget class="DKFormListPane" name="movementTypeOverrideForms">
+            <property name="showFormTypes">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>16</width>
+              <height>8</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <layout class="QGridLayout" name="gridLayout_28">
+            <item row="2" column="1">
+             <widget class="QDoubleSpinBox" name="movementTypeOverrideWalkRight">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QDoubleSpinBox" name="movementTypeOverrideWalkRotate">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_62">
+              <property name="text">
+               <string>Forward</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_64">
+              <property name="text">
+               <string>Rotate</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="label_66">
+              <property name="text">
+               <string>Run</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_65">
+              <property name="text">
+               <string>Walk</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QDoubleSpinBox" name="movementTypeOverrideWalkForward">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_60">
+              <property name="text">
+               <string>Left</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QDoubleSpinBox" name="movementTypeOverrideRunLeft">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_63">
+              <property name="text">
+               <string>Back</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_61">
+              <property name="text">
+               <string>Right</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QDoubleSpinBox" name="movementTypeOverrideWalkBack">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QDoubleSpinBox" name="movementTypeOverrideWalkLeft">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0" colspan="3">
+             <spacer name="verticalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="2" column="2">
+             <widget class="QDoubleSpinBox" name="movementTypeOverrideRunRight">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QDoubleSpinBox" name="movementTypeOverrideRunForward">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="2">
+             <widget class="QDoubleSpinBox" name="movementTypeOverrideRunBack">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="2">
+             <widget class="QDoubleSpinBox" name="movementTypeOverrideRunRotate">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <spacer name="verticalSpacer_7">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>220</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabAttackData">
+      <attribute name="title">
+       <string>Attack Data</string>
+      </attribute>
+     </widget>
+     <widget class="QWidget" name="tabCombat">
+      <attribute name="title">
+       <string>Combat</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <layout class="QGridLayout" name="gridLayout_30">
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_70">
+           <property name="text">
+            <string>Unarmed Equip Slot:</string>
+           </property>
+           <property name="buddy">
+            <cstring>unarmedEquipSlot</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="5">
+          <widget class="QDoubleSpinBox" name="aimAngleTolerance">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="minimum">
+            <double>0.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>360.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QLabel" name="label_71">
+           <property name="text">
+            <string>Aim Angle Tolerance:</string>
+           </property>
+           <property name="buddy">
+            <cstring>aimAngleTolerance</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="4" colspan="2">
+          <widget class="QCheckBox" name="flagNonHostile">
+           <property name="whatsThis">
+            <string>If this is checked, then actors of this race cannot enter combat.</string>
+           </property>
+           <property name="text">
+            <string>Non-Hostile</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <spacer name="horizontalSpacer_9">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_68">
+           <property name="text">
+            <string>Unarmed Damage:</string>
+           </property>
+           <property name="buddy">
+            <cstring>unarmedDamage</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QDoubleSpinBox" name="injuredHealthPercentage">
+           <property name="whatsThis">
+            <string>If an actor of this race has their health drop below this percentage, the game will set the &quot;Injured&quot; boolean variable in their behavior graph to &quot;true.&quot; This can be used to alter the actor's animations. Additionally, the GetIsInjured condition checks that variable.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="decimals">
+            <number>4</number>
+           </property>
+           <property name="maximum">
+            <double>100.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_67">
+           <property name="text">
+            <string>Injured Health Percentage:</string>
+           </property>
+           <property name="buddy">
+            <cstring>injuredHealthPercentage</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QDoubleSpinBox" name="unarmedDamage">
+           <property name="whatsThis">
+            <string>The base damage that this actor's melee attacks inflict when the actor is unarmed.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <spacer name="horizontalSpacer_8">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>16</width>
+             <height>8</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_69">
+           <property name="text">
+            <string>Unarmed Reach:</string>
+           </property>
+           <property name="buddy">
+            <cstring>unarmedReach</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QDoubleSpinBox" name="unarmedReach">
+           <property name="whatsThis">
+            <string>How far this actor's unarmed melee attacks can reach, in world units.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="4" colspan="2">
+          <widget class="QCheckBox" name="flagCanDualWield">
+           <property name="whatsThis">
+            <string>Control whether the actor is allowed to equip two one-handed weapons, one per hand.</string>
+           </property>
+           <property name="text">
+            <string>Can Dual Wield</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1" colspan="2">
+          <widget class="DKFormPicker" name="unarmedEquipSlot"/>
+         </item>
+         <item row="0" column="6">
+          <spacer name="horizontalSpacer_10">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_18">
+         <property name="title">
+          <string>Equipment Restrictions</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QTableView" name="equipSlots"/>
+          </item>
+          <item>
+           <widget class="QTableView" name="equipTypes">
+            <property name="whatsThis">
+             <string>Control what weapon types actors of this race are allowed to equip.</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_8">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>308</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabPhonemes">
+      <property name="whatsThis">
+       <string>Skyrim uses FaceFX as middleware for lip synching during dialogue. FaceFX defines a hardcoded set of phonemes. In this tab, you can define a list of face morphs to be used for lip synching; and then, for each phoneme, you can assign a weight to each morph.</string>
+      </property>
+      <attribute name="title">
+       <string>Phoneme Mapping</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_33" rowstretch="0,0,0,0" columnstretch="1,1,1">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_72">
+         <property name="text">
+          <string>FaceFX Phonemes</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_73">
+         <property name="text">
+          <string>Phoneme Targets</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QListView" name="phonemeFaceFXList"/>
+       </item>
+       <item row="1" column="1">
+        <widget class="QTableView" name="phonemeTargets"/>
+       </item>
+       <item row="1" column="2">
+        <layout class="QGridLayout" name="gridLayout_31">
+         <item row="0" column="1">
+          <widget class="QDoubleSpinBox" name="currentPhonemeWeight">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_74">
+           <property name="text">
+            <string>Weight:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <spacer name="verticalSpacer_9">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0" colspan="3">
+        <layout class="QGridLayout" name="gridLayout_32">
+         <item row="0" column="0">
+          <widget class="QCheckBox" name="flagDefaultFaceGenPhonemes">
+           <property name="text">
+            <string>Default FaceGen Targets and Weights</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="3" column="1">
+        <spacer name="verticalSpacer_10">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>343</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabFace">
+      <attribute name="title">
+       <string>Face Data</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QRadioButton" name="faceHeadPartsInherit">
+           <property name="whatsThis">
+            <string>If you select this option, then actors of this race and sex will use only the HeadParts defined on this race's Morph Race, if one is set.</string>
+           </property>
+           <property name="text">
+            <string>Inherit head parts from Morph Race</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_11">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="faceHeadPartsOverlay">
+           <property name="whatsThis">
+            <string>If you select this option, then actors of this race and sex will use the HeadParts defined in this race's Morph Race, except when this race defines replacements (for Base Head Parts) or additions (for Additional Head Parts).</string>
+           </property>
+           <property name="text">
+            <string>Overlay own head parts with inherited parts</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_12">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="faceHeadPartsOverride">
+           <property name="whatsThis">
+            <string>If you select this option, then actors of this race and sex will use only the HeadParts defined directly on this race, even if this race specifies a Morph Race.</string>
+           </property>
+           <property name="text">
+            <string>Use only own head parts</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QTabWidget" name="faceBySex">
+         <property name="currentIndex">
+          <number>0</number>
+         </property>
+         <widget class="QWidget" name="tabFaceF">
+          <attribute name="title">
+           <string>Female</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_35">
+           <item row="0" column="0" rowspan="2">
+            <layout class="QVBoxLayout" name="layoutHeadPartsF">
+             <item>
+              <widget class="QLabel" name="label_75">
+               <property name="text">
+                <string>Base Head Parts:</string>
+               </property>
+               <property name="buddy">
+                <cstring>baseHeadPartsF</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTableView" name="baseHeadPartsF">
+               <property name="whatsThis">
+                <string>Here, you can select one default HeadPart each for this race and sex's head, eyes, hair, facial hair, and eyebrows. If any of these areas are inapplicable to your race (e.g. Argonians having no customizable hair, or the various Vampire races only specifying HeadParts for those areas they wish to override), you can leave them blank.</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="DKFormPicker" name="baseHeadPartPickerF"/>
+             </item>
+             <item>
+              <widget class="Line" name="line_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_76">
+               <property name="text">
+                <string>Additional Head Parts:</string>
+               </property>
+               <property name="buddy">
+                <cstring>extraHeadPartsF</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="DKFormListPane" name="extraHeadPartsF">
+               <property name="whatsThis">
+                <string>Here, you can list HeadParts from the &quot;Misc&quot; category for actors of this race and sex to use by default. For example, Mouth HeadParts are used to define the inside of characters' mouths, and would go in this list.</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="1" rowspan="2">
+            <layout class="QVBoxLayout" name="layoutMorphsF">
+             <item>
+              <widget class="QLabel" name="label_77">
+               <property name="text">
+                <string>Available Morphs:</string>
+               </property>
+               <property name="buddy">
+                <cstring>availableMorphsF</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTableView" name="availableMorphsF">
+               <property name="whatsThis">
+                <string>Enable or disable face morphs defined in the *.tri files for HeadParts associated with this race and sex.</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="2">
+            <layout class="QVBoxLayout" name="verticalLayout_6">
+             <item>
+              <widget class="QLabel" name="label_78">
+               <property name="text">
+                <string>Available Hair Colors:</string>
+               </property>
+               <property name="buddy">
+                <cstring>hairColorsF</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="DKFormListPane" name="hairColorsF">
+               <property name="showFormTypes">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="1" column="2">
+            <layout class="QGridLayout" name="gridLayout_34">
+             <item row="0" column="1">
+              <widget class="DKFormPicker" name="defaultHairColorF"/>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_79">
+               <property name="text">
+                <string>Default Hair Color:</string>
+               </property>
+               <property name="buddy">
+                <cstring>defaultHairColorF</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <spacer name="verticalSpacer_12">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabFaceM">
+          <attribute name="title">
+           <string>Male</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_37">
+           <item row="0" column="0" rowspan="2">
+            <layout class="QVBoxLayout" name="layoutHeadPartsM">
+             <item>
+              <widget class="QLabel" name="label_84">
+               <property name="text">
+                <string>Base Head Parts:</string>
+               </property>
+               <property name="buddy">
+                <cstring>baseHeadPartsM</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTableView" name="baseHeadPartsM">
+               <property name="whatsThis">
+                <string>Here, you can select one default HeadPart each for this race and sex's head, eyes, hair, facial hair, and eyebrows. If any of these areas are inapplicable to your race (e.g. Argonians having no customizable hair, or the various Vampire races only specifying HeadParts for those areas they wish to override), you can leave them blank.</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="DKFormPicker" name="baseHeadPartPickerM"/>
+             </item>
+             <item>
+              <widget class="Line" name="line_3">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_85">
+               <property name="text">
+                <string>Additional Head Parts:</string>
+               </property>
+               <property name="buddy">
+                <cstring>extraHeadPartsM</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="DKFormListPane" name="extraHeadPartsM">
+               <property name="whatsThis">
+                <string>Here, you can list HeadParts from the &quot;Misc&quot; category for actors of this race and sex to use by default. For example, Mouth HeadParts are used to define the inside of characters' mouths, and would go in this list.</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="1" rowspan="2">
+            <layout class="QVBoxLayout" name="layoutMorphsM">
+             <item>
+              <widget class="QLabel" name="label_86">
+               <property name="text">
+                <string>Available Morphs:</string>
+               </property>
+               <property name="buddy">
+                <cstring>availableMorphsM</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTableView" name="availableMorphsM">
+               <property name="whatsThis">
+                <string>Enable or disable face morphs defined in the *.tri files for HeadParts associated with this race and sex.</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="2">
+            <layout class="QVBoxLayout" name="verticalLayout_7">
+             <item>
+              <widget class="QLabel" name="label_83">
+               <property name="text">
+                <string>Available Hair Colors:</string>
+               </property>
+               <property name="buddy">
+                <cstring>hairColorsM</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="DKFormListPane" name="hairColorsM">
+               <property name="showFormTypes">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="1" column="2">
+            <layout class="QGridLayout" name="gridLayout_36">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_82">
+               <property name="text">
+                <string>Default Hair Color:</string>
+               </property>
+               <property name="buddy">
+                <cstring>defaultHairColorM</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="DKFormPicker" name="defaultHairColorM"/>
+             </item>
+             <item row="1" column="0">
+              <spacer name="verticalSpacer_11">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabTints">
+      <attribute name="title">
+       <string>Face Tints</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_38">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_97">
+         <property name="text">
+          <string>Here, you can define the tint layers available for use by actors of this race. Tint layers are defined per sex. Each tint layer consists of a texture file, a color, and an &quot;alpha&quot; value that controls the intensity versus translucency of the color. Tint layers are categorized into different types, such as Neck or Lipstick or Cheek Color Upper, and the player can use one layer from each non-None type. (NPCs can use all of the layers simultaneously.)</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QTabWidget" name="tintsBySex">
+         <property name="currentIndex">
+          <number>0</number>
+         </property>
+         <widget class="QWidget" name="tabTintsF">
+          <attribute name="title">
+           <string>Female</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_12" stretch="3,2">
+           <item>
+            <widget class="QGroupBox" name="groupBox_21">
+             <property name="title">
+              <string>Tint Layers</string>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_7">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_10">
+                <item>
+                 <widget class="QTableView" name="tintsTableF"/>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_8">
+                  <item>
+                   <widget class="QPushButton" name="buttonTintsMoveUpF">
+                    <property name="text">
+                     <string>&lt;&lt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="buttonTintsMoveDownF">
+                    <property name="text">
+                     <string>&gt;&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="buttonTintsNewF">
+                    <property name="text">
+                     <string>New</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="buttonTintsDeleteF">
+                    <property name="text">
+                     <string>Delete</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QGridLayout" name="layoutEditTintF">
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_93">
+                  <property name="text">
+                   <string>Type:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>currentTintFType</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="DKGameFilePicker" name="currentTintFTexture"/>
+                </item>
+                <item row="2" column="0" colspan="2">
+                 <widget class="QGroupBox" name="groupBox_22">
+                  <property name="title">
+                   <string>Preset Color Options:</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayout_11">
+                   <item>
+                    <widget class="QTableView" name="currentTintFPresetList"/>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_9">
+                     <item>
+                      <widget class="QLabel" name="label_94">
+                       <property name="text">
+                        <string>Alpha:</string>
+                       </property>
+                       <property name="buddy">
+                        <cstring>currentTintFPresetAlphaSlider</cstring>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSlider" name="currentTintFPresetAlphaSlider">
+                       <property name="maximum">
+                        <number>10000</number>
+                       </property>
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="tickPosition">
+                        <enum>QSlider::TicksBothSides</enum>
+                       </property>
+                       <property name="tickInterval">
+                        <number>1000</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QDoubleSpinBox" name="currentTintFPresetAlpha">
+                       <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                       </property>
+                       <property name="decimals">
+                        <number>4</number>
+                       </property>
+                       <property name="maximum">
+                        <double>1.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="DKFormPicker" name="currentTintFDefaultColor">
+                  <property name="whatsThis">
+                   <string>Select one of the Preset Color Options to use as the default for this tint layer.</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QComboBox" name="currentTintFType">
+                  <property name="whatsThis">
+                   <string>Specify the type that this tint layer is categorized under. Use &quot;None&quot; for non-playable tint layers.</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_95">
+                  <property name="text">
+                   <string>Texture:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>currentTintFTexture</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QLabel" name="label_96">
+                  <property name="text">
+                   <string>Default Color:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>currentTintFDefaultColor</cstring>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="complexionGroupboxF">
+             <property name="title">
+              <string>Face Complexions</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_40">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_92">
+                <property name="text">
+                 <string>Default:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>defaultFaceTextureF</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="DKFormPicker" name="defaultFaceTextureF"/>
+              </item>
+              <item row="0" column="2">
+               <spacer name="horizontalSpacer_14">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>311</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item row="1" column="0" colspan="3">
+               <widget class="DKFormListPane" name="faceTexturesF">
+                <property name="showFormTypes">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tabTintsM">
+          <attribute name="title">
+           <string>Male</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_9" stretch="3,2">
+           <item>
+            <widget class="QGroupBox" name="groupBox_19">
+             <property name="title">
+              <string>Tint Layers</string>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_5">
+                <item>
+                 <widget class="QTableView" name="tintsTableM"/>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_4">
+                  <item>
+                   <widget class="QPushButton" name="buttonTintsMoveUpM">
+                    <property name="text">
+                     <string>&lt;&lt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="buttonTintsMoveDownM">
+                    <property name="text">
+                     <string>&gt;&gt;</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="buttonTintsNewM">
+                    <property name="text">
+                     <string>New</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="buttonTintsDeleteM">
+                    <property name="text">
+                     <string>Delete</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QGridLayout" name="layoutEditTintM">
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_89">
+                  <property name="text">
+                   <string>Type:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>currentTintMType</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="DKGameFilePicker" name="currentTintMTexture"/>
+                </item>
+                <item row="2" column="0" colspan="2">
+                 <widget class="QGroupBox" name="groupBox_20">
+                  <property name="title">
+                   <string>Preset Color Options:</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayout_8">
+                   <item>
+                    <widget class="QTableView" name="currentTintMPresetList"/>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_6">
+                     <item>
+                      <widget class="QLabel" name="label_91">
+                       <property name="text">
+                        <string>Alpha:</string>
+                       </property>
+                       <property name="buddy">
+                        <cstring>currentTintMPresetAlphaSlider</cstring>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QSlider" name="currentTintMPresetAlphaSlider">
+                       <property name="maximum">
+                        <number>10000</number>
+                       </property>
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="tickPosition">
+                        <enum>QSlider::TicksBothSides</enum>
+                       </property>
+                       <property name="tickInterval">
+                        <number>1000</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QDoubleSpinBox" name="currentTintMPresetAlpha">
+                       <property name="alignment">
+                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                       </property>
+                       <property name="decimals">
+                        <number>4</number>
+                       </property>
+                       <property name="maximum">
+                        <double>1.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="DKFormPicker" name="currentTintMDefaultColor">
+                  <property name="whatsThis">
+                   <string>Select one of the Preset Color Options to use as the default for this tint layer.</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QComboBox" name="currentTintMType">
+                  <property name="whatsThis">
+                   <string>Specify the type that this tint layer is categorized under. Use &quot;None&quot; for non-playable tint layers.</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_88">
+                  <property name="text">
+                   <string>Texture:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>currentTintMTexture</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QLabel" name="label_90">
+                  <property name="text">
+                   <string>Default Color:</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="complexionGroupboxM">
+             <property name="title">
+              <string>Face Complexions</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_39">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_87">
+                <property name="text">
+                 <string>Default:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>defaultFaceTextureM</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="DKFormPicker" name="defaultFaceTextureM"/>
+              </item>
+              <item row="0" column="2">
+               <spacer name="horizontalSpacer_13">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>311</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item row="1" column="0" colspan="3">
+               <widget class="DKFormListPane" name="faceTexturesM">
+                <property name="showFormTypes">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <spacer name="verticalSpacer_16">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>6</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabPresets">
+      <attribute name="title">
+       <string>Presets</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_43">
+       <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="label_98">
+         <property name="text">
+          <string>Here, you can specify actors whose faces will be used as presets that the player can select during character creation.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QGroupBox" name="groupBox_24">
+         <property name="title">
+          <string>Male</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_42">
+          <item row="0" column="0">
+           <widget class="DKFormListPane" name="presetsM"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="groupBox_23">
+         <property name="title">
+          <string>Female</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_41">
+          <item row="0" column="0">
+           <widget class="DKFormListPane" name="presetsF"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <spacer name="verticalSpacer_13">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>351</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <spacer name="verticalSpacer_15">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>6</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKGameFilePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKGameFilePicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>tabbox</tabstop>
+  <tabstop>morphRace</tabstop>
+  <tabstop>armorRace</tabstop>
+  <tabstop>creatureSize</tabstop>
+  <tabstop>flightRadius</tabstop>
+  <tabstop>flagPlayable</tabstop>
+  <tabstop>flagChild</tabstop>
+  <tabstop>flagAllowPlayerDialogue</tabstop>
+  <tabstop>flagFaceGenHead</tabstop>
+  <tabstop>flagAllowPickpocket</tabstop>
+  <tabstop>flagCannotOpenDoors</tabstop>
+  <tabstop>flagAllowRagdollCollision</tabstop>
+  <tabstop>flagMultipleMembraneShaders</tabstop>
+  <tabstop>flagNoKnockdowns</tabstop>
+  <tabstop>flagNoShadow</tabstop>
+  <tabstop>flagSpellsAlignWithMagicNode</tabstop>
+  <tabstop>flagCanPickUpItems</tabstop>
+  <tabstop>skillBonus01Skill</tabstop>
+  <tabstop>skillBonus01Value</tabstop>
+  <tabstop>skillBonus02Skill</tabstop>
+  <tabstop>skillBonus02Value</tabstop>
+  <tabstop>skillBonus03Skill</tabstop>
+  <tabstop>skillBonus03Value</tabstop>
+  <tabstop>skillBonus04Skill</tabstop>
+  <tabstop>skillBonus04Value</tabstop>
+  <tabstop>skillBonus05Skill</tabstop>
+  <tabstop>skillBonus05Value</tabstop>
+  <tabstop>skillBonus06Skill</tabstop>
+  <tabstop>skillBonus06Value</tabstop>
+  <tabstop>skillBonus07Skill</tabstop>
+  <tabstop>skillBonus07Value</tabstop>
+  <tabstop>attrBaseH</tabstop>
+  <tabstop>attrBaseM</tabstop>
+  <tabstop>attrBaseS</tabstop>
+  <tabstop>attrRegenH</tabstop>
+  <tabstop>attrRegenM</tabstop>
+  <tabstop>attrRegenS</tabstop>
+  <tabstop>flagRegenInCombat</tabstop>
+  <tabstop>abilities</tabstop>
+  <tabstop>flagImmobile</tabstop>
+  <tabstop>flagWalks</tabstop>
+  <tabstop>flagSwims</tabstop>
+  <tabstop>flagFlies</tabstop>
+  <tabstop>flagAvoidsRoads</tabstop>
+  <tabstop>flagNotPushable</tabstop>
+  <tabstop>flagNoWaterCombat</tabstop>
+  <tabstop>flagNoRotateToHeadtrack</tabstop>
+  <tabstop>flagUsesHeadtrackAnims</tabstop>
+  <tabstop>flagTiltPitch</tabstop>
+  <tabstop>flagTiltRoll</tabstop>
+  <tabstop>flagWorldRaycastsForIK</tabstop>
+  <tabstop>flagAlwaysProxyController</tabstop>
+  <tabstop>mountOffsetX</tabstop>
+  <tabstop>mountOffsetY</tabstop>
+  <tabstop>mountOffsetZ</tabstop>
+  <tabstop>dismountOffsetX</tabstop>
+  <tabstop>dismountOffsetY</tabstop>
+  <tabstop>dismountOffsetZ</tabstop>
+  <tabstop>mountCamOffsetX</tabstop>
+  <tabstop>mountCamOffsetY</tabstop>
+  <tabstop>mountCamOffsetZ</tabstop>
+  <tabstop>flagAllowMountedCombat</tabstop>
+  <tabstop>mass</tabstop>
+  <tabstop>bodyPartData</tabstop>
+  <tabstop>skin</tabstop>
+  <tabstop>bodyBySex</tabstop>
+  <tabstop>heightMultF</tabstop>
+  <tabstop>bodyWeightF</tabstop>
+  <tabstop>skeletonF</tabstop>
+  <tabstop>behaviorGraphF</tabstop>
+  <tabstop>bodyTextureF</tabstop>
+  <tabstop>decapArmorF</tabstop>
+  <tabstop>voicetypeF</tabstop>
+  <tabstop>heightMultM</tabstop>
+  <tabstop>bodyWeightM</tabstop>
+  <tabstop>skeletonM</tabstop>
+  <tabstop>behaviorGraphM</tabstop>
+  <tabstop>bodyTextureM</tabstop>
+  <tabstop>decapArmorM</tabstop>
+  <tabstop>voicetypeM</tabstop>
+  <tabstop>bipedSlotBody</tabstop>
+  <tabstop>bipedSlotHair</tabstop>
+  <tabstop>bipedSlotHead</tabstop>
+  <tabstop>bipedSlotShield</tabstop>
+  <tabstop>bipedSlotNames</tabstop>
+  <tabstop>bipedSlotsFirstPerson</tabstop>
+  <tabstop>impactMaterialType</tabstop>
+  <tabstop>decapBloodArt</tabstop>
+  <tabstop>flagBloodSpray</tabstop>
+  <tabstop>flagBloodDecal</tabstop>
+  <tabstop>flagWeaponBlood</tabstop>
+  <tabstop>impactDataSet</tabstop>
+  <tabstop>soundOpen</tabstop>
+  <tabstop>soundClose</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>description</tabstop>
+  <tabstop>accelerationRate</tabstop>
+  <tabstop>decelerationRate</tabstop>
+  <tabstop>angularAccelerationRate</tabstop>
+  <tabstop>flagUseAdvancedAvoidance</tabstop>
+  <tabstop>angularTolerance</tabstop>
+  <tabstop>movementTypeList</tabstop>
+  <tabstop>movementTypePicker</tabstop>
+  <tabstop>movementTypeOverrideForms</tabstop>
+  <tabstop>movementTypeOverrideWalkLeft</tabstop>
+  <tabstop>movementTypeOverrideRunLeft</tabstop>
+  <tabstop>movementTypeOverrideWalkRight</tabstop>
+  <tabstop>movementTypeOverrideRunRight</tabstop>
+  <tabstop>movementTypeOverrideWalkForward</tabstop>
+  <tabstop>movementTypeOverrideRunForward</tabstop>
+  <tabstop>movementTypeOverrideWalkBack</tabstop>
+  <tabstop>movementTypeOverrideRunBack</tabstop>
+  <tabstop>movementTypeOverrideWalkRotate</tabstop>
+  <tabstop>movementTypeOverrideRunRotate</tabstop>
+  <tabstop>injuredHealthPercentage</tabstop>
+  <tabstop>unarmedDamage</tabstop>
+  <tabstop>unarmedReach</tabstop>
+  <tabstop>unarmedEquipSlot</tabstop>
+  <tabstop>aimAngleTolerance</tabstop>
+  <tabstop>flagCanDualWield</tabstop>
+  <tabstop>flagNonHostile</tabstop>
+  <tabstop>equipSlots</tabstop>
+  <tabstop>equipTypes</tabstop>
+  <tabstop>phonemeFaceFXList</tabstop>
+  <tabstop>phonemeTargets</tabstop>
+  <tabstop>currentPhonemeWeight</tabstop>
+  <tabstop>flagDefaultFaceGenPhonemes</tabstop>
+  <tabstop>faceHeadPartsInherit</tabstop>
+  <tabstop>faceHeadPartsOverlay</tabstop>
+  <tabstop>faceHeadPartsOverride</tabstop>
+  <tabstop>faceBySex</tabstop>
+  <tabstop>baseHeadPartsF</tabstop>
+  <tabstop>baseHeadPartPickerF</tabstop>
+  <tabstop>extraHeadPartsF</tabstop>
+  <tabstop>availableMorphsF</tabstop>
+  <tabstop>hairColorsF</tabstop>
+  <tabstop>defaultHairColorF</tabstop>
+  <tabstop>baseHeadPartsM</tabstop>
+  <tabstop>baseHeadPartPickerM</tabstop>
+  <tabstop>extraHeadPartsM</tabstop>
+  <tabstop>availableMorphsM</tabstop>
+  <tabstop>hairColorsM</tabstop>
+  <tabstop>defaultHairColorM</tabstop>
+  <tabstop>tintsBySex</tabstop>
+  <tabstop>tintsTableF</tabstop>
+  <tabstop>buttonTintsMoveUpF</tabstop>
+  <tabstop>buttonTintsMoveDownF</tabstop>
+  <tabstop>buttonTintsNewF</tabstop>
+  <tabstop>buttonTintsDeleteF</tabstop>
+  <tabstop>currentTintFTexture</tabstop>
+  <tabstop>currentTintFType</tabstop>
+  <tabstop>currentTintFPresetList</tabstop>
+  <tabstop>currentTintFPresetAlphaSlider</tabstop>
+  <tabstop>currentTintFPresetAlpha</tabstop>
+  <tabstop>currentTintFDefaultColor</tabstop>
+  <tabstop>defaultFaceTextureF</tabstop>
+  <tabstop>faceTexturesF</tabstop>
+  <tabstop>tintsTableM</tabstop>
+  <tabstop>buttonTintsMoveUpM</tabstop>
+  <tabstop>buttonTintsMoveDownM</tabstop>
+  <tabstop>buttonTintsNewM</tabstop>
+  <tabstop>buttonTintsDeleteM</tabstop>
+  <tabstop>currentTintMTexture</tabstop>
+  <tabstop>currentTintMType</tabstop>
+  <tabstop>currentTintMPresetList</tabstop>
+  <tabstop>currentTintMPresetAlphaSlider</tabstop>
+  <tabstop>currentTintMPresetAlpha</tabstop>
+  <tabstop>currentTintMDefaultColor</tabstop>
+  <tabstop>defaultFaceTextureM</tabstop>
+  <tabstop>faceTexturesM</tabstop>
+  <tabstop>presetsF</tabstop>
+  <tabstop>presetsM</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+  <tabstop>bodyWeightF_2</tabstop>
+  <tabstop>skeletonF_2</tabstop>
+  <tabstop>voicetypeF_2</tabstop>
+  <tabstop>bodyTextureF_2</tabstop>
+  <tabstop>skinF_2</tabstop>
+  <tabstop>decapArmorF_2</tabstop>
+  <tabstop>heightMultF_2</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

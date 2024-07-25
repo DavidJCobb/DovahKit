@@ -12,6 +12,7 @@
 #include "components/destruction.h"
 #include "components/keyword_list.h"
 #include "components/papyrus.h"
+#include "components/spell_list.h"
 
 namespace dovah::loaded_forms {
    class ActorBase : public Form {
@@ -165,6 +166,7 @@ namespace dovah::loaded_forms {
          components::container_data          inventory;
          components::keyword_list            keywords; // KSIZ, KWDA
          components::papyrus_attachment_data script_data; // VMAD
+         components::spell_list              spells;      // SPCT, SPLO
          localized_string name;            // FULL
          localized_string short_name;      // SHRT
          actor_flags_t    actor_flags = 0; // ACBS+0x00
@@ -285,7 +287,6 @@ namespace dovah::loaded_forms {
          form_reference_t gift_filter; // GNAM // a FormList
          std::vector<form_reference_t> perks;
          uint8_t sound_level = 0;
-         std::vector<form_reference_t> spells; // SPLO[SPCT], but SPCT is just a suggestion; the game will properly reallocate the list as needed
          struct {
             float r = 255.0F; // value in the range of [0.0F, 255.0F]... but then why the hell is it encoded as a float?
             float g = 255.0F;

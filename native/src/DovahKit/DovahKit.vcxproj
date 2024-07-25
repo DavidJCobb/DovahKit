@@ -136,6 +136,9 @@
     <ClCompile Include="dovah\exceptions\form_creation_failed.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.tests.cpp" />
+    <ClCompile Include="dovah\forms\AssociationType.cpp" />
+    <ClCompile Include="dovah\forms\Class.cpp" />
+    <ClCompile Include="dovah\forms\components\biped_object.cpp" />
     <ClCompile Include="dovah\forms\components\conditions\context.cpp" />
     <ClCompile Include="dovah\forms\components\conditions\working_condition.cpp" />
     <ClCompile Include="dovah\forms\components\leveled_list.cpp" />
@@ -149,10 +152,15 @@
     <ClCompile Include="dovah\forms\components\papyrus\property.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\property_object_value.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\property_value.cpp" />
+    <ClCompile Include="dovah\forms\components\spell_list.cpp" />
     <ClCompile Include="dovah\forms\Global.cpp" />
+    <ClCompile Include="dovah\forms\HeadPart.cpp" />
     <ClCompile Include="dovah\forms\LeveledCharacter.cpp" />
     <ClCompile Include="dovah\forms\LeveledItem.cpp" />
     <ClCompile Include="dovah\forms\LeveledSpell.cpp" />
+    <ClCompile Include="dovah\forms\Outfit.cpp" />
+    <ClCompile Include="dovah\forms\Race.cpp" />
+    <ClCompile Include="dovah\forms\Relationship.cpp" />
     <ClCompile Include="dovah\forms\structs\container_object_extra_data.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\file_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_load.cpp" />
@@ -170,7 +178,9 @@
     <ClCompile Include="editor\helpers\form_stub_drag_drop.cpp" />
     <ClCompile Include="editor\helpers\backend_warning_to_string.cpp" />
     <ClCompile Include="editor\ini\main.cpp" />
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_head_part_info.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_vmad_info.cpp" />
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_voicetype_info.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\form_info_cache.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\quest_vmad_skimmer.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\threaded_builder.cpp" />
@@ -690,7 +700,10 @@
     <ClCompile Include="nif\utils\find_all_retexturable_blocks.cpp" />
     <ClCompile Include="nif\utils\precache_nif_info.cpp" />
     <ClCompile Include="ui\form_windows\activator.cpp" />
+    <ClCompile Include="ui\form_windows\actor_base.cpp" />
+    <ClCompile Include="ui\form_windows\association_type.cpp" />
     <ClCompile Include="ui\form_windows\cell.cpp" />
+    <ClCompile Include="ui\form_windows\class.cpp" />
     <ClCompile Include="ui\form_windows\color.cpp" />
     <ClCompile Include="ui\form_windows\container.cpp" />
     <ClCompile Include="ui\form_windows\door.cpp" />
@@ -699,6 +712,7 @@
     <ClCompile Include="ui\form_windows\flora.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
     <ClCompile Include="ui\form_windows\global.cpp" />
+    <ClCompile Include="ui\form_windows\head_part.cpp" />
     <ClCompile Include="ui\form_windows\landtexture.cpp" />
     <ClCompile Include="ui\form_windows\leveled_character.cpp" />
     <ClCompile Include="ui\form_windows\leveled_item.cpp" />
@@ -709,7 +723,9 @@
     <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_objectives.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\quest_tab_stages.cpp" />
     <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
+    <ClCompile Include="ui\form_windows\outfit.cpp" />
     <ClCompile Include="ui\form_windows\quest.cpp" />
+    <ClCompile Include="ui\form_windows\relationship.cpp" />
     <ClCompile Include="ui\form_windows\shout.cpp" />
     <ClCompile Include="ui\form_windows\static.cpp" />
     <ClCompile Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.cpp" />
@@ -907,6 +923,7 @@
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
     <ClCompile Include="widgets\DKVulkanView.cpp" />
+    <ClCompile Include="widgets\widget-data\DKFormPickerCustomFilter.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBSABrowseDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBoundScriptDialog.cpp" />
@@ -946,6 +963,9 @@
     <ClInclude Include="dovah\data\conditions\parameter_typeinfo.h" />
     <ClInclude Include="dovah\data\conditions\parameter_underlying_type.h" />
     <ClInclude Include="dovah\data\conditions\run_on_type.h" />
+    <ClInclude Include="dovah\data\face_fx\phonemes.h" />
+    <ClInclude Include="dovah\data\sex.h" />
+    <ClInclude Include="dovah\data\skills.h" />
     <ClInclude Include="dovah\exceptions\default_object_assign_failed.h" />
     <ClInclude Include="dovah\exceptions\enums\form_creation_error_code.h" />
     <ClInclude Include="dovah\exceptions\file_load_failed.h" />
@@ -962,6 +982,9 @@
     <ClInclude Include="dovah\exceptions\invalid_load_order\desired_active_file_is_a_dependency.h" />
     <ClInclude Include="dovah\exceptions\invalid_load_order\load_order_would_have_too_many_files.h" />
     <ClInclude Include="dovah\exceptions\object_reference_move_failed.h" />
+    <ClInclude Include="dovah\forms\AssociationType.h" />
+    <ClInclude Include="dovah\forms\Class.h" />
+    <ClInclude Include="dovah\forms\components\biped_object.h" />
     <ClInclude Include="dovah\forms\components\conditions\working_comparison.h" />
     <ClInclude Include="dovah\forms\components\conditions\context.h" />
     <ClInclude Include="dovah\forms\components\conditions\event_parameters.h" />
@@ -969,10 +992,15 @@
     <ClInclude Include="dovah\forms\components\conditions\working_condition.h" />
     <ClInclude Include="dovah\forms\components\conditions\working_parameter.h" />
     <ClInclude Include="dovah\forms\components\leveled_list.h" />
+    <ClInclude Include="dovah\forms\components\spell_list.h" />
     <ClInclude Include="dovah\forms\Global.h" />
+    <ClInclude Include="dovah\forms\HeadPart.h" />
     <ClInclude Include="dovah\forms\LeveledCharacter.h" />
     <ClInclude Include="dovah\forms\LeveledItem.h" />
     <ClInclude Include="dovah\forms\LeveledSpell.h" />
+    <ClInclude Include="dovah\forms\Outfit.h" />
+    <ClInclude Include="dovah\forms\Race.h" />
+    <ClInclude Include="dovah\forms\Relationship.h" />
     <ClInclude Include="dovah\forms\structs\container_object_extra_data.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
     <ClInclude Include="dovah\game_change_failure_reason.h" />
@@ -1037,6 +1065,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\cell_type_not_yet_known.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\data_for_wrong_cell_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\head_part\invalid_morph_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\excess_layers_per_quad.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\invalid_quad_for_land_texture.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\note\non_texture_note_includes_texture_path.h" />
@@ -1044,6 +1073,9 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\alias_papyrus_data_specifies_wrong_quest.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\papyrus_fragment_belongs_to_missing_log_entry.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\unexpected_subrecord_in_objective.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\biped_object_name_too_long.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\invalid_face_texture_sex.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\too_many_biped_object_names.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\shout\wrong_word_count.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_addendum_subrecord_too_early.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\worldspace\is_own_parent.h" />
@@ -1070,6 +1102,7 @@
     <ClInclude Include="dovah\notices\_all_warnings.h" />
     <ClInclude Include="dovah\notices\_util.define.h" />
     <ClInclude Include="dovah\notices\_util.undef.h" />
+    <ClInclude Include="dovah\utils\data_by_sex.h" />
     <ClInclude Include="dovah\utils\leveled_list_preview.h" />
     <ClInclude Include="editor\helpers\backend_error_to_string.h" />
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
@@ -1077,6 +1110,10 @@
     <QtMoc Include="widgets\widget-models\DKLeveledListPreviewModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormInventoryModel.h" />
     <QtMoc Include="editor\subsystems\message_log\dovahkit_message_log.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\head_part_info.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\voicetype_info.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_head_part_info.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_voicetype_info.h" />
     <ClInclude Include="editor\subsystems\message_log\core.h" />
     <ClInclude Include="helpers\hashing\crc32.h" />
     <ClInclude Include="nif\blocks\BSValueNode.h" />
@@ -1095,8 +1132,14 @@
     <QtMoc Include="ui\form_windows\global.h" />
     <QtMoc Include="ui\form_windows\leveled_character.h" />
     <QtMoc Include="ui\form_windows\container.h" />
+    <QtMoc Include="ui\form_windows\actor_base.h" />
+    <QtMoc Include="ui\form_windows\head_part.h" />
+    <QtMoc Include="ui\form_windows\association_type.h" />
+    <QtMoc Include="ui\form_windows\class.h" />
     <ClInclude Include="ui\form_windows\leveled_lists\LeveledListEditDialogHelpers.h" />
     <QtMoc Include="ui\form_windows\leveled_spell.h" />
+    <QtMoc Include="ui\form_windows\outfit.h" />
+    <QtMoc Include="ui\form_windows\relationship.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
@@ -1119,6 +1162,7 @@
     <QtMoc Include="widgets\DKComboBox.h" />
     <QtMoc Include="widgets\DKFormInventoryWidget.h" />
     <QtMoc Include="widgets\widget-dialogs\DKLeveledListPreviewDialog.h" />
+    <QtMoc Include="widgets\widget-data\DKFormPickerCustomFilter.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />
     <QtMoc Include="widgets\DKFormNIFPicker.h" />
@@ -2362,7 +2406,10 @@
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\form_windows\activator.ui" />
+    <QtUic Include="ui\form_windows\actor_base.ui" />
+    <QtUic Include="ui\form_windows\association_type.ui" />
     <QtUic Include="ui\form_windows\cell.ui" />
+    <QtUic Include="ui\form_windows\class.ui" />
     <QtUic Include="ui\form_windows\color.ui" />
     <QtUic Include="ui\form_windows\container.ui" />
     <QtUic Include="ui\form_windows\door.ui" />
@@ -2371,6 +2418,7 @@
     <QtUic Include="ui\form_windows\flora.ui" />
     <QtUic Include="ui\form_windows\formlist.ui" />
     <QtUic Include="ui\form_windows\global.ui" />
+    <QtUic Include="ui\form_windows\head_part.ui" />
     <QtUic Include="ui\form_windows\landtexture.ui" />
     <QtUic Include="ui\form_windows\leveled_character.ui" />
     <QtUic Include="ui\form_windows\leveled_item.ui" />
@@ -2384,9 +2432,11 @@
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_objectives.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_stages.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\shout_word.ui" />
+    <QtUic Include="ui\form_windows\outfit.ui" />
     <QtUic Include="ui\form_windows\projectile.ui" />
     <QtUic Include="ui\form_windows\quest.ui" />
     <QtUic Include="ui\form_windows\reference.ui" />
+    <QtUic Include="ui\form_windows\relationship.ui" />
     <QtUic Include="ui\form_windows\shout.ui" />
     <QtUic Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.ui" />
     <QtUic Include="ui\form_windows\static.ui" />
