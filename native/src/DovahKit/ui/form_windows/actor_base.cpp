@@ -392,7 +392,11 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
       if constexpr (!allow_customizing_face) {
          this->ui.tabFaceMorphs->setEnabled(false);
       }
-      static_assert(false, "TODO");
+      //
+      // We set the morph information when we bind the widgets to the form, not here.
+      // Easier that way just because there's no floating-point QSlider; keep all the 
+      // values we use as hacks to adjust it all in one place.
+      //
    #pragma endregion
    #pragma region Face Anim Preview tab
       if constexpr (preview_enabled) {
@@ -561,10 +565,44 @@ void FormDialogActorBase::_load_impl() {
       static_assert(false, "TODO");
    #pragma endregion
    #pragma region Face Morphs tab
-      static_assert(false, "TODO");
+      {
+         auto _handle = [](QSlider* widget, float& value) {
+            widget->setRange(-1000, 1000);
+            widget->setTickInterval(200);
+            ui::bind(widget, value, 1000);
+         };
+
+         _handle(this->ui.faceMorphBrowDepth,  working.face.morphs.brows.depth);
+         _handle(this->ui.faceMorphBrowHeight, working.face.morphs.brows.height);
+         _handle(this->ui.faceMorphBrowWidth,  working.face.morphs.brows.width);
+
+         static_assert(false, "TODO: Mouth Type (morph index from the actor's race)");
+         _handle(this->ui.faceMorphMouthHeight, working.face.morphs.mouth.height);
+         _handle(this->ui.faceMorphMouthDepth,  working.face.morphs.mouth.depth);
+
+         _handle(this->ui.faceMorphChinDepth,  working.face.morphs.chin.depth);
+         _handle(this->ui.faceMorphChinLength, working.face.morphs.chin.height);
+         _handle(this->ui.faceMorphChinWidth,  working.face.morphs.chin.width);
+
+         _handle(this->ui.faceMorphJawDepth,  working.face.morphs.jaw.depth);
+         _handle(this->ui.faceMorphJawHeight, working.face.morphs.jaw.height);
+         _handle(this->ui.faceMorphJawWidth,  working.face.morphs.jaw.width);
+
+         _handle(this->ui.faceMorphCheekbonesHeight, working.face.morphs.cheeks.height);
+         _handle(this->ui.faceMorphCheekbonesWidth,  working.face.morphs.cheeks.width);
+
+         static_assert(false, "TODO: Eyes Type (morph index from the actor's race)");
+         _handle(this->ui.faceMorphEyesDepth,  working.face.morphs.eyes.depth);
+         _handle(this->ui.faceMorphEyesHeight, working.face.morphs.eyes.height);
+         _handle(this->ui.faceMorphEyesWidth,  working.face.morphs.eyes.width);
+
+         static_assert(false, "TODO: Nose Type (morph index from the actor's race)");
+         _handle(this->ui.faceMorphNoseHeight, working.face.morphs.nose.height);
+         _handle(this->ui.faceMorphNoseLength, working.face.morphs.nose.length);
+      }
    #pragma endregion
    #pragma region Face Anim Preview tab
-      static_assert(false, "TODO");
+      static_assert(!preview_enabled, "TODO");
    #pragma endregion
 
    static_assert(false, "TODO");

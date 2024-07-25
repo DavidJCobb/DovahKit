@@ -8,6 +8,7 @@
 #include <QDoubleSpinBox>
 #include <QGroupBox>
 #include <QRadioButton>
+#include <QSlider>
 #include <QSpinBox>
 #include <QLineEdit>
 
@@ -165,6 +166,22 @@ namespace ui {
       widget->setValue(target);
       QObject::connect(widget, QOverload<double>::of(&QDoubleSpinBox::valueChanged), widget, [widget, &target](double f) {
          target = f;
+      });
+   }
+
+   template<typename Target> requires (std::is_arithmetic_v<Target> && !std::is_floating_point_v<Target>)
+   void bind(QSlider* widget, Target& target) {
+      widget->setValue(target);
+      QObject::connect(widget, QOverload<int>::of(&QSlider::valueChanged), widget, [widget, &target](int v) {
+         target = (Target)v;
+      });
+   }
+   //
+   template<typename Target, typename Factor> requires (std::is_floating_point_v<Target> && std::is_arithmetic_v<Factor>)
+   void bind(QSlider* widget, Target& target, Factor factor) {
+      widget->setValue(round(target * factor));
+      QObject::connect(widget, QOverload<int>::of(&QSlider::valueChanged), widget, [widget, &target, factor](int v) {
+         target = (Target)v / factor;
       });
    }
 

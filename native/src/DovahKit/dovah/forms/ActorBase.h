@@ -209,7 +209,7 @@ namespace dovah::loaded_forms {
                } jaw;
                struct {
                   float height = 0;
-                  float depth  = 0;
+                  float width  = 0;
                } cheeks;
                struct {
                   float height = 0;
@@ -224,7 +224,7 @@ namespace dovah::loaded_forms {
                struct {
                   float height = 0;
                   float depth  = 0;
-               } lips;
+               } mouth;
                struct {
                   float width  = 0;
                   float height = 0;
