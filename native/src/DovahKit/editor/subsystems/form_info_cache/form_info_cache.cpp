@@ -15,6 +15,7 @@
 
 #include "dovah/load_order_interfaces/form_load.h"
 #include "./cacheable_traits/attached_scripts.h"
+#include "./cacheable_traits/faction_info.h"
 #include "./cacheable_traits/head_part_info.h"
 #include "./cacheable_traits/model_path.h"
 #include "./cacheable_traits/quest_filter.h"
@@ -48,6 +49,9 @@ namespace {
       if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::attached_scripts::form_class_is_of_interest<Current>) {
          return true;
       }
+      if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::faction_info::form_class_is_of_interest<Current>) {
+         return true;
+      }
       if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::head_part_info::form_class_is_of_interest<Current>) {
          return true;
       }
@@ -70,7 +74,7 @@ namespace {
    ) {
       using namespace dovahkit::subsystems::form_info_cache;
 
-      constexpr const bool must_read_all_subrecords = (FormType == dovah::form_type::quest);
+      constexpr const bool must_read_all_subrecords = (FormType == dovah::form_type::quest) || (FormType == dovah::form_type::head_part);
 
       using seen_trait_mask = cobb::enum_flags<cacheable_trait, cacheable_trait_count>;
       seen_trait_mask seen;
@@ -78,6 +82,9 @@ namespace {
       if constexpr (!must_read_all_subrecords) {
          if constexpr (!cacheable_traits::attached_scripts::form_type_is_of_interest(FormType)) {
             seen |= cacheable_trait::attached_scripts;
+         }
+         if constexpr (!cacheable_traits::faction_info::form_type_is_of_interest(FormType)) {
+            seen |= cacheable_trait::faction_info;
          }
          if constexpr (!cacheable_traits::head_part_info::form_type_is_of_interest(FormType)) {
             seen |= cacheable_trait::head_part_info;
@@ -99,6 +106,12 @@ namespace {
          quest_vmad_skimmer,
          uint8_t // dummy type
       > quest_skimmer;
+
+      std::conditional_t<
+         (FormType == dovah::form_type::faction),
+         cached_faction_info,
+         uint8_t // dummy type
+      > faction_info = {};
 
       std::conditional_t<
          (FormType == dovah::form_type::head_part),
@@ -141,6 +154,14 @@ namespace {
                }
             }
          }
+         if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(FormType)) {
+            if (signature == 'DATA') {
+               faction_info.skim_subrecord(subrecord);
+               //
+               if constexpr (!must_read_all_subrecords)
+                  seen |= cacheable_trait::faction_info;
+            }
+         }
          if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(FormType)) {
             head_part_info.skim_subrecord(subrecord);
          }
@@ -171,6 +192,9 @@ namespace {
          }
       }
 
+      if constexpr (FormType == dovah::form_type::faction) {
+         cache.factions.threadedInsert(stub, std::move(faction_info));
+      }
       if constexpr (FormType == dovah::form_type::quest) {
          if (!quest_skimmer.empty())
             cache.attached_scripts.threadedInsert(stub, quest_skimmer.bake());
@@ -207,6 +231,22 @@ namespace {
          }
          if (changed)
             emit core.cachedQuestFilterChanged(stub, prior, value);
+      }
+      
+      if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(LoadedForm::form_type)) {
+         auto& dst_list = cache.factions;
+         auto  dst_it   = dst_list.find(stub);
+         if (dst_it) {
+            auto& dst = *dst_it;
+            if (dst.update(loaded)) {
+               emit core.cachedFactionChanged(stub);
+            }
+         } else {
+            cached_faction_info info;
+            info.update(loaded);
+            dst_list.insert(std::move(info));
+            emit core.cachedFactionChanged(stub);
+         }
       }
 
       if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(LoadedForm::form_type)) {
@@ -328,6 +368,10 @@ namespace dovahkit::subsystems::form_info_cache {
                }
             }
 
+            if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(Current::form_type)) {
+               this->_cache.factions.takeAndReport(*stub);
+            }
+
             if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(Current::form_type)) {
                this->_cache.head_parts.takeAndReport(*stub);
                //
@@ -443,6 +487,11 @@ namespace dovahkit::subsystems::form_info_cache {
       if (stub.form_type != dovah::form_type::quest)
          return {};
       return this->_cache.quest_filters.value(&stub);
+   }
+   const cached_faction_info* core::get_faction_info(const dovah::form_stub& stub) const {
+      if (stub.form_type != dovah::form_type::faction)
+         return nullptr;
+      return &this->_cache.factions.value(&stub);
    }
    const cached_head_part_info* core::get_head_part_info(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::head_part)

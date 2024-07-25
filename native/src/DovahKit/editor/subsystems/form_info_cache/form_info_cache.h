@@ -55,6 +55,7 @@ namespace dovahkit::subsystems::form_info_cache {
          void cachedDataBuilt(); // emitted when all data is built
          void cachedDataCleared(); // emitted when all data is cleared
 
+         void cachedFactionChanged(dovah::form_stub&);
          void cachedHeadPartChanged(dovah::form_stub&);
          void cachedModelPathChanged(dovah::form_stub&, QString old_value, QString new_value);
          void cachedQuestFilterChanged(dovah::form_stub&, QString old_value, QString new_value);
@@ -64,8 +65,9 @@ namespace dovahkit::subsystems::form_info_cache {
       public:
          QString get_form_model_path(const dovah::form_stub&) const;
          QString get_quest_filter(const dovah::form_stub&) const;
-         const cached_head_part_info* get_head_part_info(const dovah::form_stub& head_part) const;
-         const cached_voicetype_info* get_voicetype_info(const dovah::form_stub& voicetype) const;
+         const cached_faction_info*   get_faction_info(const dovah::form_stub&) const;
+         const cached_head_part_info* get_head_part_info(const dovah::form_stub&) const;
+         const cached_voicetype_info* get_voicetype_info(const dovah::form_stub&) const;
 
          script_attach_state form_script_attachment(const dovah::form_stub&, std::string_view scriptname) const;
          bool quest_has_alias_with_script(const dovah::form_stub&, std::string_view scriptname) const;

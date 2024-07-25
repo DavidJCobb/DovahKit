@@ -132,12 +132,16 @@ DKFormListPaneModel* DKFormListPane::_model() const noexcept {
 
 #if !defined(QT_DESIGNER_LIB)
    void DKFormListPane::_moveSelected(int down) {
+      if (this->readOnly())
+         return;
       auto* sm = this->subwidgets.view->selectionModel();
       if (!sm)
          return;
       this->_model()->moveStubs(sm->selectedRows(), down);
    }
    void DKFormListPane::_removeSelected() {
+      if (this->readOnly())
+         return;
       auto* sm = this->subwidgets.view->selectionModel();
       if (!sm)
          return;
@@ -145,6 +149,10 @@ DKFormListPaneModel* DKFormListPane::_model() const noexcept {
    }
 #endif
 void DKFormListPane::_updateButtonVisibility() {
+   if (this->readOnly()) {
+      this->subwidgets.buttons.wrapper->setVisible(false);
+      return;
+   }
    auto* prev   = this->subwidgets.buttons.move_up;
    auto* next   = this->subwidgets.buttons.move_down;
    auto* remove = this->subwidgets.buttons.remove;
@@ -228,7 +236,17 @@ void DKFormListPane::_updateOrientation() {
       }
    }
 #endif
+   
+void DKFormListPane::setReadOnly(bool v) {
+   if (this->readOnly() == v)
+      return;
+   this->state.read_only = v;
 
+   auto* view = this->subwidgets.view;
+   view->setAcceptDrops(!v);
+   this->subwidgets.buttons.wrapper->setEnabled(!v);
+   this->subwidgets.buttons.wrapper->setVisible(!v);
+}
 #if !defined(QT_DESIGNER_LIB)
    void DKFormListPane::setAllowedFormTypes(QVector<dovah::form_type> list) {
       this->_model()->setAllowedFormTypes(list);
@@ -282,8 +300,10 @@ void DKFormListPane::setShowRemoveButton(bool v) {
 
 void DKFormListPane::keyPressEvent(QKeyEvent* event) {
    #if !defined(QT_DESIGNER_LIB)
-      if (event->matches(QKeySequence::Delete)) {
-         this->_removeSelected();
+      if (!this->readOnly()) {
+         if (event->matches(QKeySequence::Delete)) {
+            this->_removeSelected();
+         }
       }
    #endif
 }

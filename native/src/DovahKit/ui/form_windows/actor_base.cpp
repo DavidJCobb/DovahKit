@@ -2,12 +2,18 @@
 #include <limits>
 #include "dovah/core.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/item_indices_to_data.h"
 #include "ui/utils/set_range.h"
 
 #include "editor/subsystems/form_info_cache/core.h"
+#include "editor/open_window_for_form.h"
 #include "dovah/forms/Outfit.h"
 
 #include "widgets/widget-data/DKFormPickerCustomFilter.h"
+
+#include "./actor_base/ActorBaseFactionsModel.h"
+#include "./actor_base/ActorBaseRelationshipsModel.h"
+#include "./actor_base/ActorBaseSkillsModel.h"
 
 namespace {
    constexpr const bool preview_enabled = false;
@@ -21,6 +27,64 @@ namespace {
 }
 
 namespace impl {
+   class CrimeFactionPickerFilter final : public DKFormPickerCustomFilter {
+      protected:
+         using fic_type = dovahkit::subsystems::form_info_cache::core;
+
+      public:
+         CrimeFactionPickerFilter(QObject* parent) : DKFormPickerCustomFilter(parent) {
+            auto& fic = fic_type::get();
+            QObject::connect(&fic, &fic_type::cachedFactionChanged, this, [this](dovah::form_stub* stub) {
+               if (stub)
+                  this->_refilter_form(*stub);
+            });
+         }
+         
+         virtual bool form_matches(const dovah::form_stub& stub) const noexcept override {
+            if (!this->_model)
+               return true;
+
+            if (!this->_model->containsFaction(&stub))
+               return false;
+            
+            auto& fic  = fic_type::get();
+            auto* info = fic.get_faction_info(stub);
+            if (!info)
+               return false;
+
+            return info->tracks_crime;
+         };
+
+         void setModel(ActorBaseFactionsModel* model) {
+            if (this->_model == model)
+               return;
+
+            if (this->_model) {
+               QObject::disconnect(this->_model, nullptr, this, nullptr);
+            }
+            this->_model = model;
+            if (model) {
+               QObject::connect(model, &QAbstractItemModel::dataChanged, this, [this](const QModelIndex& qmi) {
+                  if (qmi.column() != ActorBaseFactionsModel::Column::Faction)
+                     return;
+                  this->_refilter_all_forms();
+               });
+               QObject::connect(model, &QAbstractItemModel::rowsInserted, this, [this]() {
+                  this->_refilter_all_forms();
+               });
+               QObject::connect(model, &QAbstractItemModel::rowsRemoved, this, [this]() {
+                  this->_refilter_all_forms();
+               });
+               QObject::connect(model, &QAbstractItemModel::modelReset, this, [this]() {
+                  this->_refilter_all_forms();
+               });
+            }
+            this->_refilter_all_forms();
+         }
+
+      protected:
+         ActorBaseFactionsModel* _model = nullptr;
+   };
    class DKFormPickerExcludeSingleFormFilter final : public DKFormPickerCustomFilter {
       public:
          using DKFormPickerCustomFilter::DKFormPickerCustomFilter;
@@ -105,26 +169,164 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
       }
       this->ui.weaponList->setAllowedFormType(dovah::form_type::formlist);
       this->ui.deathItem->setAllowedFormType(dovah::form_type::leveled_item);
+
+      ui::set_unsigned_range<decltype(decltype(loaded_form_type::stats)::disposition)>(this->ui.dispositionBase);
    #pragma endregion
    #pragma region Stats tab
-      static_assert(false, "TODO");
+      {
+         using stats_struct = decltype(loaded_form_type::stats);
+
+         ui::set_range<decltype(stats_struct::level)>(this->ui.level);
+         ui::set_range<decltype(stats_struct::calc_min_level)>(this->ui.levelCalcMin);
+         ui::set_range<decltype(stats_struct::calc_max_level)>(this->ui.levelCalcMax);
+         QObject::connect(this->ui.flagPCLevelMult, &QCheckBox::toggled, this, [this](bool checked) {
+            if (checked)
+               this->ui.flagAutoCalcStats->setChecked(true);
+         });
+
+         this->ui.speedPercentage->setRange(0, 32767);
+         this->ui.bleedoutOverrideThreshold->setRange(0, 32767);
+
+         this->ui.statsClass->setAllowedFormType(dovah::form_type::combat_class);
+         static_assert(false, "TODO: Attributes");
+         ui::set_range<decltype(decltype(stats_struct::base)::health)>(this->ui.statsHealthBase);
+         ui::set_range<decltype(decltype(stats_struct::base)::magicka)>(this->ui.statsMagickaBase);
+         ui::set_range<decltype(decltype(stats_struct::base)::stamina)>(this->ui.statsStaminaBase);
+         ui::set_range<decltype(decltype(stats_struct::offsets)::health)>(this->ui.statsHealthOffset);
+         ui::set_range<decltype(decltype(stats_struct::offsets)::magicka)>(this->ui.statsMagickaOffset);
+         ui::set_range<decltype(decltype(stats_struct::offsets)::stamina)>(this->ui.statsStaminaOffset);
+         this->ui.statsHealthBase->setReadOnly(true);
+         this->ui.statsMagickaBase->setReadOnly(true);
+         this->ui.statsStaminaBase->setReadOnly(true);
+         this->ui.statsHealthCalcFinal->setReadOnly(true);
+         this->ui.statsMagickaCalcFinal->setReadOnly(true);
+         this->ui.statsStaminaCalcFinal->setReadOnly(true);
+         {
+            auto* widget = this->ui.statsTable;
+            auto* model  = this->_models.skills = new ActorBaseSkillsModel(this);
+            widget->setModel(model);
+
+            ui::set_range<uint8_t>(this->ui.currentSkillOffset);
+
+            {  // Level
+               QObject::connect(this->ui.flagPCLevelMult, &QCheckBox::toggled, this, [this](bool checked) {
+                  if (checked)
+                     this->_models.skills->setLevel(1);
+                  else
+                     this->_models.skills->setLevel(this->ui.level->value());
+               });
+               QObject::connect(this->ui.level, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int v) {
+                  if (!this->ui.flagPCLevelMult->isChecked())
+                     this->_models.skills->setLevel(v);
+               });
+            }
+            QObject::connect(this->ui.flagAutoCalcStats, &QCheckBox::toggled, this, [this](bool checked) {
+               this->ui.skillEditLayout->setVisible(!checked);
+               this->_models.skills->setOffsetsUsed(!checked);
+            });
+            QObject::connect(this->ui.race, &DKFormPicker::formChanged, this, [this](dovah::form_stub* stub) {
+               this->_models.skills->setRace(stub);
+            });
+            QObject::connect(this->ui.statsClass, &DKFormPicker::formChanged, this, [this](dovah::form_stub* stub) {
+               this->_models.skills->setClass(stub);
+            });
+
+            auto* sel_model = widget->selectionModel();
+            QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this, sel_model, model]() {
+               auto rows = sel_model->selectedRows();
+               if (rows.isEmpty()) {
+                  this->ui.skillEditLayout->setEnabled(false);
+                  return;
+               }
+               this->ui.skillEditLayout->setEnabled(true);
+
+               const auto blocker = QSignalBlocker(this->ui.currentSkillOffset);
+               this->ui.currentSkillOffset->setValue(model->offsetOf((dovah::skill)rows[0].row()));
+            });
+            QObject::connect(this->ui.currentSkillOffset, QOverload<int>::of(&QSpinBox::valueChanged), this, [this, sel_model, model](int v) {
+               auto rows = sel_model->selectedRows();
+               if (rows.isEmpty()) {
+                  this->ui.skillEditLayout->setEnabled(false);
+                  return;
+               }
+               model->setSkillOffset((dovah::skill)rows[0].row(), v);
+            });
+
+            this->ui.skillEditLayout->setEnabled(false);
+         }
+      }
    #pragma endregion
    #pragma region Factions tab
+      this->_filters.crime_faction = new impl::CrimeFactionPickerFilter(this);
+      {
+         auto* widget = this->ui.factionsTable;
+         auto* model  = this->_models.factions = new ActorBaseFactionsModel(this);
+         widget->setModel(model);
+         this->_filters.crime_faction->setModel(model);
+      }
       this->ui.currentFactionForm->setAllowedFormType(dovah::form_type::faction);
+      this->ui.currentFactionForm->setCustomFilter(this->_filters.crime_faction);
       ui::set_range<int8_t>(this->ui.currentFactionRank);
+
+      QObject::connect(this->ui.currentFactionForm, &DKFormPicker::formChanged, this, &FormDialogActorBase::_push_faction_from_ui);
+      QObject::connect(this->ui.currentFactionRank, QOverload<int>::of(&QSpinBox::valueChanged), this, &FormDialogActorBase::_push_faction_from_ui);
    #pragma endregion
    #pragma region Relationships tab
-      static_assert(false, "TODO");
+      {
+         auto* widget = this->ui.relationshipsTable;
+         auto* model  = this->_models.relationships = new ActorBaseRelationshipsModel(this);
+         widget->setModel(model);
+
+         {  // Context menu
+            auto& menu = this->_context_menus.relationships;
+
+            auto* action_edit = new QAction(tr("Edit..."), this);
+            QObject::connect(action_edit, &QAction::triggered, this, [this]() {
+               auto* sel_model = this->ui.relationshipsTable->selectionModel();
+               size_t row;
+               {
+                  auto rows = sel_model->selectedRows();
+                  if (rows.isEmpty())
+                     return;
+                  row = rows[0].row();
+               }
+               auto* relationship = this->_models.relationships->relationshipAt(row);
+               if (!relationship)
+                  return;
+               open_edit_dialog_for_form(*relationship);
+            });
+            menu.addAction(action_edit);
+
+            widget->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+            QObject::connect(widget, &QWidget::customContextMenuRequested, this, [this, widget, action_edit, &menu](const QPoint& pos) {
+               auto& menu = this->_context_menus.relationships;
+
+               bool any_selection = false;
+               if (auto* sel_model = this->ui.relationshipsTable->selectionModel()) {
+                  auto rows = sel_model->selectedRows();
+                  if (!rows.isEmpty())
+                     any_selection = true;
+               }
+
+               action_edit->setEnabled(any_selection);
+
+               menu.exec(widget->mapToGlobal(pos));
+            });
+         }
+      }
    #pragma endregion
    #pragma region Keywords tab
       this->ui.keywords->setAllowedFormTypes({ dovah::form_type::keyword });
    #pragma endregion
    #pragma region AI Data tab
-      static_assert(false, "TODO");
+      ui::item_indices_to_data(this->ui.mood);
       ui::set_range<uint8_t>(this->ui.aiEnergy);
       this->ui.giftFilter->setAllowedFormType(dovah::form_type::formlist);
 
-      static_assert(false, "TODO");
+      ui::item_indices_to_data(this->ui.aggression);
+      ui::item_indices_to_data(this->ui.confidence);
+      ui::item_indices_to_data(this->ui.assistance);
+      ui::item_indices_to_data(this->ui.morality);
       ui::set_range<uint16_t>(this->ui.aggroRadiusWarn);
       ui::set_range<uint16_t>(this->ui.aggroRadiusWarnAttack);
       ui::set_range<uint16_t>(this->ui.aggroRadiusAttack);
@@ -141,7 +343,7 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
    #pragma region Inventory tab
       this->ui.outfitDefault->setAllowedFormType(dovah::form_type::outfit);
       this->ui.outfitSleep->setAllowedFormType(dovah::form_type::outfit);
-      static_assert(false, "TODO: Make the DKFormListPane here read-only.");
+      this->ui.outfitItemsPreview->setReadOnly(true);
       ui::set_range<uint8_t>(this->ui.gearedUpWeapons);
 
       QObject::connect(this->ui.outfitDefault, &DKFormPicker::formChanged, this, &FormDialogActorBase::_updateOutfitContentsView);
@@ -155,9 +357,15 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
       this->ui.perks->setAllowedFormTypes({ dovah::form_type::perk });
    #pragma endregion
    #pragma region Sounds tab
+      ui::item_indices_to_data(this->ui.soundLevel);
       this->ui.inheritSoundsFrom->setAllowedFormType(dovah::form_type::actor_base);
+      this->ui.inheritSoundsFrom->setAllowNone(true);
       this->ui.inheritSoundsFrom->setCustomFilter(this->_filters.exclude_self); // don't let an actor inherit sounds from themselves
 
+      static_assert(false, "TODO: list model");
+
+      ui::item_indices_to_data(this->ui.currentCreaSoundType);
+      this->ui.currentCreaSoundChance->setRange(0, 100);
       this->ui.currentCreaSoundForm->setAllowedFormType(dovah::form_type::sound_descriptor);
    #pragma endregion
    #pragma region Attack Data tab
@@ -252,6 +460,7 @@ void FormDialogActorBase::_load_impl() {
             this->form->actor_flags &= ~loaded_form_type::actor_flag::female;
 
          this->_filters.voicetype->set_female(female);
+         this->_models.relationships->setFocusActor(this->formStub(), female ? dovah::sex::female : dovah::sex::male);
       });
       ui::bind(this->ui.flagOppositeGenderAnims, working.template_data.flags, loaded_form_type::actor_flag::opposite_gender_animations);
       ui::bind(this->ui.height,     working.height);
@@ -264,13 +473,44 @@ void FormDialogActorBase::_load_impl() {
       ui::bind(this->ui.deathItem, working.death_item, working);
    #pragma endregion
    #pragma region Stats tab
-      static_assert(false, "TODO");
+      ui::bind(this->ui.level,        working.stats.level);
+      ui::bind(this->ui.levelCalcMin, working.stats.calc_min_level);
+      ui::bind(this->ui.levelCalcMax, working.stats.calc_max_level);
+      ui::bind(this->ui.flagPCLevelMult, working.actor_flags, loaded_form_type::actor_flag::pc_level_mult);
+
+      ui::bind(this->ui.speedPercentage, working.stats.speed_mult);
+      ui::bind(this->ui.flagBleedoutOverride, working.actor_flags, loaded_form_type::actor_flag::bleedout_override);
+      ui::bind(this->ui.bleedoutOverrideThreshold, working.stats.bleedout_threshold);
+
+      ui::bind(this->ui.statsClass, working.stats.combat_class, working);
+      ui::bind(this->ui.flagAutoCalcStats, working.actor_flags, loaded_form_type::actor_flag::auto_calc_stats);
+      static_assert(false, "TODO: Attributes");
+
+      {
+         for (size_t i = 0; i < dovah::skill_count; ++i)
+            this->_models.skills->setSkillOffset((dovah::skill)i, working.stats.offsets.skills.list[i]);
+      }
    #pragma endregion
    #pragma region Factions tab
-      static_assert(false, "TODO");
+      {
+         auto* model = this->_models.factions;
+         model->clear();
+
+         std::vector<ActorBaseFactionsModelNode> nodes;
+         for (const auto& entry : working.faction_memberships) {
+            auto& dst = nodes.emplace_back();
+            dst.faction = entry.faction.get_form_stub();
+            dst.rank    = entry.rank;
+         }
+         model->overwriteAllItems(nodes);
+      }
+      this->_pull_faction_to_ui();
    #pragma endregion
    #pragma region Relationships tab
-      static_assert(false, "TODO");
+      this->_models.relationships->setFocusActor(
+         this->formStub(),
+         (working.actor_flags & loaded_form_type::actor_flag::female) ? dovah::sex::female : dovah::sex::male
+      );
    #pragma endregion
    #pragma region Keywords tab
       for (auto& ref : working.keywords.forms) {
@@ -278,10 +518,14 @@ void FormDialogActorBase::_load_impl() {
       }
    #pragma endregion
    #pragma region AI Data tab
-      static_assert(false, "TODO");
+      ui::bind(this->ui.mood, working.ai.mood);
+      ui::bind(this->ui.aiEnergy, working.ai.energy_level);
       ui::bind(this->ui.giftFilter, working.gift_filter, working);
 
-      static_assert(false, "TODO");
+      ui::bind(this->ui.aggression, working.ai.aggression);
+      ui::bind(this->ui.confidence, working.ai.confidence);
+      ui::bind(this->ui.assistance, working.ai.assistance);
+      ui::bind(this->ui.morality, working.ai.morality);
       ui::bind(this->ui.aggroRadiusWarn,       working.ai.aggro.warn);
       ui::bind(this->ui.aggroRadiusWarnAttack, working.ai.aggro.warn_attack);
       ui::bind(this->ui.aggroRadiusAttack,     working.ai.aggro.attack);
@@ -299,10 +543,13 @@ void FormDialogActorBase::_load_impl() {
       QObject::connect(this->ui.outfitDefault, &DKFormPicker::formChanged, this, &FormDialogActorBase::_updateOutfitContentsView);
       ui::bind(this->ui.outfitDefault, working.outfits.normal,   working);
       ui::bind(this->ui.outfitSleep,   working.outfits.sleeping, working);
-      static_assert(false, "TODO");
+      ui::bind(this->ui.gearedUpWeapons, working.geared_up_weapons);
+
+      this->ui.inventory->initializeFrom(working.inventory);
    #pragma endregion
    #pragma region Magic and Perks tab
-      static_assert(false, "TODO");
+      this->ui.spells->pullStubs(working.spells.forms);
+      this->ui.perks->pullStubs(working.perks);
    #pragma endregion
    #pragma region Sounds tab
       static_assert(false, "TODO");
@@ -334,12 +581,13 @@ void FormDialogActorBase::_save_impl() {
    auto& working = *this->form;
    
    editor.assign_localized_string(working.name, this->ui.name->text());
-   this->ui.model->commitTo(working.model, working);
    this->ui.destructionData->commitTo(working.destruction_data, working);
 
    static_assert(false, "TODO");
 
    this->ui.keywords->commitStubs(working.keywords.forms, working);
+   this->ui.spells->commitStubs(working.spells.forms, working);
+   this->ui.perks->commitStubs(working.perks, working);
    this->ui.scriptListPane->commit();
 }
 
@@ -414,3 +662,34 @@ void FormDialogActorBase::_updateFromTemplate() {
       this->ui.packageListCombat->setFormStub(base_loaded->ai.package_override_lists.combat.get_form_stub());
    }
 }
+
+void FormDialogActorBase::_pull_faction_to_ui() {
+   auto* widget    = this->ui.factionsTable;
+   auto* model     = this->_models.factions;
+   auto* sel_model = widget->selectionModel();
+
+   const ActorBaseFactionsModelNode* node = nullptr;
+   {
+      auto rows = sel_model->selectedRows();
+      if (!rows.isEmpty())
+         node = model->item(rows[0].row());
+   }
+
+   const auto blockers = std::array{
+      QSignalBlocker(this->ui.currentFactionForm),
+      QSignalBlocker(this->ui.currentFactionRank),
+   };
+
+   this->ui.currentFactionForm->setEnabled(node != nullptr);
+   this->ui.currentFactionRank->setEnabled(node != nullptr);
+   if (!node) {
+      this->ui.currentFactionForm->setAllowNone(true);
+      this->ui.currentFactionForm->setFormStub(nullptr);
+      this->ui.currentFactionRank->setValue(-1);
+      return;
+   }
+   this->ui.currentFactionForm->setAllowNone(false);
+   this->ui.currentFactionForm->setFormStub(node->faction);
+   this->ui.currentFactionRank->setValue(node->rank);
+}
+void FormDialogActorBase::_push_faction_from_ui();

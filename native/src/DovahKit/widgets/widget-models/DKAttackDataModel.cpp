@@ -1,54 +1,87 @@
 #include "./DKAttackDataModel.h"
+#include "dovah/form_stub.h"
+#include "editor/core.h"
+
+DKAttackDataModel::DKAttackDataModel(QObject* parent) : DKGenericListModel(parent) {
+   auto& editor = DovahKitCore::get();
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &DKAttackDataModel::clear);
+   QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
+      for(size_t i = 0; i < this->_nodes.size(); ++i) {
+         auto* node = this->_nodes[i];
+         if (node->keyword == stub) {
+            node->cached.keywordEditorID = QString::fromStdString(stub->editorID);
+
+            auto qmi = this->index(i, Column::Keyword, {});
+            emit this->dataChanged(qmi, qmi);
+         }
+         if (node->spell == stub) {
+            node->cached.spellEditorID = QString::fromStdString(stub->editorID);
+
+            auto qmi = this->index(i, Column::Spell, {});
+            emit this->dataChanged(qmi, qmi);
+         }
+      }
+   });
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool just_being_flagged) {
+      for (size_t i = 0; i < this->_nodes.size(); ++i) {
+         auto* node = this->_nodes[i];
+         if (node->keyword == stub) {
+            node->keyword = nullptr;
+            node->cached.keywordEditorID = "";
+
+            auto qmi = this->index(i, Column::Keyword, {});
+            emit this->dataChanged(qmi, qmi);
+         }
+         if (node->spell == stub) {
+            node->spell = nullptr;
+            node->cached.spellEditorID = "";
+
+            auto qmi = this->index(i, Column::Spell, {});
+            emit this->dataChanged(qmi, qmi);
+         }
+      }
+   });
+}
 
 QVariant DKAttackDataModel::data_of(const node_type& node, Qt::ItemDataRole role, size_t column) const {
    switch (role) {
       case Qt::TextAlignmentRole:
          switch (column) {
-            case Column::HealthPercentage:
-            case Column::SelfDPS:
+            case Column::AttackChance:
+            case Column::DamageMult:
+            case Column::Knockdown:
+            case Column::RecoveryTime:
+            case Column::Stagger:
+            case Column::StaminaCostMult:
                return (int)(Qt::AlignRight | Qt::AlignVCenter);
-            case Column::FlagCapDamage:
-            case Column::FlagDestroy:
-            case Column::FlagDisable:
-            case Column::FlagIgnoreExternal:
-            case Column::ModelDamageStage:
-               return (int)(Qt::AlignHCenter | Qt::AlignVCenter);
-         }
-         return {};
-
-      case Qt::CheckStateRole:
-         switch (column) {
-            using Flag = DKFormDestructionDataButton::DestructionStageFlag;
-            case Column::FlagCapDamage:
-               return !!(node.flags & Flag::cap_damage) ? Qt::CheckState::Checked : Qt::CheckState::Unchecked;
-            case Column::FlagDestroy:
-               return !!(node.flags & Flag::destroy_object) ? Qt::CheckState::Checked : Qt::CheckState::Unchecked;
-            case Column::FlagDisable:
-               return !!(node.flags & Flag::disable_object) ? Qt::CheckState::Checked : Qt::CheckState::Unchecked;
-            case Column::FlagIgnoreExternal:
-               return !!(node.flags & Flag::ignore_external_damage) ? Qt::CheckState::Checked : Qt::CheckState::Unchecked;
          }
          return {};
 
       case Qt::DisplayRole:
       case Qt::ToolTipRole:
          switch (column) {
-            case Column::HealthPercentage:
-               return node.health_percent;
-            case Column::SelfDPS:
-               return node.self_damage_rate;
-            case Column::ModelDamageStage:
-               return node.damage_stage;
-            case Column::Debris:
-               if (auto* stub = node.debris) // keep blank if NONE
-                  return QVariant::fromValue(stub);
-               return {};
-            case Column::Explosion:
-               if (auto* stub = node.explosion) // keep blank if NONE
-                  return QVariant::fromValue(stub);
-               return {};
-            case Column::ReplacementModel:
-               return QString::fromStdString(node.replacement_model.model_path);
+            case Column::Name:
+               return node.event_name;
+            case Column::DamageMult:
+               return QString::number(node.damage_mult, 'f', 2);
+            case Column::AttackChance:
+               return QString::number(node.attack_chance, 'f', 2);
+            case Column::Stagger:
+               return QString::number(node.stagger, 'f', 2);
+            case Column::RecoveryTime:
+               return QString::number(node.recovery_time, 'f', 2);
+            case Column::StaminaCostMult:
+               return QString::number(node.stamina_cost_mult, 'f', 2);
+            case Column::Spell:
+               return node.cached.spellEditorID;
+            case Column::Keyword:
+               return node.cached.keywordEditorID;
+            case Column::Angle:
+               return QString("%1±%2")
+                  .arg(QString::number(node.angles.direction, 'f', 2), 6)
+                  .arg(QString::number(node.angles.range, 'f', 2), 6);
+            case Column::Knockdown:
+               return QString::number(node.knockdown, 'f', 2);
          }
          return {};
    }
@@ -56,17 +89,6 @@ QVariant DKAttackDataModel::data_of(const node_type& node, Qt::ItemDataRole role
 }
 Qt::ItemFlags DKAttackDataModel::flags_of(const node_type&, size_t column) const {
    auto flags = Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled | Qt::ItemNeverHasChildren;
-
-   switch (column) {
-      using enum Column::enumeration;
-      case FlagCapDamage:
-      case FlagDisable:
-      case FlagDestroy:
-      case FlagIgnoreExternal:
-         flags |= Qt::ItemFlag::ItemIsUserCheckable;
-         break;
-   }
-
    return flags;
 }
 
@@ -77,26 +99,26 @@ Qt::ItemFlags DKAttackDataModel::flags_of(const node_type&, size_t column) const
       return {};
    switch (section) {
       using enum Column::enumeration;
-      case HealthPercentage:
-         return tr("Health %");
-      case SelfDPS:
-         return tr("Self DPS");
-      case FlagCapDamage:
-         return tr("Cap Damage");
-      case FlagDisable:
-         return tr("Disable");
-      case FlagDestroy:
-         return tr("Destroy");
-      case FlagIgnoreExternal:
-         return tr("Ignore External");
-      case ModelDamageStage:
-         return tr("Model Damage Stage");
-      case Explosion:
-         return tr("Explosion");
-      case Debris:
-         return tr("Debris");
-      case ReplacementModel:
-         return tr("Replacement Model");
+      case Name:
+         return tr("Event");
+      case DamageMult:
+         return tr("Damage Mult");
+      case AttackChance:
+         return tr("Attack Chance");
+      case Stagger:
+         return tr("Stagger");
+      case RecoveryTime:
+         return tr("Recovery Time");
+      case StaminaCostMult:
+         return tr("Stamina Cost Mult");
+      case Spell:
+         return tr("Spell");
+      case Keyword:
+         return tr("Keyword");
+      case Angle:
+         return tr("Angle");
+      case Knockdown:
+         return tr("Knockdown");
    }
    return {};
 }
@@ -128,7 +150,11 @@ void DKAttackDataModel::overwriteAllItems(const std::vector<node_type>& src) {
       size_t size = src.size();
       this->_nodes.resize(size);
       for (size_t i = 0; i < size; ++i) {
-         this->_nodes[i] = new node_type{ src[i] };
+         auto* node = this->_nodes[i] = new node_type{ src[i] };
+         if (auto* stub = node->keyword)
+            node->cached.keywordEditorID = QString::fromStdString(stub->editorID);
+         if (auto* stub = node->spell)
+            node->cached.spellEditorID = QString::fromStdString(stub->editorID);
       }
    });
 }

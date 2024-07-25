@@ -6,6 +6,7 @@
 
   This phase is expected to enable, or make it easier to implement, the following features:
 
+  * Ability to right-click in listviews like ActorBase's relationship list, pick a "New" option, and open a form-editing dialog without a pre-existing stub, wherein a Relationship form is created if you click "OK"
   * Flowchart-like editor for dialogue
   * Cleaner code for editing Papyrus bound scripts
     * Currently, `DKPapyrusBoundScriptListPane` can't auto-commit changes to a script directly to a form-working-copy's VMAD, because `DKBoundScriptListModel` only keeps track of the VMAD itself and not the working-copy form (so it can't use `form_reference_t::set`). This means that form-editing dialogs have to manually commit changes (from the UI to the working-copy VMAD) on save. We *could* have the model track the working-copy form in order to allow auto-committing... *or* once the backend rewrite is done and working copies use bare `form_stub*` fields, it'll then be possible to give `DKPapyrusBoundScriptListPane` the ability to optionally auto-commit directly to a working-copy VMAD.
@@ -652,6 +653,11 @@ class parameter {
       }
 };
 ```
+
+#### Corresponding frontend changes
+
+* Currently, form-editing dialogs are intrinsically tied to form stubs, even when they use a working copy. It'd be really, really nice if it were possible to invoke a form-editing dialog without a stub, such that we start with default data, and such that if the user clicks "OK" rather than "Cancel," we create a new form and write the user's entered data into that form. Use cases for this include things like the relationship list in ActorBase, where in the CK you can right-click and create a new form right from that spot.
+  * Bonus points if it's possible for the caller to alter the form data (e.g. when creating a new ActorBase relationship, pre-fill the current actor as the referent in the new Relationship dialog).
 
 ## Improve form stub / file handling and loading
 

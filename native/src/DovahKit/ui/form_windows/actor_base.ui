@@ -315,7 +315,7 @@
    <item row="0" column="1">
     <widget class="QTabWidget" name="tabbox">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tabTraits">
       <attribute name="title">
@@ -664,28 +664,57 @@
           <item>
            <widget class="QTableView" name="statsTable"/>
           </item>
+          <item>
+           <widget class="QWidget" name="skillEditLayout" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout_14">
+             <item>
+              <widget class="QLabel" name="label_106">
+               <property name="text">
+                <string>Offset:</string>
+               </property>
+               <property name="buddy">
+                <cstring>currentSkillOffset</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="currentSkillOffset">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="maximum">
+                <number>255</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_23">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
        <item row="3" column="0">
         <layout class="QGridLayout" name="layoutStatsAttributes">
-         <item row="8" column="1">
-          <widget class="QDoubleSpinBox" name="statsMagickaCalcFinal">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
          <item row="7" column="0">
           <widget class="QLabel" name="label_22">
            <property name="text">
             <string>Base Magicka:</string>
            </property>
            <property name="buddy">
-            <cstring>statsMagickaCalcBase</cstring>
+            <cstring>statsMagickaBase</cstring>
            </property>
           </widget>
          </item>
@@ -735,54 +764,10 @@
            </property>
           </widget>
          </item>
-         <item row="7" column="1">
-          <widget class="QDoubleSpinBox" name="statsMagickaCalcBase">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QDoubleSpinBox" name="statsHealthCalcBase">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="0" colspan="2">
           <widget class="QCheckBox" name="flagAutoCalcStats">
            <property name="text">
             <string>Auto-calc stats</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QDoubleSpinBox" name="statsHealthCalcFinal">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QDoubleSpinBox" name="statsHealthOffset">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="10" column="1">
-          <widget class="QDoubleSpinBox" name="statsStaminaOffset">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
           </widget>
          </item>
@@ -792,7 +777,7 @@
             <string>Base Health:</string>
            </property>
            <property name="buddy">
-            <cstring>statsHealthCalcBase</cstring>
+            <cstring>statsHealthBase</cstring>
            </property>
           </widget>
          </item>
@@ -802,34 +787,7 @@
             <string>Base Stamina:</string>
            </property>
            <property name="buddy">
-            <cstring>statsStaminaCalcBase</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="11" column="1">
-          <widget class="QDoubleSpinBox" name="statsStaminaCalcBase">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="1">
-          <widget class="QDoubleSpinBox" name="statsMagickaOffset">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="12" column="1">
-          <widget class="QDoubleSpinBox" name="statsStaminaCalcFinal">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
+            <cstring>statsStaminaBase</cstring>
            </property>
           </widget>
          </item>
@@ -915,6 +873,87 @@
             </widget>
            </item>
           </layout>
+         </item>
+         <item row="2" column="1">
+          <widget class="QSpinBox" name="statsHealthOffset">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QSpinBox" name="statsMagickaOffset">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="1">
+          <widget class="QSpinBox" name="statsStaminaOffset">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QSpinBox" name="statsHealthBase">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QSpinBox" name="statsMagickaBase">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="1">
+          <widget class="QSpinBox" name="statsStaminaBase">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QSpinBox" name="statsHealthCalcFinal">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QSpinBox" name="statsMagickaCalcFinal">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="1">
+          <widget class="QSpinBox" name="statsStaminaCalcFinal">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -1070,35 +1109,6 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="2">
-          <widget class="QDoubleSpinBox" name="bleedoutOverrideThreshold">
-           <property name="whatsThis">
-            <string>You can optionally control the health percentage at which the actor enters a &quot;bleedout&quot; state.</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QDoubleSpinBox" name="speedPercentage">
-           <property name="whatsThis">
-            <string>Scale the actor's movement speed. Note that actor animations are designed around their normal movement speeds, so changing this value may lead to visual oddities.</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="suffix">
-            <string>%</string>
-           </property>
-           <property name="maximum">
-            <double>1000.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>100.000000000000000</double>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="1">
           <spacer name="horizontalSpacer_10">
            <property name="orientation">
@@ -1119,6 +1129,32 @@
           <widget class="QCheckBox" name="flagBleedoutOverride">
            <property name="text">
             <string>Bleedout override:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QSpinBox" name="speedPercentage">
+           <property name="whatsThis">
+            <string>Scale the actor's movement speed. Note that actor animations are designed around their normal movement speeds, so changing this value may lead to visual oddities.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="suffix">
+            <string>%</string>
+           </property>
+           <property name="maximum">
+            <number>100</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QSpinBox" name="bleedoutOverrideThreshold">
+           <property name="whatsThis">
+            <string>You can optionally control the health percentage at which the actor enters a &quot;bleedout&quot; state.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
           </widget>
          </item>
@@ -1268,7 +1304,7 @@
        <item>
         <widget class="QLabel" name="label_35">
          <property name="text">
-          <string>Each relationship between two actors is its own form. Right-click below to create a new relationship, or to edit an existing relationship that includes this actor.</string>
+          <string>Each relationship between two actors is its own form. Right-click a relationship form below to edit it, or use the Object Window to create a new relationsihp form.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -3684,7 +3720,7 @@
     </layout>
    </item>
    <item row="1" column="1">
-    <widget class="QWidget" name="horizontalWidget_3" native="true">
+    <widget class="QWidget" name="previewOptionsContainer" native="true">
      <layout class="QHBoxLayout" name="layoutPreviewOptions">
       <item>
        <spacer name="horizontalSpacer_2">
@@ -3828,13 +3864,14 @@
   <tabstop>statsHealthOffset</tabstop>
   <tabstop>statsMagickaOffset</tabstop>
   <tabstop>statsStaminaOffset</tabstop>
-  <tabstop>statsHealthCalcBase</tabstop>
-  <tabstop>statsMagickaCalcBase</tabstop>
-  <tabstop>statsStaminaCalcBase</tabstop>
+  <tabstop>statsHealthBase</tabstop>
+  <tabstop>statsMagickaBase</tabstop>
+  <tabstop>statsStaminaBase</tabstop>
   <tabstop>statsHealthCalcFinal</tabstop>
   <tabstop>statsMagickaCalcFinal</tabstop>
   <tabstop>statsStaminaCalcFinal</tabstop>
   <tabstop>statsTable</tabstop>
+  <tabstop>currentSkillOffset</tabstop>
   <tabstop>factionsTable</tabstop>
   <tabstop>buttonFactionAdd</tabstop>
   <tabstop>buttonFactionRemove</tabstop>
@@ -3935,6 +3972,12 @@
   <tabstop>buttonResetFaceMorphs</tabstop>
   <tabstop>previewTypeFull</tabstop>
   <tabstop>previewTypeHead</tabstop>
+  <tabstop>faceAnimPhonemeTable</tabstop>
+  <tabstop>faceAnimPhonemeSlider</tabstop>
+  <tabstop>faceAnimModifierTable</tabstop>
+  <tabstop>faceAnimModifierSlider</tabstop>
+  <tabstop>faceAnimExpression</tabstop>
+  <tabstop>buttonFaceAnimReset</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
  </tabstops>

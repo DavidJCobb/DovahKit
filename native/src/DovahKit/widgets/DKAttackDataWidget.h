@@ -78,4 +78,9 @@ class DKAttackDataWidget : public QWidget {
       struct {
          bool show_attack_race = true;
       } _state;
+
+      #if !defined(QT_DESIGNER_LIB)
+         void _pull_node_to_ui();
+         void _push_node_from_ui();
+      #endif
 };

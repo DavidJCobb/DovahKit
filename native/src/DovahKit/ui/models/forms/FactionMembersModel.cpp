@@ -68,9 +68,12 @@ void FactionMembersModel::setFaction(const dovah::form_stub& faction) {
 }
 
 void FactionMembersModel::onActorBaseChanged(dovah::form_stub& actor_base) {
+   bool found = false;
    for (size_t i = 0; i < this->_nodes.size(); ++i) {
       auto& node = this->_nodes[i];
       if (node->actor_base == &actor_base) {
+         found = true;
+
          auto rank = this->_actorRank(actor_base);
          if (!rank.has_value()) {
             //
@@ -78,8 +81,9 @@ void FactionMembersModel::onActorBaseChanged(dovah::form_stub& actor_base) {
             //
             this->beginRemoveRows({}, i, i);
             this->_nodes.removeAt(i);
+            delete node;
             this->endRemoveRows();
-            return;
+            continue;
          }
 
          node->rank = rank.value();
@@ -87,7 +91,6 @@ void FactionMembersModel::onActorBaseChanged(dovah::form_stub& actor_base) {
 
          auto qmi = this->index(i, 0, {});
          emit dataChanged(qmi, qmi, { Qt::DisplayRole, Qt::ToolTipRole });
-         return;
       }
    }
    //

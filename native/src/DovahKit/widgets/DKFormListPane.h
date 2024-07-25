@@ -20,7 +20,8 @@ namespace dovah {
 
 class DKFormListPane : public QWidget {
    Q_OBJECT;
-   Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation DESIGNABLE true);
+   Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation DESIGNABLE true USER true);
+   Q_PROPERTY(bool readOnly         READ readOnly         WRITE setReadOnly         DESIGNABLE true);
    Q_PROPERTY(bool showFormTypes    READ showFormTypes    WRITE setShowFormTypes    DESIGNABLE true);
    Q_PROPERTY(bool showIndices      READ showIndices      WRITE setShowIndices      DESIGNABLE true);
    Q_PROPERTY(bool showMoveButtons  READ showMoveButtons  WRITE setShowMoveButtons  DESIGNABLE true);
@@ -28,18 +29,19 @@ class DKFormListPane : public QWidget {
    public:
       DKFormListPane(QWidget* parent);
       
-      static constexpr int ColumnType   = 0;
-      static constexpr int ColumnName   = 1;
-      static constexpr int ColumnFormID = 2;
+      static constexpr const int ColumnType   = 0;
+      static constexpr const int ColumnName   = 1;
+      static constexpr const int ColumnFormID = 2;
 
       #if !defined(QT_DESIGNER_LIB)
          QHeaderView* horizontalHeader() const noexcept { return this->subwidgets.view->horizontalHeader(); }
       #endif
-      inline Qt::Orientation orientation() const noexcept { return this->state.orientation; }
-      inline bool showFormTypes() const noexcept { return this->state.show_form_types; }
-      inline bool showIndices() const noexcept { return this->state.show_indices; }
-      inline bool showMoveButtons() const noexcept { return this->state.show_move_buttons; }
-      inline bool showRemoveButton() const noexcept { return this->state.show_remove_button; }
+      constexpr bool readOnly() const noexcept { return this->state.read_only; }
+      constexpr Qt::Orientation orientation() const noexcept { return this->state.orientation; }
+      constexpr bool showFormTypes() const noexcept { return this->state.show_form_types; }
+      constexpr bool showIndices() const noexcept { return this->state.show_indices; }
+      constexpr bool showMoveButtons() const noexcept { return this->state.show_move_buttons; }
+      constexpr bool showRemoveButton() const noexcept { return this->state.show_remove_button; }
 
       #if !defined(QT_DESIGNER_LIB)
          QVector<dovah::form_stub*> stubs() const noexcept;
@@ -61,6 +63,7 @@ class DKFormListPane : public QWidget {
          void reserve(size_t);
       #endif
 
+      void setReadOnly(bool);
       #if !defined(QT_DESIGNER_LIB)
          void setAllowedFormTypes(QVector<dovah::form_type>);
       #endif
@@ -83,6 +86,7 @@ class DKFormListPane : public QWidget {
          QTableView* view = nullptr;
       } subwidgets;
       struct {
+         bool read_only          = false;
          bool show_form_types    = true;
          bool show_indices       = false;
          bool show_move_buttons  = true;

@@ -31,6 +31,7 @@ struct DKAttackDataModelNode {
       bool lefthanded    = false;
       bool power         = false;
       bool rotating      = false;
+      bool overridden    = true;
    } flags;
 
    struct {
@@ -61,7 +62,7 @@ class DKAttackDataModel : public DKGenericListModel<DKAttackDataModel, DKAttackD
       static constexpr const size_t column_count = Column::__COUNT; // override
 
    public:
-      DKAttackDataModel(QObject* parent) : DKGenericListModel(parent) {}
+      DKAttackDataModel(QObject* parent);
 
       using DKGenericListModel::clear;
       using DKGenericListModel::deleteItems;
