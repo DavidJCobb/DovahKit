@@ -4,15 +4,23 @@
 #include "ui_actor_base.h" // generated
 
 #include <QMenu>
+#include "dovah/data/sex.h"
 
 namespace impl {
    class CrimeFactionPickerFilter;
    class DKFormPickerExcludeSingleFormFilter;
+   class FaceComplexionPickerFilter;
+   class FaceHairColorPickerFilter;
+   class FaceTintColorPickerFilter;
    class VoicetypePickerFilter;
 }
+class ActorBaseFaceTintsModel; static_assert(false, "TODO: Implement me!");
+class ActorBaseFaceBaseHeadPartsModel; static_assert(false, "TODO: Implement me!");
+class ActorBaseFaceExtraHeadPartsModel; static_assert(false, "TODO: Implement me!");
 class ActorBaseFactionsModel;
 class ActorBaseRelationshipsModel;
 class ActorBaseSkillsModel;
+class HeadPartPickerFilter;
 
 class FormDialogActorBase :
    public QDialog,
@@ -27,13 +35,37 @@ class FormDialogActorBase :
       void updatePreview();
       
    protected:
+      struct HeadData {
+         dovah::form_stub* complexion = nullptr;
+         dovah::form_stub* hair_color = nullptr;
+         struct {
+            ActorBaseFaceTintsModel*          tints            = nullptr;
+            ActorBaseFaceBaseHeadPartsModel*  base_head_parts  = nullptr;
+            ActorBaseFaceExtraHeadPartsModel* extra_head_parts = nullptr;
+         } models;
+      };
+
       Ui::FormDialogActorBase ui;
       struct {
          QMenu relationships;
       } _context_menus;
       struct {
+         //
+         // Maintain two sets of head data so that if the player switches an actor's sex 
+         // back and forth, they don't lose (as much) data.
+         //
+         HeadData female;
+         HeadData head;
+      } _data;
+      struct {
          impl::CrimeFactionPickerFilter* crime_faction = nullptr;
          impl::DKFormPickerExcludeSingleFormFilter* exclude_self = nullptr;
+         struct {
+            HeadPartPickerFilter*             base_head_part = nullptr;
+            impl::FaceComplexionPickerFilter* complexion     = nullptr;
+            impl::FaceHairColorPickerFilter*  hair_color     = nullptr;
+            impl::FaceTintColorPickerFilter*  tint_color     = nullptr;
+         } face;
          impl::VoicetypePickerFilter* voicetype = nullptr;
       } _filters;
       struct {

@@ -2436,6 +2436,45 @@
     <ClCompile Include="dovah\forms\components\biped_object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\DKAttackDataWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-models\DKAttackDataModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\actor_base\ActorBaseFactionsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_faction_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\utils\item_indices_to_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\actor_base\ActorBaseRelationshipsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\actor_base\ActorBaseSkillsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\helpers\skill_name_to_string.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKFloatSlider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\shared\HeadPartPickerFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\actor_base\FaceComplexionPickerFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\actor_base\FaceHairColorPickerFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\actor_base\FaceTintColorPickerFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6296,6 +6335,60 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\invalid_face_texture_sex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\invalid_morph_bitmask_index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\invalid_boosted_skill.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\tint_layer_data_before_tint_layer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\too_many_phonemes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\wrong_weight_count_per_phoneme.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_save_errors\by_form_type\race\biped_object_name_is_too_long.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-models\DKAttackDataModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\actor_base\ActorBaseFactionsModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_faction_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\faction_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\item_indices_to_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\actor_base\ActorBaseRelationshipsModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\helpers\skill_name_to_string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\DKFloatSlider.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\shared\HeadPartPickerFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\actor_base\FaceComplexionPickerFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\actor_base\FaceHairColorPickerFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\actor_base\FaceTintColorPickerFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -7009,6 +7102,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\class.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKAttackDataWidget.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\actor_base\ActorBaseSkillsModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

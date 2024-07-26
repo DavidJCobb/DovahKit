@@ -315,7 +315,7 @@
    <item row="0" column="1">
     <widget class="QTabWidget" name="tabbox">
      <property name="currentIndex">
-      <number>1</number>
+      <number>11</number>
      </property>
      <widget class="QWidget" name="tabTraits">
       <attribute name="title">
@@ -2781,13 +2781,6 @@
           <item row="1" column="1" colspan="2">
            <widget class="DKColorPickerButton" name="faceTintColorCustom"/>
           </item>
-          <item row="0" column="1" colspan="2">
-           <widget class="QComboBox" name="faceTintColorPreset">
-            <property name="whatsThis">
-             <string>You can choose a preset Color form to use for this face tint. The colors available for any given tint layer are defined in the actor's Race form.</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="0">
            <widget class="QRadioButton" name="faceTintColorUseCustom">
             <property name="text">
@@ -2850,6 +2843,13 @@
             </layout>
            </widget>
           </item>
+          <item row="0" column="1">
+           <widget class="DKFormPicker" name="faceTintColorPreset">
+            <property name="allowNone">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
@@ -2897,6 +2897,9 @@
            <property name="text">
             <string>Base Head Parts:</string>
            </property>
+           <property name="buddy">
+            <cstring>baseHeadPartsTable</cstring>
+           </property>
           </widget>
          </item>
          <item>
@@ -2905,7 +2908,7 @@
             <widget class="QTableView" name="baseHeadPartsTable"/>
            </item>
            <item>
-            <widget class="QComboBox" name="baseHeadPartPicker"/>
+            <widget class="DKFormPicker" name="baseHeadPartPicker"/>
            </item>
           </layout>
          </item>
@@ -2932,7 +2935,7 @@
         </layout>
        </item>
        <item row="0" column="0" colspan="2">
-        <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="0,2,0,0,2,1,0">
+        <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="0,0,0,0,0,1,0">
          <item>
           <widget class="QLabel" name="label_80">
            <property name="text">
@@ -2944,9 +2947,27 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="faceComplexion">
+          <widget class="DKFormPicker" name="faceComplexion">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>22</height>
+            </size>
+           </property>
            <property name="whatsThis">
-            <string>Select the base TextureSet used for the actor's face. The available options are defined in the actor's Race form.</string>
+            <string>Select a complexion TextureSet for this actor from those available on the actor's race.</string>
+           </property>
+           <property name="allowNone">
+            <bool>false</bool>
+           </property>
+           <property name="splitTypesWhenMany">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -2977,9 +2998,24 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="hairColor">
+          <widget class="DKFormPicker" name="hairColor">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>22</height>
+            </size>
+           </property>
            <property name="whatsThis">
-            <string>Select the Color form used to control the actor's hair color. The available options are defined in the actor's Race form.</string>
+            <string>Select a hair color for this actor from those available on the actor's race.</string>
+           </property>
+           <property name="allowNone">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -3935,9 +3971,9 @@
   <tabstop>attackDataSelFlagBash</tabstop>
   <tabstop>attackDataSelFlagLeft</tabstop>
   <tabstop>attackDataSelFlagRotating</tabstop>
+  <tabstop>buttonFacePartsImport</tabstop>
   <tabstop>faceComplexion</tabstop>
   <tabstop>hairColor</tabstop>
-  <tabstop>buttonFacePartsImport</tabstop>
   <tabstop>faceTintLayerTable</tabstop>
   <tabstop>faceTintColorUsePreset</tabstop>
   <tabstop>faceTintColorPreset</tabstop>

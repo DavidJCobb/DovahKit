@@ -14,6 +14,9 @@
 #include "./actor_base/ActorBaseFactionsModel.h"
 #include "./actor_base/ActorBaseRelationshipsModel.h"
 #include "./actor_base/ActorBaseSkillsModel.h"
+#include "./actor_base/FaceComplexionPickerFilter.h"
+#include "./actor_base/FaceHairColorPickerFilter.h"
+#include "./actor_base/FaceTintColorPickerFilter.h"
 
 namespace {
    constexpr const bool preview_enabled = false;
@@ -386,6 +389,39 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
       if constexpr (!allow_customizing_face) {
          this->ui.tabFaceParts->setEnabled(false);
       }
+
+      this->_filters.face.complexion = new impl::FaceComplexionPickerFilter(this);
+      this->ui.faceComplexion->setCustomFilter(this->_filters.face.complexion);
+
+      this->_filters.face.hair_color = new impl::FaceHairColorPickerFilter(this);
+      this->ui.hairColor->setCustomFilter(this->_filters.face.hair_color);
+
+      this->_filters.face.tint_color = new impl::FaceTintColorPickerFilter(this);
+      this->ui.faceTintColorPreset->setCustomFilter(this->_filters.face.tint_color);
+
+      QObject::connect(this->ui.race, &DKFormPicker::formChanged, this, [this](dovah::form_stub* race) {
+         this->_filters.face.complexion->setRequiredRace(race);
+         this->_filters.face.hair_color->setRequiredRace(race);
+         this->_filters.face.tint_color->setRequiredRace(race);
+      });
+      QObject::connect(this->ui.sex, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int i) {
+         auto sex = (i == 1) ? dovah::sex::female : dovah::sex::male;
+
+         this->_filters.face.complexion->setRequiredSex(sex);
+         this->_filters.face.hair_color->setRequiredSex(sex);
+         this->_filters.face.tint_color->setRequiredSex(sex);
+      });
+
+      {
+         auto* view      = this->ui.faceTintLayerTable;
+         auto* sel_model = view->selectionModel();
+         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this]() {
+            uint16_t tint_index = static_assert(false, "TODO");
+
+            this->_filters.face.tint_color->setFaceTintIndex(tint_index);
+         });
+      }
+
       static_assert(false, "TODO");
    #pragma endregion
    #pragma region Face Morphs tab
