@@ -3,11 +3,12 @@
 #include <QWidget>
 
 class DKFloatSlider : public QWidget {
+   Q_OBJECT;
    public:
       DKFloatSlider(QWidget* parent = nullptr);
       DKFloatSlider(Qt::Orientation, QWidget* parent = nullptr);
 
-      constexpr unsigned int decimals() const noexcept { return this->_properties.precision; }
+      constexpr unsigned int decimals() const noexcept { return this->_properties.decimals; }
       constexpr float maximum() const noexcept { return this->_properties.range.max; }
       constexpr float minimum() const noexcept { return this->_properties.range.min; }
 

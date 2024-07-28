@@ -442,8 +442,9 @@ namespace dovah {
          }
 
          operator bool() { return this->wrapped != nullptr && this->wrapped->form != nullptr; };
-         operator loaded_form_t*() const noexcept { return (loaded_form_t*)this->wrapped->form; };
-         loaded_form_t* operator->() const noexcept { return (loaded_form_t*)this->wrapped->form; };
+         bool operator!() const noexcept { return this->wrapped == nullptr || this->wrapped->form == nullptr; }
+         operator loaded_form_t*() const noexcept { return this->wrapped ? (loaded_form_t*)this->wrapped->form : nullptr; };
+         loaded_form_t* operator->() const noexcept { return this->wrapped ? (loaded_form_t*)this->wrapped->form : nullptr; };
 
          inline loaded_form_t* unwrap() const noexcept {
             if (!this->wrapped)

@@ -10,18 +10,9 @@
       if (info->type != this->_params.type.value())
          return false;
    }
-   switch (info->sex) {
-      using enum std::decay_t<decltype(*info)>::sex;
-      case male:
-         if (this->_params.sex != dovah::sex::male)
-            return false;
-         break;
-      case female:
-         if (this->_params.sex != dovah::sex::female)
-            return false;
-         break;
-      case any:
-         break;
+   if (info->sex.has_value()) {
+      if (this->_params.sex != info->sex.value())
+         return false;
    }
    if (auto* race_list = info->race_list) {
       //

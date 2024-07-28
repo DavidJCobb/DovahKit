@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>FormDialogClass</class>
  <widget class="QDialog" name="FormDialogClass">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>641</width>
-    <height>610</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Class</string>
   </property>
@@ -598,6 +590,10 @@
      </item>
      <item>
       <widget class="QGroupBox" name="trainingGroupbox">
+       <property name="whatsThis">
+        <string>&lt;p&gt;If this data is set, then actors of this class will be able to train the player in the specified skill.&lt;/p&gt;
+&lt;p&gt;All of the infrastructure &lt;em&gt;around&lt;/em&gt; training has to be set up manually. That is: when adding a new skill trainer, you must manually set up dialogue lines which check the player's skill (to enforce a maximum) and call the &lt;code&gt;Game.ShowTrainingMenu&lt;/code&gt; Papyrus function via a dialogue fragment. The vanilla game stores training-specific dialogue in the DialogueTrainers quest (specifically, the OffersTrainingTopic inside); if you study the conditions on those TopicInfos carefully, you'll figure out how to add infos for your own trainer.&lt;/p&gt;</string>
+       </property>
        <property name="title">
         <string>Training</string>
        </property>

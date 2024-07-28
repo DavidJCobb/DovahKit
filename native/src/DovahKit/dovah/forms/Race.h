@@ -22,7 +22,15 @@ namespace dovah::loaded_forms {
    class Race : public Form {
       public:
          static constexpr const enum form_type form_type = form_type::race;
-         Race(const constructor_params& c) : Form(form_type, c) {};
+         Race(const constructor_params& c) : Form(form_type, c) {
+            for (auto& sex : this->by_sex) {
+               auto& morphs = sex.head_data.morphs;
+               morphs.brows.set_all();
+               morphs.eyes.set_all();
+               morphs.noses.set_all();
+               morphs.mouths.set_all();
+            }
+         };
 
          static constexpr const size_t max_biped_object_name_count  = 32;
          static constexpr const size_t max_biped_object_name_length = 0x103; // MAX_PATH - 1
@@ -35,7 +43,7 @@ namespace dovah::loaded_forms {
 
          struct race_flag {
             race_flag() = delete;
-            enum type : uint8_t {
+            enum type : uint32_t {
                playable                        = 0x00000001,
                facegen_head                    = 0x00000002,
                child                           = 0x00000004,

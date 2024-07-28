@@ -67,8 +67,8 @@
    </item>
    <item row="2" column="0" colspan="3">
     <widget class="DKFormListPane" name="forms">
-     <property name="showIndices">
-      <bool>true</bool>
+     <property name="showFormTypes">
+      <bool>false</bool>
      </property>
     </widget>
    </item>

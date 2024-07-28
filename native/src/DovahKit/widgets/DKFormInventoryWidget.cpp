@@ -274,6 +274,8 @@ DKFormInventoryWidget::DKFormInventoryWidget(QWidget* parent) : QWidget(parent) 
       {
          view->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
          view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         view->setHorizontalScrollMode(QAbstractItemView::ScrollMode::ScrollPerPixel);
+         view->setVerticalScrollMode(QAbstractItemView::ScrollMode::ScrollPerItem);
          view->setCornerButtonEnabled(false);
          view->setAcceptDrops(false);
 

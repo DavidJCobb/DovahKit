@@ -544,7 +544,7 @@ namespace ui::impl::DKFormPicker {
             sorted.reserve(cap);
          size_t sorted_this_time = 0;
          for (int i = 0; i < cap; ++i) {
-            if (of.ticker.elapsed() > max_fill_tick_duration)
+            if (i > 0 && of.ticker.elapsed() > max_fill_tick_duration)
                break;
             ++sorted_this_time;
             auto* entry = unsorted[i];

@@ -90,13 +90,26 @@ ActorBaseSkillsModel::ActorBaseSkillsModel(QObject* parent) : QAbstractItemModel
                col = columns[i];
             }
          }
-         switch (col) {
-            case _column::offset:
-               return src.offset;
-            case _column::value:
-               return src.computed;
-            case _column::skill:
-               return editor_helpers::skill_name_to_string((dovah::skill)index.row());
+         switch (role) {
+            case Qt::DisplayRole:
+            case Qt::ToolTipRole:
+               switch (col) {
+                  case _column::offset:
+                     return src.offset;
+                  case _column::value:
+                     return src.computed;
+                  case _column::skill:
+                     return editor_helpers::skill_name_to_string((dovah::skill)index.row());
+               }
+               break;
+            case Qt::TextAlignmentRole:
+               switch (col) {
+                  case _column::offset:
+                  case _column::value:
+                     return (int)(Qt::AlignmentFlag::AlignRight | Qt::AlignmentFlag::AlignVCenter);
+               }
+               break;
+
          }
          return {};
       }

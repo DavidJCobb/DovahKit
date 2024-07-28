@@ -14,12 +14,12 @@ namespace impl {
    class FaceTintColorPickerFilter;
    class VoicetypePickerFilter;
 }
-class ActorBaseFaceTintsModel; static_assert(false, "TODO: Implement me!");
-class ActorBaseFaceBaseHeadPartsModel; static_assert(false, "TODO: Implement me!");
-class ActorBaseFaceExtraHeadPartsModel; static_assert(false, "TODO: Implement me!");
+class ActorBaseFaceTintsModel;//static_assert(false, "TODO: Implement me!");
 class ActorBaseFactionsModel;
 class ActorBaseRelationshipsModel;
 class ActorBaseSkillsModel;
+class FaceBaseHeadPartsModel;
+class FaceExtraHeadPartsModel;
 class HeadPartPickerFilter;
 
 class FormDialogActorBase :
@@ -39,9 +39,9 @@ class FormDialogActorBase :
          dovah::form_stub* complexion = nullptr;
          dovah::form_stub* hair_color = nullptr;
          struct {
-            ActorBaseFaceTintsModel*          tints            = nullptr;
-            ActorBaseFaceBaseHeadPartsModel*  base_head_parts  = nullptr;
-            ActorBaseFaceExtraHeadPartsModel* extra_head_parts = nullptr;
+            ActorBaseFaceTintsModel* tints            = nullptr;
+            FaceBaseHeadPartsModel*  base_head_parts  = nullptr;
+            FaceExtraHeadPartsModel* extra_head_parts = nullptr;
          } models;
       };
 
@@ -55,7 +55,7 @@ class FormDialogActorBase :
          // back and forth, they don't lose (as much) data.
          //
          HeadData female;
-         HeadData head;
+         HeadData male;
       } _data;
       struct {
          impl::CrimeFactionPickerFilter* crime_faction = nullptr;
@@ -82,4 +82,7 @@ class FormDialogActorBase :
 
       void _pull_faction_to_ui();
       void _push_faction_from_ui();
+
+      void _set_race(dovah::form_stub*);
+      void _set_sex(dovah::sex);
 };

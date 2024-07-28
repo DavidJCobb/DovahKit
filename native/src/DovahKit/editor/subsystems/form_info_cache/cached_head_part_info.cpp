@@ -24,11 +24,11 @@ namespace dovahkit::subsystems::form_info_cache {
                   bool female = flags & loaded_form_type::head_part_flag::female;
                   bool male   = flags & loaded_form_type::head_part_flag::male;
                   if (female == male) {
-                     this->sex = sex::any;
+                     this->sex = {};
                   } else if (female) {
-                     this->sex = sex::female;
+                     this->sex = dovah::sex::female;
                   } else {
-                     this->sex = sex::male;
+                     this->sex = dovah::sex::male;
                   }
                }
             }
@@ -72,11 +72,11 @@ namespace dovahkit::subsystems::form_info_cache {
       bool female = flags & loaded_form_type::head_part_flag::female;
       bool male   = flags & loaded_form_type::head_part_flag::male;
       if (female == male) {
-         this->sex = sex::any;
+         this->sex = {};
       } else if (female) {
-         this->sex = sex::female;
+         this->sex = dovah::sex::female;
       } else {
-         this->sex = sex::male;
+         this->sex = dovah::sex::male;
       }
 
       this->type = (std::decay_t<decltype(this->type)>)src.type; // uh, okay, MSVC. sure.

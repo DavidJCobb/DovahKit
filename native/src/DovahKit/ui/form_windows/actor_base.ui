@@ -315,7 +315,7 @@
    <item row="0" column="1">
     <widget class="QTabWidget" name="tabbox">
      <property name="currentIndex">
-      <number>11</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tabTraits">
       <attribute name="title">
@@ -1274,23 +1274,16 @@
         </widget>
        </item>
        <item>
-        <layout class="QGridLayout" name="gridLayout_6" columnstretch="0,1">
+        <layout class="QGridLayout" name="gridLayout_6" columnstretch="0,0">
          <item row="0" column="0">
           <widget class="QLabel" name="label_34">
            <property name="text">
             <string>Crime Faction:</string>
            </property>
-           <property name="buddy">
-            <cstring>crimeFaction</cstring>
-           </property>
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QComboBox" name="crimeFaction">
-           <property name="whatsThis">
-            <string>Crimes committed against an actor will be reported to the actor's Crime Faction, and the player will incur a bounty with that faction. An actor's Crime Faction must be a faction that the actor is a member of, and it must be a faction that actually tracks crimes.</string>
-           </property>
-          </widget>
+          <widget class="DKFormPicker" name="crimeFaction"/>
          </item>
         </layout>
        </item>
@@ -2397,373 +2390,23 @@
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_10">
-         <item>
-          <widget class="QLabel" name="label_75">
-           <property name="text">
-            <string>Attack Race:</string>
-           </property>
-           <property name="buddy">
-            <cstring>attackDataRace</cstring>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="DKFormPicker" name="attackDataRace"/>
-         </item>
-        </layout>
+        <spacer name="verticalSpacer_14">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>6</height>
+          </size>
+         </property>
+        </spacer>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_9">
-         <item>
-          <widget class="QTableView" name="attackDataTable"/>
-         </item>
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout_12">
-           <item>
-            <widget class="QPushButton" name="buttonAttackDataOverrideAdd">
-             <property name="text">
-              <string>Add</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="buttonAttackDataOverrideRemove">
-             <property name="text">
-              <string>Remove</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="verticalSpacer_14">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QGridLayout" name="attackDataLeftCol">
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_70">
-           <property name="text">
-            <string>Stagger:</string>
-           </property>
-           <property name="buddy">
-            <cstring>attackDataSelStagger</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1" alignment="Qt::AlignLeft">
-          <widget class="QDoubleSpinBox" name="attackDataSelRecoveryTime">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="maximum">
-            <double>340282299999999994960115009090224128000.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>1.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <spacer name="horizontalSpacer_18">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Fixed</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>16</width>
-             <height>8</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="5" column="1" alignment="Qt::AlignLeft">
-          <widget class="QDoubleSpinBox" name="attackDataSelStaminaMult">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="maximum">
-            <double>340282299999999994960115009090224128000.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>1.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1" alignment="Qt::AlignLeft">
-          <widget class="QDoubleSpinBox" name="attackDataSelDamageMult">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="maximum">
-            <double>340282299999999994960115009090224128000.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>1.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_64">
-           <property name="text">
-            <string>Event:</string>
-           </property>
-           <property name="buddy">
-            <cstring>attackDataSelEvent</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="0">
-          <widget class="QLabel" name="label_72">
-           <property name="text">
-            <string>Stamina Cost Mult:</string>
-           </property>
-           <property name="buddy">
-            <cstring>attackDataSelStaminaMult</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_68">
-           <property name="text">
-            <string>Damage Mult:</string>
-           </property>
-           <property name="buddy">
-            <cstring>attackDataSelDamageMult</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_69">
-           <property name="text">
-            <string>Attack Chance:</string>
-           </property>
-           <property name="buddy">
-            <cstring>attackDataSelChance</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="7" column="0">
-          <widget class="QLabel" name="label_74">
-           <property name="text">
-            <string>Attack Type:</string>
-           </property>
-           <property name="buddy">
-            <cstring>attackDataSelKeyword</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="3">
-          <widget class="QLabel" name="label_65">
-           <property name="text">
-            <string>Attack Angle:</string>
-           </property>
-           <property name="buddy">
-            <cstring>attackDataSelAngleAttack</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="0">
-          <widget class="QLabel" name="label_73">
-           <property name="text">
-            <string>Attack Spell:</string>
-           </property>
-           <property name="buddy">
-            <cstring>attackDataSelSpell</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="3">
-          <widget class="QLabel" name="label_66">
-           <property name="text">
-            <string>Angle Range:</string>
-           </property>
-           <property name="buddy">
-            <cstring>attackDataSelAngleStrike</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="3">
-          <widget class="QLabel" name="label_67">
-           <property name="text">
-            <string>Knockdown:</string>
-           </property>
-           <property name="buddy">
-            <cstring>attackDataSelKnockdown</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="attackDataSelEvent">
-           <property name="whatsThis">
-            <string>The behavior graph event associated with this attack.</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_71">
-           <property name="text">
-            <string>Recovery Time:</string>
-           </property>
-           <property name="buddy">
-            <cstring>attackDataSelRecoveryTime</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1" alignment="Qt::AlignLeft">
-          <widget class="QDoubleSpinBox" name="attackDataSelStagger">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="maximum">
-            <double>340282299999999994960115009090224128000.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>1.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1" alignment="Qt::AlignLeft">
-          <widget class="QDoubleSpinBox" name="attackDataSelChance">
-           <property name="whatsThis">
-            <string>The chance that the actor will use this attack.</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="maximum">
-            <double>340282299999999994960115009090224128000.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>1.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="4">
-          <widget class="QDoubleSpinBox" name="attackDataSelAngleAttack">
-           <property name="whatsThis">
-            <string>The direction of the attack relative to the attacking actor. A value of 180 degrees, for example, would cause the attack to travel backwards from the actor.</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="minimum">
-            <double>-360.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>360.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>0.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="4">
-          <widget class="QDoubleSpinBox" name="attackDataSelAngleStrike">
-           <property name="whatsThis">
-            <string>The angle tolerance on the attack. For example, a value of 35 means that targets within ±35 degrees of the Attack Angle would be hit by the attack.</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="minimum">
-            <double>-360.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>360.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>0.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="4">
-          <widget class="QDoubleSpinBox" name="attackDataSelKnockdown">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="maximum">
-            <double>340282299999999994960115009090224128000.000000000000000</double>
-           </property>
-           <property name="value">
-            <double>1.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="1">
-          <widget class="DKFormPicker" name="attackDataSelSpell">
-           <property name="whatsThis">
-            <string>A spell that will be applied to targets hit by this attack.</string>
-           </property>
-          </widget>
-         </item>
-         <item row="7" column="1">
-          <widget class="DKFormPicker" name="attackDataSelKeyword">
-           <property name="whatsThis">
-            <string>A keyword which identifies the attack type. Used by perks.</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="3" colspan="2">
-          <widget class="QCheckBox" name="attackDataSelFlagPower">
-           <property name="whatsThis">
-            <string>If this is checked, then the attack is a Power Attack: the actor can only perform it if they have enough Stamina, and it will use that amount of Stamina.</string>
-           </property>
-           <property name="text">
-            <string>Power Attack</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="3" colspan="2">
-          <widget class="QCheckBox" name="attackDataSelFlagIgnoreWeapon">
-           <property name="whatsThis">
-            <string>If checked, this attack will ignore the damage formula for the actor's weapon.</string>
-           </property>
-           <property name="text">
-            <string>Ignore Weapon</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="3" colspan="2">
-          <widget class="QCheckBox" name="attackDataSelFlagBash">
-           <property name="text">
-            <string>Bash Attack</string>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="3" colspan="2">
-          <widget class="QCheckBox" name="attackDataSelFlagLeft">
-           <property name="text">
-            <string>Lefthanded Attack</string>
-           </property>
-          </widget>
-         </item>
-         <item row="7" column="3" colspan="2">
-          <widget class="QCheckBox" name="attackDataSelFlagRotating">
-           <property name="whatsThis">
-            <string>Indicates whether this attack rotates the actor's character controller (i.e. their movement and physics).</string>
-           </property>
-           <property name="text">
-            <string>Rotating Attack</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+        <widget class="DKAttackDataWidget" name="attackData"/>
        </item>
       </layout>
      </widget>
@@ -2870,6 +2513,18 @@
            <property name="whatsThis">
             <string>The actor's face texture will be blended with a &quot;tint mask&quot; generated while editing the actor. The tint mask is generated by blending multiple &quot;tint layer.&quot; Tint layers are defined as texture files in an actor's Race form, and are blended using the colors and interpolation values specified in the actor data.</string>
            </property>
+           <property name="selectionMode">
+            <enum>QAbstractItemView::SingleSelection</enum>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectRows</enum>
+           </property>
+           <property name="cornerButtonEnabled">
+            <bool>false</bool>
+           </property>
+           <attribute name="verticalHeaderVisible">
+            <bool>false</bool>
+           </attribute>
           </widget>
          </item>
         </layout>
@@ -2905,7 +2560,20 @@
          <item>
           <layout class="QVBoxLayout" name="verticalLayout_16">
            <item>
-            <widget class="QTableView" name="baseHeadPartsTable"/>
+            <widget class="QTableView" name="baseHeadPartsTable">
+             <property name="selectionMode">
+              <enum>QAbstractItemView::SingleSelection</enum>
+             </property>
+             <property name="selectionBehavior">
+              <enum>QAbstractItemView::SelectRows</enum>
+             </property>
+             <property name="cornerButtonEnabled">
+              <bool>false</bool>
+             </property>
+             <attribute name="verticalHeaderVisible">
+              <bool>false</bool>
+             </attribute>
+            </widget>
            </item>
            <item>
             <widget class="DKFormPicker" name="baseHeadPartPicker"/>
@@ -2924,13 +2592,20 @@
            <property name="text">
             <string>Additional Head Parts:</string>
            </property>
-           <property name="buddy">
-            <cstring>additionalHeadParts</cstring>
-           </property>
           </widget>
          </item>
          <item>
-          <widget class="DKFormListPane" name="additionalHeadParts"/>
+          <widget class="QTableView" name="additionalHeadParts">
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectRows</enum>
+           </property>
+           <property name="cornerButtonEnabled">
+            <bool>false</bool>
+           </property>
+           <attribute name="verticalHeaderVisible">
+            <bool>false</bool>
+           </attribute>
+          </widget>
          </item>
         </layout>
        </item>
@@ -2956,7 +2631,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>150</width>
+             <width>107</width>
              <height>22</height>
             </size>
            </property>
@@ -3007,7 +2682,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>150</width>
+             <width>107</width>
              <height>22</height>
             </size>
            </property>
@@ -3841,6 +3516,11 @@
    <extends>QWidget</extends>
    <header>widgets/DKFormInventoryWidget.h</header>
   </customwidget>
+  <customwidget>
+   <class>DKAttackDataWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKAttackDataWidget.h</header>
+  </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>editorID</tabstop>
@@ -3951,26 +3631,7 @@
   <tabstop>currentCreaSoundType</tabstop>
   <tabstop>currentCreaSoundChance</tabstop>
   <tabstop>currentCreaSoundForm</tabstop>
-  <tabstop>attackDataRace</tabstop>
-  <tabstop>attackDataTable</tabstop>
-  <tabstop>buttonAttackDataOverrideAdd</tabstop>
-  <tabstop>buttonAttackDataOverrideRemove</tabstop>
-  <tabstop>attackDataSelEvent</tabstop>
-  <tabstop>attackDataSelDamageMult</tabstop>
-  <tabstop>attackDataSelChance</tabstop>
-  <tabstop>attackDataSelStagger</tabstop>
-  <tabstop>attackDataSelRecoveryTime</tabstop>
-  <tabstop>attackDataSelStaminaMult</tabstop>
-  <tabstop>attackDataSelSpell</tabstop>
-  <tabstop>attackDataSelKeyword</tabstop>
-  <tabstop>attackDataSelAngleAttack</tabstop>
-  <tabstop>attackDataSelAngleStrike</tabstop>
-  <tabstop>attackDataSelKnockdown</tabstop>
-  <tabstop>attackDataSelFlagPower</tabstop>
-  <tabstop>attackDataSelFlagIgnoreWeapon</tabstop>
-  <tabstop>attackDataSelFlagBash</tabstop>
-  <tabstop>attackDataSelFlagLeft</tabstop>
-  <tabstop>attackDataSelFlagRotating</tabstop>
+  <tabstop>attackData</tabstop>
   <tabstop>buttonFacePartsImport</tabstop>
   <tabstop>faceComplexion</tabstop>
   <tabstop>hairColor</tabstop>

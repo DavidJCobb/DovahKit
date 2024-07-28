@@ -16,32 +16,35 @@ namespace dovah {
    class data_by_sex {
       protected:
          template<bool Const>
-         class iterator {
+         class _iterator {
             using list_type   = std::conditional_t<Const, const T, T>;
             using target_type = std::conditional_t<Const, const T, T>;
             
             target_type* target;
 
             public:
-               constexpr iterator(target_type* o) : dst(o) {}
+               constexpr _iterator(target_type* o) : target(o) {}
 
                T& operator*() const { return *target; }
                T* operator->() const { return target; }
 
-               constexpr iterator& operator++() { return operator+=(1); }
-               constexpr iterator& operator--() { return operator-=(1); }
-               constexpr iterator  operator++(int) { return iterator(*this) += 1; }
-               constexpr iterator  operator--(int) { return iterator(*this) -= 1; }
-               constexpr iterator& operator+=(size_t i) { target += i; return *this; }
-               constexpr iterator& operator-=(size_t i) { target -= i; return *this; }
+               constexpr _iterator& operator++() { return operator+=(1); }
+               constexpr _iterator& operator--() { return operator-=(1); }
+               constexpr _iterator  operator++(int) { return _iterator(*this) += 1; }
+               constexpr _iterator  operator--(int) { return _iterator(*this) -= 1; }
+               constexpr _iterator& operator+=(size_t i) { target += i; return *this; }
+               constexpr _iterator& operator-=(size_t i) { target -= i; return *this; }
 
-               constexpr std::partial_ordering operator<=>(const iterator& a, const iterator& b) {
+               friend constexpr std::partial_ordering operator<=>(const _iterator& a, const _iterator& b) {
                   return a.target <=> b.target;
                }
-               constexpr bool operator==(const iterator& other) const {
+               constexpr bool operator==(const _iterator& other) const {
                   return (*this <=> other) == std::partial_ordering::equivalent;
                }
          };
+      public:
+         using iterator = _iterator<false>;
+         using const_iterator = _iterator<true>;
 
       public:
          T male   = {};
@@ -71,12 +74,12 @@ namespace dovah {
             return sex_count;
          }
 
-         iterator<false> begin() { return iterator(&this->male); }
-         iterator<false> end()   { return iterator(&this->female + 1); }
-         const iterator<true> begin() const { return iterator(&this->male); }
-         const iterator<true> end()   const { return iterator(&this->female + 1); }
+         iterator begin() { return iterator(&this->male); }
+         iterator end()   { return iterator(&this->female + 1); }
+         const_iterator begin() const { return const_iterator(&this->male); }
+         const_iterator end()   const { return const_iterator(&this->female + 1); }
 
-         const iterator<true> cbegin() const { return iterator(&this->male); }
-         const iterator<true> cend()   const { return iterator(&this->female + 1); }
+         const_iterator cbegin() const { return const_iterator(&this->male); }
+         const_iterator cend()   const { return const_iterator(&this->female + 1); }
    };
 }

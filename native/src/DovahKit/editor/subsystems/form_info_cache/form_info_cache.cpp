@@ -20,7 +20,6 @@
 #include "./cacheable_traits/model_path.h"
 #include "./cacheable_traits/quest_filter.h"
 #include "./cacheable_traits/voicetype_info.h"
-#include "./cacheable_trait.h"
 #include "./quest_vmad_skimmer.h"
 
 #include "./threaded_builder.h"
@@ -61,6 +60,9 @@ namespace {
       if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::quest_filter::form_class_is_of_interest<Current>) {
          return true;
       }
+      if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::voicetype_info::form_class_is_of_interest<Current>) {
+         return true;
+      }
       return false;
    }>;
 }
@@ -74,31 +76,28 @@ namespace {
    ) {
       using namespace dovahkit::subsystems::form_info_cache;
 
-      constexpr const bool must_read_all_subrecords = (FormType == dovah::form_type::quest) || (FormType == dovah::form_type::head_part);
-
-      using seen_trait_mask = cobb::enum_flags<cacheable_trait, cacheable_trait_count>;
-      seen_trait_mask seen;
-
-      if constexpr (!must_read_all_subrecords) {
-         if constexpr (!cacheable_traits::attached_scripts::form_type_is_of_interest(FormType)) {
-            seen |= cacheable_trait::attached_scripts;
-         }
-         if constexpr (!cacheable_traits::faction_info::form_type_is_of_interest(FormType)) {
-            seen |= cacheable_trait::faction_info;
-         }
-         if constexpr (!cacheable_traits::head_part_info::form_type_is_of_interest(FormType)) {
-            seen |= cacheable_trait::head_part_info;
-         }
-         if constexpr (!cacheable_traits::model_path::form_type_is_of_interest(FormType)) {
-            seen |= cacheable_trait::model_path;
-         }
-         if constexpr (!cacheable_traits::quest_filter::form_type_is_of_interest(FormType)) {
-            seen |= cacheable_trait::quest_filter;
-         }
-         if constexpr (!cacheable_traits::voicetype_info::form_type_is_of_interest(FormType)) {
-            seen |= cacheable_trait::voicetype_info;
-         }
-      }
+      //
+      // The `seen` mask is used to exit the subrecord-reading loop early. The idea is that 
+      // when all bits are set, we know we've seen all data of interest. (Above, we set the 
+      // bits for data that is not of interest, i.e. cached-info types that we know the current 
+      // form type will never have.)
+      //
+      // ---------------------------------------------------------------------------------------
+      //
+      // The branches below (in the subrecord loop, for each cached-info type) generally fall 
+      // into two categories:
+      // 
+      //  - Situations where we definitely only care about one subrecord for a given type of 
+      //    cached info.
+      // 
+      //  - Situations where we (may in the future) want to read multiple subrecords for a 
+      //    given type of cached info.
+      // 
+      // In the former case, we can just instantiate the cached info and threaded-insert it 
+      // within that specific branch. In the latter case, we'll want to have a variable scoped 
+      // to outside of the branch where we handle a subrecord, and only threaded-insert the info 
+      // after the subrecord-reading loop.
+      // 
 
       // Quests require special handling, for their aliases' attached scripts.
       std::conditional_t<
@@ -108,32 +107,20 @@ namespace {
       > quest_skimmer;
 
       std::conditional_t<
-         (FormType == dovah::form_type::faction),
-         cached_faction_info,
-         uint8_t // dummy type
-      > faction_info = {};
-
-      std::conditional_t<
          (FormType == dovah::form_type::head_part),
          cached_head_part_info,
          uint8_t // dummy type
       > head_part_info = {};
 
       while (auto& subrecord = record.next_subrecord()) {
-
-         // There's no way to do an if/else tree where individual if/else branches get knocked out 
-         // based on if-constexpr tests. As a result, we have to do individual if-statements within 
-         // each if-constexpr statement; we can't join them with `else`. Hopefully we can at least 
-         // make it as obvious to the compiler/optimizer as possible that each of these ifs are 
-         // mutually exclusive, e.g. by using a shared variable instead of repeated calls to the 
-         // signature getter (the compiler might not realize they'd return the same result).
-         //
-         // We wouldn't need this if we could just `continue` at the end of each branch, but in the 
-         // case of `!must_read_all_subrecords` there's code we want to run at the end of each branch, 
-         // and that code might conditionally break out of this loop so we can't just lambda it.
          const auto signature = subrecord.signature();
 
          if constexpr (cacheable_traits::attached_scripts::form_type_is_of_interest(FormType)) {
+            //
+            // Papyrus: for most forms, we only care about the VMAD subrecord, but for quests, we 
+            // need to read additional subrecords as well in order to properly handle scripts that 
+            // are attached to aliases.
+            //
             if constexpr (FormType == dovah::form_type::quest) {
                //
                // Quests require special handling, for their aliases' attached scripts.
@@ -145,56 +132,59 @@ namespace {
             } else {
                if (signature == 'VMAD') {
                   cached_vmad_info info(subrecord);
-                  if (!info.empty()) {
+                  if (!info.empty())
                      cache.attached_scripts.threadedInsert(stub, std::move(info));
-                  }
-                  //
-                  if constexpr (!must_read_all_subrecords)
-                     seen |= cacheable_trait::attached_scripts;
                }
             }
          }
          if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(FormType)) {
+            //
+            // Factions: For now, we only care about the DATA subrecord.
+            //
             if (signature == 'DATA') {
-               faction_info.skim_subrecord(subrecord);
-               //
-               if constexpr (!must_read_all_subrecords)
-                  seen |= cacheable_trait::faction_info;
+               cached_faction_info info;
+               info.skim_subrecord(subrecord);
+               cache.factions.threadedInsert(stub, info);
             }
          }
          if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(FormType)) {
+            //
+            // HeadParts: We need to read multiple subrecords.
+            //
             head_part_info.skim_subrecord(subrecord);
          }
          if constexpr (cacheable_traits::model_path::form_type_is_of_interest(FormType)) {
+            //
+            // Models: We only care about the MODL subrecord.
+            //
             if (signature == 'MODL') {
                std::string raw;
                subrecord.read(raw);
                cache.model_paths.threadedInsert(stub, QString::fromStdString(raw));
-               //
-               if constexpr (!must_read_all_subrecords)
-                  seen |= cacheable_trait::model_path;
             }
          }
          if constexpr (cacheable_traits::quest_filter::form_type_is_of_interest(FormType)) {
+            //
+            // Quest filters: We only care about the FLTR subrecord.
+            //
             if (signature == 'FLTR') {
                std::string raw;
                subrecord.read(raw);
                cache.quest_filters.threadedInsert(stub, QString::fromStdString(raw));
-               //
-               if constexpr (!must_read_all_subrecords)
-                  seen |= cacheable_trait::quest_filter;
             }
          }
-
-         if constexpr (!must_read_all_subrecords) {
-            if (seen == seen_trait_mask::with_all_set())
-               break;
+         if constexpr (cacheable_traits::voicetype_info::form_type_is_of_interest(FormType)) {
+            //
+            // Voicetypes: We only care about the DNAM subrecord.
+            //
+            if (signature == 'DNAM') {
+               cached_voicetype_info info;
+               info.skim_subrecord(subrecord);
+               cache.voicetypes.threadedInsert(stub, info);
+            }
          }
       }
 
-      if constexpr (FormType == dovah::form_type::faction) {
-         cache.factions.threadedInsert(stub, std::move(faction_info));
-      }
       if constexpr (FormType == dovah::form_type::quest) {
          if (!quest_skimmer.empty())
             cache.attached_scripts.threadedInsert(stub, quest_skimmer.bake());
@@ -235,8 +225,8 @@ namespace {
       
       if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(LoadedForm::form_type)) {
          auto& dst_list = cache.factions;
-         auto  dst_it   = dst_list.find(stub);
-         if (dst_it) {
+         auto  dst_it   = dst_list.find(&stub);
+         if (dst_it != dst_list.end()) {
             auto& dst = *dst_it;
             if (dst.update(loaded)) {
                emit core.cachedFactionChanged(stub);
@@ -244,15 +234,15 @@ namespace {
          } else {
             cached_faction_info info;
             info.update(loaded);
-            dst_list.insert(std::move(info));
+            dst_list.insert(&stub, std::move(info));
             emit core.cachedFactionChanged(stub);
          }
       }
 
       if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(LoadedForm::form_type)) {
          auto& dst_list = cache.head_parts;
-         auto  dst_it   = dst_list.find(stub);
-         if (dst_it) {
+         auto  dst_it   = dst_list.find(&stub);
+         if (dst_it != dst_list.end()) {
             auto& dst = *dst_it;
             if (dst.update(loaded)) {
                emit core.cachedHeadPartChanged(stub);
@@ -260,8 +250,24 @@ namespace {
          } else {
             cached_head_part_info info;
             info.update(loaded);
-            dst_list.insert(std::move(info));
+            dst_list.insert(&stub, std::move(info));
             emit core.cachedHeadPartChanged(stub);
+         }
+      }
+
+      if constexpr (cacheable_traits::voicetype_info::form_type_is_of_interest(LoadedForm::form_type)) {
+         auto& dst_list = cache.voicetypes;
+         auto  dst_it   = dst_list.find(&stub);
+         if (dst_it != dst_list.end()) {
+            auto& dst = *dst_it;
+            if (dst.update(loaded)) {
+               emit core.cachedVoicetypeChanged(stub);
+            }
+         } else {
+            cached_voicetype_info info;
+            info.update(loaded);
+            dst_list.insert(&stub, std::move(info));
+            emit core.cachedVoicetypeChanged(stub);
          }
       }
 
@@ -491,17 +497,17 @@ namespace dovahkit::subsystems::form_info_cache {
    const cached_faction_info* core::get_faction_info(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::faction)
          return nullptr;
-      return &this->_cache.factions.value(&stub);
+      return this->_cache.factions.valuePointer(stub);
    }
    const cached_head_part_info* core::get_head_part_info(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::head_part)
          return nullptr;
-      return &this->_cache.head_parts.value(&stub);
+      return this->_cache.head_parts.valuePointer(stub);
    }
    const cached_voicetype_info* core::get_voicetype_info(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::voicetype)
          return nullptr;
-      return &this->_cache.voicetypes.value(&stub);
+      return this->_cache.voicetypes.valuePointer(stub);
    }
 
    script_attach_state core::form_script_attachment(const dovah::form_stub& stub, std::string_view scriptname) const {

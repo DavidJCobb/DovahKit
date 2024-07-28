@@ -83,6 +83,12 @@ void FormDialogClass::_load_impl() {
    ui::bind(this->ui.attrWeightM, working.attribute_weights.magicka);
    ui::bind(this->ui.attrWeightS, working.attribute_weights.stamina);
 
+   if (working.training.max_level > 0) {
+      this->ui.trainingMaxLevel->setValue(working.training.max_level);
+      this->ui.trainingGroupbox->setChecked(true);
+   } else {
+      this->ui.trainingGroupbox->setChecked(false);
+   }
    QObject::connect(this->ui.trainingGroupbox, &QGroupBox::toggled, this, [this](bool checked) {
       auto& working = *this->form;
       if (!checked) {

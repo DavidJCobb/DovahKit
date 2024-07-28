@@ -102,9 +102,9 @@ namespace dovah::loaded_forms {
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);
       FULL.close();
-      auto& FULL = record.open_next_subrecord('DESC');
-      FULL.write(this->description);
-      FULL.close();
+      auto& DESC = record.open_next_subrecord('DESC');
+      DESC.write(this->description);
+      DESC.close();
       if (!this->icon.empty())
          record.write_string_subrecord('ICON', this->icon);
       auto& DATA = record.open_next_subrecord('DATA');

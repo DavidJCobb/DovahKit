@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>FormDialogAssociationType</class>
  <widget class="QDialog" name="FormDialogAssociationType">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>300</width>
-    <height>300</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Association Type</string>
   </property>

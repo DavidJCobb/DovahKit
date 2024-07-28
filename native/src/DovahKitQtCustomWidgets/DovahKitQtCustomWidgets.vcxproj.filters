@@ -145,6 +145,12 @@
     <QtMoc Include="widgets\DKComboBox.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="widgets\DKAttackDataWidget.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="interfaces\DKAttackDataWidgetInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="interfaces\DKCollapsiblePaneInterface.cpp">
@@ -262,6 +268,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\DKFormInventoryWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKAttackDataWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="interfaces\DKAttackDataWidgetInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

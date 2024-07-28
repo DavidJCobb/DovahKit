@@ -2475,6 +2475,18 @@
     <ClCompile Include="ui\form_windows\actor_base\FaceTintColorPickerFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\shared\FaceBaseHeadPartsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\shared\FaceExtraHeadPartsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_attack_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\utils\typical_tableview_config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5771,9 +5783,6 @@
     <ClInclude Include="ui\main_window\object_window\filter_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_trait.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\model_path.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -6374,9 +6383,6 @@
     <ClInclude Include="editor\helpers\skill_name_to_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="widgets\DKFloatSlider.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ui\form_windows\shared\HeadPartPickerFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -6387,6 +6393,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\form_windows\actor_base\FaceTintColorPickerFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\typical_tableview_config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\set_tableview_column_flex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -6611,6 +6626,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\class.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\race.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -7108,6 +7126,15 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\actor_base\ActorBaseSkillsModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\shared\FaceBaseHeadPartsModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\shared\FaceExtraHeadPartsModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKFloatSlider.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

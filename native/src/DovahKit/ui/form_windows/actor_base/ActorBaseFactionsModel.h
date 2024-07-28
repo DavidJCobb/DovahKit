@@ -47,7 +47,7 @@ class ActorBaseFactionsModel : public DKGenericListModel<ActorBaseFactionsModel,
 
       void overwriteAllItems(const std::vector<node_type>& src);
 
-      constexpr const bool containsFaction(const dovah::form_stub* stub) const noexcept {
+      inline const bool containsFaction(const dovah::form_stub* stub) const noexcept {
          for (auto* node : this->_nodes)
             if (node->faction == stub)
                return true;

@@ -4,6 +4,7 @@
 #include "core.h"
 #include "../ui/main_window/form_use_info.h"
 #include "../ui/form_windows/activator.h"
+#include "../ui/form_windows/actor_base.h"
 #include "../ui/form_windows/association_type.h"
 #include "../ui/form_windows/cell.h"
 #include "../ui/form_windows/class.h"
@@ -38,6 +39,7 @@ namespace {
 
    constexpr std::array factory = {
       std::pair{ dovah::form_type::activator,         _make<FormDialogActivator> },
+      std::pair{ dovah::form_type::actor_base,        _make<FormDialogActorBase> },
       std::pair{ dovah::form_type::association_type,  _make<FormDialogAssociationType> },
       std::pair{ dovah::form_type::cell,              _make<FormDialogCell> },
       std::pair{ dovah::form_type::combat_class,      _make<FormDialogClass> },

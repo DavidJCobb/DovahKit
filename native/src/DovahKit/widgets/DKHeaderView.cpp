@@ -279,38 +279,51 @@ void DKHeaderView::_reapplyColumnFlex(int length) {
          total_factor = total_shrink;
       }
       //
-      int    diff = length - total_basis;
-      double per  = (double)diff / total_factor;
-      //
-      // We need to account for integer rounding errors on these calculations, which would 
-      // result in there being leftover pixels at the end of the header viewport. If we just 
-      // distribute these pixels into arbitrary sections, then we'll end up with jittering 
-      // when the user resizes a section.
-      //
-      // What we need to do instead is actively carry the rounding error from one section 
-      // into the next section. If rounding makes one section 0.33 pixels larger, then it 
-      // should make the next section 0.33 pixels smaller, and vice versa, rather than us 
-      // adding whole pixels to what are essentially random and irrelevant sections.
-      //
-      double carry = 0; // helper for sub-pixel values, to prevent jittering
-      //
-      for (int i = 0; i < count; ++i) {
-         auto& entry = this->_flexColumns[i];
-         if (this->isSectionHidden(i) || entry.hide)
-            continue;
-         int    basis  = std::max(minimum_size, entry.basis + entry.mod);
-         double offset = (per * (entry.*factor)) + carry;
+      if (total_factor == 0) {
          //
-         double rounded = round(offset);
-         entry.render = basis + rounded;
-         if (entry.render < minimum_size) {
-            entry.render = minimum_size;
-            carry = offset - minimum_size;
-         } else {
-            carry = offset - rounded; // The effect of this is that if we round one column up by 0.33px, the next will have its computed width reduced by 0.33px.
+         // We want to [grow|shrink], but we cannot.
+         //
+         for (int i = 0; i < count; ++i) {
+            auto& entry = this->_flexColumns[i];
+            if (this->isSectionHidden(i) || entry.hide)
+               continue;
+            entry.render = std::max(minimum_size, entry.basis + entry.mod);
+            total_render += entry.render;
          }
+      } else {
+         int    diff = length - total_basis;
+         double per  = (double)diff / total_factor;
          //
-         total_render += entry.render;
+         // We need to account for integer rounding errors on these calculations, which would 
+         // result in there being leftover pixels at the end of the header viewport. If we just 
+         // distribute these pixels into arbitrary sections, then we'll end up with jittering 
+         // when the user resizes a section.
+         //
+         // What we need to do instead is actively carry the rounding error from one section 
+         // into the next section. If rounding makes one section 0.33 pixels larger, then it 
+         // should make the next section 0.33 pixels smaller, and vice versa, rather than us 
+         // adding whole pixels to what are essentially random and irrelevant sections.
+         //
+         double carry = 0; // helper for sub-pixel values, to prevent jittering
+         //
+         for (int i = 0; i < count; ++i) {
+            auto& entry = this->_flexColumns[i];
+            if (this->isSectionHidden(i) || entry.hide)
+               continue;
+            int    basis  = std::max(minimum_size, entry.basis + entry.mod);
+            double offset = (per * (entry.*factor)) + carry;
+            //
+            double rounded = round(offset);
+            entry.render = basis + rounded;
+            if (entry.render < minimum_size) {
+               entry.render = minimum_size;
+               carry = offset - minimum_size;
+            } else {
+               carry = offset - rounded; // The effect of this is that if we round one column up by 0.33px, the next will have its computed width reduced by 0.33px.
+            }
+            //
+            total_render += entry.render;
+         }
       }
    }
    //

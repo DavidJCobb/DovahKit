@@ -4,12 +4,15 @@
 #include "ui/utils/bind.h"
 #include "ui/utils/item_indices_to_data.h"
 #include "ui/utils/set_range.h"
+#include "ui/utils/set_tableview_column_flex.h"
+#include "ui/utils/typical_tableview_config.h"
 
 #include "editor/subsystems/form_info_cache/core.h"
 #include "editor/open_window_for_form.h"
 #include "dovah/forms/Outfit.h"
 
 #include "widgets/widget-data/DKFormPickerCustomFilter.h"
+#include "widgets/DKHeaderView.h"
 
 #include "./actor_base/ActorBaseFactionsModel.h"
 #include "./actor_base/ActorBaseRelationshipsModel.h"
@@ -17,6 +20,19 @@
 #include "./actor_base/FaceComplexionPickerFilter.h"
 #include "./actor_base/FaceHairColorPickerFilter.h"
 #include "./actor_base/FaceTintColorPickerFilter.h"
+#include "./shared/FaceBaseHeadPartsModel.h"
+#include "./shared/FaceExtraHeadPartsModel.h"
+#include "./shared/HeadPartPickerFilter.h"
+
+namespace {
+   constexpr const bool we_are_not_done_but_just_let_me_compile_for_now =
+      #if _DEBUG
+         true
+      #else
+         false
+      #endif
+   ;
+}
 
 namespace {
    constexpr const bool preview_enabled = false;
@@ -37,9 +53,8 @@ namespace impl {
       public:
          CrimeFactionPickerFilter(QObject* parent) : DKFormPickerCustomFilter(parent) {
             auto& fic = fic_type::get();
-            QObject::connect(&fic, &fic_type::cachedFactionChanged, this, [this](dovah::form_stub* stub) {
-               if (stub)
-                  this->_refilter_form(*stub);
+            QObject::connect(&fic, &fic_type::cachedFactionChanged, this, [this](dovah::form_stub& stub) {
+               this->_refilter_form(stub);
             });
          }
          
@@ -117,9 +132,8 @@ namespace impl {
       public:
          VoicetypePickerFilter(QObject* parent) : DKFormPickerCustomFilter(parent) {
             auto& fic = fic_type::get();
-            QObject::connect(&fic, &fic_type::cachedVoicetypeChanged, this, [this](dovah::form_stub* stub) {
-               if (stub)
-                  this->_refilter_form(*stub);
+            QObject::connect(&fic, &fic_type::cachedVoicetypeChanged, this, [this](dovah::form_stub& stub) {
+               this->_refilter_form(stub);
             });
          }
 
@@ -161,6 +175,12 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
    #pragma region Traits tab
       this->ui.race->setAllowedFormType(dovah::form_type::race);
       this->ui.skin->setAllowedFormType(dovah::form_type::armor);
+      {
+         auto* widget = this->ui.sex;
+         widget->clear();
+         widget->addItem(tr("Female"), (int)dovah::sex::female);
+         widget->addItem(tr("Male"), (int)dovah::sex::male);
+      }
       ui::set_unsigned_range<float>(this->ui.height);
       this->ui.bodyWeight->setRange(0, 1);
       this->ui.farawaySkin->setAllowedFormType(dovah::form_type::armor);
@@ -191,7 +211,7 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
          this->ui.bleedoutOverrideThreshold->setRange(0, 32767);
 
          this->ui.statsClass->setAllowedFormType(dovah::form_type::combat_class);
-         static_assert(false, "TODO: Attributes");
+         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Attributes");
          ui::set_range<decltype(decltype(stats_struct::base)::health)>(this->ui.statsHealthBase);
          ui::set_range<decltype(decltype(stats_struct::base)::magicka)>(this->ui.statsMagickaBase);
          ui::set_range<decltype(decltype(stats_struct::base)::stamina)>(this->ui.statsStaminaBase);
@@ -208,6 +228,9 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
             auto* widget = this->ui.statsTable;
             auto* model  = this->_models.skills = new ActorBaseSkillsModel(this);
             widget->setModel(model);
+
+            ui::typical_tableview_config(widget);
+            widget->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
 
             ui::set_range<uint8_t>(this->ui.currentSkillOffset);
 
@@ -266,19 +289,31 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
          auto* model  = this->_models.factions = new ActorBaseFactionsModel(this);
          widget->setModel(model);
          this->_filters.crime_faction->setModel(model);
+
+         ui::typical_tableview_config(widget);
+         widget->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         ui::set_tableview_column_flex(widget, [](DKHeaderView& header, const QFontMetrics& metrics) {
+            header.setColumnFlex(ActorBaseFactionsModel::Column::Faction, 1, 0);
+            header.setColumnFlex(ActorBaseFactionsModel::Column::Rank,    0, 0, metrics.boundingRect("99999").width() * 1.5F + 4);
+         });
       }
       this->ui.currentFactionForm->setAllowedFormType(dovah::form_type::faction);
-      this->ui.currentFactionForm->setCustomFilter(this->_filters.crime_faction);
       ui::set_range<int8_t>(this->ui.currentFactionRank);
 
       QObject::connect(this->ui.currentFactionForm, &DKFormPicker::formChanged, this, &FormDialogActorBase::_push_faction_from_ui);
       QObject::connect(this->ui.currentFactionRank, QOverload<int>::of(&QSpinBox::valueChanged), this, &FormDialogActorBase::_push_faction_from_ui);
+
+      this->ui.crimeFaction->setAllowedFormType(dovah::form_type::faction);
+      this->ui.crimeFaction->setCustomFilter(this->_filters.crime_faction);
    #pragma endregion
    #pragma region Relationships tab
       {
          auto* widget = this->ui.relationshipsTable;
          auto* model  = this->_models.relationships = new ActorBaseRelationshipsModel(this);
          widget->setModel(model);
+
+         ui::typical_tableview_config(widget);
+         widget->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
 
          {  // Context menu
             auto& menu = this->_context_menus.relationships;
@@ -335,7 +370,7 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
       ui::set_range<uint16_t>(this->ui.aggroRadiusAttack);
    #pragma endregion
    #pragma region AI Packages tab
-      static_assert(false, "TODO");
+      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
 
       this->ui.packageListDefault->setAllowedFormType(dovah::form_type::formlist);
       this->ui.packageListSpectator->setAllowedFormType(dovah::form_type::formlist);
@@ -365,30 +400,24 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
       this->ui.inheritSoundsFrom->setAllowNone(true);
       this->ui.inheritSoundsFrom->setCustomFilter(this->_filters.exclude_self); // don't let an actor inherit sounds from themselves
 
-      static_assert(false, "TODO: list model");
+      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: list model");
 
       ui::item_indices_to_data(this->ui.currentCreaSoundType);
       this->ui.currentCreaSoundChance->setRange(0, 100);
       this->ui.currentCreaSoundForm->setAllowedFormType(dovah::form_type::sound_descriptor);
    #pragma endregion
    #pragma region Attack Data tab
-      this->ui.attackDataRace->setAllowedFormType(dovah::form_type::race);
       //
-      ui::set_unsigned_range<float>(this->ui.attackDataSelDamageMult);
-      ui::set_range<float>(this->ui.attackDataSelChance);
-      ui::set_unsigned_range<float>(this->ui.attackDataSelStagger);
-      ui::set_unsigned_range<float>(this->ui.attackDataSelRecoveryTime);
-      ui::set_unsigned_range<float>(this->ui.attackDataSelStaminaMult);
-      this->ui.attackDataSelAngleAttack->setRange(-360, 360);
-      this->ui.attackDataSelAngleStrike->setRange(-360, 360);
-      ui::set_unsigned_range<float>(this->ui.attackDataSelKnockdown);
-      this->ui.attackDataSelSpell->setAllowedFormType(dovah::form_type::spell);
-      this->ui.attackDataSelKeyword->setAllowedFormType(dovah::form_type::keyword);
+      // Just the one premade widget. It'll set itself up for us.
+      //
    #pragma endregion
    #pragma region Face Parts tab
       if constexpr (!allow_customizing_face) {
          this->ui.tabFaceParts->setEnabled(false);
       }
+
+      this->_filters.face.base_head_part = new HeadPartPickerFilter(this);
+      this->ui.baseHeadPartPicker->setCustomFilter(this->_filters.face.base_head_part);
 
       this->_filters.face.complexion = new impl::FaceComplexionPickerFilter(this);
       this->ui.faceComplexion->setCustomFilter(this->_filters.face.complexion);
@@ -399,30 +428,63 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
       this->_filters.face.tint_color = new impl::FaceTintColorPickerFilter(this);
       this->ui.faceTintColorPreset->setCustomFilter(this->_filters.face.tint_color);
 
-      QObject::connect(this->ui.race, &DKFormPicker::formChanged, this, [this](dovah::form_stub* race) {
-         this->_filters.face.complexion->setRequiredRace(race);
-         this->_filters.face.hair_color->setRequiredRace(race);
-         this->_filters.face.tint_color->setRequiredRace(race);
-      });
-      QObject::connect(this->ui.sex, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int i) {
-         auto sex = (i == 1) ? dovah::sex::female : dovah::sex::male;
-
-         this->_filters.face.complexion->setRequiredSex(sex);
-         this->_filters.face.hair_color->setRequiredSex(sex);
-         this->_filters.face.tint_color->setRequiredSex(sex);
-      });
+      this->_data.female.models.base_head_parts  = new FaceBaseHeadPartsModel(this);
+      this->_data.female.models.extra_head_parts = new FaceExtraHeadPartsModel(this);
+      this->_data.male.models.base_head_parts  = new FaceBaseHeadPartsModel(this);
+      this->_data.male.models.extra_head_parts = new FaceExtraHeadPartsModel(this);
 
       {
-         auto* view      = this->ui.faceTintLayerTable;
+         auto* view = this->ui.faceTintLayerTable;
+
+         ui::typical_tableview_config(view);
+         view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+
          auto* sel_model = view->selectionModel();
          QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this]() {
-            uint16_t tint_index = static_assert(false, "TODO");
+            uint16_t tint_index = 0;static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
 
             this->_filters.face.tint_color->setFaceTintIndex(tint_index);
          });
       }
+      
+      {  // Base Head Parts table
+         auto* view = this->ui.baseHeadPartsTable;
 
-      static_assert(false, "TODO");
+         ui::typical_tableview_config(view);
+         view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         //
+         // TODO: Allow drag/drop onto the base headparts table, and set the drag/drop overwrite mode 
+         //       on the table to `true`, so that drops overwrite the drop target rather than appending.
+
+         auto* sel_model = view->selectionModel();
+         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this, view, sel_model]() {
+            auto* picker = this->ui.baseHeadPartPicker;
+            auto* model  = dynamic_cast<FaceBaseHeadPartsModel*>(view->model());
+            if (!model) {
+               picker->setEnabled(false);
+               return;
+            }
+            std::optional<FaceBaseHeadPartsModel::Slot> slot;
+            {
+               auto rows = sel_model->selectedRows();
+               if (!rows.isEmpty())
+                  slot = model->slotAt(rows[0].row());
+            }
+            if (!slot.has_value()) {
+               picker->setEnabled(false);
+               return;
+            }
+
+            picker->setEnabled(true);
+            auto* stub = model->headPartFor(slot.value());
+
+            auto blocker = QSignalBlocker(picker);
+            this->_filters.face.base_head_part->setRequiredType(FaceBaseHeadPartsModel::slotToType(slot.value()));
+            picker->setFormStub(stub);
+         });
+      }
+
+      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
    #pragma endregion
    #pragma region Face Morphs tab
       if constexpr (!allow_customizing_face) {
@@ -490,17 +552,11 @@ void FormDialogActorBase::_load_impl() {
    #pragma endregion
 
    #pragma region Traits tab
-      ui::bind(this->ui.race, working.race,       working);
+      QObject::connect(this->ui.race, &DKFormPicker::formChanged, this, &FormDialogActorBase::_set_race);
       ui::bind(this->ui.skin, working.worn_armor, working);
       QObject::connect(this->ui.sex, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
-         bool female = this->ui.sex->currentIndex() == 1;
-         if (female)
-            this->form->actor_flags |= loaded_form_type::actor_flag::female;
-         else
-            this->form->actor_flags &= ~loaded_form_type::actor_flag::female;
-
-         this->_filters.voicetype->set_female(female);
-         this->_models.relationships->setFocusActor(this->formStub(), female ? dovah::sex::female : dovah::sex::male);
+         auto sex = this->ui.sex->currentData().toInt();
+         this->_set_sex((dovah::sex)sex);
       });
       ui::bind(this->ui.flagOppositeGenderAnims, working.template_data.flags, loaded_form_type::actor_flag::opposite_gender_animations);
       ui::bind(this->ui.height,     working.height);
@@ -508,7 +564,7 @@ void FormDialogActorBase::_load_impl() {
       ui::bind(this->ui.farawaySkin,     working.far_away.model, working);
       ui::bind(this->ui.farawayDistance, working.far_away.distance);
       ui::bind(this->ui.voicetype, working.voicetype, working);
-      static_assert(false, "TODO: Weapon List");
+      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Weapon List");
       ui::bind(this->ui.dispositionBase, working.stats.disposition);
       ui::bind(this->ui.deathItem, working.death_item, working);
    #pragma endregion
@@ -524,7 +580,7 @@ void FormDialogActorBase::_load_impl() {
 
       ui::bind(this->ui.statsClass, working.stats.combat_class, working);
       ui::bind(this->ui.flagAutoCalcStats, working.actor_flags, loaded_form_type::actor_flag::auto_calc_stats);
-      static_assert(false, "TODO: Attributes");
+      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Attributes");
 
       {
          for (size_t i = 0; i < dovah::skill_count; ++i)
@@ -545,6 +601,7 @@ void FormDialogActorBase::_load_impl() {
          model->overwriteAllItems(nodes);
       }
       this->_pull_faction_to_ui();
+      ui::bind(this->ui.crimeFaction, working.crime_faction, working);
    #pragma endregion
    #pragma region Relationships tab
       this->_models.relationships->setFocusActor(
@@ -571,7 +628,7 @@ void FormDialogActorBase::_load_impl() {
       ui::bind(this->ui.aggroRadiusAttack,     working.ai.aggro.attack);
    #pragma endregion
    #pragma region AI Packages tab
-      static_assert(false, "TODO");
+      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
 
       ui::bind(this->ui.packageListDefault,       working.ai.default_package_list, working);
       ui::bind(this->ui.packageListSpectator,     working.ai.package_override_lists.spectator, working);
@@ -592,13 +649,13 @@ void FormDialogActorBase::_load_impl() {
       this->ui.perks->pullStubs(working.perks);
    #pragma endregion
    #pragma region Sounds tab
-      static_assert(false, "TODO");
+      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
    #pragma endregion
    #pragma region Attack Data tab
-      static_assert(false, "TODO");
+      this->ui.attackData->initializeFrom(working.attack_data);
    #pragma endregion
    #pragma region Face Parts tab
-      static_assert(false, "TODO");
+      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
    #pragma endregion
    #pragma region Face Morphs tab
       {
@@ -612,7 +669,7 @@ void FormDialogActorBase::_load_impl() {
          _handle(this->ui.faceMorphBrowHeight, working.face.morphs.brows.height);
          _handle(this->ui.faceMorphBrowWidth,  working.face.morphs.brows.width);
 
-         static_assert(false, "TODO: Mouth Type (morph index from the actor's race)");
+         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Mouth Type (morph index from the actor's race)");
          _handle(this->ui.faceMorphMouthHeight, working.face.morphs.mouth.height);
          _handle(this->ui.faceMorphMouthDepth,  working.face.morphs.mouth.depth);
 
@@ -627,12 +684,12 @@ void FormDialogActorBase::_load_impl() {
          _handle(this->ui.faceMorphCheekbonesHeight, working.face.morphs.cheeks.height);
          _handle(this->ui.faceMorphCheekbonesWidth,  working.face.morphs.cheeks.width);
 
-         static_assert(false, "TODO: Eyes Type (morph index from the actor's race)");
+         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Eyes Type (morph index from the actor's race)");
          _handle(this->ui.faceMorphEyesDepth,  working.face.morphs.eyes.depth);
          _handle(this->ui.faceMorphEyesHeight, working.face.morphs.eyes.height);
          _handle(this->ui.faceMorphEyesWidth,  working.face.morphs.eyes.width);
 
-         static_assert(false, "TODO: Nose Type (morph index from the actor's race)");
+         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Nose Type (morph index from the actor's race)");
          _handle(this->ui.faceMorphNoseHeight, working.face.morphs.nose.height);
          _handle(this->ui.faceMorphNoseLength, working.face.morphs.nose.length);
       }
@@ -641,7 +698,12 @@ void FormDialogActorBase::_load_impl() {
       static_assert(!preview_enabled, "TODO");
    #pragma endregion
 
-   static_assert(false, "TODO");
+   {
+      bool female = (working.actor_flags & loaded_form_type::actor_flag::female) != 0;
+      this->_set_sex(female ? dovah::sex::female : dovah::sex::male);
+   }
+   this->_set_race(working.race.get_form_stub());
+   static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
 }
 void FormDialogActorBase::_save_impl() {
    //
@@ -654,15 +716,17 @@ void FormDialogActorBase::_save_impl() {
    auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   editor.assign_localized_string(working.name,       this->ui.name->text());
+   editor.assign_localized_string(working.short_name, this->ui.shortName->text());
    this->ui.destructionData->commitTo(working.destruction_data, working);
-
-   static_assert(false, "TODO");
-
-   this->ui.keywords->commitStubs(working.keywords.forms, working);
-   this->ui.spells->commitStubs(working.spells.forms, working);
-   this->ui.perks->commitStubs(working.perks, working);
    this->ui.scriptListPane->commit();
+
+   static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+   
+   this->ui.attackData->commitTo(working.attack_data, working);
+   this->ui.keywords->commitStubs(working.keywords.forms, working);
+   this->ui.perks->commitStubs(working.perks, working);
+   this->ui.spells->commitStubs(working.spells.forms, working);
 }
 
 void FormDialogActorBase::updatePreview() {
@@ -697,7 +761,7 @@ void FormDialogActorBase::_updateFromTemplate() {
    this->ui.tabSpells->setEnabled(!(flags & template_flag::use_spells));
    this->ui.tabAIData->setEnabled(!(flags & template_flag::use_ai_data));
    this->ui.packageTable->setEnabled(!(flags & template_flag::use_ai_packages));
-   static_assert(false, "TODO: template_flag::use_animations");
+   static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: template_flag::use_animations");
    this->ui.tabInventory->setEnabled(!(flags & template_flag::use_inventory));
    this->ui.tabAttackData->setEnabled(!(flags & template_flag::use_attack_data));
    this->ui.tabKeywords->setEnabled(!(flags & template_flag::use_keywords));
@@ -721,7 +785,7 @@ void FormDialogActorBase::_updateFromTemplate() {
    if (!base_loaded)
       return;
 
-   static_assert(false, "TODO: Based on flags, set the state of UI values to match the template actor.");
+   static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Based on flags, set the state of UI values to match the template actor.");
    if (flags & template_flag::use_keywords) {
       this->ui.keywords->clear();
       for (auto& ref : base_loaded->keywords.forms) {
@@ -766,4 +830,68 @@ void FormDialogActorBase::_pull_faction_to_ui() {
    this->ui.currentFactionForm->setFormStub(node->faction);
    this->ui.currentFactionRank->setValue(node->rank);
 }
-void FormDialogActorBase::_push_faction_from_ui();
+void FormDialogActorBase::_push_faction_from_ui() {
+   static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+}
+
+void FormDialogActorBase::_set_race(dovah::form_stub* race) {
+   const auto blockers = std::array{
+      QSignalBlocker(this->ui.baseHeadPartPicker),
+      QSignalBlocker(this->ui.race),
+      QSignalBlocker(this->ui.sex),
+   };
+
+   this->ui.race->setFormStub(race);
+   if (this->form) {
+      write_form_ref(this->form->race, race);
+   }
+
+   this->_filters.face.base_head_part->setRequiredRace(race);
+   this->_filters.face.complexion->setRequiredRace(race);
+   this->_filters.face.hair_color->setRequiredRace(race);
+   this->_filters.face.tint_color->setRequiredRace(race);
+
+   this->_models.skills->setRace(race);
+}
+void FormDialogActorBase::_set_sex(dovah::sex s) {
+   const auto blockers = std::array{
+      QSignalBlocker(this->ui.baseHeadPartPicker),
+      QSignalBlocker(this->ui.faceComplexion),
+      QSignalBlocker(this->ui.faceTintColorPreset),
+      QSignalBlocker(this->ui.hairColor),
+      QSignalBlocker(this->ui.sex),
+   };
+   
+   {
+      auto* widget = this->ui.sex;
+      auto  i      = widget->findData((int)s);
+      if (i >= 0)
+         widget->setCurrentIndex(i);
+   }
+   if (this->form) {
+      auto& flags = this->form->actor_flags;
+      if (s == dovah::sex::female)
+         this->form->actor_flags |= loaded_form_type::actor_flag::female;
+      else
+         this->form->actor_flags &= ~loaded_form_type::actor_flag::female;
+   }
+   this->_models.relationships->setFocusActor(this->formStub(), s);
+
+   auto& data = (s == dovah::sex::female) ? this->_data.female : this->_data.male;
+
+   this->_filters.voicetype->set_female(s == dovah::sex::female);
+   {  // Face Parts
+      this->_filters.face.base_head_part->setRequiredSex(s);
+      this->_filters.face.complexion->setRequiredSex(s);
+      this->_filters.face.hair_color->setRequiredSex(s);
+      this->_filters.face.tint_color->setRequiredSex(s);
+
+      this->ui.faceComplexion->setFormStub(data.complexion);
+      this->ui.hairColor->setFormStub(data.hair_color);
+
+      this->ui.baseHeadPartsTable->setModel(data.models.base_head_parts);
+      this->ui.additionalHeadParts->setModel(data.models.extra_head_parts);
+   }
+
+
+}

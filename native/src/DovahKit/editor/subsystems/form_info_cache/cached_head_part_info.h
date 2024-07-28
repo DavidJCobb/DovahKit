@@ -1,4 +1,6 @@
 #pragma once
+#include <optional>
+#include "dovah/data/sex.h"
 #include "dovah/forms/HeadPart.h"
 
 namespace dovah {
@@ -15,17 +17,15 @@ namespace dovahkit::subsystems::form_info_cache {
       constexpr cached_head_part_info() {}
 
       using head_part_type = dovah::loaded_forms::HeadPart::head_part_type;
-      enum class sex : uint8_t {
-         any,
-         female,
-         male,
-      };
 
       dovah::form_stub* race_list = nullptr;
-      enum sex       sex         : 2 = sex::any;
-      head_part_type type        : 3 = head_part_type::misc;
-      bool           is_extra    : 1 = false;
-      bool           is_playable : 1 = false;
+      //
+      std::optional<dovah::sex> sex; // none == any
+      //
+      head_part_type type = head_part_type::misc;
+      //
+      bool is_extra    : 1 = false;
+      bool is_playable : 1 = false;
 
       void skim_subrecord(dovah::tes_file_reading::subrecord&);
 
@@ -35,6 +35,6 @@ namespace dovahkit::subsystems::form_info_cache {
       // Returns true if anything has changed.
       bool update(const dovah::loaded_forms::HeadPart&);
 
-      constexpr const bool operator==(const cached_head_part_info&) const = default;
+      constexpr bool operator==(const cached_head_part_info&) const noexcept = default;
    };
 }

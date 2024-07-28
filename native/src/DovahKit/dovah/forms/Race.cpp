@@ -93,7 +93,7 @@ namespace dovah::loaded_forms {
                this->spells.load(subrecord, intfc);
                break;
             #pragma endregion
-            #pragma region Components only in Bethesda's code
+            #pragma region Components only in Bethesda&apos;s code
             case 'WNAM': // BGSSkinForm (signature varies per-form)
                if (subrecord.read(this->skin)) {
                   intfc.warn_if_ref_is_wrong_type(this->skin, form_type::armor, subrecord.signature());
@@ -111,7 +111,7 @@ namespace dovah::loaded_forms {
 
                      subrecord.read(skill_index);
                      subrecord.read(skill_boost);
-                     if (skill_index >= skill_count) {
+                     if (skill_index >= skill_count && skill_index != -1) {
                         specific_load_warnings::invalid_boosted_skill notice(
                            this->stub,
                            skill_index,
@@ -622,13 +622,16 @@ namespace dovah::loaded_forms {
                         std::unreachable();
                   }
 
-                  std::array<uint32_t, 256 / (sizeof(uint32_t) * 8)> bits = { 0 };
-                  if (subrecord.read(bits)) {
-                     *dst = {};
-                     for (size_t i = 0; i < dst->size(); ++i) {
-                        bool is_set = bits[i / 32] & (1 << (i % 32));
-                        if (is_set)
-                           dst->set(i);
+                  {
+                     using span_type = uint32_t;
+                     constexpr const size_t span_bitcount = sizeof(span_type) * 8;
+                     constexpr const size_t span_count    = 256 / span_bitcount;
+
+                     for (size_t i = 0; i < span_count; ++i) {
+                        span_type bits = 0xFFFFFFFF;
+                        subrecord.read(bits);
+
+                        dst->overwrite_span(i * span_bitcount, bits);
                      }
                   }
                }
@@ -1310,7 +1313,7 @@ namespace dovah::loaded_forms {
       record.write_formID_subrecord('SNMV', this->movement.types.sneak, true);
       record.write_formID_subrecord('SPMV', this->movement.types.sprint, true);
       {  // Head Data
-         auto _save_head = [this, &record, &intfc](sex s, const sex_data& data) {
+         auto _save_head = [this, &record, &intfc](sex s) {
             auto& data = this->by_sex[s];
             auto& head = data.head_data;
             record.open_next_subrecord('NAM0').close();
@@ -1409,9 +1412,9 @@ namespace dovah::loaded_forms {
          };
 
          if (_should_save_head(this->by_sex.male))
-            _save_head(sex::male, this->by_sex.male);
+            _save_head(sex::male);
          if (_should_save_head(this->by_sex.female))
-            _save_head(sex::female, this->by_sex.female);
+            _save_head(sex::female);
       }
       record.write_formID_subrecord('NAM8', this->morph_race, true);
       record.write_formID_subrecord('RNAM', this->armor_race, true);

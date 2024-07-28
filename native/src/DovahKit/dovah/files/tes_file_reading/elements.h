@@ -197,7 +197,7 @@ namespace dovah {
                if constexpr (cobb::is_std_array<T>) {
                   if (!this->is_in_bounds(sizeof(T::value_type) * field.size()))
                      return false;
-                  for (const auto& e : field)
+                  for (auto& e : field)
                      this->unchecked_read(e);
                } else {
                   if (!this->is_in_bounds(sizeof(field)))
@@ -231,7 +231,7 @@ namespace dovah {
             //
             template<typename T> requires (IsLiteralIsh<T> || cobb::is_std_array<T>) inline void unchecked_read(T& field) const {
                if constexpr (cobb::is_std_array<T>) {
-                  for (const auto& e : field)
+                  for (auto& e : field)
                      this->unchecked_read(e);
                } else {
                   this->get_containing_record().unchecked_read(field);

@@ -734,6 +734,8 @@
     <ClCompile Include="ui\form_windows\outfit.cpp" />
     <ClCompile Include="ui\form_windows\quest.cpp" />
     <ClCompile Include="ui\form_windows\relationship.cpp" />
+    <ClCompile Include="ui\form_windows\shared\FaceBaseHeadPartsModel.cpp" />
+    <ClCompile Include="ui\form_windows\shared\FaceExtraHeadPartsModel.cpp" />
     <ClCompile Include="ui\form_windows\shared\HeadPartPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\shout.cpp" />
     <ClCompile Include="ui\form_windows\static.cpp" />
@@ -754,6 +756,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\qt_3d_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\script_attachment_query_from_cache.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_attack_data.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_bound_script.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_bsa_picker.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_collapsible_pane.cpp">
@@ -805,6 +808,7 @@
     <ClCompile Include="ui\utils\bind.cpp" />
     <ClCompile Include="ui\utils\DKStyledItemDelegate.cpp" />
     <ClCompile Include="ui\utils\item_indices_to_data.cpp" />
+    <ClCompile Include="ui\utils\typical_tableview_config.cpp" />
     <ClCompile Include="vulkan\abstract_renderer.cpp" />
     <ClCompile Include="vulkan\asset_loading\reserve_meshes_for_nif.cpp" />
     <ClCompile Include="vulkan\asset_loading\reserve_mesh_textures_given_ni_shader.cpp" />
@@ -1168,7 +1172,10 @@
     <QtMoc Include="ui\form_windows\leveled_spell.h" />
     <QtMoc Include="ui\form_windows\outfit.h" />
     <QtMoc Include="ui\form_windows\relationship.h" />
+    <QtMoc Include="ui\form_windows\shared\FaceBaseHeadPartsModel.h" />
+    <QtMoc Include="ui\form_windows\shared\FaceExtraHeadPartsModel.h" />
     <ClInclude Include="ui\form_windows\shared\HeadPartPickerFilter.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
@@ -1194,7 +1201,9 @@
     <QtMoc Include="widgets\widget-dialogs\DKLeveledListPreviewDialog.h" />
     <QtMoc Include="widgets\widget-data\DKFormPickerCustomFilter.h" />
     <QtMoc Include="widgets\DKAttackDataWidget.h" />
-    <ClInclude Include="widgets\DKFloatSlider.h" />
+    <QtMoc Include="widgets\DKFloatSlider.h" />
+    <ClInclude Include="ui\utils\set_tableview_column_flex.h" />
+    <ClInclude Include="ui\utils\typical_tableview_config.h" />
     <ClInclude Include="widgets\widget-models\DKAttackDataModel.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />
@@ -1274,7 +1283,6 @@
     <ClInclude Include="dovah\utils\refs_need_persistence_checker.h" />
     <ClInclude Include="editor\ini\main.h" />
     <QtMoc Include="editor\subsystems\form_info_cache\form_info_cache.h" />
-    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_trait.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\attached_scripts.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\model_path.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\quest_filter.h" />
@@ -2468,6 +2476,7 @@
     <QtUic Include="ui\form_windows\outfit.ui" />
     <QtUic Include="ui\form_windows\projectile.ui" />
     <QtUic Include="ui\form_windows\quest.ui" />
+    <QtUic Include="ui\form_windows\race.ui" />
     <QtUic Include="ui\form_windows\reference.ui" />
     <QtUic Include="ui\form_windows\relationship.ui" />
     <QtUic Include="ui\form_windows\shout.ui" />

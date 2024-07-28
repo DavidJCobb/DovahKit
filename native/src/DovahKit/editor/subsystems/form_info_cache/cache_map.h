@@ -5,6 +5,14 @@
 #include "dovah/form_stub.h"
 
 namespace dovahkit::subsystems::form_info_cache {
+   //
+   // A subclass of QHash that offers two things:
+   // 
+   //  - A thread-safe "threaded insert" function, for insertions during 
+   //    initial load.
+   // 
+   //  - Convenience functions for insertions and removals post-load.
+   //
    template<typename ValueType>
    class cache_map : public QHash<const dovah::form_stub*, ValueType> {
       private:
@@ -67,6 +75,16 @@ namespace dovahkit::subsystems::form_info_cache {
                this->insert(&stub, value);
             }
             return true;
+         }
+
+         const ValueType* valuePointer(const dovah::form_stub& stub) const {
+            auto it = this->find(&stub);
+            if (it != this->end())
+               return &it.value();
+            return nullptr;
+         }
+         ValueType* valuePointer(const dovah::form_stub& stub) {
+            return const_cast<ValueType*>(std::as_const(*this).valuePointer(stub));
          }
    };
 }

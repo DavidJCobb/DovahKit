@@ -107,6 +107,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="interfaces\DKAttackDataWidgetInterface.cpp" />
     <ClCompile Include="interfaces\DKColorPickerButtonInterface.cpp" />
     <ClCompile Include="interfaces\DKCompactObjectReferencePickerInterface.cpp" />
     <ClCompile Include="interfaces\DKConditionListInterface.cpp" />
@@ -123,6 +124,7 @@
     <ClCompile Include="interfaces\DKPapyrusFragmentFunctionPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKQuestAliasPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp" />
+    <ClCompile Include="widgets\DKAttackDataWidget.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
     <ClCompile Include="widgets\DKComboBox.cpp" />
@@ -204,6 +206,8 @@
     <QtMoc Include="widgets\DKFormInventoryWidget.h" />
     <QtMoc Include="interfaces\DKFormInventoryWidgetInterface.h" />
     <QtMoc Include="widgets\DKComboBox.h" />
+    <QtMoc Include="widgets\DKAttackDataWidget.h" />
+    <QtMoc Include="interfaces\DKAttackDataWidgetInterface.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
     <QtMoc Include="widgets\DKObjectReferencePicker.h" />
     <QtMoc Include="widgets\DKQuestAliasPicker.h" />

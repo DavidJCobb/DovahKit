@@ -18,6 +18,7 @@
 #include "interfaces/DKConditionListInterface.h"
 #include "interfaces/DKNavmeshGenerationImportOptionPickerInterface.h"
 #include "interfaces/DKFormInventoryWidgetInterface.h"
+#include "interfaces/DKAttackDataWidgetInterface.h"
 
 DovahKitQtCustomWidgetsPlugin::DovahKitQtCustomWidgetsPlugin(QObject* parent) : QObject(parent) {
    widgets.append(new DKCollapsiblePaneInterface(this));
@@ -35,6 +36,7 @@ DovahKitQtCustomWidgetsPlugin::DovahKitQtCustomWidgetsPlugin(QObject* parent) : 
    widgets.append(new DKConditionListInterface(this));
    widgets.append(new DKFormInventoryWidgetInterface(this));
    widgets.append(new DKNavmeshGenerationImportOptionPickerInterface(this));
+   widgets.append(new DKAttackDataWidgetInterface(this));
 
    widgets.append(new DKGameFilePickerInterface(this));
    widgets.append(new DKFormNIFPickerInterface(this));

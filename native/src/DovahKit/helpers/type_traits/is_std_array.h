@@ -23,6 +23,6 @@ namespace cobb {
    template<typename T> concept is_std_array = requires(T x) {
       typename T::value_type;
       requires !std::is_array_v<T>;
-      requires std::is_same_v<T, std::array<typename std::tuple_element<0, T>::type, std::tuple_size<T>::value>>;
+      requires std::is_same_v<T, std::array<typename T::value_type, std::tuple_size<T>::value>>;
    };
 }
