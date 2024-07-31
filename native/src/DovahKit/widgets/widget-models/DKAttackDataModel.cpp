@@ -77,7 +77,7 @@ QVariant DKAttackDataModel::data_of(const node_type& node, Qt::ItemDataRole role
             case Column::Keyword:
                return node.cached.keywordEditorID;
             case Column::Angle:
-               return QString("%1±%2")
+               return trUtf8((const char*)u8"%1±%2")
                   .arg(QString::number(node.angles.direction, 'f', 2), 6)
                   .arg(QString::number(node.angles.range, 'f', 2), 6);
             case Column::Knockdown:

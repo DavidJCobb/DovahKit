@@ -64,6 +64,7 @@ DKAttackDataWidget::DKAttackDataWidget(QWidget* parent) : QWidget(parent) {
             view->setVerticalScrollMode(QAbstractItemView::ScrollMode::ScrollPerItem);
             view->setCornerButtonEnabled(false);
             view->setAcceptDrops(false);
+            view->setWordWrap(false);
 
             if (auto* vh = view->verticalHeader()) {
                vh->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -230,7 +231,7 @@ DKAttackDataWidget::DKAttackDataWidget(QWidget* parent) : QWidget(parent) {
             label->setBuddy(widget);
             widget->setAlignment(spinbox_alignment);
             widget->setRange(-360, 360);
-            widget->setWhatsThis(tr("The angle tolerance on the attack. For example, a value of 35 means that targets within ±35 degrees of the Attack Angle would be hit by the attack."));
+            widget->setWhatsThis(tr("The angle tolerance on the attack. For example, a value of 35 means that targets within (+/-)35 degrees of the Attack Angle would be hit by the attack."));
             //
             layout->addWidget(label, row, col);
             layout->addWidget(widget, row, col + 1);

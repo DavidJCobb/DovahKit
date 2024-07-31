@@ -53,27 +53,13 @@ namespace dovah::loaded_forms {
                this->script_data.load(subrecord, intfc);
                break;
             #pragma endregion
-            #pragma region Creature sounds
-            case 'CSDT':
-               {
-                  creature_sound entry;
-                  if (subrecord.read(entry.type))
-                     this->creature_sounds.push_back(entry);
-               }
+               //
+            case structs::actor_creature_sounds::subrecord_signature_inherit:
+            case structs::actor_creature_sounds::subrecord_signature_sound_chance:
+            case structs::actor_creature_sounds::subrecord_signature_sound_form:
+            case structs::actor_creature_sounds::subrecord_signature_sound_start:
+               this->creature_sounds.load(subrecord, intfc);
                break;
-            case 'CSDI':
-               if (!this->creature_sounds.empty()) {
-                  auto& form = this->creature_sounds.back().sound;
-                  if (subrecord.read(form)) {
-                     intfc.warn_if_ref_is_wrong_type(form, form_type::sound_descriptor, subrecord.signature());
-                  }
-               }
-               break;
-            case 'CDSC':
-               if (!this->creature_sounds.empty())
-                  subrecord.read(this->creature_sounds.back().chance);
-               break;
-            #pragma endregion
             #pragma region Package override lists
             case 'SCOR':
                if (subrecord.read(this->ai.package_override_lists.spectator)) {
@@ -367,9 +353,8 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'HCLF':
-               if (subrecord.read(form_id)) {
-                  this->head.hair_colors.push_back(form_id);
-                  intfc.warn_if_ref_is_wrong_type(form_id, form_type::color, subrecord.signature());
+               if (auto& dst = this->head.hair_color; subrecord.read(dst)) {
+                  intfc.warn_if_ref_is_wrong_type(dst, form_type::color, subrecord.signature());
                }
                break;
             case 'VTCK':
@@ -473,6 +458,7 @@ namespace dovah::loaded_forms {
       bool      seen_any_creature_sound = false;
       form_id_t creature_sound;
       components::destruction_stage_data::use_info_builder destruction_uib(uib);
+      structs::actor_creature_sounds::use_info_builder creature_sounds_uib(uib);
 
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
@@ -515,20 +501,12 @@ namespace dovah::loaded_forms {
                components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
             #pragma endregion
-            #pragma region Creature sounds
-            case 'CSDT': // creature sound type
-               uib.add_outbound_reference(creature_sound);
-               creature_sound = 0;
-               //
-               seen_any_creature_sound = true;
+            case structs::actor_creature_sounds::subrecord_signature_inherit:
+            case structs::actor_creature_sounds::subrecord_signature_sound_chance:
+            case structs::actor_creature_sounds::subrecord_signature_sound_form:
+            case structs::actor_creature_sounds::subrecord_signature_sound_start:
+               structs::actor_creature_sounds::generate_use_info(subrecord, creature_sounds_uib);
                break;
-            case 'CSDI': // last creature sound form
-               if (seen_any_creature_sound)
-                  subrecord.read(creature_sound);
-               break;
-            case 'CDSC': // last creature sound chance
-               break;
-            #pragma endregion
             #pragma region Package override lists
             case 'SCOR':
                subrecord.read(package_override_lists.spectator);
@@ -631,6 +609,7 @@ namespace dovah::loaded_forms {
       }
       attack_data.commit(uib);
       destruction_uib.done();
+      creature_sounds_uib.done();
    }
    void ActorBase::_clone_impl(Form* out) const noexcept {
       assert(out->type == form_type);
@@ -696,8 +675,8 @@ namespace dovah::loaded_forms {
       {
          auto& src = this->head;
          auto& dst = copy->head;
-         copy_form_reference_list(*copy, dst.hair_colors, src.hair_colors);
-         copy_form_reference_list(*copy, dst.head_parts,  src.head_parts);
+         dst.hair_color.set(*copy, src.hair_color);
+         copy_form_reference_list(*copy, dst.head_parts, src.head_parts);
       }
       {
          auto& src = this->outfits;
@@ -722,16 +701,7 @@ namespace dovah::loaded_forms {
       copy->template_data.actor.set(*copy, this->template_data.actor);
       copy->template_data.flags = this->template_data.flags;
       //
-      {
-         auto& src = this->creature_sounds;
-         auto& dst = copy->creature_sounds;
-         dst.resize(src.size());
-         for (size_t i = 0; i < src.size(); ++i) {
-            dst[i].type   = src[i].type;
-            dst[i].sound.set(*copy, src[i].sound);
-            dst[i].chance = src[i].chance;
-         }
-      }
+      copy->creature_sounds.clone_from(this->creature_sounds, *copy);
       copy->crime_faction.set(*copy, this->crime_faction);
       copy->death_item.set(*copy, this->death_item);
       {
@@ -878,9 +848,7 @@ namespace dovah::loaded_forms {
       for (const auto& entry : this->head.head_parts) {
          record.write_formID_subrecord('PNAM', entry);
       }
-      for (const auto& entry : this->head.hair_colors) {
-         record.write_formID_subrecord('HCLF', entry);
-      }
+      record.write_formID_subrecord('HCLF', this->head.hair_color, true);
       record.write_formID_subrecord('ZNAM', this->stats.combat_style, true);
       record.write_formID_subrecord('GNAM', this->gift_filter, true);
       //
@@ -902,23 +870,7 @@ namespace dovah::loaded_forms {
          NAM8.write((uint32_t)this->sound_level);
          NAM8.close();
       }
-      for (const auto& entry : this->creature_sounds) {
-         {
-            auto& CSDT = record.open_next_subrecord('CDST');
-            CSDT.write((uint32_t)entry.type);
-            CSDT.close();
-         }
-         record.write_formID_subrecord('CSDI', entry.sound, true);
-         {
-            auto& CSDC = record.open_next_subrecord('CSDC');
-            CSDC.write(entry.chance);
-            CSDC.close();
-         }
-      }
-      //
-      // xEdit would write a CSCR here (and skip CSDT/CSDI/CSDC if so), but it seems like the game 
-      // never actually reads CSCR.
-      //
+      this->creature_sounds.save(record, intfc);
       record.write_formID_subrecord('DOFT', this->outfits.normal, true);
       record.write_formID_subrecord('SOFT', this->outfits.sleeping, true);
       record.write_formID_subrecord('DPLT', this->ai.default_package_list, true);
@@ -1017,8 +969,8 @@ namespace dovah::loaded_forms {
       this->far_away.model.clear_if(*this, other);
       {
          auto& dst = this->head;
-         remove_form_from_reference_list(dst.hair_colors, other, *this);
-         remove_form_from_reference_list(dst.head_parts,  other, *this);
+         dst.hair_color.clear_if(*this, other);
+         remove_form_from_reference_list(dst.head_parts, other, *this);
       }
       {
          auto& dst = this->outfits;
@@ -1032,18 +984,7 @@ namespace dovah::loaded_forms {
       }
       this->template_data.actor.clear_if(*this, other);
       //
-      {
-         bool  any = false;
-         auto& dst = this->creature_sounds;
-         for (size_t i = 0; i < dst.size(); ++i) {
-            dst[i].sound.clear_if(*this, other);
-            if (dst[i].sound == nullptr)
-               any = true;
-         }
-         if (any) {
-            std::erase_if(dst, [](const auto& entry) -> bool { return entry.sound == nullptr; });
-         }
-      }
+      this->creature_sounds.sever_outbound_references_to(other, *this);
       this->crime_faction.clear_if(*this, other);
       this->death_item.clear_if(*this, other);
       {
@@ -1113,8 +1054,8 @@ namespace dovah::loaded_forms {
       this->far_away.distance = 0;
       {
          auto& dst = this->head;
-         clear_form_reference_list(dst.hair_colors, *this);
-         clear_form_reference_list(dst.head_parts,  *this);
+         dst.hair_color.set(*this, nullptr);
+         clear_form_reference_list(dst.head_parts, *this);
       }
       {
          auto& dst = this->outfits;
@@ -1140,13 +1081,7 @@ namespace dovah::loaded_forms {
       this->template_data.actor.set(*this, nullptr);
       this->template_data.flags = 0;
       //
-      {
-         auto& dst = this->creature_sounds;
-         for (size_t i = 0; i < dst.size(); ++i) {
-            dst[i].sound.set(*this, nullptr);
-         }
-         dst.clear();
-      }
+      this->creature_sounds.clear(*this);
       this->crime_faction.set(*this, nullptr);
       this->death_item.set(*this, nullptr);
       {

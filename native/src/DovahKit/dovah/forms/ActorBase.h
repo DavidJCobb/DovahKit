@@ -13,6 +13,7 @@
 #include "components/keyword_list.h"
 #include "components/papyrus.h"
 #include "components/spell_list.h"
+#include "structs/actor_creature_sounds.h"
 
 namespace dovah::loaded_forms {
    class ActorBase : public Form {
@@ -30,7 +31,7 @@ namespace dovah::loaded_forms {
                unique                      = 0x00000020,
                doesnt_affect_stealth_meter = 0x00000040,
                pc_level_mult               = 0x00000080,
-               use_template                = 0x00000100, // unconfirmed
+               defines_own_creature_sounds = 0x00000100, // unused. at run-time, it's basically the tag for a union and is overwritten when other subrecords influence that union's contents.
                //
                is_protected                = 0x00000800,
                //
@@ -71,22 +72,6 @@ namespace dovah::loaded_forms {
             foolhardy = 4, // Never avoids or flees from anything.
          };
 
-         enum class creature_sound_type : uint32_t {
-            idle           = 0,
-            aware          = 1,
-            attack         = 2,
-            hit            = 3,
-            death          = 4,
-            weapon         = 5,
-            movement_loop  = 6,
-            conscious_loop = 7,
-         };
-         struct creature_sound {
-            creature_sound_type type   = creature_sound_type::idle;
-            form_reference_t    sound;
-            uint8_t             chance = 100; // chance to play (percentage)
-         };
-
          struct faction_membership {
             form_reference_t faction;
             int8_t rank = 0;
@@ -112,7 +97,7 @@ namespace dovah::loaded_forms {
 
          struct template_flag {
             enum type : uint16_t {
-               use_traits      = 0x0001,
+               use_traits      = 0x0001, // and creature sounds
                use_stats       = 0x0002,
                use_factions    = 0x0004,
                use_spells      = 0x0008,
@@ -155,9 +140,9 @@ namespace dovah::loaded_forms {
 
          struct tint_layer {
             uint16_t index = 0;
-            color_t  color;      // the game skips loading this if (actor_flag::is_chargen_preset) is set and if INI setting [General]bUseFaceGenPreprocessedHeads is true
+            color_t  color;      // the game skips loading this if (actor_flag::is_chargen_preset) is cleared and if INI setting [General]bUseFaceGenPreprocessedHeads is true
             uint32_t interpolation = 0; // fixed-point: float times 100. 
-            uint16_t preset = 0; // the game skips loading this if (actor_flag::is_chargen_preset) is set and if INI setting [General]bUseFaceGenPreprocessedHeads is true
+            uint16_t preset = 0; // the game skips loading this if (actor_flag::is_chargen_preset) is cleared and if INI setting [General]bUseFaceGenPreprocessedHeads is true
          };
 
          components::attack_data             attack_data; // ATKR, ATKD+ATKE
@@ -245,7 +230,7 @@ namespace dovah::loaded_forms {
             float distance = 0.0F; // DNAM+0x2C // distance at which the far-away model is applied
          } far_away;
          struct {
-            std::vector<form_reference_t> hair_colors;  // HCLF[]
+            form_reference_t hair_color; // HCLF
             std::vector<form_reference_t> head_parts;   // HEAD[] and/or PNAM[] and/or ENAM[]
          } head;
          struct {
@@ -279,7 +264,7 @@ namespace dovah::loaded_forms {
             template_flags_t flags = 0; // ABCS+0x12
          } template_data;
          //
-         std::vector<creature_sound> creature_sounds;
+         structs::actor_creature_sounds creature_sounds;
          form_reference_t crime_faction; // CRIF // Must be in the `faction_memberships` list and must have the `track_crime` faction flag.
          form_reference_t death_item; // INAM
          std::vector<faction_membership> faction_memberships; // SNAM[]

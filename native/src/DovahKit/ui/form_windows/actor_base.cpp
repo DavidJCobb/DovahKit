@@ -14,6 +14,7 @@
 #include "widgets/widget-data/DKFormPickerCustomFilter.h"
 #include "widgets/DKHeaderView.h"
 
+#include "./actor_base/ActorBaseCreatureSoundsModel.h"
 #include "./actor_base/ActorBaseFactionsModel.h"
 #include "./actor_base/ActorBaseRelationshipsModel.h"
 #include "./actor_base/ActorBaseSkillsModel.h"
@@ -296,6 +297,8 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
             header.setColumnFlex(ActorBaseFactionsModel::Column::Faction, 1, 0);
             header.setColumnFlex(ActorBaseFactionsModel::Column::Rank,    0, 0, metrics.boundingRect("99999").width() * 1.5F + 4);
          });
+
+         QObject::connect(widget->selectionModel(), &QItemSelectionModel::selectionChanged, this, &FormDialogActorBase::_pull_faction_to_ui);
       }
       this->ui.currentFactionForm->setAllowedFormType(dovah::form_type::faction);
       ui::set_range<int8_t>(this->ui.currentFactionRank);
@@ -399,12 +402,55 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
       this->ui.inheritSoundsFrom->setAllowedFormType(dovah::form_type::actor_base);
       this->ui.inheritSoundsFrom->setAllowNone(true);
       this->ui.inheritSoundsFrom->setCustomFilter(this->_filters.exclude_self); // don't let an actor inherit sounds from themselves
+      //
+      // Update enable state for editing creature sounds, when changing whether we inherit:
+      QObject::connect(this->ui.inheritSoundsFrom, &DKFormPicker::formChanged, this, &FormDialogActorBase::_creature_sound_inheritance_changed);
 
-      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: list model");
+      {
+         auto* widget = this->ui.creatureSoundsTable;
+         auto* model  = this->_models.creature_sounds = new ActorBaseCreatureSoundsModel(this);
+         widget->setModel(model);
+         //
+         ui::typical_tableview_config(widget);
+         widget->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         ui::set_tableview_column_flex(widget, [](DKHeaderView& header, const QFontMetrics& metrics) {
+            header.setColumnFlex(ActorBaseCreatureSoundsModel::Column::Form,   1, 0);
+            header.setColumnFlex(ActorBaseCreatureSoundsModel::Column::Chance, 0, 0, metrics.boundingRect("100%").width() * 1.5F + 4);
+            header.setColumnFlex(ActorBaseCreatureSoundsModel::Column::Type,   0, 0, metrics.boundingRect("Conscious Loop").width() * 1.5F + 4);
+         });
+
+         auto* sel_model = widget->selectionModel();
+         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &FormDialogActorBase::_pull_creature_sound_to_ui);
+
+         QObject::connect(this->ui.buttonCreaSoundAdd, &QPushButton::clicked, this, [this, model, sel_model]() {
+            auto qmi = model->create();
+            if (qmi.isValid()) {
+               auto col = model->columnCount({});
+
+               auto tl = qmi.siblingAtColumn(0);
+               auto br = qmi.siblingAtColumn(col - 1);
+               sel_model->select({ tl, br }, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+            }
+         });
+         QObject::connect(this->ui.buttonCreaSoundRemove, &QPushButton::clicked, this, [this, model, sel_model]() {
+            size_t row;
+            {
+               auto rows = sel_model->selectedRows();
+               if (rows.isEmpty())
+                  return;
+               row = rows[0].row();
+            }
+            model->deleteItems(row, 1);
+         });
+      }
 
       ui::item_indices_to_data(this->ui.currentCreaSoundType);
       this->ui.currentCreaSoundChance->setRange(0, 100);
       this->ui.currentCreaSoundForm->setAllowedFormType(dovah::form_type::sound_descriptor);
+
+      QObject::connect(this->ui.currentCreaSoundType,   QOverload<int>::of(&QComboBox::currentIndexChanged), this, &FormDialogActorBase::_push_creature_sound_from_ui);
+      QObject::connect(this->ui.currentCreaSoundChance, QOverload<int>::of(&QSpinBox::valueChanged), this, &FormDialogActorBase::_push_creature_sound_from_ui);
+      QObject::connect(this->ui.currentCreaSoundForm,   &DKFormPicker::formChanged, this, &FormDialogActorBase::_push_creature_sound_from_ui);
    #pragma endregion
    #pragma region Attack Data tab
       //
@@ -649,7 +695,7 @@ void FormDialogActorBase::_load_impl() {
       this->ui.perks->pullStubs(working.perks);
    #pragma endregion
    #pragma region Sounds tab
-      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+      this->_creature_sound_inheritance_changed();
    #pragma endregion
    #pragma region Attack Data tab
       this->ui.attackData->initializeFrom(working.attack_data);
@@ -722,11 +768,76 @@ void FormDialogActorBase::_save_impl() {
    this->ui.scriptListPane->commit();
 
    static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+   #pragma region Tabs
+      #pragma region Traits
+      {
+         auto& src = (this->_current_sex() == dovah::sex::male ? this->_data.male : this->_data.female);
+         //write_form_ref(working.voicetype, src.voicetype);
+         write_form_ref(working.face.texture_set, src.complexion);
+         write_form_ref(working.head.hair_color,  src.hair_color);
+         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+      }
+      #pragma endregion
+      #pragma region Stats
+         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+      #pragma endregion
+      #pragma region Factions
+         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+      #pragma endregion
+      #pragma region Relationships
+         //
+         // Nothing to save.
+         //
+      #pragma endregion
+      #pragma region Keywords
+         this->ui.keywords->commitStubs(working.keywords.forms, working);
+      #pragma endregion
+      #pragma region AI Data
+         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+      #pragma endregion
+      #pragma region AI Packages
+         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+      #pragma endregion
+      #pragma region Inventory
+         this->ui.inventory->commitTo(working.inventory, working);
+      #pragma endregion
+      #pragma region Magic and Perks
+         this->ui.perks->commitStubs(working.perks, working);
+         this->ui.spells->commitStubs(working.spells.forms, working);
+      #pragma endregion
+      #pragma region Sounds
+      {
+         auto& dst = working.creature_sounds;
+         if (auto* stub = this->ui.inheritSoundsFrom->formStub()) {
+            dst.set_inherits_from(*this->form, stub);
+         } else {
+            std::vector<dovah::loaded_forms::structs::actor_creature_sounds::entry> entries;
+            {
+               auto*  model = this->_models.creature_sounds;
+               size_t size  = model->rowCount();
+               entries.resize(size);
+               for (size_t i = 0; i < size; ++i) {
+                  auto* data = model->item(i);
+                  if (!data)
+                     continue;
+                  entries[i] = *data;
+               }
+            }
+            dst.replace_sounds(*this->form, entries);
+         }
+      }
+      #pragma endregion
+      #pragma region Attack Data
+         this->ui.attackData->commitTo(working.attack_data, working);
+      #pragma endregion
+      #pragma region Face Parts
+         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+      #pragma endregion
+      #pragma region Face Morphs
+         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+      #pragma endregion
+   #pragma endregion
    
-   this->ui.attackData->commitTo(working.attack_data, working);
-   this->ui.keywords->commitStubs(working.keywords.forms, working);
-   this->ui.perks->commitStubs(working.perks, working);
-   this->ui.spells->commitStubs(working.spells.forms, working);
 }
 
 void FormDialogActorBase::updatePreview() {
@@ -831,7 +942,128 @@ void FormDialogActorBase::_pull_faction_to_ui() {
    this->ui.currentFactionRank->setValue(node->rank);
 }
 void FormDialogActorBase::_push_faction_from_ui() {
-   static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+   auto* widget    = this->ui.factionsTable;
+   auto* model     = this->_models.factions;
+   auto* sel_model = widget->selectionModel();
+
+   const ActorBaseFactionsModelNode* node = nullptr;
+   size_t row;
+   {
+      auto rows = sel_model->selectedRows();
+      if (!rows.isEmpty()) {
+         row  = rows[0].row();
+         node = model->item(row);
+      }
+   }
+   if (!node)
+      return;
+
+   auto overwrite = *node;
+   overwrite.faction = this->ui.currentFactionForm->formStub();
+   overwrite.rank    = this->ui.currentFactionRank->value();
+   model->overwrite(row, overwrite);
+}
+
+
+void FormDialogActorBase::_creature_sound_inheritance_changed() {
+   auto* picker       = this->ui.inheritSoundsFrom;
+   auto* inherit_from = picker->formStub();
+
+   this->form->creature_sounds.set_inherits_from(*this->form, inherit_from);
+
+   std::vector<dovah::loaded_forms::structs::actor_creature_sounds::entry> entries;
+
+   if (inherit_from) {
+      this->ui.currentCreaSoundType->setEnabled(false);
+      this->ui.currentCreaSoundChance->setEnabled(false);
+      this->ui.currentCreaSoundForm->setEnabled(false);
+
+      auto loaded = inherit_from->load().ptr_cast<loaded_form_type>();
+      if (loaded) {
+         entries = loaded->creature_sounds.sounds();
+      }
+   } else {
+      this->ui.currentCreaSoundType->setEnabled(true);
+      this->ui.currentCreaSoundChance->setEnabled(true);
+      this->ui.currentCreaSoundForm->setEnabled(true);
+
+      entries = this->form->creature_sounds.sounds();
+   }
+
+   if (!entries.empty()) {
+      std::vector<ActorBaseCreatureSoundsModelNode> nodes;
+      for (auto& src : entries) {
+         auto& dst = nodes.emplace_back();
+         dst.chance = src.chance;
+         dst.type   = src.type;
+         dst.sound  = src.sound;
+      }
+
+      auto* model = (ActorBaseCreatureSoundsModel*) this->ui.creatureSoundsTable->model();
+      model->overwriteAllItems(nodes);
+   }
+   this->_pull_creature_sound_to_ui();
+}
+void FormDialogActorBase::_pull_creature_sound_to_ui() {
+   const ActorBaseCreatureSoundsModelNode* src = nullptr;
+   {
+      auto* widget    = this->ui.creatureSoundsTable;
+      auto* model     = (ActorBaseCreatureSoundsModel*)widget->model();
+      auto* sel_model = widget->selectionModel();
+      //
+      auto rows = sel_model->selectedRows();
+      if (!rows.isEmpty())
+         src = model->item(rows[0].row());
+   }
+
+   bool enable = src != nullptr && this->ui.inheritSoundsFrom->formStub() == nullptr;
+
+   this->ui.currentCreaSoundType->setEnabled(enable);
+   this->ui.currentCreaSoundChance->setEnabled(enable);
+   this->ui.currentCreaSoundForm->setEnabled(enable);
+   if (!src) {
+      return;
+   }
+
+   const auto blockers = std::array{
+      QSignalBlocker(this->ui.currentCreaSoundType),
+      QSignalBlocker(this->ui.currentCreaSoundChance),
+      QSignalBlocker(this->ui.currentCreaSoundForm),
+   };
+   {
+      auto i = this->ui.currentCreaSoundType->findData((int)src->type);
+      this->ui.currentCreaSoundType->setCurrentIndex(i);
+   }
+   this->ui.currentCreaSoundChance->setValue(src->chance);
+   this->ui.currentCreaSoundForm->setFormStub(src->sound);
+}
+void FormDialogActorBase::_push_creature_sound_from_ui() {
+   if (this->ui.inheritSoundsFrom->formStub()) {
+      return;
+   }
+
+   auto* widget = this->ui.creatureSoundsTable;
+   auto* model  = (ActorBaseCreatureSoundsModel*)widget->model();
+
+   size_t row;
+   {
+      auto* sel_model = widget->selectionModel();
+      //
+      auto rows = sel_model->selectedRows();
+      if (rows.isEmpty())
+         return;
+      row = rows[0].row();
+   }
+
+   ActorBaseCreatureSoundsModelNode node;
+   node.type   = (decltype(ActorBaseCreatureSoundsModelNode::type)) this->ui.currentCreaSoundType->currentData().toInt();
+   node.chance = this->ui.currentCreaSoundChance->value();
+   node.sound  = this->ui.currentCreaSoundForm->formStub();
+   model->overwrite(row, node);
+}
+
+dovah::sex FormDialogActorBase::_current_sex() const {
+   return (dovah::sex)this->ui.sex->currentData().toInt();
 }
 
 void FormDialogActorBase::_set_race(dovah::form_stub* race) {

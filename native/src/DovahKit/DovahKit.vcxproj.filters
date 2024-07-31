@@ -2487,6 +2487,12 @@
     <ClCompile Include="ui\utils\typical_tableview_config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\actor_base\ActorBaseCreatureSoundsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\actor_creature_sounds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6402,6 +6408,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\utils\set_tableview_column_flex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\actor_base\ActorBaseCreatureSoundsModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\actor_creature_sounds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

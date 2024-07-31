@@ -161,6 +161,7 @@
     <ClCompile Include="dovah\forms\Outfit.cpp" />
     <ClCompile Include="dovah\forms\Race.cpp" />
     <ClCompile Include="dovah\forms\Relationship.cpp" />
+    <ClCompile Include="dovah\forms\structs\actor_creature_sounds.cpp" />
     <ClCompile Include="dovah\forms\structs\container_object_extra_data.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\file_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_load.cpp" />
@@ -706,6 +707,7 @@
     <ClCompile Include="ui\form_windows\actor_base\ActorBaseFactionsModel.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\ActorBaseRelationshipsModel.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\ActorBaseSkillsModel.cpp" />
+    <ClCompile Include="ui\form_windows\actor_base\ActorBaseCreatureSoundsModel.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\FaceComplexionPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\FaceHairColorPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\FaceTintColorPickerFilter.cpp" />
@@ -1018,6 +1020,7 @@
     <ClInclude Include="dovah\forms\Outfit.h" />
     <ClInclude Include="dovah\forms\Race.h" />
     <ClInclude Include="dovah\forms\Relationship.h" />
+    <ClInclude Include="dovah\forms\structs\actor_creature_sounds.h" />
     <ClInclude Include="dovah\forms\structs\container_object_extra_data.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
     <ClInclude Include="dovah\game_change_failure_reason.h" />
@@ -1165,6 +1168,7 @@
     <ClInclude Include="ui\form_windows\actor_base\ActorBaseFactionsModel.h" />
     <ClInclude Include="ui\form_windows\actor_base\ActorBaseRelationshipsModel.h" />
     <QtMoc Include="ui\form_windows\actor_base\ActorBaseSkillsModel.h" />
+    <ClInclude Include="ui\form_windows\actor_base\ActorBaseCreatureSoundsModel.h" />
     <ClInclude Include="ui\form_windows\actor_base\FaceComplexionPickerFilter.h" />
     <ClInclude Include="ui\form_windows\actor_base\FaceHairColorPickerFilter.h" />
     <ClInclude Include="ui\form_windows\actor_base\FaceTintColorPickerFilter.h" />

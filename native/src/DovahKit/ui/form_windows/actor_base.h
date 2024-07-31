@@ -14,6 +14,7 @@ namespace impl {
    class FaceTintColorPickerFilter;
    class VoicetypePickerFilter;
 }
+class ActorBaseCreatureSoundsModel;
 class ActorBaseFaceTintsModel;//static_assert(false, "TODO: Implement me!");
 class ActorBaseFactionsModel;
 class ActorBaseRelationshipsModel;
@@ -69,9 +70,10 @@ class FormDialogActorBase :
          impl::VoicetypePickerFilter* voicetype = nullptr;
       } _filters;
       struct {
-         ActorBaseFactionsModel*      factions      = nullptr;
-         ActorBaseRelationshipsModel* relationships = nullptr;
-         ActorBaseSkillsModel*        skills        = nullptr;
+         ActorBaseCreatureSoundsModel* creature_sounds = nullptr;
+         ActorBaseFactionsModel*       factions        = nullptr;
+         ActorBaseRelationshipsModel*  relationships   = nullptr;
+         ActorBaseSkillsModel*         skills          = nullptr;
       } _models;
       
       virtual void _load_impl() override;
@@ -82,6 +84,12 @@ class FormDialogActorBase :
 
       void _pull_faction_to_ui();
       void _push_faction_from_ui();
+
+      void _creature_sound_inheritance_changed();
+      void _pull_creature_sound_to_ui();
+      void _push_creature_sound_from_ui();
+
+      dovah::sex _current_sex() const;
 
       void _set_race(dovah::form_stub*);
       void _set_sex(dovah::sex);

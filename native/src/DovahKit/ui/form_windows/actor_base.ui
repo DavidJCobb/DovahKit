@@ -2209,9 +2209,6 @@
           <string>Creature Sounds</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_19">
-          <item row="0" column="0">
-           <widget class="QTableWidget" name="creatureSoundsTable"/>
-          </item>
           <item row="0" column="1">
            <layout class="QVBoxLayout" name="verticalLayout_11">
             <item>
@@ -2368,6 +2365,9 @@
              <widget class="DKFormPicker" name="currentCreaSoundForm"/>
             </item>
            </layout>
+          </item>
+          <item row="0" column="0">
+           <widget class="QTableView" name="creatureSoundsTable"/>
           </item>
          </layout>
         </widget>
