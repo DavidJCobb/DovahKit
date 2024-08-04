@@ -102,7 +102,7 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
       header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
       header->setMinimumSectionSize(2);
       header->setColumnFlex(ColumnType,   0, 0, metrics.boundingRect("XMMX").width() * 1.5F + 4);
-      header->setColumnFlex(ColumnName,   1, 0);
+      header->setColumnFlex(ColumnName,   5, 0); // large flex grow factor so that extra columns (which have a default flex of 1) aren't prioritized equally by default
       header->setColumnFlex(ColumnFormID, 0, 0, metrics.boundingRect("00000000").width() * 1.5F + 4); // sets minimum size
       header->modSectionSizeTo(ColumnFormID, 4); // mimics a user resize and shrinks the column
       header->setSectionResizeMode(ColumnType,   QHeaderView::Interactive);
@@ -285,6 +285,15 @@ void DKFormListPane::setShowRemoveButton(bool v) {
    this->state.show_remove_button = v;
    this->_updateButtonVisibility();
 }
+
+#if !defined(QT_DESIGNER_LIB)
+   void DKFormListPane::addExtraColumn(QString header, ExtraColumnHandler&& handler) {
+      this->_model()->addExtraColumn(header, std::forward<ExtraColumnHandler>(handler));
+   }
+   void DKFormListPane::removeExtraColumn(size_t which) {
+      this->_model()->removeExtraColumn(which);
+   }
+#endif
 
 #if !defined(QT_DESIGNER_LIB)
    void DKFormListPane::addStub(dovah::form_stub* stub) {

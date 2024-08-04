@@ -2493,6 +2493,12 @@
     <ClCompile Include="dovah\forms\structs\actor_creature_sounds.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_form_list_pane_extra_col.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\game_settings\game_settings_subsystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6416,6 +6422,12 @@
     <ClInclude Include="dovah\forms\structs\actor_creature_sounds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_form_list_pane_extra_col.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\game_settings\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -7149,6 +7161,9 @@
     <QtMoc Include="widgets\DKFloatSlider.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="editor\subsystems\game_settings\game_settings_subsystem.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -7580,6 +7595,9 @@
     <None Include="dovah\data\conditions\all_parameter_types.md" />
     <None Include="dovah\data\conditions\all_function_info.md" />
     <None Include="dovah\_docs\common form flags.md" />
+    <None Include="widgets\widget-models\DKFormListPaneModel.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

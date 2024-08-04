@@ -406,7 +406,7 @@ namespace dovah::loaded_forms {
                   subrecord.unchecked_read(this->face.morphs.chin.height);
                   subrecord.unchecked_read(this->face.morphs.chin.depth);
                   subrecord.unchecked_read(this->face.morphs.eyes.depth);
-                  subrecord.unchecked_read(this->face.morphs.unknown);
+                  subrecord.unchecked_read(this->face.morphs.vampire_morph);
                }
                break;
             case 'NAMA':
@@ -903,7 +903,7 @@ namespace dovah::loaded_forms {
          NAM9.write(this->face.morphs.chin.height);
          NAM9.write(this->face.morphs.chin.depth);
          NAM9.write(this->face.morphs.eyes.depth);
-         NAM9.write(this->face.morphs.unknown);
+         NAM9.write(this->face.morphs.vampire_morph);
          NAM9.close();
       }
       {

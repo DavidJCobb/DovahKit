@@ -2,50 +2,85 @@
 #if defined(QT_DESIGNER_LIB)
    #error This model relies on DovahKit to run. Do not include it when compiling the Qt Designer plug-in.
 #endif
+#include <functional>
+#include <optional>
+#include <variant>
 #include <QAbstractItemModel>
 #include <QString>
-#include "../../dovah/core.h"
-#include "../../dovah/form_stub.h"
+#include <QVarLengthArray>
+#include "dovah/core.h"
+#include "dovah/form_stub.h"
+
+namespace dovah::loaded_forms {
+   class Form;
+}
 
 class DKFormListPaneModel : public QAbstractTableModel {
-   Q_OBJECT
+   Q_OBJECT;
    public:
+      struct Column {
+         Column() = delete;
+         enum Enum {
+            Type   = 0,
+            Name   = 1,
+            FormID = 2,
+         };
+      };
+      static constexpr const size_t ColumnCount = 3;
+
       class Item {
          friend DKFormListPaneModel;
          public:
-            using bare_form_id_t = dovah::bare_form_id_t;
-            using form_stub      = dovah::form_stub;
+            static constexpr const size_t cached_builtin_column_count = 2;
+
+            static constexpr std::optional<size_t> cache_index_for_builtin_column(Column::Enum);
+            static constexpr size_t cache_index_for_extra_column(size_t extra_col_index);
+
+         public:
+            dovah::form_stub* stub = nullptr;
+            QVarLengthArray<QString, cached_builtin_column_count> columnText;
             
-            form_stub* stub = nullptr;
-            QString signature;
-            QString editorID;
-            
-            Item() {}
-            Item(form_stub*);
-            void updateFromStub(); // update the form's identifying information, e.g. its editor ID
+            Item();
+            Item(dovah::form_stub*);
+
+            QString computeEditorID() const;
+            QString computeSignature() const;
+
+            QString getCachedEditorID() const;
+            QString getCachedSignature() const;
       };
 
-      using form_stub = dovah::form_stub;
-      using form_type = dovah::form_type;
-      
-      static constexpr int ColumnType   = 0;
-      static constexpr int ColumnName   = 1;
-      static constexpr int ColumnFormID = 2;
+      using extra_column_handler_by_stub = std::function<QString(const dovah::form_stub&)>;
+      using extra_column_handler_by_data = std::function<QString(const dovah::loaded_forms::Form&)>;
+      //
+      using extra_column_handler = std::variant<extra_column_handler_by_stub, extra_column_handler_by_data>;
+
+   protected:
+      struct ExtraColumnInfo {
+         extra_column_handler handler;
+         QString              header_text;
+      };
       
    protected:
       QVector<Item*> children;
-      QVector<Item*> queued_additions;
-      QVector<form_type> allowed_form_types; // if empty, then no limit
+      QVector<dovah::form_type> allowed_form_types; // if empty, then no limit
       bool allow_gaps   = true;
       bool show_indices = true;
+      struct {
+         QVector<ExtraColumnInfo> list;
+         bool any_getters_take_loaded_form = false;
+      } extra_columns;
+
+      void _emitRowChanged(size_t row);
+      void _recacheNewlyAppendedExtraColumn(Item&, extra_column_handler& handler);
+      void _recacheItemText(Item&);
       
-      void _addStub(dovah::form_stub*, bool queued);
-      void _removeStub(Item*);
-      void _updateStub(Item*);
-      void _pruneItems(std::function<bool(const Item&)>);
+      // Remove all items for which the decider function returns true.
+      void _pruneItems(std::function<bool(const Item&)> decider_function);
       
    protected slots:
       void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
+      void formModified(dovah::form_stub*);
       void formRenumbered(const dovah::form_stub*, dovah::bare_form_id_t oldID, dovah::bare_form_id_t newID);
       void formsRenumberedEnMasse();
       
@@ -58,36 +93,38 @@ class DKFormListPaneModel : public QAbstractTableModel {
       QVector<dovah::form_stub*> stubs() const noexcept;
 
       #pragma region Property getters
-         inline bool allowGaps() const noexcept { return this->allow_gaps; }
-         inline QVector<form_type> allowedFormTypes() const noexcept { return this->allowed_form_types; }
-         inline bool showIndices() const noexcept { return this->show_indices; }
-
-         inline const QVector<form_type>& constAllowedFormTypes() const noexcept { return this->allowed_form_types; }
+         constexpr bool allowGaps() const noexcept { return this->allow_gaps; }
+         constexpr const QVector<dovah::form_type>& allowedFormTypes() const noexcept { return this->allowed_form_types; }
+         constexpr bool showIndices() const noexcept { return this->show_indices; }
       #pragma endregion
       
       #pragma region QAbstractItemModel overrides
-         QModelIndex index(int row, int column, const QModelIndex& parent) const override;
-         QModelIndex parent(const QModelIndex& index) const;
-         int rowCount(const QModelIndex& parent) const override;
-         int columnCount(const QModelIndex& item) const override;
-         Qt::ItemFlags flags(const QModelIndex& index) const override;
-         QVariant data(const QModelIndex& index, int role) const override;
-         QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-         inline const Item* row(int rowIndex) const noexcept;
+         #pragma region Hierarchy
+            virtual QModelIndex index(int row, int column, const QModelIndex& parent) const override;
+            virtual QModelIndex parent(const QModelIndex& index) const override;
+            virtual int rowCount(const QModelIndex& parent) const override;
+            virtual int columnCount(const QModelIndex& item) const override;
+         #pragma endregion
+         #pragma region Data
+            virtual Qt::ItemFlags flags(const QModelIndex& index) const override;
+            virtual QVariant data(const QModelIndex& index, int role) const override;
+            virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+         #pragma endregion
 
          // Qt's design for this API is unintuitive, so (moveStubs) is provided as an alternative.
          virtual bool moveRows(const QModelIndex& from_parent, int first_row_index, int count, const QModelIndex& to_parent, int to_position) override;
+
+         #pragma region Drag-and-drop
+            virtual bool canDropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) const override;
+            virtual bool dropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) override;
+            virtual QStringList mimeTypes() const override;
+            virtual Qt::DropActions supportedDropActions() const override;
+         #pragma endregion
       #pragma endregion
       
-      #pragma region Drag-and-drop
-         bool canDropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent);
-         bool dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent);
-         virtual QStringList mimeTypes() const override;
-         Qt::DropActions supportedDropActions() const;
-      #pragma endregion
       
    public slots:
-      inline void addStub(dovah::form_stub* s) { this->_addStub(s, false); }
+      void addStub(dovah::form_stub* s);
       void clear();
       void moveStubs(QModelIndexList, int down);
       void removeStub(int index);
@@ -96,8 +133,14 @@ class DKFormListPaneModel : public QAbstractTableModel {
       inline void reserve(int i) { this->children.reserve(i); }
 
       #pragma region Property setters
-         void setAllowedFormTypes(QVector<form_type>);
+         void setAllowedFormTypes(QVector<dovah::form_type>);
          void setAllowGaps(bool);
          void setShowIndices(bool);
       #pragma endregion
+         
+   public: // Ensure these are not Qt slots; slots can't have moved&& parameters
+      void addExtraColumn(QString header, extra_column_handler&&);
+      void removeExtraColumn(size_t index);
 };
+
+#include "./DKFormListPaneModel.inl"

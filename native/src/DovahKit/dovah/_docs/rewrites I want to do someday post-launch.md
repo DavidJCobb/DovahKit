@@ -756,6 +756,16 @@ As of April 28, 2024, however, that whole system for signalling warnings and err
 
 This is a massive improvement. Took a week or so and it was well worth the effort. However, it's still not perfect. As a relic of the old system, the "error" notices are not exceptions in themselves; they're basically P.O.D.s, which get wrapped (via `std::unique_ptr`) in an exception when thrown. The "error" notices could in theory be stored, but again, we don't do that. **We really should just turn them into exceptions and throw them directly.** Fortunately, that's a much simpler change than, y'know, replacing the entire `detailed_notice` system in order to get to where we are now. I'm still pushing it to post-launch because I want to just start moving forward again.
 
+## Game settings
+
+### Improve type-safety
+
+Right now, `DovahKitCore`'s accessors for modifying the value of a game setting are not type-safe. This is because the backend doesn't do any type-checking: it takes a `dovah::game_setting_value` (basically an untagged union) as a value, and the exception for failing to set a setting does not include an enum code for type mismatches.
+
+We should fix this: APIs for changing a setting's value should take a `std::variant`, and we should verify its type against the type of the setting (as dictated by its Hungarian notation prefix).
+
+(Once this change is made, we may want to update the nascent "game settings subsystem" in the frontend to take advantage of this.)
+
 # Outside the backend
 
 ## Worldedit

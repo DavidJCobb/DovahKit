@@ -533,27 +533,7 @@
        </item>
        <item row="2" column="0">
         <layout class="QGridLayout" name="gridLayout_4">
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_15">
-           <property name="text">
-            <string>Death Item:</string>
-           </property>
-           <property name="buddy">
-            <cstring>deathItem</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_13">
-           <property name="text">
-            <string>Voice Type:</string>
-           </property>
-           <property name="buddy">
-            <cstring>voicetype</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="2">
+         <item row="1" column="2">
           <spacer name="horizontalSpacer_5">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -569,31 +549,17 @@
            </property>
           </spacer>
          </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_14">
-           <property name="text">
-            <string>Weapon List:</string>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="karma">
+           <property name="enabled">
+            <bool>false</bool>
            </property>
-           <property name="buddy">
-            <cstring>weaponList</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1" colspan="4">
-          <widget class="DKFormPicker" name="weaponList">
            <property name="whatsThis">
-            <string>Unused.</string>
+            <string>Unused. Skyrim doesn't even appear to have any place to store this data, despite the Creation Kit having UI for it.</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="1" colspan="4">
-          <widget class="DKFormPicker" name="deathItem">
-           <property name="whatsThis">
-            <string>Control what leveled item, if any, is spawned into this actor's inventory when they die.</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="4">
+         <item row="1" column="4">
           <widget class="QSpinBox" name="dispositionBase">
            <property name="whatsThis">
             <string>Unused.</string>
@@ -609,27 +575,7 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_16">
-           <property name="text">
-            <string>Karma:</string>
-           </property>
-           <property name="buddy">
-            <cstring>karma</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QComboBox" name="karma">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="whatsThis">
-            <string>Unused. Skyrim doesn't even appear to have any place to store this data, despite the Creation Kit having UI for it.</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="3">
+         <item row="1" column="3">
           <widget class="QLabel" name="label_17">
            <property name="text">
             <string>Disposition Base:</string>
@@ -639,10 +585,47 @@
            </property>
           </widget>
          </item>
+         <item row="2" column="1" colspan="4">
+          <widget class="DKFormPicker" name="deathItem">
+           <property name="whatsThis">
+            <string>Control what leveled item, if any, is spawned into this actor's inventory when they die.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_16">
+           <property name="text">
+            <string>Karma:</string>
+           </property>
+           <property name="buddy">
+            <cstring>karma</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_15">
+           <property name="text">
+            <string>Death Item:</string>
+           </property>
+           <property name="buddy">
+            <cstring>deathItem</cstring>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="1" colspan="4">
           <widget class="DKFormPicker" name="voicetype">
            <property name="whatsThis">
             <string>The actor's voice. Dialogue sound files are divided by voice type.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_13">
+           <property name="text">
+            <string>Voice Type:</string>
+           </property>
+           <property name="buddy">
+            <cstring>voicetype</cstring>
            </property>
           </widget>
          </item>
@@ -1756,62 +1739,11 @@
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_6">
           <item>
-           <widget class="QTableWidget" name="packageTable">
-            <property name="whatsThis">
-             <string>&lt;p&gt;If an actor is not in combat or a similar interrupt state, they will periodically evaluate their AI packages and decide what to do. They'll search through all of their AI packages and execute the first package they find whose conditions are met. They check the following lists of packages, from top to bottom:&lt;/p&gt;
-&lt;ul&gt;
-   &lt;li&gt;Packages associated with any Quest Aliases that refer to the actor.&lt;/li&gt;
-   &lt;li&gt;Actor-specific packages (this listview).&lt;/li&gt;
-   &lt;li&gt;The actor's Default Package List (below).&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;If there are no usable packages, then the actor will just stand around doing nothing.&lt;/p&gt;</string>
+           <widget class="DKFormListPane" name="packages">
+            <property name="showFormTypes">
+             <bool>false</bool>
             </property>
            </widget>
-          </item>
-          <item>
-           <layout class="QVBoxLayout" name="verticalLayout_6">
-            <item>
-             <widget class="QPushButton" name="buttonAIPackageAdd">
-              <property name="text">
-               <string>Add</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="buttonAIPackageMoveUp">
-              <property name="text">
-               <string>Move Up</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="buttonAIPackageMoveDown">
-              <property name="text">
-               <string>Move Down</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="buttonAIPackageRemove">
-              <property name="text">
-               <string>Remove</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="verticalSpacer_10">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
           </item>
          </layout>
         </widget>
@@ -2997,14 +2929,15 @@
                <string>Type:</string>
               </property>
               <property name="buddy">
-               <cstring>faceMorphNoseForm</cstring>
+               <cstring>faceMorphNoseIndex</cstring>
               </property>
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QComboBox" name="faceMorphNoseForm">
+             <widget class="QComboBox" name="faceMorphNoseIndex">
               <property name="whatsThis">
-               <string>Choose a HeadPart to use for this actor's mouth. A HeadPart will appear in this list if it's marked as a nose part usable by the actor's race.</string>
+               <string>&lt;p&gt;Choose a morph to use for this actor's nose.&lt;/p&gt;
+&lt;p&gt;Morphs are defined in two places. The morph itself — the visual change applied to the character's facial geometry — is defined in the &quot;Chargen Morph&quot; file specified by the &quot;Face&quot; HeadPart. Additionally, the actor's Race form specifies — per sex — which of these morphs is actually enabled for use by actors.&lt;/p&gt;</string>
               </property>
              </widget>
             </item>
@@ -3027,7 +2960,7 @@
                <string>Type:</string>
               </property>
               <property name="buddy">
-               <cstring>faceMorphMouthForm</cstring>
+               <cstring>faceMorphMouthIndex</cstring>
               </property>
              </widget>
             </item>
@@ -3078,9 +3011,10 @@
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QComboBox" name="faceMorphMouthForm">
+             <widget class="QComboBox" name="faceMorphMouthIndex">
               <property name="whatsThis">
-               <string>Choose a HeadPart to use for this actor's mouth. A HeadPart will appear in this list if it's marked as a mouth part usable by the actor's race.</string>
+               <string>&lt;p&gt;Choose a morph to use for this actor's mouth and lips.&lt;/p&gt;
+&lt;p&gt;Morphs are defined in two places. The morph itself — the visual change applied to the character's facial geometry — is defined in the &quot;Chargen Morph&quot; file specified by the &quot;Face&quot; HeadPart. Additionally, the actor's Race form specifies — per sex — which of these morphs is actually enabled for use by actors.&lt;/p&gt;</string>
               </property>
              </widget>
             </item>
@@ -3246,14 +3180,15 @@
                <string>Type:</string>
               </property>
               <property name="buddy">
-               <cstring>faceMorphEyesForm</cstring>
+               <cstring>faceMorphEyesIndex</cstring>
               </property>
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QComboBox" name="faceMorphEyesForm">
+             <widget class="QComboBox" name="faceMorphEyesIndex">
               <property name="whatsThis">
-               <string>Choose a HeadPart to use for this actor's mouth. A HeadPart will appear in this list if it's marked as an eyes part usable by the actor's race.</string>
+               <string>&lt;p&gt;Choose a morph to use for this actor's eyes.&lt;/p&gt;
+&lt;p&gt;Morphs are defined in two places. The morph itself — the visual change applied to the character's facial geometry — is defined in the &quot;Chargen Morph&quot; file specified by the &quot;Face&quot; HeadPart. Additionally, the actor's Race form specifies — per sex — which of these morphs is actually enabled for use by actors.&lt;/p&gt;</string>
               </property>
              </widget>
             </item>
@@ -3564,7 +3499,6 @@
   <tabstop>farawaySkin</tabstop>
   <tabstop>farawayDistance</tabstop>
   <tabstop>voicetype</tabstop>
-  <tabstop>weaponList</tabstop>
   <tabstop>karma</tabstop>
   <tabstop>dispositionBase</tabstop>
   <tabstop>deathItem</tabstop>
@@ -3606,11 +3540,7 @@
   <tabstop>aggroRadiusWarn</tabstop>
   <tabstop>aggroRadiusWarnAttack</tabstop>
   <tabstop>aggroRadiusAttack</tabstop>
-  <tabstop>packageTable</tabstop>
-  <tabstop>buttonAIPackageAdd</tabstop>
-  <tabstop>buttonAIPackageMoveUp</tabstop>
-  <tabstop>buttonAIPackageMoveDown</tabstop>
-  <tabstop>buttonAIPackageRemove</tabstop>
+  <tabstop>packages</tabstop>
   <tabstop>packageListDefault</tabstop>
   <tabstop>packageListSpectator</tabstop>
   <tabstop>packageListObserveCorpse</tabstop>
@@ -3653,16 +3583,16 @@
   <tabstop>faceMorphChinDepth</tabstop>
   <tabstop>faceMorphCheekbonesHeight</tabstop>
   <tabstop>faceMorphCheekbonesWidth</tabstop>
-  <tabstop>faceMorphNoseForm</tabstop>
+  <tabstop>faceMorphNoseIndex</tabstop>
   <tabstop>faceMorphNoseLength</tabstop>
   <tabstop>faceMorphNoseHeight</tabstop>
-  <tabstop>faceMorphMouthForm</tabstop>
+  <tabstop>faceMorphMouthIndex</tabstop>
   <tabstop>faceMorphMouthHeight</tabstop>
   <tabstop>faceMorphMouthDepth</tabstop>
   <tabstop>faceMorphJawHeight</tabstop>
   <tabstop>faceMorphJawWidth</tabstop>
   <tabstop>faceMorphJawDepth</tabstop>
-  <tabstop>faceMorphEyesForm</tabstop>
+  <tabstop>faceMorphEyesIndex</tabstop>
   <tabstop>faceMorphEyesHeight</tabstop>
   <tabstop>faceMorphEyesWidth</tabstop>
   <tabstop>faceMorphEyesDepth</tabstop>

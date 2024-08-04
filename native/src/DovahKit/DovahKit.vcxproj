@@ -187,6 +187,7 @@
     <ClCompile Include="editor\subsystems\form_info_cache\form_info_cache.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\quest_vmad_skimmer.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\threaded_builder.cpp" />
+    <ClCompile Include="editor\subsystems\game_settings\game_settings_subsystem.cpp" />
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
     <ClCompile Include="editor\subsystems\message_log\dovahkit_message_log.cpp" />
     <ClCompile Include="editor\subsystems\options\dovahkit_options.cpp" />
@@ -768,6 +769,7 @@
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\ui_form_inventory.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_form_list_pane_extra_col.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_key_picker.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_ref_picker.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
@@ -1143,6 +1145,8 @@
     <ClInclude Include="editor\subsystems\form_info_cache\cached_faction_info.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_head_part_info.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_voicetype_info.h" />
+    <QtMoc Include="editor\subsystems\game_settings\game_settings_subsystem.h" />
+    <ClInclude Include="editor\subsystems\game_settings\core.h" />
     <ClInclude Include="editor\subsystems\message_log\core.h" />
     <ClInclude Include="helpers\hashing\crc32.h" />
     <ClInclude Include="nif\blocks\BSValueNode.h" />
@@ -1182,6 +1186,7 @@
     <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_form_list_pane_extra_col.h" />
     <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
     <QtMoc Include="ui\models\forms\LeveledListModel.h" />
     <ClInclude Include="ui\types\conditions\condition.h" />
@@ -2837,6 +2842,7 @@
     <None Include="vulkan\_docs\rotation-related identities and relationships.md" />
     <None Include="widgets\widget-models\bound-scripts\property.inl" />
     <None Include="widgets\widget-models\DKBoundScriptModel.inl" />
+    <None Include="widgets\widget-models\DKFormListPaneModel.inl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\assets\papyrus-added-edited.png" />

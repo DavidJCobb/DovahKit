@@ -36,6 +36,7 @@
 #include "ui_bound_script.h"
 #include "ui_form_inventory.h"
 #include "ui_attack_data.h"
+#include "ui_form_list_pane_extra_col.h"
 
 namespace DovahKitDebug {
    using all_features = cobb::class_list<
@@ -72,7 +73,8 @@ namespace DovahKitDebug {
       features::filter_object_selection_by_scriptname,
       features::ui_bound_script,
       features::ui_form_inventory,
-      features::ui_attack_data//,
+      features::ui_attack_data,
+      features::ui_form_list_pane_extra_col//,
    >;
 
    template<typename T> struct _add_functor {

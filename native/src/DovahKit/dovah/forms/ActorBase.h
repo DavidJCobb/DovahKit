@@ -215,7 +215,7 @@ namespace dovah::loaded_forms {
                   float height = 0;
                   float depth  = 0;
                } chin;
-               float unknown = 0;
+               float vampire_morph = 0;
             } morphs; // NAM9 // The game doesn't even bother to store this if they're all zero.
             struct {
                int32_t nose    = 0;

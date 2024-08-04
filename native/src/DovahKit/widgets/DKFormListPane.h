@@ -1,4 +1,8 @@
 #pragma once
+#if !defined(QT_DESIGNER_LIB)
+   #include <functional>
+   #include <variant>
+#endif
 #include <vector>
 #include <QAbstractItemModel>
 #include <QFrame>
@@ -27,12 +31,27 @@ class DKFormListPane : public QWidget {
    Q_PROPERTY(bool showMoveButtons  READ showMoveButtons  WRITE setShowMoveButtons  DESIGNABLE true);
    Q_PROPERTY(bool showRemoveButton READ showRemoveButton WRITE setShowRemoveButton DESIGNABLE true);
    public:
-      DKFormListPane(QWidget* parent);
-      
+      #if !defined(QT_DESIGNER_LIB)
+         //
+         // You can add extra columns to the listview, with getters that take a form stub or 
+         // a loaded form. Your getters will be invoked when forms are added to the listview 
+         // as well as when any forms already in the listview are modified. The strings that 
+         // your getters return will be cached.
+         //
+         using ExtraColumnHandler = std::variant<
+            std::function<QString(const dovah::form_stub&)>,
+            std::function<QString(const dovah::loaded_forms::Form&)>
+         >;
+      #endif
+
+   protected:
       static constexpr const int ColumnType   = 0;
       static constexpr const int ColumnName   = 1;
       static constexpr const int ColumnFormID = 2;
 
+   public:
+      DKFormListPane(QWidget* parent);
+      
       #if !defined(QT_DESIGNER_LIB)
          QHeaderView* horizontalHeader() const noexcept { return this->subwidgets.view->horizontalHeader(); }
       #endif
@@ -72,6 +91,12 @@ class DKFormListPane : public QWidget {
       void setOrientation(Qt::Orientation);
       void setShowMoveButtons(bool);
       void setShowRemoveButton(bool);
+      
+   public: // Ensure these are not Qt slots; slots can't have moved&& parameters
+      #if !defined(QT_DESIGNER_LIB)
+         void addExtraColumn(QString header, ExtraColumnHandler&&);
+         void removeExtraColumn(size_t which); // the first-added extra column is index 0. indices shift as columns are removed.
+      #endif
 
    signals:
 
@@ -97,8 +122,8 @@ class DKFormListPane : public QWidget {
       DKFormListPaneModel* _model() const noexcept;
 
       #if !defined(QT_DESIGNER_LIB)
-      void _moveSelected(int down); // negative values move up
-      void _removeSelected();
+         void _moveSelected(int down); // negative values move up
+         void _removeSelected();
       #endif
       void _updateButtonVisibility();
       void _updateOrientation();

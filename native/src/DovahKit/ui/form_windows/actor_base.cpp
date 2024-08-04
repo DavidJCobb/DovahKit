@@ -8,6 +8,7 @@
 #include "ui/utils/typical_tableview_config.h"
 
 #include "editor/subsystems/form_info_cache/core.h"
+#include "editor/subsystems/game_settings/core.h"
 #include "editor/open_window_for_form.h"
 #include "dovah/forms/Outfit.h"
 
@@ -25,6 +26,8 @@
 #include "./shared/FaceExtraHeadPartsModel.h"
 #include "./shared/HeadPartPickerFilter.h"
 
+#include "dovah/forms/Race.h"
+
 namespace {
    constexpr const bool we_are_not_done_but_just_let_me_compile_for_now =
       #if _DEBUG
@@ -41,7 +44,12 @@ namespace {
    // We don't currently have a renderer suitable for actor previews, and we don't have 
    // code to generate and export a head NIF and tintmask, so for now, disable all face 
    // editing widgets.
-   constexpr const bool allow_customizing_face = false;
+   constexpr const bool allow_customizing_face =
+      #if _DEBUG
+         true ||
+      #endif
+      false
+   ;
 
    constexpr const bool filtered_dialogue_browser_implemented = false;
 }
@@ -191,7 +199,6 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
          auto* filter = this->_filters.voicetype = new impl::VoicetypePickerFilter(this);
          this->ui.voicetype->setCustomFilter(filter); // limit voicetypes by sex, as the game itself does
       }
-      this->ui.weaponList->setAllowedFormType(dovah::form_type::formlist);
       this->ui.deathItem->setAllowedFormType(dovah::form_type::leveled_item);
 
       ui::set_unsigned_range<decltype(decltype(loaded_form_type::stats)::disposition)>(this->ui.dispositionBase);
@@ -373,7 +380,7 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
       ui::set_range<uint16_t>(this->ui.aggroRadiusAttack);
    #pragma endregion
    #pragma region AI Packages tab
-      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+      this->ui.packages->setAllowedFormTypes({ dovah::form_type::package });
 
       this->ui.packageListDefault->setAllowedFormType(dovah::form_type::formlist);
       this->ui.packageListSpectator->setAllowedFormType(dovah::form_type::formlist);
@@ -536,6 +543,10 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
       if constexpr (!allow_customizing_face) {
          this->ui.tabFaceMorphs->setEnabled(false);
       }
+      this->ui.faceComplexion->setAllowedFormType(dovah::form_type::texture_set);
+      this->ui.hairColor->setAllowedFormType(dovah::form_type::color);
+      this->ui.faceTintColorPreset->setAllowedFormType(dovah::form_type::color);
+      this->ui.baseHeadPartPicker->setAllowedFormType(dovah::form_type::head_part);
       //
       // We set the morph information when we bind the widgets to the form, not here.
       // Easier that way just because there's no floating-point QSlider; keep all the 
@@ -610,7 +621,6 @@ void FormDialogActorBase::_load_impl() {
       ui::bind(this->ui.farawaySkin,     working.far_away.model, working);
       ui::bind(this->ui.farawayDistance, working.far_away.distance);
       ui::bind(this->ui.voicetype, working.voicetype, working);
-      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Weapon List");
       ui::bind(this->ui.dispositionBase, working.stats.disposition);
       ui::bind(this->ui.deathItem, working.death_item, working);
    #pragma endregion
@@ -656,9 +666,7 @@ void FormDialogActorBase::_load_impl() {
       );
    #pragma endregion
    #pragma region Keywords tab
-      for (auto& ref : working.keywords.forms) {
-         this->ui.keywords->addStub(ref.get_form_stub());
-      }
+      this->ui.keywords->pullStubs(working.keywords.forms);
    #pragma endregion
    #pragma region AI Data tab
       ui::bind(this->ui.mood, working.ai.mood);
@@ -674,7 +682,7 @@ void FormDialogActorBase::_load_impl() {
       ui::bind(this->ui.aggroRadiusAttack,     working.ai.aggro.attack);
    #pragma endregion
    #pragma region AI Packages tab
-      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+      this->ui.packages->pullStubs(working.ai.package_list);
 
       ui::bind(this->ui.packageListDefault,       working.ai.default_package_list, working);
       ui::bind(this->ui.packageListSpectator,     working.ai.package_override_lists.spectator, working);
@@ -715,7 +723,10 @@ void FormDialogActorBase::_load_impl() {
          _handle(this->ui.faceMorphBrowHeight, working.face.morphs.brows.height);
          _handle(this->ui.faceMorphBrowWidth,  working.face.morphs.brows.width);
 
-         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Mouth Type (morph index from the actor's race)");
+         QObject::connect(this->ui.faceMorphMouthIndex, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
+            auto i = this->ui.faceMorphMouthIndex->currentData().toInt();
+            this->form->face.parts.mouth = i;
+         });
          _handle(this->ui.faceMorphMouthHeight, working.face.morphs.mouth.height);
          _handle(this->ui.faceMorphMouthDepth,  working.face.morphs.mouth.depth);
 
@@ -730,12 +741,18 @@ void FormDialogActorBase::_load_impl() {
          _handle(this->ui.faceMorphCheekbonesHeight, working.face.morphs.cheeks.height);
          _handle(this->ui.faceMorphCheekbonesWidth,  working.face.morphs.cheeks.width);
 
-         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Eyes Type (morph index from the actor's race)");
+         QObject::connect(this->ui.faceMorphEyesIndex, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
+            auto i = this->ui.faceMorphEyesIndex->currentData().toInt();
+            this->form->face.parts.eyes = i;
+         });
          _handle(this->ui.faceMorphEyesDepth,  working.face.morphs.eyes.depth);
          _handle(this->ui.faceMorphEyesHeight, working.face.morphs.eyes.height);
          _handle(this->ui.faceMorphEyesWidth,  working.face.morphs.eyes.width);
 
-         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Nose Type (morph index from the actor's race)");
+         QObject::connect(this->ui.faceMorphNoseIndex, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
+            auto i = this->ui.faceMorphNoseIndex->currentData().toInt();
+            this->form->face.parts.nose = i;
+         });
          _handle(this->ui.faceMorphNoseHeight, working.face.morphs.nose.height);
          _handle(this->ui.faceMorphNoseLength, working.face.morphs.nose.length);
       }
@@ -779,24 +796,47 @@ void FormDialogActorBase::_save_impl() {
       }
       #pragma endregion
       #pragma region Stats
-         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+         //
+         // All data is bound, widget-to-field, and live-updated.
+         //
       #pragma endregion
       #pragma region Factions
-         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+         {
+            auto* model = this->_models.factions;
+            auto& dst   = working.faction_memberships;
+            for (auto& item : dst)
+               item.faction.set(working, nullptr);
+            dst.clear();
+
+            size_t size = model->rowCount();
+            for (size_t i = 0; i < size; ++i) {
+               auto* src_item = model->item(i);
+               if (!src_item)
+                  break;
+               if (!src_item->faction)
+                  continue;
+               auto& dst_item = dst.emplace_back();
+               dst_item.rank = src_item->rank;
+               write_form_ref(dst_item.faction, src_item->faction);
+            }
+         }
       #pragma endregion
       #pragma region Relationships
          //
-         // Nothing to save.
+         // Nothing to save. This tab just exists to let you view relationship forms 
+         // that refer to this actor.
          //
       #pragma endregion
       #pragma region Keywords
          this->ui.keywords->commitStubs(working.keywords.forms, working);
       #pragma endregion
       #pragma region AI Data
-         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+         //
+         // All data is bound, widget-to-field, and live-updated.
+         //
       #pragma endregion
       #pragma region AI Packages
-         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+         this->ui.packages->commitStubs(working.ai.package_list, working);
       #pragma endregion
       #pragma region Inventory
          this->ui.inventory->commitTo(working.inventory, working);
@@ -871,7 +911,7 @@ void FormDialogActorBase::_updateFromTemplate() {
    this->ui.tabFactions->setEnabled(!(flags & template_flag::use_factions));
    this->ui.tabSpells->setEnabled(!(flags & template_flag::use_spells));
    this->ui.tabAIData->setEnabled(!(flags & template_flag::use_ai_data));
-   this->ui.packageTable->setEnabled(!(flags & template_flag::use_ai_packages));
+   this->ui.packages->setEnabled(!(flags & template_flag::use_ai_packages));
    static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: template_flag::use_animations");
    this->ui.tabInventory->setEnabled(!(flags & template_flag::use_inventory));
    this->ui.tabAttackData->setEnabled(!(flags & template_flag::use_attack_data));
@@ -1073,6 +1113,10 @@ void FormDialogActorBase::_set_race(dovah::form_stub* race) {
       QSignalBlocker(this->ui.sex),
    };
 
+   bool changed = true;
+   if (this->form)
+      changed = this->form->race != race;
+
    this->ui.race->setFormStub(race);
    if (this->form) {
       write_form_ref(this->form->race, race);
@@ -1084,6 +1128,112 @@ void FormDialogActorBase::_set_race(dovah::form_stub* race) {
    this->_filters.face.tint_color->setRequiredRace(race);
 
    this->_models.skills->setRace(race);
+
+   auto loaded = race->load().ptr_cast<dovah::loaded_forms::Race>();
+   {  // Indexed face morphs
+      if (loaded) {
+         size_t prior_eyes = 0;
+         size_t prior_lips = 0;
+         size_t prior_nose = 0;
+         if (!changed) {
+            prior_eyes = this->form->face.parts.eyes;
+            prior_lips = this->form->face.parts.mouth;
+            prior_nose = this->form->face.parts.nose;
+         }
+         this->ui.faceMorphEyesIndex->clear();
+         this->ui.faceMorphMouthIndex->clear();
+         this->ui.faceMorphNoseIndex->clear();
+
+         auto& src = loaded->by_sex[this->_current_sex()].head_data.morphs;
+         auto& gss = dovahkit::subsystems::game_settings::core::get();
+
+         {
+            size_t morph_count = 10;
+            {
+               auto variant = gss.get_setting_value("iEyeMorphCount");
+               if (std::holds_alternative<int32_t>(variant))
+                  morph_count = std::get<int32_t>(variant);
+            }
+            auto* widget = this->ui.faceMorphEyesIndex;
+            for (size_t i = 0; i < morph_count; ++i) {
+               bool enabled = src.eyes.test(i);
+               if (enabled)
+                  widget->addItem(QString("EyeType%1").arg(i), i);
+            }
+            if (prior_eyes != -1) {
+               auto i = widget->findData(prior_eyes);
+               if (i >= 0)
+                  widget->setCurrentIndex(i);
+               else
+                  widget->setCurrentIndex(0);
+            }
+         }
+         {
+            size_t morph_count = 10;
+            {
+               auto variant = gss.get_setting_value("iLipMorphCount");
+               if (std::holds_alternative<int32_t>(variant))
+                  morph_count = std::get<int32_t>(variant);
+            }
+            auto* widget = this->ui.faceMorphMouthIndex;
+            for (size_t i = 0; i < morph_count; ++i) {
+               bool enabled = src.mouths.test(i);
+               if (enabled)
+                  widget->addItem(QString("LipType%1").arg(i), i);
+            }
+            if (prior_lips != -1) {
+               auto i = widget->findData(prior_lips);
+               if (i >= 0)
+                  widget->setCurrentIndex(i);
+               else
+                  widget->setCurrentIndex(0);
+            }
+         }
+         {
+            size_t morph_count = 10;
+            {
+               auto variant = gss.get_setting_value("iNoseMorphCount");
+               if (std::holds_alternative<int32_t>(variant))
+                  morph_count = std::get<int32_t>(variant);
+            }
+            auto* widget = this->ui.faceMorphNoseIndex;
+            for (size_t i = 0; i < morph_count; ++i) {
+               bool enabled = src.noses.test(i);
+               if (enabled)
+                  widget->addItem(QString("NoseType%1").arg(i), i);
+            }
+            if (prior_nose != -1) {
+               auto i = widget->findData(prior_nose);
+               if (i >= 0)
+                  widget->setCurrentIndex(i);
+               else
+                  widget->setCurrentIndex(0);
+            }
+         }
+      } else {
+         this->ui.faceMorphEyesIndex->clear();
+         this->ui.faceMorphMouthIndex->clear();
+         this->ui.faceMorphNoseIndex->clear();
+      }
+   }
+   {  // Tab and preview-option visibility
+      bool show = false;
+      if (loaded) {
+         show = loaded->race_flags & dovah::loaded_forms::Race::race_flag::facegen_head;
+      }
+      this->ui.tabbox->setTabVisible(this->ui.tabbox->indexOf(this->ui.tabFaceMorphs), show);
+      this->ui.tabbox->setTabVisible(this->ui.tabbox->indexOf(this->ui.tabFaceParts), show);
+      if constexpr (preview_enabled) {
+         this->ui.tabbox->setTabVisible(this->ui.tabbox->indexOf(this->ui.tabFaceAnimPreview), show);
+
+         this->ui.previewTypeHead->setEnabled(show);
+         if (!show)
+            this->ui.previewTypeFull->setChecked(true);
+      }
+   }
+   //
+   // TODO: Pull the tint layer definitions from the race and update UI models appropriately
+   //
 }
 void FormDialogActorBase::_set_sex(dovah::sex s) {
    const auto blockers = std::array{
