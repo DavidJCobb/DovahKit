@@ -3,7 +3,7 @@
 #include "helpers/qt/vector3.h"
 #include "helpers/bitwise.h"
 #include "helpers/miscellaneous.h"
-#include "dovah/forms/factories/hardcoded.h"
+#include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/forms/components/extra_data/cell_acoustic_space.h"
 #include "dovah/forms/components/extra_data/cell_climate.h"
 #include "dovah/forms/components/extra_data/cell_imagespace.h"

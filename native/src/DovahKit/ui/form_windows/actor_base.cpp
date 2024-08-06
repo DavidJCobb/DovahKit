@@ -10,6 +10,8 @@
 #include "editor/subsystems/form_info_cache/core.h"
 #include "editor/subsystems/game_settings/core.h"
 #include "editor/open_window_for_form.h"
+#include "dovah/data/hardcoded_form_ids.h"
+#include "dovah/forms/Class.h"
 #include "dovah/forms/Outfit.h"
 
 #include "widgets/widget-data/DKFormPickerCustomFilter.h"
@@ -170,7 +172,7 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
    this->initialize(stub);
 
    this->ui.previewOptionsContainer->setVisible(preview_enabled);
-   this->ui.buttonShowFilteredDialogue->setVisible(filtered_dialogue_browser_implemented);
+   this->ui.buttonShowFilteredDialogue->setEnabled(filtered_dialogue_browser_implemented);
 
    this->_filters.exclude_self = new impl::DKFormPickerExcludeSingleFormFilter(this);
 
@@ -210,28 +212,30 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
          ui::set_range<decltype(stats_struct::level)>(this->ui.level);
          ui::set_range<decltype(stats_struct::calc_min_level)>(this->ui.levelCalcMin);
          ui::set_range<decltype(stats_struct::calc_max_level)>(this->ui.levelCalcMax);
-         QObject::connect(this->ui.flagPCLevelMult, &QCheckBox::toggled, this, [this](bool checked) {
-            if (checked)
-               this->ui.flagAutoCalcStats->setChecked(true);
-         });
+         QObject::connect(this->ui.level,           QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &FormDialogActorBase::_on_effective_level_changed);
+         QObject::connect(this->ui.flagPCLevelMult, &QCheckBox::toggled, this, &FormDialogActorBase::_set_pc_level_mult);
 
          this->ui.speedPercentage->setRange(0, 32767);
          this->ui.bleedoutOverrideThreshold->setRange(0, 32767);
 
          this->ui.statsClass->setAllowedFormType(dovah::form_type::combat_class);
-         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Attributes");
+         this->ui.statsClass->setAllowNone(false);
          ui::set_range<decltype(decltype(stats_struct::base)::health)>(this->ui.statsHealthBase);
          ui::set_range<decltype(decltype(stats_struct::base)::magicka)>(this->ui.statsMagickaBase);
          ui::set_range<decltype(decltype(stats_struct::base)::stamina)>(this->ui.statsStaminaBase);
          ui::set_range<decltype(decltype(stats_struct::offsets)::health)>(this->ui.statsHealthOffset);
          ui::set_range<decltype(decltype(stats_struct::offsets)::magicka)>(this->ui.statsMagickaOffset);
          ui::set_range<decltype(decltype(stats_struct::offsets)::stamina)>(this->ui.statsStaminaOffset);
+         ui::set_unsigned_range<int>(this->ui.statsHealthCalcFinal);
+         ui::set_unsigned_range<int>(this->ui.statsMagickaCalcFinal);
+         ui::set_unsigned_range<int>(this->ui.statsStaminaCalcFinal);
          this->ui.statsHealthBase->setReadOnly(true);
          this->ui.statsMagickaBase->setReadOnly(true);
          this->ui.statsStaminaBase->setReadOnly(true);
          this->ui.statsHealthCalcFinal->setReadOnly(true);
          this->ui.statsMagickaCalcFinal->setReadOnly(true);
          this->ui.statsStaminaCalcFinal->setReadOnly(true);
+
          {
             auto* widget = this->ui.statsTable;
             auto* model  = this->_models.skills = new ActorBaseSkillsModel(this);
@@ -242,25 +246,11 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
 
             ui::set_range<uint8_t>(this->ui.currentSkillOffset);
 
-            {  // Level
-               QObject::connect(this->ui.flagPCLevelMult, &QCheckBox::toggled, this, [this](bool checked) {
-                  if (checked)
-                     this->_models.skills->setLevel(1);
-                  else
-                     this->_models.skills->setLevel(this->ui.level->value());
-               });
-               QObject::connect(this->ui.level, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int v) {
-                  if (!this->ui.flagPCLevelMult->isChecked())
-                     this->_models.skills->setLevel(v);
-               });
-            }
             QObject::connect(this->ui.flagAutoCalcStats, &QCheckBox::toggled, this, [this](bool checked) {
                this->ui.skillEditLayout->setVisible(!checked);
                this->_models.skills->setOffsetsUsed(!checked);
             });
-            QObject::connect(this->ui.race, &DKFormPicker::formChanged, this, [this](dovah::form_stub* stub) {
-               this->_models.skills->setRace(stub);
-            });
+            // Updating in response to race changes is done in our `_set_race` member function.
             QObject::connect(this->ui.statsClass, &DKFormPicker::formChanged, this, [this](dovah::form_stub* stub) {
                this->_models.skills->setClass(stub);
             });
@@ -569,6 +559,13 @@ void FormDialogActorBase::_load_impl() {
    auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
 
+   //
+   // Corrections:
+   //
+   if (!working.race) {
+      write_form_ref(working.race, editor.get_form_of_probable_type(dovah::form_type::race, dovah::hardcoded_form_ids::DefaultRace));
+   }
+
    this->_filters.exclude_self->set_exclusion(this->formStub());
 
    #pragma region Not in a tab
@@ -625,7 +622,15 @@ void FormDialogActorBase::_load_impl() {
       ui::bind(this->ui.deathItem, working.death_item, working);
    #pragma endregion
    #pragma region Stats tab
-      ui::bind(this->ui.level,        working.stats.level);
+      QObject::connect(this->ui.level, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](double value) {
+         auto& working = *this->form;
+         if (working.actor_flags & loaded_form_type::actor_flag::pc_level_mult) {
+            working.stats.level = value * 1000;
+         } else {
+            working.stats.level = value;
+            this->_recalc_attributes();
+         }
+      });
       ui::bind(this->ui.levelCalcMin, working.stats.calc_min_level);
       ui::bind(this->ui.levelCalcMax, working.stats.calc_max_level);
       ui::bind(this->ui.flagPCLevelMult, working.actor_flags, loaded_form_type::actor_flag::pc_level_mult);
@@ -636,7 +641,16 @@ void FormDialogActorBase::_load_impl() {
 
       ui::bind(this->ui.statsClass, working.stats.combat_class, working);
       ui::bind(this->ui.flagAutoCalcStats, working.actor_flags, loaded_form_type::actor_flag::auto_calc_stats);
-      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Attributes");
+      {  // Attributes
+         ui::bind(this->ui.statsHealthOffset, working.stats.offsets.health);
+         ui::bind(this->ui.statsMagickaOffset, working.stats.offsets.magicka);
+         ui::bind(this->ui.statsStaminaOffset, working.stats.offsets.stamina);
+         QObject::connect(this->ui.statsHealthOffset,  QOverload<int>::of(&QSpinBox::valueChanged), this, &FormDialogActorBase::_recalc_attributes);
+         QObject::connect(this->ui.statsMagickaOffset, QOverload<int>::of(&QSpinBox::valueChanged), this, &FormDialogActorBase::_recalc_attributes);
+         QObject::connect(this->ui.statsStaminaOffset, QOverload<int>::of(&QSpinBox::valueChanged), this, &FormDialogActorBase::_recalc_attributes);
+         QObject::connect(this->ui.statsClass, &DKFormPicker::formChanged, this, &FormDialogActorBase::_recalc_attributes);
+         // Recalculating attributes on-race-change is done in the `_set_race` method.
+      }
 
       {
          for (size_t i = 0; i < dovah::skill_count; ++i)
@@ -766,6 +780,7 @@ void FormDialogActorBase::_load_impl() {
       this->_set_sex(female ? dovah::sex::female : dovah::sex::male);
    }
    this->_set_race(working.race.get_form_stub());
+   this->_set_pc_level_mult(this->ui.flagPCLevelMult->isChecked());
    static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
 }
 void FormDialogActorBase::_save_impl() {
@@ -952,6 +967,109 @@ void FormDialogActorBase::_updateFromTemplate() {
    }
 }
 
+unsigned int FormDialogActorBase::_get_effective_level() const {
+   unsigned int level = this->ui.level->value();
+   if (this->ui.flagPCLevelMult->isChecked()) {
+      level = this->ui.levelCalcMin->value();
+      if (level < 1)
+         level = 1;
+   }
+   return level;
+}
+void FormDialogActorBase::_on_effective_level_changed() {
+   auto level = this->_get_effective_level();
+   this->_models.skills->setLevel(level);
+   this->_recalc_attributes();
+}
+
+void FormDialogActorBase::_recalc_attributes() {
+   auto level = _get_effective_level();
+
+   size_t total_points = 0; // iAVDhmsLevelUp * level
+   float  health_bonus = 0; // fNPCHealthLevelBonus * level, if actor is not the player
+   {
+      auto& gss = dovahkit::subsystems::game_settings::core::get();
+
+      total_points = 10;
+      {
+         auto variant = gss.get_setting_value("iAVDhmsLevelUp");
+         if (std::holds_alternative<int32_t>(variant))
+            total_points = std::get<int32_t>(variant);
+      }
+
+      if (this->formStub()->formID != dovah::hardcoded_form_ids::Player) {
+         health_bonus = 5;
+
+         auto variant = gss.get_setting_value("fNPCHealthLevelBonus");
+         if (std::holds_alternative<float>(variant))
+            health_bonus = std::get<float>(variant);
+      }
+
+      total_points *= (level - 1);
+      health_bonus *= (level - 1);
+   }
+
+   std::array<size_t, 3> weights = { 1, 1, 1 };
+   size_t total_weight = 3;
+   if (auto* stub = this->form->stats.combat_class.get_form_stub()) {
+      if (auto loaded = stub->load().ptr_cast<dovah::loaded_forms::Class>()) {
+         weights[0] = loaded->attribute_weights.health;
+         weights[1] = loaded->attribute_weights.magicka;
+         weights[2] = loaded->attribute_weights.stamina;
+         total_weight = weights[0] + weights[1] + weights[2];
+      }
+   }
+   //
+   std::array<size_t, 3> attribute_order = { 0, 1, 2 };
+   std::stable_sort(attribute_order.begin(), attribute_order.end(), [&weights](size_t a, size_t b) {
+      return weights[a] > weights[b];
+   });
+
+   std::array<float, 3> results = { 0 };
+   {  // Compute attribute increases from the Class.
+      size_t remaining = total_points;
+      for (size_t i = 0; i < attribute_order.size() - 1; ++i) {
+         auto  attribute_index = attribute_order[i];
+
+         float factor = (float)weights[attribute_index] / total_weight;
+         int   result = total_points * factor;
+         //
+         results[attribute_index] = result;
+         remaining -= result;
+      }
+      auto attribute_index = attribute_order.back();
+      results[attribute_index] = remaining;
+   }
+   results[0] += health_bonus;
+
+   // Apply attribute base values from the Race.
+   if (auto* stub = this->form->race.get_form_stub()) {
+      auto loaded = stub->load().ptr_cast<dovah::loaded_forms::Race>();
+      if (loaded) {
+         results[0] += loaded->stats.attribute_base.health;
+         results[1] += loaded->stats.attribute_base.magicka;
+         results[2] += loaded->stats.attribute_base.stamina;
+      }
+   }
+
+   // Clamp the values, since for whatever reason they get serialized into the ActorBase.
+   for (auto& item : results)
+      item = std::min(item, (float) std::numeric_limits<uint16_t>::max()); // clamp to max value for safe storage (not sure if the game or CK do this though)
+
+   this->form->stats.base.health  = results[0];
+   this->form->stats.base.magicka = results[1];
+   this->form->stats.base.stamina = results[2];
+   this->ui.statsHealthBase->setValue(results[0]);
+   this->ui.statsMagickaBase->setValue(results[1]);
+   this->ui.statsStaminaBase->setValue(results[2]);
+   results[0] += this->ui.statsHealthOffset->value();
+   results[1] += this->ui.statsMagickaOffset->value();
+   results[2] += this->ui.statsStaminaOffset->value();
+   this->ui.statsHealthCalcFinal->setValue(results[0]);
+   this->ui.statsMagickaCalcFinal->setValue(results[1]);
+   this->ui.statsStaminaCalcFinal->setValue(results[2]);
+}
+
 void FormDialogActorBase::_pull_faction_to_ui() {
    auto* widget    = this->ui.factionsTable;
    auto* model     = this->_models.factions;
@@ -1106,6 +1224,44 @@ dovah::sex FormDialogActorBase::_current_sex() const {
    return (dovah::sex)this->ui.sex->currentData().toInt();
 }
 
+void FormDialogActorBase::_set_pc_level_mult(bool flag) {
+   bool prior = this->form->actor_flags & loaded_form_type::actor_flag::pc_level_mult;
+   
+   {
+      auto* const widget  = this->ui.flagPCLevelMult;
+      const auto  blocker = QSignalBlocker(widget);
+      widget->setChecked(flag);
+   }
+   {
+      auto* const widget  = this->ui.level;
+      const auto  blocker = QSignalBlocker(widget);
+      if (flag) {
+         widget->setDecimals(3);
+         widget->setRange(0.001, 32.767);
+         if (flag == prior) {
+            widget->setValue((float)this->form->stats.level / 1000);
+         } else {
+            widget->setValue(1);
+         }
+      } else {
+         widget->setDecimals(0);
+         widget->setRange(1, 32767);
+         if (flag == prior) {
+            widget->setValue(this->form->stats.level);
+         } else {
+            widget->setValue(this->form->stats.calc_min_level);
+         }
+      }
+   }
+
+   this->ui.flagAutoCalcStats->setEnabled(!flag);
+   if (flag) {
+      this->ui.flagAutoCalcStats->setChecked(true);
+   }
+
+   if (flag != prior)
+      this->_on_effective_level_changed();
+}
 void FormDialogActorBase::_set_race(dovah::form_stub* race) {
    const auto blockers = std::array{
       QSignalBlocker(this->ui.baseHeadPartPicker),
@@ -1130,6 +1286,7 @@ void FormDialogActorBase::_set_race(dovah::form_stub* race) {
    this->_models.skills->setRace(race);
 
    auto loaded = race->load().ptr_cast<dovah::loaded_forms::Race>();
+   this->_recalc_attributes();
    {  // Indexed face morphs
       if (loaded) {
          size_t prior_eyes = 0;

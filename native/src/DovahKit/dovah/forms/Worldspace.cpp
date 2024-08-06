@@ -1,6 +1,6 @@
 #include "Worldspace.h"
 #include "_common_cpp.h"
-#include "factories/hardcoded.h"
+#include "../data/hardcoded_form_ids.h"
 
 #include "../notices/form_load_warnings/by_form_type/worldspace/is_own_parent.h"
 

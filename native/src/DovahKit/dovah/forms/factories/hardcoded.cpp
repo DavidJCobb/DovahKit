@@ -1,5 +1,6 @@
 #include "hardcoded.h"
 #include "construct.h"
+#include "../../data/hardcoded_form_ids.h"
 #include "../../core.h"
 #include "../../form_stub.h"
 #include "../../form_stub_use_info_builder.h"
@@ -74,28 +75,28 @@ namespace dovah {
          //
          // Extra configuration:
          //
-         case 0x001:
+         case hardcoded_form_ids::DoorMarker:
             ((loaded_forms::Static*)form)->model.model_path = "MarkerTeleport.nif";
             break;
-         case 0x002:
+         case hardcoded_form_ids::TravelMarker:
             ((loaded_forms::Static*)form)->model.model_path = "Marker_Travel.nif";
             break;
-         case 0x003:
+         case hardcoded_form_ids::NorthMarker:
             ((loaded_forms::Static*)form)->model.model_path = "Marker_North.nif";
             break;
-         case 0x004:
+         case hardcoded_form_ids::PrisonMarker:
             ((loaded_forms::Static*)form)->model.model_path = "Marker_Prison.nif";
             break;
-         case 0x005:
+         case hardcoded_form_ids::DivineMarker:
             ((loaded_forms::Static*)form)->model.model_path = "Marker_Divine.nif";
             break;
-         case 0x006:
+         case hardcoded_form_ids::TempleMarker:
             ((loaded_forms::Static*)form)->model.model_path = "Marker_Temple.nif";
             break;
-         case 0x010:
+         case hardcoded_form_ids::MapMarker:
             ((loaded_forms::Static*)form)->model.model_path = "Marker_Map.nif";
             break;
-         case 0x012:
+         case hardcoded_form_ids::HorseMarker:
             ((loaded_forms::Static*)form)->model.model_path = "Marker_Horse.nif";
             break;
          case hardcoded_form_ids::PlayerRef: // PlayerRef
@@ -107,10 +108,10 @@ namespace dovah {
          case hardcoded_form_ids::COCMarkerHeading:
             ((loaded_forms::Static*)form)->model.model_path = "MarkerCOCHeading.nif";
             break;
-         case 0x034:
+         case hardcoded_form_ids::XMarkerHeading:
             ((loaded_forms::Static*)form)->model.model_path = "MarkerXHeading.nif";
             break;
-         case 0x038:
+         case hardcoded_form_ids::XMarker:
             ((loaded_forms::Static*)form)->model.model_path = "MarkerX.nif";
             break;
          default:
@@ -137,6 +138,9 @@ namespace dovah {
       //       IDs are in the range reserved for hardcoded forms, but it's equally possible that 
       //       they *were* hardcoded at some point during early development and remained inside 
       //       of Skyrim.esm as leftovers after being removed from both the game *and* the CK.
+      // 
+      // NOTE: It is generally not safe to make extensive changes to a form stub (in particular, 
+      //       its record flags) until after you've called `lo._accept_hardcoded_form(stub)`.
       //
       form_stub* Player = nullptr;
       {  // Actor values
@@ -153,7 +157,7 @@ namespace dovah {
       }
       {  // [STAT:001]"DoorMarker"
          auto stub = new form_stub();
-         stub->formID    = 0x001;
+         stub->formID    = hardcoded_form_ids::DoorMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "DoorMarker";
          // Flags: 0x800000
@@ -163,7 +167,7 @@ namespace dovah {
       }
       {  // [STAT:002]"TravelMarker"
          auto stub = new form_stub();
-         stub->formID    = 0x002;
+         stub->formID    = hardcoded_form_ids::TravelMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "TravelMarker";
          // Flags: 0x800000
@@ -173,7 +177,7 @@ namespace dovah {
       }
       {  // [STAT:003]"NorthMarker"
          auto stub = new form_stub();
-         stub->formID    = 0x003;
+         stub->formID    = hardcoded_form_ids::NorthMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "NorthMarker";
          // Flags: 0x800000
@@ -220,14 +224,14 @@ namespace dovah {
       }
       {  // [MISC:00A]"BobbyPin"
          auto stub = new form_stub();
-         stub->formID    = 0x00A;
+         stub->formID    = hardcoded_form_ids::BobbyPin;
          stub->form_type = form_type_info::signature_to_form_type('MISC');
          stub->editorID  = "BobbyPin";
          lo._accept_hardcoded_form(stub);
       }
       {  // [CONT:00E]"LootBag"
          auto stub = new form_stub();
-         stub->formID    = 0x00E;
+         stub->formID    = hardcoded_form_ids::LootBag;
          stub->form_type = form_type_info::signature_to_form_type('CONT');
          stub->editorID  = "LootBag";
          // Model File Name: "Clutter\\Sack01.NIF"
@@ -238,7 +242,7 @@ namespace dovah {
          // The hardcoded currency form; Skyrim.esm renames and reskins this to be gold coins.
          //
          auto stub = new form_stub();
-         stub->formID    = 0x00F;
+         stub->formID    = hardcoded_form_ids::Caps001;
          stub->form_type = form_type_info::signature_to_form_type('MISC');
          stub->editorID  = "Caps001";
          lo._accept_hardcoded_form(stub);
@@ -268,7 +272,7 @@ namespace dovah {
          // tiate this form programmatically.
          //
          auto stub = new form_stub();
-         stub->formID    = 0x013;
+         stub->formID    = hardcoded_form_ids::CreatureFaction;
          stub->form_type = form_type_info::signature_to_form_type('FACT');
          stub->editorID  = "CreatureFaction";
          lo._accept_hardcoded_form(stub);
@@ -280,6 +284,7 @@ namespace dovah {
          stub->editorID  = "PlayerRef";
          //
          lo._accept_hardcoded_form(stub);
+         stub->edit_record_flags(loaded_forms::ObjectReference::form_flag::persistent, true);
       }
       {  // [STAT:015]"MultiBoundMarker"
          auto stub = new form_stub();
@@ -292,7 +297,7 @@ namespace dovah {
       }
       {  // [STAT:017]"PlaneMarker"
          auto stub = new form_stub();
-         stub->formID    = 0x017;
+         stub->formID    = hardcoded_form_ids::PlaneMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "PlaneMarker";
          // Flags: 0x800000
@@ -307,20 +312,15 @@ namespace dovah {
          lo._accept_hardcoded_form(stub);
       }
       {  // [RACE:019]"DefaultRace"
-         //
-         // NOTE: This form is hardcoded into the Creation Kit, but NOT into the game itself. Skyrim.esm 
-         // never passes 0x019 as an argument to TESForm::SetFormID, which means that it does not instan-
-         // tiate this form programmatically.
-         //
          auto stub = new form_stub();
-         stub->formID    = 0x019;
+         stub->formID    = hardcoded_form_ids::DefaultRace;
          stub->form_type = form_type_info::signature_to_form_type('RACE');
          stub->editorID  = "DefaultRace";
          lo._accept_hardcoded_form(stub);
       }
       {  // [EYES:01A]"eyeReanimate"
          auto stub = new form_stub();
-         stub->formID    = 0x01A;
+         stub->formID    = hardcoded_form_ids::eyeReanimate;
          stub->form_type = form_type_info::signature_to_form_type('EYES');
          stub->editorID  = "eyeReanimate";
          // Full Name: "Reanimate Eyes"
@@ -328,7 +328,7 @@ namespace dovah {
       }
       {  // [ACTI:01B]"DefaultAshPile1"
          auto stub = new form_stub();
-         stub->formID    = 0x01B;
+         stub->formID    = hardcoded_form_ids::DefaultAshPile1;
          stub->form_type = form_type_info::signature_to_form_type('ACTI');
          stub->editorID  = "DefaultAshPile1";
          // Full Name: "Ash Pile 1"
@@ -343,14 +343,14 @@ namespace dovah {
       }
       {  // [BPTD:01D]"DefaultBodyPartData"
          auto stub = new form_stub();
-         stub->formID    = 0x01D;
+         stub->formID    = hardcoded_form_ids::DefaultBodyPartData;
          stub->form_type = form_type_info::signature_to_form_type('BPTD');
          stub->editorID  = "DefaultBodyPartData";
          lo._accept_hardcoded_form(stub);
       }
       {  // [ECZN:01E]"NoZoneZone"
          auto stub = new form_stub();
-         stub->formID    = 0x01E;
+         stub->formID    = hardcoded_form_ids::NoZoneZone;
          stub->form_type = form_type_info::signature_to_form_type('ECZN');
          stub->editorID  = "NoZoneZone";
          lo._accept_hardcoded_form(stub);
@@ -372,7 +372,7 @@ namespace dovah {
          // Base form used for portals defined in the Creation Kit?
          //
          auto stub = new form_stub();
-         stub->formID    = 0x020;
+         stub->formID    = hardcoded_form_ids::PortalMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "PortalMarker";
          // Flags: 0x800000
@@ -384,7 +384,7 @@ namespace dovah {
          // Base form used for collision primitives placed in the Creation Kit.
          //
          auto stub = new form_stub();
-         stub->formID    = 0x021;
+         stub->formID    = hardcoded_form_ids::CollisionMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "CollisionMarker";
          // Flags: 0x800000
@@ -393,7 +393,7 @@ namespace dovah {
       }
       {  // [ACTI:022]"DefaultAshPile2"
          auto stub = new form_stub();
-         stub->formID    = 0x022;
+         stub->formID    = hardcoded_form_ids::DefaultAshPile2;
          stub->form_type = form_type_info::signature_to_form_type('ACTI');
          stub->editorID  = "DefaultAshPile2";
          // Full Name: "Ash Pile 2"
@@ -523,26 +523,26 @@ namespace dovah {
       }
       {  // [CSTY:03D]"DefaultCombatstyle"
          //
-         // NOTE: This form is hardcoded into the Creation Kit, but NOT into the game itself. Skyrim.esm 
-         // never passes 0x03D as an argument to TESForm::SetFormID, which means that it does not instan-
-         // tiate this form programmatically.
+         // NOTE: This form is hardcoded into the Creation Kit, but I haven't verified whether it exists 
+         // in-game. It'd certainly be odd if it didn't, but the game doesn't *appear* to pass it into 
+         // TESForm::SetFormID unless I missed a call somewhere.
          //
          auto stub = new form_stub();
-         stub->formID    = 0x03D;
+         stub->formID    = hardcoded_form_ids::DefaultCombatStyle;
          stub->form_type = form_type_info::signature_to_form_type('CSTY');
          stub->editorID  = "DefaultCombatstyle";
          lo._accept_hardcoded_form(stub);
       }
       {  // [SMBN:05B]"Root"
          auto stub = new form_stub();
-         stub->formID    = 0x05B;
+         stub->formID    = hardcoded_form_ids::Root;
          stub->form_type = form_type_info::signature_to_form_type('SMBN');
          stub->editorID  = "Root";
          lo._accept_hardcoded_form(stub);
       }
       {  // [STAT:061]"CellWaterCurrentMarker"
          auto stub = new form_stub();
-         stub->formID    = 0x061;
+         stub->formID    = hardcoded_form_ids::CellWaterCurrentMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "CellWaterCurrentMarker";
          // Flags: 0x800000
@@ -552,7 +552,7 @@ namespace dovah {
       }
       {  // [STAT:062]"WaterCurrentMarker"
          auto stub = new form_stub();
-         stub->formID    = 0x062;
+         stub->formID    = hardcoded_form_ids::WaterCurrentMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "WaterCurrentMarker";
          // Flags: 0x800000
@@ -570,42 +570,42 @@ namespace dovah {
       }
       {  // [STAT:064]"FurnitureMarker01"
          auto stub = new form_stub();
-         stub->formID    = 0x064;
+         stub->formID    = hardcoded_form_ids::FurnitureMarker01;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "FurnitureMarker01";
          lo._accept_hardcoded_form(stub);
       }
       {  // [STAT:065]"FurnitureMarker02"
          auto stub = new form_stub();
-         stub->formID    = 0x065;
+         stub->formID    = hardcoded_form_ids::FurnitureMarker02;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "FurnitureMarker02";
          lo._accept_hardcoded_form(stub);
       }
       {  // [STAT:066]"FurnitureMarker03"
          auto stub = new form_stub();
-         stub->formID    = 0x066;
+         stub->formID    = hardcoded_form_ids::FurnitureMarker03;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "FurnitureMarker03";
          lo._accept_hardcoded_form(stub);
       }
       {  // [STAT:067]"FurnitureMarker04"
          auto stub = new form_stub();
-         stub->formID    = 0x067;
+         stub->formID    = hardcoded_form_ids::FurnitureMarker04;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "FurnitureMarker04";
          lo._accept_hardcoded_form(stub);
       }
       {  // [STAT:068]"FurnitureMarker05"
          auto stub = new form_stub();
-         stub->formID    = 0x068;
+         stub->formID    = hardcoded_form_ids::FurnitureMarker05;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "FurnitureMarker05";
          lo._accept_hardcoded_form(stub);
       }
       {  // [STAT:0C4]"WaterCurrentZoneMarker"
          auto stub = new form_stub();
-         stub->formID    = 0x0C4;
+         stub->formID    = hardcoded_form_ids::WaterCurrentZoneMarker;
          stub->form_type = form_type_info::signature_to_form_type('STAT');
          stub->editorID  = "WaterCurrentZoneMarker";
          // Flags: 0x800000
@@ -620,7 +620,7 @@ namespace dovah {
          // that it does not instantiate this form programmatically.
          //
          auto stub = new form_stub();
-         stub->formID    = 0x146;
+         stub->formID    = hardcoded_form_ids::LifeDetected;
          stub->form_type = form_type_info::signature_to_form_type('EFSH');
          stub->editorID  = "LifeDetected";
          lo._accept_hardcoded_form(stub);
@@ -632,7 +632,7 @@ namespace dovah {
          // tiate this form programmatically.
          //
          auto stub = new form_stub();
-         stub->formID    = 0x14A;
+         stub->formID    = hardcoded_form_ids::ScriptEffect;
          stub->form_type = form_type_info::signature_to_form_type('MGEF');
          stub->editorID  = "ScriptEffect";
          lo._accept_hardcoded_form(stub);
@@ -644,49 +644,49 @@ namespace dovah {
          // tiate this form programmatically.
          //
          auto stub = new form_stub();
-         stub->formID    = 0x14C;
+         stub->formID    = hardcoded_form_ids::WardConcSelf0;
          stub->form_type = form_type_info::signature_to_form_type('MGEF');
          stub->editorID  = "WardConcSelf0";
          lo._accept_hardcoded_form(stub);
       }
       {  // [WTHR:15E]"DefaultWeather"
          auto stub = new form_stub();
-         stub->formID    = 0x15E;
+         stub->formID    = hardcoded_form_ids::DefaultWeather;
          stub->form_type = form_type_info::signature_to_form_type('WTHR');
          stub->editorID  = "DefaultWeather";
          lo._accept_hardcoded_form(stub);
       }
       {  // [WTHR:15F]"DefaultClimate"
          auto stub = new form_stub();
-         stub->formID    = 0x15F;
+         stub->formID    = hardcoded_form_ids::DefaultClimate;
          stub->form_type = form_type_info::signature_to_form_type('CLMT');
          stub->editorID  = "DefaultClimate";
          lo._accept_hardcoded_form(stub);
       }
       {  // [IMGS:160]"DefaultImageSpaceInterior"
          auto stub = new form_stub();
-         stub->formID    = 0x160;
+         stub->formID    = hardcoded_form_ids::DefaultImageSpaceInterior;
          stub->form_type = form_type_info::signature_to_form_type('IMGS');
          stub->editorID  = "DefaultImageSpaceInterior";
          lo._accept_hardcoded_form(stub);
       }
       {  // [IMGS:161]"DefaultImageSpaceExterior"
          auto stub = new form_stub();
-         stub->formID    = 0x161;
+         stub->formID    = hardcoded_form_ids::DefaultImageSpaceExterior;
          stub->form_type = form_type_info::signature_to_form_type('IMGS');
          stub->editorID  = "DefaultImageSpaceExterior";
          lo._accept_hardcoded_form(stub);
       }
       {  // [IMAD:162]"GetHit"
          auto stub = new form_stub();
-         stub->formID    = 0x162;
+         stub->formID    = hardcoded_form_ids::GetHit;
          stub->form_type = form_type_info::signature_to_form_type('IMAD');
          stub->editorID  = "GetHit";
          lo._accept_hardcoded_form(stub);
       }
       {  // [FLST:163]"HelpManualPC"
          auto stub = new form_stub();
-         stub->formID    = 0x163;
+         stub->formID    = hardcoded_form_ids::HelpManualPC;
          stub->form_type = form_type_info::signature_to_form_type('FLST');
          stub->editorID  = "HelpManualPC";
          //
@@ -694,14 +694,14 @@ namespace dovah {
       }
       {  // [IMAD:164]"ImageSpaceConcussion"
          auto stub = new form_stub();
-         stub->formID    = 0x164;
+         stub->formID    = hardcoded_form_ids::ImageSpaceConcussion;
          stub->form_type = form_type_info::signature_to_form_type('IMAD');
          stub->editorID  = "ImageSpaceConcussion";
          lo._accept_hardcoded_form(stub);
       }
       {  // [FLST:165]"HelpManualXBox"
          auto stub = new form_stub();
-         stub->formID    = 0x165;
+         stub->formID    = hardcoded_form_ids::HelpManualXbox;
          stub->form_type = form_type_info::signature_to_form_type('FLST');
          stub->editorID  = "HelpManualXBox";
          //
@@ -709,14 +709,14 @@ namespace dovah {
       }
       {  // [IMAD:166]"ExplosionInFace"
          auto stub = new form_stub();
-         stub->formID    = 0x166;
+         stub->formID    = hardcoded_form_ids::ExplosionInFace;
          stub->form_type = form_type_info::signature_to_form_type('IMAD');
          stub->editorID  = "ExplosionInFace";
          lo._accept_hardcoded_form(stub);
       }
       {  // [IMGS:167]"DefaultImageSpace"
          auto stub = new form_stub();
-         stub->formID    = 0x167;
+         stub->formID    = hardcoded_form_ids::DefaultImageSpace;
          stub->form_type = form_type_info::signature_to_form_type('IMGS');
          stub->editorID  = "DefaultImageSpace";
          lo._accept_hardcoded_form(stub);
@@ -730,112 +730,112 @@ namespace dovah {
       //
       {  // [MESG:16D]"HelpPipBoyItems"
          auto stub = new form_stub();
-         stub->formID    = 0x16D;
+         stub->formID    = hardcoded_form_ids::HelpPipBoyItems;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpPipBoyItems";
          lo._accept_hardcoded_form(stub);
       }
       {  // [MESG:16E]"HelpPipBoyRepair"
          auto stub = new form_stub();
-         stub->formID    = 0x16E;
+         stub->formID    = hardcoded_form_ids::HelpPipBoyRepair;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpPipBoyRepair";
          lo._accept_hardcoded_form(stub);
       }
       {  // [MESG:176]"HelpChargenTagSkills"
          auto stub = new form_stub();
-         stub->formID    = 0x176;
+         stub->formID    = hardcoded_form_ids::HelpCharGenTagSkills;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpChargenTagSkills";
          lo._accept_hardcoded_form(stub);
       }
       {  // [MESG:177]"HelpChargenRace"
          auto stub = new form_stub();
-         stub->formID    = 0x177;
+         stub->formID    = hardcoded_form_ids::HelpCharGenRace;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpChargenRace";
          lo._accept_hardcoded_form(stub);
       }
       {  // [MESG:178]"HelpLeveling"
          auto stub = new form_stub();
-         stub->formID    = 0x178;
+         stub->formID    = hardcoded_form_ids::HelpLeveling;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpLeveling";
          lo._accept_hardcoded_form(stub);
       }
       {  // [MESG:179]"HelpDialogue"
          auto stub = new form_stub();
-         stub->formID    = 0x179;
+         stub->formID    = hardcoded_form_ids::HelpDialogue;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpDialogue";
          lo._accept_hardcoded_form(stub);
       }
       {  // [MESG:17B]"HelpHacking"
          auto stub = new form_stub();
-         stub->formID    = 0x17B;
+         stub->formID    = hardcoded_form_ids::HelpHacking;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpHacking";
          lo._accept_hardcoded_form(stub);
       }
       {  // [MESG:17C]"HelpLockpickingPC"
          auto stub = new form_stub();
-         stub->formID    = 0x17C;
+         stub->formID    = hardcoded_form_ids::HelpLockpickingPC;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpLockpickingPC";
          lo._accept_hardcoded_form(stub);
       }
       {  // [MESG:17D]"HelpVATSPC"
          auto stub = new form_stub();
-         stub->formID    = 0x17D;
+         stub->formID    = hardcoded_form_ids::HelpVATSPC;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpVATSPC";
          lo._accept_hardcoded_form(stub);
       }
       {  // [MESG:17E]"HelpContainer"
          auto stub = new form_stub();
-         stub->formID    = 0x17E;
+         stub->formID    = hardcoded_form_ids::HelpContainer;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpContainer";
          lo._accept_hardcoded_form(stub);
       }
       {  // [MESG:17F]"HelpBarter"
          auto stub = new form_stub();
-         stub->formID    = 0x17F;
+         stub->formID    = hardcoded_form_ids::HelpBarter;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpBarter";
          lo._accept_hardcoded_form(stub);
       }
       {  // [MESG:180]"HelpTerminal"
          auto stub = new form_stub();
-         stub->formID    = 0x180;
+         stub->formID    = hardcoded_form_ids::HelpTerminal;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpTerminal";
          lo._accept_hardcoded_form(stub);
       }
       {  // [MESG:181]"HelpPipBoyStats"
          auto stub = new form_stub();
-         stub->formID    = 0x181;
+         stub->formID    = hardcoded_form_ids::HelpPipBoyStats;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpPipBoyStats";
          lo._accept_hardcoded_form(stub);
       }
       {  // [MESG:182]"HelpPipBoyData"
          auto stub = new form_stub();
-         stub->formID    = 0x182;
+         stub->formID    = hardcoded_form_ids::HelpPipBoyData;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpPipBoyData";
          lo._accept_hardcoded_form(stub);
       }
       {  // [MESG:183]"HelpVATSXBox"
          auto stub = new form_stub();
-         stub->formID    = 0x183;
+         stub->formID    = hardcoded_form_ids::HelpVATSXBox;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpVATSXBox";
          lo._accept_hardcoded_form(stub);
       }
       {  // [MESG:184]"HelpLockpickingXBox"
          auto stub = new form_stub();
-         stub->formID    = 0x184;
+         stub->formID    = hardcoded_form_ids::HelpLockpickingXBox;
          stub->form_type = form_type_info::signature_to_form_type('MESG');
          stub->editorID  = "HelpLockpickingXBox";
          lo._accept_hardcoded_form(stub);
@@ -851,7 +851,7 @@ namespace dovah {
          // tiate this form programmatically.
          //
          auto stub = new form_stub();
-         stub->formID    = 0x1F3;
+         stub->formID    = hardcoded_form_ids::HairColorListDoNotUse;
          stub->form_type = form_type_info::signature_to_form_type('FLST');
          stub->editorID  = "HairColorListDoNotUse";
          //
@@ -859,7 +859,7 @@ namespace dovah {
       }
       {  // [WEAP:1F4]"Unarmed"
          auto stub = new form_stub();
-         stub->formID    = 0x1F4;
+         stub->formID    = hardcoded_form_ids::Unarmed;
          stub->form_type = form_type_info::signature_to_form_type('WEAP');
          stub->editorID  = "Unarmed";
          // DATA - Animation Type: HandToHandMelee (0)
@@ -867,7 +867,7 @@ namespace dovah {
       }
       {  // [EXPL:1F5]"Default Water Explosion"
          auto stub = new form_stub();
-         stub->formID    = 0x1F5;
+         stub->formID    = hardcoded_form_ids::DefaultWaterExplosion;
          stub->form_type = form_type_info::signature_to_form_type('EXPL');
          stub->editorID  = "Default Water Explosion";
          // Full Name: "Water Explosion"
@@ -875,7 +875,7 @@ namespace dovah {
       }
       {  // [WEAP:1F6]"GasTrap Dummy"
          auto stub = new form_stub();
-         stub->formID    = 0x1F6;
+         stub->formID    = hardcoded_form_ids::GasTrapDummy;
          stub->form_type = form_type_info::signature_to_form_type('WEAP');
          stub->editorID  = "GasTrap Dummy";
          // Full Name: "GasTrap Dummy"
@@ -883,7 +883,7 @@ namespace dovah {
       }
       {  // [IPDS:276]"DefaultImpactDataSet"
          auto stub = new form_stub();
-         stub->formID    = 0x276;
+         stub->formID    = hardcoded_form_ids::DefaultImpactDataSet;
          stub->form_type = form_type_info::signature_to_form_type('IPDS');
          stub->editorID  = "DefaultImpactDataSet";
          lo._accept_hardcoded_form(stub);
@@ -896,7 +896,7 @@ namespace dovah {
          // pointing to them.
          //
          auto stub = new form_stub();
-         stub->formID    = 0x28A;
+         stub->formID    = hardcoded_form_ids::PapyrusPersistenceForm;
          stub->form_type = form_type_info::signature_to_form_type('NONE');
          stub->editorID  = "PapyrusPersistenceForm";
          lo._accept_hardcoded_form(stub);
@@ -911,7 +911,7 @@ namespace dovah {
          // other actors.
          //
          auto stub = new form_stub();
-         stub->formID    = 0x294;
+         stub->formID    = hardcoded_form_ids::CommandingActorPersistenceForm;
          stub->form_type = form_type_info::signature_to_form_type('NONE');
          stub->editorID  = "CommandingActorPersistenceForm";
          lo._accept_hardcoded_form(stub);
@@ -920,10 +920,10 @@ namespace dovah {
    void build_hardcoded_form_outbound_refs(form_stub_use_info_builder& uib) {
       auto* stub = uib.stub();
       switch (stub->formID) {
-         case 0x00000014: // [ACHR]PlayerRef
+         case hardcoded_form_ids::PlayerRef: // [ACHR]PlayerRef
             uib.add_outbound_reference(0x00000007, use_info_entry::flag::object_reference);
             break;
-         case 0x0000015E: // [WTHR]DefaultWeather
+         case hardcoded_form_ids::DefaultWeather: // [WTHR]DefaultWeather
             //
             // The Creation Kit lists this form as referring to [IMGS:167]DefaultImageSpace, but 
             // when the game initializes both forms, it doesn't actually link them together on 

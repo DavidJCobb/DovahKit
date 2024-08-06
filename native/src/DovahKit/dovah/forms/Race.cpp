@@ -1,7 +1,7 @@
 #include "Race.h"
 #include "_common_cpp.h"
 
-#include "./factories/hardcoded.h" // hardcoded form IDs
+#include "../data/hardcoded_form_ids.h"
 
 #include "../notices/form_load_warnings/by_form_type/race/biped_object_name_too_long.h"
 #include "../notices/form_load_warnings/by_form_type/race/invalid_boosted_skill.h"

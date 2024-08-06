@@ -29,6 +29,7 @@
 #include "subsystems/game_inis.h"
 #include "asset_manager/asset_manager.h"
 #include "subsystems/form_info_cache/core.h"
+#include "subsystems/game_settings/core.h"
 #include "subsystems/message_log/core.h"
 #include "subsystems/options/core.h"
 #include "subsystems/papyrus/core.h"
@@ -148,11 +149,13 @@ DovahKitCore::DovahKitCore() {
    DKBSACollectionModel::setDefaultBackend(this->bsa_browse_backend);
    //
    // We want to make sure a few systems exist, but we need to construct them AFTER DovahKitCore to avoid 
-   // cyclical dependencies / infinite recursion:
+   // cyclical dependencies / infinite recursion within the constructors (i.e. their constructors access 
+   // DovahKitCore, so we need to make sure DovahKitCore is fully constructed by then):
    //
    QTimer::singleShot(0, []() {
       DovahKitAssetManager::get();
       dovahkit::subsystems::form_info_cache::core::get_or_create();
+      dovahkit::subsystems::game_settings::core::get_or_create();
       dovahkit::subsystems::options::core::get_or_create();
       dovahkit::subsystems::papyrus::core::get_or_create();
    });

@@ -3,6 +3,7 @@
 #include "helpers/dynamic_fast_cast.h"
 #include "dovah/notices/_all_warnings.h"
 
+#include "./face_fx_phoneme_name.h"
 #include "./form_identifiers_to_string.h"
 #include "./form_type_name_to_string.h"
 #include "helpers/qt/strings.h"
@@ -738,6 +739,82 @@ namespace editor_helpers {
                      "will not load properly.",
                      disambig
                   ).arg(subject).arg(signature);
+               }
+            #pragma endregion
+            #pragma region note
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::race::biped_object_name_too_long*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Biped Object Name #%2 in Race %1 is too long: it's %3 bytes long, but the Creation Kit "
+                     "and the game will only load the first %4 bytes.",
+                     disambig
+                  ).arg(subject).arg(casted->which).arg(casted->size).arg(casted->max_serializable_size);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::race::invalid_boosted_skill*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Race %1 has an invalid skill boost: slot %2 uses invalid skill ID %3.",
+                     disambig
+                  ).arg(subject).arg(casted->which).arg(casted->skill);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::race::invalid_face_texture_sex*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString target  = form_identifiers_to_string(casted->texture_set);
+                  //
+                  return QObject::tr(
+                     "Race %1 attempts to offer TextureSet %2 as a complexion option, but the option is "
+                     "associated with an invalid sex (%3).",
+                     disambig
+                  ).arg(subject).arg(target).arg(casted->invalid_sex);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::race::invalid_morph_bitmask_index*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Race %1 attempts to define indexed face morphs for index %2. The maximum valid "
+                     "index is %3.",
+                     disambig
+                  ).arg(subject).arg(casted->index).arg(casted->max_index);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::race::tint_layer_data_before_tint_layer*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  auto    signature = cobb::qt::four_cc_to_string(casted->subrecord_signature);
+                  //
+                  return QObject::tr(
+                     "Race %1 contains a %2 subrecord before any TINI subrecord. That is: there exists "
+                     "tint layer data before any actual tint layer.",
+                     disambig
+                  ).arg(subject).arg(signature);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::race::too_many_biped_object_names*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Race %1 attempts to define %2 Biped Object Name(s), but the maximum supported "
+                     "number of Biped Object Name(s) is %3.",
+                     disambig
+                  ).arg(subject).arg(casted->count).arg(casted->max_count);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::race::too_many_phonemes*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Race %1 attempts to define weight values for %2 FaceFX phonemes, but FaceFx only "
+                     "had %3 phonemes as of its use in Skyrim.",
+                     disambig
+                  ).arg(subject).arg(casted->count).arg(casted->max_count);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::race::wrong_weight_count_per_phoneme*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString phoneme = face_fx_phoneme_name(casted->phoneme);
+                  //
+                  return QObject::tr(
+                     "Race %1 attempts to define %3 weight values for FaceFX phoneme %2, but the "
+                     "race only defines %4 weights to use for lip synching.",
+                     disambig
+                  ).arg(subject).arg(phoneme).arg(casted->count).arg(casted->desired_count);
                }
             #pragma endregion
             #pragma region shout

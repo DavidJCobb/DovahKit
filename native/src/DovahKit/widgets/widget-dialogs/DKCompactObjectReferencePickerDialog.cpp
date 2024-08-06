@@ -1,5 +1,5 @@
 #include "./DKCompactObjectReferencePickerDialog.h"
-#include "dovah/forms/factories/hardcoded.h"
+#include "dovah/data/hardcoded_form_ids.h"
 #include "editor/core.h"
 
 DKCompactObjectReferencePickerDialog::DKCompactObjectReferencePickerDialog(QWidget* parent) : QDialog(parent) {

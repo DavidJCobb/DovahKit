@@ -3,6 +3,15 @@
 #include "editor/core.h"
 
 namespace dovahkit::subsystems::game_settings {
+   core::core() {
+      auto& editor = DovahKitCore::get();
+      QObject::connect(&editor, &DovahKitCore::gameSettingValueChanged, this, [this](const char* name) {
+         emit settingValueChanged(name);
+      });
+   }
+   core::~core() {
+   }
+
    game_setting_value core::get_setting_value(const char* name) {
       dovah::loaded_game_setting loaded;
       if (DovahKitCore::get().get_loaded_game_setting(name, loaded)) {

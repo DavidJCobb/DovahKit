@@ -3,7 +3,7 @@
 #include <QGridLayout>
 #include <QLabel>
 #if !defined(QT_DESIGNER_LIB)
-   #include "dovah/forms/factories/hardcoded.h" // for PlayerRef form ID
+   #include "dovah/data/hardcoded_form_ids.h" // for PlayerRef form ID
    #include "dovah/form_stub.h"
    #include "editor/subsystems/papyrus/core.h"
    #include "editor/subsystems/worldedit/core.h"

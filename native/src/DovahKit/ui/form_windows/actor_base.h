@@ -82,6 +82,11 @@ class FormDialogActorBase :
       void _updateOutfitContentsView();
       void _updateFromTemplate();
 
+      unsigned int _get_effective_level() const;
+      void _on_effective_level_changed();
+
+      void _recalc_attributes();
+
       void _pull_faction_to_ui();
       void _push_faction_from_ui();
 
@@ -91,6 +96,7 @@ class FormDialogActorBase :
 
       dovah::sex _current_sex() const;
 
+      void _set_pc_level_mult(bool);
       void _set_race(dovah::form_stub*);
       void _set_sex(dovah::sex);
 };

@@ -3,8 +3,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
+#include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/exceptions/form_creation_failed.h"
-#include "dovah/forms/factories/hardcoded.h"
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "dovah/form_stub_helpers.h"
 #include "dovah/forms/Cell.h"

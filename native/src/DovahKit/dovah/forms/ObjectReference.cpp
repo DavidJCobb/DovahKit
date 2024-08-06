@@ -1,5 +1,6 @@
 #include "ObjectReference.h"
 #include "_common_cpp.h"
+#include "../data/hardcoded_form_ids.h"
 #include "../form_stub_helpers.h"
 #include "factories/hardcoded.h"
 #include "components/extra_data/enable_state_parent.h"

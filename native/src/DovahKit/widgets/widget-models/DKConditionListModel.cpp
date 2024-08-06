@@ -5,11 +5,11 @@
 #include "dovah/data/conditions/all_function_info.h"
 #include "dovah/data/conditions/all_parameter_types.h"
 #include "dovah/data/conditions/event_function.h"
+#include "dovah/data/hardcoded_form_ids.h"
 #include "editor/helpers/actor_value_index_to_name.h"
 #include "editor/helpers/form_type_name_to_string.h"
 #include "editor/core.h"
 
-#include "dovah/forms/factories/hardcoded.h"
 #include "dovah/forms/Package.h"
 #include "dovah/forms/Quest.h"
 

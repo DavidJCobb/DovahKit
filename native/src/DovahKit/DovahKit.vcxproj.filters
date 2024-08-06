@@ -2499,6 +2499,9 @@
     <ClCompile Include="editor\subsystems\game_settings\game_settings_subsystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\helpers\face_fx_phoneme_name.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6426,6 +6429,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\game_settings\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\hardcoded_form_ids.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\helpers\face_fx_phoneme_name.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -25,5 +25,8 @@ namespace dovahkit::subsystems::game_settings {
       public:
          game_setting_value get_setting_value(const char* name);
          void set_setting_value(const char* name, const game_setting_value&); // may throw dovah::exceptions::game_setting_value_change_failed
+
+      signals:
+         void settingValueChanged(const char* name);
    };
 }

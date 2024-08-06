@@ -756,6 +756,22 @@ As of April 28, 2024, however, that whole system for signalling warnings and err
 
 This is a massive improvement. Took a week or so and it was well worth the effort. However, it's still not perfect. As a relic of the old system, the "error" notices are not exceptions in themselves; they're basically P.O.D.s, which get wrapped (via `std::unique_ptr`) in an exception when thrown. The "error" notices could in theory be stored, but again, we don't do that. **We really should just turn them into exceptions and throw them directly.** Fortunately, that's a much simpler change than, y'know, replacing the entire `detailed_notice` system in order to get to where we are now. I'm still pushing it to post-launch because I want to just start moving forward again.
 
+## Localized strings
+
+I don't like how we currently handle localized strings in form data. In particular, it's hard to make it so that a mod can easily copy the localized strings of a base file (e.g. so that a French mod author changing an apple's sale value doesn't cause shenigans for English mod users).
+
+In particular, I wish we could have an editing UI similar to ReachVariantTool, wherein the form-editing dialogs show L-strings in your chosen language but there's a button you can click to pop a dialog box and edit each localization. (As an improvement over RVT, we should also have "Copy All" and "Paste All" buttons that copy into multiple MIME types, so you can paste into Notepad as plain text or paste via the button to copy all localizations from one L-string to another.)
+
+I also wish we could optionally generate per-language string files for all languages that are actually defined in a mod, when saving.
+
+There are a few challenges here:
+
+* It'd be more work to maintain the string table in memory: we'd have to support modifying it, we'd have to figure out what to do with strings that become orphaned/unused, and so on.
+
+* If two places use the same L-string, we'd need to give the player the option to separate them... which requires being able to track references from forms to L-strings, bidirectionally, similar to Use Info. The current backend isn't designed for this. We don't even have a metaprogramming-based way to know which form types can even *have* L-strings. (Offhand I know TESFullName and TESDescription use L-strings, but we don't implement those as components in DovahKit, so we can't build dynamic dispatch for them; and in any case, there are other non-component places that use L-strings, such as string-type game setting values.)
+
+We don't have to solve this for Sustain Phase 1; we can give it its own phase later on after our big-ticket phases are done.
+
 ## Game settings
 
 ### Improve type-safety

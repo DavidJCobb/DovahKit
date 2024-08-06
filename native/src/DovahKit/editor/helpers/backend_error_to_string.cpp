@@ -389,6 +389,19 @@ namespace editor_helpers {
                      ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
                   }
                #pragma endregion
+               #pragma region race
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::by_type::race::biped_object_name_is_too_long*>(&warning)) {
+                     return QObject::tr(
+                        "Biped Object Name #%2 in Race %1 has a name that is too long. The name is %3 bytes long, but the maximum supported "
+                        "length is %4.",
+                        disambig
+                     )
+                        .arg(subject)
+                        .arg(casted->which)
+                        .arg(casted->size)
+                        .arg(casted->max_serializable_size);
+                  }
+               #pragma endregion
             #pragma endregion
          }
       #pragma endregion

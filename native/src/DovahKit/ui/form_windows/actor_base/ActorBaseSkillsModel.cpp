@@ -3,28 +3,20 @@
 #include "dovah/forms/Class.h"
 #include "dovah/form_stub.h"
 #include "editor/helpers/skill_name_to_string.h"
+#include "editor/subsystems/game_settings/core.h"
 #include "editor/core.h"
+#include "helpers/string/strlen.h"
 
 #include "dovah/forms/Class.h"
 #include "dovah/forms/Race.h"
 
-namespace {
-   static int _get_iAVDskillsLevelUp() {
-      {
-         auto& editor = DovahKitCore::get();
-
-         dovah::loaded_game_setting data;
-         if (editor.get_loaded_game_setting("iAVDSkillsLevelUp", data))
-            return data.value.i;
-      }
-      for (auto& dfn : dovah::game_settings)
-         if (_strnicmp("iAVDSkillsLevelUp", dfn.name, sizeof("iAVDSkillsLevelUp")))
-            return dfn.default_value.i;
-      return 8;
-   }
-}
-
 ActorBaseSkillsModel::ActorBaseSkillsModel(QObject* parent) : QAbstractItemModel(parent) {
+   auto& gss = dovahkit::subsystems::game_settings::core::get();
+   QObject::connect(&gss, &std::decay_t<decltype(gss)>::settingValueChanged, this, [this](const char* name) {
+      if (_strnicmp(name, "iAVDSkillsLevelUp", cobb::strlen("iAVDSkillsLevelUp")) != 0)
+         return;
+      this->_recalcStats();
+   });
 }
       
 #pragma region QAbstractItemModel overrides
@@ -190,6 +182,7 @@ void ActorBaseSkillsModel::setSkillOffset(dovah::skill skill, uint8_t offset) {
    if (dst.offset == offset)
       return;
    dst.offset = offset;
+   this->_recalcStats();
    if (this->_state.using_offsets) {
       auto qmi = this->index((size_t)skill, 0, {});
       emit dataChanged(qmi, qmi);
@@ -210,7 +203,13 @@ void ActorBaseSkillsModel::setOffsetsUsed(bool v) {
 }
 
 void ActorBaseSkillsModel::_recalcStats() {
-   int iAVDskillsLevelUp = _get_iAVDskillsLevelUp();
+   int32_t iAVDSkillsLevelUp = 8;
+   {
+      auto& gss     = dovahkit::subsystems::game_settings::core::get();
+      auto  variant = gss.get_setting_value("iAVDSkillsLevelUp");
+      if (std::holds_alternative<int32_t>(variant))
+         iAVDSkillsLevelUp = std::get<int32_t>(variant);
+   }
 
    auto& dst_list = this->_state.skills;
 
@@ -231,7 +230,7 @@ void ActorBaseSkillsModel::_recalcStats() {
          dst.computed += dst.offset;
    }
 
-   int  skill_points = this->_state.level * iAVDskillsLevelUp;
+   int  skill_points = this->_state.level * iAVDSkillsLevelUp;
    bool used_class   = false;
    if (this->_state.class_form) {
       auto loaded = this->_state.class_form->load().ptr_cast<dovah::loaded_forms::Class>();

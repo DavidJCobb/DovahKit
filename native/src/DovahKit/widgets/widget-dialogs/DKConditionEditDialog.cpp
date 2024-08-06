@@ -22,8 +22,8 @@
 #include "dovah/data/conditions/event_function.h"
 #include "dovah/data/conditions/parameter_typeinfo.h"
 #include "dovah/data/conditions/parameter_underlying_type.h"
+#include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/data/story_manager.h"
-#include "dovah/forms/factories/hardcoded.h"
 #include "dovah/forms/Package.h"
 #include "dovah/forms/Quest.h"
 

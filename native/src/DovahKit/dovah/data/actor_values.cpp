@@ -214,11 +214,11 @@ namespace dovah::data {
          actor_value_info(156, 0x643, "MagickaRateMult"),
          actor_value_info(157, 0x644, "StaminaRateMult"),
          actor_value_info(158, 0x645, "WerewolfPerks"),
+         actor_value_info(159, 0x646, "VampirePerks"),
          actor_value_info(160, 0x647, "GrabActorOffset"),
          actor_value_info(161, 0x648, "Grabbed"),
          actor_value_info(162, 0x649, "DEPRECATED05"),
          actor_value_info(163, 0x64A, "ReflectDamage"),
-         actor_value_info(159, 0x646, "VampirePerks"),
       };
       this->list  = (actor_value_info*) malloc(sizeof(data));
       memcpy(this->list, data, sizeof(data));

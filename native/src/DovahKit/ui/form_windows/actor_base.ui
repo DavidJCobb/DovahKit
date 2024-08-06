@@ -303,6 +303,9 @@
        </item>
        <item>
         <widget class="QPushButton" name="buttonShowFilteredDialogue">
+         <property name="whatsThis">
+          <string>This button will open the Filtered Dialogue window, with the filters set to view dialogue that this ActorBase can use.</string>
+         </property>
          <property name="text">
           <string>Dialogue</string>
          </property>
@@ -315,7 +318,7 @@
    <item row="0" column="1">
     <widget class="QTabWidget" name="tabbox">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tabTraits">
       <attribute name="title">
@@ -371,7 +374,11 @@
           </widget>
          </item>
          <item row="1" column="1" colspan="4">
-          <widget class="DKFormPicker" name="skin"/>
+          <widget class="DKFormPicker" name="skin">
+           <property name="whatsThis">
+            <string>Character models in Skyrim pull the majority of their visuals from Armor and ArmorAddon forms, not from Race forms. Even their appearance when nude comes from a &quot;skin&quot; Armor specified on theirrace. You can optionally override any actor's default skin by selecting one here.</string>
+           </property>
+          </widget>
          </item>
          <item row="0" column="0">
           <widget class="QLabel" name="label_10">
@@ -453,7 +460,11 @@
           </widget>
          </item>
          <item row="0" column="1" colspan="4">
-          <widget class="DKFormPicker" name="race"/>
+          <widget class="DKFormPicker" name="race">
+           <property name="allowNone">
+            <bool>false</bool>
+           </property>
+          </widget>
          </item>
          <item row="3" column="2">
           <spacer name="horizontalSpacer_4">
@@ -1035,16 +1046,6 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QSpinBox" name="level">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="maximum">
-             <number>100</number>
-            </property>
-           </widget>
-          </item>
           <item row="0" column="2" rowspan="2">
            <spacer name="horizontalSpacer_7">
             <property name="orientation">
@@ -1060,6 +1061,16 @@
              </size>
             </property>
            </spacer>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="level">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="decimals">
+             <number>0</number>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -1266,7 +1277,11 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="DKFormPicker" name="crimeFaction"/>
+          <widget class="DKFormPicker" name="crimeFaction">
+           <property name="whatsThis">
+            <string>Crimes committed against an actor will be reported to that actor's crime faction. The crime faction must be a faction that tracks crime, and that the actor is a member of (i.e. it must be in the above list).</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -1329,16 +1344,26 @@
           </item>
           <item row="1" column="1">
            <widget class="QSpinBox" name="aiEnergy">
+            <property name="whatsThis">
+             <string>&lt;p&gt;A value in the range [0, 100]. In past Bethesda titles, it determined how often an actor would move to a new location while executing a &quot;Sandbox&quot; AI package. Its current function is unknown; it may be unused.&lt;/p&gt;
+&lt;p&gt;Games before Skyrim had a very limited system for defining NPC schedules: there were a fixed set of hardcoded behaviors (ambush, eat, sandbox, etc.), and each AI package consisted of a single behavior and a very, very limited set of options — mostly just on/off toggles. Skyrim expanded the AI system, turning these hardcoded behaviors into &quot;procedures,&quot; allowing a package to use several procedures at a time, and allowing procedures to take more options.&lt;/p&gt;
+&lt;p&gt;In past games, the hardcoded &quot;sandbox&quot; behavior checked an actor's energy value. In Skyrim, &quot;Energy&quot; is now an option that can be passed to the &quot;Sandbox&quot; procedure, and there doesn't appear to be a way to tell the procedure to use the actor's energy value.&lt;/p&gt;</string>
+            </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
             <property name="maximum">
-             <number>255</number>
+             <number>100</number>
             </property>
            </widget>
           </item>
           <item row="2" column="1">
-           <widget class="DKFormPicker" name="giftFilter"/>
+           <widget class="DKFormPicker" name="giftFilter">
+            <property name="whatsThis">
+             <string>&lt;p&gt;This isn't used by the game engine. However, you can access it from a Papyrus script using &lt;code&gt;myActor.GetGiftFilter()&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Skyrim allows Papyrus scripts to open a &quot;gift menu&quot; on an actor, which lets the player give items to the actor. For example, a script could be attached to a &quot;feed your pet&quot; dialogue option to let the player give their pet a food item. Bethesda seems to have originally intended for an actor's Gift Filter to limit what items the player can give them. However, they later modified the script engine so that the script itself chooses what filter to use. This is more flexible: it means that &quot;feed your pet&quot; and &quot;give your pet a toy&quot; can be separate dialogue options, with separate gift filters, on the same actor.&lt;/p&gt;</string>
+            </property>
+           </widget>
           </item>
           <item row="0" column="1">
            <widget class="QComboBox" name="mood">
@@ -1425,6 +1450,9 @@
           </item>
           <item row="2" column="1">
            <widget class="QComboBox" name="assistance">
+            <property name="whatsThis">
+             <string>This option controls whether the actor will assist nearby actors that enter combat, based on the relationships it has with those actors.</string>
+            </property>
             <property name="sizeAdjustPolicy">
              <enum>QComboBox::AdjustToContents</enum>
             </property>
@@ -1740,6 +1768,15 @@
          <layout class="QHBoxLayout" name="horizontalLayout_6">
           <item>
            <widget class="DKFormListPane" name="packages">
+            <property name="whatsThis">
+             <string>&lt;p&gt;If an actor is not in combat or a similar interrupt state, they will periodically evaluate their AI packages and decide what to do. They'll search through all of their AI packages and execute the first package they find whose conditions are met. They check the following lists of packages, from top to bottom:&lt;/p&gt;
+&lt;ul&gt;
+   &lt;li&gt;&lt;p&gt;Packages associated with any Quest Aliases that refer to the actor. Higher-priority quests have their aliases' packages checked first.&lt;/p&gt;&lt;/li&gt;
+   &lt;li&gt;&lt;p&gt;Actor-specific packages (this listview).&lt;/p&gt;&lt;/li&gt;
+   &lt;li&gt;&lt;p&gt;The actor's Default Package List (below).&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;If there are no usable packages, then the actor will just stand around doing nothing.&lt;/p&gt;</string>
+            </property>
             <property name="showFormTypes">
              <bool>false</bool>
             </property>
@@ -1801,14 +1838,14 @@
           <item row="3" column="1">
            <widget class="DKFormPicker" name="packageListSpectator">
             <property name="whatsThis">
-             <string>Actors who witness combat without participating in it become spectators. They'll suspend their normal AI behavior and execute the first usable package in this list; if no packages in this list are usable, then they'll fall back to hardcoded spectator behavior (usually fleeing).</string>
+             <string>Actors who witness combat without participating in it become spectators. They'll suspend their normal AI behavior and execute the first usable package in this list. If no packages in this list are usable, then they'll fall back to hardcoded spectator behavior (usually fleeing).</string>
             </property>
            </widget>
           </item>
           <item row="4" column="1">
            <widget class="DKFormPicker" name="packageListObserveCorpse">
             <property name="whatsThis">
-             <string>Actors who discover a dead body will suspend their normal AI behavior and execute the first usable package in this list; if no packages in this list are usable, then they'll fall back to hardcoded behavior (usually approaching and inspecting the corpse).</string>
+             <string>Actors who discover a dead body will suspend their normal AI behavior and execute the first usable package in this list. If no packages in this list are usable, then they'll fall back to hardcoded behavior (usually approaching and inspecting the corpse).</string>
             </property>
            </widget>
           </item>
@@ -1822,7 +1859,7 @@
           <item row="5" column="1">
            <widget class="DKFormPicker" name="packageListGuardWarn">
             <property name="whatsThis">
-             <string>Actors who are running a Guard package and enter the Warn behavior will execute the first usable package in this list; if no packages in this list are usable, then they'll fall back to the default Warn behavior.</string>
+             <string>Actors who are running a Guard package and enter the Warn behavior will execute the first usable package in this list. If no packages in this list are usable, then they'll fall back to the default Warn behavior.</string>
             </property>
            </widget>
           </item>
@@ -2056,7 +2093,12 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_8">
           <item>
-           <widget class="DKFormListPane" name="perks"/>
+           <widget class="DKFormListPane" name="perks">
+            <property name="whatsThis">
+             <string>&lt;p&gt;The perks that this actor has.&lt;/p&gt;
+&lt;p&gt;Papyrus can be used to add or remove the player's perks, but not NPCs' perks; those are set in stone. If an NPC needs to be given a perk during play, you'll need to make it so that the NPC always has the perk (by adding it to this list), and then use conditions on the perk's entry points to limit when the perk actually does anything.&lt;/p&gt;</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -2091,10 +2133,18 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="DKFormPicker" name="inheritSoundsFrom"/>
+          <widget class="DKFormPicker" name="inheritSoundsFrom">
+           <property name="whatsThis">
+            <string>&lt;p&gt;Actors can define their own creature sounds, or they can inherit creature sounds from another actor. You can specify an actor to inherit sounds from here. Alternatively, if you're using a template actor and have &quot;Use Traits&quot; enabled, creature sounds will be inherited from the template actor.&lt;/p&gt;
+&lt;p&gt;If you select an actor here, you can only select one that does not, itself, inherit creature sounds.&lt;/p&gt;</string>
+           </property>
+          </widget>
          </item>
          <item row="0" column="1">
           <widget class="QComboBox" name="soundLevel">
+           <property name="whatsThis">
+            <string>This influences the effect that creature sounds have on stealth and detection. It does not affect the actual volume of the sounds.</string>
+           </property>
            <property name="currentIndex">
             <number>1</number>
            </property>
@@ -2186,6 +2236,23 @@
             </item>
             <item>
              <widget class="QComboBox" name="currentCreaSoundType">
+              <property name="whatsThis">
+               <string>&lt;p&gt;These types appear to be (mostly) the same as were available in &lt;i&gt;Fallout 3&lt;/i&gt; and &lt;i&gt;Fallout: New Vegas&lt;/i&gt;. In those games, they had the following functionality:&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;&lt;b&gt;Attack&lt;/b&gt;&lt;/dt&gt;
+   &lt;dt&gt;&lt;b&gt;Aware&lt;/b&gt;&lt;/dt&gt;
+   &lt;dt&gt;&lt;b&gt;Death&lt;/b&gt;&lt;/dt&gt;
+   &lt;dt&gt;&lt;b&gt;Hit&lt;/b&gt;&lt;/dt&gt;
+   &lt;dt&gt;&lt;b&gt;Idle&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The sound is played &quot;when the corresponding enum notetrack is called in the creature's animation.&quot;&lt;/p&gt;
+   &lt;dt&gt;&lt;b&gt;Weapon&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Unknown. This didn't exist in &lt;i&gt;Fallout&lt;/i&gt;.&lt;/p&gt;
+   &lt;dt&gt;&lt;b&gt;Conscious Loop&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The sound is played for as long as the creature is alive. The chance to play must be set to 100%, and the sound must be set to loop.&lt;/p&gt;
+   &lt;dt&gt;&lt;b&gt;Movement Loop&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The sound is played while the creature is moving. The chance to play must be set to 100%, and the sound must be set to loop.&lt;/p&gt;
+&lt;/dl&gt;</string>
+              </property>
               <item>
                <property name="text">
                 <string>Idle</string>
@@ -2256,6 +2323,9 @@
             </item>
             <item>
              <widget class="QSpinBox" name="currentCreaSoundChance">
+              <property name="whatsThis">
+               <string>For sounds that are keyed to the creature's animations, this controls the likelihood that the sound will play each time the appropriate point in the animation is reached. This can be used to prevent excessive noise, for animations that play constantly or very frequently.</string>
+              </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
               </property>

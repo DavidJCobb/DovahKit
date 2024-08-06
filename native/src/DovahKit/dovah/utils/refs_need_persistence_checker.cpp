@@ -1,6 +1,7 @@
 #include "./refs_need_persistence_checker.h"
 #include <cassert>
 #include <stdexcept>
+#include "../data/hardcoded_form_ids.h"
 #include "../files/file_load_order.h"
 #include "../form_stub.h"
 #include "../form_stub_helpers.h"

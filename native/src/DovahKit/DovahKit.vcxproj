@@ -176,6 +176,7 @@
     <ClCompile Include="dovah\utils\leveled_list_preview.cpp" />
     <ClCompile Include="dovah\utils\refs_need_persistence_checker.cpp" />
     <ClCompile Include="editor\helpers\backend_error_to_string.cpp" />
+    <ClCompile Include="editor\helpers\face_fx_phoneme_name.cpp" />
     <ClCompile Include="editor\helpers\form_stub_drag_drop.cpp" />
     <ClCompile Include="editor\helpers\backend_warning_to_string.cpp" />
     <ClCompile Include="editor\helpers\skill_name_to_string.cpp" />
@@ -985,6 +986,7 @@
     <ClInclude Include="dovah\data\conditions\parameter_underlying_type.h" />
     <ClInclude Include="dovah\data\conditions\run_on_type.h" />
     <ClInclude Include="dovah\data\face_fx\phonemes.h" />
+    <ClInclude Include="dovah\data\hardcoded_form_ids.h" />
     <ClInclude Include="dovah\data\sex.h" />
     <ClInclude Include="dovah\data\skills.h" />
     <ClInclude Include="dovah\exceptions\default_object_assign_failed.h" />
@@ -1133,6 +1135,7 @@
     <ClInclude Include="dovah\utils\data_by_sex.h" />
     <ClInclude Include="dovah\utils\leveled_list_preview.h" />
     <ClInclude Include="editor\helpers\backend_error_to_string.h" />
+    <ClInclude Include="editor\helpers\face_fx_phoneme_name.h" />
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
     <QtMoc Include="widgets\widget-models\DKLeveledListPreviewModel.h" />
