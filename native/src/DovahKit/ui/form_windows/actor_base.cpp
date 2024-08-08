@@ -13,6 +13,8 @@
 #include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/forms/Class.h"
 #include "dovah/forms/Outfit.h"
+#include "dovah/forms/Race.h"
+#include "dovah/utils/compute_classed_stat_points.h"
 
 #include "widgets/widget-data/DKFormPickerCustomFilter.h"
 #include "widgets/DKHeaderView.h"
@@ -27,8 +29,6 @@
 #include "./shared/FaceBaseHeadPartsModel.h"
 #include "./shared/FaceExtraHeadPartsModel.h"
 #include "./shared/HeadPartPickerFilter.h"
-
-#include "dovah/forms/Race.h"
 
 namespace {
    constexpr const bool we_are_not_done_but_just_let_me_compile_for_now =
@@ -985,89 +985,64 @@ void FormDialogActorBase::_on_effective_level_changed() {
 void FormDialogActorBase::_recalc_attributes() {
    auto level = _get_effective_level();
 
-   size_t total_points = 0; // iAVDhmsLevelUp * level
-   float  health_bonus = 0; // fNPCHealthLevelBonus * level, if actor is not the player
+   dovah::loaded_form_ptr<dovah::loaded_forms::Class> loaded_class;
+   dovah::loaded_form_ptr<dovah::loaded_forms::Race>  loaded_race;
+   if (auto* stub = this->form->stats.combat_class.get_form_stub())
+      loaded_class = stub->load().ptr_cast<dovah::loaded_forms::Class>();
+   if (auto* stub = this->form->race.get_form_stub())
+      loaded_race = stub->load().ptr_cast<dovah::loaded_forms::Race>();
+
+   float health_bonus = 0;
    {
       auto& gss = dovahkit::subsystems::game_settings::core::get();
 
-      total_points = 10;
-      {
-         auto variant = gss.get_setting_value("iAVDhmsLevelUp");
-         if (std::holds_alternative<int32_t>(variant))
-            total_points = std::get<int32_t>(variant);
-      }
-
-      if (this->formStub()->formID != dovah::hardcoded_form_ids::Player) {
+      dovahkit::subsystems::game_settings::game_setting_value variant;
+      if (this->formStub()->formID == dovah::hardcoded_form_ids::Player) {
+         health_bonus = 0;
+         variant = gss.get_setting_value("fPCHealthLevelBonus");
+      } else {
          health_bonus = 5;
-
-         auto variant = gss.get_setting_value("fNPCHealthLevelBonus");
-         if (std::holds_alternative<float>(variant))
-            health_bonus = std::get<float>(variant);
+         variant = gss.get_setting_value("fNPCHealthLevelBonus");
       }
+      if (std::holds_alternative<float>(variant))
+         health_bonus = std::get<float>(variant);
 
-      total_points *= (level - 1);
       health_bonus *= (level - 1);
    }
 
-   std::array<size_t, 3> weights = { 1, 1, 1 };
-   size_t total_weight = 3;
-   if (auto* stub = this->form->stats.combat_class.get_form_stub()) {
-      if (auto loaded = stub->load().ptr_cast<dovah::loaded_forms::Class>()) {
-         weights[0] = loaded->attribute_weights.health;
-         weights[1] = loaded->attribute_weights.magicka;
-         weights[2] = loaded->attribute_weights.stamina;
-         total_weight = weights[0] + weights[1] + weights[2];
-      }
+   std::array<float, 3> attributes;
+   {
+      auto results = dovah::compute_classed_stat_points(
+         this->formStub()->get_owning_load_order(),
+         loaded_class,
+         loaded_race,
+         level
+      );
+
+      auto& src = results.attribute_points.list;
+      for (size_t i = 0; i < attributes.size(); ++i)
+         attributes[i] = (float)src[i];
+
+      attributes[0] += health_bonus;
    }
    //
-   std::array<size_t, 3> attribute_order = { 0, 1, 2 };
-   std::stable_sort(attribute_order.begin(), attribute_order.end(), [&weights](size_t a, size_t b) {
-      return weights[a] > weights[b];
-   });
+   // Clamp the values, since they do get serialized into the ActorBase.
+   //
+   for (auto& item : attributes)
+      item = std::min(item, (float) std::numeric_limits<uint16_t>::max());
 
-   std::array<float, 3> results = { 0 };
-   {  // Compute attribute increases from the Class.
-      size_t remaining = total_points;
-      for (size_t i = 0; i < attribute_order.size() - 1; ++i) {
-         auto  attribute_index = attribute_order[i];
-
-         float factor = (float)weights[attribute_index] / total_weight;
-         int   result = total_points * factor;
-         //
-         results[attribute_index] = result;
-         remaining -= result;
-      }
-      auto attribute_index = attribute_order.back();
-      results[attribute_index] = remaining;
-   }
-   results[0] += health_bonus;
-
-   // Apply attribute base values from the Race.
-   if (auto* stub = this->form->race.get_form_stub()) {
-      auto loaded = stub->load().ptr_cast<dovah::loaded_forms::Race>();
-      if (loaded) {
-         results[0] += loaded->stats.attribute_base.health;
-         results[1] += loaded->stats.attribute_base.magicka;
-         results[2] += loaded->stats.attribute_base.stamina;
-      }
-   }
-
-   // Clamp the values, since for whatever reason they get serialized into the ActorBase.
-   for (auto& item : results)
-      item = std::min(item, (float) std::numeric_limits<uint16_t>::max()); // clamp to max value for safe storage (not sure if the game or CK do this though)
-
-   this->form->stats.base.health  = results[0];
-   this->form->stats.base.magicka = results[1];
-   this->form->stats.base.stamina = results[2];
-   this->ui.statsHealthBase->setValue(results[0]);
-   this->ui.statsMagickaBase->setValue(results[1]);
-   this->ui.statsStaminaBase->setValue(results[2]);
-   results[0] += this->ui.statsHealthOffset->value();
-   results[1] += this->ui.statsMagickaOffset->value();
-   results[2] += this->ui.statsStaminaOffset->value();
-   this->ui.statsHealthCalcFinal->setValue(results[0]);
-   this->ui.statsMagickaCalcFinal->setValue(results[1]);
-   this->ui.statsStaminaCalcFinal->setValue(results[2]);
+   this->form->stats.base.health  = attributes[0];
+   this->form->stats.base.magicka = attributes[1];
+   this->form->stats.base.stamina = attributes[2];
+   this->ui.statsHealthBase->setValue(attributes[0]);
+   this->ui.statsMagickaBase->setValue(attributes[1]);
+   this->ui.statsStaminaBase->setValue(attributes[2]);
+   attributes[0] += this->ui.statsHealthOffset->value();
+   attributes[1] += this->ui.statsMagickaOffset->value();
+   attributes[2] += this->ui.statsStaminaOffset->value();
+   this->ui.statsHealthCalcFinal->setValue(attributes[0]);
+   this->ui.statsMagickaCalcFinal->setValue(attributes[1]);
+   this->ui.statsStaminaCalcFinal->setValue(attributes[2]);
 }
 
 void FormDialogActorBase::_pull_faction_to_ui() {

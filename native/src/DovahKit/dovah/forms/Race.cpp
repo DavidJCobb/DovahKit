@@ -111,13 +111,16 @@ namespace dovah::loaded_forms {
 
                      subrecord.read(skill_index);
                      subrecord.read(skill_boost);
-                     if (skill_index >= skill_count && skill_index != -1) {
-                        specific_load_warnings::invalid_boosted_skill notice(
-                           this->stub,
-                           skill_index,
-                           i
-                        );
-                        intfc.log_load_warning(notice);
+                     if (skill_index != -1) {
+                        skill_index -= first_skill_actor_value_index;
+                        if (skill_index >= skill_count) {
+                           specific_load_warnings::invalid_boosted_skill notice(
+                              this->stub,
+                              skill_index,
+                              i
+                           );
+                           intfc.log_load_warning(notice);
+                        }
                      }
 
                      if (skill_index == -1) {
@@ -250,6 +253,11 @@ namespace dovah::loaded_forms {
                case 'RNAM':
                   if (subrecord.read(this->armor_race)) {
                      intfc.warn_if_ref_is_wrong_type(this->armor_race, form_type::race, subrecord.signature());
+                  }
+                  break;
+               case 'UNES':
+                  if (auto& dst = this->equipment.unarmed_equip_slot; subrecord.read(dst)) {
+                     intfc.warn_if_ref_is_wrong_type(dst, form_type::equip_slot, subrecord.signature());
                   }
                   break;
             #pragma endregion
@@ -557,7 +565,7 @@ namespace dovah::loaded_forms {
                            }
                            auto& preset = tint.presets[i];
                            if (subrecord.read(preset.color)) {
-                              intfc.warn_if_ref_is_wrong_type(form_id, form_type::head_part, subrecord.signature());
+                              intfc.warn_if_ref_is_wrong_type(form_id, form_type::color, subrecord.signature());
                            }
                         }
                         ++current_tint_preset_color;
@@ -1145,7 +1153,13 @@ namespace dovah::loaded_forms {
                continue;
             }
             auto& dst = dst_opt.value();
-            DATA.write((int8_t)dst.skill);
+            int8_t skill_index = (int8_t)dst.skill;
+            if (skill_index >= 0) {
+               skill_index += first_skill_actor_value_index;
+            } else {
+               skill_index = -1;
+            }
+            DATA.write(skill_index);
             DATA.write(dst.boost);
          }
          DATA.skip_bytes(2);

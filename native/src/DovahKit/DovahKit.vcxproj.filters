@@ -2502,6 +2502,9 @@
     <ClCompile Include="editor\helpers\face_fx_phoneme_name.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\utils\compute_classed_stat_points.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6435,6 +6438,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\helpers\face_fx_phoneme_name.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\compute_classed_stat_points.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

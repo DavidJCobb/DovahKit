@@ -21,12 +21,18 @@ namespace dovah::loaded_forms {
             dovah::skill skill     = dovah::skill::one_handed;
             uint8_t      max_level = 0; // 0 means this isn't a skill trainer
          } training;
-         struct {
-            uint8_t health  = 0;
-            uint8_t magicka = 0;
-            uint8_t stamina = 0;
-            uint8_t unknown = 0; // possibly padding; need to verify
+         union _ {
+            ~_() { list.~array(); }
+
+            std::array<uint8_t, 4> list = { 0 };
+            struct {
+               uint8_t health;
+               uint8_t magicka;
+               uint8_t stamina;
+               uint8_t unknown; // possibly padding; need to verify
+            };
          } attribute_weights;
+
          std::array<uint8_t, dovah::skill_count> skill_weights = { 0 }; // indices are `dovah::skill` values
          float    bleedout_default = 0;
          int32_t  voice_points     = 0;
