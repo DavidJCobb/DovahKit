@@ -31,7 +31,7 @@ namespace dovah {
             },
             desired_gmst{
                skill_points_per_level_up,
-               "iAVDSkiiAVDSkillsLevelUpllStart"
+               "iAVDSkillsLevelUp"
             },
             desired_gmst{
                max_points_per_skill,
@@ -88,7 +88,7 @@ namespace dovah {
       // First: the base value of each skill and attribute.
       //
       if (skill_points_base > 0) {
-         for (auto& dst : result.skill_points)
+         for (auto& dst : result.skill_points.base)
             dst += skill_points_base;
       }
       if (race) {
@@ -97,12 +97,15 @@ namespace dovah {
                continue;
             auto& skill = skill_opt.value();
             auto  index = (size_t)skill.skill;
-            if (index < result.skill_points.size())
-               result.skill_points[index] += skill.boost;
+            if (index < result.skill_points.base.size())
+               result.skill_points.base[index] += skill.boost;
          }
-         result.attribute_points.h = race->stats.attribute_base.health;
-         result.attribute_points.m = race->stats.attribute_base.magicka;
-         result.attribute_points.s = race->stats.attribute_base.stamina;
+         result.attribute_points.base.h = race->stats.attribute_base.health;
+         result.attribute_points.base.m = race->stats.attribute_base.magicka;
+         result.attribute_points.base.s = race->stats.attribute_base.stamina;
+
+         result.attribute_points.calculated = result.attribute_points.base;
+         result.skill_points.calculated = result.skill_points.base;
       }
       //
       // Let's real quick handle the level.
@@ -162,7 +165,7 @@ namespace dovah {
             for (auto& item : skills) {
                if (item.weight == 0)
                   continue;
-               auto&    dst    = result.skill_points[(size_t)item.skill];
+               auto&    dst    = result.skill_points.calculated[(size_t)item.skill];
                uint32_t points = wholes_per_weight * item.weight;
                points_lost_to_cap += _increase_stat(dst, points);
             }
@@ -175,7 +178,7 @@ namespace dovah {
             bool failed = true;
             while (points_lost_to_cap > 0 && num_skills_maxed < skill_count) {
                for (auto& item : skills) {
-                  auto& dst = result.skill_points[(size_t)item.skill];
+                  auto& dst = result.skill_points.calculated[(size_t)item.skill];
                   if (dst >= max_points_per_skill)
                      continue;
 
@@ -221,7 +224,7 @@ namespace dovah {
          while (points_lost_to_truncation > 0) {
             bool failed = true;
             for (auto& item : skills) {
-               auto& dst = result.skill_points[(size_t)item.skill];
+               auto& dst = result.skill_points.calculated[(size_t)item.skill];
                if (item.weight <= 0)
                   continue;
                --item.weight;
@@ -273,7 +276,7 @@ namespace dovah {
             for (auto& item : attributes) {
                if (item.weight == 0)
                   continue;
-               auto&    dst    = result.attribute_points.list[item.id];
+               auto&    dst    = result.attribute_points.calculated.list[item.id];
                uint32_t points = wholes_per_weight * item.weight;
                dst += points;
             }
@@ -286,7 +289,7 @@ namespace dovah {
          while (points_lost_to_truncation > 0) {
             bool failed = true;
             for (auto& item : attributes) {
-               auto& dst = result.attribute_points.list[item.id];
+               auto& dst = result.attribute_points.calculated.list[item.id];
                if (item.weight <= 0)
                   continue;
                --item.weight;

@@ -132,31 +132,31 @@ namespace dovah::loaded_forms {
                if (record.version() < 0x1D) {
                   if (subrecord.is_in_bounds(0x1C)) {
                      subrecord.unchecked_read(this->actor_flags);
-                     subrecord.unchecked_read(this->stats.offsets.magicka);
-                     subrecord.unchecked_read(this->stats.offsets.stamina);
-                     subrecord.skip_bytes(2);                                   // 08
-                     subrecord.unchecked_read(this->stats.level);          // 0A -> 08
-                     subrecord.unchecked_read(this->stats.calc_min_level); // 0C -> 0A
-                     subrecord.unchecked_read(this->stats.calc_max_level); // 0E -> 0C
-                     subrecord.unchecked_read(this->stats.speed_mult);     // 10 -> 0E
-                     subrecord.unchecked_read(this->stats.disposition);    // 12 -> 10
-                     subrecord.unchecked_read(this->template_data.flags); // 14 -> 12
-                     subrecord.unchecked_read(this->stats.offsets.health);  // 16 -> 14
-                     subrecord.unchecked_read(this->stats.bleedout_threshold); // 18 -> 16
+                     subrecord.unchecked_read(this->stats.attributes.offsets.magicka);
+                     subrecord.unchecked_read(this->stats.attributes.offsets.stamina);
+                     subrecord.skip_bytes(2);                                   // 08 // Offsets here differ by form version
+                     subrecord.unchecked_read(this->stats.level);               // 0A -> 08
+                     subrecord.unchecked_read(this->stats.calc_min_level);      // 0C -> 0A
+                     subrecord.unchecked_read(this->stats.calc_max_level);      // 0E -> 0C
+                     subrecord.unchecked_read(this->stats.speed_mult);          // 10 -> 0E
+                     subrecord.unchecked_read(this->stats.disposition);         // 12 -> 10
+                     subrecord.unchecked_read(this->template_data.flags);       // 14 -> 12
+                     subrecord.unchecked_read(this->stats.attributes.offsets.health); // 16 -> 14
+                     subrecord.unchecked_read(this->stats.bleedout_threshold);  // 18 -> 16
                   }
                   break;
                }
                if (subrecord.is_in_bounds(0x18)) {
                   subrecord.unchecked_read(this->actor_flags);
-                  subrecord.unchecked_read(this->stats.offsets.magicka);
-                  subrecord.unchecked_read(this->stats.offsets.stamina);
+                  subrecord.unchecked_read(this->stats.attributes.offsets.magicka);
+                  subrecord.unchecked_read(this->stats.attributes.offsets.stamina);
                   subrecord.unchecked_read(this->stats.level);
                   subrecord.unchecked_read(this->stats.calc_min_level);
                   subrecord.unchecked_read(this->stats.calc_max_level);
                   subrecord.unchecked_read(this->stats.speed_mult);
                   subrecord.unchecked_read(this->stats.disposition);
                   subrecord.unchecked_read(this->template_data.flags);
-                  subrecord.unchecked_read(this->stats.offsets.health);
+                  subrecord.unchecked_read(this->stats.attributes.offsets.health);
                   subrecord.unchecked_read(this->stats.bleedout_threshold);
                }
                break;
@@ -246,13 +246,13 @@ namespace dovah::loaded_forms {
                break;
             case 'DNAM':
                if (subrecord.is_in_bounds(0x34)) {
-                  for (auto& byte : this->stats.base.skills.list)
+                  for (auto& byte : this->stats.skills.calculated.list)
                      subrecord.unchecked_read(byte);
-                  for (auto& byte : this->stats.offsets.skills.list)
+                  for (auto& byte : this->stats.skills.offsets.list)
                      subrecord.unchecked_read(byte);
-                  subrecord.unchecked_read(this->stats.base.health);
-                  subrecord.unchecked_read(this->stats.base.magicka);
-                  subrecord.unchecked_read(this->stats.base.stamina);
+                  subrecord.unchecked_read(this->stats.attributes.calculated.health);
+                  subrecord.unchecked_read(this->stats.attributes.calculated.magicka);
+                  subrecord.unchecked_read(this->stats.attributes.calculated.stamina);
                   subrecord.skip_bytes(2);
                   subrecord.unchecked_read(this->far_away.distance);
                   subrecord.unchecked_read(this->geared_up_weapons);
@@ -687,8 +687,8 @@ namespace dovah::loaded_forms {
       {
          auto& src = this->stats;
          auto& dst = copy->stats;
-         dst.base    = src.base;
-         dst.offsets = src.offsets;
+         dst.attributes = src.attributes;
+         dst.skills     = src.skills;
          dst.level              = src.level;
          dst.calc_min_level     = src.calc_min_level;
          dst.calc_max_level     = src.calc_max_level;
@@ -733,8 +733,8 @@ namespace dovah::loaded_forms {
          auto& ACBS = record.open_next_subrecord('ACBS');
          if (record.version() < 0x1D) {
             ACBS.write(this->actor_flags);
-            ACBS.write(this->stats.offsets.magicka);
-            ACBS.write(this->stats.offsets.stamina);
+            ACBS.write(this->stats.attributes.offsets.magicka);
+            ACBS.write(this->stats.attributes.offsets.stamina);
             ACBS.skip_bytes(2);                                   // 08
             ACBS.write(this->stats.level);          // 0A -> 08
             ACBS.write(this->stats.calc_min_level); // 0C -> 0A
@@ -742,19 +742,19 @@ namespace dovah::loaded_forms {
             ACBS.write(this->stats.speed_mult);     // 10 -> 0E
             ACBS.write(this->stats.disposition);    // 12 -> 10
             ACBS.write(this->template_data.flags); // 14 -> 12
-            ACBS.write(this->stats.offsets.health);  // 16 -> 14
+            ACBS.write(this->stats.attributes.offsets.health);  // 16 -> 14
             ACBS.write(this->stats.bleedout_threshold); // 18 -> 16
          } else {
             ACBS.write(this->actor_flags);
-            ACBS.write(this->stats.offsets.magicka);
-            ACBS.write(this->stats.offsets.stamina);
+            ACBS.write(this->stats.attributes.offsets.magicka);
+            ACBS.write(this->stats.attributes.offsets.stamina);
             ACBS.write(this->stats.level);
             ACBS.write(this->stats.calc_min_level);
             ACBS.write(this->stats.calc_max_level);
             ACBS.write(this->stats.speed_mult);
             ACBS.write(this->stats.disposition);
             ACBS.write(this->template_data.flags);
-            ACBS.write(this->stats.offsets.health);
+            ACBS.write(this->stats.attributes.offsets.health);
             ACBS.write(this->stats.bleedout_threshold);
          }
          ACBS.close();
@@ -833,13 +833,13 @@ namespace dovah::loaded_forms {
       }
       {
          auto& DNAM = record.open_next_subrecord('DNAM');
-         for (auto& byte : this->stats.base.skills.list)
+         for (auto& byte : this->stats.skills.calculated.list)
             DNAM.write(byte);
-         for (auto& byte : this->stats.offsets.skills.list)
+         for (auto& byte : this->stats.skills.offsets.list)
             DNAM.write(byte);
-         DNAM.write(this->stats.base.health);
-         DNAM.write(this->stats.base.magicka);
-         DNAM.write(this->stats.base.stamina);
+         DNAM.write(this->stats.attributes.calculated.health);
+         DNAM.write(this->stats.attributes.calculated.magicka);
+         DNAM.write(this->stats.attributes.calculated.stamina);
          DNAM.skip_bytes(2);
          DNAM.write(this->far_away.distance);
          DNAM.write(this->geared_up_weapons);
@@ -1064,9 +1064,7 @@ namespace dovah::loaded_forms {
       }
       {
          auto& dst = this->stats;
-         dst.base    = {};
-         dst.offsets = {};
-         dst.level   = 1;
+         dst.level          = 1;
          dst.calc_min_level = 0;
          dst.calc_max_level = 0;
          dst.speed_mult     = 0;
@@ -1075,8 +1073,10 @@ namespace dovah::loaded_forms {
          dst.combat_class.set(*this, nullptr);
          dst.combat_style.set(*this, nullptr);
          //
-         for (auto& skill : dst.base.skills.list)
-            skill = 5;
+         dst.attributes = {};
+         dst.skills     = {};
+         for (auto& skill : dst.skills.calculated.list)
+            skill = 5; // TODO: use GMST iAVDSkillStart
       }
       this->template_data.actor.set(*this, nullptr);
       this->template_data.flags = 0;

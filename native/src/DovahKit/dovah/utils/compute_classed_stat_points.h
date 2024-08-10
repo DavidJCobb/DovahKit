@@ -14,24 +14,32 @@ namespace dovah {
 
 namespace dovah {
    struct classed_stat_points {
-      using value_type = uint32_t;
+      public:
+         using value_type = uint32_t;
 
-      std::array<value_type, skill_count> skill_points = { 0 };
-      union _ {
-         ~_() { list.~array(); }
+         union attribute_trio {
+            std::array<value_type, 3> list = { 0 };
+            struct {
+               value_type health;
+               value_type magicka;
+               value_type stamina;
+            };
+            struct {
+               value_type h;
+               value_type m;
+               value_type s;
+            };
+         };
 
-         std::array<value_type, 3> list = { 0 };
+      public:
          struct {
-            value_type health;
-            value_type magicka;
-            value_type stamina;
-         };
+            attribute_trio base;
+            attribute_trio calculated;
+         } attribute_points;
          struct {
-            value_type h;
-            value_type m;
-            value_type s;
-         };
-      } attribute_points;
+            std::array<value_type, skill_count> base       = { 0 };
+            std::array<value_type, skill_count> calculated = { 0 };
+         } skill_points;
    };
 
    //

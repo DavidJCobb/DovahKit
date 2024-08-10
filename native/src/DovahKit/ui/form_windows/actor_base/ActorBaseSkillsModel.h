@@ -4,6 +4,7 @@
 #include <optional>
 #include <QAbstractItemModel>
 #include "dovah/data/skills.h"
+#include "dovah/utils/compute_classed_stat_points.h"
 
 namespace dovah {
    class form_stub;
@@ -11,6 +12,10 @@ namespace dovah {
 
 class ActorBaseSkillsModel final : public QAbstractItemModel {
    Q_OBJECT;
+   public:
+      using skill_value_type  = uint8_t; // should match ActorBase
+      using skill_value_array = std::array<skill_value_type, dovah::skill_count>;
+
    public:
       ActorBaseSkillsModel(QObject* parent);
       
@@ -29,36 +34,18 @@ class ActorBaseSkillsModel final : public QAbstractItemModel {
          virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
       #pragma endregion
 
-      void setClass(dovah::form_stub*);
-      void setLevel(uint32_t);
-      void setRace(dovah::form_stub*);
-      void setSkillOffset(dovah::skill, uint8_t);
+      void setAllData(const skill_value_array& skill_offsets, const skill_value_array& computed_skills);
       void setOffsetsUsed(bool);
-
-      constexpr uint8_t offsetOf(dovah::skill s) const noexcept {
-         if ((size_t)s >= this->_state.skills.size())
-            return 0;
-         return this->_state.skills[(size_t)s].offset;
-      }
+      std::optional<dovah::skill> skillAtRow(int) const;
 
    protected:
       struct SkillInfo {
-         uintmax_t computed = 0;
-         uint8_t   offset = 0;
-      };
-      struct SkillBonus {
-         dovah::skill skill;
-         uint8_t      bonus = 0;
+         uint8_t computed = 0;
+         uint8_t offset   = 0;
       };
 
       struct {
-         dovah::form_stub* class_form    = nullptr;
-         uint32_t          level         = 0;
-         bool              using_offsets = false;
-
-         std::array<std::optional<SkillBonus>, 7>  racial_bonuses;
+         bool using_offsets = false;
          std::array<SkillInfo, dovah::skill_count> skills;
       } _state;
-
-      void _recalcStats();
 };

@@ -11,12 +11,6 @@
 #include "dovah/forms/Race.h"
 
 ActorBaseSkillsModel::ActorBaseSkillsModel(QObject* parent) : QAbstractItemModel(parent) {
-   auto& gss = dovahkit::subsystems::game_settings::core::get();
-   QObject::connect(&gss, &std::decay_t<decltype(gss)>::settingValueChanged, this, [this](const char* name) {
-      if (_strnicmp(name, "iAVDSkillsLevelUp", cobb::strlen("iAVDSkillsLevelUp")) != 0)
-         return;
-      this->_recalcStats();
-   });
 }
       
 #pragma region QAbstractItemModel overrides
@@ -135,58 +129,22 @@ ActorBaseSkillsModel::ActorBaseSkillsModel(QObject* parent) : QAbstractItemModel
          return {};
       }
 #pragma endregion
-
-void ActorBaseSkillsModel::setClass(dovah::form_stub* stub) {
-   if (stub == this->_state.class_form)
-      return;
-   this->_state.class_form = stub;
-   this->_recalcStats();
-}
-void ActorBaseSkillsModel::setLevel(uint32_t level) {
-   if (this->_state.level == level)
-      return;
-   this->_state.level = level;
-   this->_recalcStats();
-}
-void ActorBaseSkillsModel::setRace(dovah::form_stub* stub) {
-   if (stub && stub->form_type != dovah::form_type::race)
-      return;
-   this->_state.racial_bonuses = {};
-   if (stub) {
-      auto loaded = stub->load().ptr_cast<dovah::loaded_forms::Race>();
-      if (loaded) {
-         static_assert(
-            std::tuple_size_v<decltype(decltype(dovah::loaded_forms::Race::stats)::skill_boosts)> == std::tuple_size_v<decltype(this->_state.racial_bonuses)>,
-            "Ensure we have room for all of the racial bonuses in a Race form!"
-         );
-
-         for(size_t i = 0; i < loaded->stats.skill_boosts.size(); ++i) {
-            auto& src = loaded->stats.skill_boosts[i];
-            auto& dst = this->_state.racial_bonuses[i];
-            if (!src.has_value()) {
-               dst = {};
-               continue;
-            }
-            dst.emplace();
-            dst.value().skill = src.value().skill;
-            dst.value().bonus = src.value().boost;
-         }
-      }
+      
+void ActorBaseSkillsModel::setAllData(const skill_value_array& skill_offsets, const skill_value_array& computed_skills) {
+   for (size_t i = 0; i < dovah::skill_count; ++i) {
+      auto& dst   = this->_state.skills[i];
+      auto  value = (unsigned int)skill_offsets[i] + (unsigned int)computed_skills[i];
+      //
+      dst.offset   = skill_offsets[i];
+      dst.computed = std::min<unsigned int>(value, std::numeric_limits<skill_value_type>::max());
    }
-   this->_recalcStats();
-}
-void ActorBaseSkillsModel::setSkillOffset(dovah::skill skill, uint8_t offset) {
-   if ((size_t)skill >= this->_state.skills.size())
-      return;
-   auto& dst = this->_state.skills[(size_t)skill];
-   if (dst.offset == offset)
-      return;
-   dst.offset = offset;
-   this->_recalcStats();
-   if (this->_state.using_offsets) {
-      auto qmi = this->index((size_t)skill, 0, {});
-      emit dataChanged(qmi, qmi);
-   }
+   
+   int col = 1;
+   if (this->_state.using_offsets)
+      col = 0;
+   auto tl = this->index(0, col, {});
+   auto br = this->index(dovah::skill_count - 1, col, {});
+   emit dataChanged(tl, br);
 }
 void ActorBaseSkillsModel::setOffsetsUsed(bool v) {
    if (this->_state.using_offsets == v)
@@ -199,76 +157,9 @@ void ActorBaseSkillsModel::setOffsetsUsed(bool v) {
       this->beginRemoveColumns({}, 0, 0);
       this->endRemoveColumns();
    }
-   this->_recalcStats();
 }
-
-void ActorBaseSkillsModel::_recalcStats() {
-   int32_t iAVDSkillsLevelUp = 8;
-   {
-      auto& gss     = dovahkit::subsystems::game_settings::core::get();
-      auto  variant = gss.get_setting_value("iAVDSkillsLevelUp");
-      if (std::holds_alternative<int32_t>(variant))
-         iAVDSkillsLevelUp = std::get<int32_t>(variant);
-   }
-
-   auto& dst_list = this->_state.skills;
-
-   // Gather racial bonuses.
-   for (size_t i = 0; i < dst_list.size(); ++i) {
-      auto& dst = dst_list[i];
-      dst.computed = 0;
-
-      for (auto& item : this->_state.racial_bonuses) {
-         if (!item.has_value())
-            continue;
-         if (item.value().skill == (dovah::skill)i)
-            dst.computed += item.value().bonus;
-      }
-   }
-   if (this->_state.using_offsets) {
-      for (auto& dst : dst_list)
-         dst.computed += dst.offset;
-   }
-
-   int  skill_points = this->_state.level * iAVDSkillsLevelUp;
-   bool used_class   = false;
-   if (this->_state.class_form) {
-      auto loaded = this->_state.class_form->load().ptr_cast<dovah::loaded_forms::Class>();
-      if (loaded) {
-         used_class = true;
-
-         size_t total_weight = 0;
-         for (auto w : loaded->skill_weights)
-            total_weight += w;
-
-         for (size_t i = 0; i < dovah::skill_count; ++i) {
-            auto  weight = loaded->skill_weights[i];
-            auto& dst    = dst_list[i];
-
-            float v = (float)weight / total_weight;
-            v *= skill_points;
-
-            dst.computed += round(v);
-         }
-      }
-   }
-   if (!used_class) {
-      int portion   = skill_points / dovah::skill_count;
-      int remaining = skill_points;
-      for (auto& dst : dst_list) {
-         if (portion > remaining) {
-            dst.computed += remaining;
-         } else {
-            dst.computed += portion;
-            remaining    -= portion;
-         }
-      }
-   }
-
-   int col = 1;
-   if (this->_state.using_offsets)
-      col = 0;
-   auto tl = this->index(0, col, {});
-   auto br = this->index(dovah::skill_count - 1, col, {});
-   emit dataChanged(tl, br);
+std::optional<dovah::skill> ActorBaseSkillsModel::skillAtRow(int r) const {
+   if (r < 0 || r >= this->_state.skills.size())
+      return {};
+   return (dovah::skill)r;
 }

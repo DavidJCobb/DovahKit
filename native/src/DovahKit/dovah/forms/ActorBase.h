@@ -114,28 +114,48 @@ namespace dovah::loaded_forms {
          };
          using template_flags_t = std::underlying_type_t<template_flag::type>;
 
+         using attribute_value_type  = uint16_t;
+         using attribute_offset_type = int16_t;
+         using skill_value_type      = uint8_t;
+         using skill_offset_type     = skill_value_type; // negative offsets are not allowed
+
+         template<typename T>
+         union attribute_list {
+            std::array<T, 3> list = { 0 };
+            struct {
+               T health;
+               T magicka;
+               T stamina;
+            };
+            struct {
+               T h;
+               T m;
+               T s;
+            };
+         };
+
          union skill_byte_list {
             struct {
-               uint8_t one_handed;
-               uint8_t two_handed;
-               uint8_t archery;
-               uint8_t block;
-               uint8_t smithing;    // NPCs never craft on their own, though it's not impossible that a mod might read this and use it.
-               uint8_t heavy_armor;
-               uint8_t light_armor;
-               uint8_t pickpocket;  // only used by NPCs to scale how difficult it is for the player to pickpocket them; NPCs cannot pickpocket others.
-               uint8_t lockpicking; // not used by NPCs; they only lockpick when commanded to, and in that case will always succeed.
-               uint8_t sneak;
-               uint8_t alchemy;     // NPCs never craft on their own, though it's not impossible that a mod might read this and use it.
-               uint8_t speech;      // not used by NPCs.
-               uint8_t alteration;
-               uint8_t conjuration;
-               uint8_t destruction;
-               uint8_t illusion;
-               uint8_t restoration;
-               uint8_t enchanting;  // NPCs never craft on their own, though it's not impossible that a mod might read this and use it.
+               skill_value_type one_handed;
+               skill_value_type two_handed;
+               skill_value_type archery;
+               skill_value_type block;
+               skill_value_type smithing;    // NPCs never craft on their own, though it's not impossible that a mod might read this and use it.
+               skill_value_type heavy_armor;
+               skill_value_type light_armor;
+               skill_value_type pickpocket;  // only used by NPCs to scale how difficult it is for the player to pickpocket them; NPCs cannot pickpocket others.
+               skill_value_type lockpicking; // not used by NPCs; they only lockpick when commanded to, and in that case will always succeed.
+               skill_value_type sneak;
+               skill_value_type alchemy;     // NPCs never craft on their own, though it's not impossible that a mod might read this and use it.
+               skill_value_type speech;      // not used by NPCs.
+               skill_value_type alteration;
+               skill_value_type conjuration;
+               skill_value_type destruction;
+               skill_value_type illusion;
+               skill_value_type restoration;
+               skill_value_type enchanting;  // NPCs never craft on their own, though it's not impossible that a mod might read this and use it.
             };
-            std::array<uint8_t, 18> list = {};
+            std::array<skill_value_type, 18> list = {};
          };
 
          struct tint_layer {
@@ -239,17 +259,13 @@ namespace dovah::loaded_forms {
          } outfits;
          struct {
             struct {
-               skill_byte_list skills; // DNAM+0x00
-               uint16_t health;  // DNAM+0x24
-               uint16_t magicka; // DNAM+0x26
-               uint16_t stamina; // DNAM+0x28
-            } base;
+               attribute_list<attribute_value_type>  calculated; // DNAM+0x24, DNAM+0x26, DNAM+0x28
+               attribute_list<attribute_offset_type> offsets;    // ACBS+0x14, ACBS+0x04, ACBS+0x06
+            } attributes;
             struct {
-               skill_byte_list skills; // DNAM+0x18
-               int16_t health  = 0; // ABCS+0x14
-               int16_t magicka = 0; // ABCS+0x04
-               int16_t stamina = 0; // ABCS+0x06
-            } offsets;
+               skill_byte_list calculated; // DNAM+0x00
+               skill_byte_list offsets;    // DNAM+0x18
+            } skills;
             int16_t  level;              // ABCS+0x08 // this is a multiplier (fixed-point; convert to a float by dividing by 1000) if the PC Level Mult flag is set
             int16_t  calc_min_level = 0; // ABCS+0x0A // applies if the PC Level Mult flag is set
             int16_t  calc_max_level = 0; // ABCS+0x0C // applies if the PC Level Mult flag is set

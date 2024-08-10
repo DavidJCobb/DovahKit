@@ -85,7 +85,7 @@ class FormDialogActorBase :
       unsigned int _get_effective_level() const;
       void _on_effective_level_changed();
 
-      void _recalc_attributes();
+      void _recalc_stats();
 
       void _pull_faction_to_ui();
       void _push_faction_from_ui();

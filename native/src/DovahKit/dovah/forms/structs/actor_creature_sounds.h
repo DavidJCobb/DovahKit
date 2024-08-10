@@ -10,14 +10,14 @@ namespace dovah {
 
 namespace dovah {
    enum class creature_sound_type : uint32_t {
-      idle           = 0,
-      aware          = 1,
-      attack         = 2,
-      hit            = 3,
-      death          = 4,
-      weapon         = 5,
-      movement_loop  = 6,
-      conscious_loop = 7,
+      idle,
+      aware,
+      attack,
+      hit,
+      death,
+      weapon,
+      movement_loop,
+      conscious_loop,
    };
 }
 

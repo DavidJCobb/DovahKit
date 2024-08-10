@@ -1,5 +1,6 @@
 #include "./actor_base.h"
 #include <limits>
+#include "helpers/string/strlen.h"
 #include "dovah/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/item_indices_to_data.h"
@@ -220,15 +221,16 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
 
          this->ui.statsClass->setAllowedFormType(dovah::form_type::combat_class);
          this->ui.statsClass->setAllowNone(false);
-         ui::set_range<decltype(decltype(stats_struct::base)::health)>(this->ui.statsHealthBase);
-         ui::set_range<decltype(decltype(stats_struct::base)::magicka)>(this->ui.statsMagickaBase);
-         ui::set_range<decltype(decltype(stats_struct::base)::stamina)>(this->ui.statsStaminaBase);
-         ui::set_range<decltype(decltype(stats_struct::offsets)::health)>(this->ui.statsHealthOffset);
-         ui::set_range<decltype(decltype(stats_struct::offsets)::magicka)>(this->ui.statsMagickaOffset);
-         ui::set_range<decltype(decltype(stats_struct::offsets)::stamina)>(this->ui.statsStaminaOffset);
-         ui::set_unsigned_range<int>(this->ui.statsHealthCalcFinal);
-         ui::set_unsigned_range<int>(this->ui.statsMagickaCalcFinal);
-         ui::set_unsigned_range<int>(this->ui.statsStaminaCalcFinal);
+         ui::set_range<loaded_form_type::attribute_value_type>(this->ui.statsHealthBase);
+         ui::set_range<loaded_form_type::attribute_value_type>(this->ui.statsMagickaBase);
+         ui::set_range<loaded_form_type::attribute_value_type>(this->ui.statsStaminaBase);
+         ui::set_range<loaded_form_type::attribute_offset_type>(this->ui.statsHealthOffset);
+         ui::set_range<loaded_form_type::attribute_offset_type>(this->ui.statsMagickaOffset);
+         ui::set_range<loaded_form_type::attribute_offset_type>(this->ui.statsStaminaOffset);
+         ui::set_range<loaded_form_type::attribute_value_type>(this->ui.statsHealthCalcFinal);
+         ui::set_range<loaded_form_type::attribute_value_type>(this->ui.statsMagickaCalcFinal);
+         ui::set_range<loaded_form_type::attribute_value_type>(this->ui.statsStaminaCalcFinal);
+         ui::set_range<loaded_form_type::skill_offset_type>(this->ui.currentSkillOffset);
          this->ui.statsHealthBase->setReadOnly(true);
          this->ui.statsMagickaBase->setReadOnly(true);
          this->ui.statsStaminaBase->setReadOnly(true);
@@ -244,17 +246,6 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
             ui::typical_tableview_config(widget);
             widget->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
 
-            ui::set_range<uint8_t>(this->ui.currentSkillOffset);
-
-            QObject::connect(this->ui.flagAutoCalcStats, &QCheckBox::toggled, this, [this](bool checked) {
-               this->ui.skillEditLayout->setVisible(!checked);
-               this->_models.skills->setOffsetsUsed(!checked);
-            });
-            // Updating in response to race changes is done in our `_set_race` member function.
-            QObject::connect(this->ui.statsClass, &DKFormPicker::formChanged, this, [this](dovah::form_stub* stub) {
-               this->_models.skills->setClass(stub);
-            });
-
             auto* sel_model = widget->selectionModel();
             QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this, sel_model, model]() {
                auto rows = sel_model->selectedRows();
@@ -262,22 +253,45 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
                   this->ui.skillEditLayout->setEnabled(false);
                   return;
                }
-               this->ui.skillEditLayout->setEnabled(true);
-
-               const auto blocker = QSignalBlocker(this->ui.currentSkillOffset);
-               this->ui.currentSkillOffset->setValue(model->offsetOf((dovah::skill)rows[0].row()));
-            });
-            QObject::connect(this->ui.currentSkillOffset, QOverload<int>::of(&QSpinBox::valueChanged), this, [this, sel_model, model](int v) {
-               auto rows = sel_model->selectedRows();
-               if (rows.isEmpty()) {
+               auto skill_opt = model->skillAtRow(rows[0].row());
+               if (!skill_opt.has_value()) {
                   this->ui.skillEditLayout->setEnabled(false);
                   return;
                }
-               model->setSkillOffset((dovah::skill)rows[0].row(), v);
+               this->ui.skillEditLayout->setEnabled(true);
+               auto skill = skill_opt.value();
+
+               const auto blocker = QSignalBlocker(this->ui.currentSkillOffset);
+               this->ui.currentSkillOffset->setValue(this->form->stats.skills.offsets.list[(size_t)skill]);
+            });
+            QObject::connect(this->ui.currentSkillOffset, QOverload<int>::of(&QSpinBox::valueChanged), this, [this, sel_model, model](int v) {
+               auto rows = sel_model->selectedRows();
+               if (rows.isEmpty())
+                  return;
+               auto skill_opt = model->skillAtRow(rows[0].row());
+               if (!skill_opt.has_value())
+                  return;
+               auto skill = skill_opt.value();
+
+               this->form->stats.skills.offsets.list[(size_t)skill] = v;
+               this->_recalc_stats();
             });
 
             this->ui.skillEditLayout->setEnabled(false);
          }
+         QObject::connect(this->ui.flagAutoCalcStats, &QCheckBox::toggled, this, [this](bool checked) {
+            if (this->form) {
+               auto& dst  = this->form->actor_flags;
+               auto  flag = loaded_form_type::actor_flag::auto_calc_stats;
+               if (checked)
+                  dst |= flag;
+               else
+                  dst &= ~flag;
+            }
+            this->ui.skillEditLayout->setVisible(!checked);
+            this->_models.skills->setOffsetsUsed(!checked);
+            this->_recalc_stats();
+         });
       }
    #pragma endregion
    #pragma region Factions tab
@@ -554,6 +568,45 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
    #pragma endregion
 
    this->load(); // this creates the working copy.
+
+   //
+   // Bit unusual to do anything in the constructor but after loading, but:
+   //
+   {  // Update auto-calc'd actor stats if relevant game settings cahnge
+      constexpr const auto relevant_settings = std::array{
+         "iAVDSkillStart",
+         "iAVDSkillsLevelUp",
+         "iAVDAutoCalcSkillMax",
+         "iAVDhmsLevelUp",
+         "fPCHealthLevelBonus",
+         "fNPCHealthLevelBonus",
+      };
+      
+      auto& gss = dovahkit::subsystems::game_settings::core::get();
+      QObject::connect(&gss, &std::decay_t<decltype(gss)>::settingValueChanged, this, [this](const char* name) {
+         bool found = true;
+         for (auto* item : relevant_settings) {
+            if (_strnicmp(name, item, cobb::strlen(item)) != 0) {
+               found = true;
+               break;
+            }
+         }
+         if (found)
+            this->_recalc_stats();
+      });
+   }
+   {  // Watch for changes to our race or class
+      auto& editor = DovahKitCore::get();
+      QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
+         bool race_edited = stub == this->form->race.get_form_stub();
+         if (race_edited) {
+            this->_set_race(stub); // not redundant; should refresh everything
+         } else {
+            if (stub == this->form->stats.combat_class.get_form_stub())
+               this->_recalc_stats();
+         }
+      });
+   }
 }
 void FormDialogActorBase::_load_impl() {
    auto& editor  = DovahKitCore::get();
@@ -628,34 +681,38 @@ void FormDialogActorBase::_load_impl() {
             working.stats.level = value * 1000;
          } else {
             working.stats.level = value;
-            this->_recalc_attributes();
+            this->_recalc_stats();
          }
       });
       ui::bind(this->ui.levelCalcMin, working.stats.calc_min_level);
       ui::bind(this->ui.levelCalcMax, working.stats.calc_max_level);
-      ui::bind(this->ui.flagPCLevelMult, working.actor_flags, loaded_form_type::actor_flag::pc_level_mult);
+
+      // DO NOT bind this; we already registered a handler for it, and that handler ensures that we do things 
+      // in the proper order (i.e. change the actor flag and then recalc stats).
+      //ui::bind(this->ui.flagPCLevelMult, working.actor_flags, loaded_form_type::actor_flag::pc_level_mult);
 
       ui::bind(this->ui.speedPercentage, working.stats.speed_mult);
       ui::bind(this->ui.flagBleedoutOverride, working.actor_flags, loaded_form_type::actor_flag::bleedout_override);
       ui::bind(this->ui.bleedoutOverrideThreshold, working.stats.bleedout_threshold);
 
       ui::bind(this->ui.statsClass, working.stats.combat_class, working);
-      ui::bind(this->ui.flagAutoCalcStats, working.actor_flags, loaded_form_type::actor_flag::auto_calc_stats);
+
+      // DO NOT bind this; we already registered a handler for it, and that handler ensures that we do things 
+      // in the proper order (i.e. change the actor flag and then recalc stats).
+      //ui::bind(this->ui.flagAutoCalcStats, working.actor_flags, loaded_form_type::actor_flag::auto_calc_stats);
+      //
       {  // Attributes
-         ui::bind(this->ui.statsHealthOffset, working.stats.offsets.health);
-         ui::bind(this->ui.statsMagickaOffset, working.stats.offsets.magicka);
-         ui::bind(this->ui.statsStaminaOffset, working.stats.offsets.stamina);
-         QObject::connect(this->ui.statsHealthOffset,  QOverload<int>::of(&QSpinBox::valueChanged), this, &FormDialogActorBase::_recalc_attributes);
-         QObject::connect(this->ui.statsMagickaOffset, QOverload<int>::of(&QSpinBox::valueChanged), this, &FormDialogActorBase::_recalc_attributes);
-         QObject::connect(this->ui.statsStaminaOffset, QOverload<int>::of(&QSpinBox::valueChanged), this, &FormDialogActorBase::_recalc_attributes);
-         QObject::connect(this->ui.statsClass, &DKFormPicker::formChanged, this, &FormDialogActorBase::_recalc_attributes);
+         auto spinbox_change_signal = QOverload<int>::of(&QSpinBox::valueChanged);
+         QObject::connect(this->ui.statsHealthOffset,  spinbox_change_signal, this, &FormDialogActorBase::_recalc_stats);
+         QObject::connect(this->ui.statsMagickaOffset, spinbox_change_signal, this, &FormDialogActorBase::_recalc_stats);
+         QObject::connect(this->ui.statsStaminaOffset, spinbox_change_signal, this, &FormDialogActorBase::_recalc_stats);
+         QObject::connect(this->ui.statsClass, &DKFormPicker::formChanged, this, &FormDialogActorBase::_recalc_stats);
          // Recalculating attributes on-race-change is done in the `_set_race` method.
       }
-
-      {
-         for (size_t i = 0; i < dovah::skill_count; ++i)
-            this->_models.skills->setSkillOffset((dovah::skill)i, working.stats.offsets.skills.list[i]);
-      }
+      this->_models.skills->setAllData(
+         working.stats.skills.offsets.list,
+         working.stats.skills.calculated.list
+      );
    #pragma endregion
    #pragma region Factions tab
       {
@@ -978,11 +1035,10 @@ unsigned int FormDialogActorBase::_get_effective_level() const {
 }
 void FormDialogActorBase::_on_effective_level_changed() {
    auto level = this->_get_effective_level();
-   this->_models.skills->setLevel(level);
-   this->_recalc_attributes();
+   this->_recalc_stats();
 }
 
-void FormDialogActorBase::_recalc_attributes() {
+void FormDialogActorBase::_recalc_stats() {
    auto level = _get_effective_level();
 
    dovah::loaded_form_ptr<dovah::loaded_forms::Class> loaded_class;
@@ -1009,40 +1065,68 @@ void FormDialogActorBase::_recalc_attributes() {
 
       health_bonus *= (level - 1);
    }
+   
+   auto stats = dovah::compute_classed_stat_points(
+      this->formStub()->get_owning_load_order(),
+      loaded_class,
+      loaded_race,
+      level
+   );
+   stats.attribute_points.base.health       += health_bonus;
+   stats.attribute_points.calculated.health += health_bonus;
 
-   std::array<float, 3> attributes;
+   auto& working = *this->form;
    {
-      auto results = dovah::compute_classed_stat_points(
-         this->formStub()->get_owning_load_order(),
-         loaded_class,
-         loaded_race,
-         level
-      );
-
-      auto& src = results.attribute_points.list;
-      for (size_t i = 0; i < attributes.size(); ++i)
-         attributes[i] = (float)src[i];
-
-      attributes[0] += health_bonus;
+      working.stats.attributes.offsets.h = this->ui.statsHealthOffset->value();
+      working.stats.attributes.offsets.m = this->ui.statsMagickaOffset->value();
+      working.stats.attributes.offsets.s = this->ui.statsStaminaOffset->value();
    }
-   //
-   // Clamp the values, since they do get serialized into the ActorBase.
-   //
-   for (auto& item : attributes)
-      item = std::min(item, (float) std::numeric_limits<uint16_t>::max());
 
-   this->form->stats.base.health  = attributes[0];
-   this->form->stats.base.magicka = attributes[1];
-   this->form->stats.base.stamina = attributes[2];
-   this->ui.statsHealthBase->setValue(attributes[0]);
-   this->ui.statsMagickaBase->setValue(attributes[1]);
-   this->ui.statsStaminaBase->setValue(attributes[2]);
-   attributes[0] += this->ui.statsHealthOffset->value();
-   attributes[1] += this->ui.statsMagickaOffset->value();
-   attributes[2] += this->ui.statsStaminaOffset->value();
-   this->ui.statsHealthCalcFinal->setValue(attributes[0]);
-   this->ui.statsMagickaCalcFinal->setValue(attributes[1]);
-   this->ui.statsStaminaCalcFinal->setValue(attributes[2]);
+   auto _set_stats_from = [&working](
+      const dovah::classed_stat_points::attribute_trio& attributes,
+      const std::array<dovah::classed_stat_points::value_type, dovah::skill_count>& skills
+   ) {
+      using source_type = dovah::classed_stat_points::value_type;
+      {
+         auto& stat_set = working.stats.attributes;
+         auto& offsets  = stat_set.offsets.list;
+         auto& dst      = stat_set.calculated.list;
+         using destination_type = std::decay_t<decltype(dst)>::value_type;
+
+         for (size_t i = 0; i < dst.size(); ++i) {
+            auto value = attributes.list[i] + offsets[i];
+            dst[i] = std::min<source_type>(std::numeric_limits<destination_type>::max(), value);
+         }
+      }
+      {
+         auto& stat_set = working.stats.skills;
+         auto& offsets  = stat_set.offsets.list;
+         auto& dst      = stat_set.calculated.list;
+         using destination_type = std::decay_t<decltype(dst)>::value_type;
+
+         for (size_t i = 0; i < dst.size(); ++i) {
+            auto value = skills[i] + offsets[i];
+            dst[i] = std::min<source_type>(std::numeric_limits<destination_type>::max(), value);
+         }
+      }
+   };
+
+   if (working.actor_flags & (loaded_form_type::actor_flag::auto_calc_stats | loaded_form_type::actor_flag::pc_level_mult)) {
+      _set_stats_from(stats.attribute_points.calculated, stats.skill_points.calculated);
+   } else {
+      _set_stats_from(stats.attribute_points.base, stats.skill_points.base);
+   }
+
+   this->ui.statsHealthBase->setValue(stats.attribute_points.base.h);
+   this->ui.statsMagickaBase->setValue(stats.attribute_points.base.m);
+   this->ui.statsStaminaBase->setValue(stats.attribute_points.base.s);
+   this->ui.statsHealthCalcFinal->setValue(working.stats.attributes.calculated.list[0]);
+   this->ui.statsMagickaCalcFinal->setValue(working.stats.attributes.calculated.list[1]);
+   this->ui.statsStaminaCalcFinal->setValue(working.stats.attributes.calculated.list[2]);
+   this->_models.skills->setAllData(
+      working.stats.skills.offsets.list,
+      working.stats.skills.calculated.list
+   );
 }
 
 void FormDialogActorBase::_pull_faction_to_ui() {
@@ -1258,10 +1342,8 @@ void FormDialogActorBase::_set_race(dovah::form_stub* race) {
    this->_filters.face.hair_color->setRequiredRace(race);
    this->_filters.face.tint_color->setRequiredRace(race);
 
-   this->_models.skills->setRace(race);
-
    auto loaded = race->load().ptr_cast<dovah::loaded_forms::Race>();
-   this->_recalc_attributes();
+   this->_recalc_stats();
    {  // Indexed face morphs
       if (loaded) {
          size_t prior_eyes = 0;
