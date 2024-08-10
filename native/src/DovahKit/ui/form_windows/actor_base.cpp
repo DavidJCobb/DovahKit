@@ -690,6 +690,7 @@ void FormDialogActorBase::_load_impl() {
       // DO NOT bind this; we already registered a handler for it, and that handler ensures that we do things 
       // in the proper order (i.e. change the actor flag and then recalc stats).
       //ui::bind(this->ui.flagPCLevelMult, working.actor_flags, loaded_form_type::actor_flag::pc_level_mult);
+      this->ui.flagPCLevelMult->setChecked(working.actor_flags & loaded_form_type::actor_flag::pc_level_mult);
 
       ui::bind(this->ui.speedPercentage, working.stats.speed_mult);
       ui::bind(this->ui.flagBleedoutOverride, working.actor_flags, loaded_form_type::actor_flag::bleedout_override);
@@ -700,6 +701,7 @@ void FormDialogActorBase::_load_impl() {
       // DO NOT bind this; we already registered a handler for it, and that handler ensures that we do things 
       // in the proper order (i.e. change the actor flag and then recalc stats).
       //ui::bind(this->ui.flagAutoCalcStats, working.actor_flags, loaded_form_type::actor_flag::auto_calc_stats);
+      this->ui.flagAutoCalcStats->setChecked(working.actor_flags & loaded_form_type::actor_flag::auto_calc_stats);
       //
       {  // Attributes
          auto spinbox_change_signal = QOverload<int>::of(&QSpinBox::valueChanged);
@@ -1082,7 +1084,9 @@ void FormDialogActorBase::_recalc_stats() {
       working.stats.attributes.offsets.s = this->ui.statsStaminaOffset->value();
    }
 
-   auto _set_stats_from = [&working](
+   bool auto_calc = working.actor_flags & (loaded_form_type::actor_flag::auto_calc_stats | loaded_form_type::actor_flag::pc_level_mult);
+
+   auto _set_stats_from = [&working, auto_calc](
       const dovah::classed_stat_points::attribute_trio& attributes,
       const std::array<dovah::classed_stat_points::value_type, dovah::skill_count>& skills
    ) {
@@ -1105,13 +1109,15 @@ void FormDialogActorBase::_recalc_stats() {
          using destination_type = std::decay_t<decltype(dst)>::value_type;
 
          for (size_t i = 0; i < dst.size(); ++i) {
-            auto value = skills[i] + offsets[i];
+            auto value = skills[i];
+            if (!auto_calc) // skill offsets are not used when Auto-Calc Stats is active
+               value += offsets[i];
             dst[i] = std::min<source_type>(std::numeric_limits<destination_type>::max(), value);
          }
       }
    };
 
-   if (working.actor_flags & (loaded_form_type::actor_flag::auto_calc_stats | loaded_form_type::actor_flag::pc_level_mult)) {
+   if (auto_calc) {
       _set_stats_from(stats.attribute_points.calculated, stats.skill_points.calculated);
    } else {
       _set_stats_from(stats.attribute_points.base, stats.skill_points.base);
@@ -1285,6 +1291,11 @@ dovah::sex FormDialogActorBase::_current_sex() const {
 
 void FormDialogActorBase::_set_pc_level_mult(bool flag) {
    bool prior = this->form->actor_flags & loaded_form_type::actor_flag::pc_level_mult;
+   if (flag) {
+      this->form->actor_flags |= loaded_form_type::actor_flag::pc_level_mult;
+   } else {
+      this->form->actor_flags &= ~loaded_form_type::actor_flag::pc_level_mult;
+   }
    
    {
       auto* const widget  = this->ui.flagPCLevelMult;

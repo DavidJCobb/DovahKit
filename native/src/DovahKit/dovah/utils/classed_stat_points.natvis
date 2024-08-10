@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::classed_stat_points::attribute_trio">
+      <DisplayString>HMS: {h}, {m}, {s}</DisplayString>
+      <Expand>
+         <Item Name="[health]"> h,d</Item>
+         <Item Name="[magicka]">m,d</Item>
+         <Item Name="[stamina]">s,d</Item>
+      </Expand>
+   </Type>
+   
+   <Type Name="dovah::classed_stat_points">
+      
+      <Intrinsic Name="_skill" Expression="(use_calc ? skill_points.calculated : skill_points.base)[(size_t)skill],d">
+         <Parameter Name="use_calc" Type="bool" />
+         <Parameter Name="skill"    Type="dovah::skill" />
+      </Intrinsic>
+      
+      <Intrinsic Name="_skill_diff" Expression="skill_points.calculated[(size_t)skill] - skill_points.base[(size_t)skill]">
+         <Parameter Name="skill" Type="dovah::skill" />
+      </Intrinsic>
+      
+      <Expand>
+         <Synthetic Name="[attributes]">
+            <Expand>
+               <Item Name="[base]">      attribute_points.base</Item>
+               <Item Name="[calculated]">attribute_points.calculated</Item>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="[skills]">
+            <Expand>
+               <Synthetic Name="[base]">
+                  <Expand>
+                     <Item Name="[alchemy]">       _skill(false, dovah::skill::alchemy)       ,d</Item>
+                     <Item Name="[alteration]">    _skill(false, dovah::skill::alteration)    ,d</Item>
+                     <Item Name="[archery]">       _skill(false, dovah::skill::archery)       ,d</Item>
+                     <Item Name="[block]">         _skill(false, dovah::skill::block)         ,d</Item>
+                     <Item Name="[conjuration]">   _skill(false, dovah::skill::conjuration)   ,d</Item>
+                     <Item Name="[heavy armor]">   _skill(false, dovah::skill::heavy_armor)   ,d</Item>
+                     <Item Name="[illusion]">      _skill(false, dovah::skill::illusion)      ,d</Item>
+                     <Item Name="[light armor]">   _skill(false, dovah::skill::light_armor)   ,d</Item>
+                     <Item Name="[lockpicking]">   _skill(false, dovah::skill::lockpicking)   ,d</Item>
+                     <Item Name="[one-handed]">    _skill(false, dovah::skill::one_handed)    ,d</Item>
+                     <Item Name="[pickpocketing]"> _skill(false, dovah::skill::pickpocket)    ,d</Item>
+                     <Item Name="[restoration]">   _skill(false, dovah::skill::restoration)   ,d</Item>
+                     <Item Name="[smithing]">      _skill(false, dovah::skill::smithing)      ,d</Item>
+                     <Item Name="[sneak]">         _skill(false, dovah::skill::sneak)         ,d</Item>
+                     <Item Name="[speech]">        _skill(false, dovah::skill::speech)        ,d</Item>
+                     <Item Name="[two-handed]">    _skill(false, dovah::skill::two_handed)    ,d</Item>
+                  </Expand>
+               </Synthetic>
+               <Synthetic Name="[calculated]">
+                  <Expand>
+                     <Item Name="[alchemy]">       skill_points.calculated[(size_t)dovah::skill::alchemy]       ,d</Item>
+                     <Item Name="[alteration]">    skill_points.calculated[(size_t)dovah::skill::alteration]    ,d</Item>
+                     <Item Name="[archery]">       skill_points.calculated[(size_t)dovah::skill::archery]       ,d</Item>
+                     <Item Name="[block]">         skill_points.calculated[(size_t)dovah::skill::block]         ,d</Item>
+                     <Item Name="[conjuration]">   skill_points.calculated[(size_t)dovah::skill::conjuration]   ,d</Item>
+                     <Item Name="[heavy armor]">   skill_points.calculated[(size_t)dovah::skill::heavy_armor]   ,d</Item>
+                     <Item Name="[illusion]">      skill_points.calculated[(size_t)dovah::skill::illusion]      ,d</Item>
+                     <Item Name="[light armor]">   skill_points.calculated[(size_t)dovah::skill::light_armor]   ,d</Item>
+                     <Item Name="[lockpicking]">   skill_points.calculated[(size_t)dovah::skill::lockpicking]   ,d</Item>
+                     <Item Name="[one-handed]">    skill_points.calculated[(size_t)dovah::skill::one_handed]    ,d</Item>
+                     <Item Name="[pickpocketing]"> skill_points.calculated[(size_t)dovah::skill::pickpocket]    ,d</Item>
+                     <Item Name="[restoration]">   skill_points.calculated[(size_t)dovah::skill::restoration]   ,d</Item>
+                     <Item Name="[smithing]">      skill_points.calculated[(size_t)dovah::skill::smithing]      ,d</Item>
+                     <Item Name="[sneak]">         skill_points.calculated[(size_t)dovah::skill::sneak]         ,d</Item>
+                     <Item Name="[speech]">        skill_points.calculated[(size_t)dovah::skill::speech]        ,d</Item>
+                     <Item Name="[two-handed]">    skill_points.calculated[(size_t)dovah::skill::two_handed]    ,d</Item>
+                  </Expand>
+               </Synthetic>
+               <Synthetic Name="[diffs]">
+                  <Expand>
+                     <Item Name="[alchemy]"       Condition="_skill_diff(dovah::skill::alchemy)       &gt; 0">_skill_diff(dovah::skill::alchemy)       ,d</Item>
+                     <Item Name="[alteration]"    Condition="_skill_diff(dovah::skill::alteration)    &gt; 0">_skill_diff(dovah::skill::alteration)    ,d</Item>
+                     <Item Name="[archery]"       Condition="_skill_diff(dovah::skill::archery)       &gt; 0">_skill_diff(dovah::skill::archery)       ,d</Item>
+                     <Item Name="[block]"         Condition="_skill_diff(dovah::skill::block)         &gt; 0">_skill_diff(dovah::skill::block)         ,d</Item>
+                     <Item Name="[conjuration]"   Condition="_skill_diff(dovah::skill::conjuration)   &gt; 0">_skill_diff(dovah::skill::conjuration)   ,d</Item>
+                     <Item Name="[heavy armor]"   Condition="_skill_diff(dovah::skill::heavy_armor)   &gt; 0">_skill_diff(dovah::skill::heavy_armor)   ,d</Item>
+                     <Item Name="[illusion]"      Condition="_skill_diff(dovah::skill::illusion)      &gt; 0">_skill_diff(dovah::skill::illusion)      ,d</Item>
+                     <Item Name="[light armor]"   Condition="_skill_diff(dovah::skill::light_armor)   &gt; 0">_skill_diff(dovah::skill::light_armor)   ,d</Item>
+                     <Item Name="[lockpicking]"   Condition="_skill_diff(dovah::skill::lockpicking)   &gt; 0">_skill_diff(dovah::skill::lockpicking)   ,d</Item>
+                     <Item Name="[one-handed]"    Condition="_skill_diff(dovah::skill::one_handed)    &gt; 0">_skill_diff(dovah::skill::one_handed)    ,d</Item>
+                     <Item Name="[pickpocketing]" Condition="_skill_diff(dovah::skill::pickpocket)    &gt; 0">_skill_diff(dovah::skill::pickpocket)    ,d</Item>
+                     <Item Name="[restoration]"   Condition="_skill_diff(dovah::skill::restoration)   &gt; 0">_skill_diff(dovah::skill::restoration)   ,d</Item>
+                     <Item Name="[smithing]"      Condition="_skill_diff(dovah::skill::smithing)      &gt; 0">_skill_diff(dovah::skill::smithing)      ,d</Item>
+                     <Item Name="[sneak]"         Condition="_skill_diff(dovah::skill::sneak)         &gt; 0">_skill_diff(dovah::skill::sneak)         ,d</Item>
+                     <Item Name="[speech]"        Condition="_skill_diff(dovah::skill::speech)        &gt; 0">_skill_diff(dovah::skill::speech)        ,d</Item>
+                     <Item Name="[two-handed]"    Condition="_skill_diff(dovah::skill::two_handed)    &gt; 0">_skill_diff(dovah::skill::two_handed)    ,d</Item>
+                  </Expand>
+               </Synthetic>
+               <CustomListItems>
+                  <Variable Name="total" InitialValue="(size_t)0"/>
+                  <Variable Name="i"     InitialValue="(size_t)0"/>
+                  <Variable Name="diff"  InitialValue="(size_t)0"/>
+            
+                  <Exec>i = 0</Exec>
+                  <Loop Condition="i &lt; dovah::skill_count">
+                     <Exec>diff = skill_points.calculated[i] - skill_points.base[i]</Exec>
+                     <If Condition="diff &gt; 0">
+                        <Exec>total += diff</Exec>
+                     </If>
+                     <Exec>++i</Exec>
+                  </Loop>
+                  <If Condition="total &gt; 0">
+                     <Item Name="[total diff]">total</Item>
+                  </If>
+               </CustomListItems>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+</AutoVisualizer>

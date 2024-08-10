@@ -7678,5 +7678,6 @@
     <Natvis Include="editor\subsystems\papyrus\known_script.natvis" />
     <Natvis Include="dovah\files\bsa\packed_folder_info.natvis" />
     <Natvis Include="dovah\bs_hash.natvis" />
+    <Natvis Include="dovah\utils\classed_stat_points.natvis" />
   </ItemGroup>
 </Project>

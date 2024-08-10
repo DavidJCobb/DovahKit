@@ -132,11 +132,9 @@ ActorBaseSkillsModel::ActorBaseSkillsModel(QObject* parent) : QAbstractItemModel
       
 void ActorBaseSkillsModel::setAllData(const skill_value_array& skill_offsets, const skill_value_array& computed_skills) {
    for (size_t i = 0; i < dovah::skill_count; ++i) {
-      auto& dst   = this->_state.skills[i];
-      auto  value = (unsigned int)skill_offsets[i] + (unsigned int)computed_skills[i];
-      //
+      auto& dst = this->_state.skills[i];
       dst.offset   = skill_offsets[i];
-      dst.computed = std::min<unsigned int>(value, std::numeric_limits<skill_value_type>::max());
+      dst.computed = std::min<unsigned int>(computed_skills[i], std::numeric_limits<skill_value_type>::max());
    }
    
    int col = 1;

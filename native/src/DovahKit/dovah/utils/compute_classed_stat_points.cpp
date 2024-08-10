@@ -48,10 +48,10 @@ namespace dovah {
             dovah::loaded_game_setting l_gmst;
             for (auto& item : desired_settings) {
                if (lo.get_loaded_setting_by_name(item.name.data(), l_gmst)) {
-                  auto value = l_gmst.definition->default_value.i;
+                  auto value = l_gmst.value.i;
                   if (value >= 0) {
                      item.found = true;
-                     item.dst = l_gmst.definition->default_value.i;
+                     item.dst   = l_gmst.value.i;
                      continue;
                   }
                }
@@ -84,6 +84,15 @@ namespace dovah {
       //
 
       classed_stat_points result;
+      #if _DEBUG
+         //
+         // For whatever reason, the Visual Studio debugger is unable to inspect the 
+         // `result` variable. It initially shows "an unknown error occurred," and 
+         // then claims that the variable doesn't even exist -- even despite going to 
+         // the trouble to list it in the Locals pane.
+         //
+         auto& _let_me_see_the_goddamn_variable = result;
+      #endif
       //
       // First: the base value of each skill and attribute.
       //
@@ -136,7 +145,7 @@ namespace dovah {
                total_weight += weight;
             }
          }
-         std::stable_sort(skills.begin(), skills.end(), [](const _item& a, const _item& b) { return a.weight < b.weight; });
+         std::stable_sort(skills.begin(), skills.end(), [](const _item& a, const _item& b) { return b.weight < a.weight; });
 
          float    points_per_weight = total_points / total_weight;
          uint32_t wholes_per_weight = points_per_weight;
@@ -231,10 +240,16 @@ namespace dovah {
                points_lost_to_truncation -= 1;
                points_lost_to_truncation += _increase_stat(dst, 1);
                failed = false;
+               if (points_lost_to_truncation == 0)
+                  //
+                  // All points distributed.
+                  //
+                  break;
             }
             if (failed)
                //
-               // Failsafe, so we don't end up in an infinite loop.
+               // Failsafe, so we don't end up in an infinite loop if all skills have 
+               // (or reach) a weight of zero.
                //
                break;
          }

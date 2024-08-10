@@ -2863,6 +2863,7 @@
     <Natvis Include="dovah\files\bsa\packed_folder_info.natvis" />
     <Natvis Include="dovah\forms\Landscape.natvis" />
     <Natvis Include="dovah\form_stub.natvis" />
+    <Natvis Include="dovah\utils\classed_stat_points.natvis" />
     <Natvis Include="editor\subsystems\papyrus\known_script.natvis" />
     <Natvis Include="editor\subsystems\worldedit\tool_system\opaque_options_union.natvis" />
     <Natvis Include="editor\subsystems\worldedit\tool_system\options_union.natvis" />
