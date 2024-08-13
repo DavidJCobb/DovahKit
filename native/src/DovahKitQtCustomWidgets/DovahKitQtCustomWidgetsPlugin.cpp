@@ -19,8 +19,13 @@
 #include "interfaces/DKNavmeshGenerationImportOptionPickerInterface.h"
 #include "interfaces/DKFormInventoryWidgetInterface.h"
 #include "interfaces/DKAttackDataWidgetInterface.h"
+#include "interfaces/DKTabWidgetInterface.h"
+#include "interfaces/DKFloatSliderInterface.h"
 
 DovahKitQtCustomWidgetsPlugin::DovahKitQtCustomWidgetsPlugin(QObject* parent) : QObject(parent) {
+   widgets.append(new DKFloatSliderInterface(this));
+   widgets.append(new DKTabWidgetInterface(this));
+
    widgets.append(new DKCollapsiblePaneInterface(this));
    widgets.append(new DKColorPickerButtonInterface(this));
    widgets.append(new DKDelayedEnableButtonInterface(this));

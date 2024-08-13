@@ -80,7 +80,7 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
    layout->addWidget(this->_subwidgets.type, 0);
    layout->addWidget(this->_subwidgets.form, 1);
    layout->setMargin(0);
-   layout->setSizeConstraint(QLayout::SizeConstraint::SetMinimumSize);
+   layout->setStretch(1, 1);
    this->setFocusPolicy(Qt::FocusPolicy::TabFocus);
    this->setFocusProxy(this->_subwidgets.type);
    this->setTabOrder(this->_subwidgets.type, this->_subwidgets.form);
@@ -388,7 +388,7 @@ void DKFormPicker::_updateForceIncludedForm(dovah::form_stub* stub) {
    auto* prior = this->_state.last_force_included_form;
    if (prior == stub)
       return;
-
+   
    #if !defined(QT_DESIGNER_LIB)
       auto* model = this->_rawModel();
       if (prior) {
@@ -500,3 +500,23 @@ void DKFormPicker::clear() {
       this->setFormStub(stub);
    #endif
 }
+
+#if !defined(QT_DESIGNER_LIB)
+DKFormPickerCustomFilter* DKFormPicker::customFilter() const {
+   return this->_rawModel()->customFilter();
+}
+void DKFormPicker::setCustomFilter(DKFormPickerCustomFilter* v) {
+   auto* model = this->_rawModel();
+   auto* prior = model->customFilter();
+   if (prior == v) {
+      return;
+   }
+   model->setCustomFilter(v);
+   if (model->customFilter() == v) {
+      if (prior) {
+         prior->_unhookFromModel(model);
+      }
+      v->_hookToModel(model);
+   }
+}
+#endif

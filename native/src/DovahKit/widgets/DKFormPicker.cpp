@@ -80,7 +80,7 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
    layout->addWidget(this->_subwidgets.type, 0);
    layout->addWidget(this->_subwidgets.form, 1);
    layout->setMargin(0);
-   layout->setSizeConstraint(QLayout::SizeConstraint::SetMinimumSize);
+   layout->setStretch(1, 1);
    this->setFocusPolicy(Qt::FocusPolicy::TabFocus);
    this->setFocusProxy(this->_subwidgets.type);
    this->setTabOrder(this->_subwidgets.type, this->_subwidgets.form);

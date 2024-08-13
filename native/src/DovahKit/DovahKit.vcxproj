@@ -770,6 +770,7 @@
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_float_slider.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_form_inventory.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_form_list_pane_extra_col.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_key_picker.cpp" />
@@ -941,6 +942,8 @@
     <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp" />
     <ClCompile Include="widgets\DKPapyrusFragmentFunctionPicker.cpp" />
     <ClCompile Include="widgets\DKQuestAliasPicker.cpp" />
+    <ClCompile Include="widgets\DKTabBar.cpp" />
+    <ClCompile Include="widgets\DKTabWidget.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
@@ -1189,6 +1192,7 @@
     <QtMoc Include="ui\form_windows\shared\FaceExtraHeadPartsModel.h" />
     <ClInclude Include="ui\form_windows\shared\HeadPartPickerFilter.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_float_slider.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_list_pane_extra_col.h" />
@@ -1218,6 +1222,8 @@
     <QtMoc Include="widgets\DKFloatSlider.h" />
     <ClInclude Include="ui\utils\set_tableview_column_flex.h" />
     <ClInclude Include="ui\utils\typical_tableview_config.h" />
+    <QtMoc Include="widgets\DKTabBar.h" />
+    <QtMoc Include="widgets\DKTabWidget.h" />
     <ClInclude Include="widgets\widget-models\DKAttackDataModel.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />

@@ -112,6 +112,7 @@
     <ClCompile Include="interfaces\DKCompactObjectReferencePickerInterface.cpp" />
     <ClCompile Include="interfaces\DKConditionListInterface.cpp" />
     <ClCompile Include="interfaces\DKDelayedEnableButtonInterface.cpp" />
+    <ClCompile Include="interfaces\DKFloatSliderInterface.cpp" />
     <ClCompile Include="interfaces\DKFormDestructionDataButtonInterface.cpp" />
     <ClCompile Include="interfaces\DKFormInventoryWidgetInterface.cpp" />
     <ClCompile Include="interfaces\DKFormListPaneInterface.cpp" />
@@ -123,6 +124,7 @@
     <ClCompile Include="interfaces\DKPapyrusBoundScriptListPaneInterface.cpp" />
     <ClCompile Include="interfaces\DKPapyrusFragmentFunctionPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKQuestAliasPickerInterface.cpp" />
+    <ClCompile Include="interfaces\DKTabWidgetInterface.cpp" />
     <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp" />
     <ClCompile Include="widgets\DKAttackDataWidget.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
@@ -131,6 +133,7 @@
     <ClCompile Include="widgets\DKCompactObjectReferencePicker.cpp" />
     <ClCompile Include="widgets\DKConditionList.cpp" />
     <ClCompile Include="widgets\DKDelayedEnableButton.cpp" />
+    <ClCompile Include="widgets\DKFloatSlider.cpp" />
     <ClCompile Include="widgets\DKFormDestructionDataButton.cpp" />
     <ClCompile Include="widgets\DKFormInventoryWidget.cpp" />
     <ClCompile Include="widgets\DKFormListPane.cpp" />
@@ -143,6 +146,8 @@
     <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp" />
     <ClCompile Include="widgets\DKPapyrusFragmentFunctionPicker.cpp" />
     <ClCompile Include="widgets\DKQuestAliasPicker.cpp" />
+    <ClCompile Include="widgets\DKTabBar.cpp" />
+    <ClCompile Include="widgets\DKTabWidget.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
     <None Include="cpp.hint" />
     <None Include="README.md" />
@@ -189,6 +194,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\form_types.h" />
+    <QtMoc Include="widgets\DKTabBar.h" />
+    <QtMoc Include="widgets\DKTabWidget.h" />
     <QtMoc Include="interfaces\DKNavmeshGenerationImportOptionPickerInterface.h" />
     <QtMoc Include="widgets\DKNavmeshGenerationImportOptionPicker.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentFunctionPicker.h" />
@@ -208,6 +215,9 @@
     <QtMoc Include="widgets\DKComboBox.h" />
     <QtMoc Include="widgets\DKAttackDataWidget.h" />
     <QtMoc Include="interfaces\DKAttackDataWidgetInterface.h" />
+    <QtMoc Include="interfaces\DKTabWidgetInterface.h" />
+    <QtMoc Include="widgets\DKFloatSlider.h" />
+    <QtMoc Include="interfaces\DKFloatSliderInterface.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
     <QtMoc Include="widgets\DKObjectReferencePicker.h" />
     <QtMoc Include="widgets\DKQuestAliasPicker.h" />

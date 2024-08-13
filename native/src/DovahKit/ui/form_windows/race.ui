@@ -906,6 +906,9 @@
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Expanding</enum>
+         </property>
          <property name="sizeHint" stdset="0">
           <size>
            <width>8</width>
@@ -3182,6 +3185,7 @@
   <tabstop>armorRace</tabstop>
   <tabstop>creatureSize</tabstop>
   <tabstop>flightRadius</tabstop>
+  <tabstop>baseCarryCapacity</tabstop>
   <tabstop>flagPlayable</tabstop>
   <tabstop>flagChild</tabstop>
   <tabstop>flagAllowPlayerDialogue</tabstop>
@@ -3291,6 +3295,7 @@
   <tabstop>movementTypeOverrideRunBack</tabstop>
   <tabstop>movementTypeOverrideWalkRotate</tabstop>
   <tabstop>movementTypeOverrideRunRotate</tabstop>
+  <tabstop>attackData</tabstop>
   <tabstop>injuredHealthPercentage</tabstop>
   <tabstop>unarmedDamage</tabstop>
   <tabstop>unarmedReach</tabstop>

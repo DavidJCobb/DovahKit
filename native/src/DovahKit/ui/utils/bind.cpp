@@ -7,6 +7,7 @@
 #include "dovah/core.h" // form_reference_t
 #include "widgets/DKColorPickerButton.h"
 #include "widgets/DKCompactObjectReferencePicker.h"
+#include "widgets/DKFloatSlider.h"
 #include "widgets/DKFormPicker.h"
 #include "widgets/DKFormListPane.h"
 #include "widgets/DKGameFilePicker.h"
@@ -54,6 +55,13 @@ namespace ui {
       widget->setFormStub(target);
       QObject::connect(widget, &DKFormPicker::formChanged, widget, [&target](dovah::form_stub* value) {
          target = value;
+      });
+   }
+
+   extern void bind(DKFloatSlider* widget, float& dst) {
+      widget->setValue(dst);
+      QObject::connect(widget, &DKFloatSlider::valueChanged, widget, [&dst](float value) {
+         dst = value;
       });
    }
 

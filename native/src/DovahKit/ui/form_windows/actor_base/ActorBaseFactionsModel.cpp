@@ -83,7 +83,12 @@ QModelIndex ActorBaseFactionsModel::create() {
 QModelIndex ActorBaseFactionsModel::overwrite(int row, const node_type& src) {
    if (row < 0 || row >= this->_nodes.size())
       return {};
-   *this->_nodes[row] = src;
+   auto* node = this->_nodes[row];
+   *node = src;
+   if (auto* stub = node->faction)
+      node->cached.editorID = QString::fromStdString(stub->editorID);
+   else
+      node->cached.editorID = "";
    
    auto tl = this->index(row, 0, {});
    auto br = this->index(row, column_count, {});

@@ -311,7 +311,29 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
             header.setColumnFlex(ActorBaseFactionsModel::Column::Rank,    0, 0, metrics.boundingRect("99999").width() * 1.5F + 4);
          });
 
-         QObject::connect(widget->selectionModel(), &QItemSelectionModel::selectionChanged, this, &FormDialogActorBase::_pull_faction_to_ui);
+         auto* sel_model = widget->selectionModel();
+         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &FormDialogActorBase::_pull_faction_to_ui);
+         
+         QObject::connect(this->ui.buttonFactionAdd, &QPushButton::clicked, this, [this, model, sel_model]() {
+            auto qmi = model->create();
+            if (qmi.isValid()) {
+               auto col = model->columnCount({});
+
+               auto tl = qmi.siblingAtColumn(0);
+               auto br = qmi.siblingAtColumn(col - 1);
+               sel_model->select({ tl, br }, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+            }
+         });
+         QObject::connect(this->ui.buttonFactionRemove, &QPushButton::clicked, this, [this, model, sel_model]() {
+            size_t row;
+            {
+               auto rows = sel_model->selectedRows();
+               if (rows.isEmpty())
+                  return;
+               row = rows[0].row();
+            }
+            model->deleteItems(row, 1);
+         });
       }
       this->ui.currentFactionForm->setAllowedFormType(dovah::form_type::faction);
       ui::set_range<int8_t>(this->ui.currentFactionRank);
@@ -812,10 +834,10 @@ void FormDialogActorBase::_load_impl() {
    #pragma endregion
    #pragma region Face Morphs tab
       {
-         auto _handle = [](QSlider* widget, float& value) {
-            widget->setRange(-1000, 1000);
-            widget->setTickInterval(200);
-            ui::bind(widget, value, 1000);
+         auto _handle = [](DKFloatSlider* widget, float& value) {
+            widget->setRange(-1, 1);
+            widget->setTickInterval(0.2);
+            ui::bind(widget, value);
          };
 
          _handle(this->ui.faceMorphBrowDepth,  working.face.morphs.brows.depth);
@@ -854,6 +876,10 @@ void FormDialogActorBase::_load_impl() {
          });
          _handle(this->ui.faceMorphNoseHeight, working.face.morphs.nose.height);
          _handle(this->ui.faceMorphNoseLength, working.face.morphs.nose.length);
+
+         // This one is in the range [0, 1] rather than [-1, 1], I believe.
+         this->ui.faceMorphVampire->setTickInterval(0.2);
+         ui::bind(this->ui.faceMorphVampire, working.face.morphs.vampire_morph);
       }
    #pragma endregion
    #pragma region Face Anim Preview tab
@@ -1121,7 +1147,68 @@ void FormDialogActorBase::_push_data_to_ui(loaded_form_type::template_flag::type
                static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: UI: Additional Head Parts");
             }
             { // Face Morphs
-               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+               const auto blockers = std::array{
+                  QSignalBlocker(this->ui.faceMorphBrowDepth),
+                  QSignalBlocker(this->ui.faceMorphBrowHeight),
+                  QSignalBlocker(this->ui.faceMorphBrowWidth),
+                  //
+                  QSignalBlocker(this->ui.faceMorphMouthIndex),
+                  QSignalBlocker(this->ui.faceMorphMouthDepth),
+                  QSignalBlocker(this->ui.faceMorphMouthHeight),
+                  //
+                  QSignalBlocker(this->ui.faceMorphChinDepth),
+                  QSignalBlocker(this->ui.faceMorphChinLength),
+                  QSignalBlocker(this->ui.faceMorphChinWidth),
+                  //
+                  QSignalBlocker(this->ui.faceMorphJawDepth),
+                  QSignalBlocker(this->ui.faceMorphJawHeight),
+                  QSignalBlocker(this->ui.faceMorphJawWidth),
+                  //
+                  QSignalBlocker(this->ui.faceMorphCheekbonesHeight),
+                  QSignalBlocker(this->ui.faceMorphCheekbonesWidth),
+                  //
+                  QSignalBlocker(this->ui.faceMorphEyesIndex),
+                  QSignalBlocker(this->ui.faceMorphEyesDepth),
+                  QSignalBlocker(this->ui.faceMorphEyesHeight),
+                  QSignalBlocker(this->ui.faceMorphEyesWidth),
+                  //
+                  QSignalBlocker(this->ui.faceMorphNoseIndex),
+                  QSignalBlocker(this->ui.faceMorphNoseHeight),
+                  QSignalBlocker(this->ui.faceMorphNoseLength),
+                  //
+                  QSignalBlocker(this->ui.faceMorphVampire),
+               };
+
+               const auto& morphs = working.face.morphs;
+               this->ui.faceMorphBrowDepth->setValue(morphs.brows.depth);
+               this->ui.faceMorphBrowHeight->setValue(morphs.brows.height);
+               this->ui.faceMorphBrowWidth->setValue(morphs.brows.width);
+               //
+               this->ui.faceMorphMouthIndex->setCurrentIndex(this->ui.faceMorphMouthIndex->findData(working.face.parts.mouth));
+               this->ui.faceMorphMouthDepth->setValue(morphs.mouth.depth);
+               this->ui.faceMorphMouthHeight->setValue(morphs.mouth.height);
+               //
+               this->ui.faceMorphChinDepth->setValue(morphs.chin.depth);
+               this->ui.faceMorphChinLength->setValue(morphs.chin.height);
+               this->ui.faceMorphChinWidth->setValue(morphs.chin.width);
+               //
+               this->ui.faceMorphJawDepth->setValue(morphs.jaw.depth);
+               this->ui.faceMorphJawHeight->setValue(morphs.jaw.height);
+               this->ui.faceMorphJawWidth->setValue(morphs.jaw.width);
+               //
+               this->ui.faceMorphCheekbonesHeight->setValue(morphs.cheeks.height);
+               this->ui.faceMorphCheekbonesWidth->setValue(morphs.cheeks.width);
+               //
+               this->ui.faceMorphEyesIndex->setCurrentIndex(this->ui.faceMorphEyesIndex->findData(working.face.parts.eyes));
+               this->ui.faceMorphEyesDepth->setValue(morphs.eyes.depth);
+               this->ui.faceMorphEyesHeight->setValue(morphs.eyes.height);
+               this->ui.faceMorphEyesWidth->setValue(morphs.eyes.width);
+               //
+               this->ui.faceMorphNoseIndex->setCurrentIndex(this->ui.faceMorphNoseIndex->findData(working.face.parts.nose));
+               this->ui.faceMorphNoseHeight->setValue(morphs.nose.height);
+               this->ui.faceMorphNoseLength->setValue(morphs.nose.length);
+               //
+               this->ui.faceMorphVampire->setValue(morphs.vampire_morph);
             }
          }
          break;
@@ -1152,7 +1239,7 @@ void FormDialogActorBase::_push_data_to_ui(loaded_form_type::template_flag::type
             this->ui.bleedoutOverrideThreshold->setValue(working.stats.bleedout_threshold);
             this->ui.statsClass->setFormStub(working.stats.combat_class.get_form_stub());
          }
-         this->_set_pc_level_mult(working.actor_flags & actor_flag::pc_level_mult);
+         this->_set_pc_level_mult(working.actor_flags & actor_flag::pc_level_mult); // update UI
          break;
       case template_flag::use_factions:
          {
@@ -1612,6 +1699,10 @@ void FormDialogActorBase::_set_race(dovah::form_stub* race) {
    this->_filters.face.hair_color->setRequiredRace(race);
    this->_filters.face.tint_color->setRequiredRace(race);
 
+   if (!race) {
+      return;
+   }
+
    auto loaded = race->load().ptr_cast<dovah::loaded_forms::Race>();
    this->_recalc_stats();
    {  // Indexed face morphs
@@ -1713,6 +1804,8 @@ void FormDialogActorBase::_set_race(dovah::form_stub* race) {
          this->ui.previewTypeHead->setEnabled(show);
          if (!show)
             this->ui.previewTypeFull->setChecked(true);
+      } else {
+         this->ui.tabbox->setTabVisible(this->ui.tabbox->indexOf(this->ui.tabFaceAnimPreview), false);
       }
    }
    //

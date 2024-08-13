@@ -23,6 +23,7 @@ namespace dovah{
 }
 class DKColorPickerButton;
 class DKCompactObjectReferencePicker;
+class DKFloatSlider;
 class DKFormPicker;
 class DKGameFilePicker;
 class DKNavmeshGenerationImportOptionPicker;
@@ -199,6 +200,8 @@ namespace ui {
    extern void bind(DKColorPickerButton*, dovah::loaded_forms::color_t&);
 
    extern void bind(DKFormPicker*, dovah::form_stub*&);
+
+   extern void bind(DKFloatSlider*, float&);
 
    // Intended for form working copies only. Making real-time changes to forms is bad UI/UX and 
    // you should use an OK/Cancel button instead. Once we do the backend rewrite to form working 
