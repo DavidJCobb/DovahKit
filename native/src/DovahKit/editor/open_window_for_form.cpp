@@ -31,6 +31,7 @@
 #include "../ui/form_windows/textureset.h"
 #include "../ui/form_windows/voicetype.h"
 #include "../ui/form_windows/word_of_power.h"
+#include "ui/main_window.h" // MainWindow::get
 
 namespace {
    template<typename T> QDialog* _make(dovah::form_stub& f, QWidget* p) {
@@ -157,6 +158,13 @@ void open_edit_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
    // If we made it to here, then there isn't already a window for this form, so let's 
    // open one.
    //
+   if (parent == nullptr) {
+      //
+      // TODO: If this is a child form (e.g. DIAL, INFO), reuse or open windows for its 
+      // ancestor forms (e.g. QUST, DIAL) and use the appropriate one as the parent.
+      //
+      parent = &MainWindow::get();
+   }
    QDialog* opened = nullptr;
    for (auto& pair : factory) {
       if (pair.first == stub.form_type) {

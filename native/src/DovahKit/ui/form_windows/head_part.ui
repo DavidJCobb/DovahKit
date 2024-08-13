@@ -75,7 +75,7 @@
       <widget class="QComboBox" name="type">
        <property name="whatsThis">
         <string>&lt;p&gt;This setting controls what part of a character's face this HeadPart defines.&lt;/p&gt;
-&lt;p&gt;Most of these types are self-explanatory &amp;mdash; eyes, eyebrows, and whatnot &amp;mdash; but it's worth clarifying that &quot;Face&quot; defines an entire head NIF for an actor to use. The &quot;Misc&quot; type is generally used for HeadParts that exist only to serve as &quot;extra parts&quot; for other HeadParts (e.g. hairline meshes for hairstyles).&lt;/p&gt;</string>
+&lt;p&gt;Most of these types are self-explanatory — eyes, eyebrows, and whatnot — but it's worth clarifying that &quot;Face&quot; defines an entire head NIF for an actor to use. The &quot;Misc&quot; type is generally used for HeadParts that exist only to serve as &quot;extra parts&quot; for other HeadParts (e.g. hairline meshes for hairstyles).&lt;/p&gt;</string>
        </property>
        <item>
         <property name="text">

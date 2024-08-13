@@ -38,6 +38,8 @@ struct DKAttackDataModelNode {
       QString spellEditorID;
       QString keywordEditorID;
    } cached;
+
+   void recache_editor_ids();
 };
 
 class DKAttackDataModel : public DKGenericListModel<DKAttackDataModel, DKAttackDataModelNode> {

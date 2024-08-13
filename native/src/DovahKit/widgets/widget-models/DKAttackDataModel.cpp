@@ -2,6 +2,18 @@
 #include "dovah/form_stub.h"
 #include "editor/core.h"
 
+void DKAttackDataModelNode::recache_editor_ids() {
+   if (auto* stub = this->keyword)
+      this->cached.keywordEditorID = QString::fromStdString(stub->editorID);
+   else
+      this->cached.keywordEditorID = "";
+
+   if (auto* stub = this->spell)
+      this->cached.spellEditorID = QString::fromStdString(stub->editorID);
+   else
+      this->cached.spellEditorID = "";
+}
+
 DKAttackDataModel::DKAttackDataModel(QObject* parent) : DKGenericListModel(parent) {
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &DKAttackDataModel::clear);
@@ -133,7 +145,9 @@ QModelIndex DKAttackDataModel::create() {
 QModelIndex DKAttackDataModel::overwrite(int row, const node_type& src) {
    if (row < 0 || row >= this->_nodes.size())
       return {};
-   *this->_nodes[row] = src;
+   auto* node = this->_nodes[row];
+   *node = src;
+   node->recache_editor_ids();
    
    auto tl = this->index(row, 0, {});
    auto br = this->index(row, column_count, {});
@@ -151,10 +165,7 @@ void DKAttackDataModel::overwriteAllItems(const std::vector<node_type>& src) {
       this->_nodes.resize(size);
       for (size_t i = 0; i < size; ++i) {
          auto* node = this->_nodes[i] = new node_type{ src[i] };
-         if (auto* stub = node->keyword)
-            node->cached.keywordEditorID = QString::fromStdString(stub->editorID);
-         if (auto* stub = node->spell)
-            node->cached.spellEditorID = QString::fromStdString(stub->editorID);
+         node->recache_editor_ids();
       }
    });
 }

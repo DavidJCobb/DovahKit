@@ -182,7 +182,16 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
    #pragma region Not in any tab
       this->ui.templateActor->setAllowedFormTypes({ dovah::form_type::actor_base, dovah::form_type::leveled_character });
       QObject::connect(this->ui.templateActor, &DKFormPicker::formChanged, this, [this](dovah::form_stub* target) {
+         this->ui.buttonEditTemplateActor->setEnabled(target != nullptr);
          this->ui.templateFlags->setEnabled(target != nullptr);
+      });
+      QObject::connect(this->ui.buttonEditTemplateActor, &QPushButton::clicked, this, [this]() {
+         if (!this->form)
+            return;
+         auto* stub = this->form->template_data.actor.get_form_stub();
+         if (!stub)
+            return;
+         open_edit_dialog_for_form(*stub);
       });
    #pragma endregion
    

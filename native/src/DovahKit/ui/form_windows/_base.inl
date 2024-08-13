@@ -2,6 +2,7 @@
 #include "./_base.h"
 #include <cassert>
 #include <QDialog>
+#include <QMetaMethod> // for wildcard QObject::disconnect
 #include <QPushButton> // for buttonOK and buttonCancel handlers
 #include "dovah/forms/components/extra_data/_templates.h"
 #include "dovah/form_stub.h"
@@ -185,6 +186,28 @@ void CLASS_NAME::save() {
       return;
    
    auto& editor = DovahKitCore::get();
+   {  // Unhook signals so we aren't notified about ourselves. If we try to access `this->form` 
+      // in, say, a formModified signal handler, we'll choke and die on a null pointer. I'd 
+      // rather not require every such signal in every such dialog to have to guard against 
+      // that edge-case; the dialog should be considered "dead" once you click "OK" on it.
+      //
+      // WARNING: If other objects' responses to these signals cause signals of the same type 
+      //          to be emitted, the dialog won't catch those! In general, you should assume 
+      //          that once `save()` is called, your dialog is ABSOLUTELY BLOODY DONE doing 
+      //          any custom behaviors it has.
+      // 
+      //          Sadly, Qt's API doesn't seem to have any way of saying, "Prevent this one 
+      //          object from reacting to this one signal this one time, while still allowing 
+      //          it to react to all other signals, including signals of this same type that 
+      //          are emitted after the one occurrence we wish to block."
+      //
+      auto* this_object = dynamic_cast<QObject*>(this);
+      assert(this_object != nullptr && "FormEditDialogMixin subclasses should be QObjects.");
+      QObject::disconnect(&editor, &DovahKitCore::formWorkingCopyCommitImminent, this_object, nullptr);
+      QObject::disconnect(&editor, &DovahKitCore::formModificationImminent,      this_object, nullptr);
+      QObject::disconnect(&editor, &DovahKitCore::formModified,                  this_object, nullptr);
+      QObject::disconnect(&editor, &DovahKitCore::formWorkingCopyCommitComplete, this_object, nullptr);
+   }
    if constexpr (uses_working_copy) {
       emit editor.formWorkingCopyCommitImminent(this->stub);
    }
