@@ -2,6 +2,174 @@
 #include "_common_cpp.h"
 
 namespace dovah::loaded_forms {
+   void ActorBase::copy_data_from_template_actor() {
+      for (size_t i = 0; i < 13; ++i) {
+         this->copy_data_from_template_actor((template_flag::type)(1 << i));
+      }
+   }
+   void ActorBase::copy_data_from_template_actor(template_flag::type flag) {
+      if (!this->template_data.actor)
+         return;
+
+      auto* template_stub   = this->template_data.actor.get_form_stub();
+      auto  template_loaded = template_stub->load().ptr_cast<ActorBase>();
+      if (!template_loaded)
+         return;
+
+      auto& src_actor = *template_loaded;
+
+      auto _copy_flag = [this, &src_actor](actor_flag::type flag) {
+         if (src_actor.actor_flags & flag)
+            this->actor_flags |= flag;
+         else
+            this->actor_flags &= ~flag;
+      };
+      auto _copy_form = [this, &src_actor](form_reference_t& dst, const form_reference_t& src) {
+         dst.set(*this, src);
+      };
+
+      switch (flag) {
+         case template_flag::use_traits:
+            {  // Traits
+               _copy_flag(actor_flag::female);
+               _copy_flag(actor_flag::opposite_gender_animations);
+               _copy_form(this->race,           src_actor.race);
+               _copy_form(this->skin,           src_actor.skin);
+               _copy_form(this->voicetype,      src_actor.voicetype);
+               _copy_form(this->death_item,     src_actor.death_item);
+               _copy_form(this->far_away.model, src_actor.far_away.model);
+               this->far_away.distance = src_actor.far_away.distance;
+               this->height = src_actor.height;
+               this->weight = src_actor.weight;
+               this->stats.disposition = src_actor.stats.disposition;
+            }
+            {  // Sounds
+               this->sound_level = src_actor.sound_level;
+
+               auto& dst = this->creature_sounds;
+               auto& src = src_actor.creature_sounds;
+               if (auto* stub = src.inherits_from()) {
+                  dst.set_inherits_from(*this, stub);
+               } else {
+                  if (src.sound_count()) {
+                     dst.replace_sounds(*this, src.sounds());
+                  } else {
+                     dst.replace_sounds(*this, {});
+                  }
+               }
+            }
+            {  // Face Parts
+               _copy_form(this->face.texture_set, src_actor.face.texture_set);
+               _copy_form(this->head.hair_color,  src_actor.head.hair_color);
+               copy_form_reference_list(*this, this->head.head_parts, src_actor.head.head_parts);
+               this->tint_layers = src_actor.tint_layers;
+            }
+            {  // Face Morphs
+               this->face.morphs = src_actor.face.morphs;
+               this->face.parts  = src_actor.face.parts;
+            }
+            break;
+         case template_flag::use_stats:
+            {
+               const auto& src = src_actor.stats;
+               auto& dst = this->stats;
+
+               _copy_flag(actor_flag::auto_calc_stats);
+               _copy_flag(actor_flag::pc_level_mult);
+               dst.level          = src.level;
+               dst.calc_min_level = src.calc_min_level;
+               dst.calc_max_level = src.calc_max_level;
+               dst.attributes     = src.attributes;
+               dst.skills         = src.skills;
+               _copy_form(dst.combat_class, src.combat_class);
+               dst.speed_mult     = src.speed_mult;
+               _copy_flag(actor_flag::bleedout_override);
+               dst.bleedout_threshold = src.bleedout_threshold;
+            }
+            break;
+         case template_flag::use_factions:
+            {
+               const auto& src = src_actor.faction_memberships;
+               auto& dst = this->faction_memberships;
+
+               for (auto& item : dst)
+                  item.faction.set(*this, nullptr);
+               size_t size = src.size();
+               dst.resize(size);
+               for (size_t i = 0; i < size; ++i) {
+                  _copy_form(dst[i].faction, src[i].faction);
+                  dst[i].rank = src[i].rank;
+               }
+
+               _copy_form(this->crime_faction, src_actor.crime_faction);
+            }
+            break;
+         case template_flag::use_spells:
+            this->spells.clone_from(src_actor.spells, *this);
+            copy_form_reference_list(*this, this->perks, src_actor.perks);
+            break;
+         case template_flag::use_ai_data:
+            {
+               const auto& src = src_actor.ai;
+               auto& dst = this->ai;
+
+               dst.aggression   = src.aggression;
+               dst.aggro        = src.aggro;
+               dst.assistance   = src.assistance;
+               dst.confidence   = src.confidence;
+               dst.energy_level = src.energy_level;
+               dst.mood         = src.mood;
+               dst.morality     = src.morality;
+            }
+            break;
+         case template_flag::use_ai_packages:
+            copy_form_reference_list(*this, this->ai.package_list, src_actor.ai.package_list);
+            break;
+         case template_flag::use_package_overrides:
+            {
+               _copy_form(this->ai.default_package_list, src_actor.ai.default_package_list);
+
+               const auto& src = src_actor.ai.package_override_lists;
+               auto& dst = this->ai.package_override_lists;
+
+               _copy_form(dst.combat,         src.combat);
+               _copy_form(dst.guard_warn,     src.guard_warn);
+               _copy_form(dst.observe_corpse, src.observe_corpse);
+               _copy_form(dst.spectator,      src.spectator);
+            }
+            break;
+         case template_flag::use_animations:
+            //
+            // ???
+            //
+            break;
+         case template_flag::use_base_data:
+            this->name       = src_actor.name;
+            this->short_name = src_actor.short_name;
+            _copy_flag(actor_flag::essential);
+            _copy_flag(actor_flag::is_protected);
+            _copy_flag(actor_flag::respawn);
+            _copy_flag(actor_flag::summonable);
+            _copy_flag(actor_flag::simple_actor);
+            _copy_flag(actor_flag::doesnt_affect_stealth_meter);
+            break;
+         case template_flag::use_inventory:
+            _copy_form(this->outfits.normal,   src_actor.outfits.normal);
+            _copy_form(this->outfits.sleeping, src_actor.outfits.sleeping);
+            this->inventory.clone_from(src_actor.inventory, *this);
+            break;
+         case template_flag::use_scripts:
+            // Doesn't copy data.
+            break;
+         case template_flag::use_attack_data:
+            this->attack_data.clone_from(src_actor.attack_data, *this);
+            break;
+         case template_flag::use_keywords:
+            this->keywords.clone_from(src_actor.keywords, *this);
+            break;
+      }
+   }
+
    void ActorBase::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
@@ -304,8 +472,8 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'WNAM':
-               if (subrecord.read(this->worn_armor)) {
-                  intfc.warn_if_ref_is_wrong_type(this->worn_armor, form_type::armor, subrecord.signature());
+               if (subrecord.read(this->skin)) {
+                  intfc.warn_if_ref_is_wrong_type(this->skin, form_type::armor, subrecord.signature());
                }
                break;
             case 'ZNAM':
@@ -448,7 +616,7 @@ namespace dovah::loaded_forms {
       form_id_t race;
       form_id_t template_actor;
       form_id_t voicetype;
-      form_id_t worn_armor;
+      form_id_t skin; // WNAM
       struct {
          form_id_t spectator;      // SPOR
          form_id_t observe_corpse; // OCOR
@@ -572,7 +740,7 @@ namespace dovah::loaded_forms {
                subrecord.read(race);
                break;
             case 'WNAM':
-               subrecord.read(worn_armor);
+               subrecord.read(skin);
                break;
             case 'ZNAM':
                subrecord.read(combat_style);
@@ -720,7 +888,7 @@ namespace dovah::loaded_forms {
       copy->texture_lighting = this->texture_lighting;
       copy->tint_layers = this->tint_layers;
       copy->voicetype.set(*copy, this->voicetype);
-      copy->worn_armor.set(*copy, this->worn_armor);
+      copy->skin.set(*copy, this->skin);
       copy->height = this->height;
       copy->weight = this->weight;
    }
@@ -772,7 +940,7 @@ namespace dovah::loaded_forms {
       this->spells.save(record, intfc);
       if (this->destruction_data.has_value())
          this->destruction_data.value().save(record, intfc);
-      record.write_formID_subrecord('WNAM', this->worn_armor, true);
+      record.write_formID_subrecord('WNAM', this->skin, true);
       record.write_formID_subrecord('ANAM', this->far_away.model, true);
       this->attack_data.save(record, intfc);
       record.write_formID_subrecord('SPOR', this->ai.package_override_lists.spectator, true);
@@ -1002,7 +1170,7 @@ namespace dovah::loaded_forms {
       this->gift_filter.clear_if(*this, other);
       remove_form_from_reference_list(this->perks,  other, *this);
       this->voicetype.clear_if(*this, other);
-      this->worn_armor.clear_if(*this, other);
+      this->skin.clear_if(*this, other);
    }
    void ActorBase::_clear_impl() noexcept {
       // components
@@ -1098,7 +1266,7 @@ namespace dovah::loaded_forms {
       this->texture_lighting = {};
       this->tint_layers.clear();
       this->voicetype.set(*this, nullptr);
-      this->worn_armor.set(*this, nullptr);
+      this->skin.set(*this, nullptr);
       this->height = 1.0;
       this->weight = 0.0;
    }

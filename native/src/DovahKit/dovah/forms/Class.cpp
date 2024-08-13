@@ -50,7 +50,7 @@ namespace dovah::loaded_forms {
                   subrecord.read(this->attribute_weights.health);
                   subrecord.read(this->attribute_weights.magicka);
                   subrecord.read(this->attribute_weights.stamina);
-                  subrecord.read(this->attribute_weights.unknown);
+                  subrecord.read(this->attribute_weights.padding);
                }
                break;
             default:
@@ -117,7 +117,7 @@ namespace dovah::loaded_forms {
       DATA.write(this->attribute_weights.health);
       DATA.write(this->attribute_weights.magicka);
       DATA.write(this->attribute_weights.stamina);
-      DATA.write(this->attribute_weights.unknown);
+      DATA.write(this->attribute_weights.padding);
       DATA.close();
    }
    void Class::_clear_impl() noexcept {

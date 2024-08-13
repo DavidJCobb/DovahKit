@@ -79,8 +79,9 @@ class FormDialogActorBase :
       virtual void _load_impl() override;
       virtual void _save_impl() override;
 
-      void _updateOutfitContentsView();
-      void _updateFromTemplate();
+      void _update_outfit_contents_view();
+      void _update_from_template_actor();
+      void _push_data_to_ui(loaded_form_type::template_flag::type);
 
       unsigned int _get_effective_level() const;
       void _on_effective_level_changed();

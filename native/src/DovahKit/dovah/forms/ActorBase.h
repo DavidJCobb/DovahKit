@@ -269,7 +269,7 @@ namespace dovah::loaded_forms {
             int16_t  level;              // ABCS+0x08 // this is a multiplier (fixed-point; convert to a float by dividing by 1000) if the PC Level Mult flag is set
             int16_t  calc_min_level = 0; // ABCS+0x0A // applies if the PC Level Mult flag is set
             int16_t  calc_max_level = 0; // ABCS+0x0C // applies if the PC Level Mult flag is set
-            int16_t  speed_mult     = 0; // ABCS+0x0E
+            int16_t  speed_mult     = 0; // ABCS+0x0E // this is a percentage, i.e. a raw value of 100 means a multiplier of 1
             int16_t  disposition    = 0; // ABCS+0x10
             uint16_t bleedout_threshold; // ABCS+0x16 // override the Bleedout Default on the actor's CLAS form, if the Bleedout Override actor flag is set
             form_reference_t combat_class; // CNAM
@@ -295,9 +295,12 @@ namespace dovah::loaded_forms {
          } texture_lighting; // QNAM
          std::vector<tint_layer> tint_layers;
          form_reference_t voicetype; // VTCK
-         form_reference_t worn_armor; // WNAM
+         form_reference_t skin; // WNAM
          float height = 1.0F;
          float weight = 0.0F;
+
+         void copy_data_from_template_actor();
+         void copy_data_from_template_actor(template_flag::type flag);
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc); // TODO: FINISH ME
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);

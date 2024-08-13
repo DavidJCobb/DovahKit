@@ -29,7 +29,7 @@ namespace dovah::loaded_forms {
                uint8_t health;
                uint8_t magicka;
                uint8_t stamina;
-               uint8_t unknown; // possibly padding; need to verify
+               uint8_t padding;
             };
          } attribute_weights;
 

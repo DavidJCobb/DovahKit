@@ -172,6 +172,8 @@ namespace impl {
 FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
 
+   this->ui.tabbox->setCurrentIndex(0);
+
    this->ui.previewOptionsContainer->setVisible(preview_enabled);
    this->ui.buttonShowFilteredDialogue->setEnabled(filtered_dialogue_browser_implemented);
 
@@ -398,7 +400,7 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
       this->ui.outfitItemsPreview->setReadOnly(true);
       ui::set_range<uint8_t>(this->ui.gearedUpWeapons);
 
-      QObject::connect(this->ui.outfitDefault, &DKFormPicker::formChanged, this, &FormDialogActorBase::_updateOutfitContentsView);
+      QObject::connect(this->ui.outfitDefault, &DKFormPicker::formChanged, this, &FormDialogActorBase::_update_outfit_contents_view);
    #pragma endregion
    #pragma region Magic and Perks tab
       this->ui.spells->setAllowedFormTypes({
@@ -595,15 +597,16 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
             this->_recalc_stats();
       });
    }
-   {  // Watch for changes to our race or class
+   {  // Watch for changes to our template actor, race, or class
       auto& editor = DovahKitCore::get();
       QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
          bool race_edited = stub == this->form->race.get_form_stub();
          if (race_edited) {
             this->_set_race(stub); // not redundant; should refresh everything
-         } else {
-            if (stub == this->form->stats.combat_class.get_form_stub())
-               this->_recalc_stats();
+         } else if (stub == this->form->stats.combat_class.get_form_stub()) {
+            this->_recalc_stats();
+         } else if (stub == this->form->template_data.actor.get_form_stub()) {
+            this->_update_from_template_actor();
          }
       });
    }
@@ -649,18 +652,40 @@ void FormDialogActorBase::_load_impl() {
          ui::bind(this->ui.templateUseAIPackages, working.template_data.flags, loaded_form_type::template_flag::use_ai_packages);
          ui::bind(this->ui.templateUseAttackData, working.template_data.flags, loaded_form_type::template_flag::use_attack_data);
          ui::bind(this->ui.templateUseBaseData, working.template_data.flags, loaded_form_type::template_flag::use_base_data);
-         ui::bind(this->ui.templateUseDefaultPackages, working.template_data.flags, loaded_form_type::template_flag::use_package_overrides);
+         ui::bind(this->ui.templateUsePackageFormLists, working.template_data.flags, loaded_form_type::template_flag::use_package_overrides);
          ui::bind(this->ui.templateUseFactions, working.template_data.flags, loaded_form_type::template_flag::use_factions);
          ui::bind(this->ui.templateUseInventory, working.template_data.flags, loaded_form_type::template_flag::use_inventory);
          ui::bind(this->ui.templateUseKeywords, working.template_data.flags, loaded_form_type::template_flag::use_keywords);
          ui::bind(this->ui.templateUseScripts, working.template_data.flags, loaded_form_type::template_flag::use_scripts);
          ui::bind(this->ui.templateUseSpellList, working.template_data.flags, loaded_form_type::template_flag::use_spells);
+         ui::bind(this->ui.templateUseStats, working.template_data.flags, loaded_form_type::template_flag::use_stats);
+         ui::bind(this->ui.templateUseTraits, working.template_data.flags, loaded_form_type::template_flag::use_traits);
+         //
+         // This next signal has to be registered here, to ensure it runs after the flag is changed.
+         //
+         auto checkboxes = std::array{
+            this->ui.templateUseTraits,
+            this->ui.templateUseStats,
+            this->ui.templateUseScripts,
+            this->ui.templateUseFactions,
+            this->ui.templateUseAIData,
+            this->ui.templateUseAIPackages,
+            this->ui.templateUsePackageFormLists,
+            this->ui.templateUseAttackData,
+            this->ui.templateUseSpellList,
+            this->ui.templateUseInventory,
+            this->ui.templateUseBaseData,
+            this->ui.templateUseKeywords,
+         };
+         for (auto* checkbox : checkboxes) {
+            QObject::connect(checkbox, &QCheckBox::stateChanged, this, &FormDialogActorBase::_update_from_template_actor);
+         }
       #pragma endregion
    #pragma endregion
 
    #pragma region Traits tab
       QObject::connect(this->ui.race, &DKFormPicker::formChanged, this, &FormDialogActorBase::_set_race);
-      ui::bind(this->ui.skin, working.worn_armor, working);
+      ui::bind(this->ui.skin, working.skin, working);
       QObject::connect(this->ui.sex, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
          auto sex = this->ui.sex->currentData().toInt();
          this->_set_sex((dovah::sex)sex);
@@ -749,7 +774,8 @@ void FormDialogActorBase::_load_impl() {
       ui::bind(this->ui.aggression, working.ai.aggression);
       ui::bind(this->ui.confidence, working.ai.confidence);
       ui::bind(this->ui.assistance, working.ai.assistance);
-      ui::bind(this->ui.morality, working.ai.morality);
+      ui::bind(this->ui.morality,   working.ai.morality);
+      ui::bind(this->ui.aggroRadii, working.ai.aggro.use_radius);
       ui::bind(this->ui.aggroRadiusWarn,       working.ai.aggro.warn);
       ui::bind(this->ui.aggroRadiusWarnAttack, working.ai.aggro.warn_attack);
       ui::bind(this->ui.aggroRadiusAttack,     working.ai.aggro.attack);
@@ -764,7 +790,7 @@ void FormDialogActorBase::_load_impl() {
       ui::bind(this->ui.packageListCombat,        working.ai.package_override_lists.combat, working);
    #pragma endregion
    #pragma region Inventory tab
-      QObject::connect(this->ui.outfitDefault, &DKFormPicker::formChanged, this, &FormDialogActorBase::_updateOutfitContentsView);
+      QObject::connect(this->ui.outfitDefault, &DKFormPicker::formChanged, this, &FormDialogActorBase::_update_outfit_contents_view);
       ui::bind(this->ui.outfitDefault, working.outfits.normal,   working);
       ui::bind(this->ui.outfitSleep,   working.outfits.sleeping, working);
       ui::bind(this->ui.gearedUpWeapons, working.geared_up_weapons);
@@ -841,6 +867,7 @@ void FormDialogActorBase::_load_impl() {
    this->_set_race(working.race.get_form_stub());
    this->_set_pc_level_mult(this->ui.flagPCLevelMult->isChecked());
    static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+   this->_update_from_template_actor();
 }
 void FormDialogActorBase::_save_impl() {
    //
@@ -957,7 +984,7 @@ void FormDialogActorBase::_save_impl() {
 void FormDialogActorBase::updatePreview() {
    static_assert(!preview_enabled, "The 3D preview is not yet implemented. Don't enable it until it's implemented!");
 }
-void FormDialogActorBase::_updateOutfitContentsView() {
+void FormDialogActorBase::_update_outfit_contents_view() {
    auto* widget = this->ui.outfitItemsPreview;
    widget->clear();
 
@@ -972,7 +999,7 @@ void FormDialogActorBase::_updateOutfitContentsView() {
       widget->addStub(entry.get_form_stub());
    }
 }
-void FormDialogActorBase::_updateFromTemplate() {
+void FormDialogActorBase::_update_from_template_actor() {
    using template_flag = loaded_form_type::template_flag;
 
    auto* base  = this->form->template_data.actor.get_form_stub();
@@ -980,17 +1007,22 @@ void FormDialogActorBase::_updateFromTemplate() {
    if (!base) {
       flags = 0;
    }
-   this->ui.tabTraits->setEnabled(!(flags& template_flag::use_traits));
+   {  // Traits flag
+      bool enable = !(flags & template_flag::use_traits);
+      this->ui.tabTraits->setEnabled(enable);
+      this->ui.tabSounds->setEnabled(enable);
+      this->ui.tabFaceParts->setEnabled(enable);
+      this->ui.tabFaceMorphs->setEnabled(enable);
+   }
    this->ui.tabStats->setEnabled(!(flags & template_flag::use_stats));
    this->ui.tabFactions->setEnabled(!(flags & template_flag::use_factions));
    this->ui.tabSpells->setEnabled(!(flags & template_flag::use_spells));
    this->ui.tabAIData->setEnabled(!(flags & template_flag::use_ai_data));
    this->ui.packages->setEnabled(!(flags & template_flag::use_ai_packages));
-   static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: template_flag::use_animations");
    this->ui.tabInventory->setEnabled(!(flags & template_flag::use_inventory));
+   this->ui.defaultPackagesGroupbox->setEnabled(!(flags & template_flag::use_package_overrides));
    this->ui.tabAttackData->setEnabled(!(flags & template_flag::use_attack_data));
    this->ui.tabKeywords->setEnabled(!(flags & template_flag::use_keywords));
-   this->ui.defaultPackagesGroupbox->setEnabled(!(flags & template_flag::use_package_overrides));
    {  // Base data
       bool enable = !(flags & template_flag::use_base_data);
       this->ui.name->setEnabled(enable);
@@ -1009,20 +1041,248 @@ void FormDialogActorBase::_updateFromTemplate() {
    auto base_loaded = base->load().ptr_cast<loaded_form_type>();
    if (!base_loaded)
       return;
+   auto& editor  = DovahKitCore::get();
+   auto& working = *this->form;
 
-   static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Based on flags, set the state of UI values to match the template actor.");
-   if (flags & template_flag::use_keywords) {
-      this->ui.keywords->clear();
-      for (auto& ref : base_loaded->keywords.forms) {
-         this->ui.keywords->addStub(ref.get_form_stub());
-      }
+   working.copy_data_from_template_actor();
+   for (size_t i = 0; i < 13; ++i) {
+      auto mask = (template_flag::type)(1 << i);
+      if (working.template_data.flags & mask)
+         this->_push_data_to_ui(mask);
    }
-   if (flags & template_flag::use_package_overrides) {
-      this->ui.packageListDefault->setFormStub(base_loaded->ai.default_package_list.get_form_stub());
-      this->ui.packageListSpectator->setFormStub(base_loaded->ai.package_override_lists.spectator.get_form_stub());
-      this->ui.packageListObserveCorpse->setFormStub(base_loaded->ai.package_override_lists.observe_corpse.get_form_stub());
-      this->ui.packageListGuardWarn->setFormStub(base_loaded->ai.package_override_lists.guard_warn.get_form_stub());
-      this->ui.packageListCombat->setFormStub(base_loaded->ai.package_override_lists.combat.get_form_stub());
+}
+
+void FormDialogActorBase::_push_data_to_ui(loaded_form_type::template_flag::type flag) {
+   using actor_flag    = loaded_form_type::actor_flag;
+   using template_flag = loaded_form_type::template_flag;
+
+   auto& editor  = DovahKitCore::get();
+   auto& working = *this->form;
+
+   switch (flag) {
+      case template_flag::use_traits:
+         {
+            // Must set these first, so the various formpicker filters get updated.
+            this->_set_sex(working.actor_flags & actor_flag::female ? dovah::sex::female : dovah::sex::male);
+            this->_set_race(working.race.get_form_stub());
+
+            { // Traits
+               const auto blockers = std::array{
+                  QSignalBlocker(this->ui.skin),
+                  QSignalBlocker(this->ui.height),
+                  QSignalBlocker(this->ui.bodyWeight),
+                  QSignalBlocker(this->ui.farawaySkin),
+                  QSignalBlocker(this->ui.farawayDistance),
+                  QSignalBlocker(this->ui.voicetype),
+                  QSignalBlocker(this->ui.dispositionBase),
+                  QSignalBlocker(this->ui.deathItem),
+                  QSignalBlocker(this->ui.flagOppositeGenderAnims),
+               };
+               this->ui.skin->setFormStub(working.skin.get_form_stub());
+               this->ui.height->setValue(working.height);
+               this->ui.bodyWeight->setValue(working.weight);
+               this->ui.farawaySkin->setFormStub(working.far_away.model.get_form_stub());
+               this->ui.farawayDistance->setValue(working.far_away.distance);
+               this->ui.voicetype->setFormStub(working.voicetype.get_form_stub());
+               this->ui.dispositionBase->setValue(working.stats.disposition);
+               this->ui.deathItem->setFormStub(working.death_item.get_form_stub());
+               this->ui.flagOppositeGenderAnims->setChecked(working.actor_flags & actor_flag::opposite_gender_animations);
+            }
+            { // Sounds
+               const auto blockers = std::array{
+                  QSignalBlocker(this->ui.soundLevel),
+                  QSignalBlocker(this->ui.inheritSoundsFrom),
+               };
+               this->ui.soundLevel->setCurrentIndex(this->ui.soundLevel->findData((int)working.sound_level));
+               this->ui.inheritSoundsFrom->setFormStub(working.creature_sounds.inherits_from());
+
+               this->_creature_sound_inheritance_changed();
+            }
+            { // Face Parts
+               auto& current_head = this->_current_sex() == dovah::sex::female ? this->_data.female : this->_data.male;
+               auto& unused_head  = this->_current_sex() == dovah::sex::male   ? this->_data.female : this->_data.male;
+
+               current_head.complexion = working.face.texture_set.get_form_stub();
+               current_head.hair_color = working.head.hair_color.get_form_stub();
+               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Update current sex: Face Tint Layers");
+               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Update current sex: Base Head Parts");
+               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Update current sex: Additional Head Parts");
+
+               unused_head.complexion = nullptr;
+               unused_head.hair_color = nullptr;
+               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Reset unused sex: Face Tint Layers");
+               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Reset unused sex: Base Head Parts");
+               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Reset unused sex: Additional Head Parts");
+
+               this->ui.faceComplexion->setFormStub(current_head.complexion);
+               this->ui.hairColor->setFormStub(current_head.hair_color);
+               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: UI: Face Tint Layers");
+               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: UI: Base Head Parts");
+               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: UI: Additional Head Parts");
+            }
+            { // Face Morphs
+               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+            }
+         }
+         break;
+      case template_flag::use_stats:
+         {
+            const auto blockers = std::array{
+               //QSignalBlocker(this->ui.flagPCLevelMult), // handled by _set_pc_level_mult
+               QSignalBlocker(this->ui.flagAutoCalcStats),
+               //QSignalBlocker(this->ui.level),           // handled by _set_pc_level_mult
+               QSignalBlocker(this->ui.levelCalcMin),
+               QSignalBlocker(this->ui.levelCalcMax),
+               QSignalBlocker(this->ui.statsHealthOffset),
+               QSignalBlocker(this->ui.statsMagickaOffset),
+               QSignalBlocker(this->ui.statsStaminaOffset),
+               QSignalBlocker(this->ui.speedPercentage),
+               QSignalBlocker(this->ui.flagBleedoutOverride),
+               QSignalBlocker(this->ui.bleedoutOverrideThreshold),
+               QSignalBlocker(this->ui.statsClass),
+            };
+            this->ui.flagAutoCalcStats->setChecked(working.actor_flags & actor_flag::auto_calc_stats);
+            this->ui.levelCalcMin->setValue(working.stats.calc_min_level);
+            this->ui.levelCalcMax->setValue(working.stats.calc_max_level);
+            this->ui.statsHealthOffset->setValue(working.stats.attributes.offsets.health);
+            this->ui.statsMagickaOffset->setValue(working.stats.attributes.offsets.magicka);
+            this->ui.statsStaminaOffset->setValue(working.stats.attributes.offsets.stamina);
+            this->ui.speedPercentage->setValue(working.stats.speed_mult);
+            this->ui.flagBleedoutOverride->setChecked(working.actor_flags & actor_flag::bleedout_override);
+            this->ui.bleedoutOverrideThreshold->setValue(working.stats.bleedout_threshold);
+            this->ui.statsClass->setFormStub(working.stats.combat_class.get_form_stub());
+         }
+         this->_set_pc_level_mult(working.actor_flags & actor_flag::pc_level_mult);
+         break;
+      case template_flag::use_factions:
+         {
+            const auto blockers = std::array{
+               QSignalBlocker(this->ui.currentFactionForm),
+               QSignalBlocker(this->ui.currentFactionRank),
+               QSignalBlocker(this->ui.crimeFaction),
+            };
+            {
+               auto* model = this->_models.factions;
+               model->clear();
+
+               std::vector<ActorBaseFactionsModelNode> nodes;
+               for (const auto& entry : working.faction_memberships) {
+                  auto& dst = nodes.emplace_back();
+                  dst.faction = entry.faction.get_form_stub();
+                  dst.rank    = entry.rank;
+               }
+               model->overwriteAllItems(nodes);
+            }
+            this->_pull_faction_to_ui();
+            this->ui.crimeFaction->setFormStub(working.crime_faction.get_form_stub());
+         }
+         break;
+      case template_flag::use_spells:
+         this->ui.spells->pullStubs(working.spells.forms);
+         this->ui.perks->pullStubs(working.perks);
+         break;
+      case template_flag::use_ai_data:
+         {
+            const auto blockers = std::array{
+               QSignalBlocker(this->ui.mood),
+               QSignalBlocker(this->ui.aiEnergy),
+               QSignalBlocker(this->ui.giftFilter),
+               QSignalBlocker(this->ui.aggression),
+               QSignalBlocker(this->ui.confidence),
+               QSignalBlocker(this->ui.assistance),
+               QSignalBlocker(this->ui.morality),
+               QSignalBlocker(this->ui.aggroRadii),
+               QSignalBlocker(this->ui.aggroRadiusWarn),
+               QSignalBlocker(this->ui.aggroRadiusWarnAttack),
+               QSignalBlocker(this->ui.aggroRadiusAttack),
+            };
+            this->ui.mood->setCurrentIndex(this->ui.mood->findData((int)working.ai.mood));
+            this->ui.aiEnergy->setValue(working.ai.energy_level);
+            this->ui.giftFilter->setFormStub(working.gift_filter.get_form_stub());
+            this->ui.aggression->setCurrentIndex(this->ui.aggression->findData((int)working.ai.aggression));
+            this->ui.confidence->setCurrentIndex(this->ui.confidence->findData((int)working.ai.confidence));
+            this->ui.assistance->setCurrentIndex(this->ui.assistance->findData((int)working.ai.assistance));
+            this->ui.morality->setCurrentIndex(this->ui.morality->findData((int)working.ai.morality));
+            this->ui.aggroRadii->setChecked(working.ai.aggro.use_radius);
+            this->ui.aggroRadiusWarn->setValue(working.ai.aggro.warn);
+            this->ui.aggroRadiusWarnAttack->setValue(working.ai.aggro.warn_attack);
+            this->ui.aggroRadiusAttack->setValue(working.ai.aggro.attack);
+         }
+         break;
+      case template_flag::use_ai_packages:
+         this->ui.packages->pullStubs(working.ai.package_list);
+         break;
+      case template_flag::use_animations:
+         //
+         // None?
+         //
+         break;
+      case template_flag::use_base_data:
+         {
+            const auto blockers = std::array{
+               QSignalBlocker(this->ui.name),
+               QSignalBlocker(this->ui.shortName),
+               QSignalBlocker(this->ui.flagEssential),
+               QSignalBlocker(this->ui.flagProtected),
+               QSignalBlocker(this->ui.flagRespawn),
+               QSignalBlocker(this->ui.flagSummonable),
+               QSignalBlocker(this->ui.flagSimple),
+               QSignalBlocker(this->ui.flagDoesntAffectStealthMeter),
+            };
+
+            this->ui.name->setText(editor.convert_localized_string(working.name));
+            this->ui.shortName->setText(editor.convert_localized_string(working.short_name));
+            //
+            auto flags = working.actor_flags;
+            this->ui.flagEssential->setChecked(flags & actor_flag::essential);
+            this->ui.flagProtected->setChecked(flags & actor_flag::is_protected);
+            this->ui.flagRespawn->setChecked(flags & actor_flag::respawn);
+            this->ui.flagSummonable->setChecked(flags & actor_flag::summonable);
+            this->ui.flagSimple->setChecked(flags & actor_flag::simple_actor);
+            this->ui.flagDoesntAffectStealthMeter->setChecked(flags & actor_flag::doesnt_affect_stealth_meter);
+         }
+         break;
+      case template_flag::use_inventory:
+         {
+            const auto blockers = std::array{
+               QSignalBlocker(this->ui.outfitDefault),
+               QSignalBlocker(this->ui.outfitSleep),
+               QSignalBlocker(this->ui.gearedUpWeapons),
+            };
+            this->ui.outfitDefault->setFormStub(working.outfits.normal.get_form_stub());
+            this->ui.outfitSleep->setFormStub(working.outfits.sleeping.get_form_stub());
+            this->_update_outfit_contents_view();
+            this->ui.inventory->initializeFrom(working.inventory);
+            this->ui.gearedUpWeapons->setValue(working.geared_up_weapons);
+         }
+         break;
+      case template_flag::use_scripts:
+         //
+         // Doesn't copy anything at edit time; the copying happens during play.
+         //
+         break;
+      case template_flag::use_package_overrides:
+         {
+            const auto blockers = std::array{
+               QSignalBlocker(this->ui.packageListDefault),
+               QSignalBlocker(this->ui.packageListSpectator),
+               QSignalBlocker(this->ui.packageListObserveCorpse),
+               QSignalBlocker(this->ui.packageListGuardWarn),
+               QSignalBlocker(this->ui.packageListCombat),
+            };
+            this->ui.packageListDefault->setFormStub(working.ai.default_package_list.get_form_stub());
+            this->ui.packageListSpectator->setFormStub(working.ai.package_override_lists.spectator.get_form_stub());
+            this->ui.packageListObserveCorpse->setFormStub(working.ai.package_override_lists.observe_corpse.get_form_stub());
+            this->ui.packageListGuardWarn->setFormStub(working.ai.package_override_lists.guard_warn.get_form_stub());
+            this->ui.packageListCombat->setFormStub(working.ai.package_override_lists.combat.get_form_stub());
+         }
+         break;
+      case template_flag::use_attack_data:
+         this->ui.attackData->initializeFrom(working.attack_data);
+         break;
+      case template_flag::use_keywords:
+         this->ui.keywords->pullStubs(working.keywords.forms);
+         break;
    }
 }
 
@@ -1196,23 +1456,24 @@ void FormDialogActorBase::_creature_sound_inheritance_changed() {
 
    std::vector<dovah::loaded_forms::structs::actor_creature_sounds::entry> entries;
 
-   if (inherit_from) {
-      this->ui.currentCreaSoundType->setEnabled(false);
-      this->ui.currentCreaSoundChance->setEnabled(false);
-      this->ui.currentCreaSoundForm->setEnabled(false);
+   {
+      bool enable = inherit_from == nullptr;
 
+      this->ui.currentCreaSoundType->setEnabled(enable);
+      this->ui.currentCreaSoundChance->setEnabled(enable);
+      this->ui.currentCreaSoundForm->setEnabled(enable);
+      this->ui.buttonCreaSoundAdd->setEnabled(enable);
+      this->ui.buttonCreaSoundRemove->setEnabled(enable);
+   }
+
+   if (inherit_from) {
       auto loaded = inherit_from->load().ptr_cast<loaded_form_type>();
       if (loaded) {
          entries = loaded->creature_sounds.sounds();
       }
    } else {
-      this->ui.currentCreaSoundType->setEnabled(true);
-      this->ui.currentCreaSoundChance->setEnabled(true);
-      this->ui.currentCreaSoundForm->setEnabled(true);
-
       entries = this->form->creature_sounds.sounds();
    }
-
    if (!entries.empty()) {
       std::vector<ActorBaseCreatureSoundsModelNode> nodes;
       for (auto& src : entries) {
@@ -1308,19 +1569,17 @@ void FormDialogActorBase::_set_pc_level_mult(bool flag) {
       if (flag) {
          widget->setDecimals(3);
          widget->setRange(0.001, 32.767);
-         if (flag == prior) {
-            widget->setValue((float)this->form->stats.level / 1000);
-         } else {
-            widget->setValue(1);
+         if (flag != prior) {
+            this->form->stats.level = 1000;
          }
+         widget->setValue((float)this->form->stats.level / 1000);
       } else {
          widget->setDecimals(0);
          widget->setRange(1, 32767);
-         if (flag == prior) {
-            widget->setValue(this->form->stats.level);
-         } else {
-            widget->setValue(this->form->stats.calc_min_level);
+         if (flag != prior) {
+            this->form->stats.level = this->form->stats.calc_min_level;
          }
+         widget->setValue(this->form->stats.level);
       }
    }
 

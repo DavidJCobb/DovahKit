@@ -19,7 +19,30 @@
      <item row="6" column="0" colspan="2">
       <widget class="QGroupBox" name="groupBox">
        <property name="whatsThis">
-        <string>You can optionally have this Actor definition borrow data from another Actor definition instead of using its own data. This removes the need to keep multiple actor definitions in synch by hand. Use the checkboxes to control what data is borrowed.</string>
+        <string>&lt;p&gt;You can optionally have this Actor definition inherit data from another Actor definition instead of using its own data. This removes the need to keep multiple actor definitions in synch by hand. Use the checkboxes to control what data is borrowed.&lt;/p&gt;
+&lt;p&gt;Most of the checkboxes are self-explanatory: they cause this actor to inherit all of the data in a given tab of this dialog box. Some of the checkboxes are a bit different:&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;&lt;b&gt;Use Traits&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The actor inherits everything in the Traits tab, the Sounds tab, the Face Parts tab, and the Face Morphs tab.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Use Scripts&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The actor inherits Papyrus scripts. You can still attach scripts here, but they won't be used.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Use AI Packages&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The actor inherits its list of AI packages.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Use Package FormLists&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The actor inherits the Default Package List, and the lists of override packages.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Use Base Data&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;
+         &lt;p&gt;The actor inherits its name, short name, and the following options:&lt;/p&gt;
+         &lt;ul&gt;
+            &lt;li&gt;Essential&lt;/li&gt;
+            &lt;li&gt;Protected&lt;/li&gt;
+            &lt;li&gt;Respawn&lt;/li&gt;
+            &lt;li&gt;Summonable&lt;/li&gt;
+            &lt;li&gt;Simple Actor&lt;/li&gt;
+            &lt;li&gt;Doesn't Affect Stealth Meter&lt;/li&gt;
+         &lt;/ul&gt;
+      &lt;/dd&gt;
+&lt;/dl&gt;</string>
        </property>
        <property name="title">
         <string>Template Data</string>
@@ -90,7 +113,7 @@
            <item row="0" column="2">
             <widget class="QCheckBox" name="templateUseSpellList">
              <property name="text">
-              <string>Use Spell List</string>
+              <string>Use Magic and Perks</string>
              </property>
             </widget>
            </item>
@@ -102,12 +125,12 @@
             </widget>
            </item>
            <item row="2" column="1">
-            <widget class="QCheckBox" name="templateUseDefaultPackages">
+            <widget class="QCheckBox" name="templateUsePackageFormLists">
              <property name="accessibleName">
-              <string>Use Default AI Package List</string>
+              <string>Use AI Package Form Lists</string>
              </property>
              <property name="text">
-              <string>Use Def. Pkg. List</string>
+              <string>Use Pkg. FormLists</string>
              </property>
             </widget>
            </item>
@@ -318,7 +341,7 @@
    <item row="0" column="1">
     <widget class="QTabWidget" name="tabbox">
      <property name="currentIndex">
-      <number>0</number>
+      <number>11</number>
      </property>
      <widget class="QWidget" name="tabTraits">
       <attribute name="title">
@@ -1643,6 +1666,9 @@
              <string>Aggro Radius Behavior</string>
             </property>
             <property name="checkable">
+             <bool>true</bool>
+            </property>
+            <property name="checked">
              <bool>false</bool>
             </property>
             <layout class="QGridLayout" name="gridLayout_12" columnstretch="0,0,1">
@@ -2691,8 +2717,8 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>107</width>
-             <height>22</height>
+             <width>110</width>
+             <height>8</height>
             </size>
            </property>
            <property name="whatsThis">
@@ -2742,8 +2768,8 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>107</width>
-             <height>22</height>
+             <width>110</width>
+             <height>8</height>
             </size>
            </property>
            <property name="whatsThis">
@@ -2758,6 +2784,9 @@
           <spacer name="horizontalSpacer_20">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Preferred</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -3620,7 +3649,7 @@
   <tabstop>templateUseFactions</tabstop>
   <tabstop>templateUseAIData</tabstop>
   <tabstop>templateUseAIPackages</tabstop>
-  <tabstop>templateUseDefaultPackages</tabstop>
+  <tabstop>templateUsePackageFormLists</tabstop>
   <tabstop>templateUseAttackData</tabstop>
   <tabstop>templateUseSpellList</tabstop>
   <tabstop>templateUseInventory</tabstop>
