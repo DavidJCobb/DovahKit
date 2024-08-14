@@ -1,7 +1,9 @@
 #include "./actor_base.h"
 #include <limits>
+#include <QMessageBox>
 #include "helpers/string/strlen.h"
 #include "dovah/core.h"
+#include "dovah/exceptions/actor_base_template_is_cyclical.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/item_indices_to_data.h"
 #include "ui/utils/set_range.h"
@@ -678,6 +680,7 @@ void FormDialogActorBase::_load_impl() {
 
       #pragma region Template data
          ui::bind(this->ui.templateActor, working.template_data.actor, working);
+         QObject::connect(this->ui.templateActor, &DKFormPicker::formChanged, this, &FormDialogActorBase::_update_from_template_actor);
          //
          ui::bind(this->ui.templateUseAIData, working.template_data.flags, loaded_form_type::template_flag::use_ai_data);
          ui::bind(this->ui.templateUseAIPackages, working.template_data.flags, loaded_form_type::template_flag::use_ai_packages);
@@ -1015,6 +1018,11 @@ void FormDialogActorBase::_save_impl() {
    #pragma endregion
    
 }
+void FormDialogActorBase::event(QEvent* event) {
+   if (event->type() == QEvent::Type::WindowActivate) {
+      this->_show_cyclical_template_actor_warning();
+   }
+}
 
 void FormDialogActorBase::updatePreview() {
    static_assert(!preview_enabled, "The 3D preview is not yet implemented. Don't enable it until it's implemented!");
@@ -1070,21 +1078,78 @@ void FormDialogActorBase::_update_from_template_actor() {
       this->ui.flagDoesntAffectStealthMeter->setEnabled(enable);
    }
 
+   if (base != this->_state.pending_cyclical_template_actor_warn.our_template) {
+      this->_state.pending_cyclical_template_actor_warn = {};
+   }
    if (!base) {
       return;
    }
-   auto base_loaded = base->load().ptr_cast<loaded_form_type>();
-   if (!base_loaded)
-      return;
-   auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
-
-   working.copy_data_from_template_actor();
+   try {
+      working.copy_data_from_template_actor();
+   } catch (const dovah::exceptions::actor_base_template_is_cyclical& e) {
+      auto& dst = this->_state.pending_cyclical_template_actor_warn;
+      if (dst.our_template != base) {
+         dst.warned       = false;
+         dst.our_template = base;
+         dst.seen_twice   = &e.seen_twice;
+         if (!dst.warned && this->isActiveWindow()) {
+            this->_show_cyclical_template_actor_warning();
+         }
+      }
+      return;
+   }
    for (size_t i = 0; i < 13; ++i) {
       auto mask = (template_flag::type)(1 << i);
       if (working.template_data.flags & mask)
          this->_push_data_to_ui(mask);
    }
+}
+
+void FormDialogActorBase::_show_cyclical_template_actor_warning() {
+   auto& state = this->_state.pending_cyclical_template_actor_warn;
+   if (state.warned || !state.our_template) {
+      return;
+   }
+   state.warned = true;
+
+   QString text;
+   if (state.seen_twice) {
+      text = tr(
+         "You have selected ActorBase %1 as this ActorBase's template, but doing so has "
+         "formed a cyclical reference (ActorBase %2 was seen multiple times when checking "
+         "the template relationships).\n\n"
+         "A cyclical reference is a situation where A inherits from B, who inherits from "
+         "C, who inherits from A: if you follow the chain, it loops back around on itself "
+         "like a set of Penrose stairs or a Möbius strip.\n\n"
+         "Skyrim knows how to avoid getting stuck in an infinite loop, but the practical "
+         "consequence of this cyclical reference is that the data that each involved actor "
+         "will inherit will depend on what order Skyrim happens to process the template "
+         "relationships in, rather than being consistent. You should fix this, by changing "
+         "the template relationships between the involved actors so they're not cyclical.",
+         "cyclical template actor warning"
+      )
+         .arg(QString::fromStdString(state.our_template->editorID))
+         .arg(QString::fromStdString(state.seen_twice->editorID))
+      ;
+   } else {
+      text = tr(
+         "You have selected ActorBase %1 as this ActorBase's template, but doing so has "
+         "formed a cyclical reference.\n\n"
+         "A cyclical reference is a situation where A inherits from B, who inherits from "
+         "C, who inherits from A: if you follow the chain, it loops back around on itself "
+         "like a set of Penrose stairs or a Möbius strip.\n\n"
+         "Skyrim knows how to avoid getting stuck in an infinite loop, but the practical "
+         "consequence of this cyclical reference is that the data that each involved actor "
+         "will inherit will depend on what order Skyrim happens to process the template "
+         "relationships in, rather than being consistent. You should fix this, by changing "
+         "the template relationships between the involved actors so they're not cyclical.",
+         "cyclical template actor warning"
+      )
+         .arg(QString::fromStdString(state.our_template->editorID))
+      ;
+   }
+   QMessageBox::critical(this, tr("Error"), text);
 }
 
 void FormDialogActorBase::_push_data_to_ui(loaded_form_type::template_flag::type flag) {

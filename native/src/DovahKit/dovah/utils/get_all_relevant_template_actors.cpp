@@ -36,14 +36,31 @@ namespace dovah {
                break;
             
             auto flags = loaded_subject->template_data.flags;
-            for (size_t i = 0; i < out.templates.all.size(); ++i) {
-               auto&    dst  = out.templates.all[i];
-               uint32_t mask = (1 << i);
-               if (flags & mask) {
-                  if (unbroken_chain & mask)
-                     dst = tmpl;
-               } else {
-                  unbroken_chain &= ~mask;
+            if (flags == 0) {
+               //
+               // Even if we reach a point where all template flags are zero, such 
+               // that we won't inherit data from this point further, we should still 
+               // traverse the template relationships in order to verify that there 
+               // isn't a cyclical reference.
+               //
+               unbroken_chain = 0;
+            } else if (unbroken_chain == 0) {
+               //
+               // Even if we reach a point where all template flags are zero, such 
+               // that we won't inherit data from this point further, we should still 
+               // traverse the template relationships in order to verify that there 
+               // isn't a cyclical reference.
+               //
+            } else {
+               for (size_t i = 0; i < out.templates.all.size(); ++i) {
+                  auto&    dst  = out.templates.all[i];
+                  uint32_t mask = (1 << i);
+                  if (flags & mask) {
+                     if (unbroken_chain & mask)
+                        dst = tmpl;
+                  } else {
+                     unbroken_chain &= ~mask;
+                  }
                }
             }
 

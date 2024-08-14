@@ -27,7 +27,7 @@ namespace dovah::loaded_forms {
             enum type : uint32_t {
                female                      = 0x00000001,
                essential                   = 0x00000002,
-               is_chargen_preset           = 0x00000004,
+               is_chargen_preset           = 0x00000004, // CK sorts actor differently, and game acts like INI setting [General]bUseFaceGenPreprocessedHeads is false
                respawn                     = 0x00000008,
                auto_calc_stats             = 0x00000010,
                unique                      = 0x00000020,
@@ -105,7 +105,7 @@ namespace dovah::loaded_forms {
                use_spells      = 0x0008,
                use_ai_data     = 0x0010,
                use_ai_packages = 0x0020,
-               use_animations  = 0x0040, // and model?
+               use_animations  = 0x0040, // unused
                use_base_data   = 0x0080,
                use_inventory   = 0x0100,
                use_scripts     = 0x0200,
@@ -262,8 +262,8 @@ namespace dovah::loaded_forms {
          float height = 1.0F;
          float weight = 0.0F;
 
-         void copy_data_from_template_actor();
-         void copy_data_from_template_actor(template_flag::type flag);
+         void copy_data_from_template_actor(); // calls `utils::get_all_relevant_template_actors` which can throw
+         void copy_data_from_actor(form_stub& source, template_flag::type flag);
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc); // TODO: FINISH ME
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);

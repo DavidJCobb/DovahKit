@@ -75,12 +75,25 @@ class FormDialogActorBase :
          ActorBaseRelationshipsModel*  relationships   = nullptr;
          ActorBaseSkillsModel*         skills          = nullptr;
       } _models;
+      struct {
+         // If we detect that the current Template Actor would form a cyclical reference 
+         // (including if changes are made to other actors which cause this), then we want 
+         // to warn the user. However, if our window doesn't have focus, then we should 
+         // delay the warning.
+         struct {
+            bool warned = false;
+            dovah::form_stub* our_template = nullptr;
+            dovah::form_stub* seen_twice   = nullptr;
+         } pending_cyclical_template_actor_warn;
+      } _state;
       
       virtual void _load_impl() override;
       virtual void _save_impl() override;
+      virtual void event(QEvent*) override;
 
       void _update_outfit_contents_view();
       void _update_from_template_actor();
+      void _show_cyclical_template_actor_warning();
       void _push_data_to_ui(loaded_form_type::template_flag::type);
 
       unsigned int _get_effective_level() const;

@@ -23,6 +23,7 @@ namespace dovah {
                this->all.~array();
             }
 
+            // The order of this list is the same as the order of the template flags.
             struct {
                loaded_form_pointer traits;
                loaded_form_pointer stats;
@@ -40,7 +41,15 @@ namespace dovah {
             };
             std::array<loaded_form_pointer, 13> all = {};
          } templates;
+
+         bool empty() const noexcept {
+            for (auto& item : this->templates.all)
+               if (item != nullptr)
+                  return false;
+            return true;
+         }
    };
 
+   // May throw `exceptions::actor_base_template_is_cyclical`.
    extern relevant_template_actors get_all_relevant_template_actors(form_stub& subject_actor);
 }

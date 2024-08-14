@@ -2,18 +2,23 @@
 #include "_common_cpp.h"
 #include "../use_info_entry.h"
 
+#include "../utils/get_all_relevant_template_actors.h"
+
 namespace dovah::loaded_forms {
    void ActorBase::copy_data_from_template_actor() {
-      for (size_t i = 0; i < 13; ++i) {
-         this->copy_data_from_template_actor((template_flag::type)(1 << i));
-      }
-   }
-   void ActorBase::copy_data_from_template_actor(template_flag::type flag) {
-      if (!this->template_data.actor)
+      auto relevant = get_all_relevant_template_actors(this->stub);
+      if (relevant.empty())
          return;
 
-      auto* template_stub   = this->template_data.actor.get_form_stub();
-      auto  template_loaded = template_stub->load().ptr_cast<ActorBase>();
+      auto& list = relevant.templates.all;
+      for (size_t i = 0; i < list.size(); ++i) {
+         if (!list[i])
+            continue;
+         this->copy_data_from_actor(list[i]->stub, (template_flag::type)(1 << i));
+      }
+   }
+   void ActorBase::copy_data_from_actor(form_stub& source, template_flag::type flag) {
+      auto template_loaded = source.load().ptr_cast<ActorBase>();
       if (!template_loaded)
          return;
 
