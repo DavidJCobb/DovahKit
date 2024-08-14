@@ -8,7 +8,6 @@
 
 #include "../../../dovah/forms/Landscape.h"
 #include "../../../dovah/forms/Worldspace.h"
-#include "../../../dovah/form_stub_helpers.h"
 #include "landscape/quad_list.h"
 
 //

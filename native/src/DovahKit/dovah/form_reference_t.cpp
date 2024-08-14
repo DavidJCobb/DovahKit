@@ -1,17 +1,8 @@
-#include "core.h"
-#include "form_stub.h"
-#include "forms/form.h"
+#include "./form_reference_t.h"
+#include "./form_stub.h"
+#include "./forms/Form.h"
 
 namespace dovah {
-   extern bool game_supports_light_plugins(game g) {
-      switch (g) {
-         case game::skyrim_special:
-            return true;
-      }
-      return false;
-   }
-
-   #pragma region form_reference_t
    bare_form_id_t form_reference_t::formID() const noexcept {
       return this->stub ? this->stub->formID : 0;
    }
@@ -39,19 +30,7 @@ namespace dovah {
    void form_reference_t::unmanaged_set(form_stub* set_to) {
       this->stub = set_to;
    }
-   //
-   base_form_reference_t::base_form_reference_t() : form_reference_t(use_info_entry::flag::object_reference) {};
-   base_form_reference_t::base_form_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::object_reference, s) {};
-   //
-   dialogue_branch_reference_t::dialogue_branch_reference_t() : form_reference_t(use_info_entry::flag::dialogue_branch) {};
-   dialogue_branch_reference_t::dialogue_branch_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::dialogue_branch, s) {};
-   //
-   dialogue_quest_reference_t::dialogue_quest_reference_t() : form_reference_t(use_info_entry::flag::dialogue_quest) {};
-   dialogue_quest_reference_t::dialogue_quest_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::dialogue_quest, s) {};
-   //
-   water_acti_type_reference_t::water_acti_type_reference_t() : form_reference_t(use_info_entry::flag::water_acti_type) {};
-   water_acti_type_reference_t::water_acti_type_reference_t(form_stub* s) : form_reference_t(use_info_entry::flag::water_acti_type, s) {};
-
+   
    void clear_form_reference_list(std::vector<form_reference_t>& list, loaded_forms::Form& owner) {
       for (auto& id : list)
          id.set(owner, nullptr);
@@ -84,5 +63,4 @@ namespace dovah {
          target.resize(size);
       }
    }
-   #pragma endregion
 }

@@ -136,6 +136,7 @@
     <ClCompile Include="dovah\exceptions\form_creation_failed.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.tests.cpp" />
+    <ClCompile Include="dovah\forms\ActorBase.cpp" />
     <ClCompile Include="dovah\forms\AssociationType.cpp" />
     <ClCompile Include="dovah\forms\Class.cpp" />
     <ClCompile Include="dovah\forms\components\biped_object.cpp" />
@@ -163,6 +164,13 @@
     <ClCompile Include="dovah\forms\Relationship.cpp" />
     <ClCompile Include="dovah\forms\structs\actor_creature_sounds.cpp" />
     <ClCompile Include="dovah\forms\structs\container_object_extra_data.cpp" />
+    <ClCompile Include="dovah\form_reference_t.cpp" />
+    <ClCompile Include="dovah\form_stubs\helpers\get_base_form.cpp" />
+    <ClCompile Include="dovah\form_stubs\helpers\get_cell_landscape.cpp" />
+    <ClCompile Include="dovah\form_stubs\helpers\get_template_actor.cpp" />
+    <ClCompile Include="dovah\form_stubs\helpers\get_worldspace_cell_by_grid.cpp" />
+    <ClCompile Include="dovah\form_stubs\helpers\get_worldspace_persistent_cell.cpp" />
+    <ClCompile Include="dovah\form_stubs\helpers\is_worldspace_persistent_cell.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\file_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_save.cpp" />
@@ -174,6 +182,7 @@
     <ClCompile Include="dovah\load_order_requests\game_setting_edit_request.cpp" />
     <ClCompile Include="dovah\load_order_requests\game_setting_renumber_request.cpp" />
     <ClCompile Include="dovah\utils\compute_classed_stat_points.cpp" />
+    <ClCompile Include="dovah\utils\get_all_relevant_template_actors.cpp" />
     <ClCompile Include="dovah\utils\leveled_list_preview.cpp" />
     <ClCompile Include="dovah\utils\refs_need_persistence_checker.cpp" />
     <ClCompile Include="editor\helpers\backend_error_to_string.cpp" />
@@ -415,7 +424,6 @@
     <ClCompile Include="dovahscript\wrappers\unusual\raster_draw_path.cpp" />
     <ClCompile Include="dovahscript\wrap_native_object.cpp" />
     <ClCompile Include="dovah\bs_hash.cpp" />
-    <ClCompile Include="dovah\core.cpp" />
     <ClCompile Include="dovah\data\actor_values.cpp" />
     <ClCompile Include="dovah\data\default_objects.cpp" />
     <ClCompile Include="dovah\data\game_settings.cpp" />
@@ -444,7 +452,6 @@
     <ClCompile Include="dovah\files\tes_file_writing\file_writer.cpp" />
     <ClCompile Include="dovah\files\tes_file_writing\results.cpp" />
     <ClCompile Include="dovah\forms\Activator.cpp" />
-    <ClCompile Include="dovah\forms\ActorBase.cpp" />
     <ClCompile Include="dovah\forms\Cell.cpp" />
     <ClCompile Include="dovah\forms\Color.cpp" />
     <ClCompile Include="dovah\forms\components\attack_data.cpp" />
@@ -528,7 +535,6 @@
     <ClCompile Include="dovah\forms\_component_access.cpp" />
     <ClCompile Include="dovah\form_stub.cpp" />
     <ClCompile Include="dovah\form_stub_addenda.cpp" />
-    <ClCompile Include="dovah\form_stub_helpers.cpp" />
     <ClCompile Include="dovah\form_stub_use_info_builder.cpp" />
     <ClCompile Include="dovah\localization\common.cpp" />
     <ClCompile Include="dovah\localization\localized_string_store.cpp" />
@@ -990,9 +996,11 @@
     <ClInclude Include="dovah\data\conditions\parameter_underlying_type.h" />
     <ClInclude Include="dovah\data\conditions\run_on_type.h" />
     <ClInclude Include="dovah\data\face_fx\phonemes.h" />
+    <ClInclude Include="dovah\data\game.h" />
     <ClInclude Include="dovah\data\hardcoded_form_ids.h" />
     <ClInclude Include="dovah\data\sex.h" />
     <ClInclude Include="dovah\data\skills.h" />
+    <ClInclude Include="dovah\exceptions\actor_base_template_is_cyclical.h" />
     <ClInclude Include="dovah\exceptions\default_object_assign_failed.h" />
     <ClInclude Include="dovah\exceptions\enums\form_creation_error_code.h" />
     <ClInclude Include="dovah\exceptions\file_load_failed.h" />
@@ -1031,6 +1039,18 @@
     <ClInclude Include="dovah\forms\structs\actor_creature_sounds.h" />
     <ClInclude Include="dovah\forms\structs\container_object_extra_data.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
+    <ClInclude Include="dovah\form_reference_t.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\for_each_child_form.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\for_each_persistent_ref_in_world.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\for_each_quest_topic.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\get_base_form.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\get_cell_landscape.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\get_template_actor.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\get_unique_outbound_use.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\get_worldspace_cell_by_grid.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\get_worldspace_persistent_cell.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\is_persistent.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\is_worldspace_persistent_cell.h" />
     <ClInclude Include="dovah\game_change_failure_reason.h" />
     <ClInclude Include="dovah\load_order_interfaces\file_load.h" />
     <ClInclude Include="dovah\load_order_interfaces\form_load.h" />
@@ -1136,8 +1156,12 @@
     <ClInclude Include="dovah\notices\_all_warnings.h" />
     <ClInclude Include="dovah\notices\_util.define.h" />
     <ClInclude Include="dovah\notices\_util.undef.h" />
+    <ClInclude Include="dovah\use_info_entry.h" />
     <ClInclude Include="dovah\utils\compute_classed_stat_points.h" />
+    <ClInclude Include="dovah\utils\data_by_actor_attribute.h" />
     <ClInclude Include="dovah\utils\data_by_sex.h" />
+    <ClInclude Include="dovah\utils\data_by_skill.h" />
+    <ClInclude Include="dovah\utils\get_all_relevant_template_actors.h" />
     <ClInclude Include="dovah\utils\leveled_list_preview.h" />
     <ClInclude Include="editor\helpers\backend_error_to_string.h" />
     <ClInclude Include="editor\helpers\face_fx_phoneme_name.h" />
@@ -2320,7 +2344,6 @@
     <ClInclude Include="dovah\form_stub.h" />
     <ClInclude Include="dovah\form_stub_addenda.h" />
     <ClInclude Include="dovah\form_stub_heap.h" />
-    <ClInclude Include="dovah\form_stub_helpers.h" />
     <ClInclude Include="dovah\form_stub_use_info_builder.h" />
     <ClInclude Include="dovah\localization\common.h" />
     <ClInclude Include="dovah\localization\localized_string_store.h" />
@@ -2633,6 +2656,7 @@
     <None Include="dovah\bs_hash.inl" />
     <None Include="dovah\data\conditions\all_function_info.md" />
     <None Include="dovah\data\conditions\all_parameter_types.md" />
+    <None Include="dovah\data\game.inl" />
     <None Include="dovah\exceptions\_docs\be careful with unique_ptr members.md" />
     <None Include="dovah\files\bsa\bsa_archive.inl" />
     <None Include="dovah\files\bsa\packed_folder_info.inl" />
@@ -2657,6 +2681,7 @@
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="dovah\forms\structs\precached_nif_info.inl" />
     <None Include="dovah\form_stub.inl" />
+    <None Include="dovah\form_stubs\helpers\README.md" />
     <None Include="dovah\load_order_interfaces\form_load.inl" />
     <None Include="dovah\load_order_processes\file_save.md" />
     <None Include="dovah\load_order_requests\README.md" />

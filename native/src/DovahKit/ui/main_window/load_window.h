@@ -3,7 +3,7 @@
 #include <QDialog>
 #include <QTimer>
 #include "ui_load_window.h"
-#include "../../dovah/core.h"
+#include "dovah/data/game.h"
 
 class LoadOrderOpenDialog : public QDialog {
    Q_OBJECT

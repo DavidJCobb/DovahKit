@@ -6,8 +6,9 @@
 #include <QString>
 #include <QTableView>
 #include <QTimer>
-#include "../../../dovah/core.h"
-#include "../../../dovah/data/game_settings.h"
+#include "dovah/core.h" // bare_form_id_t
+#include "dovah/data/game.h"
+#include "dovah/data/game_settings.h"
 
 namespace dovah {
    class loaded_game_setting;

@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "../common.h"
-#include "../../core.h"
+#include "../../data/game.h"
 
 namespace dovah::tes_file_writing {
    enum class record_compression_policy {

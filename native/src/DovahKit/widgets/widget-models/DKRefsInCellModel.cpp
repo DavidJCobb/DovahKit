@@ -2,7 +2,8 @@
 #include <cassert>
 #include <vector>
 #include "dovah/form_stub.h"
-#include "dovah/form_stub_helpers.h"
+#include "dovah/form_stubs/helpers/for_each_child_form.h"
+#include "dovah/form_stubs/helpers/get_base_form.h"
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/subsystems/papyrus/core.h"

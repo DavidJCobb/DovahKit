@@ -3,7 +3,6 @@
 #include "../file_load_order.h"
 #include "../../form_stub.h"
 #include "../../form_stub_addenda.h"
-#include "../../form_stub_helpers.h"
 #include "../../utils/world_position_to_grid_coordinates.h"
 #include "../../load_order_interfaces/form_load.h"
 

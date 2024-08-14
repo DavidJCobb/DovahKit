@@ -14,6 +14,8 @@
 #include "components/papyrus.h"
 #include "components/spell_list.h"
 #include "structs/actor_creature_sounds.h"
+#include "../utils/data_by_actor_attribute.h"
+#include "../utils/data_by_skill.h"
 
 namespace dovah::loaded_forms {
    class ActorBase : public Form {
@@ -119,45 +121,6 @@ namespace dovah::loaded_forms {
          using skill_value_type      = uint8_t;
          using skill_offset_type     = skill_value_type; // negative offsets are not allowed
 
-         template<typename T>
-         union attribute_list {
-            std::array<T, 3> list = { 0 };
-            struct {
-               T health;
-               T magicka;
-               T stamina;
-            };
-            struct {
-               T h;
-               T m;
-               T s;
-            };
-         };
-
-         union skill_byte_list {
-            struct {
-               skill_value_type one_handed;
-               skill_value_type two_handed;
-               skill_value_type archery;
-               skill_value_type block;
-               skill_value_type smithing;    // NPCs never craft on their own, though it's not impossible that a mod might read this and use it.
-               skill_value_type heavy_armor;
-               skill_value_type light_armor;
-               skill_value_type pickpocket;  // only used by NPCs to scale how difficult it is for the player to pickpocket them; NPCs cannot pickpocket others.
-               skill_value_type lockpicking; // not used by NPCs; they only lockpick when commanded to, and in that case will always succeed.
-               skill_value_type sneak;
-               skill_value_type alchemy;     // NPCs never craft on their own, though it's not impossible that a mod might read this and use it.
-               skill_value_type speech;      // not used by NPCs.
-               skill_value_type alteration;
-               skill_value_type conjuration;
-               skill_value_type destruction;
-               skill_value_type illusion;
-               skill_value_type restoration;
-               skill_value_type enchanting;  // NPCs never craft on their own, though it's not impossible that a mod might read this and use it.
-            };
-            std::array<skill_value_type, 18> list = {};
-         };
-
          struct tint_layer {
             uint16_t index = 0;
             color_t  color;      // the game skips loading this if (actor_flag::is_chargen_preset) is cleared and if INI setting [General]bUseFaceGenPreprocessedHeads is true
@@ -259,12 +222,12 @@ namespace dovah::loaded_forms {
          } outfits;
          struct {
             struct {
-               attribute_list<attribute_value_type>  calculated; // DNAM+0x24, DNAM+0x26, DNAM+0x28
-               attribute_list<attribute_offset_type> offsets;    // ACBS+0x14, ACBS+0x04, ACBS+0x06
+               data_by_actor_attribute<attribute_value_type>  calculated; // DNAM+0x24, DNAM+0x26, DNAM+0x28
+               data_by_actor_attribute<attribute_offset_type> offsets;    // ACBS+0x14, ACBS+0x04, ACBS+0x06
             } attributes;
             struct {
-               skill_byte_list calculated; // DNAM+0x00
-               skill_byte_list offsets;    // DNAM+0x18
+               data_by_skill<skill_value_type> calculated; // DNAM+0x00
+               data_by_skill<skill_value_type> offsets;    // DNAM+0x18
             } skills;
             int16_t  level;              // ABCS+0x08 // this is a multiplier (fixed-point; convert to a float by dividing by 1000) if the PC Level Mult flag is set
             int16_t  calc_min_level = 0; // ABCS+0x0A // applies if the PC Level Mult flag is set
@@ -276,8 +239,8 @@ namespace dovah::loaded_forms {
             form_reference_t combat_style; // ZNAM
          } stats;
          struct {
-            form_reference_t actor;     // TPLT
-            template_flags_t flags = 0; // ABCS+0x12
+            template_actor_reference_t actor;     // TPLT
+            template_flags_t           flags = 0; // ABCS+0x12
          } template_data;
          //
          structs::actor_creature_sounds creature_sounds;

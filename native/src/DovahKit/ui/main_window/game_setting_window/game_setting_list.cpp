@@ -1,11 +1,11 @@
-#include "game_setting_list.h"
+#include "./game_setting_list.h"
 #include <QHeaderView>
 #include <QLineEdit>
-#include "../../../helpers/qt/strings.h"
-#include "../../../dovah/files/tes_file_reading/file_loader.h"
-#include "../../../editor/core.h"
-#include "../../../editor/helpers/form_identifiers_to_string.h"
-#include "../../../editor/get_game_setting_description.h"
+#include "helpers/qt/strings.h"
+#include "dovah/files/tes_file_reading/file_loader.h"
+#include "editor/core.h"
+#include "editor/helpers/form_identifiers_to_string.h"
+#include "editor/get_game_setting_description.h"
 
 #pragma region GameSettingListModel
 GameSettingListModelItem::GameSettingListModelItem(const dovah::loaded_game_setting& source) {

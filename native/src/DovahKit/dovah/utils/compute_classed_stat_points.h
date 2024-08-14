@@ -2,6 +2,7 @@
 #include <array>
 #include <cstdint>
 #include "../data/skills.h"
+#include "./data_by_actor_attribute.h"
 
 namespace dovah {
    namespace loaded_forms {
@@ -15,21 +16,8 @@ namespace dovah {
 namespace dovah {
    struct classed_stat_points {
       public:
-         using value_type = uint32_t;
-
-         union attribute_trio {
-            std::array<value_type, 3> list = { 0 };
-            struct {
-               value_type health;
-               value_type magicka;
-               value_type stamina;
-            };
-            struct {
-               value_type h;
-               value_type m;
-               value_type s;
-            };
-         };
+         using value_type     = uint32_t;
+         using attribute_trio = data_by_actor_attribute<value_type>;
 
       public:
          struct {

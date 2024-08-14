@@ -2,6 +2,7 @@
 #include <QMessageBox>
 #include "helpers/filesystem.h"
 #include "helpers/miscellaneous.h"
+#include "dovah/data/game.h"
 #include "dovah/files/file_header.h"
 #include "dovah/files/tes_file_writing/config.h"
 #include "dovah/files/tes_file_writing/results.h"

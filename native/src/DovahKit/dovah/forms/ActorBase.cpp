@@ -1,5 +1,6 @@
 #include "ActorBase.h"
 #include "_common_cpp.h"
+#include "../use_info_entry.h"
 
 namespace dovah::loaded_forms {
    void ActorBase::copy_data_from_template_actor() {
@@ -614,7 +615,7 @@ namespace dovah::loaded_forms {
          form_id_t sleeping;
       } outfits;
       form_id_t race;
-      form_id_t template_actor;
+      form_id_t template_actor; // TPLT // Note: requires special use info flag: use_info_entry::flag::template_actor
       form_id_t voicetype;
       form_id_t skin; // WNAM
       struct {
@@ -623,8 +624,6 @@ namespace dovah::loaded_forms {
          form_id_t guard_warn;     // GWOR
          form_id_t combat;         // ECOR
       } package_override_lists;
-      bool      seen_any_creature_sound = false;
-      form_id_t creature_sound;
       components::destruction_stage_data::use_info_builder destruction_uib(uib);
       structs::actor_creature_sounds::use_info_builder creature_sounds_uib(uib);
 
@@ -778,6 +777,24 @@ namespace dovah::loaded_forms {
       attack_data.commit(uib);
       destruction_uib.done();
       creature_sounds_uib.done();
+      uib.add_outbound_reference(combat_class);
+      uib.add_outbound_reference(combat_style);
+      uib.add_outbound_reference(crime_faction);
+      uib.add_outbound_reference(death_item);
+      uib.add_outbound_reference(default_package_list);
+      uib.add_outbound_reference(face_texture_set);
+      uib.add_outbound_reference(far_away_model);
+      uib.add_outbound_reference(gift_filter);
+      uib.add_outbound_reference(outfits.normal);
+      uib.add_outbound_reference(outfits.sleeping);
+      uib.add_outbound_reference(race);
+      uib.add_outbound_reference(template_actor, use_info_entry::flag::template_actor);
+      uib.add_outbound_reference(voicetype);
+      uib.add_outbound_reference(skin);
+      uib.add_outbound_reference(package_override_lists.spectator);
+      uib.add_outbound_reference(package_override_lists.observe_corpse);
+      uib.add_outbound_reference(package_override_lists.guard_warn);
+      uib.add_outbound_reference(package_override_lists.combat);
    }
    void ActorBase::_clone_impl(Form* out) const noexcept {
       assert(out->type == form_type);

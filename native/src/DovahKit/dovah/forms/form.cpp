@@ -1,4 +1,5 @@
 #include "form.h"
+#include <cassert>
 #include "../form_stub.h"
 #include "../form_stub_addenda.h"
 #include "../files/tes_file_reading/elements.h"
@@ -6,7 +7,6 @@
 #include "factories/construct.h"
 #include "_component_access.h"
 
-#include "../form_stub_helpers.h"
 #include "./components/papyrus/attachment_data.h"
 #include "./components/papyrus/attached_script.h"
 #include "./components/papyrus/property.h"

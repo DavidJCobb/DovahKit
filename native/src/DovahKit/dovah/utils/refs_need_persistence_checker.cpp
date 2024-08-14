@@ -4,7 +4,7 @@
 #include "../data/hardcoded_form_ids.h"
 #include "../files/file_load_order.h"
 #include "../form_stub.h"
-#include "../form_stub_helpers.h"
+#include "../form_stubs/helpers/get_base_form.h"
 
 #include "../forms/factories/hardcoded.h"
 #include "../forms/ObjectReference.h"

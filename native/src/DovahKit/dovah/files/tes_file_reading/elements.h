@@ -199,6 +199,7 @@ namespace dovah {
                      return false;
                   for (auto& e : field)
                      this->unchecked_read(e);
+                  return true;
                } else {
                   if (!this->is_in_bounds(sizeof(field)))
                      return false;

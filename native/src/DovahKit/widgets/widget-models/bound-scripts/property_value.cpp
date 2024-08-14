@@ -1,7 +1,7 @@
 #include "./property_value.h"
 #include "helpers/type_traits/is_std_vector.h"
 
-#include "dovah/form_stub_helpers.h"
+#include "dovah/form_stubs/helpers/get_base_form.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 
 // for stringifying quest aliases:

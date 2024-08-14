@@ -24,7 +24,7 @@
 #include "editor/subsystems/assets.h"
 
 // For testing whether a form has a given script attached, without having to load the form:
-#include "dovah/form_stub_helpers.h"
+#include "dovah/form_stubs/helpers/get_base_form.h"
 #include "editor/subsystems/form_info_cache/core.h"
 
 // for testing aliases' scripts

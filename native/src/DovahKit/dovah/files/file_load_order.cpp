@@ -4,7 +4,7 @@
 #include "helpers/unordered_map.h"
 #include "../form_stub.h"
 #include "../form_stub_addenda.h"
-#include "../form_stub_helpers.h"
+#include "../form_stubs/helpers/get_worldspace_cell_by_grid.h"
 #include "./tes_file_reading/file_loader.h"
 #include "./tes_file_reading/file_header.h"
 #include "./tes_file_reading/threaded_load_order_use_info_builder.h"

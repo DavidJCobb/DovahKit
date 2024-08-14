@@ -10,7 +10,8 @@
 #include "../../lua_libraries/form_types.h"
 
 #include "../../../dovah/forms/Cell.h"
-#include "../../../dovah/form_stub_helpers.h"
+#include "../../../dovah/form_stubs/helpers/for_each_child_form.h"
+#include "../../../dovah/form_stubs/helpers/get_cell_landscape.h"
 #include "cell/grid_coords.h"
 
 //

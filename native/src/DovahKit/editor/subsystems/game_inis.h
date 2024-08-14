@@ -1,6 +1,6 @@
 #pragma once
 #include "../../helpers/qt/ini.h"
-#include "../../dovah/core.h"
+#include "../../dovah/data/game.h"
 
 namespace editor::game_inis {
    extern cobb::qt::ini::File& get_skyrim();

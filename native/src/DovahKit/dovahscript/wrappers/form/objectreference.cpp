@@ -16,7 +16,7 @@
 #include "../../api_helpers/pull_rotation.h"
 
 #include "dovah/exceptions/object_reference_move_failed.h"
-#include "dovah/form_stub_helpers.h"
+#include "dovah/form_stubs/helpers/get_base_form.h"
 #include "dovah/forms/Form.h"
 #include "dovah/forms/ObjectReference.h"
 #include "./objectreference/position.h"

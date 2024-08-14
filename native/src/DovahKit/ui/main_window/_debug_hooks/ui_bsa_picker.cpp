@@ -1,10 +1,12 @@
-#include "ui_bsa_picker.h"
-#include "../../../dovah/files/bsa/bsa_load_order.h"
-#include "../../../dovah/utils/get_ini_defined_bsa_list.h"
-#include "../../../editor/core.h"
-#include "../../../widgets/DKGameFilePicker.h"
-#include "../../../widgets/widget-dialogs/DKBSABrowseDialog.h"
-#include "../../../widgets/widget-models/DKBSACollectionModel.h"
+#include "./ui_bsa_picker.h"
+#include <filesystem>
+#include "dovah/data/game.h"
+#include "dovah/files/bsa/bsa_load_order.h"
+#include "dovah/utils/get_ini_defined_bsa_list.h"
+#include "editor/core.h"
+#include "widgets/DKGameFilePicker.h"
+#include "widgets/widget-dialogs/DKBSABrowseDialog.h"
+#include "widgets/widget-models/DKBSACollectionModel.h"
 
 namespace DovahKitDebug::features {
    /*static*/ void ui_bsa_picker::execute(QWidget* from) {

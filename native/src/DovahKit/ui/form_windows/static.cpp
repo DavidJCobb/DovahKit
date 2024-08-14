@@ -1,5 +1,5 @@
 #include "./static.h"
-#include "dovah/core.h"
+#include "dovah/data/game.h"
 #include "ui/utils/bind.h"
 
 #include "./static/FormSubdialogStaticLODMeshes.h"

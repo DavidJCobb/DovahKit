@@ -1,7 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <string>
-#include <vector>
 #include "Form.h"
 #include "_common.h"
 #include "structs/color_dword.h"

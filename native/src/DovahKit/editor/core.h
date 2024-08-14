@@ -1,9 +1,13 @@
 #pragma once
+#include <cstdint>
 #include <filesystem>
+#include <string>
 #include <unordered_map>
 #include <QDialog>
 #include <QObject>
-#include "dovah/core.h"
+#include "dovah/data/game.h"
+#include "dovah/core.h" // bare_form_id_t
+#include "dovah/form_types.h"
 #include "dovah/files/file_load_order.h"
 
 #include "dovah/load_order_requests/form_creation_request.h"

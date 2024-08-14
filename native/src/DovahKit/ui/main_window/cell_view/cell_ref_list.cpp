@@ -7,7 +7,8 @@
 #include "editor/helpers/form_type_name_to_string.h"
 #include "editor/open_window_for_form.h"
 #include "dovah/form_stub.h"
-#include "dovah/form_stub_helpers.h"
+#include "dovah/form_stubs/helpers/for_each_child_form.h"
+#include "dovah/form_stubs/helpers/get_base_form.h"
 #include "widgets/DKHeaderView.h"
 #include "../../generic/QItemSelectionModelEx.h"
 

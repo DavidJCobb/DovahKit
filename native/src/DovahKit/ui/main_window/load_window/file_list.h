@@ -5,7 +5,8 @@
 #include <QDateTime>
 #include <QString>
 #include <QTableView>
-#include "../../../dovah/core.h"
+#include "dovah/data/game.h"
+#include "dovah/core.h" // bare_form_id_t
 
 namespace dovah::tes_file_reading {
    class file_header_reader;

@@ -1,5 +1,7 @@
 #pragma once
-#include "dovah/core.h"
+#include <cstdint>
+#include "../core.h"
+#include "../form_types.h"
 
 namespace dovah {
    class file_load_order;

@@ -1,4 +1,5 @@
 #include "./landtexture.h"
+#include "dovah/data/game.h"
 #include "helpers/bitwise.h"
 
 FormDialogLandTexture::FormDialogLandTexture(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {

@@ -29,7 +29,7 @@
 #include <QSpinBox>
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "dovah/form_stub.h"
-#include "dovah/form_stub_helpers.h"
+#include "dovah/form_stubs/helpers/get_base_form.h"
 #include "dovah/forms/Form.h"
 #include "dovah/forms/components/model.h"
 #include "editor/helpers/form_identifiers_to_string.h"

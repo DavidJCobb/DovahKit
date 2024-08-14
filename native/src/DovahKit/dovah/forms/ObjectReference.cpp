@@ -1,15 +1,13 @@
 #include "ObjectReference.h"
 #include "_common_cpp.h"
 #include "../data/hardcoded_form_ids.h"
-#include "../form_stub_helpers.h"
-#include "factories/hardcoded.h"
+#include "../form_stubs/helpers/get_worldspace_cell_by_grid.h"
 #include "components/extra_data/enable_state_parent.h"
 #include "components/extra_data/scale.h"
 #include "components/extra_data/_use_info.h"
 
 // persistence checks
 #include "./components/extra_data/location.h"
-#include "./factories/hardcoded.h"
 #include "./Activator.h"
 #include "./DefaultObjectManager.h"
 #include "./Door.h"

@@ -7,6 +7,7 @@
 #include "helpers/qt/strings.h"
 #include "editor/core.h"
 #include "editor/open_window_for_form.h"
+#include "dovah/data/game.h"
 #include "dovah/files/file_load_order.h"
 #pragma region subwindows
    #include "./main_window/cell_view.h"

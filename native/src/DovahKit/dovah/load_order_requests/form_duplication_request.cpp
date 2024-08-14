@@ -1,6 +1,7 @@
 #include "./form_duplication_request.h"
 #include "../files/file_load_order.h"
-#include "../form_stub_helpers.h"
+#include "../form_stubs/helpers/for_each_child_form.h"
+#include "../form_stubs/helpers/for_each_quest_topic.h"
 #include "./form_creation_request.h"
 #include "../exceptions/form_creation_failed.h"
 
