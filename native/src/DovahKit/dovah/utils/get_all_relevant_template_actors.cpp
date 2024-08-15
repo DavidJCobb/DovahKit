@@ -8,19 +8,21 @@ namespace dovah {
       using loaded_form_type    = relevant_template_actors::loaded_form_type;
       using loaded_form_pointer = relevant_template_actors::loaded_form_pointer;
 
+      relevant_template_actors out;
+      out.subject = &subject_actor;
+
       if (!form_stub_helpers::get_template_actor(&subject_actor))
-         return {};
+         return out;
 
       auto loaded = subject_actor.load().ptr_cast<loaded_form_type>();
       if (!loaded)
-         return {};
+         return out;
 
       // Handle the case where A inherits keywords from B, who inherits keywords from C, 
       // who DOESN'T inherit keywords from D, who inherits keywords from E: make sure we 
       // stop inheriting keywords at C.
       uint32_t unbroken_chain = 0xFFFFFFFF;
 
-      relevant_template_actors out;
       {
          form_stub* current = &subject_actor;
          std::vector<form_stub*> seen_actors = { current };

@@ -75,25 +75,18 @@ class FormDialogActorBase :
          ActorBaseRelationshipsModel*  relationships   = nullptr;
          ActorBaseSkillsModel*         skills          = nullptr;
       } _models;
-      struct {
-         // If we detect that the current Template Actor would form a cyclical reference 
-         // (including if changes are made to other actors which cause this), then we want 
-         // to warn the user. However, if our window doesn't have focus, then we should 
-         // delay the warning.
-         struct {
-            bool warned = false;
-            dovah::form_stub* our_template = nullptr;
-            dovah::form_stub* seen_twice   = nullptr;
-         } pending_cyclical_template_actor_warn;
-      } _state;
+
+      // Singleton signal handlers:
+      void _on_game_setting_changed(const char* name);
+      void _on_other_form_modified(dovah::form_stub*);
       
       virtual void _load_impl() override;
       virtual void _save_impl() override;
-      virtual void event(QEvent*) override;
 
       void _update_outfit_contents_view();
+
+      void _set_template_actor(dovah::form_stub*);
       void _update_from_template_actor();
-      void _show_cyclical_template_actor_warning();
       void _push_data_to_ui(loaded_form_type::template_flag::type);
 
       unsigned int _get_effective_level() const;
@@ -104,6 +97,7 @@ class FormDialogActorBase :
       void _pull_faction_to_ui();
       void _push_faction_from_ui();
 
+      void _set_creature_sound_inherit_actor(dovah::form_stub* stub); // NOTE: If we can't legally inherit from `stub`, makes no change but still updates UI.
       void _creature_sound_inheritance_changed();
       void _pull_creature_sound_to_ui();
       void _push_creature_sound_from_ui();

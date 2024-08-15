@@ -14,6 +14,7 @@
 #include "editor/subsystems/game_settings/core.h"
 #include "editor/open_window_for_form.h"
 #include "dovah/data/hardcoded_form_ids.h"
+#include "dovah/form_stubs/helpers/get_template_actor.h"
 #include "dovah/forms/Class.h"
 #include "dovah/forms/Outfit.h"
 #include "dovah/forms/Race.h"
@@ -449,8 +450,7 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
       this->ui.inheritSoundsFrom->setAllowNone(true);
       this->ui.inheritSoundsFrom->setCustomFilter(this->_filters.exclude_self); // don't let an actor inherit sounds from themselves
       //
-      // Update enable state for editing creature sounds, when changing whether we inherit:
-      QObject::connect(this->ui.inheritSoundsFrom, &DKFormPicker::formChanged, this, &FormDialogActorBase::_creature_sound_inheritance_changed);
+      QObject::connect(this->ui.inheritSoundsFrom, &DKFormPicker::formChanged, this, &FormDialogActorBase::_set_creature_sound_inherit_actor);
 
       {
          auto* widget = this->ui.creatureSoundsTable;
@@ -607,43 +607,66 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
    //
    // Bit unusual to do anything in the constructor but after loading, but:
    //
-   {  // Update auto-calc'd actor stats if relevant game settings cahnge
-      constexpr const auto relevant_settings = std::array{
-         "iAVDSkillStart",
-         "iAVDSkillsLevelUp",
-         "iAVDAutoCalcSkillMax",
-         "iAVDhmsLevelUp",
-         "fPCHealthLevelBonus",
-         "fNPCHealthLevelBonus",
-      };
-      
+   {
       auto& gss = dovahkit::subsystems::game_settings::core::get();
-      QObject::connect(&gss, &std::decay_t<decltype(gss)>::settingValueChanged, this, [this](const char* name) {
-         bool found = true;
-         for (auto* item : relevant_settings) {
-            if (_strnicmp(name, item, cobb::strlen(item)) != 0) {
-               found = true;
-               break;
-            }
-         }
-         if (found)
-            this->_recalc_stats();
-      });
+      QObject::connect(&gss, &std::decay_t<decltype(gss)>::settingValueChanged, this, &FormDialogActorBase::_on_game_setting_changed);
    }
-   {  // Watch for changes to our template actor, race, or class
+   {
       auto& editor = DovahKitCore::get();
-      QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
-         bool race_edited = stub == this->form->race.get_form_stub();
-         if (race_edited) {
-            this->_set_race(stub); // not redundant; should refresh everything
-         } else if (stub == this->form->stats.combat_class.get_form_stub()) {
-            this->_recalc_stats();
-         } else if (stub == this->form->template_data.actor.get_form_stub()) {
-            this->_update_from_template_actor();
-         }
-      });
+      QObject::connect(&editor, &DovahKitCore::formModified, this, &FormDialogActorBase::_on_other_form_modified);
    }
 }
+
+void FormDialogActorBase::_on_game_setting_changed(const char* name) {
+   //
+   // Update auto-calc'd stats if any GMSTs used in the calculations are changed.
+   //
+   constexpr const auto relevant_settings = std::array{
+      "iAVDSkillStart",
+      "iAVDSkillsLevelUp",
+      "iAVDAutoCalcSkillMax",
+      "iAVDhmsLevelUp",
+      "fPCHealthLevelBonus",
+      "fNPCHealthLevelBonus",
+   };
+   
+   bool found = true;
+   for (auto* item : relevant_settings) {
+      if (_strnicmp(name, item, cobb::strlen(item)) != 0) {
+         found = true;
+         break;
+      }
+   }
+   if (found)
+      this->_recalc_stats();
+}
+void FormDialogActorBase::_on_other_form_modified(dovah::form_stub* stub) {
+   auto& working = *this->form;
+   if (stub->form_type == dovah::form_type::actor_base || stub->form_type == dovah::form_type::leveled_character) {
+      //
+      // Detect changes to our template actor (or their template actor (or...)).
+      //
+      auto* current = dovah::form_stub_helpers::get_template_actor(this->formStub());
+      for (; current; current = dovah::form_stub_helpers::get_template_actor(current)) {
+         if (stub == current) {
+            this->_update_from_template_actor();
+            break;
+         }
+      }
+   }
+   if (stub->form_type == dovah::form_type::actor_base) {
+      if (stub == working.creature_sounds.inherits_from()) {
+         this->_set_creature_sound_inherit_actor(stub);
+      }
+   } else {
+      if (stub == working.race.get_form_stub()) {
+         this->_set_race(stub); // not redundant; should refresh everything
+      } else if (stub == working.stats.combat_class.get_form_stub()) {
+         this->_recalc_stats();
+      }
+   }
+}
+
 void FormDialogActorBase::_load_impl() {
    auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
@@ -679,8 +702,8 @@ void FormDialogActorBase::_load_impl() {
       this->ui.scriptListPane->setFormWorkingCopy(&working);
 
       #pragma region Template data
-         ui::bind(this->ui.templateActor, working.template_data.actor, working);
-         QObject::connect(this->ui.templateActor, &DKFormPicker::formChanged, this, &FormDialogActorBase::_update_from_template_actor);
+         this->ui.templateActor->setFormStub(working.template_data.actor.get_form_stub());
+         QObject::connect(this->ui.templateActor, &DKFormPicker::formChanged, this, &FormDialogActorBase::_set_template_actor);
          //
          ui::bind(this->ui.templateUseAIData, working.template_data.flags, loaded_form_type::template_flag::use_ai_data);
          ui::bind(this->ui.templateUseAIPackages, working.template_data.flags, loaded_form_type::template_flag::use_ai_packages);
@@ -836,7 +859,7 @@ void FormDialogActorBase::_load_impl() {
       this->ui.perks->pullStubs(working.perks);
    #pragma endregion
    #pragma region Sounds tab
-      this->_creature_sound_inheritance_changed();
+      this->_set_creature_sound_inherit_actor(working.creature_sounds.inherits_from());
    #pragma endregion
    #pragma region Attack Data tab
       this->ui.attackData->initializeFrom(working.attack_data);
@@ -898,6 +921,7 @@ void FormDialogActorBase::_load_impl() {
       static_assert(!preview_enabled, "TODO");
    #pragma endregion
 
+   this->_update_from_template_actor();
    {
       bool female = (working.actor_flags & loaded_form_type::actor_flag::female) != 0;
       this->_set_sex(female ? dovah::sex::female : dovah::sex::male);
@@ -905,7 +929,6 @@ void FormDialogActorBase::_load_impl() {
    this->_set_race(working.race.get_form_stub());
    this->_set_pc_level_mult(this->ui.flagPCLevelMult->isChecked());
    static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
-   this->_update_from_template_actor();
 }
 void FormDialogActorBase::_save_impl() {
    //
@@ -1018,11 +1041,6 @@ void FormDialogActorBase::_save_impl() {
    #pragma endregion
    
 }
-void FormDialogActorBase::event(QEvent* event) {
-   if (event->type() == QEvent::Type::WindowActivate) {
-      this->_show_cyclical_template_actor_warning();
-   }
-}
 
 void FormDialogActorBase::updatePreview() {
    static_assert(!preview_enabled, "The 3D preview is not yet implemented. Don't enable it until it's implemented!");
@@ -1041,6 +1059,73 @@ void FormDialogActorBase::_update_outfit_contents_view() {
    for (auto& entry : loaded->contents) {
       widget->addStub(entry.get_form_stub());
    }
+}
+
+void FormDialogActorBase::_set_template_actor(dovah::form_stub* desired) {
+   if (desired) {
+      switch (desired->form_type) {
+         case dovah::form_type::actor_base:
+         case dovah::form_type::leveled_character:
+            break;
+         default:
+            desired = nullptr;
+            break;
+      }
+   }
+   if (this->form->template_data.actor.get_form_stub() == desired)
+      return;
+   if (desired) {
+      //
+      // Guard against cyclical references. (NOTE: We don't care about incidental 
+      // cyclical references occurring elsewhere; we only care about cyclical 
+      // references that would come to exist specifically as a result of setting 
+      // this template relationship right here. In practice, we only care about 
+      // cycles that loop through this very ActorBase that we're editing.)
+      //
+      bool would_create_a_new_cycle = false;
+      {
+         std::vector<dovah::form_stub*> seen;
+         dovah::form_stub* current = desired;
+         for (; current; current = dovah::form_stub_helpers::get_template_actor(current)) {
+            if (current == this->formStub()) {
+               would_create_a_new_cycle = true;
+               break;
+            }
+            if (std::find(seen.begin(), seen.end(), current) != seen.end()) {
+               break;
+            }
+            seen.push_back(current);
+         }
+      }
+      if (would_create_a_new_cycle) {
+         QString text = tr(
+            "You have selected ActorBase %1 as this ActorBase's template, but doing so would "
+            "form a cyclical reference. The selected ActorBase ultimately inherits from this "
+            "ActorBase.\n\n"
+            "A cyclical reference is a situation where A inherits from B, who inherits from "
+            "C, who inherits from A: if you follow the chain, it loops back around on itself "
+            "like a set of Penrose stairs or a Möbius strip.\n\n"
+            "Skyrim knows how to avoid getting stuck in an infinite loop, but the practical "
+            "consequence of this cyclical reference is that the data that each involved actor "
+            "will inherit will depend on what order Skyrim happens to process the template "
+            "relationships in, rather than being consistent.\n\n"
+            "This selection will not be used.",
+            "cyclical template actor warning"
+         )
+            .arg(QString::fromStdString(desired->editorID))
+         ;
+         QMessageBox::critical(this, tr("Error"), text);
+
+         auto* prior = this->form->template_data.actor.get_form_stub();
+         if (prior != desired) {
+            const auto blocker = QSignalBlocker(this->ui.templateActor);
+            this->ui.templateActor->setFormStub(this->form->template_data.actor.get_form_stub());
+         }
+         return;
+      }
+   }
+   write_form_ref(this->form->template_data.actor, desired);
+   this->_update_from_template_actor();
 }
 void FormDialogActorBase::_update_from_template_actor() {
    using template_flag = loaded_form_type::template_flag;
@@ -1078,9 +1163,6 @@ void FormDialogActorBase::_update_from_template_actor() {
       this->ui.flagDoesntAffectStealthMeter->setEnabled(enable);
    }
 
-   if (base != this->_state.pending_cyclical_template_actor_warn.our_template) {
-      this->_state.pending_cyclical_template_actor_warn = {};
-   }
    if (!base) {
       return;
    }
@@ -1088,15 +1170,6 @@ void FormDialogActorBase::_update_from_template_actor() {
    try {
       working.copy_data_from_template_actor();
    } catch (const dovah::exceptions::actor_base_template_is_cyclical& e) {
-      auto& dst = this->_state.pending_cyclical_template_actor_warn;
-      if (dst.our_template != base) {
-         dst.warned       = false;
-         dst.our_template = base;
-         dst.seen_twice   = &e.seen_twice;
-         if (!dst.warned && this->isActiveWindow()) {
-            this->_show_cyclical_template_actor_warning();
-         }
-      }
       return;
    }
    for (size_t i = 0; i < 13; ++i) {
@@ -1104,52 +1177,6 @@ void FormDialogActorBase::_update_from_template_actor() {
       if (working.template_data.flags & mask)
          this->_push_data_to_ui(mask);
    }
-}
-
-void FormDialogActorBase::_show_cyclical_template_actor_warning() {
-   auto& state = this->_state.pending_cyclical_template_actor_warn;
-   if (state.warned || !state.our_template) {
-      return;
-   }
-   state.warned = true;
-
-   QString text;
-   if (state.seen_twice) {
-      text = tr(
-         "You have selected ActorBase %1 as this ActorBase's template, but doing so has "
-         "formed a cyclical reference (ActorBase %2 was seen multiple times when checking "
-         "the template relationships).\n\n"
-         "A cyclical reference is a situation where A inherits from B, who inherits from "
-         "C, who inherits from A: if you follow the chain, it loops back around on itself "
-         "like a set of Penrose stairs or a Möbius strip.\n\n"
-         "Skyrim knows how to avoid getting stuck in an infinite loop, but the practical "
-         "consequence of this cyclical reference is that the data that each involved actor "
-         "will inherit will depend on what order Skyrim happens to process the template "
-         "relationships in, rather than being consistent. You should fix this, by changing "
-         "the template relationships between the involved actors so they're not cyclical.",
-         "cyclical template actor warning"
-      )
-         .arg(QString::fromStdString(state.our_template->editorID))
-         .arg(QString::fromStdString(state.seen_twice->editorID))
-      ;
-   } else {
-      text = tr(
-         "You have selected ActorBase %1 as this ActorBase's template, but doing so has "
-         "formed a cyclical reference.\n\n"
-         "A cyclical reference is a situation where A inherits from B, who inherits from "
-         "C, who inherits from A: if you follow the chain, it loops back around on itself "
-         "like a set of Penrose stairs or a Möbius strip.\n\n"
-         "Skyrim knows how to avoid getting stuck in an infinite loop, but the practical "
-         "consequence of this cyclical reference is that the data that each involved actor "
-         "will inherit will depend on what order Skyrim happens to process the template "
-         "relationships in, rather than being consistent. You should fix this, by changing "
-         "the template relationships between the involved actors so they're not cyclical.",
-         "cyclical template actor warning"
-      )
-         .arg(QString::fromStdString(state.our_template->editorID))
-      ;
-   }
-   QMessageBox::critical(this, tr("Error"), text);
 }
 
 void FormDialogActorBase::_push_data_to_ui(loaded_form_type::template_flag::type flag) {
@@ -1609,6 +1636,29 @@ void FormDialogActorBase::_push_faction_from_ui() {
 }
 
 
+void FormDialogActorBase::_set_creature_sound_inherit_actor(dovah::form_stub* stub) {
+   {
+      auto* const widget  = this->ui.inheritSoundsFrom;
+      const auto  blocker = QSignalBlocker(widget);
+
+      auto* prior = widget->formStub();
+      widget->setFormStub(stub);
+      if (stub) {
+         //
+         // If `stub` isn't something we can legally inherit from (i.e. if the 
+         // filter we've attached to that DKFormPicker rejects it), then use 
+         // the prior stub.
+         //
+         auto* selected = widget->formStub();
+         if (stub != selected) {
+            widget->setFormStub(prior);
+            stub = prior;
+         }
+      }
+   }
+   this->form->creature_sounds.set_inherits_from(*this->form, stub);
+   this->_creature_sound_inheritance_changed();
+}
 void FormDialogActorBase::_creature_sound_inheritance_changed() {
    auto* picker       = this->ui.inheritSoundsFrom;
    auto* inherit_from = picker->formStub();
