@@ -1,7 +1,29 @@
 #include "Class.h"
 #include "_common_cpp.h"
 
+#include "../data/game_settings.h"
+namespace {
+   unsigned int _default_voice_points(const dovah::file_load_order& lo) {
+      const std::string setting_name("iVoicePointsDefault");
+
+      dovah::loaded_game_setting loaded;
+      if (lo.get_loaded_setting_by_name(setting_name, loaded)) {
+         return loaded.value.i;
+      }
+      for (auto& dfn : dovah::game_settings) {
+         if (_strnicmp(dfn.name, setting_name.data(), setting_name.size()) == 0) {
+            return dfn.default_value.i;
+         }
+      }
+      return 5;
+   }
+}
+
 namespace dovah::loaded_forms {
+   void Class::setup(const file_load_order& lo) noexcept {
+      this->voice_points = _default_voice_points(lo);
+   }
+
    void Class::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //
@@ -131,7 +153,7 @@ namespace dovah::loaded_forms {
       this->attribute_weights = {};
       this->unk30 = 0;
       this->bleedout_default = 0;
-      this->voice_points = 0;
+      this->voice_points     = _default_voice_points(this->stub.get_owning_load_order());
    }
    void Class::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);

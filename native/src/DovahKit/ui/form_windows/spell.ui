@@ -1,0 +1,537 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogSpell</class>
+ <widget class="QDialog" name="FormDialogSpell">
+  <property name="windowTitle">
+   <string>Spell</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="2" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="1">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QGroupBox" name="effectsGroupbox">
+       <property name="title">
+        <string>Effects</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,0">
+        <item>
+         <widget class="QTableView" name="effects"/>
+        </item>
+        <item>
+         <widget class="QStackedWidget" name="conditionExplanationStack">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="conditionExplanationNormal">
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>&lt;p&gt;Conditions can be defined separately for each effect in this list, on both this Spell and inside of the Magic Effects themselves. For most spells, the behavior is as follows (it's flipped around for Concentration spells):&lt;/p&gt;
+&lt;p&gt;Magic Effect-side conditions are checked one time when the spell is first applied, and they control whether the effect is ever applied to the spell's target. If the Magic Effect's conditions are not met, then the Magic Effect is never applied to the target. Prefer those conditions for things like immunities (e.g. Restoration healing spells failing to work at all on undead actors and Dwarven robots).&lt;/p&gt;
+&lt;p&gt;Once a Magic Effect is applied to the target, the Spell-side conditions are checked every second afterward. If these conditions are met, then the effect is active and will affect the target. If the conditions cease to be met, then the effect will stop being active: the target will still &lt;em&gt;have&lt;/em&gt; the effect, but it won't do anything until the conditions are met again. Prefer these conditions for effects that should turn on and off (e.g. vampires' sunlight nerfs existing persistently on a vampire, but only being active during certain times of day).&lt;/p&gt;</string>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="conditionExplanationConcentration">
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="label_16">
+              <property name="text">
+               <string>&lt;p&gt;Conditions can be defined separately for each effect in this list, on both this Spell and inside of the Magic Effects themselves. For Concentration spells, the behavior is as follows (it's flipped around from all other spells):&lt;/p&gt;
+&lt;p&gt;Spell-side conditions are checked one time when the spell is first applied, and they control whether the effect is ever applied to the spell's target. If the Spell-side conditions are not met, then the Magic Effect is never applied to the target. Prefer those conditions for things like immunities (e.g. Restoration healing spells failing to work at all on undead actors and Dwarven robots).&lt;/p&gt;
+&lt;p&gt;Once a Magic Effect is applied to the target, the Magic Effect-side conditions are checked every second afterward. If these conditions are met, then the effect is active and will affect the target. If the conditions cease to be met, then the effect will stop being active: the target will still &lt;em&gt;have&lt;/em&gt; the effect, but it won't do anything until the conditions are met again. Prefer these conditions for effects that should turn on and off (e.g. vampires' sunlight nerfs existing persistently on a vampire, but only being active during certain times of day).&lt;/p&gt;</string>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QCheckBox" name="flagAutoCalc">
+         <property name="whatsThis">
+          <string>&lt;p&gt;If the Auto-Calculate option is checked, then the game will compute the spell's charge time and cost automatically based on the stats for each effect. This computation happens both in the Creation Kit and when the player loads the game. Both of those computations are generally accurate but are believed to have bugs in specific situations.&lt;/p&gt;
+&lt;ul&gt;
+   &lt;li&gt;&lt;p&gt;The Creation Kit may incorrectly force Area values for a spell's AoE effects to zero when editing effects while Auto-Calculate is checked.&lt;/p&gt;&lt;/li&gt;
+   &lt;li&gt;
+      &lt;p&gt;The game calculates a spell's cost based on all of its effects, but this calculation happens when the spell is loaded — and is therefore sensitive to the order in which mods are loaded. If a later-loaded data file changes the Base Cost value for a Magic Effect, and that Magic Effect is used by spells that were loaded from earlier data files, those spells will not be retroactively updated and will have inconsistent costs. Only spells that are loaded from the same data file, or later-loaded data files, will have auto-calculated costs that reflect the updated Magic Effect data. In some cases, this means that you may have to make a deliberate &quot;dirty edit&quot; to a spell to update its cost, when you wish to edit the costs of its Magic Effects.&lt;/p&gt;
+      &lt;p&gt;Even base-game DLCs are known to cause these mishaps. If a mod that edits the Flames spell is loaded, the spell will become unexpectedly more expensive, because Dragonborn.esm made changes to the spell's effects but not to the spell itself. The game calculates Flames' cost when Flames is first defined in Skyrim.esm, at which point those calculations are based on Flames' Magic Effects as they exist at the time. The game then loads Dragonborn, which updates the Magic Effects but not Flames itself, and the game doesn't know to go back and recalculate Flames' cost. Then, the game loads the mod which updates Flames, so it redoes those calculations using the Magic Effects as they exist at the time that the mod is loaded — so Dragonborn's increases to those effects' base costs now come into play, and Flames unexpectedly has a higher Magicka cost despite the mod never changing the cost directly.&lt;/p&gt;
+   &lt;/li&gt;
+&lt;/ul&gt;</string>
+         </property>
+         <property name="text">
+          <string>Auto-Calculate</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Charge Time:</string>
+         </property>
+         <property name="buddy">
+          <cstring>chargeTime</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="chargeTime">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Magicka Cost:</string>
+         </property>
+         <property name="buddy">
+          <cstring>cost</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="cost">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Cast Duration:</string>
+         </property>
+         <property name="buddy">
+          <cstring>castDuration</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="castDuration"/>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="0" rowspan="3">
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="name"/>
+       </item>
+       <item row="2" column="1">
+        <widget class="QComboBox" name="type">
+         <property name="whatsThis">
+          <string>&lt;p&gt;The basic type of the spell.&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;&lt;b&gt;Ability&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;These are always-on, constant-effect spells. They're good for things like Wood Elves' racial resistance to poison and disease.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Addiction&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Unused. These are a leftover from Fallout 3 and Fallout: New Vegas.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Disease&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;These spells are diseases. Disease Resistance offers protection from them.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Lesser Power&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;These spells are listed as Powers in the Magic Menu, but can be used multiple times per day. An example would be the Night Eye power for Khajiit characters.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Poison&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;These spells are designed to be applied by poisons. Poison Resistance offers protection from these spells.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Power&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;These spells are listed as Powers in the Magic Menu, and can only be used once per day.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Spell&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;These are standard spells, and are sorted by their school of magic within the Magic Menu.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Voice Power&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;These spells are designed to be used in Shouts.&lt;/p&gt;&lt;/dd&gt;
+&lt;/dl&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QComboBox" name="casting">
+         <property name="whatsThis">
+          <string>&lt;p&gt;The casting type controls how the spell's caster triggers the effect. All of the effects on a spell must have the same casting type.&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;&lt;b&gt;Concentration&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;These spells are cast while the button is pressed, and continually drain Magicka while the spell remains in effect.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Fire and Forget&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;These spells must charge (if only briefly) while the button is pressed, and then fire once when the button is released.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Constant Effect&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;These spells are always active. (You would typically use this with Ability spells.)&lt;/p&gt;&lt;/dt&gt;
+&lt;/dl&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <widget class="QComboBox" name="equipType">
+         <property name="whatsThis">
+          <string>&lt;p&gt;Controls how the caster equips the spell. Some races are limited in what equip types they can use.&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;&lt;b&gt;EitherHand&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;A one-handed spell that can be equipped to the left hand or the right hand. Note that some actors are only capable of equipping spells to a single hand, and will never only use spells that are specifically restricted to that hand.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;BothHands&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;A two-handed spell.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Voice&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;A Power or Shout.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;LeftHand&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;A one-handed spell specifically restricted to the caster's left hand, and usable by casters that can only equip spells to their left hand.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;RightHand&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;A one-handed spell specifically restricted to the caster's right hand, and usable by casters that can only equip spells to their right hand.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Shield&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Not used for magic?&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;None&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The spell is not equipped. This generally makes sense for Ability-type spells.&lt;/p&gt;&lt;/dd&gt;
+&lt;/dl&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="DKFormPicker" name="menuDisplay">
+         <property name="whatsThis">
+          <string>&lt;p&gt;Controls what 3D model is displayed for the spell in the Magic Menu. If you don't specify one here, then the game checks the spell's effects: the first effect with a Menu Display Object will determine what 3D model is used. If none of the effects has a Menu Display Object, then the spell will have no 3D model in the Magic Menu.&lt;/p&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Editor ID:</string>
+         </property>
+         <property name="buddy">
+          <cstring>editorID</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Casting:</string>
+         </property>
+         <property name="buddy">
+          <cstring>casting</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_10">
+         <property name="text">
+          <string>Equip Type:</string>
+         </property>
+         <property name="buddy">
+          <cstring>equipType</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Name:</string>
+         </property>
+         <property name="buddy">
+          <cstring>name</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Type:</string>
+         </property>
+         <property name="buddy">
+          <cstring>type</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="QLabel" name="label_13">
+         <property name="text">
+          <string>Range:</string>
+         </property>
+         <property name="buddy">
+          <cstring>range</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="editorID"/>
+       </item>
+       <item row="4" column="1">
+        <widget class="QComboBox" name="delivery">
+         <property name="whatsThis">
+          <string>&lt;p&gt;This specifies how the spell's effects are delivered to the target. All effects on a spell must have the same delivery type.&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;&lt;b&gt;Self&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The effect is applied to the caster.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Contact&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The effect is applied to the target by contact with a melee attack. This can be used for enchantments applied to melee weapons, or for spells specified in a Race or Actor's Attack Data overrides (i.e. spells attached to the animation event for a melee attack).&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Aimed&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The effect is applied to the target by contact with a projectile.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Target Actor&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The effect is applied immediately to whatever Actor the caster is aiming at. No projectile is fired.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Target Location&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The effect is applied to the object or landscape that the caster is aiming at. No projectile is fired.&lt;/p&gt;&lt;/dd&gt;
+&lt;/dl&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>Delivery:</string>
+         </property>
+         <property name="buddy">
+          <cstring>delivery</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="1">
+        <widget class="DKFormPicker" name="castingPerk">
+         <property name="whatsThis">
+          <string>&lt;p&gt;This exists to help with setting conditions on Perk Entry Points. When an entry point is invoked on a spell, you can use the &lt;code&gt;GetSpellCastingPerk&lt;/code&gt; condition to check if that spell has a particular Perk as its Casting Perk.&lt;/p&gt;
+&lt;p&gt;The primary intended usage is for perks that reduce the cost of casting certain spells. You'd have the perk use the Mod Spell Cost entry point, and have the entry point conditions check whether the spell currently being cast uses the perk as its Casting Perk.&lt;/p&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Menu Display Object:</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="buddy">
+          <cstring>menuDisplay</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLabel" name="label_12">
+         <property name="text">
+          <string>Casting Perk:</string>
+         </property>
+         <property name="buddy">
+          <cstring>castingPerk</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="0">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>School:</string>
+         </property>
+         <property name="buddy">
+          <cstring>school</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="1">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QDoubleSpinBox" name="range">
+           <property name="whatsThis">
+            <string>The maximum range of a ranged spell.</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_15">
+           <property name="text">
+            <string>ft.</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="9" column="1">
+        <widget class="QLineEdit" name="school">
+         <property name="whatsThis">
+          <string>The school of magic to which this spell belongs. This is computed for you based on the spell's Magic Effects.</string>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="flagNoAbsorbReflect">
+       <property name="text">
+        <string>Disallow Spell Absorb/Reflect</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="flagIgnoreResist">
+       <property name="text">
+        <string>Ignore Resistance</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="flagAOEIgnoresLOS">
+       <property name="whatsThis">
+        <string>&lt;p&gt;By default, spells can only affect targets if the caster has a potential line of sight to. &quot;Potential line of sight&quot; here means that there is a sufficiently unobstructed line between the caster and target in &lt;em&gt;any&lt;/em&gt; direction (e.g. including targets that are behind the caster).&lt;/p&gt;
+&lt;p&gt;If this option is checked, then the line-of-sight requirement will be ignored: the spell will affect any targets in range, ignoring walls and other obstacles.&lt;/p&gt;</string>
+       </property>
+       <property name="text">
+        <string>Area-of-Effect Ignores Line of Sight</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="flagPlayerStartSpell">
+       <property name="text">
+        <string>Player Start Spell (unused)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="flagNoDualCastMod">
+       <property name="whatsThis">
+        <string>If this is checked, then dual-casting the spell doesn't add to its Magicka cost, effect magnitudes, or effect durations.</string>
+       </property>
+       <property name="text">
+        <string>No Dual Cast Modifications</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="descriptionGroupbox">
+       <property name="whatsThis">
+        <string>&lt;p&gt;You can optionally specify a description for this spell, to be shown in the Magic Menu. If you don't write a description here, then a description will be generated automatically from the descriptions of each of the spell's Magic Effects, in the order they appear in the effect list. You can preview the auto-generated description by clicking the &quot;Test concatenated effect descriptions&quot; button.&lt;/p&gt;</string>
+       </property>
+       <property name="title">
+        <string>Description</string>
+       </property>
+       <layout class="QVBoxLayout" name="descriptionLayout">
+        <item>
+         <widget class="QPlainTextEdit" name="description"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="buttonTestAutoDesc">
+          <property name="text">
+           <string>Test concatenated effect descriptions</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="1">
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>type</tabstop>
+  <tabstop>casting</tabstop>
+  <tabstop>delivery</tabstop>
+  <tabstop>menuDisplay</tabstop>
+  <tabstop>equipType</tabstop>
+  <tabstop>castingPerk</tabstop>
+  <tabstop>range</tabstop>
+  <tabstop>school</tabstop>
+  <tabstop>flagNoAbsorbReflect</tabstop>
+  <tabstop>flagIgnoreResist</tabstop>
+  <tabstop>flagAOEIgnoresLOS</tabstop>
+  <tabstop>flagPlayerStartSpell</tabstop>
+  <tabstop>flagNoDualCastMod</tabstop>
+  <tabstop>description</tabstop>
+  <tabstop>buttonTestAutoDesc</tabstop>
+  <tabstop>effects</tabstop>
+  <tabstop>flagAutoCalc</tabstop>
+  <tabstop>chargeTime</tabstop>
+  <tabstop>cost</tabstop>
+  <tabstop>castDuration</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
