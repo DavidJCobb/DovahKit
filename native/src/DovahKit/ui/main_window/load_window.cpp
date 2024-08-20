@@ -23,6 +23,14 @@ namespace {
 LoadOrderOpenDialog::LoadOrderOpenDialog(dovah::game g, QWidget* parent) : QDialog(parent) {
    ui.setupUi(this);
    //
+   switch (g) {
+      case dovah::game::skyrim_classic:
+         this->setWindowTitle(tr("Load Data Files (Skyrim 2011 Edition)"));
+         break;
+      case dovah::game::skyrim_special:
+         this->setWindowTitle(tr("Load Data Files (Skyrim Special Edition)"));
+         break;
+   }
    this->ui.fileList->listFiles(g);
    //
    this->_load_poller.setSingleShot(false);

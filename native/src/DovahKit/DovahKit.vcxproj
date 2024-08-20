@@ -201,6 +201,7 @@
     <ClCompile Include="editor\subsystems\game_settings\game_settings_subsystem.cpp" />
     <ClCompile Include="editor\subsystems\gui_adjust\gui_adjust.cpp" />
     <ClCompile Include="editor\subsystems\message_log\dovahkit_message_log.cpp" />
+    <ClCompile Include="editor\subsystems\message_log\dovahkit_message_log_model.cpp" />
     <ClCompile Include="editor\subsystems\options\dovahkit_options.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\known_script.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\known_script_ptr.cpp" />
@@ -781,6 +782,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\ui_form_list_pane_extra_col.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_key_picker.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_ref_picker.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_status_bar_segment.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2.cpp" />
@@ -908,7 +910,6 @@
     <ClCompile Include="ui\main_window\load_window.cpp" />
     <ClCompile Include="ui\main_window\load_window\file_list.cpp" />
     <ClCompile Include="ui\main_window\log_window.cpp" />
-    <ClCompile Include="ui\main_window\log_window\log_list_view.cpp" />
     <ClCompile Include="ui\main_window\object_window.cpp" />
     <ClCompile Include="ui\main_window\object_window\form_table.cpp" />
     <ClCompile Include="ui\main_window\object_window\object_window_treeview.cpp" />
@@ -948,6 +949,7 @@
     <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp" />
     <ClCompile Include="widgets\DKPapyrusFragmentFunctionPicker.cpp" />
     <ClCompile Include="widgets\DKQuestAliasPicker.cpp" />
+    <ClCompile Include="widgets\DKStatusBar.cpp" />
     <ClCompile Include="widgets\DKTabBar.cpp" />
     <ClCompile Include="widgets\DKTabWidget.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
@@ -1180,6 +1182,8 @@
     <QtMoc Include="editor\subsystems\game_settings\game_settings_subsystem.h" />
     <ClInclude Include="editor\subsystems\game_settings\core.h" />
     <ClInclude Include="editor\subsystems\message_log\core.h" />
+    <QtMoc Include="editor\subsystems\message_log\dovahkit_message_log_model.h" />
+    <ClInclude Include="editor\subsystems\message_log\model.h" />
     <ClInclude Include="helpers\hashing\crc32.h" />
     <ClInclude Include="nif\blocks\BSValueNode.h" />
     <ClInclude Include="nif\utils\find_all_retexturable_blocks.h" />
@@ -1205,6 +1209,7 @@
     <ClInclude Include="ui\form_windows\actor_base\ActorBaseRelationshipsModel.h" />
     <QtMoc Include="ui\form_windows\actor_base\ActorBaseSkillsModel.h" />
     <ClInclude Include="ui\form_windows\actor_base\ActorBaseCreatureSoundsModel.h" />
+    <QtMoc Include="ui\form_windows\actor_base\ActorBaseTintLayerModel.h" />
     <ClInclude Include="ui\form_windows\actor_base\FaceComplexionPickerFilter.h" />
     <ClInclude Include="ui\form_windows\actor_base\FaceHairColorPickerFilter.h" />
     <ClInclude Include="ui\form_windows\actor_base\FaceTintColorPickerFilter.h" />
@@ -1220,6 +1225,7 @@
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_list_pane_extra_col.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_status_bar_segment.h" />
     <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
     <QtMoc Include="ui\models\forms\LeveledListModel.h" />
     <ClInclude Include="ui\types\conditions\condition.h" />
@@ -1248,6 +1254,7 @@
     <ClInclude Include="ui\utils\typical_tableview_config.h" />
     <QtMoc Include="widgets\DKTabBar.h" />
     <QtMoc Include="widgets\DKTabWidget.h" />
+    <QtMoc Include="widgets\DKStatusBar.h" />
     <ClInclude Include="widgets\widget-models\DKAttackDataModel.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />
@@ -2408,7 +2415,6 @@
     <ClInclude Include="helpers\windows_ini.h" />
     <QtMoc Include="ui\generic\QTextEncodingValidator.h" />
     <QtMoc Include="ui\main_window\log_window.h" />
-    <QtMoc Include="ui\main_window\log_window\log_list_view.h" />
     <QtMoc Include="ui\main_window\game_setting_window\game_setting_list.h" />
     <QtMoc Include="ui\main_window\game_setting_window.h" />
     <QtMoc Include="ui\main_window\default_object_window.h" />

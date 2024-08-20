@@ -5,7 +5,9 @@
 #include <QShowEvent>
 #include <QtWinExtras/QWinTaskbarProgress.h> // this probably isn't the right way to include this, but Visual Studio and Qt Tools are not being cooperative.
 #include "helpers/qt/strings.h"
+#include "widgets/DKStatusBar.h"
 #include "editor/core.h"
+#include "editor/subsystems/message_log/core.h"
 #include "editor/open_window_for_form.h"
 #include "dovah/data/game.h"
 #include "dovah/files/file_load_order.h"
@@ -37,6 +39,10 @@
 #include "main_window/_debug_hooks/_setup.h"
 
 namespace {
+   using logging_subsystem = dovahkit::subsystems::message_log::core;
+}
+
+namespace {
    MainWindow* _window = nullptr;
 }
 /*static*/ MainWindow& MainWindow::get() {
@@ -65,7 +71,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    _window = this;
    //
    this->taskbar_button = new QWinTaskbarButton(this);
-   //
+   
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::fileLoadStatisticsAvailable, [this](const DovahKitCore::file_load_stats& stats) {
       auto text = QString("Loaded all files in %1 ms.").arg(stats.milliseconds);
@@ -79,7 +85,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       this->ui.actionEditFileMetadata->setDisabled(true);
       this->ui.actionSave->setDisabled(true);
    });
-   //
+
    this->subwindows.object.flags = Qt::CustomizeWindowHint | Qt::WindowTitleHint;
    this->subwindows.object.open(this->ui.mdi);
    this->subwindows.cell_view.flags = Qt::CustomizeWindowHint | Qt::WindowTitleHint;
@@ -87,7 +93,34 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    this->subwindows.log.open(this->ui.mdi);
    this->subwindows.render.flags = Qt::CustomizeWindowHint | Qt::WindowTitleHint;
    this->subwindows.render.open(this->ui.mdi);
-   //
+
+   // Status bar
+   {
+      auto* status_bar = new DKStatusBar(this);
+      this->setStatusBar(status_bar);
+
+      {
+         auto& info      = this->_status_bar_widgets.warning_count;
+         auto* container = info.container = new QWidget(status_bar);
+         auto* label     = info.label     = new QLabel(container);
+         {
+            auto* icon = info.icon = new QLabel(this);
+            icon->setScaledContents(true);
+
+            auto* layout = new QHBoxLayout(container);
+            layout->setContentsMargins(0, 0, 0, 0);
+            layout->addWidget(icon);
+            layout->addWidget(label);
+            status_bar->addPermanentWidget(container);
+         }
+         label->setText("No warnings logged");
+
+         auto& ml = logging_subsystem::get_or_create();
+         QObject::connect(&ml, &logging_subsystem::warningCountsChanged, this, &MainWindow::updateStatusBarWarningsCount);
+         this->updateStatusBarWarningsCount(0, 0);
+      }
+   }
+   
    #pragma region Window menu
    {
       QAction* action;
@@ -153,7 +186,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       #pragma endregion
    }
    #pragma endregion
-   //
+   
    this->ui.actionEditFileMetadata->setDisabled(true);
    this->ui.actionSave->setDisabled(true);
    //
@@ -397,5 +430,45 @@ void MainWindow::updateFormUsesWindowList() {
       action->setData(0);
       action->setEnabled(false);
       this->form_uses_window_menu->addAction(action);
+   }
+}
+
+void MainWindow::updateStatusBarWarningsCount(size_t count, size_t count_unread) {
+   auto& info = this->_status_bar_widgets.warning_count;
+
+   if (!count) {
+      {  // Show the icon as greyscale when no warnings are present.
+         auto image = QImage(":/icons/log-window-icons/warning-16.png");
+         auto alpha = image.alphaChannel();
+         image.convertTo(QImage::Format_Grayscale16);
+         image.convertTo(QImage::Format_ARGB32);
+         image.setAlphaChannel(alpha);
+
+         QPixmap pixmap;
+         if (pixmap.convertFromImage(image))
+            info.icon->setPixmap(pixmap);
+      }
+      info.label->setText(tr("No warnings logged", "main window status bar: log window warning count"));
+      return;
+   }
+
+   info.icon->setPixmap(QPixmap(":/icons/log-window-icons/warning-16.png"));
+   if (count_unread) {
+      info.label->setText(tr("%n warning(s) (%1 unread)", "main window status bar: log window warning count", count).arg(count_unread));
+   } else {
+      info.label->setText(tr("%n warning(s) logged", "main window status bar: log window warning count", count));
+   }
+
+   auto* status_bar = qobject_cast<DKStatusBar*>(this->statusBar());
+   if (status_bar) {
+      bool flash = count_unread > 0;
+      if (flash) {
+         auto* subwindow = this->subwindows.log.widget();
+         if (subwindow && subwindow->hasFocus())
+            flash = false;
+      }
+      if (flash) {
+         status_bar->flash(info.container);
+      }
    }
 }

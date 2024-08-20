@@ -420,9 +420,6 @@
     <ClCompile Include="ui\main_window\log_window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\log_window\log_list_view.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\data\game_settings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2530,6 +2527,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\forms\ActorBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_status_bar_segment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKStatusBar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\message_log\dovahkit_message_log_model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -6524,6 +6530,12 @@
     <ClInclude Include="dovah\form_stubs\helpers\for_each_persistent_ref_in_world.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_status_bar_segment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\message_log\model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6841,9 +6853,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\log_window.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\main_window\log_window\log_list_view.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\main_window\game_setting_window\game_setting_list.h">
@@ -7267,6 +7276,15 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKTabWidget.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\actor_base\ActorBaseTintLayerModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKStatusBar.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\subsystems\message_log\dovahkit_message_log_model.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

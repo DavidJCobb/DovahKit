@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
-#include <QtWidgets/QMainWindow>
+#include <QLabel>
+#include <QMainWindow>
 #include <QtWinExtras/qwintaskbarbutton.h> // this probably isn't the right way to include this, but Visual Studio and Qt Tools are not being cooperative.
 #include "ui_main_window.h"
 
@@ -50,6 +51,13 @@ class MainWindow : public QMainWindow {
    private:
       Ui::MainWindow ui;
       struct {
+         struct {
+            QWidget* container = nullptr;
+            QLabel*  icon      = nullptr;
+            QLabel*  label     = nullptr;
+         } warning_count;
+      } _status_bar_widgets;
+      struct {
          _subwindow<CellViewWindow> cell_view;
          _subwindow<LogWindow>      log;
          _subwindow<ObjectWindow>   object;
@@ -71,4 +79,6 @@ class MainWindow : public QMainWindow {
 
       void updateFormEditWindowList();
       void updateFormUsesWindowList();
+
+      void updateStatusBarWarningsCount(size_t count, size_t count_unread);
 };

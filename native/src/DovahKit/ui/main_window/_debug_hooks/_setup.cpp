@@ -38,6 +38,7 @@
 #include "ui_attack_data.h"
 #include "ui_form_list_pane_extra_col.h"
 #include "ui_float_slider.h"
+#include "ui_status_bar_segment.h"
 
 namespace DovahKitDebug {
    using all_features = cobb::class_list<
@@ -76,7 +77,8 @@ namespace DovahKitDebug {
       features::ui_form_inventory,
       features::ui_attack_data,
       features::ui_form_list_pane_extra_col,
-      features::ui_float_slider//,
+      features::ui_float_slider,
+      features::ui_status_bar_segment//,
    >;
 
    template<typename T> struct _add_functor {
