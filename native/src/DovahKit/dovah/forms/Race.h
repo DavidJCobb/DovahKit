@@ -271,6 +271,8 @@ namespace dovah::loaded_forms {
             // the morph names should appear in the record before the morph weights.)
             //
             // The weights seem to only be loaded by the CK, likely because they're only used for generating LIP files.
+            //
+            // The morph names list may be empty (but the weight list full) if the race uses the 16 default morph names.
          } phonemes;
          struct {
             float aim_angle_tolerance = 0; // DATA+0x6C

@@ -262,6 +262,15 @@ namespace dovah::loaded_forms {
                   break;
             #pragma endregion
 
+            case 'MTNM':
+               //
+               // In current versions of Skyrim, these are always the same FourCCs. The game 
+               // itself doesn't even load them, but the CK always generates them. We'll check 
+               // for the case here so we don't emit a warning on an unrecognized subrecord, 
+               // but we'll ignore it. (There aren't any form IDs, etc., inside, so that's 
+               // safe to do.)
+               //
+               break;
             case 'NAME':
                if (current_biped_object_name < this->biped_object_info.names.size()) {
                   auto& name = this->biped_object_info.names[current_biped_object_name];
@@ -338,6 +347,19 @@ namespace dovah::loaded_forms {
                #pragma region Stateful subrecords (relying on loader state to know what sex to load into)
                   case 'ANAM':
                      (is_female ? this->by_sex.female : this->by_sex.male).skeleton_nif.load_model_path(subrecord, intfc);
+                     break;
+                  case 'INDX':
+                     //
+                     // INDX is the index of each HeadPart in the list that it came from... but it's not 
+                     // actually used anywhere. The loader reads it but never uses the variable it reads 
+                     // into; and the CK's save code just writes, for each HeadPart, its index in the 
+                     // HeadPart list. The value is completely unused.
+                     // 
+                     // My guess is that Bethesda anticipated a potential need to refer to HeadParts via 
+                     // a consistent index/ID, similar to tint layers, but it never came to pass -- and 
+                     // they never bothered to remove the subrecord. In any case, we should generate it 
+                     // on save, but since the game never retains it in memory, neither will we.
+                     //
                      break;
                   case 'HEAD':
                      if (!in_head_data)
@@ -565,7 +587,7 @@ namespace dovah::loaded_forms {
                            }
                            auto& preset = tint.presets[i];
                            if (subrecord.read(preset.color)) {
-                              intfc.warn_if_ref_is_wrong_type(form_id, form_type::color, subrecord.signature());
+                              intfc.warn_if_ref_is_wrong_type(preset.color, form_type::color, subrecord.signature());
                            }
                         }
                         ++current_tint_preset_color;
@@ -664,13 +686,22 @@ namespace dovah::loaded_forms {
 
                      size_t count = subrecord.size() / sizeof(float);
                      if (count != this->phonemes.morph_names.size()) {
-                        specific_load_warnings::wrong_weight_count_per_phoneme notice(
-                           this->stub,
-                           (dovah::face_fx::phoneme)current_phoneme_weight_set,
-                           count,
-                           this->phonemes.morph_names.size()
+                        bool uses_default_names = (
+                           count == 16
+                           &&
+                           (this->race_flags & race_flag::facegen_head)
+                           &&
+                           this->phonemes.morph_names.empty()
                         );
-                        intfc.log_load_warning(notice);
+                        if (!uses_default_names) {
+                           specific_load_warnings::wrong_weight_count_per_phoneme notice(
+                              this->stub,
+                              (dovah::face_fx::phoneme)current_phoneme_weight_set,
+                              count,
+                              this->phonemes.morph_names.size()
+                           );
+                           intfc.log_load_warning(notice);
+                        }
                      }
                      list.clear();
                      list.resize(count);

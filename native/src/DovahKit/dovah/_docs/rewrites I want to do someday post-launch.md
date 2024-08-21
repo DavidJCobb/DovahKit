@@ -808,6 +808,31 @@ This is another issue that a scripting language could solve, but forcing end use
 
 The inability to do conditional binds (i.e. move camera if move selection succeeds) without hardcoded composition is a problem, ~~but could be solved in other ways (e.g. ordered operations, at the cost of heap allocation and freeing per frame, rather than merged ones; could pre-allocate, etc., to ease perf burdens)~~. (This doesn't work for "move camera if move selection succeeds," because moving the selection may only *partially* succeed: you may try to move the selection 100 units to the left, but it only goes 70 and then hits some boundary that we can't let it cross e.g. the max coordinate threshold in an interior cell. How do we ferry the amount by which it moved into the "move camera" bind, so that the camera movement matches the selection movement? Again: having tools return results isn't part of the design, much less having one tool take the results of another (i.e. *any other*) tool as input.)
 
+#### Musings on tools invoked in tandem
+
+If we subcategorize tools into "tools" and, for want of a better word, "archetypes," then potentially a solution exists for running tools in tandem while accounting for partial or complete failures:
+
+* Allow a single bind to host multiple tools, to be run in sequence
+* Allow tools to return a result, if they're marked as doing so by the user
+* Give tools an archetype that takes [a property of] the last returned result as input (if the types match)
+
+Under this idea, the Move Selection tool could return the position to which the selection was moved, and the vector by which the selection was moved (which could optionally also be accessed as a direction). Then, a Move Camera tool on the same bind could be set to use the vector by which the selection was moved as input.
+
+This does, however, introduce the question of whether the added complexity here (in terms of both implementation and UX/onboarding) is worth it &mdash; whether we get enough practical value out of such a system to merit using it further. Are there many other cases where two tools could or should be run in tandem like this?
+
+Moreover, this way of executing tools feels closer to being an inadequate scripting language than an adequate configuration system. I said above that scripts aren't a good alternative to Worldinput or Worldedit due to the complexity of the 3D transforms involved for many of these tools; but if we're already splitting tools into tools and archetypes, then the logical metaphor (in a text-based programming language) is function overloads:
+
+```c++
+auto result = move_selection::simple{
+   .frame = reference_frame::world,
+   .by    = vec(0, 0, 2)
+});
+move_camera::simple({
+   .frame = reference_frame::world,
+   .by    = result.translated_by,
+});
+```
+
 ### A note about Worldinput
 
 Worldinput doesn't need a redesign, nor does it need to be replaced with scripting.
