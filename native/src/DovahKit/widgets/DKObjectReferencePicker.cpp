@@ -85,7 +85,6 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
             worldedit.center_on_refr(*ref);
          });
       #endif
-      layout->addWidget(widget, 2, 0, 1, 2);
    }
 
    #pragma region Tab order

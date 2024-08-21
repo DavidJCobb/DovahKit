@@ -52,6 +52,7 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
       layout->addWidget(button_wrap);
 
       auto* sublayout = new QHBoxLayout(button_wrap);
+      sublayout->setContentsMargins(0, 0, 0, 0);
       button_wrap->setLayout(sublayout);
       {
          auto* button = this->_subwidgets.move_up = new QPushButton(tr("<<", "move up label"));
