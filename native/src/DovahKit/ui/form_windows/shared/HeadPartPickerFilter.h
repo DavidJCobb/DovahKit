@@ -1,12 +1,12 @@
 #pragma once
 #include <optional>
+#include "dovah/data/headparts.h"
 #include "dovah/data/sex.h"
-#include "dovah/forms/HeadPart.h"
 #include "widgets/widget-data/DKFormPickerCustomFilter.h"
 
 class HeadPartPickerFilter final : public DKFormPickerCustomFilter {
    public:
-      using head_part_type = dovah::loaded_forms::HeadPart::head_part_type;
+      using head_part_type = dovah::head_part_type;
 
    public:
       using DKFormPickerCustomFilter::DKFormPickerCustomFilter;

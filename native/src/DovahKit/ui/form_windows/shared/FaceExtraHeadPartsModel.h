@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <QAbstractItemModel>
-#include "dovah/forms/HeadPart.h"
+#include "dovah/data/headparts.h"
 
 namespace dovah {
    class form_stub;
@@ -13,7 +13,7 @@ namespace dovah {
 class FaceExtraHeadPartsModel final : public QAbstractItemModel {
    Q_OBJECT;
    public:
-      using HeadPartType = dovah::loaded_forms::HeadPart::head_part_type;
+      using HeadPartType = dovah::head_part_type;
 
    public:
       FaceExtraHeadPartsModel(QObject* parent = nullptr);

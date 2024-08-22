@@ -1414,7 +1414,7 @@ namespace dovah::loaded_forms {
                auto& TINI = record.open_next_subrecord('TINI');
                TINI.write(tint.index);
                TINI.close();
-               if (tint.type != tint_type::none) {
+               if (tint.type != face_tint_type::none) {
                   auto& TINP = record.open_next_subrecord('TINP');
                   TINP.write(tint.type);
                   TINP.close();

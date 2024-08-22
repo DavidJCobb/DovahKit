@@ -15,7 +15,7 @@ namespace impl {
    class VoicetypePickerFilter;
 }
 class ActorBaseCreatureSoundsModel;
-class ActorBaseFaceTintsModel;//static_assert(false, "TODO: Implement me!");
+class ActorBaseTintLayerModel;
 class ActorBaseFactionsModel;
 class ActorBaseRelationshipsModel;
 class ActorBaseSkillsModel;
@@ -36,28 +36,10 @@ class FormDialogActorBase :
       void updatePreview();
       
    protected:
-      struct HeadData {
-         dovah::form_stub* complexion = nullptr;
-         dovah::form_stub* hair_color = nullptr;
-         struct {
-            ActorBaseFaceTintsModel* tints            = nullptr;
-            FaceBaseHeadPartsModel*  base_head_parts  = nullptr;
-            FaceExtraHeadPartsModel* extra_head_parts = nullptr;
-         } models;
-      };
-
       Ui::FormDialogActorBase ui;
       struct {
          QMenu relationships;
       } _context_menus;
-      struct {
-         //
-         // Maintain two sets of head data so that if the player switches an actor's sex 
-         // back and forth, they don't lose (as much) data.
-         //
-         HeadData female;
-         HeadData male;
-      } _data;
       struct {
          impl::CrimeFactionPickerFilter* crime_faction = nullptr;
          impl::DKFormPickerExcludeSingleFormFilter* exclude_self = nullptr;
@@ -65,15 +47,17 @@ class FormDialogActorBase :
             HeadPartPickerFilter*             base_head_part = nullptr;
             impl::FaceComplexionPickerFilter* complexion     = nullptr;
             impl::FaceHairColorPickerFilter*  hair_color     = nullptr;
-            impl::FaceTintColorPickerFilter*  tint_color     = nullptr;
          } face;
          impl::VoicetypePickerFilter* voicetype = nullptr;
       } _filters;
       struct {
-         ActorBaseCreatureSoundsModel* creature_sounds = nullptr;
-         ActorBaseFactionsModel*       factions        = nullptr;
-         ActorBaseRelationshipsModel*  relationships   = nullptr;
-         ActorBaseSkillsModel*         skills          = nullptr;
+         ActorBaseCreatureSoundsModel* creature_sounds  = nullptr;
+         ActorBaseTintLayerModel*      face_tints       = nullptr;
+         ActorBaseFactionsModel*       factions         = nullptr;
+         FaceBaseHeadPartsModel*       head_parts_base  = nullptr;
+         FaceExtraHeadPartsModel*      head_parts_extra = nullptr;
+         ActorBaseRelationshipsModel*  relationships    = nullptr;
+         ActorBaseSkillsModel*         skills           = nullptr;
       } _models;
 
       // Singleton signal handlers:
@@ -85,6 +69,7 @@ class FormDialogActorBase :
 
       void _update_outfit_contents_view();
 
+      dovah::form_stub* _is_templated_from_leveled_base() const; // returns Leveled Character if so
       void _set_template_actor(dovah::form_stub*);
       void _update_from_template_actor();
       void _push_data_to_ui(loaded_form_type::template_flag::type);
@@ -101,6 +86,9 @@ class FormDialogActorBase :
       void _creature_sound_inheritance_changed();
       void _pull_creature_sound_to_ui();
       void _push_creature_sound_from_ui();
+
+      void _pull_tint_layer_to_ui();
+      void _push_tint_layer_from_ui();
 
       dovah::sex _current_sex() const;
 

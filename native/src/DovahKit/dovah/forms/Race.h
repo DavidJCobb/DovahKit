@@ -15,6 +15,7 @@
 #include "components/papyrus.h"
 #include "components/spell_list.h"
 #include "../data/face_fx/phonemes.h"
+#include "../data/face_tints.h"
 #include "../data/skills.h"
 #include "../utils/data_by_sex.h"
 
@@ -136,36 +137,17 @@ namespace dovah::loaded_forms {
             } values;
          };
 
-         enum class tint_type : uint16_t {
-            none,
-            lip_color,
-            cheek_color_upper,
-            eyeliner,
-            eyeshadow_upper,
-            eyeshadow_lower,
-            skin_tone,
-            facepaint,
-            laugh_lines,
-            cheek_color_lower,
-            nose,
-            chin,
-            neck,
-            forehead,
-            dirt,
-            unknown_16,
-         };
-
          struct tint_preset {
-            form_reference_t color;     // TINC // type is CLFM
-            int16_t          index = 0; // TIRS
-            float            alpha = 1; // TINV
+            form_reference_t     color;     // TINC // type is CLFM
+            face_tint_index_type index = 0; // TIRS
+            float                alpha = 1; // TINV
          };
          //
          struct face_tint {
-            int32_t          index;         // TINI // instantiates the tint.
-            form_reference_t default_color; // TIND // type is CLFM
-            tint_type        type = tint_type::none; // TINP
-            std::string      texture;       // TINT // DDS path
+            face_tint_index_type index;         // TINI
+            form_reference_t     default_color; // TIND // type is CLFM
+            face_tint_type       type = face_tint_type::none; // TINP
+            std::string          texture;       // TINT // DDS path
             std::vector<tint_preset> presets;
          };
 

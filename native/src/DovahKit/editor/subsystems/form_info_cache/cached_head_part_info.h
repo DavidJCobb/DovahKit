@@ -16,7 +16,7 @@ namespace dovahkit::subsystems::form_info_cache {
    struct cached_head_part_info {
       constexpr cached_head_part_info() {}
 
-      using head_part_type = dovah::loaded_forms::HeadPart::head_part_type;
+      using head_part_type = dovah::head_part_type;
 
       dovah::form_stub* race_list = nullptr;
       //

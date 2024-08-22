@@ -12,6 +12,7 @@
 
 #include "editor/subsystems/form_info_cache/core.h"
 #include "editor/subsystems/game_settings/core.h"
+#include "editor/subsystems/message_log/core.h"
 #include "editor/open_window_for_form.h"
 #include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/form_stubs/helpers/get_template_actor.h"
@@ -27,12 +28,15 @@
 #include "./actor_base/ActorBaseFactionsModel.h"
 #include "./actor_base/ActorBaseRelationshipsModel.h"
 #include "./actor_base/ActorBaseSkillsModel.h"
+#include "./actor_base/ActorBaseTintLayerModel.h"
 #include "./actor_base/FaceComplexionPickerFilter.h"
 #include "./actor_base/FaceHairColorPickerFilter.h"
-#include "./actor_base/FaceTintColorPickerFilter.h"
+#include "./actor_base/FaceTintColorPickerFilter.h" // TODO: DEPRECATED; DELETE
 #include "./shared/FaceBaseHeadPartsModel.h"
 #include "./shared/FaceExtraHeadPartsModel.h"
 #include "./shared/HeadPartPickerFilter.h"
+
+#include "ui/types/logging/log_item.h"
 
 namespace {
    constexpr const bool we_are_not_done_but_just_let_me_compile_for_now =
@@ -509,38 +513,45 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
       }
 
       this->_filters.face.base_head_part = new HeadPartPickerFilter(this);
+      this->ui.baseHeadPartPicker->setAllowedFormType(dovah::form_type::head_part);
       this->ui.baseHeadPartPicker->setCustomFilter(this->_filters.face.base_head_part);
 
       this->_filters.face.complexion = new impl::FaceComplexionPickerFilter(this);
+      this->ui.faceComplexion->setAllowedFormType(dovah::form_type::texture_set);
       this->ui.faceComplexion->setCustomFilter(this->_filters.face.complexion);
 
       this->_filters.face.hair_color = new impl::FaceHairColorPickerFilter(this);
+      this->ui.hairColor->setAllowedFormType(dovah::form_type::color);
       this->ui.hairColor->setCustomFilter(this->_filters.face.hair_color);
 
-      this->_filters.face.tint_color = new impl::FaceTintColorPickerFilter(this);
-      this->ui.faceTintColorPreset->setCustomFilter(this->_filters.face.tint_color);
-
-      this->_data.female.models.base_head_parts  = new FaceBaseHeadPartsModel(this);
-      this->_data.female.models.extra_head_parts = new FaceExtraHeadPartsModel(this);
-      this->_data.male.models.base_head_parts  = new FaceBaseHeadPartsModel(this);
-      this->_data.male.models.extra_head_parts = new FaceExtraHeadPartsModel(this);
-
       {
-         auto* view = this->ui.faceTintLayerTable;
+         auto* view  = this->ui.faceTintLayerTable;
+         auto* model = this->_models.face_tints = new ActorBaseTintLayerModel(this);
+         view->setModel(model);
 
          ui::typical_tableview_config(view);
          view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         ui::set_tableview_column_flex(view, [](DKHeaderView& header, const QFontMetrics& metrics) {
+            header.setColumnFlex(ActorBaseTintLayerModel::Column::TexturePath, 1, 0);
+            header.setColumnFlex(ActorBaseTintLayerModel::Column::Color, 0, 0, metrics.boundingRect("   ").width() * 1.5F + 4);
+            header.setColumnFlex(ActorBaseTintLayerModel::Column::Alpha, 0, 0, metrics.boundingRect("100%").width() * 1.5F + 4);
+         });
+         QObject::connect(view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &FormDialogActorBase::_pull_tint_layer_to_ui);
 
-         auto* sel_model = view->selectionModel();
-         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this]() {
-            uint16_t tint_index = 0;static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
-
-            this->_filters.face.tint_color->setFaceTintIndex(tint_index);
+         QObject::connect(this->ui.faceTintColorUseCustom, &QRadioButton::toggled, this, &FormDialogActorBase::_push_tint_layer_from_ui);
+         QObject::connect(this->ui.faceTintColorUsePreset, &QRadioButton::toggled, this, &FormDialogActorBase::_push_tint_layer_from_ui);
+         QObject::connect(this->ui.faceTintColorCustom, &DKColorPickerButton::colorChanged, this, &FormDialogActorBase::_push_tint_layer_from_ui);
+         QObject::connect(this->ui.faceTintColorPreset, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &FormDialogActorBase::_push_tint_layer_from_ui);
+         QObject::connect(this->ui.faceTintColorInterpolation, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &FormDialogActorBase::_push_tint_layer_from_ui);
+         QObject::connect(this->ui.faceTintColorInterpolationSlider, &DKFloatSlider::valueChanged, this, [this](float value) {
+            this->ui.faceTintColorInterpolation->setValue(value);
          });
       }
       
       {  // Base Head Parts table
-         auto* view = this->ui.baseHeadPartsTable;
+         auto* view  = this->ui.baseHeadPartsTable;
+         auto* model = this->_models.head_parts_base = new FaceBaseHeadPartsModel(this);
+         view->setModel(model);
 
          ui::typical_tableview_config(view);
          view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
@@ -576,16 +587,23 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
          });
       }
 
+      {  // Additional Head Parts table
+         auto* view  = this->ui.additionalHeadParts;
+         auto* model = this->_models.head_parts_extra = new FaceExtraHeadPartsModel(this);
+         view->setModel(model);
+
+         ui::typical_tableview_config(view);
+         view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         //
+         // TODO: Allow drag/drop onto the base headparts table.
+      }
+
       static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
    #pragma endregion
    #pragma region Face Morphs tab
       if constexpr (!allow_customizing_face) {
          this->ui.tabFaceMorphs->setEnabled(false);
       }
-      this->ui.faceComplexion->setAllowedFormType(dovah::form_type::texture_set);
-      this->ui.hairColor->setAllowedFormType(dovah::form_type::color);
-      this->ui.faceTintColorPreset->setAllowedFormType(dovah::form_type::color);
-      this->ui.baseHeadPartPicker->setAllowedFormType(dovah::form_type::head_part);
       //
       // We set the morph information when we bind the widgets to the form, not here.
       // Easier that way just because there's no floating-point QSlider; keep all the 
@@ -676,6 +694,25 @@ void FormDialogActorBase::_load_impl() {
    //
    if (!working.race) {
       write_form_ref(working.race, editor.get_form_of_probable_type(dovah::form_type::race, dovah::hardcoded_form_ids::DefaultRace));
+   }
+   {
+      bool is_unique = working.actor_flags & loaded_form_type::actor_flag::unique;
+      if (is_unique) {
+         dovah::form_stub* leveled_base = this->_is_templated_from_leveled_base();
+         if (leveled_base) {
+            ui::types::log_item item;
+            item.context = ui::types::log_item_context::form_load;
+            item.type    = ui::types::log_item_type::warning;
+            item.text    =
+               tr("ActorBase %1 is flagged as Unique, but it pulls pulls template data "
+                  "(directly or indirectly) from Leveled Character %2. The Unique flag "
+                  "will be removed."
+               )
+               .arg(QString::fromStdString(this->formStub()->editorID))
+               .arg(QString::fromStdString(leveled_base->editorID));
+            dovahkit::subsystems::message_log::core::get().addLogItem(item);
+         }
+      }
    }
 
    this->_filters.exclude_self->set_exclusion(this->formStub());
@@ -865,7 +902,11 @@ void FormDialogActorBase::_load_impl() {
       this->ui.attackData->initializeFrom(working.attack_data);
    #pragma endregion
    #pragma region Face Parts tab
-      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+      ui::bind(this->ui.faceComplexion, working.face.texture_set, working);
+      ui::bind(this->ui.hairColor,      working.head.hair_color, working);
+      //
+      // The rest is done below, after updating from the template actor.
+      //
    #pragma endregion
    #pragma region Face Morphs tab
       {
@@ -924,11 +965,13 @@ void FormDialogActorBase::_load_impl() {
    this->_update_from_template_actor();
    {
       bool female = (working.actor_flags & loaded_form_type::actor_flag::female) != 0;
+
+      this->_models.face_tints->importLayerStates(working);
       this->_set_sex(female ? dovah::sex::female : dovah::sex::male);
+      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Head parts");
    }
    this->_set_race(working.race.get_form_stub());
    this->_set_pc_level_mult(this->ui.flagPCLevelMult->isChecked());
-   static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
 }
 void FormDialogActorBase::_save_impl() {
    //
@@ -946,16 +989,22 @@ void FormDialogActorBase::_save_impl() {
    this->ui.destructionData->commitTo(working.destruction_data, working);
    this->ui.scriptListPane->commit();
 
+   if (this->_is_templated_from_leveled_base() != nullptr) {
+      //
+      // Actors that are templated on LeveledActors can't be Unique. We clear the 
+      // checkbox and grey it out when you set one, but we don't actually clear the 
+      // flag during save time (so that if you change the template actor to one that 
+      // isn't a LeveledActor, we can re-check the checkbox).
+      //
+      working.actor_flags &= ~loaded_form_type::actor_flag::unique;
+   }
+
    static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
    #pragma region Tabs
       #pragma region Traits
-      {
-         auto& src = (this->_current_sex() == dovah::sex::male ? this->_data.male : this->_data.female);
-         //write_form_ref(working.voicetype, src.voicetype);
-         write_form_ref(working.face.texture_set, src.complexion);
-         write_form_ref(working.head.hair_color,  src.hair_color);
-         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
-      }
+         //
+         // All data is bound, widget-to-field, and live-updated.
+         //
       #pragma endregion
       #pragma region Stats
          //
@@ -1033,13 +1082,15 @@ void FormDialogActorBase::_save_impl() {
          this->ui.attackData->commitTo(working.attack_data, working);
       #pragma endregion
       #pragma region Face Parts
-         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+         this->_models.face_tints->exportLayerStates(working);
+         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Head parts");
       #pragma endregion
       #pragma region Face Morphs
-         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+         //
+         // All data is bound, widget-to-field, and live-updated.
+         //
       #pragma endregion
    #pragma endregion
-   
 }
 
 void FormDialogActorBase::updatePreview() {
@@ -1061,6 +1112,20 @@ void FormDialogActorBase::_update_outfit_contents_view() {
    }
 }
 
+dovah::form_stub* FormDialogActorBase::_is_templated_from_leveled_base() const {
+   std::vector<dovah::form_stub*> seen;
+
+   dovah::form_stub* current = this->form->template_data.actor.get_form_stub();
+   for(; current; current = dovah::form_stub_helpers::get_template_actor(current)) {
+      if (std::find(seen.begin(), seen.end(), current) != seen.end())
+         break;
+      seen.push_back(current);
+
+      if (current->form_type == dovah::form_type::leveled_character)
+         return current;
+   }
+   return nullptr;
+}
 void FormDialogActorBase::_set_template_actor(dovah::form_stub* desired) {
    if (desired) {
       switch (desired->form_type) {
@@ -1163,9 +1228,26 @@ void FormDialogActorBase::_update_from_template_actor() {
       this->ui.flagDoesntAffectStealthMeter->setEnabled(enable);
    }
 
+   {
+      auto* widget        = this->ui.flagUnique;
+      bool  can_be_unique = true;
+      if (base) {
+         can_be_unique = this->_is_templated_from_leveled_base() == nullptr;
+      }
+      widget->setEnabled(can_be_unique);
+
+      const auto blocker = QSignalBlocker(widget);
+      if (can_be_unique) {
+         widget->setChecked(this->form->actor_flags & loaded_form_type::actor_flag::unique);
+      } else {
+         widget->setChecked(false);
+      }
+   }
+
    if (!base) {
       return;
    }
+
    auto& working = *this->form;
    try {
       working.copy_data_from_template_actor();
@@ -1226,24 +1308,14 @@ void FormDialogActorBase::_push_data_to_ui(loaded_form_type::template_flag::type
                this->_creature_sound_inheritance_changed();
             }
             { // Face Parts
-               auto& current_head = this->_current_sex() == dovah::sex::female ? this->_data.female : this->_data.male;
-               auto& unused_head  = this->_current_sex() == dovah::sex::male   ? this->_data.female : this->_data.male;
-
-               current_head.complexion = working.face.texture_set.get_form_stub();
-               current_head.hair_color = working.head.hair_color.get_form_stub();
-               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Update current sex: Face Tint Layers");
                static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Update current sex: Base Head Parts");
                static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Update current sex: Additional Head Parts");
 
-               unused_head.complexion = nullptr;
-               unused_head.hair_color = nullptr;
-               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Reset unused sex: Face Tint Layers");
-               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Reset unused sex: Base Head Parts");
-               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Reset unused sex: Additional Head Parts");
+               this->ui.faceComplexion->setFormStub(working.face.texture_set.get_form_stub());
+               this->ui.hairColor->setFormStub(working.head.hair_color.get_form_stub());
 
-               this->ui.faceComplexion->setFormStub(current_head.complexion);
-               this->ui.hairColor->setFormStub(current_head.hair_color);
-               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: UI: Face Tint Layers");
+               this->_models.face_tints->importLayerStates(working);
+               this->_models.face_tints->setSex(this->_current_sex());
                static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: UI: Base Head Parts");
                static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: UI: Additional Head Parts");
             }
@@ -1757,6 +1829,145 @@ void FormDialogActorBase::_push_creature_sound_from_ui() {
    model->overwrite(row, node);
 }
 
+void FormDialogActorBase::_pull_tint_layer_to_ui() {
+   auto* view      = this->ui.faceTintLayerTable;
+   auto* model     = qobject_cast<ActorBaseTintLayerModel*>(view->model());
+   auto* sel_model = view->selectionModel();
+   assert(model     != nullptr);
+   assert(sel_model != nullptr);
+
+   std::optional<ActorBaseTintLayerModel::TintLayer> layer_opt;
+   uint16_t layer_index;
+   {
+      auto rows = sel_model->selectedRows();
+      if (!rows.isEmpty()) {
+         auto index_opt = model->layerIndex(rows[0].row());
+         if (index_opt.has_value()) {
+            layer_index = index_opt.value();
+            layer_opt   = model->layerDefinitionByIndex(layer_index);
+         }
+      }
+   }
+   if (layer_opt.has_value()) {
+      const auto& layer_dfn = layer_opt.value();
+
+      this->ui.faceTintColorGroupbox->setEnabled(true);
+
+      const auto blockers = std::array{
+         QSignalBlocker(this->ui.faceTintColorCustom),
+         QSignalBlocker(this->ui.faceTintColorPreset),
+         QSignalBlocker(this->ui.faceTintColorUseCustom),
+         QSignalBlocker(this->ui.faceTintColorUsePreset),
+         QSignalBlocker(this->ui.faceTintColorInterpolation),
+         QSignalBlocker(this->ui.faceTintColorInterpolationSlider),
+      };
+
+      bool changes_required = false;
+      bool has_custom_color = false;
+
+      this->ui.faceTintColorPreset->clear();
+      for (auto& preset : layer_dfn.presets) {
+         QString text = QString("%1 at opacity %2");
+         if (auto* stub = preset.color.form) {
+            text = text.arg(stub->get_editor_id());
+         } else {
+            text = text.arg(tr("NONE"));
+         }
+         text = text.arg(preset.alpha);
+
+         this->ui.faceTintColorPreset->addItem(text, (int)preset.index);
+      }
+      
+      auto* state = model->layerStateByIndex(layer_index);
+      if (state) {
+         has_custom_color = state->preset_index == dovah::index_of_no_face_tint;
+         if (!has_custom_color) {
+            has_custom_color = true;
+            if (auto* preset = layer_dfn.preset_by_index(state->preset_index)) {
+               if (preset->color.form) {
+                  auto* widget = this->ui.faceTintColorPreset;
+                  int   i      = widget->findData((int)state->preset_index);
+                  if (i >= 0) {
+                     widget->setCurrentIndex(i);
+                     this->ui.faceTintColorCustom->setColor(preset->color.cached);
+                     has_custom_color = false;
+                  }
+               }
+            }
+            changes_required = has_custom_color;
+         }
+         if (has_custom_color) {
+            this->ui.faceTintColorCustom->setColor(state->color);
+         }
+         this->ui.faceTintColorInterpolation->setValue((float)state->alpha / 100);
+         this->ui.faceTintColorInterpolationSlider->setValue((float)state->alpha / 100);
+      } else {
+         float alpha = 0.0F;
+
+         this->ui.faceTintColorPreset->setCurrentIndex(-1);
+         if (!layer_dfn.presets.empty()) {
+            auto& preset = layer_dfn.presets[0];
+            this->ui.faceTintColorPreset->setCurrentIndex(0);
+            this->ui.faceTintColorCustom->setColor(preset.color.cached);
+         }
+         if (auto* stub = layer_dfn.default_color) {
+            auto& list = layer_dfn.presets;
+            auto  size = list.size();
+            for (size_t i = 0; i < size; ++i) {
+               auto& preset = list[i];
+               if (preset.color.form == stub) {
+                  this->ui.faceTintColorPreset->setCurrentIndex(i);
+                  this->ui.faceTintColorCustom->setColor(preset.color.cached);
+                  alpha = preset.alpha;
+                  break;
+               }
+            }
+         }
+         this->ui.faceTintColorInterpolation->setValue(alpha);
+         this->ui.faceTintColorInterpolationSlider->setValue(alpha);
+      }
+      this->ui.faceTintColorUseCustom->setChecked(has_custom_color);
+      this->ui.faceTintColorUsePreset->setChecked(!has_custom_color);
+      this->ui.faceTintColorCustom->setEnabled(has_custom_color);
+      this->ui.faceTintColorPreset->setEnabled(!has_custom_color);
+
+      if (changes_required) {
+         this->_push_tint_layer_from_ui();
+      }
+   } else {
+      this->ui.faceTintColorGroupbox->setEnabled(false);
+   }
+}
+void FormDialogActorBase::_push_tint_layer_from_ui() {
+   auto* view      = this->ui.faceTintLayerTable;
+   auto* model     = qobject_cast<ActorBaseTintLayerModel*>(view->model());
+   auto* sel_model = view->selectionModel();
+   assert(model     != nullptr);
+   assert(sel_model != nullptr);
+
+   uint16_t layer_index;
+   {
+      auto rows = sel_model->selectedRows();
+      if (rows.isEmpty())
+         return;
+      auto index_opt = model->layerIndex(rows[0].row());
+      if (!index_opt.has_value())
+         return;
+      layer_index = index_opt.value();
+   }
+
+   ActorBaseTintLayerModel::TintLayerActorState state;
+   state.layer_index = layer_index;
+   state.alpha       = this->ui.faceTintColorInterpolation->value() * 100;
+   state.color       = this->ui.faceTintColorCustom->color();
+   if (this->ui.faceTintColorUsePreset->isChecked()) {
+      state.preset_index = this->ui.faceTintColorPreset->currentIndex();
+   } else {
+      state.preset_index = dovah::index_of_no_face_tint;
+   }
+   model->importLayerState(state);
+}
+
 dovah::sex FormDialogActorBase::_current_sex() const {
    return (dovah::sex)this->ui.sex->currentData().toInt();
 }
@@ -1821,7 +2032,6 @@ void FormDialogActorBase::_set_race(dovah::form_stub* race) {
    this->_filters.face.base_head_part->setRequiredRace(race);
    this->_filters.face.complexion->setRequiredRace(race);
    this->_filters.face.hair_color->setRequiredRace(race);
-   this->_filters.face.tint_color->setRequiredRace(race);
 
    if (!race) {
       return;
@@ -1829,6 +2039,19 @@ void FormDialogActorBase::_set_race(dovah::form_stub* race) {
 
    auto loaded = race->load().ptr_cast<dovah::loaded_forms::Race>();
    this->_recalc_stats();
+   {  // Face Parts
+      if (loaded) {
+         //
+         // Tint layers:
+         //
+         this->_models.face_tints->importLayerDefinitions(*loaded);
+         this->_pull_tint_layer_to_ui();
+         //
+         // Head parts:
+         //
+         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+      }
+   }
    {  // Indexed face morphs
       if (loaded) {
          size_t prior_eyes = 0;
@@ -1932,15 +2155,11 @@ void FormDialogActorBase::_set_race(dovah::form_stub* race) {
          this->ui.tabbox->setTabVisible(this->ui.tabbox->indexOf(this->ui.tabFaceAnimPreview), false);
       }
    }
-   //
-   // TODO: Pull the tint layer definitions from the race and update UI models appropriately
-   //
 }
 void FormDialogActorBase::_set_sex(dovah::sex s) {
    const auto blockers = std::array{
       QSignalBlocker(this->ui.baseHeadPartPicker),
       QSignalBlocker(this->ui.faceComplexion),
-      QSignalBlocker(this->ui.faceTintColorPreset),
       QSignalBlocker(this->ui.hairColor),
       QSignalBlocker(this->ui.sex),
    };
@@ -1960,21 +2179,13 @@ void FormDialogActorBase::_set_sex(dovah::sex s) {
    }
    this->_models.relationships->setFocusActor(this->formStub(), s);
 
-   auto& data = (s == dovah::sex::female) ? this->_data.female : this->_data.male;
-
    this->_filters.voicetype->set_female(s == dovah::sex::female);
    {  // Face Parts
       this->_filters.face.base_head_part->setRequiredSex(s);
       this->_filters.face.complexion->setRequiredSex(s);
       this->_filters.face.hair_color->setRequiredSex(s);
-      this->_filters.face.tint_color->setRequiredSex(s);
 
-      this->ui.faceComplexion->setFormStub(data.complexion);
-      this->ui.hairColor->setFormStub(data.hair_color);
-
-      this->ui.baseHeadPartsTable->setModel(data.models.base_head_parts);
-      this->ui.additionalHeadParts->setModel(data.models.extra_head_parts);
+      this->_models.face_tints->setSex(s);
+      this->_pull_tint_layer_to_ui();
    }
-
-
 }

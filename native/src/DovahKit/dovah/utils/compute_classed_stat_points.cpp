@@ -145,113 +145,115 @@ namespace dovah {
                total_weight += weight;
             }
          }
-         std::stable_sort(skills.begin(), skills.end(), [](const _item& a, const _item& b) { return b.weight < a.weight; });
+         if (total_weight > 0 && total_points > 0) {
+            std::stable_sort(skills.begin(), skills.end(), [](const _item& a, const _item& b) { return b.weight < a.weight; });
 
-         float    points_per_weight = total_points / total_weight;
-         uint32_t wholes_per_weight = points_per_weight;
+            float    points_per_weight = total_points / total_weight;
+            uint32_t wholes_per_weight = points_per_weight;
          
-         uint32_t points_lost_to_cap        = 0;
-         uint32_t points_lost_to_truncation = total_points - (wholes_per_weight * total_weight);
-         uint32_t num_skills_maxed          = 0;
+            uint32_t points_lost_to_cap        = 0;
+            uint32_t points_lost_to_truncation = total_points - (wholes_per_weight * total_weight);
+            uint32_t num_skills_maxed          = 0;
 
-         // Returns points lost due to the cap.
-         auto _increase_stat = [max_points_per_skill, &num_skills_maxed](classed_stat_points::value_type& dst, classed_stat_points::value_type by) -> uint32_t {
-            if (!by)
+            // Returns points lost due to the cap.
+            auto _increase_stat = [max_points_per_skill, &num_skills_maxed](classed_stat_points::value_type& dst, classed_stat_points::value_type by) -> uint32_t {
+               if (!by)
+                  return 0;
+               dst += by;
+               if (dst >= max_points_per_skill) {
+                  ++num_skills_maxed;
+                  if (dst > max_points_per_skill) {
+                     uint32_t lost = dst - max_points_per_skill;
+                     dst = max_points_per_skill;
+                     return lost;
+                  }
+               }
                return 0;
-            dst += by;
-            if (dst >= max_points_per_skill) {
-               ++num_skills_maxed;
-               if (dst > max_points_per_skill) {
-                  uint32_t lost = dst - max_points_per_skill;
-                  dst = max_points_per_skill;
-                  return lost;
+            };
+
+            if (cls && wholes_per_weight > 0) {
+               for (auto& item : skills) {
+                  if (item.weight == 0)
+                     continue;
+                  auto&    dst    = result.skill_points.calculated[(size_t)item.skill];
+                  uint32_t points = wholes_per_weight * item.weight;
+                  points_lost_to_cap += _increase_stat(dst, points);
                }
             }
-            return 0;
-         };
+            //
+            // If any points were lost to skill caps, then split them evenly among all skills 
+            // that aren't yet maxed out.
+            //
+            if (num_skills_maxed > 0 && points_lost_to_cap > 0) {
+               bool failed = true;
+               while (points_lost_to_cap > 0 && num_skills_maxed < skill_count) {
+                  for (auto& item : skills) {
+                     auto& dst = result.skill_points.calculated[(size_t)item.skill];
+                     if (dst >= max_points_per_skill)
+                        continue;
 
-         if (cls && wholes_per_weight > 0) {
-            for (auto& item : skills) {
-               if (item.weight == 0)
-                  continue;
-               auto&    dst    = result.skill_points.calculated[(size_t)item.skill];
-               uint32_t points = wholes_per_weight * item.weight;
-               points_lost_to_cap += _increase_stat(dst, points);
+                     uint32_t points_per = points_lost_to_cap / (skill_count - num_skills_maxed);
+                     if (!points_per)
+                        break;
+                     points_lost_to_cap -= points_per;
+                     points_lost_to_cap += _increase_stat(dst, points_per);
+                     failed = false;
+                  }
+                  if (failed)
+                     //
+                     // Failsafe, so we don't end up in an infinite loop in the event that the 
+                     // number of points to distribute doesn't divide evenly (such that the 
+                     // `points_per` variable gets stuck at zero).
+                     //
+                     break;
+               }
             }
-         }
-         //
-         // If any points were lost to skill caps, then split them evenly among all skills 
-         // that aren't yet maxed out.
-         //
-         if (num_skills_maxed > 0 && points_lost_to_cap > 0) {
-            bool failed = true;
-            while (points_lost_to_cap > 0 && num_skills_maxed < skill_count) {
+            if (points_lost_to_cap > 0) {
+               points_lost_to_truncation += points_lost_to_cap;
+            }
+            //
+            // If any points remain, distribute them one at a time, preferring skills that come 
+            // earlier in the game's hardcoded skill enum (i.e. skills with lower actor value 
+            // indices). Do this until we've distributed all points or until all skills are at 
+            // the maximum.
+            // 
+            // We still respect per-skill weightings here. This loop is meant to handle skill 
+            // points that failed to divide evenly somewhere -- skill points that were lost to 
+            // truncation in the first go-around, or skill points that were lost to the skill 
+            // cap and then subsequently failed to be divided evenly amongst all skills (i.e. 
+            // the "points-per variable being zero" case in the previous loop). As such, we 
+            // can respect skill weights by decreasing the weight values as we distribute the 
+            // skills: if a skill has weight 2, it gets at most 2 points; if a skill has weight 
+            // 1, it gets at most 1 point; and so on.
+            // 
+            // Of course, we also still respect skill maximums here, so if *every* skill gets 
+            // maxed out, or if a skill isn't maxed but also has weight zero, then we'll just 
+            // end up losing points in the end. C'est la vie: if there's nowhere to put them, 
+            // then there's nowhere to put them.
+            //
+            while (points_lost_to_truncation > 0) {
+               bool failed = true;
                for (auto& item : skills) {
                   auto& dst = result.skill_points.calculated[(size_t)item.skill];
-                  if (dst >= max_points_per_skill)
+                  if (item.weight <= 0)
                      continue;
-
-                  uint32_t points_per = points_lost_to_cap / (skill_count - num_skills_maxed);
-                  if (!points_per)
-                     break;
-                  points_lost_to_cap -= points_per;
-                  points_lost_to_cap += _increase_stat(dst, points_per);
+                  --item.weight;
+                  points_lost_to_truncation -= 1;
+                  points_lost_to_truncation += _increase_stat(dst, 1);
                   failed = false;
+                  if (points_lost_to_truncation == 0)
+                     //
+                     // All points distributed.
+                     //
+                     break;
                }
                if (failed)
                   //
-                  // Failsafe, so we don't end up in an infinite loop in the event that the 
-                  // number of points to distribute doesn't divide evenly (such that the 
-                  // `points_per` variable gets stuck at zero).
+                  // Failsafe, so we don't end up in an infinite loop if all skills have 
+                  // (or reach) a weight of zero.
                   //
                   break;
             }
-         }
-         if (points_lost_to_cap > 0) {
-            points_lost_to_truncation += points_lost_to_cap;
-         }
-         //
-         // If any points remain, distribute them one at a time, preferring skills that come 
-         // earlier in the game's hardcoded skill enum (i.e. skills with lower actor value 
-         // indices). Do this until we've distributed all points or until all skills are at 
-         // the maximum.
-         // 
-         // We still respect per-skill weightings here. This loop is meant to handle skill 
-         // points that failed to divide evenly somewhere -- skill points that were lost to 
-         // truncation in the first go-around, or skill points that were lost to the skill 
-         // cap and then subsequently failed to be divided evenly amongst all skills (i.e. 
-         // the "points-per variable being zero" case in the previous loop). As such, we 
-         // can respect skill weights by decreasing the weight values as we distribute the 
-         // skills: if a skill has weight 2, it gets at most 2 points; if a skill has weight 
-         // 1, it gets at most 1 point; and so on.
-         // 
-         // Of course, we also still respect skill maximums here, so if *every* skill gets 
-         // maxed out, or if a skill isn't maxed but also has weight zero, then we'll just 
-         // end up losing points in the end. C'est la vie: if there's nowhere to put them, 
-         // then there's nowhere to put them.
-         //
-         while (points_lost_to_truncation > 0) {
-            bool failed = true;
-            for (auto& item : skills) {
-               auto& dst = result.skill_points.calculated[(size_t)item.skill];
-               if (item.weight <= 0)
-                  continue;
-               --item.weight;
-               points_lost_to_truncation -= 1;
-               points_lost_to_truncation += _increase_stat(dst, 1);
-               failed = false;
-               if (points_lost_to_truncation == 0)
-                  //
-                  // All points distributed.
-                  //
-                  break;
-            }
-            if (failed)
-               //
-               // Failsafe, so we don't end up in an infinite loop if all skills have 
-               // (or reach) a weight of zero.
-               //
-               break;
          }
          //
          // Done with skills.
@@ -279,50 +281,52 @@ namespace dovah {
                total_weight += weight;
             }
          }
-         std::stable_sort(attributes.begin(), attributes.end(), [](const _item& a, const _item& b) { return b.weight < a.weight; });
+         if (total_weight > 0 && total_points > 0) {
+            std::stable_sort(attributes.begin(), attributes.end(), [](const _item& a, const _item& b) { return b.weight < a.weight; });
 
-         float    points_per_weight = total_points / total_weight;
-         uint32_t wholes_per_weight = points_per_weight;
+            float    points_per_weight = total_points / total_weight;
+            uint32_t wholes_per_weight = points_per_weight;
          
-         uint32_t points_lost_to_truncation = total_points - (wholes_per_weight * total_weight);
-         uint32_t num_skills_maxed          = 0;
+            uint32_t points_lost_to_truncation = total_points - (wholes_per_weight * total_weight);
+            uint32_t num_skills_maxed          = 0;
 
-         if (cls && wholes_per_weight > 0) {
-            for (auto& item : attributes) {
-               if (item.weight == 0)
-                  continue;
-               auto&    dst    = result.attribute_points.calculated.list[item.id];
-               uint32_t points = wholes_per_weight * item.weight;
-               dst += points;
+            if (cls && wholes_per_weight > 0) {
+               for (auto& item : attributes) {
+                  if (item.weight == 0)
+                     continue;
+                  auto&    dst    = result.attribute_points.calculated.list[item.id];
+                  uint32_t points = wholes_per_weight * item.weight;
+                  dst += points;
+               }
             }
-         }
-         //
-         // If any points remain, distribute them one at a time. Again, this is the same 
-         // basic algorithm as with skills, handling points that failed to divide in 
-         // somewhere while still respecting weights.
-         //
-         while (points_lost_to_truncation > 0) {
-            bool failed = true;
-            for (auto& item : attributes) {
-               auto& dst = result.attribute_points.calculated.list[item.id];
-               if (item.weight <= 0)
-                  continue;
-               --item.weight;
-               --points_lost_to_truncation;
-               ++dst;
-               failed = false;
-               if (points_lost_to_truncation == 0)
+            //
+            // If any points remain, distribute them one at a time. Again, this is the same 
+            // basic algorithm as with skills, handling points that failed to divide in 
+            // somewhere while still respecting weights.
+            //
+            while (points_lost_to_truncation > 0) {
+               bool failed = true;
+               for (auto& item : attributes) {
+                  auto& dst = result.attribute_points.calculated.list[item.id];
+                  if (item.weight <= 0)
+                     continue;
+                  --item.weight;
+                  --points_lost_to_truncation;
+                  ++dst;
+                  failed = false;
+                  if (points_lost_to_truncation == 0)
+                     //
+                     // All points distributed.
+                     //
+                     break;
+               }
+               if (failed)
                   //
-                  // All points distributed.
+                  // Failsafe, so we don't end up in an infinite loop if all attributes have 
+                  // (or reach) a weight of zero.
                   //
                   break;
             }
-            if (failed)
-               //
-               // Failsafe, so we don't end up in an infinite loop if all attributes have 
-               // (or reach) a weight of zero.
-               //
-               break;
          }
          //
          // Done with attributes.

@@ -342,7 +342,7 @@
    <item row="0" column="1">
     <widget class="DKTabWidget" name="tabbox">
      <property name="currentIndex">
-      <number>0</number>
+      <number>11</number>
      </property>
      <widget class="QWidget" name="tabTraits">
       <attribute name="title">
@@ -2500,7 +2500,7 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_22">
        <item row="1" column="1">
-        <widget class="QGroupBox" name="groupBox_12">
+        <widget class="QGroupBox" name="faceTintColorGroupbox">
          <property name="title">
           <string>Edit selected face tint:</string>
          </property>
@@ -2540,8 +2540,11 @@
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
+               <property name="decimals">
+                <number>2</number>
+               </property>
                <property name="value">
-                <double>1.000000000000000</double>
+                <double>0.000000000000000</double>
                </property>
                <property name="minimum">
                 <double>0.000000000000000</double>
@@ -2550,10 +2553,10 @@
                 <double>1.000000000000000</double>
                </property>
                <property name="tickInterval">
-                <double>0.000000000000000</double>
+                <double>0.100000001490116</double>
                </property>
                <property name="tickPosition">
-                <enum>QSlider::TicksBelow</enum>
+                <enum>QSlider::TicksBothSides</enum>
                </property>
               </widget>
              </item>
@@ -2573,12 +2576,8 @@
             </layout>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="DKFormPicker" name="faceTintColorPreset">
-            <property name="allowNone">
-             <bool>false</bool>
-            </property>
-           </widget>
+          <item row="0" column="1" colspan="2">
+           <widget class="QComboBox" name="faceTintColorPreset"/>
           </item>
          </layout>
         </widget>
@@ -3902,7 +3901,6 @@
   <tabstop>hairColor</tabstop>
   <tabstop>faceTintLayerTable</tabstop>
   <tabstop>faceTintColorUsePreset</tabstop>
-  <tabstop>faceTintColorPreset</tabstop>
   <tabstop>faceTintColorUseCustom</tabstop>
   <tabstop>faceTintColorCustom</tabstop>
   <tabstop>faceTintColorInterpolationSlider</tabstop>

@@ -6,6 +6,7 @@
 #include "_common.h"
 #include "components/model.h"
 #include "components/papyrus.h"
+#include "../data/headparts.h"
 
 namespace dovah::loaded_forms {
    class HeadPart : public Form {
@@ -17,16 +18,6 @@ namespace dovah::loaded_forms {
             enum : uint32_t {
                non_playable = 0x00000004,
             };
-         };
-
-         enum class head_part_type : uint32_t {
-            misc,
-            face,
-            eyes,
-            hair,
-            facial_hair,
-            scar,
-            eyebrows,
          };
          
          struct head_part_flag {

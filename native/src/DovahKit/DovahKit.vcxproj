@@ -718,6 +718,7 @@
     <ClCompile Include="ui\form_windows\actor_base\ActorBaseRelationshipsModel.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\ActorBaseSkillsModel.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\ActorBaseCreatureSoundsModel.cpp" />
+    <ClCompile Include="ui\form_windows\actor_base\ActorBaseTintLayerModel.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\FaceComplexionPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\FaceHairColorPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\FaceTintColorPickerFilter.cpp" />
@@ -998,8 +999,10 @@
     <ClInclude Include="dovah\data\conditions\parameter_underlying_type.h" />
     <ClInclude Include="dovah\data\conditions\run_on_type.h" />
     <ClInclude Include="dovah\data\face_fx\phonemes.h" />
+    <ClInclude Include="dovah\data\face_tints.h" />
     <ClInclude Include="dovah\data\game.h" />
     <ClInclude Include="dovah\data\hardcoded_form_ids.h" />
+    <ClInclude Include="dovah\data\headparts.h" />
     <ClInclude Include="dovah\data\sex.h" />
     <ClInclude Include="dovah\data\skills.h" />
     <ClInclude Include="dovah\exceptions\actor_base_template_is_cyclical.h" />
@@ -2702,6 +2705,7 @@
     <None Include="dovah\_docs\TO-DO LIST.md" />
     <None Include="editor\ini\main.hint" />
     <None Include="editor\subsystems\form_info_cache\cached_vmad_info.inl" />
+    <None Include="editor\subsystems\form_info_cache\_docs\README.md" />
     <None Include="editor\subsystems\papyrus\known_script.inl" />
     <None Include="editor\subsystems\papyrus\_docs\known scripts.md" />
     <None Include="editor\subsystems\papyrus\_docs\thread-safety.md" />

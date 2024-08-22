@@ -14,6 +14,8 @@
 #include "components/papyrus.h"
 #include "components/spell_list.h"
 #include "structs/actor_creature_sounds.h"
+#include "../data/face_tints.h"
+#include "../data/sex.h"
 #include "../utils/data_by_actor_attribute.h"
 #include "../utils/data_by_skill.h"
 
@@ -122,10 +124,26 @@ namespace dovah::loaded_forms {
          using skill_offset_type     = skill_value_type; // negative offsets are not allowed
 
          struct tint_layer {
-            uint16_t index = 0;
-            color_t  color;      // the game skips loading this if (actor_flag::is_chargen_preset) is cleared and if INI setting [General]bUseFaceGenPreprocessedHeads is true
-            uint32_t interpolation = 0; // fixed-point: float times 100. 
-            uint16_t preset = 0; // the game skips loading this if (actor_flag::is_chargen_preset) is cleared and if INI setting [General]bUseFaceGenPreprocessedHeads is true
+            // The Race-side tint layer that we're configuring.
+            face_tint_index_type index = 0;
+
+            // The color of the tint layer. If a preset is being used, then this is 
+            // serialized as a cached copy of the Color form's color. To use a custom 
+            // color, set `preset` to `dovah::index_of_no_face_tint`.
+            //
+            // The game skips loading this if (actor_flag::is_chargen_preset) is not 
+            // set and if INI setting [General]bUseFaceGenPreprocessedHeads is true.
+            color_t color;
+
+            // The alpha value, stored as fixed-point out to two decimals (i.e. the 
+            // alpha value times 100).
+            uint32_t interpolation = 0;
+
+            // The Race-side preset that we're using in lieu of a custom color.
+            // 
+            // The game skips loading this if (actor_flag::is_chargen_preset) is not 
+            // set and if INI setting [General]bUseFaceGenPreprocessedHeads is true.
+            face_tint_index_type preset = 0;
          };
 
          components::attack_data             attack_data; // ATKR, ATKD+ATKE
@@ -264,6 +282,11 @@ namespace dovah::loaded_forms {
 
          void copy_data_from_template_actor(); // calls `utils::get_all_relevant_template_actors` which can throw
          void copy_data_from_actor(form_stub& source, template_flag::type flag);
+
+         // Does not consult the template actor; just grabs the local data.
+         constexpr const dovah::sex get_local_sex() const {
+            return this->actor_flags & actor_flag::female ? dovah::sex::female : dovah::sex::male;
+         }
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc); // TODO: FINISH ME
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);

@@ -47,8 +47,8 @@ class FaceBaseHeadPartsModel final : public QAbstractItemModel {
          return {};
       }
 
-      static constexpr dovah::loaded_forms::HeadPart::head_part_type slotToType(Slot s) noexcept {
-         using hpt = dovah::loaded_forms::HeadPart::head_part_type;
+      static constexpr dovah::head_part_type slotToType(Slot s) noexcept {
+         using hpt = dovah::head_part_type;
          switch (s) {
             case Slot::Brows: return hpt::eyebrows;
             case Slot::Eyes: return hpt::eyes;

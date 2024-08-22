@@ -35,7 +35,7 @@ namespace dovahkit::subsystems::form_info_cache {
             break;
          case 'PNAM':
             {
-               loaded_form_type::head_part_type v;
+               head_part_type v;
                if (subrecord.read(v)) {
                   this->type = (std::decay_t<decltype(this->type)>)v; // uh, okay, MSVC. sure.
                }

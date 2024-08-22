@@ -8,6 +8,7 @@
 #include <vector>
 #include <QAbstractItemModel>
 #include <QElapsedTimer>
+#include <QPointer>
 #include <QTimer>
 #include "dovah/form_types.h"
 #include "../../widget-data/DKFormPickerCustomFilter.h"
@@ -93,7 +94,7 @@ namespace ui::impl::DKFormPicker {
       protected:
          std::vector<const item_type*>        _items;
          std::vector<const dovah::form_stub*> _force_included_forms;
-         DKFormPickerCustomFilter* _custom_filter = nullptr;
+         QPointer<DKFormPickerCustomFilter> _custom_filter = nullptr;
          filter_parameters _last_completed_fill_params;
          struct {
             filter_parameters params;
