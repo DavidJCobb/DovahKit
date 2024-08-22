@@ -14,6 +14,7 @@
 #include "components/papyrus.h"
 #include "components/spell_list.h"
 #include "structs/actor_creature_sounds.h"
+#include "structs/actor_facegen_morphs.h"
 #include "../data/face_tints.h"
 #include "../data/sex.h"
 #include "../utils/data_by_actor_attribute.h"
@@ -183,57 +184,15 @@ namespace dovah::loaded_forms {
             } aggro;
          } ai;
          struct {
-            struct {
-               struct {
-                  float length = 0;
-                  float height = 0;
-               } nose;
-               struct {
-                  float height = 0;
-                  float width  = 0;
-                  float depth  = 0;
-               } jaw;
-               struct {
-                  float height = 0;
-                  float width  = 0;
-               } cheeks;
-               struct {
-                  float height = 0;
-                  float width  = 0;
-                  float depth  = 0; // read AFTER chin
-               } eyes;
-               struct {
-                  float height = 0;
-                  float width  = 0;
-                  float depth  = 0;
-               } brows;
-               struct {
-                  float height = 0;
-                  float depth  = 0;
-               } mouth;
-               struct {
-                  float width  = 0;
-                  float height = 0;
-                  float depth  = 0;
-               } chin;
-               float vampire_morph = 0;
-            } morphs; // NAM9 // The game doesn't even bother to store this if they're all zero.
-            struct {
-               int32_t nose    = 0;
-               int32_t unknown = -1;
-               int32_t eyes    = 0;
-               int32_t mouth   = 0;
-            } parts; // NAMA
-            form_reference_t texture_set; // FTST
-         } face;
+            form_reference_t complexion; // FTST
+            form_reference_t hair_color; // HCLF
+            std::vector<form_reference_t> head_parts; // HEAD[] and/or PNAM[] and/or ENAM[]
+            structs::actor_facegen_morphs morphs;     // NAM9 and NAMA
+         } facegen;
          struct {
             form_reference_t model; // ANAM // an Armor
             float distance = 0.0F; // DNAM+0x2C // distance at which the far-away model is applied
          } far_away;
-         struct {
-            form_reference_t hair_color; // HCLF
-            std::vector<form_reference_t> head_parts;   // HEAD[] and/or PNAM[] and/or ENAM[]
-         } head;
          struct {
             form_reference_t normal; // default
             form_reference_t sleeping;

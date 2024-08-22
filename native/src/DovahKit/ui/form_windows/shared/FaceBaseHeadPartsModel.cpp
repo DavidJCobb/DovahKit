@@ -2,7 +2,31 @@
 #include "dovah/form_stub.h"
 #include "dovah/utils/form_list_contains.h"
 #include "editor/core.h"
+#include "editor/helpers/form_stub_drag_drop.h"
 #include "editor/subsystems/form_info_cache/core.h"
+
+namespace {
+   namespace form_info_cache {
+      using namespace dovahkit::subsystems::form_info_cache;
+   }
+
+   std::optional<FaceBaseHeadPartsModel::Slot> _from_backend_enum(dovah::head_part_type t) {
+      switch (t) {
+         using enum FaceBaseHeadPartsModel::Slot;
+         case dovah::head_part_type::eyebrows:
+            return Brows;
+         case dovah::head_part_type::eyes:
+            return Eyes;
+         case dovah::head_part_type::face:
+            return Face;
+         case dovah::head_part_type::facial_hair:
+            return FacialHair;
+         case dovah::head_part_type::hair:
+            return Hair;
+      }
+      return {};
+   }
+}
 
 FaceBaseHeadPartsModel::FaceBaseHeadPartsModel(QObject* parent) : QAbstractItemModel(parent) {
    auto& editor = DovahKitCore::get();
@@ -94,8 +118,9 @@ FaceBaseHeadPartsModel::FaceBaseHeadPartsModel(QObject* parent) : QAbstractItemM
          return {};
       }
       /*virtual*/ Qt::ItemFlags FaceBaseHeadPartsModel::flags(const QModelIndex& index) const /*override*/ {
-         auto flags = Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled | Qt::ItemNeverHasChildren;
-         return flags;
+         if (!index.isValid())
+            return Qt::ItemFlag::ItemIsDropEnabled;
+         return Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled | Qt::ItemNeverHasChildren;
       }
    #pragma endregion
    /*virtual*/ QVariant FaceBaseHeadPartsModel::headerData(int section, Qt::Orientation orientation, int role) const /*override*/ {
@@ -111,6 +136,74 @@ FaceBaseHeadPartsModel::FaceBaseHeadPartsModel(QObject* parent) : QAbstractItemM
       }
       return {};
    }
+   #pragma region Drag-and-drop
+      bool FaceBaseHeadPartsModel::canDropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) const {
+         if (action != Qt::DropAction::CopyAction)
+            return false;
+         if (!data)
+            return false;
+         if (!data->hasFormat(editor_helpers::form_stub_array_mime_type))
+            return false;
+         return true;
+      }
+      bool FaceBaseHeadPartsModel::dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) {
+         if (!this->canDropMimeData(data, action, row, column, parent))
+            return false;
+         if (action == Qt::IgnoreAction)
+            return true;
+         
+         auto stubs = editor_helpers::form_stubs_from_mime_data(*data);
+         if (stubs.empty())
+            return true;
+
+         std::array<bool, slot_count> changes = {};
+         {
+            auto& fic = form_info_cache::core::get();
+            for (dovah::form_stub* stub : stubs) {
+               if (!stub || stub->form_type != dovah::form_type::head_part)
+                  continue;
+               auto* info = fic.get_head_part_info(*stub);
+               if (!info)
+                  continue;
+
+               auto slot = _from_backend_enum(info->type);
+               if (!slot.has_value())
+                  continue;
+
+               if (auto* race = this->_last_filters.race) {
+                  if (info->race_list) {
+                     if (!dovah::form_list_contains(*info->race_list, *race))
+                        continue;
+                  }
+               }
+               if (this->_last_filters.sex.has_value()) {
+                  if (info->sex.has_value() && info->sex.value() != this->_last_filters.sex.value())
+                     continue;
+               }
+
+               auto i = (size_t)slot.value();
+               changes[i] = true;
+               this->_data.list[i].stub = stub;
+            }
+         }
+         for (size_t i = 0; i < changes.size(); ++i) {
+            if (!changes[i])
+               continue;
+            auto& item = this->_data.list[i];
+            item.cached.editorID = QString::fromStdString(item.stub->editorID);
+
+            auto qmi = this->index(i, 1, {});
+            emit dataChanged(qmi, qmi);
+         }
+         return true;
+      }
+      QStringList FaceBaseHeadPartsModel::mimeTypes() const {
+         return QStringList(QString(editor_helpers::form_stub_array_mime_type));
+      }
+      Qt::DropActions FaceBaseHeadPartsModel::supportedDropActions() const {
+         return Qt::CopyAction;
+      }
+   #pragma endregion
 #pragma endregion
 
 dovah::form_stub* FaceBaseHeadPartsModel::headPartFor(Slot s) const {

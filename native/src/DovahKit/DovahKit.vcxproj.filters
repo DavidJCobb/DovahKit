@@ -6551,6 +6551,9 @@
     <ClInclude Include="dovah\utils\form_list_contains.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\forms\structs\actor_facegen_morphs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

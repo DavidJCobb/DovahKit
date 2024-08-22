@@ -99,4 +99,6 @@ class FormDialogActorBase :
       // Overwrite UI data regarding HeadParts with data from the loaded form.
       // Should generally only be used on initial load and when template flags change.
       void _pull_headparts_to_ui();
+
+      virtual bool eventFilter(QObject* object, QEvent* event) override;
 };

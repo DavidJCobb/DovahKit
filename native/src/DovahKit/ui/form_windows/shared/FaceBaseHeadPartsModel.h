@@ -40,6 +40,12 @@ class FaceBaseHeadPartsModel final : public QAbstractItemModel {
             virtual Qt::ItemFlags flags(const QModelIndex& index) const override;
          #pragma endregion
          virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+         #pragma region Drag-and-drop
+            virtual bool canDropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) const override;
+            virtual bool dropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) override;
+            virtual QStringList mimeTypes() const override;
+            virtual Qt::DropActions supportedDropActions() const override;
+         #pragma endregion
       #pragma endregion
 
       constexpr std::optional<Slot> slotAt(size_t row) const noexcept {
@@ -88,4 +94,8 @@ class FaceBaseHeadPartsModel final : public QAbstractItemModel {
          };
          std::array<SlotValue, 5> list = {};
       } _data;
+      struct {
+         dovah::form_stub* race = nullptr;
+         std::optional<dovah::sex> sex;
+      } _last_filters;
 };

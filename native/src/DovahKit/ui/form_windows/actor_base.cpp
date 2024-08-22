@@ -1,5 +1,6 @@
 #include "./actor_base.h"
 #include <limits>
+#include <QKeyEvent>
 #include <QMessageBox>
 #include "helpers/string/strlen.h"
 #include "dovah/core.h"
@@ -37,16 +38,6 @@
 #include "./shared/HeadPartPickerFilter.h"
 
 #include "ui/types/logging/log_item.h"
-
-namespace {
-   constexpr const bool we_are_not_done_but_just_let_me_compile_for_now =
-      #if _DEBUG
-         true
-      #else
-         false
-      #endif
-   ;
-}
 
 namespace {
    constexpr const bool preview_enabled = false;
@@ -538,8 +529,20 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
          });
          QObject::connect(view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &FormDialogActorBase::_pull_tint_layer_to_ui);
 
-         QObject::connect(this->ui.faceTintColorUseCustom, &QRadioButton::toggled, this, &FormDialogActorBase::_push_tint_layer_from_ui);
-         QObject::connect(this->ui.faceTintColorUsePreset, &QRadioButton::toggled, this, &FormDialogActorBase::_push_tint_layer_from_ui);
+         QObject::connect(this->ui.faceTintColorUseCustom, &QRadioButton::toggled, this, [this](bool checked) {
+            if (!checked)
+               return;
+            this->ui.faceTintColorPreset->setEnabled(false);
+            this->ui.faceTintColorCustom->setEnabled(true);
+            this->_push_tint_layer_from_ui();
+         });
+         QObject::connect(this->ui.faceTintColorUsePreset, &QRadioButton::toggled, this, [this](bool checked) {
+            if (!checked)
+               return;
+            this->ui.faceTintColorPreset->setEnabled(true);
+            this->ui.faceTintColorCustom->setEnabled(false);
+            this->_push_tint_layer_from_ui();
+         });
          QObject::connect(this->ui.faceTintColorCustom, &DKColorPickerButton::colorChanged, this, &FormDialogActorBase::_push_tint_layer_from_ui);
          QObject::connect(this->ui.faceTintColorPreset, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &FormDialogActorBase::_push_tint_layer_from_ui);
          QObject::connect(this->ui.faceTintColorInterpolation, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &FormDialogActorBase::_push_tint_layer_from_ui);
@@ -552,6 +555,10 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
          auto* view  = this->ui.baseHeadPartsTable;
          auto* model = this->_models.head_parts_base = new FaceBaseHeadPartsModel(this);
          view->setModel(model);
+         view->setAcceptDrops(true);
+         view->setDragDropMode(QAbstractItemView::DragDropMode::DropOnly);
+         view->setDragDropOverwriteMode(false);
+         view->setDropIndicatorShown(true);
 
          ui::typical_tableview_config(view);
          view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
@@ -559,9 +566,6 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
             header.setColumnFlex(0, 0, 0, metrics.boundingRect("Facial Hair").width() * 1.5F + 4);
             header.setColumnFlex(1, 1, 0);
          });
-         //
-         // TODO: Allow drag/drop onto the base headparts table, and set the drag/drop overwrite mode 
-         //       on the table to `true`, so that drops overwrite the drop target rather than appending.
 
          auto* sel_model = view->selectionModel();
          QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this, view, model, sel_model]() {
@@ -606,6 +610,10 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
          auto* view  = this->ui.additionalHeadParts;
          auto* model = this->_models.head_parts_extra = new FaceExtraHeadPartsModel(this);
          view->setModel(model);
+         view->setAcceptDrops(true);
+         view->setDragDropMode(QAbstractItemView::DragDropMode::DropOnly);
+         view->setDragDropOverwriteMode(false);
+         view->setDropIndicatorShown(true);
 
          ui::typical_tableview_config(view);
          view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
@@ -613,8 +621,9 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
             header.setColumnFlex(0, 0, 0, metrics.boundingRect("Facial Hair").width() * 1.5F + 4);
             header.setColumnFlex(1, 1, 0);
          });
-         //
-         // TODO: Allow drag/drop onto the base headparts table.
+
+         // Handle the Del key for removing head parts from the list.
+         view->installEventFilter(this);
       }
    #pragma endregion
    #pragma region Face Morphs tab
@@ -919,8 +928,8 @@ void FormDialogActorBase::_load_impl() {
       this->ui.attackData->initializeFrom(working.attack_data);
    #pragma endregion
    #pragma region Face Parts tab
-      ui::bind(this->ui.faceComplexion, working.face.texture_set, working);
-      ui::bind(this->ui.hairColor,      working.head.hair_color, working);
+      ui::bind(this->ui.faceComplexion, working.facegen.complexion, working);
+      ui::bind(this->ui.hairColor,      working.facegen.hair_color, working);
       //
       // The rest is done below, after updating from the template actor.
       //
@@ -933,46 +942,72 @@ void FormDialogActorBase::_load_impl() {
             ui::bind(widget, value);
          };
 
-         _handle(this->ui.faceMorphBrowDepth,  working.face.morphs.brows.depth);
-         _handle(this->ui.faceMorphBrowHeight, working.face.morphs.brows.height);
-         _handle(this->ui.faceMorphBrowWidth,  working.face.morphs.brows.width);
+         auto& values = working.facegen.morphs.sliders;
 
-         QObject::connect(this->ui.faceMorphMouthIndex, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
-            auto i = this->ui.faceMorphMouthIndex->currentData().toInt();
-            this->form->face.parts.mouth = i;
-         });
-         _handle(this->ui.faceMorphMouthHeight, working.face.morphs.mouth.height);
-         _handle(this->ui.faceMorphMouthDepth,  working.face.morphs.mouth.depth);
+         _handle(this->ui.faceMorphBrowDepth,  values.brows.depth);
+         _handle(this->ui.faceMorphBrowHeight, values.brows.height);
+         _handle(this->ui.faceMorphBrowWidth,  values.brows.width);
+         
+         {
+            auto* widget = this->ui.faceMorphMouthIndex;
+            QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, widget](int index) {
+               auto& dst = this->form->facegen.morphs.indices.lips;
+               if (index < 0 && widget->count() == 0) {
+                  dst = -1;
+                  return;
+               }
+               auto i = widget->currentData().toInt();
+               dst = i;
+            });
+         }
+         _handle(this->ui.faceMorphMouthHeight, values.mouth.height);
+         _handle(this->ui.faceMorphMouthDepth,  values.mouth.depth);
 
-         _handle(this->ui.faceMorphChinDepth,  working.face.morphs.chin.depth);
-         _handle(this->ui.faceMorphChinLength, working.face.morphs.chin.height);
-         _handle(this->ui.faceMorphChinWidth,  working.face.morphs.chin.width);
+         _handle(this->ui.faceMorphChinDepth,  values.chin.depth);
+         _handle(this->ui.faceMorphChinLength, values.chin.height);
+         _handle(this->ui.faceMorphChinWidth,  values.chin.width);
 
-         _handle(this->ui.faceMorphJawDepth,  working.face.morphs.jaw.depth);
-         _handle(this->ui.faceMorphJawHeight, working.face.morphs.jaw.height);
-         _handle(this->ui.faceMorphJawWidth,  working.face.morphs.jaw.width);
+         _handle(this->ui.faceMorphJawDepth,  values.jaw.depth);
+         _handle(this->ui.faceMorphJawHeight, values.jaw.height);
+         _handle(this->ui.faceMorphJawWidth,  values.jaw.width);
 
-         _handle(this->ui.faceMorphCheekbonesHeight, working.face.morphs.cheeks.height);
-         _handle(this->ui.faceMorphCheekbonesWidth,  working.face.morphs.cheeks.width);
+         _handle(this->ui.faceMorphCheekbonesHeight, values.cheeks.height);
+         _handle(this->ui.faceMorphCheekbonesWidth,  values.cheeks.width);
 
-         QObject::connect(this->ui.faceMorphEyesIndex, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
-            auto i = this->ui.faceMorphEyesIndex->currentData().toInt();
-            this->form->face.parts.eyes = i;
-         });
-         _handle(this->ui.faceMorphEyesDepth,  working.face.morphs.eyes.depth);
-         _handle(this->ui.faceMorphEyesHeight, working.face.morphs.eyes.height);
-         _handle(this->ui.faceMorphEyesWidth,  working.face.morphs.eyes.width);
+         {
+            auto* widget = this->ui.faceMorphEyesIndex;
+            QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, widget](int index) {
+               auto& dst = this->form->facegen.morphs.indices.eyes;
+               if (index < 0 && widget->count() == 0) {
+                  dst = -1;
+                  return;
+               }
+               auto i = widget->currentData().toInt();
+               dst = i;
+            });
+         }
+         _handle(this->ui.faceMorphEyesDepth,  values.eyes.depth);
+         _handle(this->ui.faceMorphEyesHeight, values.eyes.height);
+         _handle(this->ui.faceMorphEyesWidth,  values.eyes.width);
 
-         QObject::connect(this->ui.faceMorphNoseIndex, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
-            auto i = this->ui.faceMorphNoseIndex->currentData().toInt();
-            this->form->face.parts.nose = i;
-         });
-         _handle(this->ui.faceMorphNoseHeight, working.face.morphs.nose.height);
-         _handle(this->ui.faceMorphNoseLength, working.face.morphs.nose.length);
+         {
+            auto* widget = this->ui.faceMorphNoseIndex;
+            QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, widget](int index) {
+               auto& dst = this->form->facegen.morphs.indices.nose;
+               if (index < 0 && widget->count() == 0) {
+                  dst = -1;
+                  return;
+               }
+               auto i = widget->currentData().toInt();
+               dst = i;
+            });
+         }
+         _handle(this->ui.faceMorphNoseHeight, values.nose.height);
+         _handle(this->ui.faceMorphNoseLength, values.nose.length);
 
          // This one is in the range [0, 1] rather than [-1, 1], I believe.
          this->ui.faceMorphVampire->setTickInterval(0.2);
-         ui::bind(this->ui.faceMorphVampire, working.face.morphs.vampire_morph);
+         ui::bind(this->ui.faceMorphVampire, values.vampire_morph);
       }
    #pragma endregion
    #pragma region Face Anim Preview tab
@@ -986,7 +1021,6 @@ void FormDialogActorBase::_load_impl() {
 
       this->_models.face_tints->importLayerStates(working);
       this->_set_sex(female ? dovah::sex::female : dovah::sex::male);
-      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Head parts");
    }
    this->_set_race(working.race.get_form_stub());
    this->_set_pc_level_mult(this->ui.flagPCLevelMult->isChecked());
@@ -1017,7 +1051,6 @@ void FormDialogActorBase::_save_impl() {
       working.actor_flags &= ~loaded_form_type::actor_flag::unique;
    }
 
-   static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
    #pragma region Tabs
       #pragma region Traits
          //
@@ -1126,7 +1159,7 @@ void FormDialogActorBase::_save_impl() {
                }
             }
 
-            auto& dst_list = working.head.head_parts;
+            auto& dst_list = working.facegen.head_parts;
             dovah::clear_form_reference_list(dst_list, working);
             for (auto* stub : head_parts) {
                auto& form_use = dst_list.emplace_back();
@@ -1357,8 +1390,8 @@ void FormDialogActorBase::_push_data_to_ui(loaded_form_type::template_flag::type
                this->_creature_sound_inheritance_changed();
             }
             { // Face Parts
-               this->ui.faceComplexion->setFormStub(working.face.texture_set.get_form_stub());
-               this->ui.hairColor->setFormStub(working.head.hair_color.get_form_stub());
+               this->ui.faceComplexion->setFormStub(working.facegen.complexion.get_form_stub());
+               this->ui.hairColor->setFormStub(working.facegen.hair_color.get_form_stub());
 
                this->_models.face_tints->importLayerStates(working);
                this->_models.face_tints->setSex(this->_current_sex());
@@ -1397,12 +1430,12 @@ void FormDialogActorBase::_push_data_to_ui(loaded_form_type::template_flag::type
                   QSignalBlocker(this->ui.faceMorphVampire),
                };
 
-               const auto& morphs = working.face.morphs;
+               const auto& morphs = working.facegen.morphs.sliders;
                this->ui.faceMorphBrowDepth->setValue(morphs.brows.depth);
                this->ui.faceMorphBrowHeight->setValue(morphs.brows.height);
                this->ui.faceMorphBrowWidth->setValue(morphs.brows.width);
                //
-               this->ui.faceMorphMouthIndex->setCurrentIndex(this->ui.faceMorphMouthIndex->findData(working.face.parts.mouth));
+               this->ui.faceMorphMouthIndex->setCurrentIndex(this->ui.faceMorphMouthIndex->findData(working.facegen.morphs.indices.lips));
                this->ui.faceMorphMouthDepth->setValue(morphs.mouth.depth);
                this->ui.faceMorphMouthHeight->setValue(morphs.mouth.height);
                //
@@ -1417,12 +1450,12 @@ void FormDialogActorBase::_push_data_to_ui(loaded_form_type::template_flag::type
                this->ui.faceMorphCheekbonesHeight->setValue(morphs.cheeks.height);
                this->ui.faceMorphCheekbonesWidth->setValue(morphs.cheeks.width);
                //
-               this->ui.faceMorphEyesIndex->setCurrentIndex(this->ui.faceMorphEyesIndex->findData(working.face.parts.eyes));
+               this->ui.faceMorphEyesIndex->setCurrentIndex(this->ui.faceMorphEyesIndex->findData(working.facegen.morphs.indices.eyes));
                this->ui.faceMorphEyesDepth->setValue(morphs.eyes.depth);
                this->ui.faceMorphEyesHeight->setValue(morphs.eyes.height);
                this->ui.faceMorphEyesWidth->setValue(morphs.eyes.width);
                //
-               this->ui.faceMorphNoseIndex->setCurrentIndex(this->ui.faceMorphNoseIndex->findData(working.face.parts.nose));
+               this->ui.faceMorphNoseIndex->setCurrentIndex(this->ui.faceMorphNoseIndex->findData(working.facegen.morphs.indices.nose));
                this->ui.faceMorphNoseHeight->setValue(morphs.nose.height);
                this->ui.faceMorphNoseLength->setValue(morphs.nose.length);
                //
@@ -2006,7 +2039,7 @@ void FormDialogActorBase::_push_tint_layer_from_ui() {
    state.alpha       = this->ui.faceTintColorInterpolation->value() * 100;
    state.color       = this->ui.faceTintColorCustom->color();
    if (this->ui.faceTintColorUsePreset->isChecked()) {
-      state.preset_index = this->ui.faceTintColorPreset->currentIndex();
+      state.preset_index = this->ui.faceTintColorPreset->currentData().toInt();
    } else {
       state.preset_index = dovah::index_of_no_face_tint;
    }
@@ -2104,9 +2137,9 @@ void FormDialogActorBase::_set_race(dovah::form_stub* race) {
          size_t prior_lips = 0;
          size_t prior_nose = 0;
          if (!changed) {
-            prior_eyes = this->form->face.parts.eyes;
-            prior_lips = this->form->face.parts.mouth;
-            prior_nose = this->form->face.parts.nose;
+            prior_eyes = this->form->facegen.morphs.indices.eyes;
+            prior_lips = this->form->facegen.morphs.indices.lips;
+            prior_nose = this->form->facegen.morphs.indices.nose;
          }
          this->ui.faceMorphEyesIndex->clear();
          this->ui.faceMorphMouthIndex->clear();
@@ -2248,9 +2281,32 @@ void FormDialogActorBase::_pull_headparts_to_ui() {
    using base_slot = FaceBaseHeadPartsModel::Slot;
 
    std::vector<dovah::form_stub*> extra_parts;
-   for (auto& form_use : this->form->head.head_parts) {
+
+   // Used to strip out duplicates on load.
+   auto _head_part_already_seen = [&extra_parts, model_base](const dovah::form_stub* stub) {
+      if (stub == model_base->headPartFor(base_slot::Brows))
+         return true;
+      if (stub == model_base->headPartFor(base_slot::Eyes))
+         return true;
+      if (stub == model_base->headPartFor(base_slot::Face))
+         return true;
+      if (stub == model_base->headPartFor(base_slot::FacialHair))
+         return true;
+      if (stub == model_base->headPartFor(base_slot::Hair))
+         return true;
+
+      auto it = std::find(extra_parts.begin(), extra_parts.end(), stub);
+      if (it != extra_parts.end())
+         return true;
+
+      return false;
+   };
+
+   for (auto& form_use : this->form->facegen.head_parts) {
       auto* stub = form_use.get_form_stub();
       if (stub && stub->form_type == dovah::form_type::head_part) {
+         if (_head_part_already_seen(stub))
+            continue;
          auto* info = fic.get_head_part_info(*stub);
          if (!info) {
             extra_parts.push_back(stub);
@@ -2277,4 +2333,31 @@ void FormDialogActorBase::_pull_headparts_to_ui() {
       }
    }
    model_extra->replaceAllHeadParts(extra_parts);
+}
+
+/*virtual*/ bool FormDialogActorBase::eventFilter(QObject* object, QEvent* event) /*override*/ {
+   auto* widget = this->ui.additionalHeadParts;
+   if (object == widget) {
+      if (event->type() == QEvent::Type::KeyPress) {
+         auto* casted = (QKeyEvent*)event;
+         if (casted->key() == Qt::Key_Delete) {
+
+            auto* sel_model = widget->selectionModel();
+            auto* model     = this->_models.head_parts_extra;
+            {
+               auto rows = sel_model->selectedRows();
+               if (!rows.isEmpty()) {
+                  auto  row  = rows[0].row();
+                  auto* stub = model->headPart(row);
+                  if (stub)
+                     model->removeHeadPart(*stub);
+               }
+            }
+
+            return true;
+         }
+         return false;
+      }
+   }
+   return false;
 }

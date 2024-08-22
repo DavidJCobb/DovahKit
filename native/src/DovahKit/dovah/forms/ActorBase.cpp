@@ -64,15 +64,13 @@ namespace dovah::loaded_forms {
                   }
                }
             }
-            {  // Face Parts
-               _copy_form(this->face.texture_set, src_actor.face.texture_set);
-               _copy_form(this->head.hair_color,  src_actor.head.hair_color);
-               copy_form_reference_list(*this, this->head.head_parts, src_actor.head.head_parts);
+            {  // FaceGen
+               _copy_form(this->facegen.complexion, src_actor.facegen.complexion);
+               _copy_form(this->facegen.hair_color, src_actor.facegen.hair_color);
+               copy_form_reference_list(*this, this->facegen.head_parts, src_actor.facegen.head_parts);
                this->tint_layers = src_actor.tint_layers;
-            }
-            {  // Face Morphs
-               this->face.morphs = src_actor.face.morphs;
-               this->face.parts  = src_actor.face.parts;
+
+               this->facegen.morphs = src_actor.facegen.morphs;
             }
             break;
          case template_flag::use_stats:
@@ -508,8 +506,8 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'FTST':
-               if (subrecord.read(this->face.texture_set)) {
-                  intfc.warn_if_ref_is_wrong_type(this->face.texture_set, form_type::texture_set, subrecord.signature());
+               if (auto& dst = this->facegen.complexion; subrecord.read(dst)) {
+                  intfc.warn_if_ref_is_wrong_type(dst, form_type::texture_set, subrecord.signature());
                }
                break;
             case 'HEAD': // found via disassembly; identical to PNAM
@@ -518,7 +516,7 @@ namespace dovah::loaded_forms {
             [[fallthrough]];
             case 'PNAM':
                if (subrecord.read(form_id))
-                  this->head.head_parts.push_back(form_id);
+                  this->facegen.head_parts.push_back(form_id);
                break;
             case 'PKID':
                if (subrecord.read(form_id)) {
@@ -527,7 +525,7 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'HCLF':
-               if (auto& dst = this->head.hair_color; subrecord.read(dst)) {
+               if (auto& dst = this->facegen.hair_color; subrecord.read(dst)) {
                   intfc.warn_if_ref_is_wrong_type(dst, form_type::color, subrecord.signature());
                }
                break;
@@ -559,38 +557,29 @@ namespace dovah::loaded_forms {
                      this->sound_level = 0;
                break;
             case 'NAM9':
-               if (subrecord.is_in_bounds(0x4C)) {
-                  //
-                  // If all of these floats are 0, then the TESNPC instance doesn't even bother 
-                  // allocating storage for them.
-                  //
-                  subrecord.unchecked_read(this->face.morphs.nose.length);
-                  subrecord.unchecked_read(this->face.morphs.nose.height);
-                  subrecord.unchecked_read(this->face.morphs.jaw.height);
-                  subrecord.unchecked_read(this->face.morphs.jaw.width);
-                  subrecord.unchecked_read(this->face.morphs.jaw.depth);
-                  subrecord.unchecked_read(this->face.morphs.cheeks.height);
-                  subrecord.unchecked_read(this->face.morphs.cheeks.width);
-                  subrecord.unchecked_read(this->face.morphs.eyes.height);
-                  subrecord.unchecked_read(this->face.morphs.eyes.width);
-                  subrecord.unchecked_read(this->face.morphs.brows.height);
-                  subrecord.unchecked_read(this->face.morphs.brows.width);
-                  subrecord.unchecked_read(this->face.morphs.brows.depth);
-                  subrecord.unchecked_read(this->face.morphs.mouth.height);
-                  subrecord.unchecked_read(this->face.morphs.mouth.depth);
-                  subrecord.unchecked_read(this->face.morphs.chin.width);
-                  subrecord.unchecked_read(this->face.morphs.chin.height);
-                  subrecord.unchecked_read(this->face.morphs.chin.depth);
-                  subrecord.unchecked_read(this->face.morphs.eyes.depth);
-                  subrecord.unchecked_read(this->face.morphs.vampire_morph);
+               {
+                  auto& dst = this->facegen.morphs.sliders;
+                  using dst_type = std::decay_t<decltype(dst)>;
+
+                  if (subrecord.is_in_bounds(sizeof(dst_type::value_type) * dst.size())) {
+                     //
+                     // If all of these floats are 0, then the TESNPC instance doesn't even bother 
+                     // allocating storage for them.
+                     //
+                     for (auto& f : dst)
+                        subrecord.unchecked_read(f);
+                  }
                }
                break;
             case 'NAMA':
-               if (subrecord.is_in_bounds(0x10)) {
-                  subrecord.unchecked_read(this->face.parts.nose);
-                  subrecord.unchecked_read(this->face.parts.unknown);
-                  subrecord.unchecked_read(this->face.parts.eyes);
-                  subrecord.unchecked_read(this->face.parts.mouth);
+               {
+                  auto& dst = this->facegen.morphs.indices;
+                  using dst_type = std::decay_t<decltype(dst)>;
+
+                  if (subrecord.is_in_bounds(sizeof(dst_type::value_type) * dst.size())) {
+                     for (auto& f : dst)
+                        subrecord.unchecked_read(f);
+                  }
                }
                break;
 
@@ -852,23 +841,18 @@ namespace dovah::loaded_forms {
          copy->ai.aggro = this->ai.aggro;
       }
       {  // face
-         auto& src = this->face;
-         auto& dst = copy->face;
-         dst.texture_set.set(*copy, src.texture_set);
+         auto& src = this->facegen;
+         auto& dst = copy->facegen;
+         dst.complexion.set(*copy, src.complexion);
+         dst.hair_color.set(*copy, src.hair_color);
+         copy_form_reference_list(*copy, dst.head_parts, src.head_parts);
          dst.morphs = src.morphs;
-         dst.parts  = src.parts;
       }
       {
          auto& src = this->far_away;
          auto& dst = copy->far_away;
          dst.model.set(*copy, src.model);
          dst.distance = src.distance;
-      }
-      {
-         auto& src = this->head;
-         auto& dst = copy->head;
-         dst.hair_color.set(*copy, src.hair_color);
-         copy_form_reference_list(*copy, dst.head_parts, src.head_parts);
       }
       {
          auto& src = this->outfits;
@@ -1037,10 +1021,10 @@ namespace dovah::loaded_forms {
          DNAM.write(this->geared_up_weapons);
          DNAM.close();
       }
-      for (const auto& entry : this->head.head_parts) {
+      for (const auto& entry : this->facegen.head_parts) {
          record.write_formID_subrecord('PNAM', entry);
       }
-      record.write_formID_subrecord('HCLF', this->head.hair_color, true);
+      record.write_formID_subrecord('HCLF', this->facegen.hair_color, true);
       record.write_formID_subrecord('ZNAM', this->stats.combat_style, true);
       record.write_formID_subrecord('GNAM', this->gift_filter, true);
       {
@@ -1074,7 +1058,7 @@ namespace dovah::loaded_forms {
       record.write_formID_subrecord('SOFT', this->outfits.sleeping, true);
       record.write_formID_subrecord('DPLT', this->ai.default_package_list, true);
       record.write_formID_subrecord('CRIF', this->crime_faction, true);
-      record.write_formID_subrecord('FTST', this->face.texture_set, true);
+      record.write_formID_subrecord('FTST', this->facegen.complexion, true);
       {
          auto& QNAM = record.open_next_subrecord('QNAM');
          QNAM.write(this->texture_lighting.r);
@@ -1082,35 +1066,16 @@ namespace dovah::loaded_forms {
          QNAM.write(this->texture_lighting.b);
          QNAM.close();
       }
-      {
+      if (!this->facegen.morphs.all_sliders_zeroed()) {
          auto& NAM9 = record.open_next_subrecord('NAM9');
-         NAM9.write(this->face.morphs.nose.length);
-         NAM9.write(this->face.morphs.nose.height);
-         NAM9.write(this->face.morphs.jaw.height);
-         NAM9.write(this->face.morphs.jaw.width);
-         NAM9.write(this->face.morphs.jaw.depth);
-         NAM9.write(this->face.morphs.cheeks.height);
-         NAM9.write(this->face.morphs.cheeks.width);
-         NAM9.write(this->face.morphs.eyes.height);
-         NAM9.write(this->face.morphs.eyes.width);
-         NAM9.write(this->face.morphs.brows.height);
-         NAM9.write(this->face.morphs.brows.width);
-         NAM9.write(this->face.morphs.brows.depth);
-         NAM9.write(this->face.morphs.mouth.height);
-         NAM9.write(this->face.morphs.mouth.depth);
-         NAM9.write(this->face.morphs.chin.width);
-         NAM9.write(this->face.morphs.chin.height);
-         NAM9.write(this->face.morphs.chin.depth);
-         NAM9.write(this->face.morphs.eyes.depth);
-         NAM9.write(this->face.morphs.vampire_morph);
+         for (auto f : this->facegen.morphs.sliders)
+            NAM9.write(f);
          NAM9.close();
       }
       {
          auto& NAMA = record.open_next_subrecord('NAMA');
-         NAMA.write(this->face.parts.nose);
-         NAMA.write(this->face.parts.unknown);
-         NAMA.write(this->face.parts.eyes);
-         NAMA.write(this->face.parts.mouth);
+         for (auto v : this->facegen.morphs.indices)
+            NAMA.write(v);
          NAMA.close();
       }
       for (const auto& entry : this->tint_layers) {
@@ -1162,15 +1127,12 @@ namespace dovah::loaded_forms {
          }
       }
       {  // face
-         auto& dst = this->face;
-         dst.texture_set.clear_if(*this, other);
-      }
-      this->far_away.model.clear_if(*this, other);
-      {
-         auto& dst = this->head;
+         auto& dst = this->facegen;
+         dst.complexion.clear_if(*this, other);
          dst.hair_color.clear_if(*this, other);
          remove_form_from_reference_list(dst.head_parts, other, *this);
       }
+      this->far_away.model.clear_if(*this, other);
       {
          auto& dst = this->outfits;
          dst.normal.clear_if(*this, other);
@@ -1243,19 +1205,14 @@ namespace dovah::loaded_forms {
          this->ai.aggro.attack = 0;
       }
       {  // face
-         auto& dst = this->face;
-         dst.texture_set.set(*this, nullptr);
+         auto& dst = this->facegen;
+         dst.complexion.set(*this, nullptr);
+         dst.hair_color.set(*this, nullptr);
+         clear_form_reference_list(dst.head_parts, *this);
          dst.morphs = {};
-         dst.parts  = {};
-         dst.parts.unknown = -1;
       }
       this->far_away.model.set(*this, nullptr);
       this->far_away.distance = 0;
-      {
-         auto& dst = this->head;
-         dst.hair_color.set(*this, nullptr);
-         clear_form_reference_list(dst.head_parts, *this);
-      }
       {
          auto& dst = this->outfits;
          dst.normal.set(*this, nullptr);

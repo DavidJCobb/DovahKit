@@ -2647,6 +2647,9 @@
           <layout class="QVBoxLayout" name="verticalLayout_16">
            <item>
             <widget class="QTableView" name="baseHeadPartsTable">
+             <property name="whatsThis">
+              <string>&lt;p&gt;Here, you can select the fundamental HeadParts that make up a FaceGen actor's face. Alternatively, you can use the race-level defaults. To change a HeadPart, select the slot in the table here, and then use the drop-down below the table.&lt;/p&gt;</string>
+             </property>
              <property name="selectionMode">
               <enum>QAbstractItemView::SingleSelection</enum>
              </property>
@@ -2689,6 +2692,9 @@
          </item>
          <item>
           <widget class="QTableView" name="additionalHeadParts">
+           <property name="whatsThis">
+            <string>&lt;p&gt;This is a list of extra HeadParts that this actor will use. You can drag HeadParts from the Object Window into this list, if those HeadParts are compatible with the actor's race and sex. You can also select HeadParts in this table and press the Delete key to remove them from the list.&lt;/p&gt;</string>
+           </property>
            <property name="selectionBehavior">
             <enum>QAbstractItemView::SelectRows</enum>
            </property>

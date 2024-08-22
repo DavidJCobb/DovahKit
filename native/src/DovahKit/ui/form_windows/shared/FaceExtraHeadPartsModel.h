@@ -32,6 +32,12 @@ class FaceExtraHeadPartsModel final : public QAbstractItemModel {
             virtual Qt::ItemFlags flags(const QModelIndex& index) const override;
          #pragma endregion
          virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+         #pragma region Drag-and-drop
+            virtual bool canDropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) const override;
+            virtual bool dropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) override;
+            virtual QStringList mimeTypes() const override;
+            virtual Qt::DropActions supportedDropActions() const override;
+         #pragma endregion
       #pragma endregion
 
       void appendHeadPart(dovah::form_stub&);
@@ -57,4 +63,10 @@ class FaceExtraHeadPartsModel final : public QAbstractItemModel {
          void recache_type_name();
       };
       std::vector<Item> _items;
+      struct {
+         dovah::form_stub* race = nullptr;
+         std::optional<dovah::sex> sex;
+      } _last_filters;
+
+      std::vector<dovah::form_stub*> _extract_usable_head_parts(const QMimeData&) const;
 };
