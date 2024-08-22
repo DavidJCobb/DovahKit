@@ -1,6 +1,8 @@
 #include "./FaceBaseHeadPartsModel.h"
 #include "dovah/form_stub.h"
+#include "dovah/utils/form_list_contains.h"
 #include "editor/core.h"
+#include "editor/subsystems/form_info_cache/core.h"
 
 FaceBaseHeadPartsModel::FaceBaseHeadPartsModel(QObject* parent) : QAbstractItemModel(parent) {
    auto& editor = DovahKitCore::get();
@@ -129,4 +131,51 @@ void FaceBaseHeadPartsModel::setHeadPartFor(Slot s, dovah::form_stub* stub) {
 
    auto qmi = this->index((size_t)s, 1);
    emit dataChanged(qmi, qmi);
+}
+
+void FaceBaseHeadPartsModel::filterForRace(dovah::form_stub* race) {
+   if (!race)
+      return;
+   auto& fic  = dovahkit::subsystems::form_info_cache::core::get();
+   auto& list = this->_data.list;
+   for (size_t i = 0; i < list.size(); ++i) {
+      auto& item = list[i];
+      auto* stub = item.stub;
+      if (!stub)
+         continue;
+      auto* info = fic.get_head_part_info(*stub);
+      if (!info)
+         continue;
+
+      if (!info->race_list)
+         continue;
+      if (!dovah::form_list_contains(*info->race_list, *race)) {
+         item.stub   = nullptr;
+         item.cached = {};
+
+         auto qmi = this->index(i, 1);
+         emit dataChanged(qmi, qmi);
+      }
+   }
+}
+void FaceBaseHeadPartsModel::filterForSex(dovah::sex sex) {
+   auto& fic  = dovahkit::subsystems::form_info_cache::core::get();
+   auto& list = this->_data.list;
+   for (size_t i = 0; i < list.size(); ++i) {
+      auto& item = list[i];
+      auto* stub = item.stub;
+      if (!stub)
+         continue;
+      auto* info = fic.get_head_part_info(*stub);
+      if (!info)
+         continue;
+
+      if (info->sex.has_value() && info->sex.value() != sex) {
+         item.stub   = nullptr;
+         item.cached = {};
+
+         auto qmi = this->index(i, 1);
+         emit dataChanged(qmi, qmi);
+      }
+   }
 }

@@ -2541,6 +2541,9 @@
     <ClCompile Include="ui\form_windows\actor_base\ActorBaseTintLayerModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\utils\form_list_contains.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6543,6 +6546,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\data\headparts.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\form_list_contains.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

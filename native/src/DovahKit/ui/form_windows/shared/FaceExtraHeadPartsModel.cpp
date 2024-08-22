@@ -1,5 +1,6 @@
 #include "./FaceExtraHeadPartsModel.h"
 #include "dovah/form_stub.h"
+#include "dovah/utils/form_list_contains.h"
 #include "editor/subsystems/form_info_cache/core.h"
 #include "editor/core.h"
 
@@ -264,4 +265,55 @@ std::vector<dovah::form_stub*> FaceExtraHeadPartsModel::headParts() const {
    for (auto& src : this->_items)
       out.push_back(src.stub);
    return out;
+}
+
+void FaceExtraHeadPartsModel::filterForRace(dovah::form_stub* race) {
+   if (!race)
+      return;
+   auto&  fic  = dovahkit::subsystems::form_info_cache::core::get();
+   auto&  list = this->_items;
+   size_t size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto& item = list[i];
+      auto* stub = item.stub;
+      if (!stub)
+         continue;
+
+      auto* info = fic.get_head_part_info(*stub);
+      if (!info)
+         continue;
+
+      if (!info->race_list)
+         continue;
+
+      if (!dovah::form_list_contains(*info->race_list, *race)) {
+         this->beginRemoveRows({}, i, i);
+         list.erase(list.begin() + i);
+         --i;
+         --size;
+         this->endRemoveRows();
+      }
+   }
+}
+void FaceExtraHeadPartsModel::filterForSex(dovah::sex sex) {
+   auto&  fic  = dovahkit::subsystems::form_info_cache::core::get();
+   auto&  list = this->_items;
+   size_t size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto& item = list[i];
+      auto* stub = item.stub;
+      if (!stub)
+         continue;
+      auto* info = fic.get_head_part_info(*stub);
+      if (!info)
+         continue;
+
+      if (info->sex.has_value() && info->sex.value() != sex) {
+         this->beginRemoveRows({}, i, i);
+         list.erase(list.begin() + i);
+         --i;
+         --size;
+         this->endRemoveRows();
+      }
+   }
 }

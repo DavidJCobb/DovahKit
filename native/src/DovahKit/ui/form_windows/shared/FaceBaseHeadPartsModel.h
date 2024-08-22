@@ -2,6 +2,7 @@
 #include <array>
 #include <optional>
 #include <QAbstractItemModel>
+#include "dovah/data/sex.h"
 #include "dovah/forms/HeadPart.h"
 
 namespace dovah {
@@ -61,6 +62,9 @@ class FaceBaseHeadPartsModel final : public QAbstractItemModel {
 
       dovah::form_stub* headPartFor(Slot) const;
       void setHeadPartFor(Slot, dovah::form_stub*);
+
+      void filterForRace(dovah::form_stub* race);
+      void filterForSex(dovah::sex);
 
    protected:
       struct SlotValue {

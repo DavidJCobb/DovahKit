@@ -2,6 +2,7 @@
 #include <vector>
 #include <QAbstractItemModel>
 #include "dovah/data/headparts.h"
+#include "dovah/data/sex.h"
 
 namespace dovah {
    class form_stub;
@@ -40,6 +41,9 @@ class FaceExtraHeadPartsModel final : public QAbstractItemModel {
       //
       dovah::form_stub* headPart(size_t) const;
       [[nodiscard]] std::vector<dovah::form_stub*> headParts() const;
+
+      void filterForRace(dovah::form_stub* race);
+      void filterForSex(dovah::sex);
 
    protected:
       struct Item {

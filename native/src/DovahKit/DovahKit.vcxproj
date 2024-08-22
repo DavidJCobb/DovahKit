@@ -182,6 +182,7 @@
     <ClCompile Include="dovah\load_order_requests\game_setting_edit_request.cpp" />
     <ClCompile Include="dovah\load_order_requests\game_setting_renumber_request.cpp" />
     <ClCompile Include="dovah\utils\compute_classed_stat_points.cpp" />
+    <ClCompile Include="dovah\utils\form_list_contains.cpp" />
     <ClCompile Include="dovah\utils\get_all_relevant_template_actors.cpp" />
     <ClCompile Include="dovah\utils\leveled_list_preview.cpp" />
     <ClCompile Include="dovah\utils\refs_need_persistence_checker.cpp" />
@@ -1166,6 +1167,7 @@
     <ClInclude Include="dovah\utils\data_by_actor_attribute.h" />
     <ClInclude Include="dovah\utils\data_by_sex.h" />
     <ClInclude Include="dovah\utils\data_by_skill.h" />
+    <ClInclude Include="dovah\utils\form_list_contains.h" />
     <ClInclude Include="dovah\utils\get_all_relevant_template_actors.h" />
     <ClInclude Include="dovah\utils\leveled_list_preview.h" />
     <ClInclude Include="editor\helpers\backend_error_to_string.h" />

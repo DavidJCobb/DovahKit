@@ -555,18 +555,18 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
 
          ui::typical_tableview_config(view);
          view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         ui::set_tableview_column_flex(view, [](DKHeaderView& header, const QFontMetrics& metrics) {
+            header.setColumnFlex(0, 0, 0, metrics.boundingRect("Facial Hair").width() * 1.5F + 4);
+            header.setColumnFlex(1, 1, 0);
+         });
          //
          // TODO: Allow drag/drop onto the base headparts table, and set the drag/drop overwrite mode 
          //       on the table to `true`, so that drops overwrite the drop target rather than appending.
 
          auto* sel_model = view->selectionModel();
-         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this, view, sel_model]() {
+         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this, view, model, sel_model]() {
             auto* picker = this->ui.baseHeadPartPicker;
-            auto* model  = dynamic_cast<FaceBaseHeadPartsModel*>(view->model());
-            if (!model) {
-               picker->setEnabled(false);
-               return;
-            }
+
             std::optional<FaceBaseHeadPartsModel::Slot> slot;
             {
                auto rows = sel_model->selectedRows();
@@ -585,6 +585,21 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
             this->_filters.face.base_head_part->setRequiredType(FaceBaseHeadPartsModel::slotToType(slot.value()));
             picker->setFormStub(stub);
          });
+
+         QObject::connect(this->ui.baseHeadPartPicker, &DKFormPicker::formChanged, this, [this, sel_model, model](dovah::form_stub* stub) {
+            auto* picker = this->ui.baseHeadPartPicker;
+
+            std::optional<FaceBaseHeadPartsModel::Slot> slot;
+            {
+               auto rows = sel_model->selectedRows();
+               if (!rows.isEmpty())
+                  slot = model->slotAt(rows[0].row());
+            }
+            if (!slot.has_value())
+               return;
+
+            model->setHeadPartFor(slot.value(), stub);
+         });
       }
 
       {  // Additional Head Parts table
@@ -594,11 +609,13 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
 
          ui::typical_tableview_config(view);
          view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         ui::set_tableview_column_flex(view, [](DKHeaderView& header, const QFontMetrics& metrics) {
+            header.setColumnFlex(0, 0, 0, metrics.boundingRect("Facial Hair").width() * 1.5F + 4);
+            header.setColumnFlex(1, 1, 0);
+         });
          //
          // TODO: Allow drag/drop onto the base headparts table.
       }
-
-      static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
    #pragma endregion
    #pragma region Face Morphs tab
       if constexpr (!allow_customizing_face) {
@@ -963,6 +980,7 @@ void FormDialogActorBase::_load_impl() {
    #pragma endregion
 
    this->_update_from_template_actor();
+   this->_pull_headparts_to_ui();
    {
       bool female = (working.actor_flags & loaded_form_type::actor_flag::female) != 0;
 
@@ -1083,7 +1101,38 @@ void FormDialogActorBase::_save_impl() {
       #pragma endregion
       #pragma region Face Parts
          this->_models.face_tints->exportLayerStates(working);
-         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Head parts");
+         {  // HeadParts list
+            std::vector<dovah::form_stub*> head_parts;
+            {
+               auto* model = this->_models.head_parts_base;
+               if (auto* stub = model->headPartFor(FaceBaseHeadPartsModel::Slot::Brows))
+                  head_parts.push_back(stub);
+               if (auto* stub = model->headPartFor(FaceBaseHeadPartsModel::Slot::Eyes))
+                  head_parts.push_back(stub);
+               if (auto* stub = model->headPartFor(FaceBaseHeadPartsModel::Slot::Face))
+                  head_parts.push_back(stub);
+               if (auto* stub = model->headPartFor(FaceBaseHeadPartsModel::Slot::FacialHair))
+                  head_parts.push_back(stub);
+               if (auto* stub = model->headPartFor(FaceBaseHeadPartsModel::Slot::Hair))
+                  head_parts.push_back(stub);
+            }
+            {
+               auto*  model = this->_models.head_parts_extra;
+               size_t size  = model->rowCount();
+               head_parts.reserve(head_parts.size() + size);
+               for (size_t i = 0; i < size; ++i) {
+                  if (auto* stub = model->headPart(i))
+                     head_parts.push_back(stub);
+               }
+            }
+
+            auto& dst_list = working.head.head_parts;
+            dovah::clear_form_reference_list(dst_list, working);
+            for (auto* stub : head_parts) {
+               auto& form_use = dst_list.emplace_back();
+               write_form_ref(form_use, stub);
+            }
+         }
       #pragma endregion
       #pragma region Face Morphs
          //
@@ -1308,16 +1357,12 @@ void FormDialogActorBase::_push_data_to_ui(loaded_form_type::template_flag::type
                this->_creature_sound_inheritance_changed();
             }
             { // Face Parts
-               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Update current sex: Base Head Parts");
-               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: Update current sex: Additional Head Parts");
-
                this->ui.faceComplexion->setFormStub(working.face.texture_set.get_form_stub());
                this->ui.hairColor->setFormStub(working.head.hair_color.get_form_stub());
 
                this->_models.face_tints->importLayerStates(working);
                this->_models.face_tints->setSex(this->_current_sex());
-               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: UI: Base Head Parts");
-               static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO: UI: Additional Head Parts");
+               this->_pull_headparts_to_ui();
             }
             { // Face Morphs
                const auto blockers = std::array{
@@ -2049,7 +2094,8 @@ void FormDialogActorBase::_set_race(dovah::form_stub* race) {
          //
          // Head parts:
          //
-         static_assert(we_are_not_done_but_just_let_me_compile_for_now, "TODO");
+         this->_models.head_parts_base->filterForRace(race);
+         this->_models.head_parts_extra->filterForRace(race);
       }
    }
    {  // Indexed face morphs
@@ -2187,5 +2233,48 @@ void FormDialogActorBase::_set_sex(dovah::sex s) {
 
       this->_models.face_tints->setSex(s);
       this->_pull_tint_layer_to_ui();
+
+      this->_models.head_parts_base->filterForSex(s);
+      this->_models.head_parts_extra->filterForSex(s);
    }
+}
+
+void FormDialogActorBase::_pull_headparts_to_ui() {
+   auto* model_base  = this->_models.head_parts_base;
+   auto* model_extra = this->_models.head_parts_extra;
+
+   auto& fic = dovahkit::subsystems::form_info_cache::core::get();
+
+   using base_slot = FaceBaseHeadPartsModel::Slot;
+
+   std::vector<dovah::form_stub*> extra_parts;
+   for (auto& form_use : this->form->head.head_parts) {
+      auto* stub = form_use.get_form_stub();
+      if (stub && stub->form_type == dovah::form_type::head_part) {
+         auto* info = fic.get_head_part_info(*stub);
+         if (!info) {
+            extra_parts.push_back(stub);
+            continue;
+         }
+         switch (info->type) {
+            case dovah::head_part_type::eyebrows:
+               model_base->setHeadPartFor(base_slot::Brows, stub);
+               continue;
+            case dovah::head_part_type::eyes:
+               model_base->setHeadPartFor(base_slot::Eyes, stub);
+               continue;
+            case dovah::head_part_type::face:
+               model_base->setHeadPartFor(base_slot::Face, stub);
+               continue;
+            case dovah::head_part_type::facial_hair:
+               model_base->setHeadPartFor(base_slot::FacialHair, stub);
+               continue;
+            case dovah::head_part_type::hair:
+               model_base->setHeadPartFor(base_slot::Hair, stub);
+               continue;
+         }
+         extra_parts.push_back(stub);
+      }
+   }
+   model_extra->replaceAllHeadParts(extra_parts);
 }

@@ -543,6 +543,8 @@ namespace dovah::loaded_forms {
                if (esp1B == 0)
                   esp1B = 1;
                break;
+            case 'NAM5':
+               break;
             case 'NAM6':
                if (subrecord.read(this->height))
                   if (this->height == 0.0F) // game does this, too
@@ -1041,10 +1043,17 @@ namespace dovah::loaded_forms {
       record.write_formID_subrecord('HCLF', this->head.hair_color, true);
       record.write_formID_subrecord('ZNAM', this->stats.combat_style, true);
       record.write_formID_subrecord('GNAM', this->gift_filter, true);
-      //
-      // A NAM5 subrecord, empty or with dummy bytes, can be found here, but the game doesn't 
-      // seem to load it.
-      //
+      {
+         //
+         // A NAM5 subrecord, empty or with dummy bytes, can be found here, but the game doesn't 
+         // seem to load it. The CK always serializes it as a two-byte value: 0x00FF.
+         //
+         uint16_t value = 0x00FF;
+
+         auto& NAM5 = record.open_next_subrecord('NAM5');
+         NAM5.write(value);
+         NAM5.close();
+      }
       {
          auto& NAM6 = record.open_next_subrecord('NAM6');
          NAM6.write(this->height);

@@ -95,4 +95,8 @@ class FormDialogActorBase :
       void _set_pc_level_mult(bool);
       void _set_race(dovah::form_stub*);
       void _set_sex(dovah::sex);
+
+      // Overwrite UI data regarding HeadParts with data from the loaded form.
+      // Should generally only be used on initial load and when template flags change.
+      void _pull_headparts_to_ui();
 };

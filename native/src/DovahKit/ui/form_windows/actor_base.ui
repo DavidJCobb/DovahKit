@@ -2662,7 +2662,11 @@
             </widget>
            </item>
            <item>
-            <widget class="DKFormPicker" name="baseHeadPartPicker"/>
+            <widget class="DKFormPicker" name="baseHeadPartPicker">
+             <property name="overrideTextForNone">
+              <string>(use race and sex default)</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
