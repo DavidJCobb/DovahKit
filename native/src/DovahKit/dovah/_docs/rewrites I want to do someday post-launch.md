@@ -739,6 +739,7 @@ One thing I'd really like to do is do a better job of separating out all the mac
 Miscellaneous:
 
 * `form_creation_request::commit` and friends should return a `form_stub&`, so callers don't have to check whether the request succeeded even when it doesn't throw an exception.
+* Improve `base_form_load_warning`: it should probably be possible to specify an alias ID when warnings occur while loading a quest alias.
 
 ## Change `dovah::notices::base_error` and its subclasses into exceptions and throw them directly, instead of wrapping them
 
