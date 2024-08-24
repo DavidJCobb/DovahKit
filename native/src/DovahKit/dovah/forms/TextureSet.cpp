@@ -132,7 +132,7 @@ namespace dovah::loaded_forms {
    }
    void TextureSet::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
-      if (!this->bounds.is_zero()) {
+      {  // xEdit considers it an error if OBND is not present here (`wbOBNDReq` in its definitions)
          auto& OBND = record.open_next_subrecord('OBND');
          this->bounds.save(OBND, intfc);
          OBND.close();
@@ -154,15 +154,15 @@ namespace dovah::loaded_forms {
       if (!this->textures.backlight.empty())
          record.write_string_subrecord('TX07', this->textures.backlight);
       //
-      auto& DNAM = record.open_next_subrecord('DNAM');
-      DNAM.write(this->texture_flags);
-      DNAM.close();
-      //
       if (auto* data = this->decal_data) {
          auto& DODT = record.open_next_subrecord('DODT');
          data->save(DODT, intfc);
          DODT.close();
       }
+      //
+      auto& DNAM = record.open_next_subrecord('DNAM');
+      DNAM.write(this->texture_flags);
+      DNAM.close();
    }
    void TextureSet::_clear_impl() noexcept {
       this->textures.diffuse.clear();

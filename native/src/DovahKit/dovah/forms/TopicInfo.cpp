@@ -297,15 +297,16 @@ namespace dovah::loaded_forms {
       //
       bool move_to_next_legacy_script = true;
       //
-      form_id_t formID;
-      form_id_t sharedinfo;
-      form_id_t speaker;
-      form_id_t walk_away_topic;
-      form_id_t audio_output_override;
+      form_id_t formID = {};
+      form_id_t sharedinfo = {};
+      form_id_t speaker = {};
+      form_id_t walk_away_topic = {};
+      form_id_t audio_output_override = {};
       bool      seen_any_response_header = false;
-      form_id_t response_idle_for_listener;
-      form_id_t response_idle_for_speaker;
-      form_id_t legacy_script_quest;
+      form_id_t response_idle_for_listener = {};
+      form_id_t response_idle_for_speaker = {};
+      form_id_t legacy_script_quest = {};
+      form_id_t unknown_topic = {}; // TPIC
       //
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
@@ -336,6 +337,9 @@ namespace dovah::loaded_forms {
             case 'ENAM': // metadata (new)
             case 'CNAM': // favor level
             case 'RNAM': // override topic text
+               break;
+            case 'TPIC':
+               subrecord.read(unknown_topic);
                break;
             //
             // Response data only loads for the winning record:
@@ -403,6 +407,7 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(audio_output_override);
       uib.add_outbound_reference(response_idle_for_listener); // add these from the last response
       uib.add_outbound_reference(response_idle_for_speaker);
+      uib.add_outbound_reference(unknown_topic);
    }
    /*virtual*/ void TopicInfo::_clone_impl(Form* out) const noexcept {
       assert(out->type == form_type);
@@ -464,6 +469,7 @@ namespace dovah::loaded_forms {
          ENAM.write(time);
          ENAM.close();
       }
+      record.write_formID_subrecord('TPIC', this->topic, true);
       if (const auto* prev = intfc.get_previous_child()) {
          record.write_formID_subrecord('PNAM', prev, true);
       }

@@ -12,9 +12,11 @@ namespace {
 
 namespace {
    //
-   // xEdit discards this data when saving, since it should only appear in masters.
+   // xEdit discards this data when saving, since it should only appear in masters. 
+   // However, if we load it, then we either need to save it or need to clear it at 
+   // save time.
    //
-   inline constexpr bool KEEP_WORLDSPACE_LARGE_REFERENCES = false;
+   inline constexpr bool KEEP_WORLDSPACE_LARGE_REFERENCES = true;
 }
 
 namespace dovah::loaded_forms {
@@ -412,7 +414,7 @@ namespace dovah::loaded_forms {
       }
       //
       bool is_fixed_dimensions = this->world_flags & world_flag::fixed_dimensions;
-      if (KEEP_WORLDSPACE_LARGE_REFERENCES) {
+      if constexpr (KEEP_WORLDSPACE_LARGE_REFERENCES) {
          for (auto& entry : this->large_references.entries) {
             auto& subrecord = record.open_next_subrecord('RNAM');
             subrecord.write(entry.y);
@@ -424,6 +426,11 @@ namespace dovah::loaded_forms {
             }
             subrecord.close();
          }
+      } else {
+         for (auto& item : this->large_references.entries)
+            for (auto& ref : item.refs)
+               ref.form.set(*this, nullptr);
+         this->large_references.entries.clear();
       }
       if (this->max_height_data.present) { // under what conditions is this generated?
          auto& MHDT = record.open_next_subrecord('MHDT');
@@ -449,32 +456,32 @@ namespace dovah::loaded_forms {
          WCTR.write(this->center_cell_coordinates.y);
          WCTR.close();
       }
-      if (this->lighting_template)
-         record.write_formID_subrecord('LTMP', this->lighting_template);
-      if (this->encounter_zone)
-         record.write_formID_subrecord('XEZN', this->encounter_zone);
-      if (this->location)
-         record.write_formID_subrecord('XLCN', this->location);
+      record.write_formID_subrecord('LTMP', this->lighting_template, true);
+      record.write_formID_subrecord('XEZN', this->encounter_zone, true);
+      record.write_formID_subrecord('XLCN', this->location, true);
       if (this->parent.form) {
-         record.write_formID_subrecord('WNAM', this->parent.form);
+         record.write_formID_subrecord('WNAM', this->parent.form, true);
          auto& PNAM = record.open_next_subrecord('PNAM');
          PNAM.write(this->parent.flags);
          PNAM.close();
       }
       if (!this->parent.form || !(this->parent.flags & parent_flag::use_parent_climate)) {
-         if (this->climate)
-            record.write_formID_subrecord('CNAM', this->climate);
+         record.write_formID_subrecord('CNAM', this->climate, true);
+      } else {
+         this->climate.set(*this, nullptr);
       }
       if (!this->parent.form || !(this->parent.flags & parent_flag::use_parent_water)) {
-         if (this->water_type)
-            record.write_formID_subrecord('NAM2', this->water_type);
+         record.write_formID_subrecord('NAM2', this->water_type, true);
+      } else {
+         this->water_type.set(*this, nullptr);
       }
       if (!this->parent.form || !(this->parent.flags & parent_flag::use_parent_lod)) {
-         if (this->water_type_lod)
-            record.write_formID_subrecord('NAM3', this->water_type_lod);
+         record.write_formID_subrecord('NAM3', this->water_type_lod, true);
          auto& NAM4 = record.open_next_subrecord('NAM4');
          NAM4.write(this->lod_water_height);
          NAM4.close();
+      } else {
+         this->water_type_lod.set(*this, nullptr);
       }
       if (!this->parent.form || !(this->parent.flags & parent_flag::use_parent_land)) {
          auto& DNAM = record.open_next_subrecord('DNAM');

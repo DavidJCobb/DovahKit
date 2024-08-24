@@ -161,9 +161,7 @@ namespace dovah::loaded_forms {
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);
       FULL.close();
-      auto& MDOB = record.open_next_subrecord('MDOB');
-      MDOB.write(this->menu_display_object);
-      MDOB.close();
+      record.write_formID_subrecord('MDOB', this->menu_display_object, true);
       record.write_formID_subrecord('ETYP', this->equip_type, true);
       auto& DESC = record.open_next_subrecord('DESC');
       DESC.write(this->description);

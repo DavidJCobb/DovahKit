@@ -79,7 +79,7 @@ namespace dovah::loaded_forms {
          std::string name;
          flags_t     flags = 0;
          uint32_t    hidden_flags = 0; // BNAM sets flag 0x01, ONAM sets flag 0x02
-         alias_id_t  force_into_alias_id  = none_id; // same sentinel value used by the game
+         alias_id_t  force_into_alias_id  = none_id;
          //
          fill_type_t fill_type = fill_type_t::none;
          struct {
@@ -87,7 +87,7 @@ namespace dovah::loaded_forms {
             alias_id_t       alias = none_id; // ALEA, ALFA
          } fill_from_alias;
          struct {
-            story_event_code_t code   = story_event_code::undefined; // ALFE // same sentinel value used by the game
+            story_event_code_t code   = story_event_code::undefined; // ALFE
             uint32_t           member = 0; // ALFD
          } fill_from_event;
          //

@@ -133,6 +133,7 @@ namespace dovah::loaded_forms {
       copy->script_data.clone_from(this->script_data, *copy);
    }
    /*virtual*/ void Topic::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
+      this->script_data.save(record, intfc);
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->text);
       FULL.close();
@@ -156,8 +157,6 @@ namespace dovah::loaded_forms {
          count = addenda->ordered_children.size();
       TIFC.write(count);
       TIFC.close();
-      //
-      this->script_data.save(record, intfc);
    }
    /*virtual*/ void Topic::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->owning_forms.branch.clear_if(*this, other);

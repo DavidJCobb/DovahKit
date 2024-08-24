@@ -254,6 +254,7 @@ namespace dovah::loaded_forms {
       copy->script_data.clone_from(this->script_data, *copy);
    }
    void Faction::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);
       FULL.close();
@@ -309,10 +310,8 @@ namespace dovah::loaded_forms {
             record.write_string_subrecord('INAM', r.insignia);
          }
       }
-      if (this->vendor_list)
-         record.write_formID_subrecord('VEND', this->vendor_list);
-      if (this->vendor_chest)
-         record.write_formID_subrecord('VENC', this->vendor_chest);
+      record.write_formID_subrecord('VEND', this->vendor_list,  true);
+      record.write_formID_subrecord('VENC', this->vendor_chest, true);
       auto& VENV = record.open_next_subrecord('VENV');
       VENV.write(this->vendor_data.start_hour);
       VENV.write(this->vendor_data.end_hour);
@@ -330,7 +329,6 @@ namespace dovah::loaded_forms {
       CITC.close();
       for (auto& condition : this->vendor_conditions)
          condition.save(record, intfc);
-      this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
    }
    void Faction::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);

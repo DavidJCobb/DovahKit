@@ -174,6 +174,7 @@ namespace dovah::loaded_forms {
          this->destruction_data.value().save(record, intfc);
       record.write_formID_subrecord('YNAM', this->take_sound, true);
       record.write_formID_subrecord('ZNAM', this->drop_sound, true);
+      this->keywords.save(record, intfc);
       auto& DATA = record.open_next_subrecord('DATA');
       DATA.write(this->value);
       DATA.write(this->weight);

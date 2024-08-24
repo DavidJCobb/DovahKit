@@ -375,6 +375,10 @@ namespace dovah::loaded_forms {
             break;
          case fill_type_t::other_alias_in_same_quest:
             {
+               auto& ALFA = record.open_next_subrecord('ALFA');
+               ALFA.write(this->fill_from_alias.alias);
+               ALFA.close();
+               fully_handled = false; // next subrecord is written by the specific alias type
             }
             break;
          case fill_type_t::from_event:
@@ -478,11 +482,11 @@ namespace dovah::loaded_forms {
       record.write_formID_subrecord('ECOR', this->package_override_lists.combat, true);
       record.write_formID_subrecord('ALDN', this->display_name, true);
       for (auto& id : this->spells)
-         record.write_formID_subrecord('ALSP', id);
+         record.write_formID_subrecord('ALSP', id, true);
       for (auto& id : this->factions)
-         record.write_formID_subrecord('ALFC', id);
+         record.write_formID_subrecord('ALFC', id, true);
       for (auto& id : this->packages)
-         record.write_formID_subrecord('ALPC', id);
+         record.write_formID_subrecord('ALPC', id, true);
       record.write_formID_subrecord('VTCK', this->additional_voicetype, true);
       //
       if (this->hidden_flags & 4)

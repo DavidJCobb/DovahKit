@@ -24,12 +24,12 @@ void FormDialogFlora::_load_impl() {
    this->ui.name->setText(editor.convert_localized_string(working.name));
    this->ui.model->initializeFrom(working.model);
    this->ui.destructionData->initializeFrom(working.destruction_data);
-   ui::bind(this->ui.ingredient,   working.ingredient,    working);
-   ui::bind(this->ui.harvestSound, working.harvest_sound, working);
-   ui::bind(this->ui.chanceSpring, working.chance_by_season.spring);
-   ui::bind(this->ui.chanceFall,   working.chance_by_season.autumn);
-   ui::bind(this->ui.chanceSummer, working.chance_by_season.summer);
-   ui::bind(this->ui.chanceWinter, working.chance_by_season.winter);
+   ui::bind(this->ui.ingredient,   working.harvestable.ingredient,    working);
+   ui::bind(this->ui.harvestSound, working.harvestable.harvest_sound, working);
+   ui::bind(this->ui.chanceSpring, working.harvestable.chance_by_season.spring);
+   ui::bind(this->ui.chanceFall,   working.harvestable.chance_by_season.autumn);
+   ui::bind(this->ui.chanceSummer, working.harvestable.chance_by_season.summer);
+   ui::bind(this->ui.chanceWinter, working.harvestable.chance_by_season.winter);
    //
    this->ui.activateTextOverride->setText(editor.convert_localized_string(working.activation_verb));
 

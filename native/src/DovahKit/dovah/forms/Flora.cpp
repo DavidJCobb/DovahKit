@@ -66,19 +66,10 @@ namespace dovah::loaded_forms {
                break;
             #pragma endregion
             #pragma region FLOR subrecords
-            case 'PFIG':
-               subrecord.read(this->ingredient);
-               intfc.warn_if_ref_is_wrong_type(this->ingredient, std::array{ form_type::ingredient, form_type::leveled_item }, subrecord.signature());
-               break;
-            case 'PFPC':
-               subrecord.read(this->chance_by_season.spring);
-               subrecord.read(this->chance_by_season.summer);
-               subrecord.read(this->chance_by_season.autumn);
-               subrecord.read(this->chance_by_season.winter);
-               break;
-            case 'SNAM':
-               subrecord.read(this->harvest_sound);
-               intfc.warn_if_ref_is_wrong_type(this->harvest_sound, form_type::sound_descriptor, subrecord.signature());
+            case components::harvestable::subrecord_signature_ingredient:
+            case components::harvestable::subrecord_signature_sound:
+            case components::harvestable::subrecord_signature_percentages:
+               this->harvestable.load(record, intfc);
                break;
             #pragma endregion
             default:
@@ -100,6 +91,7 @@ namespace dovah::loaded_forms {
       form_id_t harvest_sound;    // FLOR/SNAM
       form_id_t ingredient;       // FLOR/PFIG
       components::destruction_stage_data::use_info_builder destruction_uib(uib);
+      components::harvestable::use_info_state harvestable_uis;
 
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
@@ -129,8 +121,8 @@ namespace dovah::loaded_forms {
             case 'DSTF': // destruction stage end marker
                components::destruction_stage_data::generate_use_info(subrecord, destruction_uib);
                break;
-            case 'KSIZ':
-            case 'KWDA':
+            case components::keyword_list::subrecord_signature_count:
+            case components::keyword_list::subrecord_signature_array:
                components::keyword_list::generate_use_info(subrecord, uib);
                break;
             case 'OBND': // bounds
@@ -144,13 +136,10 @@ namespace dovah::loaded_forms {
                break;
             #pragma endregion
             #pragma region FLOR subrecords
-            case 'PFIG':
-               subrecord.read(ingredient);
-               break;
-            case 'SNAM':
-               subrecord.read(harvest_sound);
-               break;
-            case 'PFPC':
+            case components::harvestable::subrecord_signature_ingredient:
+            case components::harvestable::subrecord_signature_sound:
+            case components::harvestable::subrecord_signature_percentages:
+               harvestable_uis.read(record);
                break;
             #pragma endregion
          }
@@ -161,6 +150,7 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(harvest_sound);    // FLOR/SNAM
       uib.add_outbound_reference(ingredient);       // FLOR/PFIG
       destruction_uib.done();
+      harvestable_uis.commit(uib);
    }
    void Flora::_clone_impl(Form* out) const noexcept {
       assert(out->type == form_type);
@@ -192,9 +182,7 @@ namespace dovah::loaded_forms {
          copy->activator_flags = this->activator_flags;
       #pragma endregion
       #pragma region FLOR fields
-         copy->harvest_sound.set(*copy, this->harvest_sound);
-         copy->ingredient.set(*copy, this->ingredient);
-         copy->chance_by_season = this->chance_by_season;
+         copy->harvestable.clone_from(this->harvestable, *copy);
       #pragma endregion
    }
    void Flora::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
@@ -202,22 +190,35 @@ namespace dovah::loaded_forms {
       auto& OBND = record.open_next_subrecord('OBND');
       this->bounds.save(OBND, intfc);
       OBND.close();
-      auto& FULL = record.open_next_subrecord('FULL');
-      FULL.write(this->name);
-      FULL.close();
-      this->model.save(record, intfc, 'MODL', 'MODT', 'MODS');
-      if (this->destruction_data.has_value())
-         this->destruction_data.value().save(record, intfc);
-      this->keywords.save(record, intfc);
-      record.write_formID_subrecord('SNAM', this->harvest_sound, true);
-      record.write_formID_subrecord('VNAM', this->activation_sound, true);
-      record.write_formID_subrecord('WNAM', this->water_type, true);
-      if (!this->activation_verb.empty()) {
-         auto& RNAM = record.open_next_subrecord('RNAM');
-         RNAM.write(this->activation_verb);
-         RNAM.close();
+      {  // Fields inherited from ACTI
+         auto& FULL = record.open_next_subrecord('FULL');
+         FULL.write(this->name);
+         FULL.close();
+         this->model.save(record, intfc, 'MODL', 'MODT', 'MODS');
+         if (this->destruction_data.has_value())
+            this->destruction_data.value().save(record, intfc);
+         this->keywords.save(record, intfc);
+         auto& PNAM = record.open_next_subrecord('PNAM');
+         this->marker_color.save(PNAM);
+         PNAM.close();
+         //
+         // ACTI/SNAM would serialize here, except it's impossible for ACTI/SNAM to ever load 
+         // because it's shadowed by the SNAM in the TESProduceForm component; ergo there's 
+         // nothing to actually save.
+         //
+         record.write_formID_subrecord('VNAM', this->activation_sound, true);
+         record.write_formID_subrecord('WNAM', this->water_type, true);
+         if (!this->activation_verb.empty()) {
+            auto& RNAM = record.open_next_subrecord('RNAM');
+            RNAM.write(this->activation_verb);
+            RNAM.close();
+         }
+         auto& FNAM = record.open_next_subrecord('FNAM');
+         FNAM.write(this->activator_flags);
+         FNAM.close();
+         record.write_formID_subrecord('KNAM', this->interact_keyword, true);
       }
-      record.write_formID_subrecord('KNAM', this->interact_keyword, true);
+      this->harvestable.save(record, intfc);
    }
    void Flora::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);

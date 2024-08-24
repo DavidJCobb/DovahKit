@@ -107,7 +107,7 @@ namespace dovah::loaded_forms {
          favor_level_t favor_level = favor_level_t::none; // CNAM
          float         days_until_reset = 0.0F; // NOTE: maximum is 1.0F; CK presents it as hours
          form_reference_t speaker; // ANAM
-         form_reference_t topic; // TPIC // unknown
+         form_reference_t topic; // TPIC // unknown. loaded by the CK but not the game
          form_reference_t walk_away_topic; // TWAT (yes, really)
          form_reference_t use_shared_info; // DNAM // a SharedInfo to borrow response data from
          form_reference_t audio_override_output; // ONAM

@@ -1022,7 +1022,7 @@ namespace dovah::loaded_forms {
          DNAM.close();
       }
       for (const auto& entry : this->facegen.head_parts) {
-         record.write_formID_subrecord('PNAM', entry);
+         record.write_formID_subrecord('PNAM', entry, true);
       }
       record.write_formID_subrecord('HCLF', this->facegen.hair_color, true);
       record.write_formID_subrecord('ZNAM', this->stats.combat_style, true);

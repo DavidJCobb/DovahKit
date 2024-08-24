@@ -106,8 +106,12 @@ namespace dovah::loaded_forms {
                subrecord.read(this->water.noise_texture);
                break;
             case 'OBND':
-               this->has_object_bounds = true;
-               this->object_bounds.load(subrecord, intfc);
+               //
+               // The loader checks for this and passes it to a virtual function on TESForm 
+               // that's responsible for loading it. However, this form doesn't derive from 
+               // TESBoundObject, so the TESForm implementation of that virtual function (a 
+               // no-op) isn't overridden and therefore the data is not retained in memory.
+               //
                break;
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
@@ -198,8 +202,6 @@ namespace dovah::loaded_forms {
       copy->exterior.max_height_data = this->exterior.max_height_data;
       copy->water.height = this->water.height;
       copy->water.noise_texture = this->water.noise_texture;
-      copy->has_object_bounds = this->has_object_bounds;
-      copy->object_bounds = this->object_bounds;
       copy->script_data.clone_from(this->script_data, *copy);
    }
    void Cell::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
@@ -208,6 +210,7 @@ namespace dovah::loaded_forms {
       //
       bool is_exterior = this->stub.is_exterior_cell();
       //
+      this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);
       FULL.close();
@@ -244,7 +247,7 @@ namespace dovah::loaded_forms {
                MHDT.write(col);
          MHDT.close();
       }
-      record.write_formID_subrecord('LTMP', this->interior.lighting_template);
+      record.write_formID_subrecord('LTMP', this->interior.lighting_template, true);
       auto& XCLW = record.open_next_subrecord('XCLW');
       XCLW.write(this->water.height);
       XCLW.close();
@@ -253,13 +256,6 @@ namespace dovah::loaded_forms {
       XNAM.close();
       //
       this->extra_data.save(record, intfc);
-      //
-      if (this->has_object_bounds) {
-         auto& subrecord = record.open_next_subrecord('OBND');
-         this->object_bounds.save(subrecord, intfc);
-         subrecord.close();
-      }
-      this->script_data.save(record, intfc); // VMAD (won't write anything if no scripts are attached)
    }
    void Cell::_clear_impl() noexcept {
       this->name.reset();
@@ -271,8 +267,6 @@ namespace dovah::loaded_forms {
       this->exterior.occlusion_data.clear();
       this->water.height = 0.0F;
       this->water.noise_texture.clear();
-      this->has_object_bounds = false;
-      this->object_bounds.clear();
       this->script_data.clear(*this);
    }
    void Cell::_sever_outbound_references_impl(form_stub& other) noexcept {

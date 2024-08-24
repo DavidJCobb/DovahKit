@@ -49,7 +49,7 @@ namespace dovah::loaded_forms {
          std::optional<components::destruction_stage_data> destruction_data; // DEST
          components::keyword_list keywords; // KSIZ, KWDA
          localized_string  name;                // FULL
-         color_t           marker_color;        // CNAM
+         color_t           marker_color;        // PNAM
          form_reference_t  looping_sound;       // SNAM; form type is SNDR
          form_reference_t  activation_sound;    // VNAM
          water_acti_type_reference_t water_type;          // WNAM

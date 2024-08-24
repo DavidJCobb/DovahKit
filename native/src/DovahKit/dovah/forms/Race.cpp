@@ -1395,7 +1395,7 @@ namespace dovah::loaded_forms {
                if (!list.empty()) {
                   auto signature = (s == sex::male) ? 'RPRM' : 'RPRF';
                   for (auto& item : list)
-                     record.write_formID_subrecord(signature, item);
+                     record.write_formID_subrecord(signature, item, true);
                }
             }
             {
@@ -1403,7 +1403,15 @@ namespace dovah::loaded_forms {
                if (!list.empty()) {
                   auto signature = (s == sex::male) ? 'ACHM' : 'ACHF';
                   for (auto& item : list)
-                     record.write_formID_subrecord(signature, item);
+                     record.write_formID_subrecord(signature, item, true);
+               }
+            }
+            {
+               auto& list = head.face_textures;
+               if (!list.empty()) {
+                  auto signature = (s == sex::male) ? 'FTSM' : 'FTSF';
+                  for (auto& item : list)
+                     record.write_formID_subrecord(signature, item, true);
                }
             }
             //

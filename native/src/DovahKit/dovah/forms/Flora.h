@@ -6,6 +6,7 @@
 #include "components/bounds.h"
 #include "components/destruction.h"
 #include "components/keyword_list.h"
+#include "components/harvestable.h"
 #include "components/model.h"
 #include "components/papyrus.h"
 #include "structs/color_dword.h"
@@ -31,29 +32,19 @@ namespace dovah::loaded_forms {
          //    a different subrecord, and so FLOR never defers to the ACTI subrecord handler for SNAM. As 
          //    such, ACTI/SNAM is omitted here.
          //
-         components::papyrus_attachment_data script_data; // VMAD
-         components::object_bounds bounds; // OBND
+         components::papyrus_attachment_data script_data;
+         components::object_bounds bounds;
          components::model_ts model; // MODL, MODT, MODS
-         std::optional<components::destruction_stage_data> destruction_data; // DEST
-         components::keyword_list keywords; // KSIZ, KWDA
+         std::optional<components::destruction_stage_data> destruction_data;
+         components::keyword_list keywords;
+         components::harvestable  harvestable; // NOTE: SNAM here shadows ACTI/SNAM, so that superclass field will never load
          localized_string  name;                // FULL
-         color_t           marker_color;        // CNAM
+         color_t           marker_color;        // PNAM
          form_reference_t  activation_sound;    // VNAM
          form_reference_t  water_type;          // WNAM
          form_reference_t  interact_keyword;    // KNAM
          localized_string  activation_verb;     // RNAM
          activator_flags_t activator_flags = 0; // FNAM
-         //
-         // Unique fields:
-         //
-         form_reference_t ingredient;    // PFIG
-         form_reference_t harvest_sound; // SNAM; form type SNDR // shadows ACTI/SNAM, so that superclass field will never load
-         struct {
-            uint8_t spring = 100;
-            uint8_t summer = 100;
-            uint8_t autumn = 100;
-            uint8_t winter = 100;
-         } chance_by_season;
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
