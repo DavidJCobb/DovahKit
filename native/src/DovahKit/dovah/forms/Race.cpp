@@ -156,6 +156,8 @@ namespace dovah::loaded_forms {
                   subrecord.read(this->stats.unarmed.reach);
                   subrecord.read(this->biped_object_info.body);
                   subrecord.read(this->stats.aim_angle_tolerance);
+                  subrecord.read(this->movement.flight_radius);
+                  subrecord.read(this->movement.angular_acceleration_rate);
                   subrecord.read(this->movement.angular_tolerance);
                   subrecord.read(this->alt_flags);
                   if (record.version() >= 43) {
@@ -1218,6 +1220,8 @@ namespace dovah::loaded_forms {
          DATA.write(this->stats.unarmed.reach);
          DATA.write(this->biped_object_info.body);
          DATA.write(this->stats.aim_angle_tolerance);
+         DATA.write(this->movement.flight_radius);
+         DATA.write(this->movement.angular_acceleration_rate);
          DATA.write(this->movement.angular_tolerance);
          DATA.write(this->alt_flags);
          if (record.version() >= 43) {

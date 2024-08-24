@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogRace</class>
  <widget class="QDialog" name="FormDialogRace">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1020</width>
+    <height>898</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Race</string>
   </property>
@@ -67,7 +75,7 @@
    <item row="1" column="0">
     <widget class="QTabWidget" name="tabbox">
      <property name="currentIndex">
-      <number>0</number>
+      <number>8</number>
      </property>
      <widget class="QWidget" name="tabGeneral">
       <attribute name="title">
@@ -93,7 +101,7 @@
           <item row="1" column="1">
            <widget class="QCheckBox" name="flagChild">
             <property name="whatsThis">
-             <string>Races that are flagged as &quot;Child&quot; races will have hardcoded behaviors suitable for child characters, such as limitations on what activators can use (for the sake of age-appropriate animations) and an inability to die (for the sake of the developers' restraint in storytelling).</string>
+             <string>Races that are flagged as &quot;Child&quot; races will have hardcoded behaviors suitable for child characters, such as limitations on what activators they can use (for the sake of age-appropriate animations) and an inability to die (for the sake of the developers' restraint in storytelling).</string>
             </property>
             <property name="text">
              <string>Child</string>
@@ -1171,19 +1179,6 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="1" colspan="2">
-            <widget class="QDoubleSpinBox" name="heightMultF">
-             <property name="whatsThis">
-              <string>This value nominally scales the height for actors of this race and sex. In reality, it scales their entire size.</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="value">
-              <double>1.000000000000000</double>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="0">
             <widget class="QLabel" name="label_24">
              <property name="text">
@@ -1197,7 +1192,7 @@
            <item row="3" column="0">
             <widget class="QLabel" name="label_25">
              <property name="text">
-              <string>Body Texture:</string>
+              <string>Unused Body Tex.:</string>
              </property>
              <property name="buddy">
               <cstring>bodyTextureF</cstring>
@@ -1260,6 +1255,19 @@
             <widget class="DKFormNIFPicker" name="behaviorGraphF">
              <property name="whatsThis">
               <string>Specify a Havok behavior graph (*.hkx) file for actors of this race and sex. Behavior graphs contain animation definitions, allowing animations to accept parameters that vary at run-time and emit events that the game engine can react to. Race behavior graphs are sex-differentiated because per-sex behavior graphs can include or override animations in general behavior graph files, e.g. to provide male and female actors with different walk cycles.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1" colspan="2">
+            <widget class="QDoubleSpinBox" name="heightMultF">
+             <property name="whatsThis">
+              <string>This value nominally scales the height for actors of this race and sex. In reality, it scales their entire size.</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="value">
+              <double>1.000000000000000</double>
              </property>
             </widget>
            </item>
@@ -1377,7 +1385,7 @@
            <item row="3" column="0">
             <widget class="QLabel" name="label_47">
              <property name="text">
-              <string>Body Texture:</string>
+              <string>Unused Body Tex.:</string>
              </property>
              <property name="buddy">
               <cstring>bodyTextureM</cstring>
@@ -1460,7 +1468,11 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="DKFormPicker" name="impactMaterialType"/>
+           <widget class="DKFormPicker" name="impactMaterialType">
+            <property name="whatsThis">
+             <string>&lt;p&gt;The impact material type chosen here will influence the sound that is made when actors of this race are hit. It should correspond to what physical material the actor's surface is made of (e.g. skin, fur, metal).&lt;/p&gt;</string>
+            </property>
+           </widget>
           </item>
           <item row="2" column="3">
            <widget class="QCheckBox" name="flagWeaponBlood">
@@ -1627,7 +1639,11 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="name"/>
+        <widget class="QLineEdit" name="name">
+         <property name="whatsThis">
+          <string>The name of this race, as displayed in the character customization UI.</string>
+         </property>
+        </widget>
        </item>
        <item row="3" column="0" colspan="2">
         <spacer name="verticalSpacer_4">
@@ -2421,7 +2437,7 @@
               </widget>
              </item>
              <item>
-              <widget class="DKFormListPane" name="extraHeadPartsF">
+              <widget class="QTableView" name="extraHeadPartsF">
                <property name="whatsThis">
                 <string>Here, you can list HeadParts from the &quot;Misc&quot; category for actors of this race and sex to use by default. For example, Mouth HeadParts are used to define the inside of characters' mouths, and would go in this list.</string>
                </property>
@@ -2508,75 +2524,6 @@
            <string>Male</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_37">
-           <item row="0" column="0" rowspan="2">
-            <layout class="QVBoxLayout" name="layoutHeadPartsM">
-             <item>
-              <widget class="QLabel" name="label_84">
-               <property name="text">
-                <string>Base Head Parts:</string>
-               </property>
-               <property name="buddy">
-                <cstring>baseHeadPartsM</cstring>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QTableView" name="baseHeadPartsM">
-               <property name="whatsThis">
-                <string>Here, you can select one default HeadPart each for this race and sex's head, eyes, hair, facial hair, and eyebrows. If any of these areas are inapplicable to your race (e.g. Argonians having no customizable hair, or the various Vampire races only specifying HeadParts for those areas they wish to override), you can leave them blank.</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="DKFormPicker" name="baseHeadPartPickerM"/>
-             </item>
-             <item>
-              <widget class="Line" name="line_3">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="label_85">
-               <property name="text">
-                <string>Additional Head Parts:</string>
-               </property>
-               <property name="buddy">
-                <cstring>extraHeadPartsM</cstring>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="DKFormListPane" name="extraHeadPartsM">
-               <property name="whatsThis">
-                <string>Here, you can list HeadParts from the &quot;Misc&quot; category for actors of this race and sex to use by default. For example, Mouth HeadParts are used to define the inside of characters' mouths, and would go in this list.</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="0" column="1" rowspan="2">
-            <layout class="QVBoxLayout" name="layoutMorphsM">
-             <item>
-              <widget class="QLabel" name="label_86">
-               <property name="text">
-                <string>Available Morphs:</string>
-               </property>
-               <property name="buddy">
-                <cstring>availableMorphsM</cstring>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QTableView" name="availableMorphsM">
-               <property name="whatsThis">
-                <string>Enable or disable face morphs defined in the *.tri files for HeadParts associated with this race and sex.</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
            <item row="0" column="2">
             <layout class="QVBoxLayout" name="verticalLayout_7">
              <item>
@@ -2625,6 +2572,75 @@
                 </size>
                </property>
               </spacer>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="0" rowspan="2">
+            <layout class="QVBoxLayout" name="layoutHeadPartsM">
+             <item>
+              <widget class="QLabel" name="label_84">
+               <property name="text">
+                <string>Base Head Parts:</string>
+               </property>
+               <property name="buddy">
+                <cstring>baseHeadPartsM</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTableView" name="baseHeadPartsM">
+               <property name="whatsThis">
+                <string>Here, you can select one default HeadPart each for this race and sex's head, eyes, hair, facial hair, and eyebrows. If any of these areas are inapplicable to your race (e.g. Argonians having no customizable hair, or the various Vampire races only specifying HeadParts for those areas they wish to override), you can leave them blank.</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="DKFormPicker" name="baseHeadPartPickerM"/>
+             </item>
+             <item>
+              <widget class="Line" name="line_3">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_85">
+               <property name="text">
+                <string>Additional Head Parts:</string>
+               </property>
+               <property name="buddy">
+                <cstring>extraHeadPartsM</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTableView" name="extraHeadPartsM">
+               <property name="whatsThis">
+                <string>Here, you can list HeadParts from the &quot;Misc&quot; category for actors of this race and sex to use by default. For example, Mouth HeadParts are used to define the inside of characters' mouths, and would go in this list.</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="1" rowspan="2">
+            <layout class="QVBoxLayout" name="layoutMorphsM">
+             <item>
+              <widget class="QLabel" name="label_86">
+               <property name="text">
+                <string>Available Morphs:</string>
+               </property>
+               <property name="buddy">
+                <cstring>availableMorphsM</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QTableView" name="availableMorphsM">
+               <property name="whatsThis">
+                <string>Enable or disable face morphs defined in the *.tri files for HeadParts associated with this race and sex.</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>

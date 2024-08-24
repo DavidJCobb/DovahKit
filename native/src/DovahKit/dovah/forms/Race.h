@@ -17,6 +17,7 @@
 #include "../data/face_fx/phonemes.h"
 #include "../data/face_tints.h"
 #include "../data/skills.h"
+#include "../utils/data_by_actor_attribute.h"
 #include "../utils/data_by_sex.h"
 
 namespace dovah::loaded_forms {
@@ -35,6 +36,8 @@ namespace dovah::loaded_forms {
 
          static constexpr const size_t max_biped_object_name_count  = 32;
          static constexpr const size_t max_biped_object_name_length = 0x103; // MAX_PATH - 1
+
+         using skill_boost_value_type = uint8_t;
 
          struct form_flag : public Form::form_flag {
             enum : uint32_t {
@@ -152,8 +155,8 @@ namespace dovah::loaded_forms {
          };
 
          struct skill_boost {
-            dovah::skill skill; // actor value enum
-            uint8_t      boost = 0;
+            dovah::skill           skill; // actor value enum
+            skill_boost_value_type boost = 0;
          };
 
          struct sex_data {
@@ -230,6 +233,8 @@ namespace dovah::loaded_forms {
             //
             float angular_acceleration_rate = 0; // DATA+0x74
             float angular_tolerance = 0; // DATA+0x78
+            //
+            float flight_radius;
 
             union {
                struct {
@@ -258,16 +263,8 @@ namespace dovah::loaded_forms {
          } phonemes;
          struct {
             float aim_angle_tolerance = 0; // DATA+0x6C
-            struct {
-               float health  = 0;
-               float magicka = 0;
-               float stamina = 0;
-            } attribute_base; // DATA+0x24
-            struct {
-               float health  = 0;
-               float magicka = 0;
-               float stamina = 0;
-            } attribute_regen; // DATA+0x54
+            data_by_actor_attribute<float> attribute_base;  // DATA+0x24
+            data_by_actor_attribute<float> attribute_regen; // DATA+0x54
             float base_carry_capacity = 0; // DATA+0x30
             float base_mass = 0; // DATA+0x34
             enum creature_size creature_size = creature_size::medium; // DATA+0x40

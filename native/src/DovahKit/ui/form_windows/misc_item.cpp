@@ -29,9 +29,7 @@ void FormDialogMiscItem::_load_impl() {
    ui::bind(this->ui.soundTake, working.take_sound, working);
    ui::bind(this->ui.soundDrop, working.drop_sound, working);
 
-   for (auto& ref : working.keywords.forms) {
-      this->ui.keywords->addStub(ref.get_form_stub());
-   }
+   this->ui.keywords->pullStubs(working.keywords.forms);
    this->ui.scriptListPane->setFormWorkingCopy(&working);
 }
 void FormDialogMiscItem::_save_impl() {
