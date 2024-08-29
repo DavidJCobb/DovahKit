@@ -13,6 +13,10 @@
 #include "./shared/FaceBaseHeadPartsModel.h"
 #include "./shared/FaceExtraHeadPartsModel.h"
 #include "./shared/HeadPartPickerFilter.h"
+#include "./race/RaceBaseMovementDefaultsModel.h"
+#include "./race/RaceBipedObjectSlotsModel.h"
+#include "./race/RaceEquipSlotsModel.h"
+#include "./race/RaceEquipTypesModel.h"
 
 FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
@@ -89,6 +93,9 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
       ui::set_range<float>(this->ui.mountCamOffsetY);
       ui::set_range<float>(this->ui.mountCamOffsetZ);
    #pragma endregion
+   #pragma region Keywords tab
+      this->ui.keywords->setAllowedFormTypes({ dovah::form_type::keyword });
+   #pragma endregion
    #pragma region Body tab
       ui::set_unsigned_range<float>(this->ui.mass);
       this->ui.bodyPartData->setAllowedFormType(dovah::form_type::body_part_data);
@@ -110,12 +117,43 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
       this->ui.voicetypeF->setAllowNone(false);
       this->ui.voicetypeM->setAllowNone(false);
 
-      static_assert(false, "TODO: Body Slot");
-      static_assert(false, "TODO: Hair Slot");
-      static_assert(false, "TODO: Head Slot");
-      static_assert(false, "TODO: Shield Slot");
-      static_assert(false, "TODO: Slot Names");
-      static_assert(false, "TODO: Visible in First Person");
+      this->_update_slot_dropdowns();
+      {  // Biped object slot table
+         auto* view  = this->ui.bipedSlotDefinitions;
+         auto* model = this->_models.biped_objects = new RaceBipedObjectSlotsModel(this);
+         view->setModel(model);
+         auto* sel_model = view->selectionModel();
+
+         ui::typical_tableview_config(view);
+         view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         ui::set_tableview_column_flex(view, [model](DKHeaderView& header, const QFontMetrics& metrics) {
+            auto col_header = model->headerData(RaceBipedObjectSlotsModel::Column::IsFirstPerson, Qt::Orientation::Horizontal, Qt::DisplayRole).toString();
+            header.setColumnFlex(RaceBipedObjectSlotsModel::Column::Name,          1, 0);
+            header.setColumnFlex(RaceBipedObjectSlotsModel::Column::IsFirstPerson, 0, 0, metrics.boundingRect(col_header).width() * 1.5F + 4);
+         });
+
+         auto* name_edit = this->ui.bipedObjectSlotNameEdit;
+         name_edit->setEnabled(false);
+         name_edit->setMaxLength(loaded_form_type::max_biped_object_name_length);
+         QObject::connect(view->selectionModel(), &QItemSelectionModel::selectionChanged, this, [this, model, name_edit](const QItemSelection& sel) {
+            const auto blocker = QSignalBlocker(name_edit);
+            if (sel.empty() || sel[0].isEmpty()) {
+               name_edit->setEnabled(false);
+               name_edit->setText("");
+               return;
+            }
+            auto qmi = QModelIndex(sel[0].topLeft()).siblingAtColumn(RaceBipedObjectSlotsModel::Column::Name);
+            name_edit->setEnabled(true);
+            name_edit->setText(model->data(qmi, Qt::DisplayRole).toString());
+         });
+         QObject::connect(name_edit, &QLineEdit::textChanged, this, [this, model, sel_model](QString text) {
+            auto sel = sel_model->selectedRows();
+            if (sel.empty())
+               return;
+            auto qmi = sel[0].siblingAtColumn(RaceBipedObjectSlotsModel::Column::Name);
+            model->setData(qmi, text, Qt::UserRole);
+         });
+      }
    #pragma endregion
    #pragma region Blood tab
       this->ui.impactMaterialType->setAllowedFormType(dovah::form_type::material_type);
@@ -130,7 +168,47 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
       //
    #pragma endregion
    #pragma region Movement Details tab
-      static_assert(false, "TODO");
+      ui::set_unsigned_range<float>(this->ui.accelerationRate);
+      ui::set_unsigned_range<float>(this->ui.decelerationRate);
+      ui::set_unsigned_range<float>(this->ui.angularAccelerationRate);
+      ui::set_unsigned_range<float>(this->ui.angularTolerance);
+      {  // Base Movement Defaults
+         auto* view  = this->ui.movementTypeList;
+         auto* model = this->_models.base_movement_types = new RaceBaseMovementDefaultsModel(this);
+         view->setModel(model);
+         auto* sel_model = view->selectionModel();
+         auto* picker    = this->ui.movementTypePicker;
+
+         picker->setAllowedFormType(dovah::form_type::movement_type);
+
+         ui::typical_tableview_config(view);
+         view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         ui::set_tableview_column_flex(view, [](DKHeaderView& header, const QFontMetrics& metrics) {
+            header.setColumnFlex(RaceBaseMovementDefaultsModel::Column::Type, 0, 0, metrics.boundingRect("   ").width() * 1.5F + 4);
+            header.setColumnFlex(RaceBaseMovementDefaultsModel::Column::Name, 1, 0, metrics.boundingRect("   ").width() * 1.5F + 4);
+         });
+         QObject::connect(view->selectionModel(), &QItemSelectionModel::selectionChanged, this, [this, model, picker](const QItemSelection& selection) {
+            if (selection.isEmpty() || selection[0].isEmpty()) {
+               picker->setEnabled(false);
+               return;
+            }
+            picker->setEnabled(true);
+
+            auto  qmi  = selection[0].topLeft();
+            auto* stub = model->form(qmi.row());
+
+            const auto blocker = QSignalBlocker(picker);
+            picker->setFormStub(stub);
+         });
+         QObject::connect(picker, &DKFormPicker::formChanged, this, [this, model, sel_model](dovah::form_stub* stub) {
+            auto sel = sel_model->selectedRows();
+            if (sel.isEmpty())
+               return;
+            model->setForm(sel[0].row(), stub);
+         });
+         picker->setEnabled(false);
+      }
+      static_assert(false, "TODO: Movement Data Overrides");
    #pragma endregion
    #pragma region Attack Data tab
       //
@@ -138,9 +216,29 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
       //
    #pragma endregion
    #pragma region Combat tab
-      static_assert(false, "TODO");
+      ui::set_unsigned_range<float>(this->ui.injuredHealthPercentage);
+      ui::set_unsigned_range<float>(this->ui.unarmedDamage);
+      ui::set_unsigned_range<float>(this->ui.unarmedReach);
       this->ui.unarmedEquipSlot->setAllowedFormType(dovah::form_type::equip_slot);
-      static_assert(false, "TODO: equipment restrictions");
+      ui::set_unsigned_range<float>(this->ui.aimAngleTolerance);
+      {
+         auto* view  = this->ui.equipSlots;
+         auto* model = this->_models.equip_slots = new RaceEquipSlotsModel(this);
+         view->setModel(model);
+
+         ui::typical_tableview_config(view);
+         view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         view->horizontalHeader()->setStretchLastSection(true);
+      }
+      {
+         auto* view  = this->ui.equipTypes;
+         auto* model = this->_models.equip_types = new RaceEquipTypesModel(this);
+         view->setModel(model);
+
+         ui::typical_tableview_config(view);
+         view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         view->horizontalHeader()->setStretchLastSection(true);
+      }
    #pragma endregion
    #pragma region Lip Synching tab
       static_assert(false, "TODO");
@@ -355,6 +453,9 @@ void FormDialogRace::_load_impl() {
       ui::bind(this->ui.mountCamOffsetZ, working.mount_data.camera_offset.z);
       ui::bind(this->ui.flagAllowMountedCombat, working.alt_flags, loaded_form_type::alt_flag::allow_mounted_combat);
    #pragma endregion
+   #pragma region Keywords tab
+      this->ui.keywords->pullStubs(working.keywords.forms);
+   #pragma endregion
    #pragma region Body tab
       ui::bind(this->ui.mass, working.stats.base_mass);
       ui::bind(this->ui.bodyPartData, working.body_part_data, working);
@@ -381,12 +482,30 @@ void FormDialogRace::_load_impl() {
          ui::bind(this->ui.voicetypeM, dst.voicetype, working);
       }
 
-      static_assert(false, "TODO: Body Slot");
-      static_assert(false, "TODO: Hair Slot");
-      static_assert(false, "TODO: Head Slot");
-      static_assert(false, "TODO: Shield Slot");
-      static_assert(false, "TODO: Slot Names");
-      static_assert(false, "TODO: Visible in First Person");
+      {  // Biped objects
+         this->_models.biped_objects->initializeFrom(working, working.biped_object);
+         this->_update_slot_dropdowns();
+         auto _set_up_slot_picker = [this](QComboBox* widget, int32_t& dst) {
+            {
+               int i = widget->findData(dst);
+               if (i >= 0)
+                  widget->setCurrentIndex(i);
+               else
+                  widget->setCurrentIndex(widget->findData(-1));
+            }
+            QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [widget, &dst]() {
+               auto data = widget->currentData();
+               if (data.isValid())
+                  dst = data.toInt();
+               else
+                  dst = -1;
+            });
+         };
+         _set_up_slot_picker(this->ui.bipedSlotBody,   working.biped_object_info.body);
+         _set_up_slot_picker(this->ui.bipedSlotHair,   working.biped_object_info.hair);
+         _set_up_slot_picker(this->ui.bipedSlotHead,   working.biped_object_info.head);
+         _set_up_slot_picker(this->ui.bipedSlotShield, working.biped_object_info.shield);
+      }
    #pragma endregion
    #pragma region Blood tab
       ui::bind(this->ui.impactMaterialType, working.material_type, working);
@@ -406,7 +525,7 @@ void FormDialogRace::_load_impl() {
       ui::bind(this->ui.angularTolerance, working.movement.angular_tolerance);
       ui::bind(this->ui.flagUseAdvancedAvoidance, working.alt_flags, loaded_form_type::alt_flag::use_advanced_avoidance);
 
-      static_assert(false, "TODO: Base Movement Defaults");
+      this->_models.base_movement_types->initializeFrom(working);
       static_assert(false, "TODO: Movement Data Overrides");
    #pragma endregion
    #pragma region Attack Data tab
@@ -421,7 +540,8 @@ void FormDialogRace::_load_impl() {
       ui::bind(this->ui.flagCanDualWield, working.race_flags, loaded_form_type::race_flag::can_dual_wield);
       ui::bind(this->ui.flagNonHostile, working.alt_flags, loaded_form_type::alt_flag::non_hostile);
 
-      static_assert(false, "TODO: Equipment Restrictions");
+      this->_models.equip_slots->initializeFrom(working.equipment.equip_slots);
+      this->_models.equip_types->initializeFrom(working);
    #pragma endregion
    #pragma region Lip Synching tab
       static_assert(false, "TODO: FaceFX Phonemes");
@@ -569,6 +689,9 @@ void FormDialogRace::_save_impl() {
       // Spells
       this->ui.abilities->commitStubs(working.spells.forms, working);
    #pragma endregion
+   #pragma region Keywords tab
+      this->ui.keywords->commitStubs(working.keywords.forms, working);
+   #pragma endregion
    #pragma region Body tab
       {  // Female
          auto& dst = working.by_sex.female;
@@ -583,12 +706,7 @@ void FormDialogRace::_save_impl() {
          this->ui.bodyTextureM->commitTo(dst.lighting_model, working);
       }
 
-      static_assert(false, "TODO: Body Slot");
-      static_assert(false, "TODO: Hair Slot");
-      static_assert(false, "TODO: Head Slot");
-      static_assert(false, "TODO: Shield Slot");
-      static_assert(false, "TODO: Slot Names");
-      static_assert(false, "TODO: Visible in First Person");
+      this->_models.biped_objects->commitTo(working, working.biped_object);
    #pragma endregion
    #pragma region Blood tab
       //
@@ -600,14 +718,15 @@ void FormDialogRace::_save_impl() {
       editor.assign_localized_string(working.description, this->ui.description->toPlainText());
    #pragma endregion
    #pragma region Movement Details tab
-      static_assert(false, "TODO: Base Movement Defaults");
+      this->_models.base_movement_types->commitTo(working);
       static_assert(false, "TODO: Movement Data Overrides");
    #pragma endregion
    #pragma region Attack Data tab
       this->ui.attackData->commitTo(working.attack_data, working);
    #pragma endregion
    #pragma region Combat tab
-      static_assert(false, "TODO: Equipment Restrictions");
+      this->_models.equip_slots->commitTo(working.equipment.equip_slots, working);
+      this->_models.equip_types->commitTo(working);
    #pragma endregion
    #pragma region Lip Synching tab
       static_assert(false, "TODO: FaceFX Phonemes");
@@ -664,6 +783,55 @@ void FormDialogRace::_save_impl() {
       this->ui.presetsF->commitStubs(working.by_sex.female.head_data.preset_actors, working);
       this->ui.presetsM->commitStubs(working.by_sex.male.head_data.preset_actors, working);
    #pragma endregion
+}
+
+void FormDialogRace::_update_slot_dropdowns() {
+   const auto widgets = std::array{
+      this->ui.bipedSlotBody,
+      this->ui.bipedSlotHair,
+      this->ui.bipedSlotHead,
+      this->ui.bipedSlotShield,
+   };
+   const auto blockers = std::array{
+      QSignalBlocker(this->ui.bipedSlotBody),
+      QSignalBlocker(this->ui.bipedSlotHair),
+      QSignalBlocker(this->ui.bipedSlotHead),
+      QSignalBlocker(this->ui.bipedSlotShield),
+   };
+
+   constexpr const size_t slot_count = loaded_form_type::max_biped_object_name_count;
+
+   std::array<QString, slot_count> names = {};
+   {
+      auto* model = this->_models.biped_objects;
+      for (size_t i = 0; i < slot_count; ++i) {
+         auto qmi = model->index(i, RaceBipedObjectSlotsModel::Column::Name, {});
+         names[i] = model->data(qmi, Qt::UserRole).toString();
+      }
+   }
+
+   for (auto* widget : widgets) {
+      auto prior = widget->currentData();
+
+      widget->clear();
+      widget->addItem(tr("NONE"), (int)-1);
+      for (size_t i = 0; i < slot_count; ++i) {
+         auto& name = names[i];
+         if (name.isEmpty())
+            continue;
+         widget->addItem(name, (int)i);
+      }
+
+      if (prior.isValid()) {
+         auto i = widget->findData(prior);
+         if (i >= 0)
+            widget->setCurrentIndex(widget->findData(prior));
+         else {
+            widget->setCurrentIndex(-1);
+            emit widget->currentIndexChanged(-1);
+         }
+      }
+   }
 }
 
 /*virtual*/ bool FormDialogRace::eventFilter(QObject* object, QEvent* event) /*override*/ {

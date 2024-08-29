@@ -927,11 +927,25 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tabKeywords">
+      <attribute name="title">
+       <string>Keywords</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_44">
+       <item row="0" column="0">
+        <widget class="DKFormListPane" name="keywords">
+         <property name="showFormTypes">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="tabBody">
       <attribute name="title">
        <string>Body</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout_17" rowstretch="0,0,1">
+      <layout class="QGridLayout" name="gridLayout_17" rowstretch="0,0,1" columnstretch="1,1">
        <item row="0" column="0" colspan="2">
         <layout class="QGridLayout" name="gridLayout_14" columnstretch="0,0,0,0,0">
          <item row="0" column="1">
@@ -1012,29 +1026,6 @@
           <string>Biped Object Data</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_16">
-          <item row="4" column="0">
-           <widget class="QListView" name="bipedSlotNames"/>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLabel" name="label_32">
-            <property name="text">
-             <string>Visible in First Person:</string>
-            </property>
-            <property name="buddy">
-             <cstring>bipedSlotsFirstPerson</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_31">
-            <property name="text">
-             <string>Slot Names</string>
-            </property>
-            <property name="buddy">
-             <cstring>bipedSlotNames</cstring>
-            </property>
-           </widget>
-          </item>
           <item row="2" column="0" colspan="2">
            <layout class="QGridLayout" name="gridLayout_22" columnstretch="0,0,1">
             <item row="0" column="0">
@@ -1107,8 +1098,35 @@
             </item>
            </layout>
           </item>
-          <item row="4" column="1">
-           <widget class="QListView" name="bipedSlotsFirstPerson"/>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_31">
+            <property name="text">
+             <string>Slot Names</string>
+            </property>
+            <property name="buddy">
+             <cstring>bipedSlotDefinitions</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_10">
+            <item>
+             <widget class="QLabel" name="label_39">
+              <property name="text">
+               <string>Edit Name:</string>
+              </property>
+              <property name="buddy">
+               <cstring>bipedObjectSlotNameEdit</cstring>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="bipedObjectSlotNameEdit"/>
+            </item>
+           </layout>
+          </item>
+          <item row="4" column="0">
+           <widget class="QTableView" name="bipedSlotDefinitions"/>
           </item>
          </layout>
         </widget>
@@ -2250,12 +2268,18 @@
          <property name="text">
           <string>FaceFX Phonemes</string>
          </property>
+         <property name="buddy">
+          <cstring>phonemeFaceFXList</cstring>
+         </property>
         </widget>
        </item>
        <item row="0" column="1">
         <widget class="QLabel" name="label_73">
          <property name="text">
           <string>Phoneme Targets</string>
+         </property>
+         <property name="buddy">
+          <cstring>phonemeTargets</cstring>
          </property>
         </widget>
        </item>
@@ -2267,21 +2291,24 @@
        </item>
        <item row="1" column="2">
         <layout class="QGridLayout" name="gridLayout_31">
-         <item row="0" column="1">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_74">
+           <property name="text">
+            <string>Weight:</string>
+           </property>
+           <property name="buddy">
+            <cstring>currentPhonemeWeight</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
           <widget class="QDoubleSpinBox" name="currentPhonemeWeight">
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
           </widget>
          </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_74">
-           <property name="text">
-            <string>Weight:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
+         <item row="2" column="0">
           <spacer name="verticalSpacer_9">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
@@ -2293,6 +2320,19 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_32">
+           <property name="text">
+            <string>Target Name:</string>
+           </property>
+           <property name="buddy">
+            <cstring>currentPhonemeMorphName</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="currentPhonemeMorphName"/>
          </item>
         </layout>
        </item>
@@ -3259,6 +3299,7 @@
   <tabstop>mountCamOffsetY</tabstop>
   <tabstop>mountCamOffsetZ</tabstop>
   <tabstop>flagAllowMountedCombat</tabstop>
+  <tabstop>keywords</tabstop>
   <tabstop>mass</tabstop>
   <tabstop>bodyPartData</tabstop>
   <tabstop>skin</tabstop>
@@ -3281,8 +3322,8 @@
   <tabstop>bipedSlotHair</tabstop>
   <tabstop>bipedSlotHead</tabstop>
   <tabstop>bipedSlotShield</tabstop>
-  <tabstop>bipedSlotNames</tabstop>
-  <tabstop>bipedSlotsFirstPerson</tabstop>
+  <tabstop>bipedSlotDefinitions</tabstop>
+  <tabstop>bipedObjectSlotNameEdit</tabstop>
   <tabstop>impactMaterialType</tabstop>
   <tabstop>decapBloodArt</tabstop>
   <tabstop>flagBloodSpray</tabstop>
@@ -3323,6 +3364,7 @@
   <tabstop>equipTypes</tabstop>
   <tabstop>phonemeFaceFXList</tabstop>
   <tabstop>phonemeTargets</tabstop>
+  <tabstop>currentPhonemeMorphName</tabstop>
   <tabstop>currentPhonemeWeight</tabstop>
   <tabstop>flagDefaultFaceGenPhonemes</tabstop>
   <tabstop>faceHeadPartsInherit</tabstop>

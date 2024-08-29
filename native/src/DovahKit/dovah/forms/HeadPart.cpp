@@ -132,6 +132,9 @@ namespace dovah::loaded_forms {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
          switch (subrecord.signature()) {
+            case 'VMAD':
+               components::papyrus_attachment_data::generate_use_info(subrecord, uib);
+               break;
             case 'FULL':
                break;
             case 'MODL':

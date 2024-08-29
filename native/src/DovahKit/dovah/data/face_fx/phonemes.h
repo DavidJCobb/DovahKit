@@ -43,7 +43,7 @@ namespace dovah::face_fx {
       K,
       CH,
       SIL,
-      SHOTSIL,
+      SHORTSIL,
       FLAP,
    };
 

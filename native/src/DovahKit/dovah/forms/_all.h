@@ -16,8 +16,10 @@
    #include "DefaultObjectManager.h"
    #include "DialogueBranch.h"
    #include "Door.h"
+   #include "EquipSlot.h"
    #include "Faction.h"
    #include "Flora.h"
+   #include "Footstep.h"
    #include "FormList.h"
    #include "Global.h"
    #include "HeadPart.h"
@@ -30,6 +32,7 @@
    #include "Location.h"
    #include "MagicEffect.h"
    #include "MiscItem.h"
+   #include "MovementType.h"
    #include "Note.h"
    #include "ObjectReference.h"
    #include "Outfit.h"
@@ -62,6 +65,7 @@ namespace dovah {
       loaded_forms::DefaultObjectManager,
       loaded_forms::DialogueBranch,
       loaded_forms::Door,
+      loaded_forms::EquipSlot,
       loaded_forms::Faction,
       loaded_forms::Flora,
       loaded_forms::FormList,

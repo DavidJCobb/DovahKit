@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogBook</class>
+ <widget class="QDialog" name="FormDialogBook">
+  <property name="windowTitle">
+   <string>Book</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_4" rowstretch="3,2,0" columnstretch="3,4,4">
+   <item row="0" column="0" rowspan="3">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <layout class="QGridLayout" name="baseDataLayout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Editor ID:</string>
+         </property>
+         <property name="buddy">
+          <cstring>editorID</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>8</width>
+           <height>8</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="1" colspan="4">
+        <widget class="QLineEdit" name="editorID"/>
+       </item>
+       <item row="1" column="1" colspan="4">
+        <widget class="QLineEdit" name="name"/>
+       </item>
+       <item row="4" column="0" colspan="5">
+        <widget class="DKFormPicker" name="teachSpell">
+         <property name="whatsThis">
+          <string>&lt;p&gt;A book can optionally be configured to increase one of the player's skills when they read it for the first time, or to teach the player a new spell.&lt;/p&gt;
+&lt;p&gt;Note that if a book is set to teach a spell (i.e. if it's a Spell Tome), then the player won't be able to see the text of the book. If they try to use the book, it will either be consumed instantly (if the player doesn't already know the spell) or fail to activate.&lt;/p&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Weight:</string>
+         </property>
+         <property name="buddy">
+          <cstring>weight</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Model:</string>
+         </property>
+         <property name="buddy">
+          <cstring>model</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Name:</string>
+         </property>
+         <property name="buddy">
+          <cstring>name</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Teaches:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="4">
+        <widget class="QSpinBox" name="value">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1" colspan="4">
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QRadioButton" name="teachTypeSkill">
+           <property name="text">
+            <string>Skill</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="teachTypeSpell">
+           <property name="text">
+            <string>Spell</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="3">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Value:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="buddy">
+          <cstring>value</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QDoubleSpinBox" name="weight">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0" colspan="5">
+        <widget class="DKFormDestructionDataButton" name="destructionData"/>
+       </item>
+       <item row="5" column="1" colspan="4">
+        <widget class="DKFormNIFPicker" name="model"/>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="flagCantBeTaken">
+       <property name="text">
+        <string>Can't be taken</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox">
+       <property name="title">
+        <string>Sounds</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_9">
+          <property name="text">
+           <string>Take:</string>
+          </property>
+          <property name="buddy">
+           <cstring>takeSound</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>Drop:</string>
+          </property>
+          <property name="buddy">
+           <cstring>dropSound</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="DKFormPicker" name="takeSound"/>
+        </item>
+        <item row="1" column="1">
+         <widget class="DKFormPicker" name="dropSound"/>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="gridGroupBox_3">
+       <property name="title">
+        <string>Icons (unused)</string>
+       </property>
+       <layout class="QGridLayout" name="iconsLayout">
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_7">
+          <property name="text">
+           <string>Message:</string>
+          </property>
+          <property name="buddy">
+           <cstring>messageIcon</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>Inventory:</string>
+          </property>
+          <property name="buddy">
+           <cstring>inventoryIcon</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="DKGameFilePicker" name="inventoryIcon">
+          <property name="standardConfiguration">
+           <enum>DKGameFilePicker::Textures</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="DKGameFilePicker" name="messageIcon">
+          <property name="standardConfiguration">
+           <enum>DKGameFilePicker::Textures</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox_2">
+       <property name="title">
+        <string>Description</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <widget class="QPlainTextEdit" name="description">
+          <property name="whatsThis">
+           <string>&lt;p&gt;This text is displayed in the inventory menu, on the book's &quot;item card.&quot;&lt;/p&gt;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="1" rowspan="2">
+    <layout class="QVBoxLayout" name="layoutBookContent">
+     <item>
+      <widget class="QLabel" name="label_11">
+       <property name="text">
+        <string>Book Text:</string>
+       </property>
+       <property name="buddy">
+        <cstring>bookContent</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPlainTextEdit" name="bookContent">
+       <property name="whatsThis">
+        <string>&lt;p&gt;The text of the book. If the book doesn't teach a Spell, then the player will see this text when they attempt to read it. Most formatting in books is done using a simplified version of HTML. Comments are supported, as are the following HTML tags: &lt;code&gt;b&lt;/code&gt;, &lt;code&gt;i&lt;/code&gt;, &lt;code&gt;u&lt;/code&gt;, &lt;code&gt;font&lt;/code&gt;, &lt;code&gt;br&lt;/code&gt;, &lt;code&gt;p&lt;/code&gt;, &lt;code&gt;ul&lt;/code&gt; and &lt;code&gt;li&lt;/code&gt; for bulleted lists, and &lt;code&gt;img&lt;/code&gt;. Additionally, some custom non-HTML formatting is supported.&lt;/p&gt;
+&lt;p&gt;Notes on the HTML formatting:&lt;/p&gt;
+&lt;ul&gt;
+   &lt;li&gt;&lt;p&gt;Books don't collapse or hide whitespace, so the &lt;code&gt;br&lt;/code&gt; tag isn't strictly necessary. The &lt;code&gt;p&lt;/code&gt; tag adds one line's worth of blank space at its end, but is only strictly necessary for text alignment: you can set the &lt;code&gt;align&lt;/code&gt; alignment to &lt;code&gt;left&lt;/code&gt;, &lt;code&gt;center&lt;/code&gt;, &lt;code&gt;right&lt;/code&gt;, or &lt;code&gt;justify&lt;/code&gt;.&lt;/p&gt;&lt;/li&gt;
+   &lt;li&gt;&lt;p&gt;The &lt;code&gt;font&lt;/code&gt; tag supports four attributes: &lt;code&gt;color&lt;/code&gt;, &lt;code&gt;face&lt;/code&gt;, &lt;code&gt;size&lt;/code&gt;, and the non-standard &lt;code&gt;alpha&lt;/code&gt; attribute. The &lt;code&gt;color&lt;/code&gt; attribute takes a color in hex format (e.g. &lt;code&gt;#FF0000&lt;/code&gt;); the &lt;code&gt;alpha&lt;/code&gt; attribute controls the opacity of the text, and takes a single hex octet (i.e. &lt;code&gt;#00&lt;/code&gt; to &lt;code&gt;#FF&lt;/code&gt;); and the &lt;code&gt;size&lt;/code&gt; attribute takes an integer point size. The supported fonts that can be referenced in the &lt;code&gt;face&lt;/code&gt; attribute are &lt;code&gt;$SkyrimBooks&lt;/code&gt;, &lt;code&gt;$HandwrittenBold&lt;/code&gt;, &lt;code&gt;$DaedricFont&lt;/code&gt;, &lt;code&gt;$DragonFont&lt;/code&gt;, &lt;code&gt;$DwemerFont&lt;/code&gt;, &lt;code&gt;$FalmerFont&lt;/code&gt;, and &lt;code&gt;$MageScriptFont&lt;/code&gt;.&lt;/p&gt;&lt;/li&gt;
+   &lt;li&gt;&lt;p&gt;The &lt;code&gt;img&lt;/code&gt; tag takes a &lt;code&gt;src&lt;/code&gt; attribute and optional &lt;code&gt;width&lt;/code&gt; and &lt;code&gt;height&lt;/code&gt; attributes. The former should be a URI using the &lt;code&gt;img://&lt;/code&gt; protocol, and should specify the full path to a texture file including the Textures folder but not including the Data folder (e.g. &lt;code&gt;img://Textures/Interface/Books/Illuminated_Letters/X_letter.png&lt;/code&gt;). Note that the game's pagination system doesn't account for the size of images: if an image is too low on the page, and too large, it will run off the bottom edge of the page. Use page breaks (see below) to manually force the image to the next page.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The non-HTML formatting is as follows:&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;&lt;b&gt;[pagebreak]&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Breaks to the next page. Must be on its own line.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;quest text replacement codes&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;There are various custom formatting codes that can act as placeholders, to be filled with actor names, pronouns, and so on. These use angle brackets but are not HTML. There are too many of these codes to document here, but examples include: &lt;code&gt;&amp;lt;Alias=Player&amp;gt;&lt;/code&gt;, which will be replaced with the player's current name at display time; and &lt;code&gt;&amp;lt;Alias.Pronoun=Player&amp;gt;&lt;/code&gt;, which will be replaced with the player's subject-pronoun (e.g. &quot;she&quot;).&lt;/p&gt;&lt;/dd&gt;
+&lt;/dl&gt;</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="2">
+    <widget class="DKPapyrusBoundScriptListPane" name="scriptListPane"/>
+   </item>
+   <item row="1" column="2" rowspan="2">
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Keywords</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="DKFormListPane" name="keywords"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormDestructionDataButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormDestructionDataButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKPapyrusBoundScriptListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKPapyrusBoundScriptListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKGameFilePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKGameFilePicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>weight</tabstop>
+  <tabstop>value</tabstop>
+  <tabstop>teachTypeSkill</tabstop>
+  <tabstop>teachTypeSpell</tabstop>
+  <tabstop>teachSpell</tabstop>
+  <tabstop>model</tabstop>
+  <tabstop>destructionData</tabstop>
+  <tabstop>flagCantBeTaken</tabstop>
+  <tabstop>takeSound</tabstop>
+  <tabstop>dropSound</tabstop>
+  <tabstop>inventoryIcon</tabstop>
+  <tabstop>messageIcon</tabstop>
+  <tabstop>description</tabstop>
+  <tabstop>bookContent</tabstop>
+  <tabstop>scriptListPane</tabstop>
+  <tabstop>keywords</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

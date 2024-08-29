@@ -9,6 +9,10 @@
 class FaceBaseHeadPartsModel;
 class FaceExtraHeadPartsModel;
 class HeadPartPickerFilter;
+class RaceBaseMovementDefaultsModel;
+class RaceBipedObjectSlotsModel;
+class RaceEquipSlotsModel;
+class RaceEquipTypesModel;
 
 class FormDialogRace :
    public QDialog,
@@ -28,6 +32,12 @@ class FormDialogRace :
          dovah::data_by_sex< HeadPartPickerFilter*> base_head_part;
       } _filters;
       struct {
+         RaceBipedObjectSlotsModel* biped_objects = nullptr;
+         RaceEquipSlotsModel*       equip_slots   = nullptr;
+         RaceEquipTypesModel*       equip_types   = nullptr;
+
+         RaceBaseMovementDefaultsModel* base_movement_types = nullptr;
+
          dovah::data_by_sex<FaceBaseHeadPartsModel*>  head_parts_base;
          dovah::data_by_sex<FaceExtraHeadPartsModel*> head_parts_extra;
       } _models;
@@ -51,6 +61,8 @@ class FormDialogRace :
       
       virtual void _load_impl() override;
       virtual void _save_impl() override;
+
+      void _update_slot_dropdowns();
 
       virtual bool eventFilter(QObject* object, QEvent* event) override;
 };

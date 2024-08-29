@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogSpell</class>
  <widget class="QDialog" name="FormDialogSpell">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>792</width>
+    <height>693</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Spell</string>
   </property>
@@ -231,29 +239,6 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="1">
-        <widget class="QComboBox" name="equipType">
-         <property name="whatsThis">
-          <string>&lt;p&gt;Controls how the caster equips the spell. Some races are limited in what equip types they can use.&lt;/p&gt;
-&lt;dl&gt;
-   &lt;dt&gt;&lt;b&gt;EitherHand&lt;/b&gt;&lt;/dt&gt;
-      &lt;dd&gt;&lt;p&gt;A one-handed spell that can be equipped to the left hand or the right hand. Note that some actors are only capable of equipping spells to a single hand, and will never only use spells that are specifically restricted to that hand.&lt;/p&gt;&lt;/dd&gt;
-   &lt;dt&gt;&lt;b&gt;BothHands&lt;/b&gt;&lt;/dt&gt;
-      &lt;dd&gt;&lt;p&gt;A two-handed spell.&lt;/p&gt;&lt;/dd&gt;
-   &lt;dt&gt;&lt;b&gt;Voice&lt;/b&gt;&lt;/dt&gt;
-      &lt;dd&gt;&lt;p&gt;A Power or Shout.&lt;/p&gt;&lt;/dd&gt;
-   &lt;dt&gt;&lt;b&gt;LeftHand&lt;/b&gt;&lt;/dt&gt;
-      &lt;dd&gt;&lt;p&gt;A one-handed spell specifically restricted to the caster's left hand, and usable by casters that can only equip spells to their left hand.&lt;/p&gt;&lt;/dd&gt;
-   &lt;dt&gt;&lt;b&gt;RightHand&lt;/b&gt;&lt;/dt&gt;
-      &lt;dd&gt;&lt;p&gt;A one-handed spell specifically restricted to the caster's right hand, and usable by casters that can only equip spells to their right hand.&lt;/p&gt;&lt;/dd&gt;
-   &lt;dt&gt;&lt;b&gt;Shield&lt;/b&gt;&lt;/dt&gt;
-      &lt;dd&gt;&lt;p&gt;Not used for magic?&lt;/p&gt;&lt;/dd&gt;
-   &lt;dt&gt;&lt;b&gt;None&lt;/b&gt;&lt;/dt&gt;
-      &lt;dd&gt;&lt;p&gt;The spell is not equipped. This generally makes sense for Ability-type spells.&lt;/p&gt;&lt;/dd&gt;
-&lt;/dl&gt;</string>
-         </property>
-        </widget>
-       </item>
        <item row="5" column="1">
         <widget class="DKFormPicker" name="menuDisplay">
          <property name="whatsThis">
@@ -287,7 +272,7 @@
           <string>Equip Type:</string>
          </property>
          <property name="buddy">
-          <cstring>equipType</cstring>
+          <cstring>equipSlot</cstring>
          </property>
         </widget>
        </item>
@@ -422,6 +407,30 @@
          </property>
         </widget>
        </item>
+       <item row="6" column="1">
+        <widget class="DKFormPicker" name="equipSlot">
+         <property name="whatsThis">
+          <string>&lt;p&gt;The Equip Slot you choose here controls which hands, if any, an actor equips this spell to. The vanilla Equip Slots have the following meanings:&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;&lt;b&gt;EitherHand&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;A one-handed spell that the player can equip to either or both hands.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;BothHands&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;A two-handed spell.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Voice&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;A Greater Power or a Shout.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;LeftHand&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Makes the spell usable by actors that are restricted to LeftHand equip types. For example, Draugr can only equip spells to their left hand, and will never consider equipping a spell with any other Equip Slot — even EitherHand spells.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;RightHand&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Makes the spell usable by actors that are restricted to RightHand equip types.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Shield&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Considered a subset of LeftHand equipment. Unknown what would happen if a spell were to use this Equip Slot.&lt;/p&gt;&lt;/dd&gt;
+&lt;/dl&gt;</string>
+         </property>
+         <property name="allowNone">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
@@ -513,7 +522,7 @@
   <tabstop>casting</tabstop>
   <tabstop>delivery</tabstop>
   <tabstop>menuDisplay</tabstop>
-  <tabstop>equipType</tabstop>
+  <tabstop>equipSlot</tabstop>
   <tabstop>castingPerk</tabstop>
   <tabstop>range</tabstop>
   <tabstop>school</tabstop>
