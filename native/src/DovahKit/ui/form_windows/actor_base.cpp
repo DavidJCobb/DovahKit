@@ -426,6 +426,7 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
    #pragma region Inventory tab
       this->ui.outfitDefault->setAllowedFormType(dovah::form_type::outfit);
       this->ui.outfitSleep->setAllowedFormType(dovah::form_type::outfit);
+      this->ui.outfitItemsPreview->setAllowDuplicates(true);
       this->ui.outfitItemsPreview->setReadOnly(true);
       ui::set_range<uint8_t>(this->ui.gearedUpWeapons);
 

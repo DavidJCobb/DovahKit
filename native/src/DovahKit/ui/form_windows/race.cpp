@@ -6,17 +6,20 @@
 #include "editor/helpers/skill_name_to_string.h"
 #include "editor/subsystems/form_info_cache/core.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/get_selection.h"
 #include "ui/utils/set_range.h"
 #include "ui/utils/set_tableview_column_flex.h"
 #include "ui/utils/typical_tableview_config.h"
 
 #include "./shared/FaceBaseHeadPartsModel.h"
 #include "./shared/FaceExtraHeadPartsModel.h"
+#include "./shared/FormPickerFromFormListPaneFilter.h"
 #include "./shared/HeadPartPickerFilter.h"
 #include "./race/RaceBaseMovementDefaultsModel.h"
 #include "./race/RaceBipedObjectSlotsModel.h"
 #include "./race/RaceEquipSlotsModel.h"
 #include "./race/RaceEquipTypesModel.h"
+#include "./race/RaceTintLayerModel.h"
 
 FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
@@ -338,12 +341,164 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
    #pragma endregion
    #pragma region Face Tints tab
       static_assert(false, "TODO: Tint layers and editing thereof");
+      {
+         auto _configure = [this](
+            dovah::sex  sex,
+            QTableView* layer_table,
+
+            QWidget* layer_edit_container,
+
+            DKGameFilePicker* layer_texture,
+            QComboBox*        layer_type,
+
+            QTableView*     preset_table,
+            DKFloatSlider*  preset_alpha_slider,
+            QDoubleSpinBox* preset_alpha_setter,
+
+            DKFormPicker* default_color_picker
+         ) {
+            auto* model = this->_models.tint_layer_model[sex] = new RaceTintLayerModel(this);
+            layer_table->setModel(model);
+            auto* layer_sel_model  = layer_table->selectionModel();
+            {  // Layer table
+               ui::typical_tableview_config(layer_table);
+               layer_table->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+               ui::set_tableview_column_flex(layer_table, [](DKHeaderView& header, const QFontMetrics& metrics) {
+                  header.setColumnFlex(RaceTintLayerModel::Column::TexturePath, 3, 0);
+                  header.setColumnFlex(RaceTintLayerModel::Column::NumPresets,  0, 0, metrics.boundingRect("99").width() * 1.5F + 4);
+                  header.setColumnFlex(RaceTintLayerModel::Column::Type,        1, 0, metrics.boundingRect("Cheek Color Upper").width() * 1.5F + 4);
+               });
+               QObject::connect(
+                  layer_sel_model,
+                  &QItemSelectionModel::selectionChanged,
+                  this,
+                  [model, layer_edit_container, layer_texture, layer_type, preset_table, preset_alpha_setter](const QItemSelection& sel) {
+                     if (sel.isEmpty()) {
+                        layer_edit_container->setEnabled(false);
+                        preset_table->setRootIndex(model->noneIndex());
+                        return;
+                     }
+
+                     auto qmi       = sel[0].topLeft();
+                     auto layer_opt = model->getLayerData(qmi);
+                     if (!layer_opt.has_value()) {
+                        layer_edit_container->setEnabled(false);
+                        preset_table->setRootIndex(model->noneIndex());
+                        return;
+                     }
+                     const auto& layer = layer_opt.value();
+
+                     const auto blockers = std::array{
+                        QSignalBlocker(layer_texture),
+                        QSignalBlocker(layer_type),
+                        QSignalBlocker(preset_alpha_setter),
+                     };
+
+                     layer_texture->setPath(QString::fromStdString(layer.texture));
+                     layer_type->setCurrentIndex(layer_type->findData((int)layer.type));
+                     preset_table->setRootIndex(qmi);
+                     layer_edit_container->setEnabled(true);
+                  }
+               );
+            }
+            {  // Layer editing
+               auto _edit_layer_property = [this, model, layer_sel_model]<typename Functor>(Functor&& f) {
+                  QModelIndex qmi       = ui::get_selected_row_qmi(layer_sel_model);
+                  auto        layer_opt = model->getLayerData(qmi);
+                  if (!layer_opt.has_value())
+                     return;
+                  auto& layer = layer_opt.value();
+                  (f)(layer);
+                  model->setLayerData(qmi, layer);
+               };
+
+               QObject::connect(layer_texture, &DKGameFilePicker::pathChanged, this, [_edit_layer_property](QString path) {
+                  _edit_layer_property([path](RaceTintLayerModel::LayerData& dst) -> void {
+                     dst.texture = path.toStdString();
+                  });
+               });
+               QObject::connect(layer_type, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [_edit_layer_property, layer_type]() {
+                  auto value = (dovah::face_tint_type)layer_type->currentData().toInt();
+                  _edit_layer_property([value](RaceTintLayerModel::LayerData& dst) -> void {
+                     dst.type = value;
+                  });
+               });
+               {
+                  auto* filter = this->_filters.tint_layer_default_color[sex] = new RaceTintDefaultColorPickerFilter(this);
+                  filter->setModel(model);
+
+                  default_color_picker->setAllowedFormType(dovah::form_type::color);
+                  default_color_picker->setCustomFilter(filter);
+
+                  QObject::connect(default_color_picker, &DKFormPicker::formChanged, this, [_edit_layer_property](dovah::form_stub* stub) {
+                     _edit_layer_property([stub](RaceTintLayerModel::LayerData& dst) -> void {
+                        dst.default_color = stub;
+                     });
+                  });
+               }
+               {  // Preset table
+                  auto* preset_model = this->_models.tint_preset_model[sex] = new RaceTintLayerPresetsModel(this);
+                  preset_model->setSourceModel(model);
+                  preset_table->setRootIndex(model->noneIndex());
+                  auto* preset_sel_model = preset_table->selectionModel();
+                  
+                  auto _edit_preset_property = [this, model, layer_sel_model, preset_sel_model]<typename Functor>(Functor&& f) {
+                     QModelIndex qmi_layer  = ui::get_selected_row_qmi(layer_sel_model);
+                     QModelIndex qmi_preset = ui::get_selected_row_qmi(preset_sel_model);
+
+                     auto idx_layer = model->layerIndex(qmi_layer);
+                     if (!idx_layer.has_value())
+                        return;
+
+                     auto preset_opt = model->getLayerPresetByRow(idx_layer.value(), qmi_preset.row());
+                     if (!preset_opt.has_value())
+                        return;
+                     auto& preset = preset_opt.value();
+                     (f)(preset);
+                     model->replaceLayerPreset(preset);
+                  };
+                  
+                  QObject::connect(preset_alpha_setter, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [_edit_preset_property](double value) {
+                     _edit_preset_property([value](RaceTintLayerModel::LayerPreset& dst) -> void {
+                        dst.alpha = value;
+                     });
+                  });
+                  QObject::connect(preset_alpha_slider, &DKFloatSlider::valueChanged, this, [this, preset_alpha_setter](float value) {
+                     preset_alpha_setter->setValue(value);
+                  });
+               }
+            }
+
+         };
+
+         QObject::connect(preset_alpha_setter, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &FormDialogActorBase::_push_tint_layer_from_ui);
+         QObject::connect(preset_alpha_slider, &DKFloatSlider::valueChanged, this, [this, preset_alpha_setter](float value) {
+            preset_alpha_setter->setValue(value);
+         });
+      }
       this->ui.currentTintFDefaultColor->setAllowedFormType(dovah::form_type::color);
       this->ui.currentTintMDefaultColor->setAllowedFormType(dovah::form_type::color);
       this->ui.defaultFaceTextureF->setAllowedFormType(dovah::form_type::texture_set);
       this->ui.defaultFaceTextureM->setAllowedFormType(dovah::form_type::texture_set);
       this->ui.faceTexturesF->setAllowedFormTypes({ dovah::form_type::texture_set });
       this->ui.faceTexturesM->setAllowedFormTypes({ dovah::form_type::texture_set });
+      {  // Complexions
+         auto _configure = [this](
+            dovah::sex      sex,
+            DKFormPicker*   picker,
+            DKFormListPane* complexions
+         ) {
+            picker->setAllowedFormType(dovah::form_type::texture_set);
+            picker->setAllowNone(true);
+            complexions->setAllowedFormTypes({ dovah::form_type::texture_set });
+
+            auto* filter = this->_filters.default_complexion[sex] = new FormPickerFromFormListPaneFilter(this);
+            filter->setPane(complexions);
+            picker->setCustomFilter(filter);
+         };
+         _configure(dovah::sex::female, this->ui.defaultFaceTextureF, this->ui.faceTexturesF);
+         _configure(dovah::sex::male,   this->ui.defaultFaceTextureM, this->ui.faceTexturesM);
+      }
    #pragma endregion
    #pragma region Presets tab
       this->ui.presetsF->setAllowedFormTypes({ dovah::form_type::actor_base });
@@ -650,7 +805,13 @@ void FormDialogRace::_load_impl() {
       ui::bind(this->ui.defaultHairColorM, working.by_sex.male.head_data.default_hair_color, working);
    #pragma endregion
    #pragma region Face Tints tab
-      static_assert(false, "TODO");
+      static_assert(false, "TODO: Tint layers");
+      {  // Complexions
+         this->ui.faceTexturesF->pullStubs(working.by_sex.female.head_data.face_textures);
+         this->ui.faceTexturesM->pullStubs(working.by_sex.male.head_data.face_textures);
+         ui::bind(this->ui.defaultFaceTextureF, working.by_sex.female.head_data.default_face_texture, working);
+         ui::bind(this->ui.defaultFaceTextureM, working.by_sex.male.head_data.default_face_texture, working);
+      }
    #pragma endregion
    #pragma region Presets tab
       this->ui.presetsF->pullStubs(working.by_sex.female.head_data.preset_actors);

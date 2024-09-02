@@ -25,6 +25,7 @@ namespace dovah {
 class DKFormListPane : public QWidget {
    Q_OBJECT;
    Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation DESIGNABLE true USER true);
+   Q_PROPERTY(bool allowDuplicates  READ allowDuplicates  WRITE setAllowDuplicates  DESIGNABLE true);
    Q_PROPERTY(bool readOnly         READ readOnly         WRITE setReadOnly         DESIGNABLE true);
    Q_PROPERTY(bool showFormTypes    READ showFormTypes    WRITE setShowFormTypes    DESIGNABLE true);
    Q_PROPERTY(bool showIndices      READ showIndices      WRITE setShowIndices      DESIGNABLE true);
@@ -55,6 +56,7 @@ class DKFormListPane : public QWidget {
       #if !defined(QT_DESIGNER_LIB)
          QHeaderView* horizontalHeader() const noexcept { return this->subwidgets.view->horizontalHeader(); }
       #endif
+      constexpr bool allowDuplicates() const noexcept { return this->state.allow_duplicates; }
       constexpr bool readOnly() const noexcept { return this->state.read_only; }
       constexpr Qt::Orientation orientation() const noexcept { return this->state.orientation; }
       constexpr bool showFormTypes() const noexcept { return this->state.show_form_types; }
@@ -79,9 +81,12 @@ class DKFormListPane : public QWidget {
       #if !defined(QT_DESIGNER_LIB)
          void addStub(dovah::form_stub* stub);
          void clear();
+         bool contains(const dovah::form_stub*) const;
+         int  indexOf(const dovah::form_stub*) const;
          void reserve(size_t);
       #endif
 
+      void setAllowDuplicates(bool);
       void setReadOnly(bool);
       #if !defined(QT_DESIGNER_LIB)
          void setAllowedFormTypes(QVector<dovah::form_type>);
@@ -99,6 +104,8 @@ class DKFormListPane : public QWidget {
       #endif
 
    signals:
+      void formsAdded(size_t count);
+      void formsRemoved(size_t count);
 
    protected:
       struct {
@@ -111,6 +118,7 @@ class DKFormListPane : public QWidget {
          QTableView* view = nullptr;
       } subwidgets;
       struct {
+         bool allow_duplicates   = false;
          bool read_only          = false;
          bool show_form_types    = true;
          bool show_indices       = false;

@@ -9,6 +9,7 @@
 #include "widgets/DKCompactObjectReferencePicker.h"
 #include "widgets/DKFloatSlider.h"
 #include "widgets/DKFormPicker.h"
+#include "widgets/widget-data/DKFormPickerCustomFilter.h"
 #include "widgets/DKFormListPane.h"
 #include "widgets/DKGameFilePicker.h"
 #include "widgets/DKNavmeshGenerationImportOptionPicker.h"
@@ -56,6 +57,22 @@ namespace ui {
       QObject::connect(widget, &DKFormPicker::formChanged, widget, [&target](dovah::form_stub* value) {
          target = value;
       });
+      //
+      // Account for the possibility that the widget may have rejected the 
+      // pre-existing value. (We could do this by just hooking our signal 
+      // handler before we set the stub, but then we'd catch a spurious 
+      // signal for setting the initial value.)
+      //
+      if (auto* stub = target) {
+         if (auto* filter = widget->customFilter()) {
+            if (!filter->form_matches(*stub)) {
+               target = widget->formStub();
+            }
+         }
+      } else if (!widget->allowNone()) {
+         if (auto* after = widget->formStub())
+            target = after;
+      }
    }
 
    extern void bind(DKFloatSlider* widget, float& dst) {
@@ -67,10 +84,27 @@ namespace ui {
 
    extern void bind(DKFormPicker* widget, dovah::form_reference_t& dst, dovah::loaded_forms::Form& dst_owner) {
       assert(dst_owner.is_working_copy && "This function was created to make things easier for the (messy) form-working-copy system. Don't use it for real forms.");
-      widget->setFormStub(dst.get_form_stub());
+      auto* stub = dst.get_form_stub();
+      widget->setFormStub(stub);
       QObject::connect(widget, &DKFormPicker::formChanged, widget, [&dst, &dst_owner](dovah::form_stub* value) {
          dst.set(dst_owner, value);
       });
+      //
+      // Account for the possibility that the widget may have rejected the 
+      // pre-existing value. (We could do this by just hooking our signal 
+      // handler before we set the stub, but then we'd catch a spurious 
+      // signal for setting the initial value.)
+      //
+      if (stub) {
+         if (auto* filter = widget->customFilter()) {
+            if (!filter->form_matches(*stub)) {
+               dst.set(dst_owner, widget->formStub());
+            }
+         }
+      } else if (!widget->allowNone()) {
+         if (auto* after = widget->formStub())
+            dst.set(dst_owner, after);
+      }
    }
    extern void bind(DKCompactObjectReferencePicker* widget, dovah::form_reference_t& dst, dovah::loaded_forms::Form& dst_owner) {
       assert(dst_owner.is_working_copy && "This function was created to make things easier for the (messy) form-working-copy system. Don't use it for real forms.");

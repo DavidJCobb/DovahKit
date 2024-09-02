@@ -35,25 +35,6 @@ class ActorBaseTintLayerModel : public QAbstractItemModel {
       static constexpr const size_t ColumnCount = Column::__COUNT;
       
    public:
-      enum class TintLayerType {
-         none,
-         lip_color,
-         cheek_color_upper,
-         eyeliner,
-         eyeshadow_upper,
-         eyeshadow_lower,
-         skin_tone,
-         facepaint,
-         laugh_lines,
-         cheek_color_lower,
-         nose,
-         chin,
-         neck,
-         forehead,
-         dirt,
-         unknown_16,
-      };
-
       struct TintLayerPreset {
          dovah::face_tint_index_type index = 0;
          float alpha = 1;

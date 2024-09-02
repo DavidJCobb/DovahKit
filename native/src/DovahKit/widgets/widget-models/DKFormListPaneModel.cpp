@@ -414,27 +414,7 @@ void DKFormListPaneModel::formsRenumberedEnMasse() {
          }
          //
          auto dropped_stubs = editor_helpers::form_stubs_from_mime_data(*data);
-         QVector<Item*> queued;
-         queued.reserve(dropped_stubs.size());
-         for (auto* stub : dropped_stubs) {
-            if (!stub)
-               continue;
-            if (!this->allowed_form_types.isEmpty()) {
-               if (!this->allowed_form_types.contains(stub->form_type))
-                  continue;
-            }
-            queued.push_back(new Item(stub));
-         }
-         auto first_inserted = row;
-         auto last_inserted  = first_inserted + queued.size() - 1;
-         this->beginInsertRows({}, first_inserted, last_inserted); // we're not passing the count, we're passing the index of the last row. how annoying.
-         this->children.reserve(this->children.size() + queued.size());
-         for (int i = 0; i < queued.size(); ++i) {
-            auto* item = queued[i];
-            this->children.insert(row + i, item);
-            this->_recacheItemText(*item);
-         }
-         this->endInsertRows();
+         this->addStubs(dropped_stubs, row);
          return true;
       }
       QStringList DKFormListPaneModel::mimeTypes() const {
@@ -455,12 +435,61 @@ void DKFormListPaneModel::addStub(dovah::form_stub* stub) {
       if (!this->allow_gaps)
          return;
    }
+   if (this->allow_dupes == false) {
+      if (this->indexOfStub(stub) >= 0)
+         return;
+   }
    size_t at = this->children.size();
    this->beginInsertRows({}, at, at);
    auto* item = new Item;
    item->stub = stub;
    this->children.push_back(item);
    this->_recacheItemText(*item);
+   this->endInsertRows();
+}
+void DKFormListPaneModel::addStubs(const std::vector<dovah::form_stub*>& src, int at = -1) {
+   QVector<Item*> queued;
+   queued.reserve(src.size());
+
+   for (size_t i = 0; i < src.size(); ++i) {
+      auto* stub = src[i];
+      if (!stub)
+         continue;
+      if (!this->allowed_form_types.isEmpty()) {
+         if (!this->allowed_form_types.contains(stub->form_type))
+            continue;
+      }
+      if (this->allow_dupes == false) {
+         bool dupe = false;
+         for (size_t j = 0; j < i; ++j) {
+            if (src[j] == stub) {
+               dupe = true;
+               break;
+            }
+         }
+         if (dupe)
+            continue;
+         if (this->indexOfStub(stub) >= 0)
+            continue;
+      }
+      queued.push_back(new Item(stub));
+   }
+
+   if (queued.empty())
+      return;
+
+   if (at < 0)
+      at = this->children.size();
+
+   auto first_inserted = at;
+   auto last_inserted  = first_inserted + queued.size() - 1;
+   this->beginInsertRows({}, first_inserted, last_inserted); // we're not passing the count, we're passing the index of the last row. how annoying.
+   this->children.reserve(this->children.size() + queued.size());
+   for (int i = 0; i < queued.size(); ++i) {
+      auto* item = queued[i];
+      this->children.insert(at + i, item);
+      this->_recacheItemText(*item);
+   }
    this->endInsertRows();
 }
 void DKFormListPaneModel::clear() {
@@ -471,6 +500,12 @@ void DKFormListPaneModel::clear() {
       delete item;
    this->children.clear();
    this->endRemoveRows();
+}
+int DKFormListPaneModel::indexOfStub(const dovah::form_stub* s) const {
+   for (size_t i = 0; i < this->children.size(); ++i)
+      if (this->children[i]->stub == s)
+         return i;
+   return -1;
 }
 void DKFormListPaneModel::moveStubs(QModelIndexList indices, int down) {
    if (indices.isEmpty())
@@ -603,6 +638,30 @@ void DKFormListPaneModel::removeStubs(QModelIndexList l) {
 }
 
 #pragma region Property setters
+void DKFormListPaneModel::setAllowDuplicates(bool v) {
+   if (this->allow_dupes == v)
+      return;
+   this->allow_dupes = v;
+   if (!v) {
+      auto&  list = this->children;
+      size_t size = list.size();
+      for (size_t i = 0; i < size - 1; ++i) {
+         auto* a = list[i]->stub;
+         for (size_t j = i + 1; j < size; ++j) {
+            auto* b = list[j]->stub;
+            if (a == b) {
+               this->beginRemoveRows({}, j, j);
+               delete list[j];
+               list.erase(list.begin() + j);
+               --j;
+               --size;
+               this->endRemoveRows();
+               continue;
+            }
+         }
+      }
+   }
+}
 void DKFormListPaneModel::setAllowedFormTypes(QVector<dovah::form_type> l) {
    this->allowed_form_types = l;
    if (l.isEmpty())

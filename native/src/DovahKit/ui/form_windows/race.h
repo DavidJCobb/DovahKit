@@ -8,11 +8,15 @@
 
 class FaceBaseHeadPartsModel;
 class FaceExtraHeadPartsModel;
+class FormPickerFromFormListPaneFilter;
 class HeadPartPickerFilter;
 class RaceBaseMovementDefaultsModel;
 class RaceBipedObjectSlotsModel;
 class RaceEquipSlotsModel;
 class RaceEquipTypesModel;
+class RaceTintDefaultColorPickerFilter;
+class RaceTintLayerModel;
+class RaceTintLayerPresetsModel;
 
 class FormDialogRace :
    public QDialog,
@@ -29,7 +33,9 @@ class FormDialogRace :
    protected:
       Ui::FormDialogRace ui;
       struct {
-         dovah::data_by_sex< HeadPartPickerFilter*> base_head_part;
+         dovah::data_by_sex<HeadPartPickerFilter*>             base_head_part;
+         dovah::data_by_sex<FormPickerFromFormListPaneFilter*> default_complexion;
+         dovah::data_by_sex<RaceTintDefaultColorPickerFilter*>  tint_layer_default_color;
       } _filters;
       struct {
          RaceBipedObjectSlotsModel* biped_objects = nullptr;
@@ -40,6 +46,9 @@ class FormDialogRace :
 
          dovah::data_by_sex<FaceBaseHeadPartsModel*>  head_parts_base;
          dovah::data_by_sex<FaceExtraHeadPartsModel*> head_parts_extra;
+
+         dovah::data_by_sex<RaceTintLayerModel*>        tint_layer_model;
+         dovah::data_by_sex<RaceTintLayerPresetsModel*> tint_preset_model; // NOTE: the preset model is a child/proxy of the layer model
       } _models;
       struct {
          union {

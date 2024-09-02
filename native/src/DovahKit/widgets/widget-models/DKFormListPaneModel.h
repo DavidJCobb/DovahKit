@@ -5,6 +5,7 @@
 #include <functional>
 #include <optional>
 #include <variant>
+#include <vector>
 #include <QAbstractItemModel>
 #include <QString>
 #include <QVarLengthArray>
@@ -64,6 +65,7 @@ class DKFormListPaneModel : public QAbstractTableModel {
    protected:
       QVector<Item*> children;
       QVector<dovah::form_type> allowed_form_types; // if empty, then no limit
+      bool allow_dupes  = false; // allow duplicate entries?
       bool allow_gaps   = true;
       bool show_indices = true;
       struct {
@@ -125,7 +127,9 @@ class DKFormListPaneModel : public QAbstractTableModel {
       
    public slots:
       void addStub(dovah::form_stub* s);
+      void addStubs(const std::vector<dovah::form_stub*>&, int at = -1);
       void clear();
+      int indexOfStub(const dovah::form_stub*) const;
       void moveStubs(QModelIndexList, int down);
       void removeStub(int index);
       void removeStubs(QVector<int> indices);
@@ -133,6 +137,7 @@ class DKFormListPaneModel : public QAbstractTableModel {
       inline void reserve(int i) { this->children.reserve(i); }
 
       #pragma region Property setters
+         void setAllowDuplicates(bool);
          void setAllowedFormTypes(QVector<dovah::form_type>);
          void setAllowGaps(bool);
          void setShowIndices(bool);

@@ -24,6 +24,9 @@
        <property name="text">
         <string>Editor ID:</string>
        </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
       </widget>
      </item>
     </layout>
@@ -75,7 +78,7 @@
    <item row="1" column="0">
     <widget class="QTabWidget" name="tabbox">
      <property name="currentIndex">
-      <number>8</number>
+      <number>10</number>
      </property>
      <widget class="QWidget" name="tabGeneral">
       <attribute name="title">
@@ -1147,7 +1150,7 @@
        <item row="1" column="0">
         <widget class="QTabWidget" name="bodyBySex">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tabBodyF">
           <attribute name="title">
@@ -2703,6 +2706,9 @@
          <property name="wordWrap">
           <bool>true</bool>
          </property>
+         <property name="buddy">
+          <cstring></cstring>
+         </property>
         </widget>
        </item>
        <item row="2" column="0">
@@ -2761,110 +2767,115 @@
                </layout>
               </item>
               <item>
-               <layout class="QGridLayout" name="layoutEditTintF">
-                <item row="1" column="0">
-                 <widget class="QLabel" name="label_93">
-                  <property name="text">
-                   <string>Type:</string>
-                  </property>
-                  <property name="buddy">
-                   <cstring>currentTintFType</cstring>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="DKGameFilePicker" name="currentTintFTexture"/>
-                </item>
-                <item row="2" column="0" colspan="2">
-                 <widget class="QGroupBox" name="groupBox_22">
-                  <property name="title">
-                   <string>Preset Color Options:</string>
-                  </property>
-                  <layout class="QVBoxLayout" name="verticalLayout_11">
-                   <item>
-                    <widget class="QTableView" name="currentTintFPresetList"/>
-                   </item>
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_9">
-                     <item>
-                      <widget class="QLabel" name="label_94">
-                       <property name="text">
-                        <string>Alpha:</string>
-                       </property>
-                       <property name="buddy">
-                        <cstring>currentTintFPresetAlphaSlider</cstring>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QSlider" name="currentTintFPresetAlphaSlider">
-                       <property name="maximum">
-                        <number>10000</number>
-                       </property>
-                       <property name="orientation">
-                        <enum>Qt::Horizontal</enum>
-                       </property>
-                       <property name="tickPosition">
-                        <enum>QSlider::TicksBothSides</enum>
-                       </property>
-                       <property name="tickInterval">
-                        <number>1000</number>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QDoubleSpinBox" name="currentTintFPresetAlpha">
-                       <property name="alignment">
-                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                       </property>
-                       <property name="decimals">
-                        <number>4</number>
-                       </property>
-                       <property name="maximum">
-                        <double>1.000000000000000</double>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
-                  </layout>
-                 </widget>
-                </item>
-                <item row="3" column="1">
-                 <widget class="DKFormPicker" name="currentTintFDefaultColor">
-                  <property name="whatsThis">
-                   <string>Select one of the Preset Color Options to use as the default for this tint layer.</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1">
-                 <widget class="QComboBox" name="currentTintFType">
-                  <property name="whatsThis">
-                   <string>Specify the type that this tint layer is categorized under. Use &quot;None&quot; for non-playable tint layers.</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_95">
-                  <property name="text">
-                   <string>Texture:</string>
-                  </property>
-                  <property name="buddy">
-                   <cstring>currentTintFTexture</cstring>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="0">
-                 <widget class="QLabel" name="label_96">
-                  <property name="text">
-                   <string>Default Color:</string>
-                  </property>
-                  <property name="buddy">
-                   <cstring>currentTintFDefaultColor</cstring>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
+               <widget class="QWidget" name="layoutTintEditF" native="true">
+                <layout class="QGridLayout" name="layoutEditTintF">
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label_93">
+                   <property name="text">
+                    <string>Type:</string>
+                   </property>
+                   <property name="buddy">
+                    <cstring>currentTintFType</cstring>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="DKGameFilePicker" name="currentTintFTexture"/>
+                 </item>
+                 <item row="2" column="0" colspan="2">
+                  <widget class="QGroupBox" name="groupBox_22">
+                   <property name="title">
+                    <string>Preset Color Options:</string>
+                   </property>
+                   <layout class="QVBoxLayout" name="verticalLayout_11">
+                    <item>
+                     <widget class="QTableView" name="currentTintFPresetList"/>
+                    </item>
+                    <item>
+                     <layout class="QHBoxLayout" name="horizontalLayout_9">
+                      <item>
+                       <widget class="QLabel" name="label_94">
+                        <property name="text">
+                         <string>Alpha:</string>
+                        </property>
+                        <property name="buddy">
+                         <cstring>currentTintFPresetAlphaSlider</cstring>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="DKFloatSlider" name="currentTintFPresetAlphaSlider">
+                        <property name="orientation">
+                         <enum>Qt::Horizontal</enum>
+                        </property>
+                        <property name="decimals">
+                         <number>2</number>
+                        </property>
+                        <property name="maximum">
+                         <double>1.000000000000000</double>
+                        </property>
+                        <property name="tickInterval">
+                         <double>0.100000001490116</double>
+                        </property>
+                        <property name="tickPosition">
+                         <enum>QSlider::TicksBothSides</enum>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QDoubleSpinBox" name="currentTintFPresetAlpha">
+                        <property name="alignment">
+                         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                        </property>
+                        <property name="decimals">
+                         <number>4</number>
+                        </property>
+                        <property name="maximum">
+                         <double>1.000000000000000</double>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="DKFormPicker" name="currentTintFDefaultColor">
+                   <property name="whatsThis">
+                    <string>Select one of the Preset Color Options to use as the default for this tint layer.</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QComboBox" name="currentTintFType">
+                   <property name="whatsThis">
+                    <string>Specify the type that this tint layer is categorized under. Use &quot;None&quot; for non-playable tint layers.</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_95">
+                   <property name="text">
+                    <string>Texture:</string>
+                   </property>
+                   <property name="buddy">
+                    <cstring>currentTintFTexture</cstring>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="label_96">
+                   <property name="text">
+                    <string>Default Color:</string>
+                   </property>
+                   <property name="buddy">
+                    <cstring>currentTintFDefaultColor</cstring>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
               </item>
              </layout>
             </widget>
@@ -2964,107 +2975,115 @@
                </layout>
               </item>
               <item>
-               <layout class="QGridLayout" name="layoutEditTintM">
-                <item row="1" column="0">
-                 <widget class="QLabel" name="label_89">
-                  <property name="text">
-                   <string>Type:</string>
-                  </property>
-                  <property name="buddy">
-                   <cstring>currentTintMType</cstring>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="DKGameFilePicker" name="currentTintMTexture"/>
-                </item>
-                <item row="2" column="0" colspan="2">
-                 <widget class="QGroupBox" name="groupBox_20">
-                  <property name="title">
-                   <string>Preset Color Options:</string>
-                  </property>
-                  <layout class="QVBoxLayout" name="verticalLayout_8">
-                   <item>
-                    <widget class="QTableView" name="currentTintMPresetList"/>
-                   </item>
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_6">
-                     <item>
-                      <widget class="QLabel" name="label_91">
-                       <property name="text">
-                        <string>Alpha:</string>
-                       </property>
-                       <property name="buddy">
-                        <cstring>currentTintMPresetAlphaSlider</cstring>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QSlider" name="currentTintMPresetAlphaSlider">
-                       <property name="maximum">
-                        <number>10000</number>
-                       </property>
-                       <property name="orientation">
-                        <enum>Qt::Horizontal</enum>
-                       </property>
-                       <property name="tickPosition">
-                        <enum>QSlider::TicksBothSides</enum>
-                       </property>
-                       <property name="tickInterval">
-                        <number>1000</number>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QDoubleSpinBox" name="currentTintMPresetAlpha">
-                       <property name="alignment">
-                        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                       </property>
-                       <property name="decimals">
-                        <number>4</number>
-                       </property>
-                       <property name="maximum">
-                        <double>1.000000000000000</double>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
-                  </layout>
-                 </widget>
-                </item>
-                <item row="3" column="1">
-                 <widget class="DKFormPicker" name="currentTintMDefaultColor">
-                  <property name="whatsThis">
-                   <string>Select one of the Preset Color Options to use as the default for this tint layer.</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1">
-                 <widget class="QComboBox" name="currentTintMType">
-                  <property name="whatsThis">
-                   <string>Specify the type that this tint layer is categorized under. Use &quot;None&quot; for non-playable tint layers.</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="label_88">
-                  <property name="text">
-                   <string>Texture:</string>
-                  </property>
-                  <property name="buddy">
-                   <cstring>currentTintMTexture</cstring>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="0">
-                 <widget class="QLabel" name="label_90">
-                  <property name="text">
-                   <string>Default Color:</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
+               <widget class="QWidget" name="layoutEditTintM_2" native="true">
+                <layout class="QGridLayout" name="layoutEditTintM">
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label_89">
+                   <property name="text">
+                    <string>Type:</string>
+                   </property>
+                   <property name="buddy">
+                    <cstring>currentTintMType</cstring>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="DKGameFilePicker" name="currentTintMTexture"/>
+                 </item>
+                 <item row="2" column="0" colspan="2">
+                  <widget class="QGroupBox" name="groupBox_20">
+                   <property name="title">
+                    <string>Preset Color Options:</string>
+                   </property>
+                   <layout class="QVBoxLayout" name="verticalLayout_8">
+                    <item>
+                     <widget class="QTableView" name="currentTintMPresetList"/>
+                    </item>
+                    <item>
+                     <layout class="QHBoxLayout" name="horizontalLayout_6">
+                      <item>
+                       <widget class="QLabel" name="label_91">
+                        <property name="text">
+                         <string>Alpha:</string>
+                        </property>
+                        <property name="buddy">
+                         <cstring>currentTintMPresetAlphaSlider</cstring>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="DKFloatSlider" name="currentTintMPresetAlphaSlider">
+                        <property name="orientation">
+                         <enum>Qt::Horizontal</enum>
+                        </property>
+                        <property name="decimals">
+                         <number>2</number>
+                        </property>
+                        <property name="maximum">
+                         <double>1.000000000000000</double>
+                        </property>
+                        <property name="tickInterval">
+                         <double>0.100000001490116</double>
+                        </property>
+                        <property name="tickPosition">
+                         <enum>QSlider::TicksBothSides</enum>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QDoubleSpinBox" name="currentTintMPresetAlpha">
+                        <property name="alignment">
+                         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                        </property>
+                        <property name="decimals">
+                         <number>4</number>
+                        </property>
+                        <property name="maximum">
+                         <double>1.000000000000000</double>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="DKFormPicker" name="currentTintMDefaultColor">
+                   <property name="whatsThis">
+                    <string>Select one of the Preset Color Options to use as the default for this tint layer.</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QComboBox" name="currentTintMType">
+                   <property name="whatsThis">
+                    <string>Specify the type that this tint layer is categorized under. Use &quot;None&quot; for non-playable tint layers.</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_88">
+                   <property name="text">
+                    <string>Texture:</string>
+                   </property>
+                   <property name="buddy">
+                    <cstring>currentTintMTexture</cstring>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="label_90">
+                   <property name="text">
+                    <string>Default Color:</string>
+                   </property>
+                   <property name="buddy">
+                    <cstring>currentTintMDefaultColor</cstring>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
               </item>
              </layout>
             </widget>
@@ -3208,6 +3227,11 @@
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>DKFloatSlider</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFloatSlider.h</header>
+  </customwidget>
   <customwidget>
    <class>DKFormPicker</class>
    <extends>QWidget</extends>
@@ -3392,7 +3416,6 @@
   <tabstop>currentTintFTexture</tabstop>
   <tabstop>currentTintFType</tabstop>
   <tabstop>currentTintFPresetList</tabstop>
-  <tabstop>currentTintFPresetAlphaSlider</tabstop>
   <tabstop>currentTintFPresetAlpha</tabstop>
   <tabstop>currentTintFDefaultColor</tabstop>
   <tabstop>defaultFaceTextureF</tabstop>
@@ -3405,7 +3428,6 @@
   <tabstop>currentTintMTexture</tabstop>
   <tabstop>currentTintMType</tabstop>
   <tabstop>currentTintMPresetList</tabstop>
-  <tabstop>currentTintMPresetAlphaSlider</tabstop>
   <tabstop>currentTintMPresetAlpha</tabstop>
   <tabstop>currentTintMDefaultColor</tabstop>
   <tabstop>defaultFaceTextureM</tabstop>

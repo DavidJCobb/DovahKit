@@ -60,7 +60,7 @@ ActorBaseTintLayerModel::ActorBaseTintLayerModel(QObject* parent) : QAbstractIte
                      preset.color = {}; // TODO: Can the color of a preset be nullptr, or should we remove the preset?
                }
                if (layer->default_color == stub)
-                  layer->default_color = nullptr; // TODO: Can this be nullptr, or should we force it to the first valid color form?
+                  layer->default_color = nullptr; // can be null
             }
          }
       }

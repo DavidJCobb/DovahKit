@@ -113,7 +113,18 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
       view->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
       view->verticalHeader()->setVisible(this->state.show_indices);
       #if !defined(QT_DESIGNER_LIB)
-         this->_model()->setShowIndices(this->state.show_indices);
+      {
+         auto* model = this->_model();
+         model->setAllowDuplicates(this->state.allow_duplicates);
+         model->setShowIndices(this->state.show_indices);
+
+         QObject::connect(model, &DKFormListPaneModel::rowsInserted, this, [this](const QModelIndex&, int first, int last) {
+            emit this->formsAdded(last - first + 1);
+         });
+         QObject::connect(model, &DKFormListPaneModel::rowsRemoved, this, [this](const QModelIndex&, int first, int last) {
+            emit this->formsRemoved(last - first + 1);
+         });
+      }
       #endif
    }
    //
@@ -236,7 +247,13 @@ void DKFormListPane::_updateOrientation() {
       }
    }
 #endif
-   
+
+void DKFormListPane::setAllowDuplicates(bool v) {
+   this->state.allow_duplicates = v;
+   #if !defined(QT_DESIGNER_LIB)
+      this->_model()->setAllowDuplicates(v);
+   #endif
+}
 void DKFormListPane::setReadOnly(bool v) {
    if (this->readOnly() == v)
       return;
@@ -301,6 +318,12 @@ void DKFormListPane::setShowRemoveButton(bool v) {
    }
    void DKFormListPane::clear() {
       this->_model()->clear();
+   }
+   bool DKFormListPane::contains(const dovah::form_stub* stub) const {
+      return this->indexOf(stub) >= 0;
+   }
+   int DKFormListPane::indexOf(const dovah::form_stub* stub) const {
+      return this->_model()->indexOfStub(stub);
    }
    void DKFormListPane::reserve(size_t i) {
       this->_model()->reserve(i);
