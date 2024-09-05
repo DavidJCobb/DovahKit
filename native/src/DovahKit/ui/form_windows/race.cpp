@@ -15,12 +15,17 @@
 #include "./shared/FaceExtraHeadPartsModel.h"
 #include "./shared/FormPickerFromFormListPaneFilter.h"
 #include "./shared/HeadPartPickerFilter.h"
+#include "./race/RaceAvailableFaceMorphsModel.h"
 #include "./race/RaceBaseMovementDefaultsModel.h"
 #include "./race/RaceBipedObjectSlotsModel.h"
 #include "./race/RaceEquipSlotsModel.h"
 #include "./race/RaceEquipTypesModel.h"
 #include "./race/RaceTintDefaultColorPickerFilter.h"
 #include "./race/RaceTintLayerModel.h"
+
+namespace {
+   constexpr const bool allow_del_key_on_tint_layer_list = false;
+}
 
 namespace {
    constexpr const bool just_let_me_compile =
@@ -343,7 +348,21 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
          _configure(dovah::sex::female, this->ui.extraHeadPartsF);
          _configure(dovah::sex::male,   this->ui.extraHeadPartsM);
       }
-      static_assert(just_let_me_compile, "TODO: Available Morphs");
+      {  // Available morphs
+         auto _configure = [this](
+            dovah::sex sex,
+            QTableView* view
+         ) {
+            auto* model = this->_models.available_face_morphs[sex] = new RaceAvailableFaceMorphsModel(this);
+            view->setModel(model);
+
+            ui::typical_tableview_config(view);
+            view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+            view->horizontalHeader()->setStretchLastSection(true);
+         };
+         _configure(dovah::sex::female, this->ui.availableMorphsF);
+         _configure(dovah::sex::male,   this->ui.availableMorphsM);
+      }
       {  // Hair Colors
          auto _configure = [this](
             dovah::sex sex,
@@ -376,6 +395,11 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
             dovah::sex  sex,
             QTableView* layer_table,
 
+            QPushButton* button_layer_move_up,
+            QPushButton* button_layer_move_down,
+            QPushButton* button_layer_create,
+            QPushButton* button_layer_delete,
+
             QWidget* layer_edit_container,
 
             DKGameFilePicker* layer_texture,
@@ -391,6 +415,52 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
             auto* model = this->_models.tint_layer_model[sex] = new RaceTintLayerModel(this);
             layer_table->setModel(model);
             auto* layer_sel_model  = layer_table->selectionModel();
+
+            // Support for the Del key:
+            layer_table->installEventFilter(this);
+            preset_table->installEventFilter(this);
+
+            {  // Layer buttons
+               QObject::connect(button_layer_move_up, &QPushButton::clicked, this, [this, model, layer_sel_model]() {
+                  auto qmi = ui::get_selected_row_qmi(layer_sel_model);
+                  model->move_layer(qmi, false);
+               });
+               QObject::connect(button_layer_move_down, &QPushButton::clicked, this, [this, model, layer_sel_model]() {
+                  auto qmi = ui::get_selected_row_qmi(layer_sel_model);
+                  model->move_layer(qmi, true);
+               });
+               QObject::connect(button_layer_create, &QPushButton::clicked, this, [this, model, layer_sel_model]() {
+                  auto result = model->create_layer();
+                  if (result.has_value()) {
+                     auto qmi = model->layer_qmi(result.value());
+                     if (qmi.isValid()) {
+                        QItemSelection sel(qmi.siblingAtColumn(0), qmi.siblingAtColumn(RaceTintLayerModel::LayerColumnCount));
+                        layer_sel_model->select(sel, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+                     }
+                  }
+               });
+               QObject::connect(button_layer_delete, &QPushButton::clicked, this, [this, model, layer_sel_model]() {
+                  auto qmi = ui::get_selected_row_qmi(layer_sel_model);
+                  model->remove_layer(qmi);
+               });
+               
+               QObject::connect(
+                  layer_sel_model,
+                  &QItemSelectionModel::selectionChanged,
+                  this,
+                  [this, button_layer_move_up, button_layer_move_down, button_layer_delete](const QItemSelection& sel) {
+                     if (sel.isEmpty()) {
+                        button_layer_move_up->setEnabled(false);
+                        button_layer_move_down->setEnabled(false);
+                        button_layer_delete->setEnabled(false);
+                     } else {
+                        button_layer_move_up->setEnabled(true);
+                        button_layer_move_down->setEnabled(true);
+                        button_layer_delete->setEnabled(true);
+                     }
+                  }
+               );
+            }
 
             auto* preset_model = this->_models.tint_preset_model[sex] = new RaceTintLayerPresetsModel(this);
             preset_model->setSourceModel(model);
@@ -588,6 +658,10 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
          _configure(
             dovah::sex::female,
             this->ui.tintsTableF,
+            this->ui.buttonTintsMoveUpF,
+            this->ui.buttonTintsMoveDownF,
+            this->ui.buttonTintsNewF,
+            this->ui.buttonTintsDeleteF,
             this->ui.layoutTintEditF,
             this->ui.currentTintFTexture,
             this->ui.currentTintFType,
@@ -600,6 +674,10 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
          _configure(
             dovah::sex::male,
             this->ui.tintsTableM,
+            this->ui.buttonTintsMoveUpM,
+            this->ui.buttonTintsMoveDownM,
+            this->ui.buttonTintsNewM,
+            this->ui.buttonTintsDeleteM,
             this->ui.layoutTintEditM,
             this->ui.currentTintMTexture,
             this->ui.currentTintMType,
@@ -838,7 +916,7 @@ void FormDialogRace::_load_impl() {
       static_assert(just_let_me_compile, "TODO: Default FaceGen Targets and Weights");
    #pragma endregion
    #pragma region Face Data tab
-      {
+      {  // Head part inheritance mode
          constexpr const auto all_flags = loaded_form_type::race_flag::overlay_head_part_list | loaded_form_type::race_flag::override_head_part_list;
 
          this->ui.faceHeadPartsOverlay->setProperty("inherit_flag", (int)loaded_form_type::race_flag::overlay_head_part_list);
@@ -940,8 +1018,10 @@ void FormDialogRace::_load_impl() {
             model_extra->replaceAllHeadParts(extra_parts);
          }
       }
-      static_assert(just_let_me_compile, "TODO: Female: Morphs");
-      static_assert(just_let_me_compile, "TODO: Male: Morphs");
+      {  // Available Morphs
+         this->_models.available_face_morphs.female->initializeFrom(working, dovah::sex::female);
+         this->_models.available_face_morphs.male->initializeFrom(working, dovah::sex::male);
+      }
       this->ui.hairColorsF->pullStubs(working.by_sex.female.head_data.hair_colors);
       this->ui.hairColorsM->pullStubs(working.by_sex.male.head_data.hair_colors);
       ui::bind(this->ui.defaultHairColorF, working.by_sex.female.head_data.default_hair_color, working);
@@ -1094,9 +1174,11 @@ void FormDialogRace::_save_impl() {
             write_form_ref(form_use, stub);
          }
       }
-
-      static_assert(just_let_me_compile, "TODO: Female: Morphs");
-      static_assert(just_let_me_compile, "TODO: Male: Morphs");
+      
+      {  // Available Morphs
+         this->_models.available_face_morphs.female->commitTo(working, dovah::sex::female);
+         this->_models.available_face_morphs.male->commitTo(working, dovah::sex::male);
+      }
 
       this->ui.hairColorsF->commitStubs(working.by_sex.female.head_data.hair_colors, working);
       this->ui.hairColorsM->commitStubs(working.by_sex.male.head_data.hair_colors, working);
@@ -1191,6 +1273,22 @@ void FormDialogRace::_update_slot_dropdowns() {
                   if (stub)
                      model->removeHeadPart(*stub);
                }
+            }
+            return true;
+         }
+      }
+      if constexpr (allow_del_key_on_tint_layer_list) { // Del key for deleting a tint layer
+         auto* widget_f = this->ui.tintsTableF;
+         auto* widget_m = this->ui.tintsTableM;
+         if (object == widget_f || object == widget_m) {
+            auto sex = (object == widget_f) ? dovah::sex::female : dovah::sex::male;
+
+            auto* sel_model = ((decltype(widget_f))object)->selectionModel();
+            auto* model     = this->_models.tint_layer_model[sex];
+
+            auto qmi = ui::get_selected_row_qmi(sel_model);
+            if (qmi.isValid()) {
+               model->remove_layer(qmi);
             }
             return true;
          }

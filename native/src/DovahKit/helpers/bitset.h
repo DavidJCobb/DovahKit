@@ -85,15 +85,18 @@ namespace cobb {
                      target.set(index);
                   else
                      target.reset(index);
+                  return *this;
                }
                constexpr reference& operator=(const reference& x) noexcept {
                   if ((bool)x)
                      target.set(index);
                   else
                      target.reset(index);
+                  return *this;
                }
                reference& flip() noexcept {
                   target.flip(index);
+                  return *this;
                }
          };
          

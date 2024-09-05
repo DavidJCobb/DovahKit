@@ -525,6 +525,56 @@ void RaceTintLayerModel::exportLayers(dovah::loaded_forms::Race& race, dovah::se
          return {};
       return _data_of(*layer);
    }
+
+   QModelIndex RaceTintLayerModel::move_layer(const QModelIndex& qmi, bool down) {
+      if (!_qmi_is_layer(qmi))
+         return {};
+
+      size_t row  = qmi.row();
+      auto&  list = this->_data.layers;
+      size_t size = list.size();
+      if (row >= size)
+         return {};
+      
+      size_t to;
+      if (down) {
+         if (row == size - 1)
+            return {};
+         to = row + 1;
+      } else {
+         if (row == 0)
+            return {};
+         to = row - 1;
+      }
+      {  // QAbstractItemModel::moveRows is terrible and beginMoveRows is correspondingly terrible.
+         size_t emit_to = to;
+         if (emit_to > row) {
+            //
+            // Moving items down within the same parent is a special case. Not moving up within the 
+            // same parent; not moving across parents. Just down, within the same parent. This is 
+            // the case for QAbstractItemModel::moveRows and QAbstractItemModel::beginMoveRows alike.
+            // 
+            // The APIs are designed around the assumption that same-parent moves will be done like 
+            // so (assuming `QVector<T> children` as your storage):
+            // 
+            //    auto slice = children.mid(first_row_index, count);
+            //    children.remove(first_row_index, count);
+            //    for(int i = slice.size() - 1; i >= 0; --i)
+            //       children.insert(place_last_moved_before - count, slice[i]);
+            // 
+            // This is, in a word, stupid. It's a complete footgun, not least because the parameters 
+            // are all defined in terms of the state of the list after the removal, even though you 
+            // receive them before the removal and have to call `beginMoveRows` before the removal. 
+            // It's an unhinged design and I despise it.
+            //
+            ++emit_to;
+         }
+         this->beginMoveRows({}, row, row, {}, emit_to);
+      }
+      std::swap(list[row], list[to]);
+      this->endMoveRows();
+      return this->_qmi_of_layer(to);
+   }
    
    void RaceTintLayerModel::overwrite_layer(const QModelIndex& qmi, const LayerData& src) {
       auto* layer = _layer_from_qmi(qmi);

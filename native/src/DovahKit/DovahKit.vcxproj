@@ -754,6 +754,7 @@
     <ClCompile Include="ui\form_windows\odds_and_ends\shout_word.cpp" />
     <ClCompile Include="ui\form_windows\outfit.cpp" />
     <ClCompile Include="ui\form_windows\quest.cpp" />
+    <ClCompile Include="ui\form_windows\race\RaceAvailableFaceMorphsModel.cpp" />
     <ClCompile Include="ui\form_windows\race\RaceBaseMovementDefaultsModel.cpp" />
     <ClCompile Include="ui\form_windows\race\RaceBipedObjectSlotsModel.cpp" />
     <ClCompile Include="ui\form_windows\race\RaceEquipSlotsModel.cpp" />
@@ -1255,6 +1256,7 @@
     <QtMoc Include="ui\form_windows\race\RaceBaseMovementDefaultsModel.h" />
     <QtMoc Include="ui\form_windows\movement_type.h" />
     <QtMoc Include="ui\form_windows\race\RaceTintLayerModel.h" />
+    <QtMoc Include="ui\form_windows\race\RaceAvailableFaceMorphsModel.h" />
     <ClInclude Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.h" />
     <ClInclude Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.h" />
     <ClInclude Include="ui\form_windows\shared\HeadPartPickerFilter.h" />

@@ -37,6 +37,8 @@ namespace dovah::loaded_forms {
          static constexpr const size_t max_biped_object_name_count  = 32;
          static constexpr const size_t max_biped_object_name_length = 0x103; // MAX_PATH - 1
 
+         static constexpr const size_t max_indexed_morph_count = 256;
+
          using skill_boost_value_type = uint8_t;
 
          struct form_flag : public Form::form_flag {
@@ -171,10 +173,10 @@ namespace dovah::loaded_forms {
                std::vector<form_reference_t> hair_colors; // AHCF[] // type is CLFM
                std::vector<form_reference_t> head_parts;  // NAM0 ~ HEAD[]; or INAM[]; or JNAM[]
                struct {
-                  cobb::bitset<256> brows;  // MPAI{1}+MPAV
-                  cobb::bitset<256> eyes;   // MPAI{2}+MPAV
-                  cobb::bitset<256> mouths; // MPAI{3}+MPAV
-                  cobb::bitset<256> noses;  // MPAI{0}+MPAV
+                  cobb::bitset<max_indexed_morph_count> brows;  // MPAI{1}+MPAV
+                  cobb::bitset<max_indexed_morph_count> eyes;   // MPAI{2}+MPAV
+                  cobb::bitset<max_indexed_morph_count> mouths; // MPAI{3}+MPAV
+                  cobb::bitset<max_indexed_morph_count> noses;  // MPAI{0}+MPAV
                } morphs;
                std::vector<form_reference_t> preset_actors; // RPRF[] // type is NPC_
             } head_data;

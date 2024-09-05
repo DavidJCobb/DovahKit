@@ -2592,6 +2592,9 @@
     <ClCompile Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\race\RaceAvailableFaceMorphsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -7420,6 +7423,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\race\RaceTintLayerModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\race\RaceAvailableFaceMorphsModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

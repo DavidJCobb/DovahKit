@@ -10,6 +10,7 @@ class FaceBaseHeadPartsModel;
 class FaceExtraHeadPartsModel;
 class FormPickerFromFormListPaneFilter;
 class HeadPartPickerFilter;
+class RaceAvailableFaceMorphsModel;
 class RaceBaseMovementDefaultsModel;
 class RaceBipedObjectSlotsModel;
 class RaceEquipSlotsModel;
@@ -47,6 +48,8 @@ class FormDialogRace :
 
          dovah::data_by_sex<FaceBaseHeadPartsModel*>  head_parts_base;
          dovah::data_by_sex<FaceExtraHeadPartsModel*> head_parts_extra;
+
+         dovah::data_by_sex<RaceAvailableFaceMorphsModel*> available_face_morphs;
 
          dovah::data_by_sex<RaceTintLayerModel*>        tint_layer_model;
          dovah::data_by_sex<RaceTintLayerPresetsModel*> tint_preset_model; // NOTE: the preset model is a child/proxy of the layer model
