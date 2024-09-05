@@ -35,7 +35,8 @@ class FormDialogRace :
       struct {
          dovah::data_by_sex<HeadPartPickerFilter*>             base_head_part;
          dovah::data_by_sex<FormPickerFromFormListPaneFilter*> default_complexion;
-         dovah::data_by_sex<RaceTintDefaultColorPickerFilter*>  tint_layer_default_color;
+         dovah::data_by_sex<FormPickerFromFormListPaneFilter*> default_hair_color;
+         dovah::data_by_sex<RaceTintDefaultColorPickerFilter*> tint_layer_default_color;
       } _filters;
       struct {
          RaceBipedObjectSlotsModel* biped_objects = nullptr;

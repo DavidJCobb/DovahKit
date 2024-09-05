@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>FormDialogRace</class>
  <widget class="QDialog" name="FormDialogRace">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>1020</width>
-    <height>898</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Race</string>
   </property>
@@ -2714,7 +2706,7 @@
        <item row="2" column="0">
         <widget class="QTabWidget" name="tintsBySex">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tabTintsF">
           <attribute name="title">
@@ -2792,8 +2784,21 @@
                      <widget class="QTableView" name="currentTintFPresetList"/>
                     </item>
                     <item>
-                     <layout class="QHBoxLayout" name="horizontalLayout_9">
-                      <item>
+                     <layout class="QGridLayout" name="gridLayout_45">
+                      <item row="0" column="0">
+                       <widget class="QLabel" name="label_40">
+                        <property name="text">
+                         <string>Color:</string>
+                        </property>
+                        <property name="buddy">
+                         <cstring>currentTintFPresetColor</cstring>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="1">
+                       <widget class="DKFormPicker" name="currentTintFPresetColor"/>
+                      </item>
+                      <item row="1" column="0">
                        <widget class="QLabel" name="label_94">
                         <property name="text">
                          <string>Alpha:</string>
@@ -2803,37 +2808,41 @@
                         </property>
                        </widget>
                       </item>
-                      <item>
-                       <widget class="DKFloatSlider" name="currentTintFPresetAlphaSlider">
-                        <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
-                        </property>
-                        <property name="decimals">
-                         <number>2</number>
-                        </property>
-                        <property name="maximum">
-                         <double>1.000000000000000</double>
-                        </property>
-                        <property name="tickInterval">
-                         <double>0.100000001490116</double>
-                        </property>
-                        <property name="tickPosition">
-                         <enum>QSlider::TicksBothSides</enum>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QDoubleSpinBox" name="currentTintFPresetAlpha">
-                        <property name="alignment">
-                         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                        </property>
-                        <property name="decimals">
-                         <number>4</number>
-                        </property>
-                        <property name="maximum">
-                         <double>1.000000000000000</double>
-                        </property>
-                       </widget>
+                      <item row="1" column="1">
+                       <layout class="QHBoxLayout" name="horizontalLayout_9">
+                        <item>
+                         <widget class="DKFloatSlider" name="currentTintFPresetAlphaSlider">
+                          <property name="orientation">
+                           <enum>Qt::Horizontal</enum>
+                          </property>
+                          <property name="decimals">
+                           <number>2</number>
+                          </property>
+                          <property name="maximum">
+                           <double>1.000000000000000</double>
+                          </property>
+                          <property name="tickInterval">
+                           <double>0.100000001490116</double>
+                          </property>
+                          <property name="tickPosition">
+                           <enum>QSlider::TicksBothSides</enum>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QDoubleSpinBox" name="currentTintFPresetAlpha">
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
+                          <property name="decimals">
+                           <number>4</number>
+                          </property>
+                          <property name="maximum">
+                           <double>1.000000000000000</double>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
                       </item>
                      </layout>
                     </item>
@@ -2975,8 +2984,8 @@
                </layout>
               </item>
               <item>
-               <widget class="QWidget" name="layoutEditTintM_2" native="true">
-                <layout class="QGridLayout" name="layoutEditTintM">
+               <widget class="QWidget" name="layoutTintEditM" native="true">
+                <layout class="QGridLayout" name="_2">
                  <item row="1" column="0">
                   <widget class="QLabel" name="label_89">
                    <property name="text">
@@ -3000,8 +3009,21 @@
                      <widget class="QTableView" name="currentTintMPresetList"/>
                     </item>
                     <item>
-                     <layout class="QHBoxLayout" name="horizontalLayout_6">
-                      <item>
+                     <layout class="QGridLayout" name="gridLayout_46">
+                      <item row="0" column="1">
+                       <widget class="DKFormPicker" name="currentTintMPresetColor"/>
+                      </item>
+                      <item row="0" column="0">
+                       <widget class="QLabel" name="label_41">
+                        <property name="text">
+                         <string>Color:</string>
+                        </property>
+                        <property name="buddy">
+                         <cstring>currentTintMPresetColor</cstring>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="0">
                        <widget class="QLabel" name="label_91">
                         <property name="text">
                          <string>Alpha:</string>
@@ -3011,37 +3033,41 @@
                         </property>
                        </widget>
                       </item>
-                      <item>
-                       <widget class="DKFloatSlider" name="currentTintMPresetAlphaSlider">
-                        <property name="orientation">
-                         <enum>Qt::Horizontal</enum>
-                        </property>
-                        <property name="decimals">
-                         <number>2</number>
-                        </property>
-                        <property name="maximum">
-                         <double>1.000000000000000</double>
-                        </property>
-                        <property name="tickInterval">
-                         <double>0.100000001490116</double>
-                        </property>
-                        <property name="tickPosition">
-                         <enum>QSlider::TicksBothSides</enum>
-                        </property>
-                       </widget>
-                      </item>
-                      <item>
-                       <widget class="QDoubleSpinBox" name="currentTintMPresetAlpha">
-                        <property name="alignment">
-                         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                        </property>
-                        <property name="decimals">
-                         <number>4</number>
-                        </property>
-                        <property name="maximum">
-                         <double>1.000000000000000</double>
-                        </property>
-                       </widget>
+                      <item row="1" column="1">
+                       <layout class="QHBoxLayout" name="horizontalLayout_6">
+                        <item>
+                         <widget class="DKFloatSlider" name="currentTintMPresetAlphaSlider">
+                          <property name="orientation">
+                           <enum>Qt::Horizontal</enum>
+                          </property>
+                          <property name="decimals">
+                           <number>2</number>
+                          </property>
+                          <property name="maximum">
+                           <double>1.000000000000000</double>
+                          </property>
+                          <property name="tickInterval">
+                           <double>0.100000001490116</double>
+                          </property>
+                          <property name="tickPosition">
+                           <enum>QSlider::TicksBothSides</enum>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QDoubleSpinBox" name="currentTintMPresetAlpha">
+                          <property name="alignment">
+                           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                          </property>
+                          <property name="decimals">
+                           <number>4</number>
+                          </property>
+                          <property name="maximum">
+                           <double>1.000000000000000</double>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
                       </item>
                      </layout>
                     </item>
@@ -3416,6 +3442,8 @@
   <tabstop>currentTintFTexture</tabstop>
   <tabstop>currentTintFType</tabstop>
   <tabstop>currentTintFPresetList</tabstop>
+  <tabstop>currentTintFPresetColor</tabstop>
+  <tabstop>currentTintFPresetAlphaSlider</tabstop>
   <tabstop>currentTintFPresetAlpha</tabstop>
   <tabstop>currentTintFDefaultColor</tabstop>
   <tabstop>defaultFaceTextureF</tabstop>
@@ -3428,6 +3456,8 @@
   <tabstop>currentTintMTexture</tabstop>
   <tabstop>currentTintMType</tabstop>
   <tabstop>currentTintMPresetList</tabstop>
+  <tabstop>currentTintMPresetColor</tabstop>
+  <tabstop>currentTintMPresetAlphaSlider</tabstop>
   <tabstop>currentTintMPresetAlpha</tabstop>
   <tabstop>currentTintMDefaultColor</tabstop>
   <tabstop>defaultFaceTextureM</tabstop>

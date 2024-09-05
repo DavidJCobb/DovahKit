@@ -85,7 +85,10 @@ RaceBaseMovementDefaultsModel::RaceBaseMovementDefaultsModel(QObject* parent) : 
                }
                return {};
             case Column::Form:
-               return src.cached_editor_id;
+               if (role == Qt::DisplayRole || role == Qt::ToolTipRole) {
+                  return src.cached_editor_id;
+               }
+               return {};
          }
          return {};
       }
@@ -117,7 +120,10 @@ void RaceBaseMovementDefaultsModel::initializeFrom(const dovah::loaded_forms::Ra
    for (size_t i = 0; i < num_move_types; ++i) {
       auto& dst = this->_slots[i];
       dst.stub = race.movement.types.list[i].get_form_stub();
-      dst.cached_editor_id = QString::fromStdString(dst.stub->editorID);
+      if (dst.stub)
+         dst.cached_editor_id = QString::fromStdString(dst.stub->editorID);
+      else
+         dst.cached_editor_id = "";
    }
    this->endResetModel();
 }
@@ -140,7 +146,11 @@ void RaceBaseMovementDefaultsModel::setForm(size_t row, dovah::form_stub* stub) 
    if (dst.stub == stub)
       return;
    dst.stub = stub;
+   if (dst.stub)
+      dst.cached_editor_id = QString::fromStdString(dst.stub->editorID);
+   else
+      dst.cached_editor_id = "";
 
-   auto qmi = this->index(row, 0, {});
+   auto qmi = this->index(row, Column::Form, {});
    emit dataChanged(qmi, qmi, {});
 }

@@ -30,6 +30,42 @@ RaceTintLayerModel::~RaceTintLayerModel() {
    this->_clear_silent();
 }
 
+/*static*/ RaceTintLayerModel::LayerData RaceTintLayerModel::_data_of(const Layer& src) {
+   return LayerData{
+      .type    = src.type,
+      .texture = src.texture,
+      .default_color = src.default_color,
+   };
+}
+/*static*/ RaceTintLayerModel::PresetData RaceTintLayerModel::_data_of(const Preset& src) {
+   return PresetData{
+      .alpha = src.alpha,
+      .color = {
+         .form   = src.color.form,
+         .cached = src.color.cached,
+      },
+   };
+}
+//
+/*static*/ void RaceTintLayerModel::_overwrite(Layer& dst, const LayerData& src) {
+   dst.default_color = src.default_color;
+   dst.texture = src.texture;
+   dst.type    = src.type;
+}
+/*static*/ void RaceTintLayerModel::_overwrite(Preset& dst, const PresetData& src) {
+   auto* prior = dst.color.form;
+
+   dst.alpha = src.alpha;
+   dst.color = {
+      .form   = src.color.form,
+      .cached = src.color.cached,
+   };
+
+   if (prior != src.color.form) {
+      dst.recache_color();
+   }
+}
+
 void RaceTintLayerModel::_clear_all_layers() {
    this->_data.indices_used.clear();
    {
@@ -70,7 +106,7 @@ RaceTintLayerModel::Layer* RaceTintLayerModel::_layer_from_qmi(const QModelIndex
    }
    return nullptr;
 }
-RaceTintLayerModel::LayerPreset* RaceTintLayerModel::_preset_from_qmi(const QModelIndex& qmi) const {
+RaceTintLayerModel::Preset* RaceTintLayerModel::_preset_from_qmi(const QModelIndex& qmi) const {
    if (!_qmi_is_preset(qmi))
       return nullptr;
    auto* layer = _layer_from_qmi(qmi);
@@ -92,7 +128,7 @@ QModelIndex RaceTintLayerModel::_qmi_of_preset(Layer* layer, size_t preset_row, 
 QModelIndex RaceTintLayerModel::_qmi_of_layer(size_t row, size_t col) const {
    if (row >= this->_data.layers.size())
       return {};
-   if (col >= ColumnCount)
+   if (col >= LayerColumnCount)
       return {};
    return this->createIndex(row, col, nullptr);
 }
@@ -134,8 +170,11 @@ QModelIndex RaceTintLayerModel::_qmi_of_layer(size_t row, size_t col) const {
          return {};
       }
       /*virtual*/ QModelIndex RaceTintLayerModel::sibling(int row, int column, const QModelIndex& index) const /*override*/ {
-         if (row < 0 || column < 0 || !index.isValid() || _qmi_is_none(index))
+         if (row < 0 || column < 0 || !index.isValid())
             return {};
+         if (_qmi_is_none(index)) {
+            return this->createIndex(row, column, -1);
+         }
          if (_qmi_is_layer(index))
             return this->index(row, column, {});
          if (_qmi_is_preset(index)) {
@@ -159,9 +198,13 @@ QModelIndex RaceTintLayerModel::_qmi_of_layer(size_t row, size_t col) const {
          return this->_data.layers.size();
       }
       /*virtual*/ int RaceTintLayerModel::columnCount(const QModelIndex& parent) const /*override*/ {
-         if (_qmi_is_preset(parent) || _qmi_is_none(parent))
+         if (_qmi_is_layer(parent) || _qmi_is_none(parent))
+            //
+            // Presets have a layer as their parent, so it's the layer that has N many columns, 
+            // and the model root that has a different number.
+            //
             return PresetColumnCount;
-         return ColumnCount;
+         return LayerColumnCount;
       }
    #pragma endregion
    #pragma region Node data
@@ -175,21 +218,21 @@ QModelIndex RaceTintLayerModel::_qmi_of_layer(size_t row, size_t col) const {
             if (!layer)
                return {};
             switch (index.column()) {
-               case Column::TexturePath:
+               case LayerColumn::TexturePath:
                   switch (role) {
                      case Qt::DisplayRole:
                      case Qt::ToolTipRole:
                         return QString::fromStdString(layer->texture);
                   }
                   break;
-               case Column::NumPresets:
+               case LayerColumn::NumPresets:
                   switch (role) {
                      case Qt::DisplayRole:
                      case Qt::ToolTipRole:
                         return layer->presets.size();
                   }
                   break;
-               case Column::Type:
+               case LayerColumn::Type:
                   if (role == Qt::DisplayRole || role == Qt::ToolTipRole) {
                      switch (layer->type) {
                         using enum dovah::face_tint_type;
@@ -278,11 +321,11 @@ QModelIndex RaceTintLayerModel::_qmi_of_layer(size_t row, size_t col) const {
          case Qt::DisplayRole:
          case Qt::ToolTipRole:
             switch (section) {
-               case Column::TexturePath:
+               case LayerColumn::TexturePath:
                   return tr("Texture");
-               case Column::NumPresets:
+               case LayerColumn::NumPresets:
                   return tr("# Presets");
-               case Column::Type:
+               case LayerColumn::Type:
                   return tr("Type");
             }
             break;
@@ -306,7 +349,7 @@ RaceTintLayerModel::Layer* RaceTintLayerModel::_layer_by_index(dovah::face_tint_
       return this->_data.layers[row.value()];
    return nullptr;
 }
-RaceTintLayerModel::LayerPreset* RaceTintLayerModel::_preset_by_index(dovah::face_tint_index_type pi) const {
+RaceTintLayerModel::Preset* RaceTintLayerModel::_preset_by_index(dovah::face_tint_index_type pi) const {
    if (!this->_index_is_in_use(pi))
       return nullptr;
    for (auto* layer : this->_data.layers)
@@ -315,7 +358,7 @@ RaceTintLayerModel::LayerPreset* RaceTintLayerModel::_preset_by_index(dovah::fac
             return &preset;
    return nullptr;
 }
-RaceTintLayerModel::LayerPreset* RaceTintLayerModel::_preset_by_indices(dovah::face_tint_index_type li, dovah::face_tint_index_type pi) const {
+RaceTintLayerModel::Preset* RaceTintLayerModel::_preset_by_indices(dovah::face_tint_index_type li, dovah::face_tint_index_type pi) const {
    if (!this->_index_is_in_use(pi))
       return nullptr;
    if (auto* layer = this->_layer_by_index(li)) {
@@ -356,7 +399,7 @@ bool RaceTintLayerModel::_index_is_in_use(dovah::face_tint_index_type i) const {
    return used[i];
 }
 
-QModelIndex RaceTintLayerModel::noneIndex() const {
+QModelIndex RaceTintLayerModel::noPresetQMI() const {
    return this->createIndex(0, 0, -1);
 }
 
@@ -456,240 +499,273 @@ void RaceTintLayerModel::exportLayers(dovah::loaded_forms::Race& race, dovah::se
    }
 }
 
-std::optional<dovah::face_tint_index_type> RaceTintLayerModel::addLayer() {
-   auto& list = this->_data.layers;
+#pragma region Functions for editing layers
+   std::optional<dovah::face_tint_index_type> RaceTintLayerModel::create_layer() {
+      auto& list = this->_data.layers;
 
-   this->beginInsertRows({}, list.size(), list.size());
-   auto  li    = this->_allocate_new_index();
-   auto& ptr   = list.emplace_back();
-   auto* layer = ptr = new Layer;
-   layer->index = li;
-   this->endInsertRows();
+      this->beginInsertRows({}, list.size(), list.size());
+      auto  li    = this->_allocate_new_index();
+      auto& ptr   = list.emplace_back();
+      auto* layer = ptr = new Layer;
+      layer->index = li;
+      this->endInsertRows();
 
-   return li;
-}
-void RaceTintLayerModel::removeLayerByIndex(dovah::face_tint_index_type li) {
-   auto& list = this->_data.layers;
-   for (size_t lr = 0; lr < list.size(); ++lr) {
-      auto* layer = list[lr];
-      if (layer->index == li) {
-         this->beginRemoveRows({}, lr, lr);
-         {
-            for (auto& preset : layer->presets)
-               this->_try_free_index(preset.index);
-            this->_try_free_index(layer->index);
-         }
-         delete layer;
-         list.erase(list.begin() + lr);
-         this->endRemoveRows();
-         return;
-      }
+      return li;
    }
-}
-void RaceTintLayerModel::removeLayerByRow(size_t lr) {
-   auto& list = this->_data.layers;
-   if (lr >= list.size())
-      return;
-   this->beginRemoveRows({}, lr, lr);
-   auto* layer = list[lr];
-   {
-      for (auto& preset : layer->presets)
-         this->_try_free_index(preset.index);
-      this->_try_free_index(layer->index);
-   }
-   delete layer;
-   list.erase(list.begin() + lr);
-   this->endRemoveRows();
-}
-//
-std::optional<RaceTintLayerModel::LayerData> RaceTintLayerModel::getLayerData(const QModelIndex& qmi) const {
-   auto* layer = _layer_from_qmi(qmi);
-   if (!layer)
-      return {};
-
-   LayerData data;
-   data.default_color = layer->default_color;
-   data.texture       = layer->texture;
-   data.type          = layer->type;
-   return data;
-}
-std::optional<RaceTintLayerModel::LayerData> RaceTintLayerModel::getLayerData(dovah::face_tint_index_type li) const {
-   auto* layer = this->_layer_by_index(li);
-   if (layer) {
-      LayerData data;
-      data.default_color = layer->default_color;
-      data.texture       = layer->texture;
-      data.type          = layer->type;
-      return data;
-   }
-   return {};
-}
-void RaceTintLayerModel::setLayerData(const QModelIndex& qmi, const LayerData& src) {
-   auto* layer = _layer_from_qmi(qmi);
-   if (!layer)
-      return;
-   layer->default_color = src.default_color;
-   layer->texture       = src.texture;
-   layer->type          = src.type;
    
-   auto tl = qmi.siblingAtColumn(0);
-   auto br = qmi.siblingAtColumn(ColumnCount);
-   emit dataChanged(tl, br);
-}
-void RaceTintLayerModel::setLayerData(dovah::face_tint_index_type li, const LayerData& src) {
-   auto row = this->_row_for_layer(li);
-   if (!row.has_value())
-      return;
-   auto* dst = this->_data.layers[row.value()];
-   dst->default_color = src.default_color;
-   dst->texture = src.texture;
-   dst->type    = src.type;
-
-   auto tl = this->index(row.value(), 0, {});
-   auto br = tl.siblingAtColumn(ColumnCount);
-   emit dataChanged(tl, br);
-}
-
-[[nodiscard]] std::optional<RaceTintLayerModel::LayerPreset> RaceTintLayerModel::getLayerPresetByIndex(dovah::face_tint_index_type preset_index) {
-   auto* src = this->_preset_by_index(preset_index);
-   if (src)
-      return *src;
-   return {};
-}
-[[nodiscard]] std::optional<RaceTintLayerModel::LayerPreset> RaceTintLayerModel::getLayerPresetByIndex(dovah::face_tint_index_type layer_index, dovah::face_tint_index_type preset_index) {
-   auto* src = this->_preset_by_indices(layer_index, preset_index);
-   if (src)
-      return *src;
-   return {};
-}
-[[nodiscard]] std::optional<RaceTintLayerModel::LayerPreset> RaceTintLayerModel::getLayerPresetByRow(dovah::face_tint_index_type layer_index, size_t row) {
-   if (auto* layer = this->_layer_by_index(layer_index)) {
-      if (row < layer->presets.size())
-         return layer->presets[row];
+   [[nodiscard]] std::optional<RaceTintLayerModel::LayerData> RaceTintLayerModel::get_layer(const QModelIndex& qmi) const {
+      auto* layer = _layer_from_qmi(qmi);
+      if (!layer)
+         return {};
+      return _data_of(*layer);
    }
-   return {};
-}
-std::optional<dovah::face_tint_index_type> RaceTintLayerModel::addLayerPreset(dovah::face_tint_index_type layer_index) { // returns new preset's index
-   QModelIndex qmi;
-   Layer*      layer = nullptr;
-   for (size_t i = 0; i < this->_data.layers.size(); ++i) {
-      auto* item = this->_data.layers[i];
-      if (item->index == layer_index) {
-         qmi   = this->index(i, 0, {});
-         layer = item;
-         break;
+   [[nodiscard]] std::optional<RaceTintLayerModel::LayerData> RaceTintLayerModel::get_layer(dovah::face_tint_index_type idx) const {
+      auto* layer = this->_layer_by_index(idx);
+      if (!layer)
+         return {};
+      return _data_of(*layer);
+   }
+   
+   void RaceTintLayerModel::overwrite_layer(const QModelIndex& qmi, const LayerData& src) {
+      auto* layer = _layer_from_qmi(qmi);
+      if (!layer)
+         return;
+      _overwrite(*layer, src);
+   
+      auto tl = qmi.siblingAtColumn(0);
+      auto br = qmi.siblingAtColumn(LayerColumnCount);
+      emit dataChanged(tl, br);
+   }
+   void RaceTintLayerModel::overwrite_layer(dovah::face_tint_index_type idx, const LayerData& src) {
+      auto row = this->_row_for_layer(idx);
+      if (!row.has_value())
+         return;
+      auto* layer = this->_data.layers[row.value()];
+      _overwrite(*layer, src);
+
+      auto tl = this->index(row.value(), 0, {});
+      auto br = tl.siblingAtColumn(LayerColumnCount);
+      emit dataChanged(tl, br);
+   }
+   
+   void RaceTintLayerModel::remove_layer(const QModelIndex& qmi) {
+      int   row  = qmi.row();
+      auto& list = this->_data.layers;
+      if (row >= list.size())
+         return;
+      this->beginRemoveRows({}, row, row);
+      auto* layer = list[row];
+      {
+         for (auto& preset : layer->presets)
+            this->_try_free_index(preset.index);
+         this->_try_free_index(layer->index);
       }
-   }
-   if (!layer)
-      return {};
-
-   this->beginInsertRows(qmi, layer->presets.size(), layer->presets.size());
-   auto& dst = layer->presets.emplace_back();
-   dst.index = this->_allocate_new_index();
-   dst.alpha = 1;
-   this->endInsertRows();
-
-   return dst.index;
-}
-void RaceTintLayerModel::replaceLayerPreset(const LayerPreset& src) {
-   if (!this->_index_is_in_use(src.index))
-      return;
-   for (size_t lr = 0; lr < this->_data.layers.size(); ++lr) {
-      auto* layer = this->_data.layers[lr];
-      for (size_t pr = 0; pr < layer->presets.size(); ++pr) {
-         auto& preset = layer->presets[pr];
-         if (preset.index == src.index) {
-            preset = src;
-
-            auto l_qmi = this->index(lr, 0, {});
-            auto p_qmi = this->index(pr, 0, l_qmi);
-            emit dataChanged(p_qmi, p_qmi.siblingAtColumn(ColumnCount));
-            return;
-         }
-      }
-   }
-}
-void RaceTintLayerModel::replaceLayerPreset(dovah::face_tint_index_type li, const LayerPreset& src) {
-   if (!this->_index_is_in_use(li))
-      return;
-   if (!this->_index_is_in_use(src.index))
-      return;
-   for (size_t lr = 0; lr < this->_data.layers.size(); ++lr) {
-      auto* layer = this->_data.layers[lr];
-      if (layer->index != li)
-         continue;
-      for (size_t pr = 0; pr < layer->presets.size(); ++pr) {
-         auto& preset = layer->presets[pr];
-         if (preset.index == src.index) {
-            preset = src;
-
-            auto l_qmi = this->index(lr, 0, {});
-            auto p_qmi = this->index(pr, 0, l_qmi);
-            emit dataChanged(p_qmi, p_qmi.siblingAtColumn(ColumnCount));
-            return;
-         }
-      }
-   }
-}
-void RaceTintLayerModel::removeLayerPresetByIndex(dovah::face_tint_index_type layer_index, dovah::face_tint_index_type preset_index) {
-   auto layer_row = this->_row_for_layer(layer_index);
-   if (!layer_row.has_value())
-      return;
-   auto  layer_qmi = this->index(layer_row.value(), 0, {});
-   auto* layer     = this->_data.layers[layer_row.value()];
-   for(size_t pr = 0; pr < layer->presets.size(); ++pr) {
-      auto& preset = layer->presets[pr];
-      if (preset.index != preset_index)
-         continue;
-      this->beginRemoveRows(layer_qmi, pr, pr);
-      layer->presets.erase(layer->presets.begin() + pr);
-      this->_try_free_index(preset.index);
+      delete layer;
+      list.erase(list.begin() + row);
       this->endRemoveRows();
-      return;
    }
-}
-void RaceTintLayerModel::removeLayerPresetByRow(dovah::face_tint_index_type layer_index, size_t preset_row) {
-   auto layer_row = this->_row_for_layer(layer_index);
-   if (!layer_row.has_value())
-      return;
-   auto  layer_qmi = this->index(layer_row.value(), 0, {});
-   auto* layer     = this->_data.layers[layer_row.value()];
-   if (preset_row >= layer->presets.size())
-      return;
-   this->beginRemoveRows(layer_qmi, preset_row, preset_row);
-   auto pi = layer->presets[preset_row].index;
-   layer->presets.erase(layer->presets.begin() + preset_row);
-   this->_try_free_index(pi);
-   this->endRemoveRows();
-}
+   void RaceTintLayerModel::remove_layer(dovah::face_tint_index_type idx) {
+      auto& list = this->_data.layers;
+      for (size_t lr = 0; lr < list.size(); ++lr) {
+         auto* layer = list[lr];
+         if (layer->index == idx) {
+            this->beginRemoveRows({}, lr, lr);
+            {
+               for (auto& preset : layer->presets)
+                  this->_try_free_index(preset.index);
+               this->_try_free_index(layer->index);
+            }
+            delete layer;
+            list.erase(list.begin() + lr);
+            this->endRemoveRows();
+            return;
+         }
+      }
+   }
+   
+   [[nodiscard]] std::optional<dovah::face_tint_index_type> RaceTintLayerModel::layer_index(const QModelIndex& qmi) const {
+      const auto* layer = this->_layer_from_qmi(qmi);
+      if (layer)
+         return layer->index;
+      return {};
+   }
+   [[nodiscard]] QModelIndex RaceTintLayerModel::layer_qmi(dovah::face_tint_index_type idx) const {
+      for (size_t i = 0; i < this->_data.layers.size(); ++i)
+         if (this->_data.layers[i]->index == idx)
+            return _qmi_of_layer(i);
+      return {};
+   }
 
-std::optional<dovah::face_tint_index_type> RaceTintLayerModel::layerIndex(const QModelIndex& qmi) const {
-   if (!_qmi_is_layer(qmi))
-      return {};
-   auto* layer =_layer_from_qmi(qmi);
-   if (!layer)
-      return {};
-   return layer->index;
-}
-std::optional<dovah::face_tint_index_type> RaceTintLayerModel::layerIndex(size_t row) const {
-   if (row >= this->rowCount())
-      return {};
-   auto* layer = this->_data.layers[row];
-   if (!layer)
-      return {};
-   return layer->index;
-}
+   bool RaceTintLayerModel::layer_has_color(const QModelIndex& qmi, const dovah::form_stub& color) const {
+      if (color.form_type != dovah::form_type::color)
+         return false;
+      auto* layer = this->_layer_from_qmi(qmi);
+      if (!layer)
+         return false;
+      for (auto& preset : layer->presets)
+         if (preset.color.form == &color)
+            return true;
+      return false;
+   }
+#pragma endregion
+#pragma region Functions for editing presets
+   std::optional<dovah::face_tint_index_type> RaceTintLayerModel::create_preset(const QModelIndex& layer_qmi) {
+      auto* layer = _layer_from_qmi(layer_qmi);
+      if (!layer)
+         return {};
 
-[[nodiscard]] std::optional<RaceTintLayerModel::Layer> RaceTintLayerModel::layerDefinitionByIndex(dovah::face_tint_index_type layer_index) const {
-   auto* layer = this->_layer_by_index(layer_index);
-   if (layer)
-      return *layer;
-   return {};
-}
+      this->beginInsertRows(layer_qmi, layer->presets.size(), layer->presets.size());
+      auto& dst = layer->presets.emplace_back();
+      dst.index = this->_allocate_new_index();
+      dst.alpha = 1;
+      this->endInsertRows();
+
+      return dst.index;
+   }
+   std::optional<dovah::face_tint_index_type> RaceTintLayerModel::create_preset(dovah::face_tint_index_type layer_idx) { // returns new preset's index
+      QModelIndex qmi;
+      Layer*      layer = nullptr;
+      for (size_t i = 0; i < this->_data.layers.size(); ++i) {
+         auto* item = this->_data.layers[i];
+         if (item->index == layer_idx) {
+            qmi   = this->_qmi_of_layer(i);
+            layer = item;
+            break;
+         }
+      }
+      if (!layer)
+         return {};
+
+      this->beginInsertRows(qmi, layer->presets.size(), layer->presets.size());
+      auto& dst = layer->presets.emplace_back();
+      dst.index = this->_allocate_new_index();
+      dst.alpha = 1;
+      this->endInsertRows();
+
+      return dst.index;
+   }
+   
+   [[nodiscard]] std::optional<RaceTintLayerModel::PresetData> RaceTintLayerModel::get_preset(const QModelIndex& qmi) {
+      auto* src = this->_preset_from_qmi(qmi);
+      if (!src)
+         return {};
+      return _data_of(*src);
+   }
+   [[nodiscard]] std::optional<RaceTintLayerModel::PresetData> RaceTintLayerModel::get_preset(dovah::face_tint_index_type idx) {
+      auto* src = this->_preset_by_index(idx);
+      if (!src)
+         return {};
+      return _data_of(*src);
+   }
+   
+   void RaceTintLayerModel::overwrite_preset(const QModelIndex& qmi, const PresetData& src) {
+      if (!_qmi_is_preset(qmi))
+         return;
+      auto* preset = _preset_from_qmi(qmi);
+      if (!preset)
+         return;
+      _overwrite(*preset, src);
+
+      auto tl = qmi.siblingAtColumn(0);
+      auto br = qmi.siblingAtColumn(PresetColumnCount - 1);
+      emit dataChanged(tl, br);
+   }
+   void RaceTintLayerModel::overwrite_preset(dovah::face_tint_index_type idx, const PresetData& src) {
+      if (!this->_index_is_in_use(idx))
+         return;
+
+      for (size_t lr = 0; lr < this->_data.layers.size(); ++lr) {
+         auto* layer = this->_data.layers[lr];
+         for (size_t pr = 0; pr < layer->presets.size(); ++pr) {
+            auto& preset = layer->presets[pr];
+            if (preset.index != idx)
+               continue;
+            _overwrite(preset, src);
+
+            auto l_qmi = this->index(lr, 0, {});
+            auto p_qmi = this->index(pr, 0, l_qmi);
+            emit dataChanged(p_qmi, p_qmi.siblingAtColumn(PresetColumnCount));
+            return;
+         }
+      }
+   }
+   
+   void RaceTintLayerModel::remove_preset(const QModelIndex& qmi) {
+      if (!_qmi_is_preset(qmi))
+         return;
+      auto* layer = _layer_from_qmi(qmi);
+      if (!layer)
+         return;
+
+      auto& list = layer->presets;
+      auto  pr = qmi.row();
+      if (pr >= list.size())
+         return;
+
+      QModelIndex layer_qmi;
+      for (size_t i = 0; i < this->_data.layers.size(); ++i) {
+         if (this->_data.layers[i] == layer) {
+            layer_qmi = this->_qmi_of_layer(i);
+            break;
+         }
+      }
+      if (!layer_qmi.isValid())
+         return;
+
+      this->beginRemoveRows(layer_qmi, pr, pr);
+      auto idx = list[pr].index;
+      list.erase(list.begin() + pr);
+      this->_try_free_index(idx);
+      this->endRemoveRows();
+   }
+   void RaceTintLayerModel::remove_preset(dovah::face_tint_index_type idx) {
+      for (size_t lr = 0; lr < this->_data.layers.size(); ++lr) {
+         auto& list = this->_data.layers[lr]->presets;
+         for (size_t pr = 0; pr < list.size(); ++pr) {
+            auto& preset = list[pr];
+            if (preset.index != idx)
+               continue;
+
+            auto layer_qmi = this->_qmi_of_layer(lr);
+            this->beginRemoveRows(layer_qmi, pr, pr);
+            list.erase(list.begin() + pr);
+            this->_try_free_index(idx);
+            this->endRemoveRows();
+            return;
+         }
+      }
+   }
+   
+   [[nodiscard]] std::optional<dovah::face_tint_index_type> RaceTintLayerModel::preset_index(const QModelIndex& qmi) const {
+      if (!_qmi_is_preset(qmi))
+         return {};
+      auto* layer = _layer_from_qmi(qmi);
+      if (!layer)
+         return {};
+      auto pr = qmi.row();
+      if (pr >= layer->presets.size())
+         return {};
+      return layer->presets[pr].index;
+   }
+   [[nodiscard]] QModelIndex RaceTintLayerModel::preset_qmi(dovah::face_tint_index_type idx) const {
+      for (size_t lr = 0; lr < this->_data.layers.size(); ++lr) {
+         auto* layer = this->_data.layers[lr];
+         auto& list  = layer->presets;
+         for (size_t pr = 0; pr < list.size(); ++pr) {
+            auto& preset = list[pr];
+            if (preset.index != idx)
+               continue;
+
+            return this->_qmi_of_preset(layer, pr);
+         }
+      }
+      return {};
+   }
+#pragma endregion
 
 #pragma region RaceTintLayerPresetsModel
 /*virtual*/ QVariant RaceTintLayerPresetsModel::headerData(int section, Qt::Orientation orientation, int role) const /*override*/ {
-   if (orientation != Qt::Orientation::Vertical)
+   if (orientation != Qt::Orientation::Horizontal)
       return {};
    if (role != Qt::DisplayRole && role != Qt::ToolTipRole)
       return {};

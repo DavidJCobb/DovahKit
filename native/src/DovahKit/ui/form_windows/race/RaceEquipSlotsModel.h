@@ -38,9 +38,9 @@ class RaceEquipSlotsModel : public QAbstractItemModel {
    protected:
       void _on_data_acquire();
       void _on_data_abandon_imminent();
-      void _on_form_created(dovah::form_stub&);
-      void _on_form_modified(dovah::form_stub&);
-      void _on_form_deletion_imminent(dovah::form_stub&);
+      void _on_form_created(dovah::form_stub*);
+      void _on_form_modified(dovah::form_stub*);
+      void _on_form_deletion_imminent(dovah::form_stub*);
 
    public:
       void initializeFrom(const std::vector<dovah::form_reference_t>&);
@@ -53,10 +53,13 @@ class RaceEquipSlotsModel : public QAbstractItemModel {
 
    protected:
       struct KnownForm {
+         bool operator==(const KnownForm&) const noexcept = default; // *sigh*
+
          dovah::form_stub* stub = nullptr;
          bool    checked = false;
          QString cached_editor_id;
       };
+
       std::vector<KnownForm> _data;
 
       void _insert_item(const KnownForm& item, bool emit_model_sync_signals);

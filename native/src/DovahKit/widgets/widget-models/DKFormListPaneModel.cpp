@@ -183,6 +183,20 @@ void DKFormListPaneModel::_pruneItems(std::function<bool(const Item&)> functor) 
    }
 }
 
+void DKFormListPaneModel::_clear(bool silent) {
+   if (this->children.empty())
+      return;
+   if (!silent) {
+      this->beginRemoveRows({}, 0, this->children.size() - 1); // don't use beginResetModel; Qt documentation doesn't seem to mention this anywhere but it breaks hidden columns in table views
+   }
+   for (auto* item : this->children)
+      delete item;
+   this->children.clear();
+   if (!silent) {
+      this->endRemoveRows();
+   }
+}
+
 QVector<dovah::form_stub*> DKFormListPaneModel::stubs() const noexcept {
    QVector<dovah::form_stub*> s;
    s.reserve(this->children.size());
@@ -447,7 +461,7 @@ void DKFormListPaneModel::addStub(dovah::form_stub* stub) {
    this->_recacheItemText(*item);
    this->endInsertRows();
 }
-void DKFormListPaneModel::addStubs(const std::vector<dovah::form_stub*>& src, int at = -1) {
+void DKFormListPaneModel::addStubs(const std::vector<dovah::form_stub*>& src, int at) {
    QVector<Item*> queued;
    queued.reserve(src.size());
 
@@ -493,13 +507,7 @@ void DKFormListPaneModel::addStubs(const std::vector<dovah::form_stub*>& src, in
    this->endInsertRows();
 }
 void DKFormListPaneModel::clear() {
-   if (this->children.empty())
-      return;
-   this->beginRemoveRows({}, 0, this->children.size() - 1); // don't use beginResetModel; Qt documentation doesn't seem to mention this anywhere but it breaks hidden columns in table views
-   for (auto* item : this->children)
-      delete item;
-   this->children.clear();
-   this->endRemoveRows();
+   this->_clear();
 }
 int DKFormListPaneModel::indexOfStub(const dovah::form_stub* s) const {
    for (size_t i = 0; i < this->children.size(); ++i)

@@ -11,6 +11,9 @@ RaceEquipSlotsModel::RaceEquipSlotsModel(QObject* parent) : QAbstractItemModel(p
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, &RaceEquipSlotsModel::_on_form_deletion_imminent);
    QObject::connect(&editor, &DovahKitCore::formCreated,  this, &RaceEquipSlotsModel::_on_form_created);
    QObject::connect(&editor, &DovahKitCore::formModified, this, &RaceEquipSlotsModel::_on_form_modified);
+   if (editor.has_data()) {
+      this->_on_data_acquire();
+   }
 }
    
 #pragma region QAbstractItemModel overrides
@@ -103,33 +106,33 @@ void RaceEquipSlotsModel::_on_data_abandon_imminent() {
    this->_data.clear();
    this->endResetModel();
 }
-void RaceEquipSlotsModel::_on_form_created(dovah::form_stub& stub) {
-   if (stub.form_type != dovah::form_type::equip_slot)
+void RaceEquipSlotsModel::_on_form_created(dovah::form_stub* stub) {
+   if (stub->form_type != dovah::form_type::equip_slot)
       return;
    KnownForm item;
-   item.stub    = &stub;
-   item.cached_editor_id = QString::fromStdString(stub.editorID);
+   item.stub    = stub;
+   item.cached_editor_id = QString::fromStdString(stub->editorID);
    item.checked = false;
    this->_insert_item(item, true);
 }
-void RaceEquipSlotsModel::_on_form_modified(dovah::form_stub& stub) {
-   if (stub.form_type != dovah::form_type::equip_slot)
+void RaceEquipSlotsModel::_on_form_modified(dovah::form_stub* stub) {
+   if (stub->form_type != dovah::form_type::equip_slot)
       return;
 
    QString editor_id_prior;
-   QString editor_id_after = QString::fromStdString(stub.editorID);
+   QString editor_id_after = QString::fromStdString(stub->editorID);
 
    auto&  list = this->_data;
    size_t from;
    for (from = 0; from < list.size(); ++from) {
       auto& item = list[from];
-      if (item.stub == &stub) {
+      if (item.stub == stub) {
          break;
       }
    }
    bool use_all_parents = false;
    {
-      auto loaded = stub.load().ptr_cast<dovah::loaded_forms::EquipSlot>();
+      auto loaded = stub->load().ptr_cast<dovah::loaded_forms::EquipSlot>();
       if (loaded)
          use_all_parents = loaded->local_flags & dovah::loaded_forms::EquipSlot::local_flag::use_all_parents;
    }
@@ -140,8 +143,8 @@ void RaceEquipSlotsModel::_on_form_modified(dovah::form_stub& stub) {
       //
       if (!use_all_parents) {
          KnownForm item;
-         item.stub    = &stub;
-         item.cached_editor_id = QString::fromStdString(stub.editorID);
+         item.stub    = stub;
+         item.cached_editor_id = QString::fromStdString(stub->editorID);
          item.checked = false;
          this->_insert_item(item, true);
       }
@@ -166,13 +169,13 @@ void RaceEquipSlotsModel::_on_form_modified(dovah::form_stub& stub) {
       this->_re_sort_item(item, editor_id_prior);
    }
 }
-void RaceEquipSlotsModel::_on_form_deletion_imminent(dovah::form_stub& stub) {
-   if (stub.form_type != dovah::form_type::equip_slot)
+void RaceEquipSlotsModel::_on_form_deletion_imminent(dovah::form_stub* stub) {
+   if (stub->form_type != dovah::form_type::equip_slot)
       return;
    auto&  list = this->_data;
    size_t size = list.size();
    for (size_t i = 0; i < size; ++i) {
-      if (list[i].stub == &stub) {
+      if (list[i].stub == stub) {
          this->beginRemoveRows({}, i, i);
          list.erase(list.begin() + i);
          this->endRemoveRows();
@@ -266,20 +269,20 @@ decltype(RaceEquipSlotsModel::_data)::iterator RaceEquipSlotsModel::_insertion_p
    return std::upper_bound(
       this->_data.begin(),
       this->_data.end(),
-      &item,
-      [](const KnownForm* a, const KnownForm* b) {
-         if (!a->stub && b->stub)
+      item,
+      [](const KnownForm& a, const KnownForm& b) -> bool {
+         if (!a.stub && b.stub)
             return true;
-         if (!b->stub && a->stub)
+         if (!b.stub && a.stub)
             return false;
-         return a->cached_editor_id.compare(b->cached_editor_id, Qt::CaseInsensitive) < 0;
+         return a.cached_editor_id.compare(b.cached_editor_id, Qt::CaseInsensitive) < 0;
       }
    );
 }
 void RaceEquipSlotsModel::_re_sort_item(const KnownForm& item, std::optional<QString> prior_name) {
    auto& list = this->_data;
             
-   auto entry_it = std::find(list.begin(), list.end(), &item);
+   auto entry_it = std::find(list.begin(), list.end(), item);
    if (entry_it == list.end())
       return;
    size_t from = std::distance(list.begin(), entry_it);

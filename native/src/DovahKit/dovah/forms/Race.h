@@ -191,8 +191,8 @@ namespace dovah::loaded_forms {
          components::keyword_list            keywords;     // KSIZ, KWDA
          components::spell_list              spells;       // SPCT, SPLO
          //
-         localized_string name;        // FULL
-         localized_string description; // DESC
+         localized_string name        = localized_string(localized_string_type::common);      // FULL
+         localized_string description = localized_string(localized_string_type::description); // DESC
          //
          race_flags_t      race_flags          = 0; // DATA+0x20
          alt_flags_t       alt_flags           = 0; // DATA+0x7C

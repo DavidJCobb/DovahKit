@@ -25,8 +25,8 @@ class RaceTintLayerModel : public QAbstractItemModel {
       RaceTintLayerModel(QObject* parent = nullptr);
       ~RaceTintLayerModel();
 
-      struct Column {
-         Column() = delete;
+      struct LayerColumn {
+         LayerColumn() = delete;
          enum type {
             TexturePath,
             NumPresets,
@@ -35,7 +35,7 @@ class RaceTintLayerModel : public QAbstractItemModel {
             __COUNT
          };
       };
-      static constexpr const size_t ColumnCount = Column::__COUNT;
+      static constexpr const size_t LayerColumnCount = LayerColumn::__COUNT;
 
       struct PresetColumn {
          PresetColumn() = delete;
@@ -47,26 +47,31 @@ class RaceTintLayerModel : public QAbstractItemModel {
             __COUNT,
          };
       };
-      static constexpr const size_t PresetColumnCount = Column::__COUNT;
+      static constexpr const size_t PresetColumnCount = PresetColumn::__COUNT;
       
    public:
-      using Layer       = ui::types::face_tints::layer;
-      using LayerPreset = ui::types::face_tints::preset;
+      using Layer  = ui::types::face_tints::layer;
+      using Preset = ui::types::face_tints::preset;
+
       struct LayerData {
          dovah::face_tint_type type = dovah::face_tint_type::none;
          std::string           texture;
          dovah::form_stub*     default_color = nullptr;
       };
+      struct PresetData {
+         float alpha = 1.0;
+         struct {
+            dovah::form_stub* form = nullptr;
+            QColor cached;
+         } color;
+      };
 
    protected:
+      static LayerData _data_of(const Layer&);
+      static PresetData _data_of(const Preset&);
 
-      // Track all used indices on the Race.
-      // If `this_index` == `layer_index`, then `this_index` is the index of a layer.
-      // Else, `this_index` is the index of a preset, and `layer_index` the index of its containing layer.
-      struct _index {
-         dovah::face_tint_index_type this_index;
-         dovah::face_tint_index_type layer_index;
-      };
+      static void _overwrite(Layer&, const LayerData&);
+      static void _overwrite(Preset&, const PresetData&);
 
    protected:
       struct {
@@ -85,8 +90,8 @@ class RaceTintLayerModel : public QAbstractItemModel {
       bool _qmi_is_layer(const QModelIndex&) const;
       bool _qmi_is_preset(const QModelIndex&) const;
       //
-      Layer* _layer_from_qmi(const QModelIndex&) const;
-      LayerPreset* _preset_from_qmi(const QModelIndex&) const;
+      Layer*  _layer_from_qmi(const QModelIndex&) const;
+      Preset* _preset_from_qmi(const QModelIndex&) const;
       //
       QModelIndex _qmi_of_preset(Layer*, size_t preset_row, size_t col = 0) const;
       QModelIndex _qmi_of_layer(size_t row, size_t col = 0) const;
@@ -109,42 +114,53 @@ class RaceTintLayerModel : public QAbstractItemModel {
 
    protected:
       std::optional<size_t> _row_for_layer(dovah::face_tint_index_type) const;
-      Layer* _layer_by_index(dovah::face_tint_index_type) const;
-      LayerPreset* _preset_by_index(dovah::face_tint_index_type preset) const;
-      LayerPreset* _preset_by_indices(dovah::face_tint_index_type layer, dovah::face_tint_index_type preset) const;
+      Layer*  _layer_by_index(dovah::face_tint_index_type) const;
+      Preset* _preset_by_index(dovah::face_tint_index_type preset) const;
+      Preset* _preset_by_indices(dovah::face_tint_index_type layer, dovah::face_tint_index_type preset) const;
 
       dovah::face_tint_index_type _allocate_new_index();
       void _try_free_index(dovah::face_tint_index_type);
       bool _index_is_in_use(dovah::face_tint_index_type) const;
 
    public:
-      QModelIndex noneIndex() const; // index of no preset, for use as a model root
+      QModelIndex noPresetQMI() const; // index of no preset, for use as a model root
 
       void importLayers(const dovah::loaded_forms::Race&, dovah::sex);
       void exportLayers(dovah::loaded_forms::Race& dst, dovah::sex);
 
-      std::optional<dovah::face_tint_index_type> addLayer(); // returns new layer's index
-      void removeLayerByIndex(dovah::face_tint_index_type);
-      void removeLayerByRow(size_t);
-      //
-      std::optional<LayerData> getLayerData(const QModelIndex&) const;
-      std::optional<LayerData> getLayerData(dovah::face_tint_index_type) const;
-      void setLayerData(const QModelIndex&, const LayerData&);
-      void setLayerData(dovah::face_tint_index_type, const LayerData&);
+      #pragma region Functions for editing layers
+         std::optional<dovah::face_tint_index_type> create_layer(); // returns new layer's index
+         
+         [[nodiscard]] std::optional<LayerData> get_layer(const QModelIndex&) const;
+         [[nodiscard]] std::optional<LayerData> get_layer(dovah::face_tint_index_type) const;
+         
+         void overwrite_layer(const QModelIndex&, const LayerData&);
+         void overwrite_layer(dovah::face_tint_index_type, const LayerData&);
+         
+         void remove_layer(const QModelIndex&);
+         void remove_layer(dovah::face_tint_index_type);
+         
+         [[nodiscard]] std::optional<dovah::face_tint_index_type> layer_index(const QModelIndex&) const;
+         [[nodiscard]] QModelIndex layer_qmi(dovah::face_tint_index_type) const;
 
-      [[nodiscard]] std::optional<LayerPreset> getLayerPresetByIndex(dovah::face_tint_index_type preset);
-      [[nodiscard]] std::optional<LayerPreset> getLayerPresetByIndex(dovah::face_tint_index_type layer, dovah::face_tint_index_type preset);
-      [[nodiscard]] std::optional<LayerPreset> getLayerPresetByRow(dovah::face_tint_index_type layer, size_t row);
-      std::optional<dovah::face_tint_index_type> addLayerPreset(dovah::face_tint_index_type layer); // returns new preset's index
-      void replaceLayerPreset(const LayerPreset&); // uses the passed-in preset's index to identify the destination; fails silently if no match
-      void replaceLayerPreset(dovah::face_tint_index_type layer, const LayerPreset&); // uses the passed-in preset's index to identify the destination; fails silently if no match
-      void removeLayerPresetByIndex(dovah::face_tint_index_type layer, dovah::face_tint_index_type preset);
-      void removeLayerPresetByRow(dovah::face_tint_index_type layer, size_t row);
-
-      std::optional<dovah::face_tint_index_type> layerIndex(const QModelIndex&) const;
-      std::optional<dovah::face_tint_index_type> layerIndex(size_t row) const;
-
-      [[nodiscard]] std::optional<Layer> layerDefinitionByIndex(dovah::face_tint_index_type layer_index) const;
+         bool layer_has_color(const QModelIndex&, const dovah::form_stub&) const;
+      #pragma endregion
+      #pragma region Functions for editing presets
+         std::optional<dovah::face_tint_index_type> create_preset(const QModelIndex& layer_qmi); // returns new preset's index
+         std::optional<dovah::face_tint_index_type> create_preset(dovah::face_tint_index_type layer_qmi); // returns new preset's index
+         
+         [[nodiscard]] std::optional<PresetData> get_preset(const QModelIndex&);
+         [[nodiscard]] std::optional<PresetData> get_preset(dovah::face_tint_index_type);
+         
+         void overwrite_preset(const QModelIndex&, const PresetData&);
+         void overwrite_preset(dovah::face_tint_index_type, const PresetData&);
+         
+         void remove_preset(const QModelIndex&);
+         void remove_preset(dovah::face_tint_index_type);
+         
+         [[nodiscard]] std::optional<dovah::face_tint_index_type> preset_index(const QModelIndex&) const;
+         [[nodiscard]] QModelIndex preset_qmi(dovah::face_tint_index_type) const;
+      #pragma endregion
 };
 
 //

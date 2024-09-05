@@ -86,8 +86,8 @@ namespace editor_helpers {
             return QCoreApplication::translate("all phoneme names", "CH");
          case dovah::face_fx::phoneme::SIL:
             return QCoreApplication::translate("all phoneme names", "SIL");
-         case dovah::face_fx::phoneme::SHOTSIL:
-            return QCoreApplication::translate("all phoneme names", "SHOTSIL");
+         case dovah::face_fx::phoneme::SHORTSIL:
+            return QCoreApplication::translate("all phoneme names", "SHORTSIL");
          case dovah::face_fx::phoneme::FLAP:
             return QCoreApplication::translate("all phoneme names", "FLAP");
       }

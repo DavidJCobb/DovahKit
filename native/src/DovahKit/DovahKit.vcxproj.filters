@@ -2577,6 +2577,21 @@
     <ClCompile Include="dovah\forms\Footstep.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\types\face_tints\preset.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\types\face_tints\layer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\race\RaceTintLayerModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6605,6 +6620,21 @@
     <ClInclude Include="dovah\forms\Footstep.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\face_tints\layer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\face_tints\preset.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\get_selection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -7389,6 +7419,9 @@
     <QtMoc Include="ui\form_windows\movement_type.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ui\form_windows\race\RaceTintLayerModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -7829,6 +7862,9 @@
     <None Include="dovah\form_stubs\helpers\README.md" />
     <None Include="editor\subsystems\form_info_cache\_docs\README.md" />
     <None Include="dovah\data\face_fx\default_facegen_race_phonemes.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="ui\types\face_tints\layer.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

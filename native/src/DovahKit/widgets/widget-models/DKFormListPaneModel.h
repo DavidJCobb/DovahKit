@@ -79,6 +79,8 @@ class DKFormListPaneModel : public QAbstractTableModel {
       
       // Remove all items for which the decider function returns true.
       void _pruneItems(std::function<bool(const Item&)> decider_function);
+
+      void _clear(bool silent = false);
       
    protected slots:
       void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
@@ -89,7 +91,7 @@ class DKFormListPaneModel : public QAbstractTableModel {
    public:
       DKFormListPaneModel(QObject* parent = nullptr);
       ~DKFormListPaneModel() {
-         this->clear();
+         this->_clear(true);
       }
 
       QVector<dovah::form_stub*> stubs() const noexcept;

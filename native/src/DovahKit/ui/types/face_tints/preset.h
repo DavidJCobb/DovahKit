@@ -1,5 +1,6 @@
 #pragma once
 #include <QColor>
+#include "dovah/data/face_tints.h"
 
 namespace dovah {
    class form_stub;

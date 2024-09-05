@@ -23,6 +23,7 @@ void FormPickerFromFormListPaneFilter::_set_pane_impl(DKFormListPane* pane) {
    }
    this->_pane = pane;
    if (pane) {
+      QObject::connect(pane, &DKFormListPane::formsAdded,   this, &FormPickerFromFormListPaneFilter::_refilter_all_forms);
       QObject::connect(pane, &DKFormListPane::formsRemoved, this, &FormPickerFromFormListPaneFilter::_refilter_all_forms);
    }
    this->_refilter_all_forms();

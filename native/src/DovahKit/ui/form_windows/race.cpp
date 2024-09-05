@@ -19,7 +19,17 @@
 #include "./race/RaceBipedObjectSlotsModel.h"
 #include "./race/RaceEquipSlotsModel.h"
 #include "./race/RaceEquipTypesModel.h"
+#include "./race/RaceTintDefaultColorPickerFilter.h"
 #include "./race/RaceTintLayerModel.h"
+
+namespace {
+   constexpr const bool just_let_me_compile =
+      false
+      #if _DEBUG
+         || true
+      #endif
+   ;
+}
 
 FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
@@ -108,9 +118,9 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
       ui::set_unsigned_range<float>(this->ui.heightMultM);
       this->ui.bodyWeightF->setRange(0, 100);
       this->ui.bodyWeightM->setRange(0, 100);
-      static_assert(false, "TODO: Skeleton (limit file extension?)");
-      static_assert(false, "TODO: Behavior graph (limit file extension?)");
-      static_assert(false, "TODO: Body Texture (limit file extension?)");
+      static_assert(just_let_me_compile, "TODO: Skeleton (limit file extension?)");
+      static_assert(just_let_me_compile, "TODO: Behavior graph (limit file extension?)");
+      static_assert(just_let_me_compile, "TODO: Body Texture (limit file extension?)");
       this->ui.decapArmorF->setAllowedFormType(dovah::form_type::armor);
       this->ui.decapArmorM->setAllowedFormType(dovah::form_type::armor);
       this->ui.voicetypeF->setAllowedFormType(dovah::form_type::voicetype);
@@ -188,7 +198,7 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
          view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
          ui::set_tableview_column_flex(view, [](DKHeaderView& header, const QFontMetrics& metrics) {
             header.setColumnFlex(RaceBaseMovementDefaultsModel::Column::Type, 0, 0, metrics.boundingRect("   ").width() * 1.5F + 4);
-            header.setColumnFlex(RaceBaseMovementDefaultsModel::Column::Name, 1, 0, metrics.boundingRect("   ").width() * 1.5F + 4);
+            header.setColumnFlex(RaceBaseMovementDefaultsModel::Column::Form, 1, 0, metrics.boundingRect("SomeCoolMovementType").width() * 1.5F + 4);
          });
          QObject::connect(view->selectionModel(), &QItemSelectionModel::selectionChanged, this, [this, model, picker](const QItemSelection& selection) {
             if (selection.isEmpty() || selection[0].isEmpty()) {
@@ -211,7 +221,7 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
          });
          picker->setEnabled(false);
       }
-      static_assert(false, "TODO: Movement Data Overrides");
+      static_assert(just_let_me_compile, "TODO: Movement Data Overrides");
    #pragma endregion
    #pragma region Attack Data tab
       //
@@ -244,7 +254,7 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
       }
    #pragma endregion
    #pragma region Lip Synching tab
-      static_assert(false, "TODO");
+      static_assert(just_let_me_compile, "TODO");
    #pragma endregion
    #pragma region Face Data tab
       {  // Base Head Parts
@@ -333,14 +343,34 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
          _configure(dovah::sex::female, this->ui.extraHeadPartsF);
          _configure(dovah::sex::male,   this->ui.extraHeadPartsM);
       }
-      static_assert(false, "TODO: Available Morphs");
-      this->ui.hairColorsF->setAllowedFormTypes({ dovah::form_type::color });
-      this->ui.hairColorsM->setAllowedFormTypes({ dovah::form_type::color });
-      this->ui.defaultHairColorF->setAllowedFormType(dovah::form_type::color);
-      this->ui.defaultHairColorM->setAllowedFormType(dovah::form_type::color);
+      static_assert(just_let_me_compile, "TODO: Available Morphs");
+      {  // Hair Colors
+         auto _configure = [this](
+            dovah::sex sex,
+            DKFormListPane* available_hair_colors,
+            DKFormPicker*   default_hair_color
+         ) {
+            available_hair_colors->setAllowedFormTypes({ dovah::form_type::color });
+            default_hair_color->setAllowedFormType(dovah::form_type::color);
+
+            auto* filter = this->_filters.default_hair_color[sex] = new FormPickerFromFormListPaneFilter(this);
+            filter->setPane(available_hair_colors);
+            default_hair_color->setCustomFilter(filter);
+         };
+
+         _configure(
+            dovah::sex::female,
+            this->ui.hairColorsF,
+            this->ui.defaultHairColorF
+         );
+         _configure(
+            dovah::sex::male,
+            this->ui.hairColorsM,
+            this->ui.defaultHairColorM
+         );
+      }
    #pragma endregion
    #pragma region Face Tints tab
-      static_assert(false, "TODO: Tint layers and editing thereof");
       {
          auto _configure = [this](
             dovah::sex  sex,
@@ -352,6 +382,7 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
             QComboBox*        layer_type,
 
             QTableView*     preset_table,
+            DKFormPicker*   preset_color_picker,
             DKFloatSlider*  preset_alpha_slider,
             QDoubleSpinBox* preset_alpha_setter,
 
@@ -360,30 +391,51 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
             auto* model = this->_models.tint_layer_model[sex] = new RaceTintLayerModel(this);
             layer_table->setModel(model);
             auto* layer_sel_model  = layer_table->selectionModel();
+
+            auto* preset_model = this->_models.tint_preset_model[sex] = new RaceTintLayerPresetsModel(this);
+            preset_model->setSourceModel(model);
+            preset_table->setModel(preset_model);
+            preset_table->setRootIndex(preset_model->mapFromSource(model->noPresetQMI()));
+
+            // Initial enable states:
+            layer_edit_container->setEnabled(false);
+            preset_color_picker->setEnabled(false);
+            preset_alpha_setter->setEnabled(false);
+            preset_alpha_slider->setEnabled(false);
+
+            preset_color_picker->setAllowedFormType(dovah::form_type::color);
+            // TODO: Can the color of a preset be nullptr? Should we allowNone?
+
             {  // Layer table
                ui::typical_tableview_config(layer_table);
                layer_table->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
                ui::set_tableview_column_flex(layer_table, [](DKHeaderView& header, const QFontMetrics& metrics) {
-                  header.setColumnFlex(RaceTintLayerModel::Column::TexturePath, 3, 0);
-                  header.setColumnFlex(RaceTintLayerModel::Column::NumPresets,  0, 0, metrics.boundingRect("99").width() * 1.5F + 4);
-                  header.setColumnFlex(RaceTintLayerModel::Column::Type,        1, 0, metrics.boundingRect("Cheek Color Upper").width() * 1.5F + 4);
+                  header.setColumnFlex(RaceTintLayerModel::LayerColumn::TexturePath, 3, 0);
+                  header.setColumnFlex(RaceTintLayerModel::LayerColumn::NumPresets,  0, 0, metrics.boundingRect("99").width() * 1.5F + 4);
+                  header.setColumnFlex(RaceTintLayerModel::LayerColumn::Type,        1, 0, metrics.boundingRect("Cheek Color Upper").width() * 1.5F + 4);
                });
                QObject::connect(
                   layer_sel_model,
                   &QItemSelectionModel::selectionChanged,
                   this,
-                  [model, layer_edit_container, layer_texture, layer_type, preset_table, preset_alpha_setter](const QItemSelection& sel) {
+                  [this, model, preset_model, sex, layer_edit_container, layer_texture, layer_type, preset_table, preset_alpha_setter](const QItemSelection& sel) {
+                     auto* default_color_filter = this->_filters.tint_layer_default_color[sex];
+
                      if (sel.isEmpty()) {
                         layer_edit_container->setEnabled(false);
-                        preset_table->setRootIndex(model->noneIndex());
+                        preset_table->setRootIndex(preset_model->mapFromSource(model->noPresetQMI()));
+                        preset_table->selectionModel()->clearSelection();
+                        default_color_filter->setLayer({});
                         return;
                      }
 
                      auto qmi       = sel[0].topLeft();
-                     auto layer_opt = model->getLayerData(qmi);
+                     auto layer_opt = model->get_layer(qmi);
                      if (!layer_opt.has_value()) {
                         layer_edit_container->setEnabled(false);
-                        preset_table->setRootIndex(model->noneIndex());
+                        preset_table->setRootIndex(preset_model->mapFromSource(model->noPresetQMI()));
+                        preset_table->selectionModel()->clearSelection();
+                        default_color_filter->setLayer({});
                         return;
                      }
                      const auto& layer = layer_opt.value();
@@ -396,7 +448,9 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
 
                      layer_texture->setPath(QString::fromStdString(layer.texture));
                      layer_type->setCurrentIndex(layer_type->findData((int)layer.type));
-                     preset_table->setRootIndex(qmi);
+                     preset_table->setRootIndex(preset_model->mapFromSource(qmi));
+                     preset_table->selectionModel()->clearSelection();
+                     default_color_filter->setLayer(qmi);
                      layer_edit_container->setEnabled(true);
                   }
                );
@@ -404,12 +458,12 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
             {  // Layer editing
                auto _edit_layer_property = [this, model, layer_sel_model]<typename Functor>(Functor&& f) {
                   QModelIndex qmi       = ui::get_selected_row_qmi(layer_sel_model);
-                  auto        layer_opt = model->getLayerData(qmi);
+                  auto        layer_opt = model->get_layer(qmi);
                   if (!layer_opt.has_value())
                      return;
                   auto& layer = layer_opt.value();
                   (f)(layer);
-                  model->setLayerData(qmi, layer);
+                  model->overwrite_layer(qmi, layer);
                };
 
                QObject::connect(layer_texture, &DKGameFilePicker::pathChanged, this, [_edit_layer_property](QString path) {
@@ -417,13 +471,33 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
                      dst.texture = path.toStdString();
                   });
                });
-               QObject::connect(layer_type, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [_edit_layer_property, layer_type]() {
-                  auto value = (dovah::face_tint_type)layer_type->currentData().toInt();
-                  _edit_layer_property([value](RaceTintLayerModel::LayerData& dst) -> void {
-                     dst.type = value;
+               {  // Layer type
+                  layer_type->clear();
+                  {  // Items
+                     layer_type->addItem(tr("None", "face tint type"), (int)dovah::face_tint_type::none);
+                     layer_type->addItem(tr("Chin", "face tint type"), (int)dovah::face_tint_type::chin);
+                     layer_type->addItem(tr("Cheek Color Upper", "face tint type"), (int)dovah::face_tint_type::cheek_color_upper);
+                     layer_type->addItem(tr("Cheek Color Lower", "face tint type"), (int)dovah::face_tint_type::cheek_color_lower);
+                     layer_type->addItem(tr("Dirt", "face tint type"), (int)dovah::face_tint_type::dirt);
+                     layer_type->addItem(tr("Eyeliner", "face tint type"), (int)dovah::face_tint_type::eyeliner);
+                     layer_type->addItem(tr("Eyeshadow Upper", "face tint type"), (int)dovah::face_tint_type::eyeshadow_upper);
+                     layer_type->addItem(tr("Eyeshadow Lower", "face tint type"), (int)dovah::face_tint_type::eyeshadow_lower);
+                     layer_type->addItem(tr("Facepaint", "face tint type"), (int)dovah::face_tint_type::facepaint);
+                     layer_type->addItem(tr("Forehead", "face tint type"), (int)dovah::face_tint_type::forehead);
+                     layer_type->addItem(tr("Laugh Lines", "face tint type"), (int)dovah::face_tint_type::laugh_lines);
+                     layer_type->addItem(tr("Lip Color", "face tint type"), (int)dovah::face_tint_type::lip_color);
+                     layer_type->addItem(tr("Skin Tone", "face tint type"), (int)dovah::face_tint_type::skin_tone);
+                     layer_type->addItem(tr("Neck", "face tint type"), (int)dovah::face_tint_type::neck);
+                     layer_type->addItem(tr("Nose", "face tint type"), (int)dovah::face_tint_type::nose);
+                  }
+                  QObject::connect(layer_type, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [_edit_layer_property, layer_type]() {
+                     auto value = (dovah::face_tint_type)layer_type->currentData().toInt();
+                     _edit_layer_property([value](RaceTintLayerModel::LayerData& dst) -> void {
+                        dst.type = value;
+                     });
                   });
-               });
-               {
+               }
+               {  // Default color
                   auto* filter = this->_filters.tint_layer_default_color[sex] = new RaceTintDefaultColorPickerFilter(this);
                   filter->setModel(model);
 
@@ -437,29 +511,69 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
                   });
                }
                {  // Preset table
-                  auto* preset_model = this->_models.tint_preset_model[sex] = new RaceTintLayerPresetsModel(this);
-                  preset_model->setSourceModel(model);
-                  preset_table->setRootIndex(model->noneIndex());
                   auto* preset_sel_model = preset_table->selectionModel();
+
+                  ui::typical_tableview_config(preset_table);
+                  preset_table->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+                  ui::set_tableview_column_flex(preset_table, [](DKHeaderView& header, const QFontMetrics& metrics) {
+                     header.setColumnFlex(RaceTintLayerModel::PresetColumn::ColorPreview, 0, 0, metrics.boundingRect("   ").width() * 1.5F + 4);
+                     header.setColumnFlex(RaceTintLayerModel::PresetColumn::Name,  1, 0);
+                     header.setColumnFlex(RaceTintLayerModel::PresetColumn::Alpha, 0, 0, metrics.boundingRect("1.000").width() * 1.5F + 4);
+                  });
+                  QObject::connect(
+                     preset_sel_model,
+                     &QItemSelectionModel::selectionChanged,
+                     this,
+                     [this, model, preset_model, sex, preset_color_picker, preset_alpha_slider, preset_alpha_setter](const QItemSelection& sel) {
+                        if (sel.isEmpty()) {
+                           preset_color_picker->setEnabled(false);
+                           preset_alpha_setter->setEnabled(false);
+                           preset_alpha_slider->setEnabled(false);
+                           return;
+                        }
+
+                        auto qmi        = preset_model->mapToSource(sel[0].topLeft());
+                        auto preset_opt = model->get_preset(qmi);
+                        if (!preset_opt.has_value()) {
+                           preset_color_picker->setEnabled(false);
+                           preset_alpha_setter->setEnabled(false);
+                           preset_alpha_slider->setEnabled(false);
+                           return;
+                        }
+                        const auto& preset = preset_opt.value();
+
+                        preset_color_picker->setEnabled(true);
+                        preset_alpha_setter->setEnabled(true);
+                        preset_alpha_slider->setEnabled(true);
+
+                        const auto blockers = std::array{
+                           QSignalBlocker(preset_color_picker),
+                           QSignalBlocker(preset_alpha_setter),
+                        };
+
+                        preset_color_picker->setFormStub(preset.color.form);
+                        preset_alpha_slider->setValue(preset.alpha);
+                     }
+                  );
                   
-                  auto _edit_preset_property = [this, model, layer_sel_model, preset_sel_model]<typename Functor>(Functor&& f) {
-                     QModelIndex qmi_layer  = ui::get_selected_row_qmi(layer_sel_model);
-                     QModelIndex qmi_preset = ui::get_selected_row_qmi(preset_sel_model);
+                  auto _edit_preset_property = [this, model, preset_model, layer_sel_model, preset_sel_model]<typename Functor>(Functor&& f) {
+                     QModelIndex qmi_preset = preset_model->mapToSource(ui::get_selected_row_qmi(preset_sel_model));
 
-                     auto idx_layer = model->layerIndex(qmi_layer);
-                     if (!idx_layer.has_value())
-                        return;
-
-                     auto preset_opt = model->getLayerPresetByRow(idx_layer.value(), qmi_preset.row());
+                     auto preset_opt = model->get_preset(qmi_preset);
                      if (!preset_opt.has_value())
                         return;
                      auto& preset = preset_opt.value();
                      (f)(preset);
-                     model->replaceLayerPreset(preset);
+                     model->overwrite_preset(qmi_preset, preset);
                   };
                   
+                  QObject::connect(preset_color_picker, &DKFormPicker::formChanged, this, [_edit_preset_property](dovah::form_stub* stub) {
+                     _edit_preset_property([stub](RaceTintLayerModel::PresetData& dst) -> void {
+                        dst.color.form = stub;
+                     });
+                  });
                   QObject::connect(preset_alpha_setter, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [_edit_preset_property](double value) {
-                     _edit_preset_property([value](RaceTintLayerModel::LayerPreset& dst) -> void {
+                     _edit_preset_property([value](RaceTintLayerModel::PresetData& dst) -> void {
                         dst.alpha = value;
                      });
                   });
@@ -468,13 +582,33 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
                   });
                }
             }
-
+            // Done.
          };
 
-         QObject::connect(preset_alpha_setter, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &FormDialogActorBase::_push_tint_layer_from_ui);
-         QObject::connect(preset_alpha_slider, &DKFloatSlider::valueChanged, this, [this, preset_alpha_setter](float value) {
-            preset_alpha_setter->setValue(value);
-         });
+         _configure(
+            dovah::sex::female,
+            this->ui.tintsTableF,
+            this->ui.layoutTintEditF,
+            this->ui.currentTintFTexture,
+            this->ui.currentTintFType,
+            this->ui.currentTintFPresetList,
+            this->ui.currentTintFPresetColor,
+            this->ui.currentTintFPresetAlphaSlider,
+            this->ui.currentTintFPresetAlpha,
+            this->ui.currentTintFDefaultColor
+         );
+         _configure(
+            dovah::sex::male,
+            this->ui.tintsTableM,
+            this->ui.layoutTintEditM,
+            this->ui.currentTintMTexture,
+            this->ui.currentTintMType,
+            this->ui.currentTintMPresetList,
+            this->ui.currentTintMPresetColor,
+            this->ui.currentTintMPresetAlphaSlider,
+            this->ui.currentTintMPresetAlpha,
+            this->ui.currentTintMDefaultColor
+         );
       }
       this->ui.currentTintFDefaultColor->setAllowedFormType(dovah::form_type::color);
       this->ui.currentTintMDefaultColor->setAllowedFormType(dovah::form_type::color);
@@ -503,8 +637,8 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
    #pragma region Presets tab
       this->ui.presetsF->setAllowedFormTypes({ dovah::form_type::actor_base });
       this->ui.presetsM->setAllowedFormTypes({ dovah::form_type::actor_base });
-      static_assert(false, "TODO: Filter female list to female ActorBases of this race");
-      static_assert(false, "TODO: Filter male list to male ActorBases of this race");
+      static_assert(just_let_me_compile, "TODO: Filter female list to female ActorBases of this race");
+      static_assert(just_let_me_compile, "TODO: Filter male list to male ActorBases of this race");
    #pragma endregion
 
    this->load(); // this creates the working copy.
@@ -681,7 +815,7 @@ void FormDialogRace::_load_impl() {
       ui::bind(this->ui.flagUseAdvancedAvoidance, working.alt_flags, loaded_form_type::alt_flag::use_advanced_avoidance);
 
       this->_models.base_movement_types->initializeFrom(working);
-      static_assert(false, "TODO: Movement Data Overrides");
+      static_assert(just_let_me_compile, "TODO: Movement Data Overrides");
    #pragma endregion
    #pragma region Attack Data tab
       this->ui.attackData->initializeFrom(working.attack_data);
@@ -699,12 +833,14 @@ void FormDialogRace::_load_impl() {
       this->_models.equip_types->initializeFrom(working);
    #pragma endregion
    #pragma region Lip Synching tab
-      static_assert(false, "TODO: FaceFX Phonemes");
-      static_assert(false, "TODO: Phoneme Targets");
-      static_assert(false, "TODO: Default FaceGen Targets and Weights");
+      static_assert(just_let_me_compile, "TODO: FaceFX Phonemes");
+      static_assert(just_let_me_compile, "TODO: Phoneme Targets");
+      static_assert(just_let_me_compile, "TODO: Default FaceGen Targets and Weights");
    #pragma endregion
    #pragma region Face Data tab
       {
+         constexpr const auto all_flags = loaded_form_type::race_flag::overlay_head_part_list | loaded_form_type::race_flag::override_head_part_list;
+
          this->ui.faceHeadPartsOverlay->setProperty("inherit_flag", (int)loaded_form_type::race_flag::overlay_head_part_list);
          this->ui.faceHeadPartsOverride->setProperty("inherit_flag", (int)loaded_form_type::race_flag::override_head_part_list);
          this->ui.faceHeadPartsInherit->setProperty("inherit_flag", (int)0);
@@ -714,16 +850,23 @@ void FormDialogRace::_load_impl() {
             this->ui.faceHeadPartsInherit,
          };
 
-         for (auto* widget : widgets) {
-            if (working.race_flags & widget->property("inherit_flag").toInt()) {
-               widget->setChecked(true);
-               break;
+         if (!(working.race_flags & all_flags)) {
+            for (auto* widget : widgets) {
+               if (widget->property("inherit_flag").toInt() == 0) {
+                  widget->setChecked(true);
+                  break;
+               }
+            }
+         } else {
+            for (auto* widget : widgets) {
+               if (working.race_flags & widget->property("inherit_flag").toInt()) {
+                  widget->setChecked(true);
+                  break;
+               }
             }
          }
          for (auto* widget : widgets) {
             QObject::connect(widget, &QRadioButton::toggled, this, [this, widget](bool checked) {
-               constexpr const auto all_flags = loaded_form_type::race_flag::overlay_head_part_list | loaded_form_type::race_flag::override_head_part_list;
-
                if (!checked)
                   return;
                auto& dst = this->form->race_flags;
@@ -797,15 +940,36 @@ void FormDialogRace::_load_impl() {
             model_extra->replaceAllHeadParts(extra_parts);
          }
       }
-      static_assert(false, "TODO: Female: Morphs");
-      static_assert(false, "TODO: Male: Morphs");
+      static_assert(just_let_me_compile, "TODO: Female: Morphs");
+      static_assert(just_let_me_compile, "TODO: Male: Morphs");
       this->ui.hairColorsF->pullStubs(working.by_sex.female.head_data.hair_colors);
       this->ui.hairColorsM->pullStubs(working.by_sex.male.head_data.hair_colors);
       ui::bind(this->ui.defaultHairColorF, working.by_sex.female.head_data.default_hair_color, working);
       ui::bind(this->ui.defaultHairColorM, working.by_sex.male.head_data.default_hair_color, working);
    #pragma endregion
    #pragma region Face Tints tab
-      static_assert(false, "TODO: Tint layers");
+      {  // Tint layers
+         auto& by_sex = this->_models.tint_layer_model;
+         by_sex.female->importLayers(working, dovah::sex::female);
+         by_sex.male->importLayers(working, dovah::sex::male);
+         //
+         // Model-resets will clear `setRootIndex` calls made to any views into the model, 
+         // even if the root indices in question survive the reset. We need to set the root 
+         // indices of our presets views back up.
+         //
+         {
+            auto* view  = this->ui.currentTintFPresetList;
+            auto* proxy = (QAbstractProxyModel*)view->model();
+            auto* model = by_sex.female;
+            view->setRootIndex(proxy->mapFromSource(model->noPresetQMI()));
+         }
+         {
+            auto* view  = this->ui.currentTintMPresetList;
+            auto* proxy = (QAbstractProxyModel*)view->model();
+            auto* model = by_sex.male;
+            view->setRootIndex(proxy->mapFromSource(model->noPresetQMI()));
+         }
+      }
       {  // Complexions
          this->ui.faceTexturesF->pullStubs(working.by_sex.female.head_data.face_textures);
          this->ui.faceTexturesM->pullStubs(working.by_sex.male.head_data.face_textures);
@@ -880,7 +1044,7 @@ void FormDialogRace::_save_impl() {
    #pragma endregion
    #pragma region Movement Details tab
       this->_models.base_movement_types->commitTo(working);
-      static_assert(false, "TODO: Movement Data Overrides");
+      static_assert(just_let_me_compile, "TODO: Movement Data Overrides");
    #pragma endregion
    #pragma region Attack Data tab
       this->ui.attackData->commitTo(working.attack_data, working);
@@ -890,9 +1054,9 @@ void FormDialogRace::_save_impl() {
       this->_models.equip_types->commitTo(working);
    #pragma endregion
    #pragma region Lip Synching tab
-      static_assert(false, "TODO: FaceFX Phonemes");
-      static_assert(false, "TODO: Phoneme Targets");
-      static_assert(false, "TODO: Default FaceGen Targets and Weights");
+      static_assert(just_let_me_compile, "TODO: FaceFX Phonemes");
+      static_assert(just_let_me_compile, "TODO: Phoneme Targets");
+      static_assert(just_let_me_compile, "TODO: Default FaceGen Targets and Weights");
    #pragma endregion
    #pragma region Face Data tab
       // Base Head Parts and Additional Head Parts
@@ -931,14 +1095,22 @@ void FormDialogRace::_save_impl() {
          }
       }
 
-      static_assert(false, "TODO: Female: Morphs");
-      static_assert(false, "TODO: Male: Morphs");
+      static_assert(just_let_me_compile, "TODO: Female: Morphs");
+      static_assert(just_let_me_compile, "TODO: Male: Morphs");
 
       this->ui.hairColorsF->commitStubs(working.by_sex.female.head_data.hair_colors, working);
       this->ui.hairColorsM->commitStubs(working.by_sex.male.head_data.hair_colors, working);
    #pragma endregion
    #pragma region Face Tints tab
-      static_assert(false, "TODO");
+      {  // Tint layers
+         auto& by_sex = this->_models.tint_layer_model;
+         by_sex.female->exportLayers(working, dovah::sex::female);
+         by_sex.male->exportLayers(working, dovah::sex::male);
+      }
+      {  // Complexions
+         this->ui.faceTexturesF->commitStubs(working.by_sex.female.head_data.face_textures, working);
+         this->ui.faceTexturesM->commitStubs(working.by_sex.male.head_data.face_textures, working);
+      }
    #pragma endregion
    #pragma region Presets tab
       this->ui.presetsF->commitStubs(working.by_sex.female.head_data.preset_actors, working);
@@ -963,8 +1135,7 @@ void FormDialogRace::_update_slot_dropdowns() {
    constexpr const size_t slot_count = loaded_form_type::max_biped_object_name_count;
 
    std::array<QString, slot_count> names = {};
-   {
-      auto* model = this->_models.biped_objects;
+   if (auto* model = this->_models.biped_objects) {
       for (size_t i = 0; i < slot_count; ++i) {
          auto qmi = model->index(i, RaceBipedObjectSlotsModel::Column::Name, {});
          names[i] = model->data(qmi, Qt::UserRole).toString();
@@ -996,35 +1167,53 @@ void FormDialogRace::_update_slot_dropdowns() {
 }
 
 /*virtual*/ bool FormDialogRace::eventFilter(QObject* object, QEvent* event) /*override*/ {
-   //
-   // Handle the Delete key on the Additional Head Parts listviews:
-   //
-   for (size_t i = 0; i < dovah::sex_count; ++i) {
-      auto  sex    = (dovah::sex)i;
-      auto* widget = this->_subwidgets.head_parts.extra[sex];
-      if (object == widget) {
-         if (event->type() == QEvent::Type::KeyPress) {
-            auto* casted = (QKeyEvent*)event;
-            if (casted->key() == Qt::Key_Delete) {
+   bool is_del_key = false;
+   if (event->type() == QEvent::Type::KeyPress) {
+      auto* casted = (QKeyEvent*)event;
+      is_del_key = casted->key() == Qt::Key_Delete;
+   }
 
-               auto* sel_model = widget->selectionModel();
-               auto* model     = this->_models.head_parts_extra[sex];
-               {
-                  auto rows = sel_model->selectedRows();
-                  if (!rows.isEmpty()) {
-                     auto  row  = rows[0].row();
-                     auto* stub = model->headPart(row);
-                     if (stub)
-                        model->removeHeadPart(*stub);
-                  }
+   if (is_del_key) {
+      //
+      // Handle the Delete key on the Additional Head Parts listviews:
+      //
+      for (size_t i = 0; i < dovah::sex_count; ++i) {
+         auto  sex    = (dovah::sex)i;
+         auto* widget = this->_subwidgets.head_parts.extra[sex];
+         if (object == widget) {
+            auto* sel_model = widget->selectionModel();
+            auto* model     = this->_models.head_parts_extra[sex];
+            {
+               auto rows = sel_model->selectedRows();
+               if (!rows.isEmpty()) {
+                  auto  row  = rows[0].row();
+                  auto* stub = model->headPart(row);
+                  if (stub)
+                     model->removeHeadPart(*stub);
                }
-
-               return true;
             }
-            return false;
+            return true;
          }
-         break;
+      }
+      {  // Del key for deleting a preset from a tint layer
+         auto* widget_f = this->ui.currentTintFPresetList;
+         auto* widget_m = this->ui.currentTintMPresetList;
+         if (object == widget_f || object == widget_m) {
+            auto sex = (object == widget_f) ? dovah::sex::female : dovah::sex::male;
+
+            auto* sel_model = ((decltype(widget_f))object)->selectionModel();
+            auto* model     = this->_models.tint_layer_model[sex];
+            auto* model_ps  = this->_models.tint_preset_model[sex];
+
+            auto qmi = model_ps->mapToSource(ui::get_selected_row_qmi(sel_model));
+            if (qmi.isValid()) {
+               model->remove_preset(qmi);
+            }
+            return true;
+         }
       }
    }
+
+
    return false;
 }

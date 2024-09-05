@@ -14,8 +14,8 @@ namespace dovah::loaded_forms {
 
          components::papyrus_attachment_data script_data; // VMAD
          //
-         localized_string name;        // FULL
-         localized_string description; // DESC
+         localized_string name        = localized_string(localized_string_type::common);      // FULL
+         localized_string description = localized_string(localized_string_type::description); // DESC
          std::string      icon;        // ICON
          struct {
             dovah::skill skill     = dovah::skill::one_handed;

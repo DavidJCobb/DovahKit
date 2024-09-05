@@ -27,6 +27,7 @@
 #include "../ui/form_windows/note.h"
 #include "../ui/form_windows/outfit.h"
 #include "../ui/form_windows/quest.h"
+#include "../ui/form_windows/race.h"
 #include "../ui/form_windows/relationship.h"
 #include "../ui/form_windows/shout.h"
 #include "../ui/form_windows/static.h"
@@ -65,6 +66,7 @@ namespace {
       std::pair{ dovah::form_type::note,              _make<FormDialogNote> },
       std::pair{ dovah::form_type::outfit,            _make<FormDialogOutfit> },
       std::pair{ dovah::form_type::quest,             _make<FormDialogQuest> },
+      std::pair{ dovah::form_type::race,              _make<FormDialogRace> },
       std::pair{ dovah::form_type::relationship,      _make<FormDialogRelationship> },
       std::pair{ dovah::form_type::shout,             _make<FormDialogShout> },
       std::pair{ dovah::form_type::statik,            _make<FormDialogStatic> },

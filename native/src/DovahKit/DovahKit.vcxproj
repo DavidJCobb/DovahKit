@@ -758,9 +758,12 @@
     <ClCompile Include="ui\form_windows\race\RaceBipedObjectSlotsModel.cpp" />
     <ClCompile Include="ui\form_windows\race\RaceEquipSlotsModel.cpp" />
     <ClCompile Include="ui\form_windows\race\RaceEquipTypesModel.cpp" />
+    <ClCompile Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.cpp" />
+    <ClCompile Include="ui\form_windows\race\RaceTintLayerModel.cpp" />
     <ClCompile Include="ui\form_windows\relationship.cpp" />
     <ClCompile Include="ui\form_windows\shared\FaceBaseHeadPartsModel.cpp" />
     <ClCompile Include="ui\form_windows\shared\FaceExtraHeadPartsModel.cpp" />
+    <ClCompile Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.cpp" />
     <ClCompile Include="ui\form_windows\shared\HeadPartPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\shout.cpp" />
     <ClCompile Include="ui\form_windows\static.cpp" />
@@ -830,6 +833,8 @@
     <ClCompile Include="ui\options_window\worldedit_tools\options\turn_camera.cpp" />
     <ClCompile Include="ui\options_window\worldinput_bind_editor.cpp" />
     <ClCompile Include="ui\options_window\worldinput_scheme_editor.cpp" />
+    <ClCompile Include="ui\types\face_tints\layer.cpp" />
+    <ClCompile Include="ui\types\face_tints\preset.cpp" />
     <ClCompile Include="ui\types\logging\log_item.cpp" />
     <ClCompile Include="ui\types\nif_for_form.cpp" />
     <ClCompile Include="ui\types\papyrus\property_value.cpp" />
@@ -1249,6 +1254,9 @@
     <QtMoc Include="ui\form_windows\race\RaceEquipTypesModel.h" />
     <QtMoc Include="ui\form_windows\race\RaceBaseMovementDefaultsModel.h" />
     <QtMoc Include="ui\form_windows\movement_type.h" />
+    <QtMoc Include="ui\form_windows\race\RaceTintLayerModel.h" />
+    <ClInclude Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.h" />
+    <ClInclude Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.h" />
     <ClInclude Include="ui\form_windows\shared\HeadPartPickerFilter.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_float_slider.h" />
@@ -1259,6 +1267,8 @@
     <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
     <QtMoc Include="ui\models\forms\LeveledListModel.h" />
     <ClInclude Include="ui\types\conditions\condition.h" />
+    <ClInclude Include="ui\types\face_tints\layer.h" />
+    <ClInclude Include="ui\types\face_tints\preset.h" />
     <ClInclude Include="ui\types\logging\log_item.h" />
     <ClInclude Include="ui\types\logging\log_item_context.h" />
     <ClInclude Include="ui\types\logging\log_item_type.h" />
@@ -1272,6 +1282,7 @@
     <QtMoc Include="widgets\widget-models\DKConditionListModel.h" />
     <QtMoc Include="widgets\widget-dialogs\DKConditionEditDialog.h" />
     <QtMoc Include="widgets\DKNavmeshGenerationImportOptionPicker.h" />
+    <ClInclude Include="ui\utils\get_selection.h" />
     <ClInclude Include="ui\utils\item_indices_to_data.h" />
     <ClInclude Include="ui\utils\set_range.h" />
     <QtMoc Include="widgets\DKComboBox.h" />
@@ -2910,6 +2921,7 @@
     <None Include="ui\form_windows\_base.inl" />
     <None Include="ui\models\DKGenericListModel.inl" />
     <None Include="ui\models\DKGenericTreeModel.inl" />
+    <None Include="ui\types\face_tints\layer.inl" />
     <None Include="ui\types\papyrus\property_value.inl" />
     <None Include="ui\_docs\form-editing dialogs.md" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
