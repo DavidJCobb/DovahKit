@@ -6,6 +6,7 @@
 #include "DKHeaderView.h"
 #if !defined(QT_DESIGNER_LIB)
    #include "../editor/open_window_for_form.h"
+   #include "./widget-data/DKFormListPaneCustomFilter.h"
 #endif
 
 namespace {
@@ -309,6 +310,27 @@ void DKFormListPane::setShowRemoveButton(bool v) {
    }
    void DKFormListPane::removeExtraColumn(size_t which) {
       this->_model()->removeExtraColumn(which);
+   }
+#endif
+   
+
+#if !defined(QT_DESIGNER_LIB)
+   DKFormListPaneCustomFilter* DKFormListPane::customFilter() const {
+      return this->_model()->customFilter();
+   }
+   void DKFormListPane::setCustomFilter(DKFormListPaneCustomFilter* v) {
+      auto* model = this->_model();
+      auto* prior = model->customFilter();
+      if (prior == v) {
+         return;
+      }
+      model->setCustomFilter(v);
+      if (model->customFilter() == v) {
+         if (prior) {
+            prior->_unhookFromModel(model);
+         }
+         v->_hookToModel(model);
+      }
    }
 #endif
 

@@ -2595,6 +2595,12 @@
     <ClCompile Include="ui\form_windows\race\RaceAvailableFaceMorphsModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\widget-data\DKFormListPaneCustomFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\race\RacePresetActorFormFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6641,6 +6647,9 @@
     <ClInclude Include="helpers\arrays\filled.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\form_windows\race\RacePresetActorFormFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -7429,6 +7438,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\race\RaceAvailableFaceMorphsModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\widget-data\DKFormListPaneCustomFilter.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

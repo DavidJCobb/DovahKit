@@ -15,6 +15,7 @@ class RaceBaseMovementDefaultsModel;
 class RaceBipedObjectSlotsModel;
 class RaceEquipSlotsModel;
 class RaceEquipTypesModel;
+class RacePresetActorFormFilter;
 class RaceTintDefaultColorPickerFilter;
 class RaceTintLayerModel;
 class RaceTintLayerPresetsModel;
@@ -71,6 +72,7 @@ class FormDialogRace :
          dovah::data_by_sex<HeadPartPickerFilter*>             base_head_part;
          dovah::data_by_sex<FormPickerFromFormListPaneFilter*> default_complexion;
          dovah::data_by_sex<FormPickerFromFormListPaneFilter*> default_hair_color;
+         dovah::data_by_sex<RacePresetActorFormFilter*>        preset_actors;
          dovah::data_by_sex<RaceTintDefaultColorPickerFilter*> tint_layer_default_color;
       } _filters;
       struct {

@@ -11,6 +11,7 @@
 #include <QVarLengthArray>
 #include "dovah/core.h"
 #include "dovah/form_stub.h"
+#include "../widget-data/DKFormListPaneCustomFilter.h"
 
 namespace dovah::loaded_forms {
    class Form;
@@ -72,7 +73,9 @@ class DKFormListPaneModel : public QAbstractTableModel {
          QVector<ExtraColumnInfo> list;
          bool any_getters_take_loaded_form = false;
       } extra_columns;
+      QPointer<DKFormListPaneCustomFilter> custom_filter;
 
+      bool _allowsForm(dovah::form_stub&);
       void _emitRowChanged(size_t row);
       void _recacheNewlyAppendedExtraColumn(Item&, extra_column_handler& handler);
       void _recacheItemText(Item&);
@@ -148,6 +151,12 @@ class DKFormListPaneModel : public QAbstractTableModel {
    public: // Ensure these are not Qt slots; slots can't have moved&& parameters
       void addExtraColumn(QString header, extra_column_handler&&);
       void removeExtraColumn(size_t index);
+
+      DKFormListPaneCustomFilter* customFilter() const;
+      void setCustomFilter(DKFormListPaneCustomFilter*);
+
+      void forceRecheckFilterOn(dovah::form_stub&);
+      void forceRecheckFilter();
 };
 
 #include "./DKFormListPaneModel.inl"

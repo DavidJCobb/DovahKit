@@ -113,6 +113,16 @@ DKFormListPaneModel::DKFormListPaneModel(QObject* parent) : QAbstractTableModel(
    QObject::connect(&editor, &DovahKitCore::formsRenumberedEnMasse, this, &DKFormListPaneModel::formsRenumberedEnMasse);
 }
 
+bool DKFormListPaneModel::_allowsForm(dovah::form_stub& stub) {
+   if (!this->allowed_form_types.isEmpty()) {
+      if (!this->allowed_form_types.contains(stub.form_type))
+         return false;
+   }
+   if (this->custom_filter)
+      if (!this->custom_filter->form_matches(stub))
+         return false;
+   return true;
+}
 void DKFormListPaneModel::_emitRowChanged(size_t row) {
    size_t column_count = ColumnCount;
    column_count += this->extra_columns.list.size();
@@ -216,10 +226,24 @@ void DKFormListPaneModel::formModified(dovah::form_stub* stub) {
    if (!this->extra_columns.list.empty())
       has_extra_columns = true;
 
-   for (size_t i = 0; i < this->children.size(); ++i) {
-      auto* item = this->children[i];
+   auto&  list = this->children;
+   size_t size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
       if (item->stub != stub)
          continue;
+
+      if (this->custom_filter) {
+         if (!this->custom_filter->form_matches(*item->stub)) {
+            this->beginRemoveRows({}, i, i);
+            delete item;
+            list.removeAt(i);
+            --i;
+            --size;
+            this->endRemoveRows();
+            continue;
+         }
+      }
 
       this->_recacheItemText(*item);
       if (has_extra_columns) {
@@ -469,10 +493,8 @@ void DKFormListPaneModel::addStubs(const std::vector<dovah::form_stub*>& src, in
       auto* stub = src[i];
       if (!stub)
          continue;
-      if (!this->allowed_form_types.isEmpty()) {
-         if (!this->allowed_form_types.contains(stub->form_type))
-            continue;
-      }
+      if (!this->_allowsForm(*stub))
+         continue;
       if (this->allow_dupes == false) {
          bool dupe = false;
          for (size_t j = 0; j < i; ++j) {
@@ -755,3 +777,55 @@ void DKFormListPaneModel::removeExtraColumn(size_t which) {
    this->endRemoveColumns();
 }
 #pragma endregion
+
+DKFormListPaneCustomFilter* DKFormListPaneModel::customFilter() const {
+   return this->custom_filter;
+}
+void DKFormListPaneModel::setCustomFilter(DKFormListPaneCustomFilter* v) {
+   if (this->custom_filter == v)
+      return;
+   this->custom_filter = v;
+   this->forceRecheckFilter();
+}
+
+void DKFormListPaneModel::forceRecheckFilterOn(dovah::form_stub& stub) {
+   if (!this->custom_filter)
+      return;
+   auto&  list = this->children;
+   size_t size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
+      if (item->stub != &stub)
+         continue;
+
+      if (!this->custom_filter->form_matches(stub)) {
+         this->beginRemoveRows({}, i, i);
+         list.removeAt(i);
+         delete item;
+         --i;
+         --size;
+      }
+
+      if (!this->allow_dupes)
+         break;
+   }
+}
+void DKFormListPaneModel::forceRecheckFilter() {
+   if (!this->custom_filter)
+      return;
+   auto&  list = this->children;
+   size_t size = list.size();
+   for (size_t i = 0; i < size; ++i) {
+      auto* item = list[i];
+      if (!item->stub)
+         continue;
+
+      if (!this->custom_filter->form_matches(*item->stub)) {
+         this->beginRemoveRows({}, i, i);
+         list.removeAt(i);
+         delete item;
+         --i;
+         --size;
+      }
+   }
+}

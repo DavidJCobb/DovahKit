@@ -14,6 +14,9 @@ class DKFormListPaneModel;
    #include "../dovah/core.h"
    #include "widget-models/DKFormListPaneModel.h"
 #endif
+#if !defined(QT_DESIGNER_LIB)
+   class DKFormListPaneCustomFilter;
+#endif
 
 namespace dovah {
    class form_stub;
@@ -101,6 +104,11 @@ class DKFormListPane : public QWidget {
       #if !defined(QT_DESIGNER_LIB)
          void addExtraColumn(QString header, ExtraColumnHandler&&);
          void removeExtraColumn(size_t which); // the first-added extra column is index 0. indices shift as columns are removed.
+      #endif
+
+      #if !defined(QT_DESIGNER_LIB)
+         DKFormListPaneCustomFilter* customFilter() const;
+         void setCustomFilter(DKFormListPaneCustomFilter* v);
       #endif
 
    signals:

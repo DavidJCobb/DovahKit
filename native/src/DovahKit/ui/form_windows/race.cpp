@@ -20,6 +20,7 @@
 #include "./race/RaceBipedObjectSlotsModel.h"
 #include "./race/RaceEquipSlotsModel.h"
 #include "./race/RaceEquipTypesModel.h"
+#include "./race/RacePresetActorFormFilter.h"
 #include "./race/RaceTintDefaultColorPickerFilter.h"
 #include "./race/RaceTintLayerModel.h"
 
@@ -631,8 +632,24 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
    #pragma region Presets tab
       this->ui.presetsF->setAllowedFormTypes({ dovah::form_type::actor_base });
       this->ui.presetsM->setAllowedFormTypes({ dovah::form_type::actor_base });
-      static_assert(just_let_me_compile, "TODO: Filter female list to female ActorBases of this race");
-      static_assert(just_let_me_compile, "TODO: Filter male list to male ActorBases of this race");
+      {
+         auto sex = dovah::sex::female;
+
+         auto* pane   = this->ui.presetsF;
+         auto* filter = this->_filters.preset_actors[sex] = new RacePresetActorFormFilter(this);
+         filter->setRace(this->formStub());
+         filter->setSex(sex);
+         pane->setCustomFilter(filter);
+      }
+      {
+         auto sex = dovah::sex::male;
+
+         auto* pane   = this->ui.presetsM;
+         auto* filter = this->_filters.preset_actors[sex] = new RacePresetActorFormFilter(this);
+         filter->setRace(this->formStub());
+         filter->setSex(sex);
+         pane->setCustomFilter(filter);
+      }
    #pragma endregion
 
    this->load(); // this creates the working copy.

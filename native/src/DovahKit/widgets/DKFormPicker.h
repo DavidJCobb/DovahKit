@@ -7,9 +7,6 @@
    #include "dovah/core.h"
 #endif
 #include "dovah/form_types.h"
-#if !defined(QT_DESIGNER_LIB)
-   #include "./widget-data/DKFormPickerCustomFilter.h"
-#endif
 
 namespace dovah {
    class form_stub;
@@ -19,6 +16,9 @@ namespace ui::impl::DKFormPicker {
 }
 class DKComboBox;
 class QComboBox;
+#if !defined(QT_DESIGNER_LIB)
+   class DKFormPickerCustomFilter;
+#endif
 
 class DKFormPicker : public QWidget {
    Q_OBJECT;
