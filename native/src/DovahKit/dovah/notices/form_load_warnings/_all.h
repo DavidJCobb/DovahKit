@@ -26,6 +26,7 @@
    #include "./by_form_type/race/invalid_boosted_skill.h"
    #include "./by_form_type/race/invalid_face_texture_sex.h"
    #include "./by_form_type/race/invalid_morph_bitmask_index.h"
+   #include "./by_form_type/race/movement_type_override_without_speeds.h"
    #include "./by_form_type/race/tint_layer_data_before_tint_layer.h"
    #include "./by_form_type/race/too_many_biped_object_names.h"
    #include "./by_form_type/race/too_many_phonemes.h"

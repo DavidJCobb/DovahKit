@@ -14,6 +14,7 @@
 #include "components/model.h"
 #include "components/papyrus.h"
 #include "components/spell_list.h"
+#include "structs/movement_type_speeds.h"
 #include "../data/face_fx/phonemes.h"
 #include "../data/face_tints.h"
 #include "../data/skills.h"
@@ -124,22 +125,7 @@ namespace dovah::loaded_forms {
 
          struct movement_type_override {
             form_reference_t type; // MTYP
-            union {
-               struct {
-                  float left_walk;
-                  float left_run;
-                  float right_walk;
-                  float right_run;
-                  float forward_walk;
-                  float forward_run;
-                  float back_walk;
-                  float back_run;
-                  float rotate_walk;
-                  float rotate_run;
-                  float unknown;
-               };
-               std::array<float, 11> list = {}; // SPED
-            } values;
+            structs::movement_type_speeds speeds; // SPED
          };
 
          struct tint_preset {

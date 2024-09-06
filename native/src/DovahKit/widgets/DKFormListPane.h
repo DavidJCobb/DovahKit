@@ -1,10 +1,12 @@
 #pragma once
+#include <optional>
 #if !defined(QT_DESIGNER_LIB)
    #include <functional>
    #include <variant>
 #endif
 #include <vector>
 #include <QAbstractItemModel>
+#include <QAbstractItemView>
 #include <QFrame>
 #include <QPushButton>
 #include <QTableView>
@@ -60,6 +62,7 @@ class DKFormListPane : public QWidget {
          QHeaderView* horizontalHeader() const noexcept { return this->subwidgets.view->horizontalHeader(); }
       #endif
       constexpr bool allowDuplicates() const noexcept { return this->state.allow_duplicates; }
+      constexpr bool allowMultiSelect() const noexcept { return this->state.allow_multi_select; }
       constexpr bool readOnly() const noexcept { return this->state.read_only; }
       constexpr Qt::Orientation orientation() const noexcept { return this->state.orientation; }
       constexpr bool showFormTypes() const noexcept { return this->state.show_form_types; }
@@ -90,6 +93,7 @@ class DKFormListPane : public QWidget {
       #endif
 
       void setAllowDuplicates(bool);
+      void setAllowMultiSelect(bool);
       void setReadOnly(bool);
       #if !defined(QT_DESIGNER_LIB)
          void setAllowedFormTypes(QVector<dovah::form_type>);
@@ -111,9 +115,16 @@ class DKFormListPane : public QWidget {
          void setCustomFilter(DKFormListPaneCustomFilter* v);
       #endif
 
+      #if !defined(QT_DESIGNER_LIB)
+         [[nodiscard]] std::vector<dovah::form_stub*> selectedForms() const;
+         [[nodiscard]] std::vector<size_t> selectedRows() const;
+      #endif
+
    signals:
       void formsAdded(size_t count);
       void formsRemoved(size_t count);
+      void selectedFormsChanged(const std::vector<dovah::form_stub*>&);
+      void selectedRowsChanged(const std::vector<size_t>&);
 
    protected:
       struct {
@@ -127,6 +138,7 @@ class DKFormListPane : public QWidget {
       } subwidgets;
       struct {
          bool allow_duplicates   = false;
+         bool allow_multi_select = true;
          bool read_only          = false;
          bool show_form_types    = true;
          bool show_indices       = false;

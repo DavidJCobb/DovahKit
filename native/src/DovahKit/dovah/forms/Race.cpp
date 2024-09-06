@@ -7,6 +7,7 @@
 #include "../notices/form_load_warnings/by_form_type/race/invalid_boosted_skill.h"
 #include "../notices/form_load_warnings/by_form_type/race/invalid_face_texture_sex.h"
 #include "../notices/form_load_warnings/by_form_type/race/invalid_morph_bitmask_index.h"
+#include "../notices/form_load_warnings/by_form_type/race/movement_type_override_without_speeds.h"
 #include "../notices/form_load_warnings/by_form_type/race/tint_layer_data_before_tint_layer.h"
 #include "../notices/form_load_warnings/by_form_type/race/too_many_biped_object_names.h"
 #include "../notices/form_load_warnings/by_form_type/race/too_many_phonemes.h"
@@ -172,6 +173,24 @@ namespace dovah::loaded_forms {
                      subrecord.read(this->mount_data.camera_offset.z);
                   }
                }
+               break;
+
+            case 'MTYP':
+               {
+                  subrecord.read(form_id);
+                  if (record.peek_next_subrecord_type() == 'SPED') {
+                     auto& item = this->movement.overrides.emplace_back();
+                     item.type.unmanaged_set(form_id.get_form_stub());
+
+                     auto& SPED = record.next_subrecord();
+                     item.speeds.load(SPED, intfc);
+                  } else {
+                     specific_load_warnings::movement_type_override_without_speeds notice(this->stub);
+                     intfc.log_load_warning(notice);
+                  }
+               }
+               break;
+            case 'SPED':
                break;
 
             #pragma region Single forms
@@ -856,6 +875,13 @@ namespace dovah::loaded_forms {
                components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
 
+            case 'MTYP':
+               if (subrecord.read(form_id))
+                  uib.add_outbound_reference(form_id);
+               break;
+            case 'SPED':
+               break;
+
             case 'FNAM':
                female = true;
                break;
@@ -1156,7 +1182,7 @@ namespace dovah::loaded_forms {
          dst.overrides.resize(size);
          for (size_t i = 0; i < size; ++i) {
             dst.overrides[i].type.set(*copy, src.overrides[i].type);
-            dst.overrides[i].values = src.overrides[i].values;
+            dst.overrides[i].speeds = src.overrides[i].speeds;
          }
       }
 
@@ -1334,7 +1360,7 @@ namespace dovah::loaded_forms {
       for (auto& item : this->movement.overrides) {
          record.write_formID_subrecord('MTYP', item.type, false);
          auto& SPED = record.open_next_subrecord('SPED');
-         SPED.write(item.values.list);
+         item.speeds.save(SPED, intfc);
          SPED.close();
       }
       {

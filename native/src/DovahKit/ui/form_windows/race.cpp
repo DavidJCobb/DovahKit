@@ -1,7 +1,9 @@
 #include "./race.h"
 #include <limits>
+#include "helpers/math/rotation/unit_conversion.h"
 #include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/data/skills.h"
+#include "dovah/forms/MovementType.h"
 #include "dovah/core.h"
 #include "editor/helpers/skill_name_to_string.h"
 #include "editor/subsystems/form_info_cache/core.h"
@@ -239,7 +241,95 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
          });
          picker->setEnabled(false);
       }
-      static_assert(just_let_me_compile, "TODO: Movement Data Overrides");
+      {  // Movement Data Overrides
+         this->_subwidgets.movement_data_override = {
+            .form_pane = this->ui.movementTypeOverrideForms,
+            .values = {
+               this->ui.movementTypeOverrideWalkLeft,
+               this->ui.movementTypeOverrideRunLeft,
+               this->ui.movementTypeOverrideWalkRight,
+               this->ui.movementTypeOverrideRunRight,
+               this->ui.movementTypeOverrideWalkForward,
+               this->ui.movementTypeOverrideRunForward,
+               this->ui.movementTypeOverrideWalkBack,
+               this->ui.movementTypeOverrideRunBack,
+               this->ui.movementTypeOverrideWalkRotate,
+               this->ui.movementTypeOverrideRunRotate,
+               nullptr
+            }
+         };
+
+         ui::set_unsigned_range<float>(this->ui.movementTypeOverrideWalkForward);
+         ui::set_unsigned_range<float>(this->ui.movementTypeOverrideWalkBack);
+         ui::set_unsigned_range<float>(this->ui.movementTypeOverrideWalkLeft);
+         ui::set_unsigned_range<float>(this->ui.movementTypeOverrideWalkRight);
+         ui::set_unsigned_range<float>(this->ui.movementTypeOverrideRunForward);
+         ui::set_unsigned_range<float>(this->ui.movementTypeOverrideRunBack);
+         ui::set_unsigned_range<float>(this->ui.movementTypeOverrideRunLeft);
+         ui::set_unsigned_range<float>(this->ui.movementTypeOverrideRunRight);
+         this->ui.movementTypeOverrideWalkRotate->setRange(0, 360);
+         this->ui.movementTypeOverrideRunRotate->setRange(0, 360);
+
+         auto* listview = this->ui.movementTypeOverrideForms;
+         listview->setAllowedFormTypes({ dovah::form_type::movement_type });
+         listview->setAllowDuplicates(false);
+         listview->setAllowMultiSelect(false);
+         QObject::connect(listview, &DKFormListPane::selectedFormsChanged, this, [this](const std::vector<dovah::form_stub*>& stubs) {
+            if (stubs.empty()) {
+               this->_pull_movement_type_overrides_to_ui(nullptr);
+               return;
+            }
+            this->_pull_movement_type_overrides_to_ui(stubs[0]);
+         });
+         QObject::connect(listview, &DKFormListPane::formsAdded, this, [this, listview]() {
+            if (this->_state.filling_movement_type_list)
+               return;
+            auto& working = *this->form;
+
+            auto  src = listview->stubs();
+            auto& dst = working.movement.overrides;
+            for (auto* stub : src) {
+               bool found = false;
+               for (const auto& item : dst) {
+                  if (item.type == stub) {
+                     found = true;
+                     break;
+                  }
+               }
+               if (!found) {
+                  auto& item = dst.emplace_back();
+                  item.type.set(working, stub);
+
+                  auto loaded = stub->load().ptr_cast<dovah::loaded_forms::MovementType>();
+                  if (loaded) {
+                     item.speeds = loaded->speeds;
+                  }
+               }
+            }
+         });
+         QObject::connect(listview, &DKFormListPane::formsRemoved, this, [this, listview]() {
+            if (this->_state.filling_movement_type_list)
+               return;
+            auto& working = *this->form;
+
+            auto& list = working.movement.overrides;
+            bool  any  = false;
+            for (auto& item : list) {
+               if (listview->contains(item.type.get_form_stub()))
+                  continue;
+               item.type.set(working, nullptr);
+               any = true;
+            }
+            std::erase_if(list, [](const auto& item) -> bool {
+               return item.type == nullptr;
+            });
+         });
+
+         for (auto* widget : this->_subwidgets.movement_data_override.values)
+            QObject::connect(widget, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &FormDialogRace::_push_movement_type_overrides_to_form);
+
+         _pull_movement_type_overrides_to_ui(nullptr); // set initial enable states
+      }
    #pragma endregion
    #pragma region Attack Data tab
       //
@@ -653,6 +743,7 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
    #pragma endregion
 
    this->load(); // this creates the working copy.
+   this->_state.filling_movement_type_list = false;
 }
 void FormDialogRace::_load_impl() {
    auto& editor  = DovahKitCore::get();
@@ -826,7 +917,15 @@ void FormDialogRace::_load_impl() {
       ui::bind(this->ui.flagUseAdvancedAvoidance, working.alt_flags, loaded_form_type::alt_flag::use_advanced_avoidance);
 
       this->_models.base_movement_types->initializeFrom(working);
-      static_assert(just_let_me_compile, "TODO: Movement Data Overrides");
+
+      {  // Movement data overrides
+         auto* widget  = this->ui.movementTypeOverrideForms;
+         auto  blocker = QSignalBlocker(widget);
+         widget->clear();
+         for (auto& item : working.movement.overrides)
+            if (auto* stub = item.type.get_form_stub())
+               widget->addStub(stub);
+      }
    #pragma endregion
    #pragma region Attack Data tab
       this->ui.attackData->initializeFrom(working.attack_data);
@@ -1052,7 +1151,6 @@ void FormDialogRace::_save_impl() {
    #pragma endregion
    #pragma region Movement Details tab
       this->_models.base_movement_types->commitTo(working);
-      static_assert(just_let_me_compile, "TODO: Movement Data Overrides");
    #pragma endregion
    #pragma region Attack Data tab
       this->ui.attackData->commitTo(working.attack_data, working);
@@ -1172,6 +1270,77 @@ void FormDialogRace::_update_slot_dropdowns() {
             widget->setCurrentIndex(-1);
             emit widget->currentIndexChanged(-1);
          }
+      }
+   }
+}
+
+namespace {
+   constexpr bool _movement_type_value_is_radians(size_t index) {
+      if (index >= 8)
+         return true;
+      return false;
+   }
+}
+void FormDialogRace::_pull_movement_type_overrides_to_ui(dovah::form_stub* stub) {
+   const auto& fields = this->_subwidgets.movement_data_override.values;
+   if (stub) {
+      for (auto& data : this->form->movement.overrides) {
+         if (data.type == stub) {
+            auto& list = data.speeds.list;
+            for (size_t i = 0; i < list.size(); ++i) {
+               auto* widget = fields[i];
+               if (!widget)
+                  continue;
+               auto blocker = QSignalBlocker(widget);
+               widget->setEnabled(true);
+
+               auto value = list[i];
+               if (_movement_type_value_is_radians(i)) {
+                  value *= cobb::radians_to_degrees_mult;
+               }
+               widget->setValue(value);
+            }
+            return;
+         }
+      }
+   }
+   //
+   // No stub or not found:
+   //
+   for (auto* widget : fields) {
+      if (widget)
+         widget->setEnabled(false);
+   }
+}
+void FormDialogRace::_push_movement_type_overrides_to_form() {
+   auto& sw = this->_subwidgets.movement_data_override;
+
+   dovah::form_stub* form = nullptr;
+   {
+      auto sel = sw.form_pane->selectedForms();
+      if (sel.empty())
+         return;
+      form = sel[0];
+      if (!form)
+         return;
+   }
+
+   const auto& fields = this->_subwidgets.movement_data_override.values;
+   for (auto& data : this->form->movement.overrides) {
+      if (data.type == form) {
+         auto& list = data.speeds.list;
+         for (size_t i = 0; i < list.size(); ++i) {
+            auto* widget = fields[i];
+            if (!widget)
+               continue;
+
+            auto value = widget->value();
+            if (_movement_type_value_is_radians(i)) {
+               value *= cobb::degrees_to_radians_mult;
+            }
+            list[i] = value;
+         }
+         break;
       }
    }
 }

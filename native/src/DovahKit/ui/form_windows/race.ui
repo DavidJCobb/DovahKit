@@ -70,7 +70,7 @@
    <item row="1" column="0">
     <widget class="QTabWidget" name="tabbox">
      <property name="currentIndex">
-      <number>10</number>
+      <number>5</number>
      </property>
      <widget class="QWidget" name="tabGeneral">
       <attribute name="title">
@@ -1833,6 +1833,9 @@
        </item>
        <item row="2" column="0" colspan="2">
         <widget class="QGroupBox" name="groupBox_16">
+         <property name="whatsThis">
+          <string>&lt;p&gt;You can drag a Movement Type from the Object Window into the list here, in order to override its values for this Race.&lt;/p&gt;</string>
+         </property>
          <property name="title">
           <string>Movement Data Overrides</string>
          </property>
@@ -1840,6 +1843,9 @@
           <item>
            <widget class="DKFormListPane" name="movementTypeOverrideForms">
             <property name="showFormTypes">
+             <bool>false</bool>
+            </property>
+            <property name="showMoveButtons">
              <bool>false</bool>
             </property>
            </widget>

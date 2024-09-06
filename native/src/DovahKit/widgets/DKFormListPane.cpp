@@ -90,7 +90,7 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
       });
    #endif
    view->setSelectionBehavior(QAbstractItemView::SelectRows);
-   view->setSelectionMode(QAbstractItemView::ExtendedSelection);
+   view->setSelectionMode(this->allowMultiSelect() ? QAbstractItemView::ExtendedSelection : QAbstractItemView::SingleSelection);
    view->setCornerButtonEnabled(false);
    view->setAcceptDrops(true);
    view->setDragDropOverwriteMode(false);
@@ -133,6 +133,32 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
       QObject::connect(this->subwidgets.buttons.move_up,   &QPushButton::clicked, this, [this]() { this->_moveSelected(-1); });
       QObject::connect(this->subwidgets.buttons.move_down, &QPushButton::clicked, this, [this]() { this->_moveSelected(1); });
       QObject::connect(this->subwidgets.buttons.remove,    &QPushButton::clicked, this, [this]() { this->_removeSelected(); });
+   #endif
+   #if !defined(QT_DESIGNER_LIB)
+      {
+         auto* sel_model = this->subwidgets.view->selectionModel();
+         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this](const QItemSelection& sel) {
+            if (sel.isEmpty()) {
+               emit selectedRowsChanged({});
+               emit selectedFormsChanged({});
+               return;
+            }
+
+            std::vector<dovah::form_stub*> forms;
+            std::vector<size_t> rows;
+
+            for (auto& sel_item : sel) {
+               int first = sel_item.top();
+               int last  = sel_item.bottom();
+               for (int i = first; i <= last; ++i) {
+                  forms.push_back(this->_model()->getNthStub(i));
+                  rows.push_back(i);
+               }
+            }
+            emit selectedRowsChanged(rows);
+            emit selectedFormsChanged(forms);
+         });
+      }
    #endif
    //
    this->_updateOrientation();
@@ -255,6 +281,13 @@ void DKFormListPane::setAllowDuplicates(bool v) {
       this->_model()->setAllowDuplicates(v);
    #endif
 }
+void DKFormListPane::setAllowMultiSelect(bool v) {
+   auto& dst = this->state.allow_multi_select;
+   if (v == dst)
+      return;
+   dst = v;
+   this->subwidgets.view->setSelectionMode(v ? QAbstractItemView::ExtendedSelection : QAbstractItemView::SingleSelection);
+}
 void DKFormListPane::setReadOnly(bool v) {
    if (this->readOnly() == v)
       return;
@@ -331,6 +364,38 @@ void DKFormListPane::setShowRemoveButton(bool v) {
          }
          v->_hookToModel(model);
       }
+   }
+#endif
+   
+
+#if !defined(QT_DESIGNER_LIB)
+   [[nodiscard]] std::vector<dovah::form_stub*> DKFormListPane::selectedForms() const {
+      std::vector<dovah::form_stub*> forms;
+
+      auto sel = this->subwidgets.view->selectionModel()->selection();
+      for (auto& sel_item : sel) {
+         int first = sel_item.top();
+         int last  = sel_item.bottom();
+         for (int i = first; i <= last; ++i) {
+            forms.push_back(this->_model()->getNthStub(i));
+         }
+      }
+
+      return forms;
+   }
+   [[nodiscard]] std::vector<size_t> DKFormListPane::selectedRows() const {
+      std::vector<size_t> rows;
+
+      auto sel = this->subwidgets.view->selectionModel()->selection();
+      for (auto& sel_item : sel) {
+         int first = sel_item.top();
+         int last  = sel_item.bottom();
+         for (int i = first; i <= last; ++i) {
+            rows.push_back(i);
+         }
+      }
+
+      return rows;
    }
 #endif
 

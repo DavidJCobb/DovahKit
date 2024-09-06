@@ -741,7 +741,7 @@ namespace editor_helpers {
                   ).arg(subject).arg(signature);
                }
             #pragma endregion
-            #pragma region note
+            #pragma region race
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::race::biped_object_name_too_long*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   //
@@ -777,6 +777,17 @@ namespace editor_helpers {
                      "index is %3.",
                      disambig
                   ).arg(subject).arg(casted->index).arg(casted->max_index);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::race::movement_type_override_without_speeds*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Race %1 contained an improperly formatted speed override: an MTYP subrecord "
+                     "not immediately followed by a SPED subrecord. The game will blindly swallow "
+                     "whatever subrecord comes after MTYP and will load the form incorrectly. "
+                     "(DovahKit will attempt to fix this up on save.)",
+                     disambig
+                  ).arg(subject);
                }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::race::tint_layer_data_before_tint_layer*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);

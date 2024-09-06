@@ -79,6 +79,7 @@ namespace dovah {
       loaded_forms::LeveledSpell,
       loaded_forms::Location,
       loaded_forms::MiscItem,
+      loaded_forms::MovementType,
       loaded_forms::Note,
       loaded_forms::ObjectReference,
       loaded_forms::Outfit,

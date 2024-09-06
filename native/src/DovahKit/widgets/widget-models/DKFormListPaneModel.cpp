@@ -214,6 +214,11 @@ QVector<dovah::form_stub*> DKFormListPaneModel::stubs() const noexcept {
       s.push_back(item->stub);
    return s;
 }
+dovah::form_stub* DKFormListPaneModel::getNthStub(size_t i) const noexcept {
+   if (i >= this->children.size())
+      return nullptr;
+   return this->children[i]->stub;
+}
 
 #pragma region Editor core hooks
 void DKFormListPaneModel::formDeletionImminent(const dovah::form_stub* stub, bool is_just_flagged) {

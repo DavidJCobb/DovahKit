@@ -91,6 +91,9 @@ class FormDialogRace :
          dovah::data_by_sex<RaceTintLayerPresetsModel*> tint_preset_model; // NOTE: the preset model is a child/proxy of the layer model
       } _models;
       struct {
+         bool filling_movement_type_list = true;
+      } _state;
+      struct {
          union {
             std::array<QRadioButton*, 3> all = {};
             struct {
@@ -102,6 +105,10 @@ class FormDialogRace :
          struct {
             dovah::data_by_sex<QTableView*> extra;
          } head_parts;
+         struct {
+            DKFormListPane* form_pane;
+            std::array<QDoubleSpinBox*, 11> values = {};
+         } movement_data_override;
          union _ {
             ~_() { all.~array(); }
 
@@ -123,6 +130,9 @@ class FormDialogRace :
       virtual void _save_impl() override;
 
       void _update_slot_dropdowns();
+
+      void _pull_movement_type_overrides_to_ui(dovah::form_stub*);
+      void _push_movement_type_overrides_to_form();
 
       void _add_new_tint_layer(dovah::sex);
       void _add_new_tint_preset(dovah::sex);

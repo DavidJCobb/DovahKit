@@ -25,19 +25,7 @@ namespace dovah::loaded_forms {
                //
                break;
             case 'SPED':
-               subrecord.read(this->speeds.left.walk);
-               subrecord.read(this->speeds.left.run);
-               subrecord.read(this->speeds.right.walk);
-               subrecord.read(this->speeds.right.run);
-               subrecord.read(this->speeds.forward.walk);
-               subrecord.read(this->speeds.forward.run);
-               subrecord.read(this->speeds.back.walk);
-               subrecord.read(this->speeds.back.run);
-               subrecord.read(this->speeds.rotate_in_place.walk);
-               subrecord.read(this->speeds.rotate_in_place.run);
-               if (record.version() > 27) {
-                  subrecord.read(this->speeds.rotate_while_moving);
-               }
+               this->speeds.load(subrecord, intfc);
                break;
             case 'INAM':
                subrecord.read(this->anim_change_thresholds.directional);
@@ -83,19 +71,7 @@ namespace dovah::loaded_forms {
       record.write_string_subrecord('MNAM', this->name);
       {
          auto& SPED = record.open_next_subrecord('SPED');
-         SPED.write(this->speeds.left.walk);
-         SPED.write(this->speeds.left.run);
-         SPED.write(this->speeds.right.walk);
-         SPED.write(this->speeds.right.run);
-         SPED.write(this->speeds.forward.walk);
-         SPED.write(this->speeds.forward.run);
-         SPED.write(this->speeds.back.walk);
-         SPED.write(this->speeds.back.run);
-         SPED.write(this->speeds.rotate_in_place.walk);
-         SPED.write(this->speeds.rotate_in_place.run);
-         if (record.version() > 27) {
-            SPED.write(this->speeds.rotate_while_moving);
-         }
+         this->speeds.save(SPED, intfc);
          SPED.close();
       }
       {

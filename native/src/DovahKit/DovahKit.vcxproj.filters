@@ -2601,6 +2601,9 @@
     <ClCompile Include="ui\form_windows\race\RacePresetActorFormFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\structs\movement_type_speeds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6648,6 +6651,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\form_windows\race\RacePresetActorFormFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\movement_type_speeds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\movement_type_override_without_speeds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\race\RaceMovementDataOverridesModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

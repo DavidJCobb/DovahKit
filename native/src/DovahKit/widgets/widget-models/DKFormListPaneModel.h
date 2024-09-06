@@ -98,6 +98,7 @@ class DKFormListPaneModel : public QAbstractTableModel {
       }
 
       QVector<dovah::form_stub*> stubs() const noexcept;
+      dovah::form_stub* getNthStub(size_t) const noexcept;
 
       #pragma region Property getters
          constexpr bool allowGaps() const noexcept { return this->allow_gaps; }

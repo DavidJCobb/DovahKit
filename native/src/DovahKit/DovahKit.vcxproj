@@ -168,6 +168,7 @@
     <ClCompile Include="dovah\forms\Relationship.cpp" />
     <ClCompile Include="dovah\forms\structs\actor_creature_sounds.cpp" />
     <ClCompile Include="dovah\forms\structs\container_object_extra_data.cpp" />
+    <ClCompile Include="dovah\forms\structs\movement_type_speeds.cpp" />
     <ClCompile Include="dovah\form_reference_t.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_base_form.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_cell_landscape.cpp" />
@@ -1070,6 +1071,7 @@
     <ClInclude Include="dovah\forms\structs\actor_creature_sounds.h" />
     <ClInclude Include="dovah\forms\structs\actor_facegen_morphs.h" />
     <ClInclude Include="dovah\forms\structs\container_object_extra_data.h" />
+    <ClInclude Include="dovah\forms\structs\movement_type_speeds.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
     <ClInclude Include="dovah\form_reference_t.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_child_form.h" />
@@ -1157,6 +1159,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\invalid_boosted_skill.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\invalid_face_texture_sex.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\invalid_morph_bitmask_index.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\movement_type_override_without_speeds.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\tint_layer_data_before_tint_layer.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\too_many_biped_object_names.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\too_many_phonemes.h" />
@@ -1260,6 +1263,7 @@
     <QtMoc Include="ui\form_windows\movement_type.h" />
     <QtMoc Include="ui\form_windows\race\RaceTintLayerModel.h" />
     <QtMoc Include="ui\form_windows\race\RaceAvailableFaceMorphsModel.h" />
+    <ClInclude Include="ui\form_windows\race\RaceMovementDataOverridesModel.h" />
     <ClInclude Include="ui\form_windows\race\RacePresetActorFormFilter.h" />
     <ClInclude Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.h" />
     <ClInclude Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.h" />

@@ -4,6 +4,7 @@
 #include "Form.h"
 #include "_common.h"
 #include "components/papyrus.h"
+#include "structs/movement_type_speeds.h"
 
 namespace dovah::loaded_forms {
    class MovementType : public Form {
@@ -13,22 +14,10 @@ namespace dovah::loaded_forms {
 
          static constexpr const float anim_change_threshold_disabled = std::numeric_limits<float>::max();
          
-         struct speed_set {
-            float walk = 0;
-            float run  = 0;
-         };
-         
          components::papyrus_attachment_data script_data;
          //
          std::string name;
-         struct {
-            speed_set left;
-            speed_set right;
-            speed_set forward;
-            speed_set back;
-            speed_set rotate_in_place; // radians
-            float     rotate_while_moving = 0; // run only, no walk // radians // added in form version 27
-         } speeds; // SPED
+         structs::movement_type_speeds speeds; // SPED
          struct {
             float directional    = anim_change_threshold_disabled;
             float movement_speed = anim_change_threshold_disabled;
