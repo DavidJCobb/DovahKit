@@ -6638,6 +6638,9 @@
     <ClInclude Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\arrays\filled.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

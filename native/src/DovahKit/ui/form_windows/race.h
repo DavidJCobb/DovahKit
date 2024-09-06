@@ -31,6 +31,40 @@ class FormDialogRace :
    protected:
       static constexpr const size_t num_skill_boosts = std::tuple_size_v<decltype(std::declval<loaded_form_type>().stats.skill_boosts)>;
 
+      struct tints_tab_subwidgets {
+         struct {
+            struct {
+               QPushButton* create    = nullptr;
+               QPushButton* move_up   = nullptr;
+               QPushButton* move_down = nullptr;
+               QPushButton* remove    = nullptr;
+            } buttons;
+            QTableView* view = nullptr;
+            struct {
+               QWidget*          container = nullptr;
+               DKGameFilePicker* texture   = nullptr;
+               QComboBox*        type      = nullptr;
+               DKFormPicker*     default_color = nullptr;
+            } edit;
+         } layers;
+         struct {
+            struct {
+               QPushButton* create    = nullptr;
+               QPushButton* move_up   = nullptr;
+               QPushButton* move_down = nullptr;
+               QPushButton* remove    = nullptr;
+            } buttons;
+            QTableView* view = nullptr;
+            struct {
+               DKFormPicker* color = nullptr;
+               struct {
+                  DKFloatSlider*  slider  = nullptr;
+                  QDoubleSpinBox* spinbox = nullptr;
+               } alpha;
+            } edit;
+         } presets;
+      };
+
    protected:
       Ui::FormDialogRace ui;
       struct {
@@ -66,16 +100,37 @@ class FormDialogRace :
          struct {
             dovah::data_by_sex<QTableView*> extra;
          } head_parts;
+         union _ {
+            ~_() { all.~array(); }
+
+            std::array<QTabWidget*, 3> all = {};
+            struct {
+               QTabWidget* body;
+               QTabWidget* face_data;
+               QTabWidget* face_tints;
+            };
+         } sex_tabboxes;
          struct {
             std::array<QComboBox*, num_skill_boosts> which = {};
             std::array<QSpinBox*,  num_skill_boosts> boost = {};
          } skills;
+         dovah::data_by_sex<tints_tab_subwidgets> tints;
       } _subwidgets;
       
       virtual void _load_impl() override;
       virtual void _save_impl() override;
 
       void _update_slot_dropdowns();
+
+      void _add_new_tint_layer(dovah::sex);
+      void _add_new_tint_preset(dovah::sex);
+      void _on_tint_layer_selection_changed(dovah::sex, const QItemSelection&);
+      void _on_tint_preset_selection_changed(dovah::sex, const QItemSelection&);
+      QModelIndex _selected_tint_layer(dovah::sex) const;
+      QModelIndex _selected_tint_preset(dovah::sex) const;
+      //
+      void _push_tint_layer_to_model(dovah::sex);
+      void _push_tint_preset_to_model(dovah::sex);
 
       virtual bool eventFilter(QObject* object, QEvent* event) override;
 };

@@ -153,6 +153,8 @@ class RaceTintLayerModel : public QAbstractItemModel {
          
          [[nodiscard]] std::optional<PresetData> get_preset(const QModelIndex&);
          [[nodiscard]] std::optional<PresetData> get_preset(dovah::face_tint_index_type);
+
+         QModelIndex move_preset(const QModelIndex&, bool down);
          
          void overwrite_preset(const QModelIndex&, const PresetData&);
          void overwrite_preset(dovah::face_tint_index_type, const PresetData&);

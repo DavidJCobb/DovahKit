@@ -1213,6 +1213,7 @@
     <ClInclude Include="editor\subsystems\message_log\core.h" />
     <QtMoc Include="editor\subsystems\message_log\dovahkit_message_log_model.h" />
     <ClInclude Include="editor\subsystems\message_log\model.h" />
+    <ClInclude Include="helpers\arrays\filled.h" />
     <ClInclude Include="helpers\hashing\crc32.h" />
     <ClInclude Include="nif\blocks\BSValueNode.h" />
     <ClInclude Include="nif\utils\find_all_retexturable_blocks.h" />

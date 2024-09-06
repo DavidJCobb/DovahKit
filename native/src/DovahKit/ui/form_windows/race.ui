@@ -2706,7 +2706,7 @@
        <item row="2" column="0">
         <widget class="QTabWidget" name="tintsBySex">
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tabTintsF">
           <attribute name="title">
@@ -2781,7 +2781,56 @@
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_11">
                     <item>
-                     <widget class="QTableView" name="currentTintFPresetList"/>
+                     <layout class="QGridLayout" name="gridLayout_47">
+                      <item row="2" column="0">
+                       <widget class="QTableView" name="currentTintFPresetList"/>
+                      </item>
+                      <item row="2" column="1">
+                       <layout class="QVBoxLayout" name="verticalLayout_14">
+                        <item>
+                         <widget class="QPushButton" name="buttonTintPresetFNew">
+                          <property name="text">
+                           <string>New</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="buttonTintPresetFMoveUp">
+                          <property name="text">
+                           <string>Move Up</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="buttonTintPresetFMoveDown">
+                          <property name="text">
+                           <string>Move Down</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="buttonTintPresetFDelete">
+                          <property name="text">
+                           <string>Delete</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <spacer name="verticalSpacer_18">
+                          <property name="orientation">
+                           <enum>Qt::Vertical</enum>
+                          </property>
+                          <property name="sizeHint" stdset="0">
+                           <size>
+                            <width>20</width>
+                            <height>40</height>
+                           </size>
+                          </property>
+                         </spacer>
+                        </item>
+                       </layout>
+                      </item>
+                     </layout>
                     </item>
                     <item>
                      <layout class="QGridLayout" name="gridLayout_45">
@@ -3006,7 +3055,56 @@
                    </property>
                    <layout class="QVBoxLayout" name="verticalLayout_8">
                     <item>
-                     <widget class="QTableView" name="currentTintMPresetList"/>
+                     <layout class="QGridLayout" name="gridLayout_48">
+                      <item row="0" column="0">
+                       <widget class="QTableView" name="currentTintMPresetList"/>
+                      </item>
+                      <item row="0" column="1">
+                       <layout class="QVBoxLayout" name="verticalLayout_15">
+                        <item>
+                         <widget class="QPushButton" name="buttonTintPresetMNew">
+                          <property name="text">
+                           <string>New</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="buttonTintPresetMMoveUp">
+                          <property name="text">
+                           <string>Move Up</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="buttonTintPresetMMoveDown">
+                          <property name="text">
+                           <string>Move Down</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="buttonTintPresetMDelete">
+                          <property name="text">
+                           <string>Delete</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <spacer name="verticalSpacer_19">
+                          <property name="orientation">
+                           <enum>Qt::Vertical</enum>
+                          </property>
+                          <property name="sizeHint" stdset="0">
+                           <size>
+                            <width>20</width>
+                            <height>40</height>
+                           </size>
+                          </property>
+                         </spacer>
+                        </item>
+                       </layout>
+                      </item>
+                     </layout>
                     </item>
                     <item>
                      <layout class="QGridLayout" name="gridLayout_46">
@@ -3442,6 +3540,10 @@
   <tabstop>currentTintFTexture</tabstop>
   <tabstop>currentTintFType</tabstop>
   <tabstop>currentTintFPresetList</tabstop>
+  <tabstop>buttonTintPresetFNew</tabstop>
+  <tabstop>buttonTintPresetFMoveUp</tabstop>
+  <tabstop>buttonTintPresetFMoveDown</tabstop>
+  <tabstop>buttonTintPresetFDelete</tabstop>
   <tabstop>currentTintFPresetColor</tabstop>
   <tabstop>currentTintFPresetAlphaSlider</tabstop>
   <tabstop>currentTintFPresetAlpha</tabstop>
@@ -3456,6 +3558,10 @@
   <tabstop>currentTintMTexture</tabstop>
   <tabstop>currentTintMType</tabstop>
   <tabstop>currentTintMPresetList</tabstop>
+  <tabstop>buttonTintPresetMNew</tabstop>
+  <tabstop>buttonTintPresetMMoveUp</tabstop>
+  <tabstop>buttonTintPresetMMoveDown</tabstop>
+  <tabstop>buttonTintPresetMDelete</tabstop>
   <tabstop>currentTintMPresetColor</tabstop>
   <tabstop>currentTintMPresetAlphaSlider</tabstop>
   <tabstop>currentTintMPresetAlpha</tabstop>
