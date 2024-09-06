@@ -15,6 +15,7 @@ class RaceBaseMovementDefaultsModel;
 class RaceBipedObjectSlotsModel;
 class RaceEquipSlotsModel;
 class RaceEquipTypesModel;
+class RacePhonemeMorphsModel;
 class RacePresetActorFormFilter;
 class RaceTintDefaultColorPickerFilter;
 class RaceTintLayerModel;
@@ -82,6 +83,8 @@ class FormDialogRace :
 
          RaceBaseMovementDefaultsModel* base_movement_types = nullptr;
 
+         RacePhonemeMorphsModel* current_phoneme_morphs = nullptr;
+
          dovah::data_by_sex<FaceBaseHeadPartsModel*>  head_parts_base;
          dovah::data_by_sex<FaceExtraHeadPartsModel*> head_parts_extra;
 
@@ -133,6 +136,17 @@ class FormDialogRace :
 
       void _pull_movement_type_overrides_to_ui(dovah::form_stub*);
       void _push_movement_type_overrides_to_form();
+
+      std::optional<dovah::face_fx::phoneme> _current_phoneme() const;
+      void _on_selected_phoneme_changed();
+      //
+      void _pull_phoneme_target_to_ui();
+      void _push_phoneme_target_from_ui();
+      //
+      void _add_phoneme_target();
+      void _remove_phoneme_target();
+      //
+      void _set_phonemes_are_default(bool);
 
       void _add_new_tint_layer(dovah::sex);
       void _add_new_tint_preset(dovah::sex);

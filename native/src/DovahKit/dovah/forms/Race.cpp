@@ -1,6 +1,7 @@
 #include "Race.h"
 #include "_common_cpp.h"
 
+#include "../data/face_fx/default_facegen_race_phonemes.h"
 #include "../data/hardcoded_form_ids.h"
 
 #include "../notices/form_load_warnings/by_form_type/race/biped_object_name_too_long.h"
@@ -25,6 +26,127 @@ namespace {
 }
 
 namespace dovah::loaded_forms {
+   #pragma region Phoneme morph helper functions
+      float Race::phoneme_weight(face_fx::phoneme phoneme, size_t morph_index) const {
+         auto&  list = this->phonemes.weights[(size_t)phoneme];
+         size_t size = list.size();
+         if (morph_index < size) {
+            return list[morph_index];
+         }
+         if (size == 0) {
+            if (this->uses_default_facegen_phoneme_morph_names()) {
+               auto& src = face_fx::default_facegen_race_phonemes[phoneme];
+               if (morph_index < src.all.size())
+                  return src[morph_index];
+            }
+         }
+         return 0;
+      }
+      bool Race::uses_default_facegen_phoneme_morph_names() const {
+
+         // TODO: Should handle this flag on load somehow
+         constexpr const bool honor_partial_record_flag_here = false;
+
+         if (!(this->race_flags & race_flag::facegen_head)) {
+            return false;
+         }
+         if constexpr (honor_partial_record_flag_here) {
+            constexpr const auto& base        = face_fx::default_facegen_race_phonemes;
+            constexpr const auto  morph_count = base.morph_names.size();
+
+            if (this->stub.test_record_flags(tes_file_record_header::flag::partial)) {
+               auto& list = this->phonemes.morph_names;
+               if (list.size() != morph_count)
+                  return false;
+               for (size_t i = 0; i < morph_count; ++i) {
+                  auto& a = list[i];
+                  auto& b = base.morph_names[i];
+                  if (a != b)
+                     return false;
+               }
+               return true;
+            }
+         }
+
+         return this->phonemes.morph_names.empty();
+      }
+      bool Race::uses_default_facegen_phonemes() const {
+         if (!this->uses_default_facegen_phoneme_morph_names())
+            return false;
+         if (this->phonemes.weights[0].empty())
+            return true;
+
+         constexpr const auto weight_count = face_fx::default_facegen_race_phonemes.weight_count;
+
+         for (size_t i = 0; i < this->phonemes.weights.size(); ++i) {
+            auto& list = this->phonemes.weights[i];
+            auto& base = face_fx::default_facegen_race_phonemes[(face_fx::phoneme)i];
+            for (size_t j = 0; j < weight_count; ++j) {
+               auto weight = this->phoneme_weight((face_fx::phoneme)i, j);
+               auto ref    = base[j];
+               if (weight != ref)
+                  return false;
+            }
+         }
+         return true;
+      }
+
+      void Race::delete_phoneme_morph(size_t i) {
+         auto&  names = this->phonemes.morph_names;
+         size_t size  = names.size();
+         if (i >= size)
+            return;
+         #if _DEBUG
+            for (auto& list : this->phonemes.weights) {
+               assert(list.size() == size);
+            }
+         #endif
+
+         names.erase(names.begin() + i);
+         for (auto& list : this->phonemes.weights)
+            list.erase(list.begin() + i);
+      }
+      void Race::insert_phoneme_morph(size_t at) {
+         auto&  names      = this->phonemes.morph_names;
+         size_t prior_size = names.size();
+         #if _DEBUG
+            for (auto& list : this->phonemes.weights) {
+               assert(list.size() == prior_size);
+            }
+         #endif
+
+         names.insert(names.begin() + at, {});
+         for (auto& list : this->phonemes.weights)
+            list.insert(list.begin() + at, 0.0F);
+      }
+
+      void Race::copy_default_facegen_phonemes() {
+         {
+            auto& src = face_fx::default_facegen_race_phonemes.morph_names;
+            auto& dst = this->phonemes.morph_names;
+            dst.assign(src.begin(), src.end());
+         }
+         for (size_t i = 0; i < face_fx::phoneme_count; ++i) {
+            auto& src = face_fx::default_facegen_race_phonemes[(face_fx::phoneme)i].all;
+            auto& dst = this->phonemes.weights[i];
+            dst.assign(src.begin(), src.end());
+         }
+      }
+   
+      void Race::revert_to_default_facegen_phonemes() {
+         if (!(this->race_flags & race_flag::facegen_head)) {
+            return;
+         }
+         this->phonemes.morph_names.clear();
+
+         for (size_t i = 0; i < face_fx::phoneme_count; ++i) {
+            auto& src = face_fx::default_facegen_race_phonemes[(face_fx::phoneme)i].all;
+            auto& dst = this->phonemes.weights[i];
+            dst.assign(src.begin(), src.end());
+         }
+      }
+   #pragma endregion
+
    void Race::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       //

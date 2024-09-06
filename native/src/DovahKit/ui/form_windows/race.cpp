@@ -1,10 +1,12 @@
 #include "./race.h"
 #include <limits>
 #include "helpers/math/rotation/unit_conversion.h"
+#include "dovah/data/face_fx/default_facegen_race_phonemes.h"
 #include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/data/skills.h"
 #include "dovah/forms/MovementType.h"
 #include "dovah/core.h"
+#include "editor/helpers/face_fx_phoneme_name.h"
 #include "editor/helpers/skill_name_to_string.h"
 #include "editor/subsystems/form_info_cache/core.h"
 #include "ui/utils/bind.h"
@@ -22,6 +24,7 @@
 #include "./race/RaceBipedObjectSlotsModel.h"
 #include "./race/RaceEquipSlotsModel.h"
 #include "./race/RaceEquipTypesModel.h"
+#include "./race/RacePhonemeMorphsModel.h"
 #include "./race/RacePresetActorFormFilter.h"
 #include "./race/RaceTintDefaultColorPickerFilter.h"
 #include "./race/RaceTintLayerModel.h"
@@ -362,7 +365,44 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
       }
    #pragma endregion
    #pragma region Lip Synching tab
-      static_assert(just_let_me_compile, "TODO");
+      QObject::connect(this->ui.flagFaceGenHead, &QCheckBox::toggled, this, [this](bool checked) {
+         auto* widget = this->ui.flagDefaultFaceGenPhonemes;
+         widget->setEnabled(checked);
+         if (!checked)
+            widget->setChecked(false);
+      });
+      this->ui.flagDefaultFaceGenPhonemes->setEnabled(false);
+      QObject::connect(this->ui.flagDefaultFaceGenPhonemes, &QCheckBox::toggled, this, &FormDialogRace::_set_phonemes_are_default);
+
+      {
+         auto* widget = this->ui.phonemeFaceFXList;
+         for (size_t i = 0; i < dovah::face_fx::phoneme_count; ++i) {
+            widget->addItem(editor_helpers::face_fx_phoneme_name((dovah::face_fx::phoneme)i));
+         }
+         QObject::connect(widget->selectionModel(), &QItemSelectionModel::selectionChanged, this, &FormDialogRace::_on_selected_phoneme_changed);
+      }
+      {
+         auto* phoneme_picker = this->ui.phonemeFaceFXList;
+         auto* target_view    = this->ui.phonemeTargets;
+
+         auto* model = this->_models.current_phoneme_morphs = new RacePhonemeMorphsModel(this);
+         target_view->setModel(model);
+
+         ui::typical_tableview_config(target_view);
+         target_view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         ui::set_tableview_column_flex(target_view, [](DKHeaderView& header, const QFontMetrics& metrics) {
+            header.setColumnFlex(RacePhonemeMorphsModel::Column::Name,   1, 0, metrics.boundingRect("RoflLmao").width() * 1.5F + 4);
+            header.setColumnFlex(RacePhonemeMorphsModel::Column::Weight, 0, 0, metrics.boundingRect("1.000000").width() * 1.5F + 4);
+         });
+
+         QObject::connect(target_view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &FormDialogRace::_pull_phoneme_target_to_ui);
+
+         QObject::connect(this->ui.buttonPhonemeMorphNew,    &QPushButton::clicked, this, &FormDialogRace::_add_phoneme_target);
+         QObject::connect(this->ui.buttonPhonemeMorphDelete, &QPushButton::clicked, this, &FormDialogRace::_remove_phoneme_target);
+         //
+         QObject::connect(this->ui.currentPhonemeMorphName, &QLineEdit::textChanged, this, &FormDialogRace::_push_phoneme_target_from_ui);
+         QObject::connect(this->ui.currentPhonemeWeight,    QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &FormDialogRace::_push_phoneme_target_from_ui);
+      }
    #pragma endregion
    #pragma region Face Data tab
       {  // Base Head Parts
@@ -943,9 +983,17 @@ void FormDialogRace::_load_impl() {
       this->_models.equip_types->initializeFrom(working);
    #pragma endregion
    #pragma region Lip Synching tab
-      static_assert(just_let_me_compile, "TODO: FaceFX Phonemes");
-      static_assert(just_let_me_compile, "TODO: Phoneme Targets");
-      static_assert(just_let_me_compile, "TODO: Default FaceGen Targets and Weights");
+      {
+         auto* model = this->_models.current_phoneme_morphs;
+         if (working.uses_default_facegen_phonemes()) {
+            this->ui.flagDefaultFaceGenPhonemes->setChecked(true);
+         } else {
+            this->ui.flagDefaultFaceGenPhonemes->setChecked(false);
+
+            model->setAllMorphNames(working.phonemes.morph_names);
+            this->_on_selected_phoneme_changed();
+         }
+      }
    #pragma endregion
    #pragma region Face Data tab
       {  // Head part inheritance mode
@@ -1160,7 +1208,6 @@ void FormDialogRace::_save_impl() {
       this->_models.equip_types->commitTo(working);
    #pragma endregion
    #pragma region Lip Synching tab
-      static_assert(just_let_me_compile, "TODO: FaceFX Phonemes");
       static_assert(just_let_me_compile, "TODO: Phoneme Targets");
       static_assert(just_let_me_compile, "TODO: Default FaceGen Targets and Weights");
    #pragma endregion
@@ -1274,6 +1321,7 @@ void FormDialogRace::_update_slot_dropdowns() {
    }
 }
 
+#pragma region Movement type override editing
 namespace {
    constexpr bool _movement_type_value_is_radians(size_t index) {
       if (index >= 8)
@@ -1344,7 +1392,163 @@ void FormDialogRace::_push_movement_type_overrides_to_form() {
       }
    }
 }
+#pragma endregion
 
+#pragma region Phoneme editing
+std::optional<dovah::face_fx::phoneme> FormDialogRace::_current_phoneme() const {
+   auto* sel_model = this->ui.phonemeFaceFXList->selectionModel();
+   auto  rows      = sel_model->selectedRows();
+   if (rows.isEmpty())
+      return {};
+   return (dovah::face_fx::phoneme)rows[0].row();
+}
+void FormDialogRace::_on_selected_phoneme_changed() {
+   bool allow_edit = !this->ui.flagDefaultFaceGenPhonemes->isChecked();
+
+   dovah::face_fx::phoneme phoneme;
+   {
+      auto phoneme_opt = this->_current_phoneme();
+      bool valid       = phoneme_opt.has_value() && this->form;
+      this->ui.phonemeTargets->setEnabled(valid && allow_edit);
+      this->ui.buttonPhonemeMorphNew->setEnabled(valid && allow_edit);
+      this->ui.buttonPhonemeMorphDelete->setEnabled(valid && allow_edit);
+      this->ui.currentPhonemeMorphName->setEnabled(valid && allow_edit);
+      this->ui.currentPhonemeWeight->setEnabled(valid && allow_edit);
+      if (valid) {
+         phoneme = phoneme_opt.value();
+      } else {
+         return;
+      }
+   }
+   auto& dst = this->form->phonemes.weights[(size_t)phoneme];
+   this->_models.current_phoneme_morphs->setAllMorphWeights(dst);
+   this->_pull_phoneme_target_to_ui();
+}
+
+void FormDialogRace::_pull_phoneme_target_to_ui() {
+   auto* view  = this->ui.phonemeTargets;
+   auto* model = this->_models.current_phoneme_morphs;
+   auto  sel   = view->selectionModel()->selection();
+
+   bool allow_edit = !this->ui.flagDefaultFaceGenPhonemes->isChecked();
+   bool fail       = sel.isEmpty();
+   this->ui.buttonPhonemeMorphDelete->setEnabled(!fail && allow_edit);
+   this->ui.currentPhonemeMorphName->setEnabled(!fail && allow_edit);
+   this->ui.currentPhonemeWeight->setEnabled(!fail && allow_edit);
+   if (fail) {
+      return;
+   }
+
+   auto  i      = sel[0].topLeft().row();
+   float weight = model->morphWeight(i);
+   auto  name   = model->morphName(i);
+
+   auto blockers = std::array{
+      QSignalBlocker(this->ui.currentPhonemeMorphName),
+      QSignalBlocker(this->ui.currentPhonemeWeight),
+   };
+
+   this->ui.currentPhonemeMorphName->setText(name);
+   this->ui.currentPhonemeWeight->setValue(weight);
+}
+void FormDialogRace::_push_phoneme_target_from_ui() {
+   if (this->ui.flagDefaultFaceGenPhonemes->isChecked())
+      return;
+
+   auto phoneme = this->_current_phoneme();
+   if (!phoneme.has_value())
+      return;
+
+   auto* view  = this->ui.phonemeTargets;
+   auto* model = this->_models.current_phoneme_morphs;
+   auto  sel   = view->selectionModel()->selection();
+   if (sel.isEmpty())
+      return;
+   auto i = sel[0].topLeft().row();
+
+   auto name   = this->ui.currentPhonemeMorphName->text();
+   auto weight = this->ui.currentPhonemeWeight->value();
+
+   model->setMorphName(i, name);
+   model->setMorphWeight(i, weight);
+
+   if (this->form) {
+      auto& dst = this->form->phonemes;
+      dst.morph_names[i] = name.toStdString();
+      dst.weights[(size_t)phoneme.value()][i] = weight;
+   }
+}
+
+void FormDialogRace::_add_phoneme_target() {
+   if (this->ui.flagDefaultFaceGenPhonemes->isChecked())
+      return;
+
+   auto* view  = this->ui.phonemeTargets;
+   auto* model = this->_models.current_phoneme_morphs;
+   auto  qmi   = model->addMorph();
+   if (!qmi.isValid())
+      return;
+
+   size_t i = qmi.row();
+   this->form->insert_phoneme_morph(i);
+   {
+      auto& dst_list = this->form->phonemes.morph_names;
+      assert(dst_list.size() == i);
+      auto& dst_name = this->form->phonemes.morph_names.emplace_back();
+      dst_name = model->morphName(i).toStdString();
+   }
+
+   auto* sel_model = view->selectionModel();
+   auto  tl = qmi.siblingAtColumn(0);
+   auto  br = qmi.siblingAtColumn(model->columnCount({}));
+   sel_model->select({ tl, br }, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+}
+void FormDialogRace::_remove_phoneme_target() {
+   if (this->ui.flagDefaultFaceGenPhonemes->isChecked())
+      return;
+
+   auto* view  = this->ui.phonemeTargets;
+   auto* model = this->_models.current_phoneme_morphs;
+   auto  sel   = view->selectionModel()->selection();
+   if (sel.isEmpty())
+      return;
+
+   size_t i = sel[0].topLeft().row();
+   model->deleteMorph(i);
+   this->form->delete_phoneme_morph(i);
+}
+//
+void FormDialogRace::_set_phonemes_are_default(bool use_defaults) {
+   if (!this->form)
+      return;
+   auto& dst = this->form->phonemes;
+
+   auto* model       = this->_models.current_phoneme_morphs;
+   auto  phoneme_opt = this->_current_phoneme();
+
+   if (use_defaults) {
+      this->form->revert_to_default_facegen_phonemes();
+
+      {
+         auto& src = dovah::face_fx::default_facegen_race_phonemes.morph_names;
+         model->setAllMorphNames({ src.begin(), src.end() });
+      }
+      if (phoneme_opt.has_value()) {
+         model->setAllMorphWeights(dst.weights[(size_t)phoneme_opt.value()]);
+      }
+   } else {
+      //
+      // Switching from default to non-default.
+      //
+      if (this->form->uses_default_facegen_phoneme_morph_names()) {
+         this->form->copy_default_facegen_phonemes();
+      }
+   }
+   this->_on_selected_phoneme_changed();
+}
+#pragma endregion
+
+#pragma region Tint layer editing
 void FormDialogRace::_add_new_tint_layer(dovah::sex sex) {
    auto* model     = this->_models.tint_layer_model[sex];
    auto* sel_model = (sex == dovah::sex::female ? this->ui.tintsTableF : this->ui.tintsTableM)->selectionModel();
@@ -1502,6 +1706,7 @@ void FormDialogRace::_push_tint_preset_to_model(dovah::sex sex) {
 
    model->overwrite_preset(qmi, data);
 }
+#pragma endregion
 
 /*virtual*/ bool FormDialogRace::eventFilter(QObject* object, QEvent* event) /*override*/ {
    bool is_del_key = false;

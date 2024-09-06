@@ -238,7 +238,7 @@ namespace dovah::loaded_forms {
             std::vector<movement_type_override> overrides; // MTYP+SPED
          } movement;
          struct {
-            std::vector<std::string> morph_names; // PHNT
+            std::vector<std::string> morph_names; // PHTN
             std::array<std::vector<float>, dovah::face_fx::phoneme_count> weights; // PHWT
 
             // The `weights` list is a list of morph weights by phoneme (i.e. weights[(size_t)phoneme][morph_index]). 
@@ -273,6 +273,31 @@ namespace dovah::loaded_forms {
             cobb::vector3<float> dismount_offset = { -50, 0, 65 };
             cobb::vector3<float> camera_offset   = { 0, -300, 0 };
          } mount_data; // DATA+0x80
+
+         #pragma region Phoneme morph helper functions
+            float phoneme_weight(face_fx::phoneme, size_t morph_index) const;
+
+            // Checks if the race borrows the default FaceGen phoneme morph names (i.e. if the 
+            // FaceGen Head flag is set and the locally-stored list of morph names is empty).
+            bool uses_default_facegen_phoneme_morph_names() const;
+
+            // Checks if the race borrows the default FaceGen phoneme morph names (see above) and 
+            // has morph weights that are exactly equal to the defaults.
+            bool uses_default_facegen_phonemes() const;
+
+            void delete_phoneme_morph(size_t index);
+            void insert_phoneme_morph(size_t at);
+
+            // Copies the default phoneme data for FaceGen races, storing the morph names locally.
+            void copy_default_facegen_phonemes();
+
+            // If the race's FaceGen Head flag is set, then this sets the race to use the default
+            // phoneme weights for FaceGen weights. In practice, it overwrites all weights and it 
+            // clears all locally-stored names.
+            //
+            // If the flag is not set, this does nothing.
+            void revert_to_default_facegen_phonemes();
+         #pragma endregion
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);

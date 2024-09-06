@@ -760,6 +760,7 @@
     <ClCompile Include="ui\form_windows\race\RaceBipedObjectSlotsModel.cpp" />
     <ClCompile Include="ui\form_windows\race\RaceEquipSlotsModel.cpp" />
     <ClCompile Include="ui\form_windows\race\RaceEquipTypesModel.cpp" />
+    <ClCompile Include="ui\form_windows\race\RacePhonemeMorphsModel.cpp" />
     <ClCompile Include="ui\form_windows\race\RacePresetActorFormFilter.cpp" />
     <ClCompile Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\race\RaceTintLayerModel.cpp" />
@@ -1263,7 +1264,7 @@
     <QtMoc Include="ui\form_windows\movement_type.h" />
     <QtMoc Include="ui\form_windows\race\RaceTintLayerModel.h" />
     <QtMoc Include="ui\form_windows\race\RaceAvailableFaceMorphsModel.h" />
-    <ClInclude Include="ui\form_windows\race\RaceMovementDataOverridesModel.h" />
+    <QtMoc Include="ui\form_windows\race\RacePhonemeMorphsModel.h" />
     <ClInclude Include="ui\form_windows\race\RacePresetActorFormFilter.h" />
     <ClInclude Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.h" />
     <ClInclude Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.h" />

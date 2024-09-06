@@ -2604,6 +2604,9 @@
     <ClCompile Include="dovah\forms\structs\movement_type_speeds.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\race\RacePhonemeMorphsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6659,9 +6662,6 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\movement_type_override_without_speeds.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\form_windows\race\RaceMovementDataOverridesModel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -7453,6 +7453,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\widget-data\DKFormListPaneCustomFilter.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\race\RacePhonemeMorphsModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
