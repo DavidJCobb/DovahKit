@@ -2652,6 +2652,12 @@
     <ClCompile Include="ui\form_windows\art_object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\Keyword.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\keyword.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6731,6 +6737,9 @@
     <ClInclude Include="dovah\forms\ArtObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\forms\Keyword.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -6992,6 +7001,12 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\art_object.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\keyword.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\combat_style.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -7570,6 +7585,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\art_object.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\keyword.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

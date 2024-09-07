@@ -24,6 +24,7 @@
 #include "../ui/form_windows/grass.h"
 #include "../ui/form_windows/head_part.h"
 #include "../ui/form_windows/key.h"
+#include "../ui/form_windows/keyword.h"
 #include "../ui/form_windows/landtexture.h"
 #include "../ui/form_windows/leveled_character.h"
 #include "../ui/form_windows/leveled_item.h"
@@ -71,6 +72,7 @@ namespace {
       std::pair{ dovah::form_type::grass,             _make<FormDialogGrass> },
       std::pair{ dovah::form_type::head_part,         _make<FormDialogHeadPart> },
       std::pair{ dovah::form_type::key,               _make<FormDialogKey> },
+      std::pair{ dovah::form_type::keyword,           _make<FormDialogKeyword> },
       std::pair{ dovah::form_type::land_texture,      _make<FormDialogLandTexture> },
       std::pair{ dovah::form_type::leveled_character, _make<FormDialogLeveledCharacter> },
       std::pair{ dovah::form_type::leveled_item,      _make<FormDialogLeveledItem> },

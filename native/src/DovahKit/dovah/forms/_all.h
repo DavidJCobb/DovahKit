@@ -29,6 +29,7 @@
    #include "Grass.h"
    #include "HeadPart.h"
    #include "Key.h"
+   #include "Keyword.h"
    #include "Landscape.h"
    #include "LandTexture.h"
    #include "LeveledCharacter.h"
@@ -85,6 +86,7 @@ namespace dovah {
       loaded_forms::Grass,
       loaded_forms::HeadPart,
       loaded_forms::Key,
+      loaded_forms::Keyword,
       loaded_forms::Landscape,
       loaded_forms::LandTexture,
       loaded_forms::Light,

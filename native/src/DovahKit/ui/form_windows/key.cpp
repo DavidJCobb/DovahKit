@@ -13,6 +13,9 @@ FormDialogKey::FormDialogKey(dovah::form_stub& stub, QWidget* parent) : QDialog(
    this->ui.weight->setMaximum(std::numeric_limits<float>::max());
    this->ui.value->setMaximum(std::numeric_limits<int32_t>::max());
 
+   // Since we're just reusing the MiscItem UI file:
+   this->setWindowTitle(tr("Key", "window title"));
+
    this->load(); // this creates the working copy.
 }
 void FormDialogKey::_load_impl() {

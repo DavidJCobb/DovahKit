@@ -165,6 +165,7 @@
     <ClCompile Include="dovah\forms\Grass.cpp" />
     <ClCompile Include="dovah\forms\HeadPart.cpp" />
     <ClCompile Include="dovah\forms\Key.cpp" />
+    <ClCompile Include="dovah\forms\Keyword.cpp" />
     <ClCompile Include="dovah\forms\LeveledCharacter.cpp" />
     <ClCompile Include="dovah\forms\LeveledItem.cpp" />
     <ClCompile Include="dovah\forms\LeveledSpell.cpp" />
@@ -752,6 +753,7 @@
     <ClCompile Include="ui\form_windows\footstep.cpp" />
     <ClCompile Include="ui\form_windows\grass.cpp" />
     <ClCompile Include="ui\form_windows\key.cpp" />
+    <ClCompile Include="ui\form_windows\keyword.cpp" />
     <ClCompile Include="ui\form_windows\movement_type.cpp" />
     <ClCompile Include="ui\form_windows\race.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
@@ -1084,6 +1086,7 @@
     <ClInclude Include="dovah\forms\Grass.h" />
     <ClInclude Include="dovah\forms\HeadPart.h" />
     <ClInclude Include="dovah\forms\Key.h" />
+    <ClInclude Include="dovah\forms\Keyword.h" />
     <ClInclude Include="dovah\forms\LeveledCharacter.h" />
     <ClInclude Include="dovah\forms\LeveledItem.h" />
     <ClInclude Include="dovah\forms\LeveledSpell.h" />
@@ -1280,6 +1283,7 @@
     <QtMoc Include="ui\form_windows\grass.h" />
     <QtMoc Include="ui\form_windows\dual_cast_data.h" />
     <QtMoc Include="ui\form_windows\art_object.h" />
+    <QtMoc Include="ui\form_windows\keyword.h" />
     <ClInclude Include="ui\form_windows\leveled_lists\LeveledListEditDialogHelpers.h" />
     <QtMoc Include="ui\form_windows\leveled_spell.h" />
     <QtMoc Include="ui\form_windows\outfit.h" />
@@ -2589,6 +2593,7 @@
     <QtUic Include="ui\form_windows\cell.ui" />
     <QtUic Include="ui\form_windows\class.ui" />
     <QtUic Include="ui\form_windows\color.ui" />
+    <QtUic Include="ui\form_windows\combat_style.ui" />
     <QtUic Include="ui\form_windows\container.ui" />
     <QtUic Include="ui\form_windows\door.ui" />
     <QtUic Include="ui\form_windows\dual_cast_data.ui" />
@@ -2601,6 +2606,7 @@
     <QtUic Include="ui\form_windows\global.ui" />
     <QtUic Include="ui\form_windows\grass.ui" />
     <QtUic Include="ui\form_windows\head_part.ui" />
+    <QtUic Include="ui\form_windows\keyword.ui" />
     <QtUic Include="ui\form_windows\landtexture.ui" />
     <QtUic Include="ui\form_windows\leveled_character.ui" />
     <QtUic Include="ui\form_windows\leveled_item.ui" />
