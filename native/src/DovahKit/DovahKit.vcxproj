@@ -136,7 +136,10 @@
     <ClCompile Include="dovah\exceptions\form_creation_failed.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.tests.cpp" />
+    <ClCompile Include="dovah\forms\AcousticSpace.cpp" />
+    <ClCompile Include="dovah\forms\ActorAction.cpp" />
     <ClCompile Include="dovah\forms\ActorBase.cpp" />
+    <ClCompile Include="dovah\forms\ArtObject.cpp" />
     <ClCompile Include="dovah\forms\AssociationType.cpp" />
     <ClCompile Include="dovah\forms\Class.cpp" />
     <ClCompile Include="dovah\forms\components\biped_object.cpp" />
@@ -155,10 +158,13 @@
     <ClCompile Include="dovah\forms\components\papyrus\property_object_value.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\property_value.cpp" />
     <ClCompile Include="dovah\forms\components\spell_list.cpp" />
+    <ClCompile Include="dovah\forms\DualCastData.cpp" />
     <ClCompile Include="dovah\forms\EquipSlot.cpp" />
     <ClCompile Include="dovah\forms\Footstep.cpp" />
     <ClCompile Include="dovah\forms\Global.cpp" />
+    <ClCompile Include="dovah\forms\Grass.cpp" />
     <ClCompile Include="dovah\forms\HeadPart.cpp" />
+    <ClCompile Include="dovah\forms\Key.cpp" />
     <ClCompile Include="dovah\forms\LeveledCharacter.cpp" />
     <ClCompile Include="dovah\forms\LeveledItem.cpp" />
     <ClCompile Include="dovah\forms\LeveledSpell.cpp" />
@@ -166,6 +172,7 @@
     <ClCompile Include="dovah\forms\Outfit.cpp" />
     <ClCompile Include="dovah\forms\Race.cpp" />
     <ClCompile Include="dovah\forms\Relationship.cpp" />
+    <ClCompile Include="dovah\forms\SoulGem.cpp" />
     <ClCompile Include="dovah\forms\structs\actor_creature_sounds.cpp" />
     <ClCompile Include="dovah\forms\structs\container_object_extra_data.cpp" />
     <ClCompile Include="dovah\forms\structs\movement_type_speeds.cpp" />
@@ -718,7 +725,9 @@
     <ClCompile Include="nif\types\NiTransform.cpp" />
     <ClCompile Include="nif\utils\find_all_retexturable_blocks.cpp" />
     <ClCompile Include="nif\utils\precache_nif_info.cpp" />
+    <ClCompile Include="ui\form_windows\acoustic_space.cpp" />
     <ClCompile Include="ui\form_windows\activator.cpp" />
+    <ClCompile Include="ui\form_windows\actor_action.cpp" />
     <ClCompile Include="ui\form_windows\actor_base.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\ActorBaseFactionsModel.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\ActorBaseRelationshipsModel.cpp" />
@@ -728,16 +737,21 @@
     <ClCompile Include="ui\form_windows\actor_base\FaceComplexionPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\FaceHairColorPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\FaceTintColorPickerFilter.cpp" />
+    <ClCompile Include="ui\form_windows\art_object.cpp" />
     <ClCompile Include="ui\form_windows\association_type.cpp" />
     <ClCompile Include="ui\form_windows\cell.cpp" />
     <ClCompile Include="ui\form_windows\class.cpp" />
     <ClCompile Include="ui\form_windows\color.cpp" />
     <ClCompile Include="ui\form_windows\container.cpp" />
     <ClCompile Include="ui\form_windows\door.cpp" />
+    <ClCompile Include="ui\form_windows\dual_cast_data.cpp" />
     <ClCompile Include="ui\form_windows\equip_slot.cpp" />
     <ClCompile Include="ui\form_windows\faction.cpp" />
     <ClCompile Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.cpp" />
     <ClCompile Include="ui\form_windows\flora.cpp" />
+    <ClCompile Include="ui\form_windows\footstep.cpp" />
+    <ClCompile Include="ui\form_windows\grass.cpp" />
+    <ClCompile Include="ui\form_windows\key.cpp" />
     <ClCompile Include="ui\form_windows\movement_type.cpp" />
     <ClCompile Include="ui\form_windows\race.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
@@ -770,6 +784,7 @@
     <ClCompile Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.cpp" />
     <ClCompile Include="ui\form_windows\shared\HeadPartPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\shout.cpp" />
+    <ClCompile Include="ui\form_windows\soul_gem.cpp" />
     <ClCompile Include="ui\form_windows\static.cpp" />
     <ClCompile Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.cpp" />
     <ClCompile Include="ui\form_windows\textureset.cpp" />
@@ -1028,6 +1043,7 @@
     <ClInclude Include="dovah\data\headparts.h" />
     <ClInclude Include="dovah\data\sex.h" />
     <ClInclude Include="dovah\data\skills.h" />
+    <ClInclude Include="dovah\data\soul_size.h" />
     <ClInclude Include="dovah\data\weapon_type.h" />
     <ClInclude Include="dovah\exceptions\actor_base_template_is_cyclical.h" />
     <ClInclude Include="dovah\exceptions\default_object_assign_failed.h" />
@@ -1046,6 +1062,9 @@
     <ClInclude Include="dovah\exceptions\invalid_load_order\desired_active_file_is_a_dependency.h" />
     <ClInclude Include="dovah\exceptions\invalid_load_order\load_order_would_have_too_many_files.h" />
     <ClInclude Include="dovah\exceptions\object_reference_move_failed.h" />
+    <ClInclude Include="dovah\forms\AcousticSpace.h" />
+    <ClInclude Include="dovah\forms\ActorAction.h" />
+    <ClInclude Include="dovah\forms\ArtObject.h" />
     <ClInclude Include="dovah\forms\AssociationType.h" />
     <ClInclude Include="dovah\forms\Class.h" />
     <ClInclude Include="dovah\forms\components\biped_object.h" />
@@ -1058,10 +1077,13 @@
     <ClInclude Include="dovah\forms\components\harvestable.h" />
     <ClInclude Include="dovah\forms\components\leveled_list.h" />
     <ClInclude Include="dovah\forms\components\spell_list.h" />
+    <ClInclude Include="dovah\forms\DualCastData.h" />
     <ClInclude Include="dovah\forms\EquipSlot.h" />
     <ClInclude Include="dovah\forms\Footstep.h" />
     <ClInclude Include="dovah\forms\Global.h" />
+    <ClInclude Include="dovah\forms\Grass.h" />
     <ClInclude Include="dovah\forms\HeadPart.h" />
+    <ClInclude Include="dovah\forms\Key.h" />
     <ClInclude Include="dovah\forms\LeveledCharacter.h" />
     <ClInclude Include="dovah\forms\LeveledItem.h" />
     <ClInclude Include="dovah\forms\LeveledSpell.h" />
@@ -1069,6 +1091,7 @@
     <ClInclude Include="dovah\forms\Outfit.h" />
     <ClInclude Include="dovah\forms\Race.h" />
     <ClInclude Include="dovah\forms\Relationship.h" />
+    <ClInclude Include="dovah\forms\SoulGem.h" />
     <ClInclude Include="dovah\forms\structs\actor_creature_sounds.h" />
     <ClInclude Include="dovah\forms\structs\actor_facegen_morphs.h" />
     <ClInclude Include="dovah\forms\structs\container_object_extra_data.h" />
@@ -1241,6 +1264,8 @@
     <QtMoc Include="ui\form_windows\head_part.h" />
     <QtMoc Include="ui\form_windows\association_type.h" />
     <QtMoc Include="ui\form_windows\class.h" />
+    <QtMoc Include="ui\form_windows\actor_action.h" />
+    <QtMoc Include="ui\form_windows\acoustic_space.h" />
     <ClInclude Include="ui\form_windows\actor_base\ActorBaseFactionsModel.h" />
     <ClInclude Include="ui\form_windows\actor_base\ActorBaseRelationshipsModel.h" />
     <QtMoc Include="ui\form_windows\actor_base\ActorBaseSkillsModel.h" />
@@ -1250,6 +1275,11 @@
     <ClInclude Include="ui\form_windows\actor_base\FaceHairColorPickerFilter.h" />
     <ClInclude Include="ui\form_windows\actor_base\FaceTintColorPickerFilter.h" />
     <QtMoc Include="ui\form_windows\equip_slot.h" />
+    <QtMoc Include="ui\form_windows\key.h" />
+    <QtMoc Include="ui\form_windows\footstep.h" />
+    <QtMoc Include="ui\form_windows\grass.h" />
+    <QtMoc Include="ui\form_windows\dual_cast_data.h" />
+    <QtMoc Include="ui\form_windows\art_object.h" />
     <ClInclude Include="ui\form_windows\leveled_lists\LeveledListEditDialogHelpers.h" />
     <QtMoc Include="ui\form_windows\leveled_spell.h" />
     <QtMoc Include="ui\form_windows\outfit.h" />
@@ -1269,6 +1299,7 @@
     <ClInclude Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.h" />
     <ClInclude Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.h" />
     <ClInclude Include="ui\form_windows\shared\HeadPartPickerFilter.h" />
+    <QtMoc Include="ui\form_windows\soul_gem.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_float_slider.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h" />
@@ -2548,8 +2579,11 @@
     <QtMoc Include="ui\main_window.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="ui\form_windows\acoustic_space.ui" />
     <QtUic Include="ui\form_windows\activator.ui" />
+    <QtUic Include="ui\form_windows\actor_action.ui" />
     <QtUic Include="ui\form_windows\actor_base.ui" />
+    <QtUic Include="ui\form_windows\art_object.ui" />
     <QtUic Include="ui\form_windows\association_type.ui" />
     <QtUic Include="ui\form_windows\book.ui" />
     <QtUic Include="ui\form_windows\cell.ui" />
@@ -2557,6 +2591,7 @@
     <QtUic Include="ui\form_windows\color.ui" />
     <QtUic Include="ui\form_windows\container.ui" />
     <QtUic Include="ui\form_windows\door.ui" />
+    <QtUic Include="ui\form_windows\dual_cast_data.ui" />
     <QtUic Include="ui\form_windows\equip_slot.ui" />
     <QtUic Include="ui\form_windows\faction.ui" />
     <QtUic Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.ui" />
@@ -2564,6 +2599,7 @@
     <QtUic Include="ui\form_windows\footstep.ui" />
     <QtUic Include="ui\form_windows\formlist.ui" />
     <QtUic Include="ui\form_windows\global.ui" />
+    <QtUic Include="ui\form_windows\grass.ui" />
     <QtUic Include="ui\form_windows\head_part.ui" />
     <QtUic Include="ui\form_windows\landtexture.ui" />
     <QtUic Include="ui\form_windows\leveled_character.ui" />
@@ -2586,9 +2622,11 @@
     <QtUic Include="ui\form_windows\reference.ui" />
     <QtUic Include="ui\form_windows\relationship.ui" />
     <QtUic Include="ui\form_windows\shout.ui" />
+    <QtUic Include="ui\form_windows\soul_gem.ui" />
     <QtUic Include="ui\form_windows\spell.ui" />
     <QtUic Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.ui" />
     <QtUic Include="ui\form_windows\static.ui" />
+    <QtUic Include="ui\form_windows\talking_activator.ui" />
     <QtUic Include="ui\form_windows\textureset.ui" />
     <QtUic Include="ui\form_windows\voicetype.ui" />
     <QtUic Include="ui\form_windows\word_of_power.ui" />

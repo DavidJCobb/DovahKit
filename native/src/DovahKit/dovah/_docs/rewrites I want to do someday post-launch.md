@@ -773,6 +773,10 @@ There are a few challenges here:
 
 We don't have to solve this for Sustain Phase 1; we can give it its own phase later on after our big-ticket phases are done.
 
+### Minor improvements
+
+* Use separate types for ILSTRINGS, DLSTRINGS, and LSTRINGS (i.e. `localized_info_string`, `localized_desc_string`, and `localized_string`). Currently we just have the one type with constructor args, and those are easy to forget when setting up new form types.
+
 ## Game settings
 
 ### Improve type-safety
@@ -880,6 +884,17 @@ These cases helped motivate a redesign of Worldinput (named `worldinput2` until 
   * It'd be nice if we could add optional functionality (to be enabled by the subclasses) for self-sorting and self-filtering models, using behavior similar to what we have in `DKRefsInCellModel`.
 
   * The model only supports rows. I can't think of any use cases where we'd want exclusively columns, but having a `constexpr` `Qt::Orientation` value wouldn't be a terrible idea.
+
+* Investigate making it possible for `DKGameFilePicker`, `DKFormNIFPicker`, and friends to filter by filetype/extension.
+
+  * The `DKBSACollectionModel` that the file-picker dialog relies on has no support for filtering by filetype at this time.
+
+  * It's important for `DKFormNIFPicker` to be able to filter by filetype because Race forms actually use it for selecting the behavior graph (HKX, not NIF); that gets stored in a TESModel (i.e. `MODT` and friends). If we have `DKFormNIFPicker` limit its filetype to NIF by default, then we ***must*** audit uses of it and ensure that anything that needs an HKX is set to filter to HKX files.
+
+  * List (non-exhaustive) of game-file-pickers that will need filtering:
+
+    * Anything used to pick a DDS
+    * Anything used to pick a TRI (e.g. HeadParts)
 
 ### Object Window
 

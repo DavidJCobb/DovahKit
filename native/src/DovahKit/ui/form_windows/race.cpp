@@ -75,6 +75,20 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
       }
       ui::set_unsigned_range<float>(this->ui.flightRadius);
       ui::set_unsigned_range<float>(this->ui.baseCarryCapacity);
+
+      QObject::connect(this->ui.flagFaceGenHead, &QCheckBox::toggled, this, [this](bool checked) {
+         auto* tabbox    = this->ui.tabbox;
+         auto* tab_parts = this->ui.tabFace;
+         auto* tab_tints = this->ui.tabTints;
+
+         tabbox->setTabVisible(tabbox->indexOf(tab_parts), checked);
+         tabbox->setTabVisible(tabbox->indexOf(tab_tints), checked);
+      });
+      {  // Update visible/enable states.
+         auto* widget  = this->ui.flagFaceGenHead;
+         bool  checked = widget->isChecked();
+         emit widget->toggled(checked);
+      }
       
       #pragma region Skill boost widgets
          this->_subwidgets.skills.which = {
@@ -141,9 +155,6 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
       ui::set_unsigned_range<float>(this->ui.heightMultM);
       this->ui.bodyWeightF->setRange(0, 100);
       this->ui.bodyWeightM->setRange(0, 100);
-      static_assert(just_let_me_compile, "TODO: Skeleton (limit file extension?)");
-      static_assert(just_let_me_compile, "TODO: Behavior graph (limit file extension?)");
-      static_assert(just_let_me_compile, "TODO: Body Texture (limit file extension?)");
       this->ui.decapArmorF->setAllowedFormType(dovah::form_type::armor);
       this->ui.decapArmorM->setAllowedFormType(dovah::form_type::armor);
       this->ui.voicetypeF->setAllowedFormType(dovah::form_type::voicetype);
@@ -1208,8 +1219,9 @@ void FormDialogRace::_save_impl() {
       this->_models.equip_types->commitTo(working);
    #pragma endregion
    #pragma region Lip Synching tab
-      static_assert(just_let_me_compile, "TODO: Phoneme Targets");
-      static_assert(just_let_me_compile, "TODO: Default FaceGen Targets and Weights");
+      //
+      // Synchronizes more-or-less in real-time.
+      //
    #pragma endregion
    #pragma region Face Data tab
       // Base Head Parts and Additional Head Parts
@@ -1769,6 +1781,10 @@ void FormDialogRace::_push_tint_preset_to_model(dovah::sex sex) {
             }
             return true;
          }
+      }
+      if (object == this->ui.phonemeTargets) {
+         this->_remove_phoneme_target();
+         return true;
       }
    }
 

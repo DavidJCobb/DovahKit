@@ -3,20 +3,27 @@
 #include "../dovah/form_stub.h"
 #include "core.h"
 #include "../ui/main_window/form_use_info.h"
+#include "../ui/form_windows/acoustic_space.h"
 #include "../ui/form_windows/activator.h"
+#include "../ui/form_windows/actor_action.h"
 #include "../ui/form_windows/actor_base.h"
+#include "../ui/form_windows/art_object.h"
 #include "../ui/form_windows/association_type.h"
 #include "../ui/form_windows/cell.h"
 #include "../ui/form_windows/class.h"
 #include "../ui/form_windows/color.h"
 #include "../ui/form_windows/container.h"
 #include "../ui/form_windows/door.h"
+#include "../ui/form_windows/dual_cast_data.h"
 #include "../ui/form_windows/equip_slot.h"
 #include "../ui/form_windows/faction.h"
 #include "../ui/form_windows/flora.h"
+#include "../ui/form_windows/footstep.h"
 #include "../ui/form_windows/formlist.h"
 #include "../ui/form_windows/global.h"
+#include "../ui/form_windows/grass.h"
 #include "../ui/form_windows/head_part.h"
+#include "../ui/form_windows/key.h"
 #include "../ui/form_windows/landtexture.h"
 #include "../ui/form_windows/leveled_character.h"
 #include "../ui/form_windows/leveled_item.h"
@@ -30,6 +37,7 @@
 #include "../ui/form_windows/race.h"
 #include "../ui/form_windows/relationship.h"
 #include "../ui/form_windows/shout.h"
+#include "../ui/form_windows/soul_gem.h"
 #include "../ui/form_windows/static.h"
 #include "../ui/form_windows/textureset.h"
 #include "../ui/form_windows/voicetype.h"
@@ -42,20 +50,27 @@ namespace {
    }
 
    constexpr std::array factory = {
+      std::pair{ dovah::form_type::acoustic_space,    _make<FormDialogAcousticSpace> },
       std::pair{ dovah::form_type::activator,         _make<FormDialogActivator> },
+      std::pair{ dovah::form_type::action,            _make<FormDialogActorAction> },
       std::pair{ dovah::form_type::actor_base,        _make<FormDialogActorBase> },
+      std::pair{ dovah::form_type::art_object,        _make<FormDialogArtObject> },
       std::pair{ dovah::form_type::association_type,  _make<FormDialogAssociationType> },
       std::pair{ dovah::form_type::cell,              _make<FormDialogCell> },
       std::pair{ dovah::form_type::combat_class,      _make<FormDialogClass> },
       std::pair{ dovah::form_type::color,             _make<FormDialogColor> },
       std::pair{ dovah::form_type::container,         _make<FormDialogContainer> },
       std::pair{ dovah::form_type::door,              _make<FormDialogDoor> },
+      std::pair{ dovah::form_type::dual_cast_data,    _make<FormDialogDualCastData> },
       std::pair{ dovah::form_type::equip_slot,        _make<FormDialogEquipSlot> },
       std::pair{ dovah::form_type::faction,           _make<FormDialogFaction> },
       std::pair{ dovah::form_type::flora,             _make<FormDialogFlora> },
+      std::pair{ dovah::form_type::footstep,          _make<FormDialogFootstep> },
       std::pair{ dovah::form_type::formlist,          _make<FormDialogFormList> },
       std::pair{ dovah::form_type::global,            _make<FormDialogGlobal> },
+      std::pair{ dovah::form_type::grass,             _make<FormDialogGrass> },
       std::pair{ dovah::form_type::head_part,         _make<FormDialogHeadPart> },
+      std::pair{ dovah::form_type::key,               _make<FormDialogKey> },
       std::pair{ dovah::form_type::land_texture,      _make<FormDialogLandTexture> },
       std::pair{ dovah::form_type::leveled_character, _make<FormDialogLeveledCharacter> },
       std::pair{ dovah::form_type::leveled_item,      _make<FormDialogLeveledItem> },
@@ -69,6 +84,7 @@ namespace {
       std::pair{ dovah::form_type::race,              _make<FormDialogRace> },
       std::pair{ dovah::form_type::relationship,      _make<FormDialogRelationship> },
       std::pair{ dovah::form_type::shout,             _make<FormDialogShout> },
+      std::pair{ dovah::form_type::soul_gem,          _make<FormDialogSoulGem> },
       std::pair{ dovah::form_type::statik,            _make<FormDialogStatic> },
       std::pair{ dovah::form_type::texture_set,       _make<FormDialogTextureSet> },
       std::pair{ dovah::form_type::voicetype,         _make<FormDialogVoicetype> },

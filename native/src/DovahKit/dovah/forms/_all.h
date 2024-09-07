@@ -5,9 +5,12 @@
 //
 #include "Form.h"
 #pragma region Forms
+   #include "AcousticSpace.h"
    #include "Activator.h"
    #include "Actor.h"
+   #include "ActorAction.h"
    #include "ActorBase.h"
+   #include "ArtObject.h"
    #include "AssociationType.h"
    #include "Cell.h"
    #include "Class.h"
@@ -16,13 +19,16 @@
    #include "DefaultObjectManager.h"
    #include "DialogueBranch.h"
    #include "Door.h"
+   #include "DualCastData.h"
    #include "EquipSlot.h"
    #include "Faction.h"
    #include "Flora.h"
    #include "Footstep.h"
    #include "FormList.h"
    #include "Global.h"
+   #include "Grass.h"
    #include "HeadPart.h"
+   #include "Key.h"
    #include "Landscape.h"
    #include "LandTexture.h"
    #include "LeveledCharacter.h"
@@ -40,8 +46,9 @@
    #include "Quest.h"
    #include "Race.h"
    #include "Relationship.h"
-   #include "Static.h"
    #include "Shout.h"
+   #include "SoulGem.h"
+   #include "Static.h"
    #include "TextureSet.h"
    #include "Topic.h"
    #include "TopicInfo.h"
@@ -54,9 +61,12 @@ namespace dovah {
    using all_loaded_form_types = cobb::class_array<
       loaded_forms::Form,
       //
+      loaded_forms::AcousticSpace,
       loaded_forms::Activator,
       loaded_forms::Actor,
+      loaded_forms::ActorAction,
       loaded_forms::ActorBase,
+      loaded_forms::ArtObject,
       loaded_forms::AssociationType,
       loaded_forms::Cell,
       loaded_forms::Class,
@@ -65,12 +75,16 @@ namespace dovah {
       loaded_forms::DefaultObjectManager,
       loaded_forms::DialogueBranch,
       loaded_forms::Door,
+      loaded_forms::DualCastData,
       loaded_forms::EquipSlot,
       loaded_forms::Faction,
       loaded_forms::Flora,
+      loaded_forms::Footstep,
       loaded_forms::FormList,
       loaded_forms::Global,
+      loaded_forms::Grass,
       loaded_forms::HeadPart,
+      loaded_forms::Key,
       loaded_forms::Landscape,
       loaded_forms::LandTexture,
       loaded_forms::Light,
@@ -87,8 +101,9 @@ namespace dovah {
       loaded_forms::Quest,
       loaded_forms::Race,
       loaded_forms::Relationship,
-      loaded_forms::Static,
       loaded_forms::Shout,
+      loaded_forms::SoulGem,
+      loaded_forms::Static,
       loaded_forms::TextureSet,
       loaded_forms::Topic,
       loaded_forms::TopicInfo,
