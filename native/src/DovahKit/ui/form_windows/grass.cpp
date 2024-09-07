@@ -60,5 +60,5 @@ void FormDialogGrass::_save_impl() {
    auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
 
-   this->ui.model->commitTo(working.model);
+   this->ui.model->commitTo(working.model, working);
 }

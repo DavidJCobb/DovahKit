@@ -333,11 +333,18 @@ namespace dovah::loaded_forms {
          // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)
          //
          return;
-      //
+
+      struct ATXT {
+         form_id_t texture;
+         uint8_t   quad  = 0;
+         int16_t   layer = 0;
+      };
+      
       std::array<form_id_t, 4> base_textures;
-      std::vector<form_id_t>   layer_textures;
+      std::vector<ATXT>        layer_textures;
       std::vector<form_id_t>   general_textures;
       form_id_t id;
+
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
@@ -348,8 +355,8 @@ namespace dovah::loaded_forms {
             case 'VNML':
                break;
             case 'BTXT':
-               {
-                  subrecord.read(id);
+               if (subrecord.is_in_bounds(4)) {
+                  subrecord.unchecked_read(id);
                   uint8_t quad;
                   subrecord.read(quad);
                   subrecord.skip_bytes(3);
@@ -362,15 +369,27 @@ namespace dovah::loaded_forms {
                break;
             case 'ATXT':
                {
+                  int16_t layer;
                   subrecord.read(id);
                   uint8_t quad;
                   subrecord.read(quad);
-                  subrecord.skip_bytes(3);
+                  subrecord.skip_bytes(1);
+                  subrecord.read(layer);
                   //
                   if (quad > 3) { // our loader doesn't store bad quads
                      break;
                   }
-                  layer_textures.push_back(id);
+                  
+                  bool exists = false;
+                  for (auto& item : layer_textures) {
+                     if (item.quad == quad && item.layer == layer) {
+                        item.texture = id;
+                        exists = true;
+                        break;
+                     }
+                  }
+                  if (!exists)
+                     layer_textures.push_back({ .texture = id, .quad = quad, .layer = layer });
                }
                break;
             case 'VTXT':
@@ -385,8 +404,8 @@ namespace dovah::loaded_forms {
       }
       for (auto id : base_textures)
          uib.add_outbound_reference(id);
-      for (auto id : layer_textures)
-         uib.add_outbound_reference(id);
+      for (auto& item : layer_textures)
+         uib.add_outbound_reference(item.texture);
       for (auto id : general_textures)
          uib.add_outbound_reference(id);
    }

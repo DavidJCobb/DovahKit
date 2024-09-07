@@ -64,6 +64,7 @@ void FormDialogSoulGem::_load_impl() {
    ui::bind(this->ui.soulInitial, working.initial_soul_size);
    ui::bind(this->ui.soulMaximum, working.maximum_soul_size);
    ui::bind(this->ui.linkedTo, working.linked_to, working);
+   ui::bind(this->ui.flagAllowHumanoidSouls, this->record_flags(), loaded_form_type::form_flag::can_hold_humanoid_souls);
 }
 void FormDialogSoulGem::_save_impl() {
    //

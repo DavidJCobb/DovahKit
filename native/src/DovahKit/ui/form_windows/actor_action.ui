@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogActorAction</class>
  <widget class="QDialog" name="FormDialogActorAction">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>278</width>
+    <height>98</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Actor Action</string>
   </property>
@@ -52,7 +60,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="buttokOK">
+      <widget class="QPushButton" name="buttonOK">
        <property name="text">
         <string>OK</string>
        </property>
@@ -92,7 +100,7 @@
  <tabstops>
   <tabstop>editorID</tabstop>
   <tabstop>color</tabstop>
-  <tabstop>buttokOK</tabstop>
+  <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
  </tabstops>
  <resources/>

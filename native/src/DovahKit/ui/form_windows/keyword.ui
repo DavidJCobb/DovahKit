@@ -60,7 +60,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="buttokOK">
+      <widget class="QPushButton" name="buttonOK">
        <property name="text">
         <string>OK</string>
        </property>
@@ -100,7 +100,7 @@
  <tabstops>
   <tabstop>editorID</tabstop>
   <tabstop>color</tabstop>
-  <tabstop>buttokOK</tabstop>
+  <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
  </tabstops>
  <resources/>

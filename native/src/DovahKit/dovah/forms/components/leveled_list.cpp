@@ -173,6 +173,8 @@ namespace dovah::loaded_forms::components {
             break;
          case 'LVLO':
             has_seen_lvlo = true;
+            subrecord.skip_bytes(sizeof(decltype(entry::level)));
+            subrecord.skip_bytes(2);
             subrecord.read(formID);
             uib.owner.add_outbound_reference(formID);
             break;

@@ -56,4 +56,7 @@ namespace dovah::loaded_forms {
    void Keyword::_clear_impl() noexcept {
       this->script_data.clear(*this);
    }
+   void Keyword::_sever_outbound_references_impl(form_stub& other) noexcept {
+      this->script_data.sever_outbound_references_to(other, *this);
+   }
 }
