@@ -33,6 +33,7 @@
 #include "./actor_base/FaceComplexionPickerFilter.h"
 #include "./actor_base/FaceHairColorPickerFilter.h"
 #include "./actor_base/FaceTintColorPickerFilter.h" // TODO: DEPRECATED; DELETE
+#include "./shared/DKFormPickerExcludeSingleFormFilter.h"
 #include "./shared/FaceBaseHeadPartsModel.h"
 #include "./shared/FaceExtraHeadPartsModel.h"
 #include "./shared/HeadPartPickerFilter.h"
@@ -113,28 +114,6 @@ namespace impl {
       protected:
          ActorBaseFactionsModel* _model = nullptr;
    };
-   class DKFormPickerExcludeSingleFormFilter final : public DKFormPickerCustomFilter {
-      public:
-         using DKFormPickerCustomFilter::DKFormPickerCustomFilter;
-         
-         virtual bool form_matches(const dovah::form_stub& stub) const noexcept override {
-            return &stub != this->_exclude;
-         };
-
-         void set_exclusion(dovah::form_stub* exclude) {
-            if (exclude == this->_exclude)
-               return;
-            auto* prior = this->_exclude;
-            this->_exclude = exclude;
-            if (prior)
-               this->_refilter_form(*prior);
-            if (exclude)
-               this->_refilter_form(*exclude);
-         }
-
-      protected:
-         dovah::form_stub* _exclude = nullptr;
-   };
    class VoicetypePickerFilter final : public DKFormPickerCustomFilter {
       protected:
          using fic_type = dovahkit::subsystems::form_info_cache::core;
@@ -175,7 +154,7 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
    this->ui.previewOptionsContainer->setVisible(preview_enabled);
    this->ui.buttonShowFilteredDialogue->setEnabled(filtered_dialogue_browser_implemented);
 
-   this->_filters.exclude_self = new impl::DKFormPickerExcludeSingleFormFilter(this);
+   this->_filters.exclude_self = new DKFormPickerExcludeSingleFormFilter(this);
 
    #pragma region Not in any tab
       this->ui.templateActor->setAllowedFormTypes({ dovah::form_type::actor_base, dovah::form_type::leveled_character });

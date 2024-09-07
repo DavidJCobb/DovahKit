@@ -37,6 +37,7 @@
    #include "LeveledSpell.h"
    #include "Light.h"
    #include "Location.h"
+   #include "LocationRefType.h"
    #include "MagicEffect.h"
    #include "MiscItem.h"
    #include "MovementType.h"
@@ -53,6 +54,7 @@
    #include "TextureSet.h"
    #include "Topic.h"
    #include "TopicInfo.h"
+   #include "VisualEffect.h"
    #include "Voicetype.h"
    #include "WordOfPower.h"
    #include "Worldspace.h"
@@ -94,6 +96,7 @@ namespace dovah {
       loaded_forms::LeveledItem,
       loaded_forms::LeveledSpell,
       loaded_forms::Location,
+      loaded_forms::LocationRefType,
       loaded_forms::MiscItem,
       loaded_forms::MovementType,
       loaded_forms::Note,
@@ -109,6 +112,7 @@ namespace dovah {
       loaded_forms::TextureSet,
       loaded_forms::Topic,
       loaded_forms::TopicInfo,
+      loaded_forms::VisualEffect,
       loaded_forms::Voicetype,
       loaded_forms::WordOfPower,
       loaded_forms::Worldspace//,

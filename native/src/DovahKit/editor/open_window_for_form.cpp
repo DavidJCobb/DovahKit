@@ -30,6 +30,7 @@
 #include "../ui/form_windows/leveled_item.h"
 #include "../ui/form_windows/leveled_spell.h"
 #include "../ui/form_windows/light.h"
+#include "../ui/form_windows/location_ref_type.h"
 #include "../ui/form_windows/misc_item.h"
 #include "../ui/form_windows/movement_type.h"
 #include "../ui/form_windows/note.h"
@@ -41,6 +42,7 @@
 #include "../ui/form_windows/soul_gem.h"
 #include "../ui/form_windows/static.h"
 #include "../ui/form_windows/textureset.h"
+#include "../ui/form_windows/visual_effect.h"
 #include "../ui/form_windows/voicetype.h"
 #include "../ui/form_windows/word_of_power.h"
 #include "ui/main_window.h" // MainWindow::get
@@ -78,6 +80,7 @@ namespace {
       std::pair{ dovah::form_type::leveled_item,      _make<FormDialogLeveledItem> },
       std::pair{ dovah::form_type::leveled_spell,     _make<FormDialogLeveledSpell> },
       std::pair{ dovah::form_type::light,             _make<FormDialogLight> },
+      std::pair{ dovah::form_type::location_ref_type, _make<FormDialogLocationRefType> },
       std::pair{ dovah::form_type::misc_item,         _make<FormDialogMiscItem> },
       std::pair{ dovah::form_type::movement_type,     _make<FormDialogMovementType> },
       std::pair{ dovah::form_type::note,              _make<FormDialogNote> },
@@ -89,6 +92,7 @@ namespace {
       std::pair{ dovah::form_type::soul_gem,          _make<FormDialogSoulGem> },
       std::pair{ dovah::form_type::statik,            _make<FormDialogStatic> },
       std::pair{ dovah::form_type::texture_set,       _make<FormDialogTextureSet> },
+      std::pair{ dovah::form_type::visual_effect,     _make<FormDialogVisualEffect> },
       std::pair{ dovah::form_type::voicetype,         _make<FormDialogVoicetype> },
       std::pair{ dovah::form_type::word_of_power,     _make<FormDialogWordOfPower> },
    };

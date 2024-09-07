@@ -8,7 +8,6 @@
 
 namespace impl {
    class CrimeFactionPickerFilter;
-   class DKFormPickerExcludeSingleFormFilter;
    class FaceComplexionPickerFilter;
    class FaceHairColorPickerFilter;
    class FaceTintColorPickerFilter;
@@ -19,6 +18,7 @@ class ActorBaseTintLayerModel;
 class ActorBaseFactionsModel;
 class ActorBaseRelationshipsModel;
 class ActorBaseSkillsModel;
+class DKFormPickerExcludeSingleFormFilter;
 class FaceBaseHeadPartsModel;
 class FaceExtraHeadPartsModel;
 class HeadPartPickerFilter;
@@ -41,8 +41,8 @@ class FormDialogActorBase :
          QMenu relationships;
       } _context_menus;
       struct {
-         impl::CrimeFactionPickerFilter* crime_faction = nullptr;
-         impl::DKFormPickerExcludeSingleFormFilter* exclude_self = nullptr;
+         impl::CrimeFactionPickerFilter*      crime_faction = nullptr;
+         DKFormPickerExcludeSingleFormFilter* exclude_self  = nullptr;
          struct {
             HeadPartPickerFilter*             base_head_part = nullptr;
             impl::FaceComplexionPickerFilter* complexion     = nullptr;

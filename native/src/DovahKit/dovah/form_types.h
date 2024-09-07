@@ -64,7 +64,10 @@ namespace dovah {
       weather,                  // WTHR: TESWeather
       climate,                  // CLMT: TESClimate
       shader_particle_geometry_data, // SPGD: BGSShaderParticleGeometryData
+      //
       reference_effect,         // RFCT: BGSReferenceEffect
+      visual_effect = reference_effect,
+      //
       region,                   // REGN: TESRegion
       navmesh_info_map,         // NAVI: NavMeshInfoMap
       cell              = 0x3C, // CELL: TESObjectCELL
