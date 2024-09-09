@@ -6,20 +6,20 @@
 
 namespace dovah::form_stub_helpers {
    //
-   // Run a functor on every dialogue topic in the given quest. If your functor 
-   // has a boolean return type, then returning true will break out of the loop 
-   // early.
+   // Run a functor on every dialogue topic in the given dialogue branch. If your 
+   // functor has a boolean return type, then returning true will break out of 
+   // the loop early.
    // 
    // Note that this grabs all topics, including those that have a containing 
    // dialogue branch.
    //
    template<typename Functor> requires std::is_invocable_v<Functor, form_stub*>
-   void for_each_quest_topic(const form_stub* quest, Functor&& functor) {
-      if (!quest || quest->form_type != form_type::quest)
+   void for_each_dialogue_branch_topic(const form_stub* quest, Functor&& functor) {
+      if (!quest || quest->form_type != form_type::dialogue_branch)
          return;
       for (auto& pair : quest->inbound) {
          auto& entry = pair.second;
-         if (entry.flags & use_info_entry::flag::dialogue_quest) {
+         if (entry.flags & use_info_entry::flag::dialogue_branch) {
             auto* child = entry.other;
             if (!child || child->form_type != form_type::topic)
                continue;

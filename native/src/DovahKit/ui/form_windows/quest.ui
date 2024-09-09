@@ -63,7 +63,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="tabBase">
       <attribute name="title">
@@ -296,10 +296,10 @@
        <string>Dialogue</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_5">
-       <item row="0" column="0">
+       <item row="1" column="0">
         <widget class="QTabWidget" name="dialogueTabbox">
          <property name="currentIndex">
-          <number>0</number>
+          <number>5</number>
          </property>
          <widget class="QWidget" name="tabDialoguePlayer">
           <attribute name="title">
@@ -333,6 +333,24 @@
          </widget>
         </widget>
        </item>
+       <item row="0" column="0">
+        <widget class="QToolButton" name="buttonDialogueHelp">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="whatsThis">
+          <string>&lt;p&gt;In Bethesda's RPG engine, all dialogue is grouped under quests, and dialogue will only be used while the containing quest is running. This is a convenient way to scope quest-specific dialogue to the quest in question, and when general-purpose dialogue needs to be implemented, it can just be placed in an unmarked quest that is always active.&lt;/p&gt;
+&lt;p&gt;For conversations between the player and an NPC, &quot;topics&quot; are things that the player can say to an NPC, and &quot;topic infos&quot; are responses that the NPC can give. (If these names seem strange, then imagine walking up to someone and asking them to teach you about the place they live in: you ask about a topic and they give you some info.) Topics in a conversation are grouped into &quot;branches,&quot; with each branch having a starting topic.&lt;/p&gt;
+&lt;p&gt;The dialogue system also handles lines that an NPC may say spontaneously, such as greetings to nearby actors, combat barks, and reactions to various player or actor behaviors occurring nearby (e.g. dropping items, jumping on tables, committing crimes, et cetera). For these lines, branches are not used, and each of the hardcoded situations that an NPC can remark on can be given one dedicated topic per quest.&lt;/p&gt;</string>
+         </property>
+         <property name="text">
+          <string>Help</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tabScenes">
@@ -344,6 +362,11 @@
       <attribute name="title">
        <string>Scripts</string>
       </attribute>
+      <layout class="QGridLayout" name="gridLayout_7">
+       <item row="0" column="0">
+        <widget class="DKPapyrusBoundScriptListPane" name="scriptListPane"/>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>
@@ -354,6 +377,11 @@
    <class>DKFormListPane</class>
    <extends>QWidget</extends>
    <header>widgets/DKFormListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKPapyrusBoundScriptListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKPapyrusBoundScriptListPane.h</header>
   </customwidget>
   <customwidget>
    <class>DKConditionList</class>

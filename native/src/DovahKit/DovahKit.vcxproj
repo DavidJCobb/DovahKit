@@ -169,6 +169,7 @@
     <ClCompile Include="dovah\forms\LeveledCharacter.cpp" />
     <ClCompile Include="dovah\forms\LeveledItem.cpp" />
     <ClCompile Include="dovah\forms\LeveledSpell.cpp" />
+    <ClCompile Include="dovah\forms\LocationRefType.cpp" />
     <ClCompile Include="dovah\forms\MovementType.cpp" />
     <ClCompile Include="dovah\forms\Outfit.cpp" />
     <ClCompile Include="dovah\forms\Race.cpp" />
@@ -177,9 +178,13 @@
     <ClCompile Include="dovah\forms\structs\actor_creature_sounds.cpp" />
     <ClCompile Include="dovah\forms\structs\container_object_extra_data.cpp" />
     <ClCompile Include="dovah\forms\structs\movement_type_speeds.cpp" />
+    <ClCompile Include="dovah\forms\VisualEffect.cpp" />
     <ClCompile Include="dovah\form_reference_t.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_base_form.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_cell_landscape.cpp" />
+    <ClCompile Include="dovah\form_stubs\helpers\get_dialogue_branch_quest.cpp" />
+    <ClCompile Include="dovah\form_stubs\helpers\get_dialogue_topic_branch.cpp" />
+    <ClCompile Include="dovah\form_stubs\helpers\get_dialogue_topic_quest.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_template_actor.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_worldspace_cell_by_grid.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_worldspace_persistent_cell.cpp" />
@@ -754,7 +759,9 @@
     <ClCompile Include="ui\form_windows\grass.cpp" />
     <ClCompile Include="ui\form_windows\key.cpp" />
     <ClCompile Include="ui\form_windows\keyword.cpp" />
+    <ClCompile Include="ui\form_windows\location_ref_type.cpp" />
     <ClCompile Include="ui\form_windows\movement_type.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestAllDialogueModel.cpp" />
     <ClCompile Include="ui\form_windows\race.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
     <ClCompile Include="ui\form_windows\global.cpp" />
@@ -781,6 +788,7 @@
     <ClCompile Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\race\RaceTintLayerModel.cpp" />
     <ClCompile Include="ui\form_windows\relationship.cpp" />
+    <ClCompile Include="ui\form_windows\shared\DKFormPickerExcludeSingleFormFilter.cpp" />
     <ClCompile Include="ui\form_windows\shared\FaceBaseHeadPartsModel.cpp" />
     <ClCompile Include="ui\form_windows\shared\FaceExtraHeadPartsModel.cpp" />
     <ClCompile Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.cpp" />
@@ -790,6 +798,7 @@
     <ClCompile Include="ui\form_windows\static.cpp" />
     <ClCompile Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.cpp" />
     <ClCompile Include="ui\form_windows\textureset.cpp" />
+    <ClCompile Include="ui\form_windows\visual_effect.cpp" />
     <ClCompile Include="ui\form_windows\voicetype.cpp" />
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
@@ -1090,6 +1099,7 @@
     <ClInclude Include="dovah\forms\LeveledCharacter.h" />
     <ClInclude Include="dovah\forms\LeveledItem.h" />
     <ClInclude Include="dovah\forms\LeveledSpell.h" />
+    <ClInclude Include="dovah\forms\LocationRefType.h" />
     <ClInclude Include="dovah\forms\MovementType.h" />
     <ClInclude Include="dovah\forms\Outfit.h" />
     <ClInclude Include="dovah\forms\Race.h" />
@@ -1100,12 +1110,18 @@
     <ClInclude Include="dovah\forms\structs\container_object_extra_data.h" />
     <ClInclude Include="dovah\forms\structs\movement_type_speeds.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
+    <ClInclude Include="dovah\forms\VisualEffect.h" />
     <ClInclude Include="dovah\form_reference_t.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_child_form.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\for_each_dialogue_branch_topic.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_persistent_ref_in_world.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\for_each_quest_dialogue_branch.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_quest_topic.h" />
     <ClInclude Include="dovah\form_stubs\helpers\get_base_form.h" />
     <ClInclude Include="dovah\form_stubs\helpers\get_cell_landscape.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\get_dialogue_branch_quest.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\get_dialogue_topic_branch.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\get_dialogue_topic_quest.h" />
     <ClInclude Include="dovah\form_stubs\helpers\get_template_actor.h" />
     <ClInclude Include="dovah\form_stubs\helpers\get_unique_outbound_use.h" />
     <ClInclude Include="dovah\form_stubs\helpers\get_worldspace_cell_by_grid.h" />
@@ -1299,11 +1315,15 @@
     <QtMoc Include="ui\form_windows\race\RaceTintLayerModel.h" />
     <QtMoc Include="ui\form_windows\race\RaceAvailableFaceMorphsModel.h" />
     <QtMoc Include="ui\form_windows\race\RacePhonemeMorphsModel.h" />
+    <QtMoc Include="ui\form_windows\location_ref_type.h" />
+    <QtMoc Include="ui\form_windows\quest\QuestAllDialogueModel.h" />
     <ClInclude Include="ui\form_windows\race\RacePresetActorFormFilter.h" />
     <ClInclude Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.h" />
+    <ClInclude Include="ui\form_windows\shared\DKFormPickerExcludeSingleFormFilter.h" />
     <ClInclude Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.h" />
     <ClInclude Include="ui\form_windows\shared\HeadPartPickerFilter.h" />
     <QtMoc Include="ui\form_windows\soul_gem.h" />
+    <QtMoc Include="ui\form_windows\visual_effect.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_float_slider.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h" />
@@ -2612,6 +2632,7 @@
     <QtUic Include="ui\form_windows\leveled_item.ui" />
     <QtUic Include="ui\form_windows\leveled_spell.ui" />
     <QtUic Include="ui\form_windows\light.ui" />
+    <QtUic Include="ui\form_windows\material_type.ui" />
     <QtUic Include="ui\form_windows\misc_item.ui" />
     <QtUic Include="ui\form_windows\movement_type.ui" />
     <QtUic Include="ui\form_windows\note.ui" />
@@ -2624,6 +2645,7 @@
     <QtUic Include="ui\form_windows\outfit.ui" />
     <QtUic Include="ui\form_windows\projectile.ui" />
     <QtUic Include="ui\form_windows\quest.ui" />
+    <QtUic Include="ui\form_windows\quest\quest_dialogue_tab_body.ui" />
     <QtUic Include="ui\form_windows\race.ui" />
     <QtUic Include="ui\form_windows\reference.ui" />
     <QtUic Include="ui\form_windows\relationship.ui" />
@@ -2634,6 +2656,7 @@
     <QtUic Include="ui\form_windows\static.ui" />
     <QtUic Include="ui\form_windows\talking_activator.ui" />
     <QtUic Include="ui\form_windows\textureset.ui" />
+    <QtUic Include="ui\form_windows\visual_effect.ui" />
     <QtUic Include="ui\form_windows\voicetype.ui" />
     <QtUic Include="ui\form_windows\word_of_power.ui" />
     <QtUic Include="ui\main_window.ui" />
@@ -2974,6 +2997,7 @@
     <None Include="shaders\util\oit-composite.frag.spv" />
     <None Include="shaders\util\scene-fog-color-far.frag" />
     <None Include="shaders\util\scene-fog-color-far.frag.spv" />
+    <None Include="ui\form_windows\quest\QuestAllDialogueModel.md" />
     <None Include="ui\form_windows\_base.inl" />
     <None Include="ui\models\DKGenericListModel.inl" />
     <None Include="ui\models\DKGenericTreeModel.inl" />

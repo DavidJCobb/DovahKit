@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>QuestDialogueTabBody</class>
+ <widget class="QWidget" name="QuestDialogueTabBody">
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0,1,0,3">
+   <item>
+    <layout class="QVBoxLayout" name="layoutBranch">
+     <item>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="branchHeader">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Branches</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCheckBox" name="branchFilterTopLevelOnly">
+         <property name="text">
+          <string>Show top-level branches only</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QTableView" name="branches"/>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="layoutBranchButtons">
+       <item>
+        <widget class="QPushButton" name="buttonBranchNew">
+         <property name="text">
+          <string>New</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonBranchEdit">
+         <property name="text">
+          <string>Settings...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonBranchDelete">
+         <property name="text">
+          <string>Delete</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>12</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="layoutTopic">
+     <item>
+      <widget class="QLabel" name="topicHeader">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Topics</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QTableView" name="topics"/>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="layoutTopicButtons">
+       <item>
+        <widget class="QPushButton" name="buttonTopicNew">
+         <property name="text">
+          <string>New</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonTopicEdit">
+         <property name="text">
+          <string>Edit</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonTopicDelete">
+         <property name="text">
+          <string>Delete</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="horizontalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>12</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="layoutInfo">
+     <item>
+      <widget class="QLabel" name="infoHeader">
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Topic Infos</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QTableView" name="infos"/>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="layoutInfoButtons">
+       <item>
+        <widget class="QPushButton" name="buttonInfoNew">
+         <property name="text">
+          <string>New</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonInfoEdit">
+         <property name="text">
+          <string>Edit</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonInfoMoveUp">
+         <property name="text">
+          <string>Move Up</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonInfoMoveDown">
+         <property name="text">
+          <string>Move Down</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonInfoDelete">
+         <property name="text">
+          <string>Delete</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>branchFilterTopLevelOnly</tabstop>
+  <tabstop>branches</tabstop>
+  <tabstop>buttonBranchNew</tabstop>
+  <tabstop>buttonBranchEdit</tabstop>
+  <tabstop>buttonBranchDelete</tabstop>
+  <tabstop>topics</tabstop>
+  <tabstop>buttonTopicNew</tabstop>
+  <tabstop>buttonTopicEdit</tabstop>
+  <tabstop>buttonTopicDelete</tabstop>
+  <tabstop>infos</tabstop>
+  <tabstop>buttonInfoNew</tabstop>
+  <tabstop>buttonInfoEdit</tabstop>
+  <tabstop>buttonInfoMoveUp</tabstop>
+  <tabstop>buttonInfoMoveDown</tabstop>
+  <tabstop>buttonInfoDelete</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

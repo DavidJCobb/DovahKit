@@ -1,4 +1,5 @@
 #include "./quest.h"
+#include <QWhatsThis> // for the "Help" button in the dialogue tab
 #include "dovah/core.h"
 #include "dovah/form_stub_addenda.h"
 #include "./odds_and_ends/quest_tab_stages.h"
@@ -86,6 +87,20 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
       _insert(2, (this->tabs.objectives = new QuestTabObjectives(stub, *this->form)));
    }
    #pragma endregion
+
+   {  // "Help" button on dialogue tab
+      auto* sub_tabbox = this->ui.dialogueTabbox;
+      auto* button     = this->ui.buttonDialogueHelp;
+      sub_tabbox->setCornerWidget(button, Qt::Corner::TopRightCorner);
+
+      QObject::connect(button, &QPushButton::clicked, this, [this, button]() {
+         QWhatsThis::showText(
+            button->mapToGlobal(button->pos()),
+            button->whatsThis(),
+            button
+         );
+      });
+   }
 }
 void FormDialogQuest::_load_impl() {
    auto& editor  = DovahKitCore::get();
@@ -108,17 +123,26 @@ void FormDialogQuest::_load_impl() {
       this->ui.dialogueConditions->importFrom(*this->form, working.conditions.dialogue);
    #pragma endregion
    #pragma region Stages
-
+      //
+      // Done by the subwidget, in its constructor.
+      //
    #pragma endregion
    #pragma region Objectives
+      //
+      // Done by the subwidget, in its constructor.
+      //
    #pragma endregion
    #pragma region Aliases
+      // TODO
    #pragma endregion
    #pragma region Dialogue
+      // TODO
    #pragma endregion
    #pragma region Scenes
+      // TODO
    #pragma endregion
    #pragma region Scripts
+      this->ui.scriptListPane->setFormWorkingCopy(&working);
    #pragma endregion
 }
 void FormDialogQuest::_save_impl() {
@@ -132,9 +156,33 @@ void FormDialogQuest::_save_impl() {
    auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
    //
-   editor.assign_localized_string(working.name, this->ui.name->text());
-   this->ui.textDisplayGlobals->commitStubs(working.text_display_globals, working);
-   this->ui.dialogueConditions->exportTo(*this->form, working.conditions.dialogue);
+   #pragma region Basic Data
+      editor.assign_localized_string(working.name, this->ui.name->text());
+      this->ui.textDisplayGlobals->commitStubs(working.text_display_globals, working);
+      this->ui.dialogueConditions->exportTo(*this->form, working.conditions.dialogue);
+   #pragma endregion
+   #pragma region Stages
+      //
+      // The subwidget makes all changes in real-time.
+      //
+   #pragma endregion
+   #pragma region Objectives
+      //
+      // The subwidget makes all changes in real-time.
+      //
+   #pragma endregion
+   #pragma region Aliases
+      // TODO
+   #pragma endregion
+   #pragma region Dialogue
+      // TODO
+   #pragma endregion
+   #pragma region Scenes
+      // TODO
+   #pragma endregion
+   #pragma region Scripts
+      this->ui.scriptListPane->commit();
+   #pragma endregion
 
    // TODO: EVERYTHING THAT DOESN'T MODIFY THE WORKING COPY IN REAL-TIME
 }
