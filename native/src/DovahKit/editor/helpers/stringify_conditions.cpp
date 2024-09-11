@@ -2,6 +2,7 @@
 #include "./stringify_condition_argument.h"
 #include "../core.h"
 #include <QObject>
+#include <QStringBuilder>
 #include "dovah/data/conditions/comparison_operator.h"
 #include "dovah/data/conditions/function_info.h"
 #include "dovah/data/conditions/run_on_type.h"
@@ -143,6 +144,15 @@ namespace editor_helpers {
       return out;
    }
 
+   extern QString stringify_condition_boolean_operator(
+      const dovah::loaded_forms::components::condition& cnd
+   ) {
+      if (cnd.get_flags() & condition::flag::or_linked)
+         return QObject::tr("OR", "condition boolean operator");
+      else
+         return QObject::tr("AND", "condition boolean operator");
+   }
+
    extern QString stringify_condition_list(
       const dovah::loaded_forms::components::condition_list& list,
       const dovah::loaded_forms::components::conditions::context& ctx
@@ -154,10 +164,7 @@ namespace editor_helpers {
       for (size_t i = 0; i < size - 1; ++i) {
          const auto& cnd = list[i];
          out += stringify_condition(cnd, ctx);
-         if (cnd.get_flags() & condition::flag::or_linked)
-            out += QObject::tr(" OR ");
-         else
-            out += QObject::tr(" AND ");
+         out += " " % stringify_condition_boolean_operator(cnd) % " ";
       }
       if (size)
          out += stringify_condition(list[size - 1], ctx);

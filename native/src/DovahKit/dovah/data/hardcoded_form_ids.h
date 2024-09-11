@@ -10,9 +10,11 @@ namespace dovah::hardcoded_form_ids {
    static constexpr bare_form_id_t TempleMarker           = 0x006;
    static constexpr bare_form_id_t Player                 = 0x007; // NPC_
    static constexpr bare_form_id_t BobbyPin               = 0x00A;
+   // Unused after Oblivion: [MISC:00C]RepairHammer
    static constexpr bare_form_id_t LootBag                = 0x00E;
    static constexpr bare_form_id_t Caps001                = 0x00F;
    static constexpr bare_form_id_t MapMarker              = 0x010;
+   // Unused after Oblivion: [CONT:011]StolenGoods
    static constexpr bare_form_id_t HorseMarker            = 0x012;
    static constexpr bare_form_id_t CreatureFaction        = 0x013;
    static constexpr bare_form_id_t PlayerRef              = 0x014; // ACHR
@@ -69,6 +71,91 @@ namespace dovah::hardcoded_form_ids {
    // Added in Fallout 4: [STAT:0A0]AnimInteractionMarker
    // Added in Fallout 4: [STAT:0C2]SplineEndpointMarker
    static constexpr bare_form_id_t WaterCurrentZoneMarker = 0x0C4;
+   // Seen in Oblivion: [DIAL:0AA]ADMIRE_HATE
+   // Seen in Oblivion: [DIAL:0AB]ADMIRE_LOVE
+   // Seen in Oblivion: [DIAL:0AC]ADMIRE_LIKE
+   // Seen in Oblivion: [DIAL:0AD]ADMIRE_DISLIKE
+   // Seen in Oblivion: [DIAL:0AE]COERCE_HATE
+   // Seen in Oblivion: [DIAL:0AF]COERCE_LOVE
+   // Seen in Oblivion: [DIAL:0B0]COERCE_LIKE
+   // Seen in Oblivion: [DIAL:0B1]COERCE_DISLIKE
+   // Seen in Oblivion: [DIAL:0B2]BOAST_HATE
+   // Seen in Oblivion: [DIAL:0B3]BOAST_LOVE
+   // Seen in Oblivion: [DIAL:0B4]BOAST_LIKE
+   // Seen in Oblivion: [DIAL:0B5]BOAST_DISLIKE
+   // Seen in Oblivion: [DIAL:0B6]JOKE_HATE
+   // Seen in Oblivion: [DIAL:0B7]JOKE_LOVE
+   // Seen in Oblivion: [DIAL:0B8]JOKE_LIKE
+   // Seen in Oblivion: [DIAL:0B9]JOKE_DISLIKE
+   // Seen in Oblivion: [DIAL:0BA]BRIBE
+   // Seen in Oblivion: [DIAL:0BB]PERSUASION_ENTER
+   // Seen in Oblivion: [DIAL:0BC]PERSUASION_EXIT
+   // Seen in Oblivion, and the form ID is referenced by the Skyrim Creation Kit's code, but it doesn't actually exist anymore: [DIAL:0C8]GREETING
+   // Seen in Oblivion: [DIAL:0D2]HELLO
+   // Seen in Oblivion: [DIAL:0D3]ANY
+   // Seen in Oblivion: [DIAL:0D4]GOODBYE
+   // Seen in Oblivion: [DIAL:0D5]Idle Chatter
+   // Seen in Oblivion: [DIAL:0D6]SPELL HELP
+   // Seen in Oblivion: [DIAL:0D7]INFO GENERAL
+   // Seen in Oblivion: [DIAL:0DC]Attack
+   // Seen in Oblivion: [DIAL:0DD]Hit
+   // Seen in Oblivion: [DIAL:0DE]Flee
+   // Seen in Oblivion: [DIAL:0DF]Steal
+   // Seen in Oblivion: [DIAL:0E0]Trespass
+   // Seen in Oblivion: [DIAL:0E1]Yield
+   // Seen in Oblivion: [DIAL:0E2]AcceptYield
+   // Seen in Oblivion: [DIAL:0E3]Pickpocket
+   // Seen in Oblivion: [DIAL:0E4]Assault
+   // Seen in Oblivion: [DIAL:0E5]Murder
+   // Seen in Oblivion: [DIAL:0E6]PowerAttack
+   // Seen in Oblivion: [DIAL:0E7]AssaultNoCrime
+   // Seen in Oblivion: [DIAL:0E8]MurderNoCrime
+   // Seen in Oblivion: [DIAL:0E9]PickpocketNoCrime
+   // Seen in Oblivion: [DIAL:0EA]StealNoCrime
+   // Seen in Oblivion: [DIAL:0EB]TrespassNoCrime
+   // Seen in Oblivion: [DIAL:0F0]AdmireSuccess
+   // Seen in Oblivion: [DIAL:0F1]AdmireFail
+   // Seen in Oblivion: [DIAL:0F2]AdmireNeutral
+   // Seen in Oblivion: [DIAL:0F3]TauntSuccess
+   // Seen in Oblivion: [DIAL:0F4]TauntFail
+   // Seen in Oblivion: [DIAL:0F5]TauntNeutral
+   // Seen in Oblivion: [DIAL:0F6]BoastSuccess
+   // Seen in Oblivion: [DIAL:0F7]BoastFail
+   // Seen in Oblivion: [DIAL:0F8]BoastNeutral
+   // Seen in Oblivion: [DIAL:0F9]JokeSuccess
+   // Seen in Oblivion: [DIAL:0FA]JokeFail
+   // Seen in Oblivion: [DIAL:0FB]JokeNeutral
+   // Seen in Oblivion: [DIAL:0FC]BribeSuccess
+   // Seen in Oblivion: [DIAL:0FD]BribeFail
+   // Seen in Oblivion: [DIAL:0FE]DemandSuccess
+   // Seen in Oblivion: [DIAL:0FF]DemandFail
+   // Seen in Oblivion: [DIAL:100]DemandNoMoney
+   // Seen in Oblivion: [DIAL:101]DemandNoMoreCircle
+   // Seen in Oblivion: [DIAL:102]BribeNoMoreCircle
+   // Seen in Oblivion: [DIAL:103]BribeNoMoney
+   // Seen in Oblivion: [DIAL:104]Noticed
+   // Seen in Oblivion: [DIAL:105]Seen
+   // Seen in Oblivion: [DIAL:106]Unseen
+   // Seen in Oblivion: [DIAL:107]Lost
+   // Seen in Oblivion: [DIAL:10E]ServiceRefusal
+   // Seen in Oblivion: [DIAL:10F]BarterStart
+   // Seen in Oblivion: [DIAL:110]BarterFail
+   // Seen in Oblivion: [DIAL:111]Repair
+   // Seen in Oblivion: [DIAL:112]Travel
+   // Seen in Oblivion: [DIAL:113]Training
+   // Seen in Oblivion: [DIAL:114]BarterBuyItem
+   // Seen in Oblivion: [DIAL:115]BarterSellItem
+   // Seen in Oblivion: [DIAL:116]BarterExit
+   // Seen in Oblivion: [DIAL:117]BarterStolen
+   // Seen in Oblivion: [DIAL:118]InfoRefusal
+   // Seen in Oblivion: [DIAL:119]Idle
+   // Seen in Oblivion: [DIAL:11A]ObserveCombat
+   // Seen in Oblivion: [DIAL:11B]Corpse
+   // Seen in Oblivion: [DIAL:11C]TimeToGo
+   // Seen in Oblivion: [DIAL:11D]RepairExit
+   // Seen in Oblivion: [DIAL:120]Recharge
+   // Seen in Oblivion: [DIAL:121]RechargeExit
+   // Seen in Oblivion: [DIAL:124]TrainingExit
    static constexpr bare_form_id_t LifeDetected           = 0x146; // EFSH // CK-only?
    static constexpr bare_form_id_t ScriptEffect           = 0x14A; // MGEF // CK-only?
    // Unused after Fallout: New Vegas: [MGEF:14B]FireDamage
@@ -115,7 +202,7 @@ namespace dovah::hardcoded_form_ids {
    static constexpr bare_form_id_t HelpPipBoyData = 0x182; // MESG
    static constexpr bare_form_id_t HelpVATSXBox = 0x183; // MESG
    static constexpr bare_form_id_t HelpLockpickingXBox = 0x184; // MESG
-   #pragma region Unused slots [185, 190]: formerly help messages from Fallout: New Vegas
+   #pragma region Scrapped slots [185, 190]: formerly help messages from Fallout: New Vegas
       // [MESG:185]HelpItemMod
       // [MESG:186]HelpCaravanBetting
       // [MESG:187]HelpCaravanDeckBuilding
@@ -129,11 +216,40 @@ namespace dovah::hardcoded_form_ids {
       // [MESG:18F]HelpReputation
       // [MESG:190]HelpHardcoreNeeds
    #pragma endregion
+   // Unused after Oblivion: [SLGM:191]WelkyndStone
+   // Unused after Oblivion: [SLGM:192]BlackSoulGem
+   // Unused after Oblivion: [SLGM:193]AzuraStone
+   // Unused after Oblivion: [SLGM:194]VarlaStone
    static constexpr bare_form_id_t HairColorListDoNotUse = 0x1F3; // FLST // CK-only?
    static constexpr bare_form_id_t Unarmed = 0x1F4; // WEAP
    static constexpr bare_form_id_t DefaultWaterExplosion = 0x1F5; // EXPL // true editor ID is "Default Water Explosion", with spaces
    static constexpr bare_form_id_t GasTrapDummy = 0x1F6; // WEAP // true editor ID is "GasTrap Dummy"
    // Seen in Fallout 4: [STAT:1F7]LightBox
+   // Unused after Oblivion: [SNDR:212]FootSoundDirt
+   // Unused after Oblivion: [SNDR:213]FootSoundGrass
+   // Unused after Oblivion: [SNDR:214]FootSoundStone
+   // Unused after Oblivion: [SNDR:215]FootSoundWater
+   // Unused after Oblivion: [SNDR:216]FootSoundWood
+   // Unused after Oblivion: [SNDR:217]FootSoundHeavyArmor
+   // Unused after Oblivion: [SNDR:218]FootSoundLightArmor
+   // Unused after Oblivion: [SNDR:219]FootSoundEarthLand
+   // Unused after Oblivion: [SNDR:21A]FootSoundGrassLand
+   // Unused after Oblivion: [SNDR:21B]FootSoundMetalLand
+   // Unused after Oblivion: [SNDR:21C]FootSoundStoneLand
+   // Unused after Oblivion: [SNDR:21D]FootSoundWaterLand
+   // Unused after Oblivion: [SNDR:21E]FootSoundWoodLand
+   // Unused after Oblivion: [SNDR:21F]FSTSnow
+   // Unused after Oblivion: [SNDR:220]FSTSnowLand
+   // Unused after Oblivion: [SNDR:221]FSTEarthSneak
+   // Unused after Oblivion: [SNDR:222]FSTGrassSneak
+   // Unused after Oblivion: [SNDR:223]FSTMetalSneak
+   // Unused after Oblivion: [SNDR:224]FSTSnowSneak
+   // Unused after Oblivion: [SNDR:225]FSTStoneSneak
+   // Unused after Oblivion: [SNDR:226]FSTWaterSneak
+   // Unused after Oblivion: [SNDR:227]FSTWoodSneak
+   // Unused after Oblivion: [SNDR:228]FSTArmorLightSneak
+   // Unused after Oblivion: [SNDR:229]FSTArmorHeavySneak
+   // Unused after Oblivion: [SNDR:22B]FSTMetal
    //
    // Form IDs in the range [258, 265] were formerly used by MICN forms in Fallout 3 and Fallout: New Vegas.
    //

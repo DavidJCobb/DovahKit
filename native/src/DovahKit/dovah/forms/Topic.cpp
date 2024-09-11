@@ -1,6 +1,7 @@
 #include "Topic.h"
 #include "_common_cpp.h"
 #include "../form_stub_addenda.h"
+#include "../data/dialogue/topic_subtype.h"
 
 namespace dovah::loaded_forms {
    void Topic::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
@@ -10,6 +11,7 @@ namespace dovah::loaded_forms {
       // to clear form-specific data are no-ops, but the function to clear all form 
       // component data still runs and empties out the TESFullName.
       //
+      bool loaded_snam = false;
       form_reference_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
@@ -23,7 +25,7 @@ namespace dovah::loaded_forms {
             case 'DATA':
                if (subrecord.is_in_bounds(4)) {
                   subrecord.unchecked_read(this->data.flags);
-                  subrecord.unchecked_read(this->data.dialogue_tab);
+                  subrecord.unchecked_read(this->data.category);
                   subrecord.unchecked_read(this->data.subtype);
                }
                break;
@@ -48,7 +50,14 @@ namespace dovah::loaded_forms {
                   intfc.warn_if_ref_is_wrong_type(this->owning_forms.quest, form_type::quest, subrecord.signature());
                break;
             case 'SNAM':
-               subrecord.read(this->subtype);
+               if (subrecord.read(this->subtype)) {
+                  loaded_snam = true;
+                  auto idx = dialogue::topic_subtype_signature_to_index(this->subtype);
+                  if (idx != (size_t)-1) {
+                     this->data.category = dialogue::all_topic_subtypes[idx].category;
+                     this->data.subtype  = idx;
+                  }
+               }
                break;
             case 'OBND':
                //
@@ -71,6 +80,14 @@ namespace dovah::loaded_forms {
                intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
+      }
+      if (!loaded_snam) {
+         //
+         // Hope and pray this form wasn't made pre-Dragonborn lol.
+         //
+         const auto& list = dialogue::all_topic_subtypes;
+         if (this->data.subtype < list.size())
+            this->subtype = list[this->data.subtype].signature;
       }
    }
    /*static*/ void Topic::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
@@ -126,7 +143,7 @@ namespace dovah::loaded_forms {
       copy->owning_forms.quest.set(*copy, this->owning_forms.quest);
       copy->text = this->text;
       copy->data.flags        = this->data.flags;
-      copy->data.dialogue_tab = this->data.dialogue_tab;
+      copy->data.category = this->data.category;
       copy->data.subtype      = this->data.subtype;
       copy->priority = this->priority;
       copy->subtype  = this->subtype;
@@ -144,7 +161,7 @@ namespace dovah::loaded_forms {
       record.write_formID_subrecord('QNAM', this->owning_forms.quest);
       auto& DATA = record.open_next_subrecord('DATA');
       DATA.write(this->data.flags);
-      DATA.write(this->data.dialogue_tab);
+      DATA.write(this->data.category);
       DATA.write(this->data.subtype);
       DATA.close();
       auto& SNAM = record.open_next_subrecord('SNAM');
@@ -168,8 +185,8 @@ namespace dovah::loaded_forms {
       this->owning_forms.branch.set(*this, nullptr);
       this->owning_forms.quest.set(*this, nullptr);
       this->data.flags        = 0;
-      this->data.dialogue_tab = category::topic;
-      this->data.subtype      = subtype_index::custom;
+      this->data.category = category::topic;
+      this->data.subtype      = 3;
       this->text.reset();
       this->subtype = 0;
       this->script_data.clear(*this);

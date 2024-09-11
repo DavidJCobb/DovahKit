@@ -3,7 +3,7 @@
 #include <QAbstractItemModel>
 #include <QIdentityProxyModel>
 #include <QSortFilterProxyModel>
-#include "dovah/forms/DialogueBranch.h"
+#include "dovah/data/dialogue/category.h"
 #include "dovah/form_stub.h"
 
 class QuestAllDialogueModel : public QAbstractItemModel {
@@ -62,18 +62,27 @@ class QuestAllDialogueModel : public QAbstractItemModel {
    protected:
       struct Info {
          dovah::form_stub* stub = nullptr;
+         bool deleted = false;
          struct {
-            QString editor_id;
-            QString responses;
-            QString speaker;
-            QString target;
-            QString voicetype;
-            QString faction;
-            QString conditions;
-            bool    uses_shared_info = false;
+            QString  editor_id;
+            size_t   response_count = 0;
+            QString  responses;
+            QString  speaker;
+            QString  target;
+            QString  voicetype;
+            QString  faction;
+            QString  conditions;
+            bool     links_to_any_topics = false;
+            bool     has_end_fragment    = false;
+            bool     has_own_prompt      = false;
+            bool     uses_shared_info    = false;
+            uint16_t hours_until_reset   = 0;
+            uint32_t flags = 0;
          } cached;
 
-         void recache_from_stub();
+         void recache_from_stub(
+            dovah::form_stub& owning_quest
+         );
       };
 
       struct Topic {
@@ -86,17 +95,32 @@ class QuestAllDialogueModel : public QAbstractItemModel {
             QString  display_text;
             uint8_t  priority = 0;
             uint32_t subtype  = 0; // signature
+
+            dovah::dialogue::category category = dovah::dialogue::category::topic;
          } cached;
 
          void recache_from_stub();
       };
 
       struct Branch {
+         enum class Type {
+            Normal,
+            Blocking,
+            TopLevel,
+         };
+
          ~Branch();
 
          dovah::form_stub*   stub = nullptr;
          std::vector<Topic*> topics;
-         dovah::loaded_form_ptr<dovah::loaded_forms::DialogueBranch> loaded;
+         struct {
+            QString editor_id;
+            Type    type      = Type::Normal;
+            bool    exclusive = false;
+         } cached;
+         Topic* starting_topic = nullptr;
+
+         void recache_from_stub();
       };
 
       struct {
@@ -144,6 +168,9 @@ class QuestAllDialogueModel : public QAbstractItemModel {
       void _on_branch_created(dovah::form_stub&);
       void _on_topic_created(dovah::form_stub&);
       void _on_info_created(dovah::form_stub&);
+
+      void _on_branch_removed(dovah::form_stub&);
+      void _on_topic_removed(dovah::form_stub&);
 
       // CK behavior:
       //  - Infos that are flagged as deleted still display in the listing.

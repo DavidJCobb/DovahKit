@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogDialogueBranch</class>
+ <widget class="QDialog" name="FormDialogDialogueBranch">
+  <property name="windowTitle">
+   <string>Dialogue Branch</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Type:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="type">
+       <property name="whatsThis">
+        <string>&lt;p&gt;Dialogue is divided into &lt;b&gt;topic lists&lt;/b&gt; and &lt;b&gt;choice lists&lt;/b&gt;, and a branch's type controls which list it appears in and how it interacts with other branches. A topic list is the top-level set of choices available to the player when they begin a conversation. A choice list is a set of dialogue options that are available to the player because the options' dialogue topics are linked to by the info that was just said to the player.&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;&lt;b&gt;Normal&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The branch's starting topic will never appear in a topic list. The only way for the player to enter this branch is to access one of its topics via a choice list.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Top-Level&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;This branch's starting topic will appear in a topic list.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Blocking&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;
+         &lt;p&gt;If this branch's starting topic contains at least one usable info, then in simple terms, the branch will become the only thing the NPC wants to talk about. That info will be used as the NPC's greeting when dialogue begins, and as their &quot;hello&quot; line when approached (unless the info is conditioned to only be valid in the dialogue menu, e.g. via &lt;code&gt;IsInDialogueWithPlayer&lt;/code&gt;). The topic list that the player sees will consist only of the topics that that info links to.&lt;/p&gt;
+         &lt;p&gt;If the info is marked as a &quot;Force Goodbye,&quot; then the dialogue menu won't come up after the info is said. If the info isn't a Goodbye, and doesn't link to any topics, then the dialogue menu will be displayed with a single topic: the branch's starting topic (yes, even though the info is inside of that topic).&lt;/p&gt;
+         &lt;p&gt;If an NPC has multiple blocking branches with usable starting topics, then the branch from the highest-priority quest will &quot;win.&quot; If more than one of those branches are from the same quest, then the &quot;winner&quot; is undefined. In general, a quest should be designed so that it won't try to apply more than one blocking branch to the same NPC at the same time.&lt;/p&gt;
+      &lt;/dd&gt;
+&lt;/dl&gt;</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Normal</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Top-Level</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Blocking</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="DKFormPicker" name="startingTopic">
+       <property name="whatsThis">
+        <string>The starting topic is the &quot;entry point&quot; for dialogue in this branch. For top-level branches, the starting topic's prompt is what appears in the topic list shown to the player. For blocking branches, the starting topic's infos are used by the NPC as a greeting. All branches must contain a starting topic, and the starting topic can be any topic in the branch.</string>
+       </property>
+       <property name="allowNone">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Starting Topic:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagExclusive">
+       <property name="whatsThis">
+        <string>&lt;p&gt;If a dialogue branch is exclusive, then it will &quot;take over&quot; the topic list once the player &quot;enters&quot; the branch, becoming the only thing that the NPC is willing to talk about until the player &quot;leaves&quot; the branch.&lt;/p&gt;
+&lt;p&gt;The player &quot;enters' an exclusive branch if the NPC says any info from any of the branch's topics. Once the NPC is marked as being &quot;in&quot; the exclusive branch, they will act as if the branch is a valid blocking branch (see the help text for the &quot;Type&quot; option) until they say an info from a different branch (i.e. because an info in the exclusive branch links to a topic outside of the branch). If the player enters an exclusive branch, exits dialogue with the NPC, and then speaks to them again, the NPC's greeting will be the active exclusive branch's starting topic.&lt;/p&gt;
+&lt;p&gt;Note that if the exclusive branch doesn't contain any usable dialogue (e.g. because conditions aren't met for any of the infos in the branch's starting topic), it can become impossible to engage the NPC in conversation ever again.&lt;/p&gt;</string>
+       </property>
+       <property name="text">
+        <string>Exclusive</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

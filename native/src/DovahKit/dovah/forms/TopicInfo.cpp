@@ -123,20 +123,24 @@ namespace dovah::loaded_forms {
          switch (subrecord.signature()) {
             case 'DATA':
                if (subrecord.is_in_bounds(8)) {
-                  float time;
+                  float days_until_reset;
                   subrecord.skip_bytes(2);
                   subrecord.unchecked_read(this->info_flags);
-                  subrecord.unchecked_read(time);
-                  time *= 65535.0F;
-                  this->days_until_reset = time;
+                  subrecord.unchecked_read(days_until_reset);
+                  days_until_reset *= 65535.0F;
+                  if (days_until_reset > 65535.0) {
+                     this->hours_until_reset = 0xFFFF;
+                  } else if (days_until_reset < 0) {
+                     this->hours_until_reset = 0;
+                  } else {
+                     this->hours_until_reset = days_until_reset;
+                  }
                }
                break;
             case 'ENAM':
                if (subrecord.is_in_bounds(8)) {
-                  uint16_t time_until_reset; // 0xFFFF = 1 day
                   subrecord.unchecked_read(this->info_flags);
-                  subrecord.unchecked_read(time_until_reset);
-                  this->days_until_reset = (float)time_until_reset / 0xFFFF;
+                  subrecord.unchecked_read(this->hours_until_reset);
                }
                break;
             case 'TCLT':
@@ -181,8 +185,16 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'ONAM':
-               if (subrecord.read(this->audio_override_output)) {
-                  intfc.warn_if_ref_is_wrong_type(this->audio_override_output, form_type::sound_output_model, subrecord.signature());
+               if (subrecord.read(this->audio_output_override)) {
+                  intfc.warn_if_ref_is_wrong_type(this->audio_output_override, form_type::sound_output_model, subrecord.signature());
+                  //
+                  // CK updates this flag when loading ONAM:
+                  //
+                  if (this->audio_output_override) {
+                     this->info_flags |= info_flag::audio_output_override;
+                  } else {
+                     this->info_flags &= ~info_flag::audio_output_override;
+                  }
                }
                break;
             case 'TRDT':
@@ -418,12 +430,12 @@ namespace dovah::loaded_forms {
       copy->info_flags = this->info_flags;
       copy->load_flags = this->load_flags;
       copy->favor_level = this->favor_level;
-      copy->days_until_reset = this->days_until_reset;
+      copy->hours_until_reset = this->hours_until_reset;
       copy->speaker.set(*copy, this->speaker);
       copy->topic.set(*copy, this->topic);
       copy->walk_away_topic.set(*copy, this->walk_away_topic);
       copy->use_shared_info.set(*copy, this->use_shared_info);
-      copy->audio_override_output.set(*copy, this->audio_override_output);
+      copy->audio_output_override.set(*copy, this->audio_output_override);
       //
       if (committing_to_self) {
          copy->link_to.locked.reserve(this->link_to.locked.size());
@@ -457,16 +469,10 @@ namespace dovah::loaded_forms {
    }
    /*virtual*/ void TopicInfo::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
-      if (this->info_flags || this->days_until_reset) {
+      if (this->info_flags || this->hours_until_reset) {
          auto& ENAM = record.open_next_subrecord('ENAM');
          ENAM.write(this->info_flags);
-         uint16_t time = 0;
-         if (this->days_until_reset >= 1.0F) {
-            time = 0xFFFF;
-         } else if (this->days_until_reset > 0.0F) {
-            time = this->days_until_reset * 0xFFFF;
-         }
-         ENAM.write(time);
+         ENAM.write(this->hours_until_reset);
          ENAM.close();
       }
       record.write_formID_subrecord('TPIC', this->topic, true);
@@ -501,14 +507,14 @@ namespace dovah::loaded_forms {
       }
       record.write_formID_subrecord('ANAM', this->speaker, true);
       record.write_formID_subrecord('TWAT', this->walk_away_topic, true);
-      record.write_formID_subrecord('ONAM', this->audio_override_output, true);
+      record.write_formID_subrecord('ONAM', this->audio_output_override, true);
    }
    /*virtual*/ void TopicInfo::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->speaker.clear_if(*this, other);
       this->topic.clear_if(*this, other);
       this->walk_away_topic.clear_if(*this, other);
       this->use_shared_info.clear_if(*this, other);
-      this->audio_override_output.clear_if(*this, other);
+      this->audio_output_override.clear_if(*this, other);
       //
       remove_form_from_reference_list(this->link_to.locked, other, *this);
       remove_form_from_reference_list(this->link_to.normal, other, *this);
@@ -529,12 +535,12 @@ namespace dovah::loaded_forms {
       this->info_flags = 0;
       this->load_flags = 0;
       this->favor_level = favor_level_t::none;
-      this->days_until_reset = 0.0F;
+      this->hours_until_reset = 0;
       this->speaker.set(*this, nullptr);
       this->topic.set(*this, nullptr);
       this->walk_away_topic.set(*this, nullptr);
       this->use_shared_info.set(*this, nullptr);
-      this->audio_override_output.set(*this, nullptr);
+      this->audio_output_override.set(*this, nullptr);
       //
       #if _DEBUG
          if (!this->link_to.locked.empty())

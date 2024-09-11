@@ -6791,6 +6791,12 @@
     <ClInclude Include="dovah\form_stubs\helpers\for_each_dialogue_branch_topic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\data\dialogue\category.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\dialogue\topic_subtype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -7067,6 +7073,18 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\quest\quest_dialogue_tab_body.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\topic.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\dialogue_branch.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\topic_info.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\topic_info\topic_info_response.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -8105,6 +8123,13 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="ui\form_windows\quest\QuestAllDialogueModel.md" />
+    <None Include="dovah\data\dialogue\topic_subtype.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\data\dialogue\category.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\data\dialogue\topic_subtype.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

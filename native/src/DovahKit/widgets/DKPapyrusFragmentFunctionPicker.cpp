@@ -31,7 +31,7 @@ DKPapyrusFragmentFunctionPicker::DKPapyrusFragmentFunctionPicker(QWidget* parent
    layout->setContentsMargins(0, 0, 0, 0);
 
    {
-      auto* label = new QLabel(tr("Script fragment data"), this);
+      auto* label = this->_subwidgets.header = new QLabel(tr("Script fragment data"), this);
       auto  font  = label->font();
       font.setBold(true);
       label->setFont(font);
@@ -224,3 +224,11 @@ DKPapyrusFragmentFunctionPicker::script* DKPapyrusFragmentFunctionPicker::_getOr
    return &(this->scripts.back());
 }
 #endif
+
+
+QString DKPapyrusFragmentFunctionPicker::headerText() const {
+   return this->_subwidgets.header->text();
+}
+void DKPapyrusFragmentFunctionPicker::setHeaderText(QString v) {
+   this->_subwidgets.header->setText(v);
+}

@@ -45,14 +45,13 @@ namespace vmad {
 #endif
 
 DKPapyrusBoundScriptListPane::DKPapyrusBoundScriptListPane(QWidget* parent) : QWidget(parent) {
-   auto* groupbox = new QGroupBox(this);
-   groupbox->setTitle("Scripts");
+   auto* wrapper_for_all = this->subwidgets.wrapper = new QWidget(this);
 
    {
       auto* layout = new QVBoxLayout();
       this->setLayout(layout);
-      layout->addWidget(groupbox);
       layout->setContentsMargins(0, 0, 0, 0);
+      layout->addWidget(wrapper_for_all);
    }
 
    auto* view = this->subwidgets.view = new QTableView(this);
@@ -62,7 +61,8 @@ DKPapyrusBoundScriptListPane::DKPapyrusBoundScriptListPane(QWidget* parent) : QW
    this->subwidgets.buttons.toggle_delete = new QPushButton(tr("Remove"),     wrap);
    //
    {
-      auto* layout = new QGridLayout(groupbox);
+      auto* layout = new QGridLayout(wrapper_for_all);
+      layout->setContentsMargins(0, 0, 0, 0);
       layout->addWidget(new QLabel(tr("Papyrus scripts")), 0, 0, 1, 2);
       layout->addWidget(view, 1, 0);
       layout->addWidget(wrap, 1, 1);
@@ -114,6 +114,8 @@ DKPapyrusBoundScriptListPane::DKPapyrusBoundScriptListPane(QWidget* parent) : QW
       vh->setSectionResizeMode(QHeaderView::ResizeToContents); // needed for sane row sizing
       vh->setVisible(false);
    }
+   //
+   this->_updateGroupbox();
    //
    #if !defined(QT_DESIGNER_LIB)
       QObject::connect(view->selectionModel(), &QItemSelectionModel::selectionChanged, this, [this](const QItemSelection& selected, const QItemSelection& deselected) {
@@ -175,6 +177,28 @@ DKPapyrusBoundScriptListPane::DKPapyrusBoundScriptListPane(QWidget* parent) : QW
          this->_updateButtons();
       });
    #endif
+}
+
+void DKPapyrusBoundScriptListPane::_updateGroupbox() {
+   this->setUpdatesEnabled(false);
+
+   auto* groupbox = this->subwidgets.groupbox;
+   auto* wrapper  = this->subwidgets.wrapper;
+   if (this->state.use_groupbox) {
+      if (!groupbox) {
+         groupbox = this->subwidgets.groupbox = new QGroupBox(this);
+         groupbox->setTitle(tr("Scripts"));
+         new QGridLayout(groupbox);
+      }
+      groupbox->layout()->addWidget(wrapper);
+      this->layout()->addWidget(groupbox);
+   } else {
+      this->layout()->addWidget(wrapper);
+      this->subwidgets.groupbox = nullptr;
+      delete groupbox;
+   }
+
+   this->setUpdatesEnabled(true);
 }
 
 #if !defined(QT_DESIGNER_LIB)
@@ -303,3 +327,11 @@ DKPapyrusBoundScriptListPane::DKPapyrusBoundScriptListPane(QWidget* parent) : QW
       this->model->commitTo(*this->vmad.target, *this->vmad.form);
    }
 #endif
+
+
+void DKPapyrusBoundScriptListPane::setUsesGroupbox(bool v) {
+   if (v == this->state.use_groupbox)
+      return;
+   this->state.use_groupbox = v;
+   this->_updateGroupbox();
+}

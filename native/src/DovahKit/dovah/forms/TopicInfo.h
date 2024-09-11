@@ -105,12 +105,12 @@ namespace dovah::loaded_forms {
          info_flags_t  info_flags  = 0;
          load_flags_t  load_flags  = 0;
          favor_level_t favor_level = favor_level_t::none; // CNAM
-         float         days_until_reset = 0.0F; // NOTE: maximum is 1.0F; CK presents it as hours
+         uint16_t      hours_until_reset = 0; // range is [0x0000, 0xFFFF], normalized to [0, 24]
          form_reference_t speaker; // ANAM
-         form_reference_t topic; // TPIC // unknown. loaded by the CK but not the game
+         form_reference_t topic; // TPIC // unknown. loaded by the CK but not the game. defaults to parent form if missing/null.
          form_reference_t walk_away_topic; // TWAT (yes, really)
          form_reference_t use_shared_info; // DNAM // a SharedInfo to borrow response data from
-         form_reference_t audio_override_output; // ONAM
+         form_reference_t audio_output_override; // ONAM
          struct {
             //
             // A TopicInfo's data consists of everything from the winning record, plus anything 

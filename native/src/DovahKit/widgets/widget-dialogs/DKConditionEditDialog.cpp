@@ -411,6 +411,38 @@ DKConditionEditDialog::DKConditionEditDialog(dovah::form_stub& containing_form, 
       this->_update_run_on_ui();
    });
    #pragma endregion
+
+   #pragma region "What's This?"
+   this->ui.runOn->setWhatsThis(tr(
+      "<p>Most condition functions are run in terms of a particular ObjectReference. These "
+      "functions are generally named in terms of what they run on. For example, <code>GetSex</code> "
+      "gets the sex of the actor it runs on; <code>GetInFaction</code> checks whether the actor "
+      "it runs on is the member of some faction; and so on.</p>"
+      "<p>But... What ObjectReference does the function run on? Well, you can choose.</p>"
+      "<dl>"
+         "<dt><b>Subject</b></dt>"
+            "<dd><p>The \"Subject\" depends on context. For dialogue conditions, it's the actor "
+            "who's going to say the line. For quest targets, it's the player. For Magic Effects "
+            "and similar, it's the actor being targeted by the effect, <em>unless</em> the Swap "
+            "Subject and Target box is checked, in which case it's the caster.</p></dd>"
+         "<dt><b>Target</b></dt>"
+            "<dd><p>The \"Target\" depends on context. For dialogue conditions, it's the actor "
+            "who is being spoken to. For package conditions, it's the ref that has been selected "
+            "as a target. For Magic Effects and similar, it's the actor being targeted by the "
+            "effect.</p></dd>"
+         "<dt><b>Reference</b></dt>"
+            "<dd><p>A specific ObjectReference pre-placed in the game world.</p></dd>"
+         "<dt><b>Combat Target</b></dt>"
+            "<dd><p>For magic conditions, this is the actor being targeted by the magic effect. "
+            "Otherwise, if the Subject is in combat, this is their target.</p></dd>"
+         "<dt><b>Linked Reference</b></dt>"
+            "<dd><p>The Subject's linked ref, if they have one.</p></dd>"
+      "</dl>"
+      "<p>For conditions that exist somewhere inside of a quest, you can also run the condition on "
+      "one of the quest's aliases; and for conditions that exist somewhere inside of a package, you "
+      "can run the condition on any package data that is an ObjectReference.</p>"
+   ));
+   #pragma endregion
 }
 
 void DKConditionEditDialog::forceUpdateParameters() {

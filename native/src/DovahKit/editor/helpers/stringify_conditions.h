@@ -10,6 +10,11 @@ namespace editor_helpers {
       const dovah::loaded_forms::components::conditions::context&
    );
 
+   // Stringify the OR/AND linkage for a condition.
+   extern QString stringify_condition_boolean_operator(
+      const dovah::loaded_forms::components::condition&
+   );
+
    extern QString stringify_condition_list(
       const dovah::loaded_forms::components::condition_list&,
       const dovah::loaded_forms::components::conditions::context&

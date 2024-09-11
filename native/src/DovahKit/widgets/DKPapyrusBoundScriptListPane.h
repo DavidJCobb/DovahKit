@@ -1,4 +1,5 @@
 #pragma once
+#include <QGroupBox>
 #include <QPushButton>
 #include <QTableView>
 
@@ -22,6 +23,7 @@ namespace dovah {
 
 class DKPapyrusBoundScriptListPane : public QWidget {
    Q_OBJECT;
+   Q_PROPERTY(bool usesGroupbox READ usesGroupbox WRITE setUsesGroupbox DESIGNABLE true);
    public:
       using vmad_type         = dovah::loaded_forms::components::papyrus::attachment_data;
       using working_copy_type = dovah::loaded_forms::Form;
@@ -37,9 +39,15 @@ class DKPapyrusBoundScriptListPane : public QWidget {
          void commit();
       #endif
 
+      constexpr bool usesGroupbox() const noexcept { return this->state.use_groupbox; }
+      void setUsesGroupbox(bool);
+
    signals:
 
    protected:
+      struct {
+         bool use_groupbox = true;
+      } state;
       struct {
          struct {
             QWidget* wrapper = nullptr;
@@ -49,6 +57,9 @@ class DKPapyrusBoundScriptListPane : public QWidget {
             QPushButton* properties    = nullptr;
          } buttons;
          QTableView* view = nullptr;
+
+         QGroupBox* groupbox = nullptr;
+         QWidget*   wrapper  = nullptr;
       } subwidgets;
       #if !defined(QT_DESIGNER_LIB)
       struct {
@@ -62,6 +73,7 @@ class DKPapyrusBoundScriptListPane : public QWidget {
       //
       DKBoundScriptListModel* model = nullptr;
 
+      void _updateGroupbox();
       #if !defined(QT_DESIGNER_LIB)
       void _editSelected();
       void _updateButtons();
