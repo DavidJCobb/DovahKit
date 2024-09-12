@@ -761,7 +761,12 @@
     <ClCompile Include="ui\form_windows\keyword.cpp" />
     <ClCompile Include="ui\form_windows\location_ref_type.cpp" />
     <ClCompile Include="ui\form_windows\movement_type.cpp" />
-    <ClCompile Include="ui\form_windows\quest\QuestAllDialogueModel.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestAllDialogueDatastore.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestDialogueBranchedTopicsModel.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestDialogueBranchesModel.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestDialogueBranchlessTopicsModel.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestDialogueTabBody.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestDialogueTopicInfosModel.cpp" />
     <ClCompile Include="ui\form_windows\race.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
     <ClCompile Include="ui\form_windows\global.cpp" />
@@ -1265,6 +1270,8 @@
     <ClInclude Include="editor\subsystems\message_log\model.h" />
     <ClInclude Include="helpers\arrays\filled.h" />
     <ClInclude Include="helpers\hashing\crc32.h" />
+    <ClInclude Include="helpers\vectors\move_item_within.h" />
+    <ClInclude Include="helpers\vectors\move_range_within.h" />
     <ClInclude Include="nif\blocks\BSValueNode.h" />
     <ClInclude Include="nif\utils\find_all_retexturable_blocks.h" />
     <ClInclude Include="nif\utils\precache_nif_info.h" />
@@ -1318,7 +1325,12 @@
     <QtMoc Include="ui\form_windows\race\RaceAvailableFaceMorphsModel.h" />
     <QtMoc Include="ui\form_windows\race\RacePhonemeMorphsModel.h" />
     <QtMoc Include="ui\form_windows\location_ref_type.h" />
-    <QtMoc Include="ui\form_windows\quest\QuestAllDialogueModel.h" />
+    <QtMoc Include="ui\form_windows\quest\QuestAllDialogueDatastore.h" />
+    <QtMoc Include="ui\form_windows\quest\QuestDialogueBranchesModel.h" />
+    <QtMoc Include="ui\form_windows\quest\QuestDialogueBranchedTopicsModel.h" />
+    <QtMoc Include="ui\form_windows\quest\QuestDialogueTopicInfosModel.h" />
+    <QtMoc Include="ui\form_windows\quest\QuestDialogueBranchlessTopicsModel.h" />
+    <QtMoc Include="ui\form_windows\quest\QuestDialogueTabBody.h" />
     <ClInclude Include="ui\form_windows\race\RacePresetActorFormFilter.h" />
     <ClInclude Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.h" />
     <ClInclude Include="ui\form_windows\shared\DKFormPickerExcludeSingleFormFilter.h" />
@@ -3006,6 +3018,7 @@
     <None Include="shaders\util\oit-composite.frag.spv" />
     <None Include="shaders\util\scene-fog-color-far.frag" />
     <None Include="shaders\util\scene-fog-color-far.frag.spv" />
+    <None Include="ui\form_windows\quest\QuestAllDialogueDatastore.inl" />
     <None Include="ui\form_windows\quest\QuestAllDialogueModel.md" />
     <None Include="ui\form_windows\_base.inl" />
     <None Include="ui\models\DKGenericListModel.inl" />

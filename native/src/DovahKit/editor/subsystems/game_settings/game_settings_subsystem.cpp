@@ -12,21 +12,7 @@ namespace dovahkit::subsystems::game_settings {
    core::~core() {
    }
 
-   game_setting_value core::get_setting_value(const char* name) {
-      dovah::loaded_game_setting loaded;
-      if (DovahKitCore::get().get_loaded_game_setting(name, loaded)) {
-         switch (loaded.get_type()) {
-            using enum dovah::game_setting_type;
-            case boolean:
-               return loaded.value.b;
-            case float32:
-               return loaded.value.f;
-            case integer:
-               return loaded.value.i;
-            case string:
-               return loaded.value.s;
-         }
-      }
+   game_setting_value core::get_setting_default_value(const char* name) {
       auto length = strlen(name);
       for (auto& dfn : dovah::game_settings) {
          if (_strnicmp(name, dfn.name, length) != 0)
@@ -44,6 +30,23 @@ namespace dovahkit::subsystems::game_settings {
          }
       }
       return {};
+   }
+   game_setting_value core::get_setting_value(const char* name) {
+      dovah::loaded_game_setting loaded;
+      if (DovahKitCore::get().get_loaded_game_setting(name, loaded)) {
+         switch (loaded.get_type()) {
+            using enum dovah::game_setting_type;
+            case boolean:
+               return loaded.value.b;
+            case float32:
+               return loaded.value.f;
+            case integer:
+               return loaded.value.i;
+            case string:
+               return loaded.value.s;
+         }
+      }
+      return get_setting_default_value(name);
    }
    void core::set_setting_value(const char* name, const game_setting_value& src) {
       if (!name || !name[0])

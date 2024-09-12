@@ -1,5 +1,6 @@
 #include "form_stub.h"
 #include <cassert>
+#include "../helpers/vectors/move_item_within.h"
 #include "../helpers/bitwise.h"
 #include "load_order_interfaces/form_load.h"
 #include "files/tes_file_reading/file_loader.h"

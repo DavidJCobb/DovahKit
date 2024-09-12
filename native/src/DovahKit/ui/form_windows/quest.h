@@ -6,6 +6,9 @@
 class QuestTabStages;
 class QuestTabObjectives;
 
+class QuestAllDialogueDatastore;
+class QuestDialogueTabBody;
+
 class FormDialogQuest :
    public QDialog,
    public FormEditDialogMixin<dovah::loaded_forms::Quest, true>
@@ -18,9 +21,23 @@ class FormDialogQuest :
    protected:
       Ui::FormDialogQuest ui;
       struct {
+         QuestAllDialogueDatastore* dialogue_datastore = nullptr;
+      } data;
+      struct {
          QuestTabStages*     stages     = nullptr;
          QuestTabObjectives* objectives = nullptr;
       } tabs;
+      struct {
+         struct {
+            QuestDialogueTabBody* player    = nullptr;
+            QuestDialogueTabBody* favor_a   = nullptr;
+            QuestDialogueTabBody* combat    = nullptr;
+            QuestDialogueTabBody* favor_b   = nullptr;
+            QuestDialogueTabBody* detection = nullptr;
+            QuestDialogueTabBody* services  = nullptr;
+            QuestDialogueTabBody* misc      = nullptr;
+         } dialogue_tab_bodies;
+      } subwidgets;
       
       virtual void _load_impl() override;
       virtual void _save_impl() override;

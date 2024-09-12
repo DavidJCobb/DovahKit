@@ -10,6 +10,9 @@
 #include "../../incomplete_code_warnings.h"
 static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "The form-editing dialog for Quests is incomplete.");
 
+#include "./quest/QuestAllDialogueDatastore.h"
+#include "./quest/QuestDialogueTabBody.h"
+
 FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    initialize(stub);
    
@@ -86,6 +89,55 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
       _insert(1, (this->tabs.stages     = new QuestTabStages(stub, *this->form)));
       _insert(2, (this->tabs.objectives = new QuestTabObjectives(stub, *this->form)));
    }
+   {
+      auto* ds  = this->data.dialogue_datastore = new QuestAllDialogueDatastore(this);
+      auto& dst = this->subwidgets.dialogue_tab_bodies;
+
+      auto _make_tab = [this, ds](dovah::dialogue::category c, QWidget* container, QuestDialogueTabBody*& body_ptr) {
+         auto* layout = new QGridLayout(container);
+
+         body_ptr = new QuestDialogueTabBody(this);
+         layout->addWidget(body_ptr);
+         body_ptr->setCategory(c);
+         body_ptr->setDatastore(ds);
+      };
+
+      _make_tab(
+         dovah::dialogue::category::topic,
+         this->ui.tabDialoguePlayer,
+         dst.player
+      );
+      _make_tab(
+         dovah::dialogue::category::favors,
+         this->ui.tabDialogueFavor,
+         dst.favor_b
+      );
+      _make_tab(
+         dovah::dialogue::category::combat,
+         this->ui.tabDialogueCombat,
+         dst.combat
+      );
+      _make_tab(
+         dovah::dialogue::category::detection,
+         this->ui.tabDialogueDetection,
+         dst.detection
+      );
+      _make_tab(
+         dovah::dialogue::category::service,
+         this->ui.tabDialogueService,
+         dst.services
+      );
+      _make_tab(
+         dovah::dialogue::category::miscellaneous,
+         this->ui.tabDialogueMisc,
+         dst.misc
+      );
+      _make_tab(
+         dovah::dialogue::category::favor_dialogue,
+         this->ui.tabDialogueFavorOld,
+         dst.favor_a
+      );
+   }
    #pragma endregion
 
    {  // "Help" button on dialogue tab
@@ -136,7 +188,7 @@ void FormDialogQuest::_load_impl() {
       // TODO
    #pragma endregion
    #pragma region Dialogue
-      // TODO
+      this->data.dialogue_datastore->set_quest(this->formStub());
    #pragma endregion
    #pragma region Scenes
       // TODO
@@ -175,7 +227,9 @@ void FormDialogQuest::_save_impl() {
       // TODO
    #pragma endregion
    #pragma region Dialogue
-      // TODO
+      //
+      // The subwidgets make all changes in real-time.
+      //
    #pragma endregion
    #pragma region Scenes
       // TODO

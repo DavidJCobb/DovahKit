@@ -174,12 +174,6 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'ANAM':
-               //
-               // I don't think the precise function of this subrecord is known, but I'm aware that the game retains 
-               // a hashmap at a static address, with TESTopicInfo pointers as keys and the loaded speaker form IDs 
-               // (which I assume are resolved to TESNPC pointers later on) as values. However, it doesn't look like 
-               // anything actually accesses this hashmap.
-               //
                if (subrecord.read(this->speaker)) {
                   intfc.warn_if_ref_is_wrong_type(this->speaker, form_type::actor_base, subrecord.signature());
                }

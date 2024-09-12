@@ -60,6 +60,10 @@ class QuestAllDialogueModel : public QAbstractItemModel {
       static constexpr const size_t InfoColumnCount = InfoColumn::__COUNT;
 
    protected:
+      struct Branch;
+      struct Topic;
+      struct Info;
+
       struct Info {
          dovah::form_stub* stub = nullptr;
          bool deleted = false;

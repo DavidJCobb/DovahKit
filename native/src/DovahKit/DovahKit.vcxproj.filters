@@ -2673,9 +2673,6 @@
     <ClCompile Include="ui\form_windows\shared\DKFormPickerExcludeSingleFormFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\form_windows\quest\QuestAllDialogueModel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\form_stubs\helpers\get_dialogue_branch_quest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2683,6 +2680,24 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\form_stubs\helpers\get_dialogue_topic_branch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\QuestAllDialogueDatastore.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\QuestDialogueBranchesModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\QuestDialogueBranchedTopicsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\QuestDialogueTopicInfosModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\QuestDialogueBranchlessTopicsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\QuestDialogueTabBody.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -6797,6 +6812,12 @@
     <ClInclude Include="dovah\data\dialogue\topic_subtype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\vectors\move_item_within.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\vectors\move_range_within.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -7674,7 +7695,22 @@
     <QtMoc Include="ui\form_windows\location_ref_type.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="ui\form_windows\quest\QuestAllDialogueModel.h">
+    <QtMoc Include="ui\form_windows\quest\QuestAllDialogueDatastore.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\quest\QuestDialogueBranchesModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\quest\QuestDialogueBranchedTopicsModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\quest\QuestDialogueTopicInfosModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\quest\QuestDialogueBranchlessTopicsModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\quest\QuestDialogueTabBody.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -8130,6 +8166,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\data\dialogue\topic_subtype.md" />
+    <None Include="ui\form_windows\quest\QuestAllDialogueDatastore.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

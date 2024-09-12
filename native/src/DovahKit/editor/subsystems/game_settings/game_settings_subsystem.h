@@ -23,6 +23,7 @@ namespace dovahkit::subsystems::game_settings {
          ~core();
 
       public:
+         game_setting_value get_setting_default_value(const char* name);
          game_setting_value get_setting_value(const char* name);
          void set_setting_value(const char* name, const game_setting_value&); // may throw dovah::exceptions::game_setting_value_change_failed
 

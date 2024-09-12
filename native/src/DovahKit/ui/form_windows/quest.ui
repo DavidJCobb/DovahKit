@@ -299,7 +299,7 @@
        <item row="1" column="0">
         <widget class="QTabWidget" name="dialogueTabbox">
          <property name="currentIndex">
-          <number>5</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tabDialoguePlayer">
           <attribute name="title">
@@ -329,6 +329,11 @@
          <widget class="QWidget" name="tabDialogueMisc">
           <attribute name="title">
            <string>Misc</string>
+          </attribute>
+         </widget>
+         <widget class="QWidget" name="tabDialogueFavorOld">
+          <attribute name="title">
+           <string>Favor (Deprecated)</string>
           </attribute>
          </widget>
         </widget>
