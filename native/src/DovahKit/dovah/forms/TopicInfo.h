@@ -105,7 +105,7 @@ namespace dovah::loaded_forms {
          info_flags_t  info_flags  = 0;
          load_flags_t  load_flags  = 0;
          favor_level_t favor_level = favor_level_t::none; // CNAM
-         uint16_t      hours_until_reset = 0; // range is [0x0000, 0xFFFF], normalized to [0, 24]
+         uint16_t      raw_hours_until_reset = 0; // range is [0x0000, 0xFFFF], normalized to [0, 24]
          form_reference_t speaker; // ANAM
          form_reference_t topic; // TPIC // unknown. loaded by the CK but not the game. defaults to parent form if missing/null.
          form_reference_t walk_away_topic; // TWAT (yes, really)
@@ -168,6 +168,20 @@ namespace dovah::loaded_forms {
          std::vector<components::legacy_script> legacy_scripts;
 
          // PNAM is not stored here; we handle it during the initial stub build
+
+         constexpr float get_hours_until_reset() const noexcept {
+            constexpr float conversion_divide = 65535.0F / 24.0F;
+            return (float)this->raw_hours_until_reset / conversion_divide;
+         }
+         constexpr void set_hours_until_reset(float v) noexcept {
+            if (v < 0)
+               v = 0;
+            else if (v > 65535.0F)
+               v = 1;
+            else
+               v *= (65535.0F / 24.0F);
+            this->raw_hours_until_reset = v;
+         }
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);

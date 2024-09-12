@@ -1,4 +1,5 @@
 #include "raster.h"
+#include <algorithm>
 #include <array>
 #include <intrin.h>
 #include "../../../helpers/lua/error.h"
@@ -149,7 +150,7 @@ namespace {
             lua_pop(L, 1);
             //
             if (!is_sorted) {
-               qStableSort(stops.begin(), stops.end(), [](const QGradientStop& a, const QGradientStop& b) {
+               std::stable_sort(stops.begin(), stops.end(), [](const QGradientStop& a, const QGradientStop& b) {
                   return a.first < b.first;
                });
             }

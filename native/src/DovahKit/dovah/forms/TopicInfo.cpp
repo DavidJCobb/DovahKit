@@ -129,18 +129,18 @@ namespace dovah::loaded_forms {
                   subrecord.unchecked_read(days_until_reset);
                   days_until_reset *= 65535.0F;
                   if (days_until_reset > 65535.0) {
-                     this->hours_until_reset = 0xFFFF;
+                     this->raw_hours_until_reset = 0xFFFF;
                   } else if (days_until_reset < 0) {
-                     this->hours_until_reset = 0;
+                     this->raw_hours_until_reset = 0;
                   } else {
-                     this->hours_until_reset = days_until_reset;
+                     this->raw_hours_until_reset = days_until_reset;
                   }
                }
                break;
             case 'ENAM':
                if (subrecord.is_in_bounds(8)) {
                   subrecord.unchecked_read(this->info_flags);
-                  subrecord.unchecked_read(this->hours_until_reset);
+                  subrecord.unchecked_read(this->raw_hours_until_reset);
                }
                break;
             case 'TCLT':
@@ -424,7 +424,7 @@ namespace dovah::loaded_forms {
       copy->info_flags = this->info_flags;
       copy->load_flags = this->load_flags;
       copy->favor_level = this->favor_level;
-      copy->hours_until_reset = this->hours_until_reset;
+      copy->raw_hours_until_reset = this->raw_hours_until_reset;
       copy->speaker.set(*copy, this->speaker);
       copy->topic.set(*copy, this->topic);
       copy->walk_away_topic.set(*copy, this->walk_away_topic);
@@ -463,10 +463,10 @@ namespace dovah::loaded_forms {
    }
    /*virtual*/ void TopicInfo::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
-      if (this->info_flags || this->hours_until_reset) {
+      if (this->info_flags || this->raw_hours_until_reset) {
          auto& ENAM = record.open_next_subrecord('ENAM');
          ENAM.write(this->info_flags);
-         ENAM.write(this->hours_until_reset);
+         ENAM.write(this->raw_hours_until_reset);
          ENAM.close();
       }
       record.write_formID_subrecord('TPIC', this->topic, true);
@@ -529,7 +529,7 @@ namespace dovah::loaded_forms {
       this->info_flags = 0;
       this->load_flags = 0;
       this->favor_level = favor_level_t::none;
-      this->hours_until_reset = 0;
+      this->raw_hours_until_reset = 0;
       this->speaker.set(*this, nullptr);
       this->topic.set(*this, nullptr);
       this->walk_away_topic.set(*this, nullptr);

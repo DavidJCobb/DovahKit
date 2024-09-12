@@ -21,7 +21,7 @@ namespace {
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
             return 0;
-         lua_pushnumber(L, (lua_Number)form->days_until_reset * 24.0);
+         lua_pushnumber(L, (lua_Number)form->get_hours_until_reset());
          return 1;
       }
       int override_topic_text(lua_State* L) {
@@ -83,13 +83,16 @@ namespace {
       int hours_until_reset(lua_State* L) {
          core::subsystems::permissions::verify_form_write_permissions();
          //
-         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto& self  = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "expected number");
+         auto  value = lua_tonumber(L, 2);
+         luaL_argcheck(L, value >   0, 2, "you cannot set a negative number of hours");
+         luaL_argcheck(L, value <= 24, 2, "the maximum hours until reset is 24");
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
             return 0;
          self.before_edit();
-         form->days_until_reset = lua_tonumber(L, 2) / 24.0;
+         form->set_hours_until_reset(lua_tonumber(L, 2));
          self.after_edit();
          return 0;
       }
