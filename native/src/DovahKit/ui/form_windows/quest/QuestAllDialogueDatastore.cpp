@@ -46,15 +46,15 @@
          for (size_t i = 0; i < loaded->responses.size(); ++i) {
             auto str = editor.convert_localized_string(loaded->responses[i].text);
             if (i > 0) {
-               str += delim;
+               dst += delim;
             }
-            str += dst;
+            dst += str;
          }
       }
       this->cached.flags = loaded->info_flags;
       this->cached.uses_shared_info    = loaded->use_shared_info != nullptr;
       this->cached.links_to_any_topics = !loaded->link_to.normal.empty() || !loaded->link_to.locked.empty();
-      this->cached.hours_until_reset   = loaded->hours_until_reset;
+      this->cached.hours_until_reset   = loaded->get_hours_until_reset();
       {
          auto& editor = DovahKitCore::get();
          auto  prompt = editor.convert_localized_string(loaded->override_topic_text);
@@ -81,6 +81,8 @@
 
          auto _stringify_list = [&context, &dst, end](const dovah::loaded_forms::components::condition_list& list, size_t offset = 0) {
             size_t size = list.size();
+            if (!size)
+               return;
             for (size_t i = 0; i < size - 1; ++i) {
                const auto& src = list[i];
                dst += editor_helpers::stringify_condition(src, context);
@@ -284,8 +286,13 @@
       this->cached.subtype  = loaded->subtype;
       {
          const auto* info = dovah::dialogue::topic_subtype_by_signature(this->cached.subtype);
-         if (info)
+         if (info) {
             this->cached.category = info->category;
+         } else {
+            #if _DEBUG
+               __debugbreak(); // Unknown subtype signature?
+            #endif
+         }
       }
    }
 #pragma endregion
@@ -475,6 +482,12 @@
       dovah::form_stub_helpers::for_each_quest_dialogue_branch(stub, [this](dovah::form_stub* branch_stub) {
          this->_add_branch_to_datastore(*branch_stub);
       });
+      dovah::form_stub_helpers::for_each_quest_topic(stub, [this](dovah::form_stub* topic_stub) {
+         auto* bs = dovah::form_stub_helpers::get_dialogue_topic_branch(topic_stub);
+         if (bs)
+            return;
+         this->_add_branchless_topic_to_datastore(*topic_stub);
+      });
       emit this->on_filled();
    }
 
@@ -547,7 +560,9 @@
       size_t src_size = src_list.size();
 
       auto* addenda = topic.stub->addenda;
-      assert(addenda != nullptr);
+      if (!addenda) {
+         assert(src_size == 0 && "If QuestAllDialogueDatastore has INFOs in a DIAL, but the DIAL has no addenda, then something failed to properly maintain the DIAL's ordered-child list.");
+      }
       
       auto&  dst_list = addenda->ordered_children;
       size_t dst_size = src_list.size();
@@ -591,7 +606,6 @@
          this->_add_info_to_datastore(*topic, *child);
       };
 
-      assert(stub.addenda != nullptr);
       if (const auto* addenda = stub.addenda) {
          for (auto* child : addenda->ordered_children) {
             _handle_info(child);

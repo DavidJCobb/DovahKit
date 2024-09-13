@@ -69,7 +69,7 @@ QuestDialogueTopicInfosModel::QuestDialogueTopicInfosModel(QObject* parent) : QA
                   if (item.cached.flags & flag::goodbye)
                      out += tr("G", "info flag");
                   if (item.cached.hours_until_reset)
-                     out += tr("O", "info flag");
+                     out += tr("O(%1)", "info flag").arg(item.cached.hours_until_reset, 1, 'f', 2);
                   if (item.cached.has_own_prompt)
                      out += tr("P", "info flag");
                   if (item.cached.flags & flag::say_once)
@@ -152,39 +152,40 @@ void QuestDialogueTopicInfosModel::setDatastore(datastore_type* ds) {
    }
    this->_datastore = ds;
    if (ds) {
-      QObject::connect(ds, datastore_type::on_filled, this, &QuestDialogueTopicInfosModel::_fill);
+      QObject::connect(ds, &datastore_type::on_filled, this, &QuestDialogueTopicInfosModel::_fill);
       QObject::connect(ds, &QObject::destroyed, this, [this]() {
          this->beginResetModel();
          this->_data.clear();
          this->_root = nullptr;
          this->endResetModel();
       });
-      QObject::connect(ds, datastore_type::on_cleared, this, [this]() {
+      QObject::connect(ds, &datastore_type::on_cleared, this, [this]() {
          this->beginResetModel();
          this->_data.clear();
          this->_root = nullptr;
          this->endResetModel();
       });
-      QObject::connect(ds, datastore_type::on_branch_removed, this, [this](const datastore_type::Branch& node) {
+      QObject::connect(ds, &datastore_type::on_branch_removed, this, [this](const datastore_type::Branch& node) {
          if (!this->_root || this->_root->parent != &node)
             return;
          this->_on_root_destroyed();
       });
-      QObject::connect(ds, datastore_type::on_topic_removed, this, [this](const container_type& node) {
+      QObject::connect(ds, &datastore_type::on_topic_removed, this, [this](const container_type& node) {
          if (this->_root != &node)
             return;
          this->_on_root_destroyed();
       });
-      QObject::connect(ds, datastore_type::on_info_added, this, [this](const node_type& node) {
+      QObject::connect(ds, &datastore_type::on_info_added, this, [this](const node_type& node) {
          if (!this->_root || node.parent != this->_root)
             return;
 
-         size_t i     = 0;
+         size_t i = 0;
          size_t size;
          bool   found = false;
          {
             auto& list = this->_root->infos;
             size = list.size();
+            assert(size == this->_data.size() + 1);
             for (; i < list.size(); ++i) {
                if (list[i] == &node) {
                   found = true;
@@ -193,8 +194,7 @@ void QuestDialogueTopicInfosModel::setDatastore(datastore_type* ds) {
             }
          }
 
-         auto&  list = this->_data;
-         size_t i    = list.size();
+         auto& list = this->_data;
          this->beginInsertRows({}, i, i);
          if (i == size) {
             list.push_back(&node);
@@ -203,8 +203,8 @@ void QuestDialogueTopicInfosModel::setDatastore(datastore_type* ds) {
          }
          this->endInsertRows();
       });
-      QObject::connect(ds, datastore_type::on_info_edited, this, &QuestDialogueTopicInfosModel::_on_node_edited);
-      QObject::connect(ds, datastore_type::on_info_removed, this, [this](const node_type& node) {
+      QObject::connect(ds, &datastore_type::on_info_edited, this, &QuestDialogueTopicInfosModel::_on_node_edited);
+      QObject::connect(ds, &datastore_type::on_info_removed, this, [this](const node_type& node) {
          if (!this->_root || node.parent != this->_root)
             return;
 

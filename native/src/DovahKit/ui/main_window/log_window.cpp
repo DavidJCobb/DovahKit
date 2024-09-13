@@ -114,6 +114,7 @@ LogWindow::LogWindow(QWidget* parent) : QWidget(parent) {
       auto* widget = this->ui.list;
       if (auto* model = dynamic_cast<model_type*>(widget->model())) {
          model->clear();
+         this->_redraw_selected_entry();
       }
    });
 

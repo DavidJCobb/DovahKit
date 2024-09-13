@@ -15,6 +15,8 @@ static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_
 
 FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    initialize(stub);
+
+   this->data.dialogue_datastore = new QuestAllDialogueDatastore(this);
    
    this->ui.textDisplayGlobals->setAllowedFormTypes({ dovah::form_type::global });
    {
@@ -90,7 +92,7 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
       _insert(2, (this->tabs.objectives = new QuestTabObjectives(stub, *this->form)));
    }
    {
-      auto* ds  = this->data.dialogue_datastore = new QuestAllDialogueDatastore(this);
+      auto* ds = this->data.dialogue_datastore;
       auto& dst = this->subwidgets.dialogue_tab_bodies;
 
       auto _make_tab = [this, ds](dovah::dialogue::category c, QWidget* container, QuestDialogueTabBody*& body_ptr) {

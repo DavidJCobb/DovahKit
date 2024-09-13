@@ -101,10 +101,10 @@ void QuestDialogueBranchesModel::setDatastore(datastore_type* ds) {
       QObject::disconnect(this->_datastore, nullptr, this, nullptr);
    this->_datastore = ds;
    if (ds) {
-      QObject::connect(ds, datastore_type::on_filled,  this, QuestDialogueBranchesModel::_fill);
-      QObject::connect(ds, &QObject::destroyed,        this, QuestDialogueBranchesModel::_fill);
-      QObject::connect(ds, datastore_type::on_cleared, this, QuestDialogueBranchesModel::_fill);
-      QObject::connect(ds, datastore_type::on_branch_added, this, [this](const node_type& node) {
+      QObject::connect(ds, &datastore_type::on_filled,  this, &QuestDialogueBranchesModel::_fill);
+      QObject::connect(ds, &QObject::destroyed,         this, &QuestDialogueBranchesModel::_fill);
+      QObject::connect(ds, &datastore_type::on_cleared, this, &QuestDialogueBranchesModel::_fill);
+      QObject::connect(ds, &datastore_type::on_branch_added, this, [this](const node_type& node) {
          auto&  list = this->_data;
          size_t i    = list.size();
          this->beginInsertRows({}, i, i);
@@ -113,8 +113,8 @@ void QuestDialogueBranchesModel::setDatastore(datastore_type* ds) {
 
          this->_re_sort_node(node);
       });
-      QObject::connect(ds, datastore_type::on_branch_edited, this, &QuestDialogueBranchesModel::_on_node_edited);
-      QObject::connect(ds, datastore_type::on_branch_removed, this, [this](const node_type& node) {
+      QObject::connect(ds, &datastore_type::on_branch_edited, this, &QuestDialogueBranchesModel::_on_node_edited);
+      QObject::connect(ds, &datastore_type::on_branch_removed, this, [this](const node_type& node) {
          auto&  list = this->_data;
          size_t size = list.size();
          for (size_t i = 0; i < size; ++i) {
@@ -206,13 +206,13 @@ decltype(QuestDialogueBranchesModel::_data)::iterator QuestDialogueBranchesModel
    return std::upper_bound(
       this->_data.begin(),
       this->_data.end(),
-      item,
-      [](const node_type& a, const node_type& b) -> bool {
-         if (!a.stub && b.stub)
+      &item,
+      [](const node_type* a, const node_type* b) -> bool {
+         if (!a->stub && b->stub)
             return true;
-         if (!b.stub && a.stub)
+         if (!b->stub && a->stub)
             return false;
-         return a.cached.editor_id.compare(b.cached.editor_id, Qt::CaseInsensitive) < 0;
+         return a->cached.editor_id.compare(b->cached.editor_id, Qt::CaseInsensitive) < 0;
       }
    );
 }

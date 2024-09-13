@@ -1,5 +1,6 @@
 #pragma once
 #include <QAbstractItemModel>
+#include <QPointer>
 #include "./QuestAllDialogueDatastore.h"
 
 class QuestDialogueBranchesModel : public QAbstractItemModel {

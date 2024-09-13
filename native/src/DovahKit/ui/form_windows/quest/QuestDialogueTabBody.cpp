@@ -10,6 +10,8 @@
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
 #include "editor/open_window_for_form.h"
+#include "ui/utils/set_tableview_column_flex.h"
+#include "ui/utils/typical_tableview_config.h"
 
 #include "./QuestDialogueBranchesModel.h"
 #include "./QuestDialogueBranchedTopicsModel.h"
@@ -167,6 +169,7 @@ QuestDialogueTabBody::QuestDialogueTabBody(QWidget* parent) : QWidget(parent) {
       auto* view  = this->ui.branches;
       auto* model = this->_models.branches = new QuestDialogueBranchesModel(this);
       view->setModel(model);
+      ui::typical_tableview_config(view);
 
       auto* sel_model = view->selectionModel();
       QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &QuestDialogueTabBody::_branch_selection_changed);
@@ -179,8 +182,10 @@ QuestDialogueTabBody::QuestDialogueTabBody(QWidget* parent) : QWidget(parent) {
       auto* view = this->ui.topics;
       auto* model = this->_models.topics.branched = new QuestDialogueBranchedTopicsModel(this);
       view->setModel(model);
+      ui::typical_tableview_config(view);
 
-      this->_set_up_topic_selection_model();
+      // Don't forget the alternate model, too!
+      this->_models.topics.branchless = new QuestDialogueBranchlessTopicsModel(this);
       
       QObject::connect(this->ui.buttonTopicNew, &QPushButton::clicked, this, &QuestDialogueTabBody::_topic_button_new);
       QObject::connect(this->ui.buttonTopicEdit, &QPushButton::clicked, this, &QuestDialogueTabBody::_topic_button_edit);
@@ -190,6 +195,7 @@ QuestDialogueTabBody::QuestDialogueTabBody(QWidget* parent) : QWidget(parent) {
       auto* view = this->ui.infos;
       auto* model = this->_models.infos = new QuestDialogueTopicInfosModel(this);
       view->setModel(model);
+      ui::typical_tableview_config(view);
 
       auto* sel_model = view->selectionModel();
       QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &QuestDialogueTabBody::_info_selection_changed);
@@ -200,6 +206,9 @@ QuestDialogueTabBody::QuestDialogueTabBody(QWidget* parent) : QWidget(parent) {
       QObject::connect(this->ui.buttonInfoMoveDown, &QPushButton::clicked, this, &QuestDialogueTabBody::_info_button_move_down);
       QObject::connect(this->ui.buttonInfoDelete, &QPushButton::clicked, this, &QuestDialogueTabBody::_info_button_delete);
    }
+
+   // Do this last, as signals triggered will try to access the other models.
+   this->_set_up_topic_selection_model();
 }
 
 QuestAllDialogueDatastore* QuestDialogueTabBody::datastore() const {

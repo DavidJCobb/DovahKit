@@ -38,7 +38,7 @@ class QuestAllDialogueDatastore : public QObject {
             bool     has_end_fragment    = false;
             bool     has_own_prompt      = false;
             bool     uses_shared_info    = false;
-            uint16_t hours_until_reset   = 0;
+            float    hours_until_reset   = 0;
             uint32_t flags = 0;
          } cached;
 

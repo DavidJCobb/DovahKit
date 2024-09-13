@@ -6,9 +6,12 @@
 
 QuestDialogueBranchlessTopicsModel::QuestDialogueBranchlessTopicsModel(QObject* parent) : QAbstractItemModel(parent) {
    auto& editor = DovahKitCore::get();
-   auto& gss    = dovahkit::subsystems::game_settings::core::get();
    QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, &QuestDialogueBranchlessTopicsModel::_update_all_topic_subtype_names);
-   QObject::connect(&gss, std::decay_t<decltype(gss)>::settingValueChanged, this, &QuestDialogueBranchlessTopicsModel::_update_topic_subtype_name);
+   if (editor.has_data())
+      this->_update_all_topic_subtype_names();
+
+   auto& gss = dovahkit::subsystems::game_settings::core::get();
+   QObject::connect(&gss, &std::decay_t<decltype(gss)>::settingValueChanged, this, &QuestDialogueBranchlessTopicsModel::_update_topic_subtype_name);
 }
    
 #pragma region QAbstractItemModel overrides
@@ -120,10 +123,10 @@ void QuestDialogueBranchlessTopicsModel::setDatastore(datastore_type* ds) {
       QObject::disconnect(this->_datastore, nullptr, this, nullptr);
    this->_datastore = ds;
    if (ds) {
-      QObject::connect(ds, datastore_type::on_filled,  this, &QuestDialogueBranchlessTopicsModel::_fill);
-      QObject::connect(ds, &QObject::destroyed,        this, &QuestDialogueBranchlessTopicsModel::_fill);
-      QObject::connect(ds, datastore_type::on_cleared, this, &QuestDialogueBranchlessTopicsModel::_fill);
-      QObject::connect(ds, datastore_type::on_topic_added, this, [this](const node_type& node) {
+      QObject::connect(ds, &datastore_type::on_filled,  this, &QuestDialogueBranchlessTopicsModel::_fill);
+      QObject::connect(ds, &QObject::destroyed,         this, &QuestDialogueBranchlessTopicsModel::_fill);
+      QObject::connect(ds, &datastore_type::on_cleared, this, &QuestDialogueBranchlessTopicsModel::_fill);
+      QObject::connect(ds, &datastore_type::on_topic_added, this, [this](const node_type& node) {
          auto&  list = this->_data;
          size_t i    = list.size();
          this->beginInsertRows({}, i, i);
@@ -132,8 +135,8 @@ void QuestDialogueBranchlessTopicsModel::setDatastore(datastore_type* ds) {
 
          this->_re_sort_node(node);
       });
-      QObject::connect(ds, datastore_type::on_topic_edited, this, &QuestDialogueBranchlessTopicsModel::_on_node_edited);
-      QObject::connect(ds, datastore_type::on_topic_removed, this, [this](const node_type& node) {
+      QObject::connect(ds, &datastore_type::on_topic_edited, this, &QuestDialogueBranchlessTopicsModel::_on_node_edited);
+      QObject::connect(ds, &datastore_type::on_topic_removed, this, [this](const node_type& node) {
          if (node.parent)
             return;
          auto&  list = this->_data;
@@ -158,8 +161,11 @@ void QuestDialogueBranchlessTopicsModel::_fill() {
    this->_data.clear();
    if (this->_datastore) {
       auto& src = this->_datastore->all_branchless_topics();
-      for (auto* item : src)
+      for (auto* item : src) {
+         if (item->cached.category != this->_category)
+            continue;
          this->_data.push_back(item);
+      }
    }
    this->endResetModel();
 }
@@ -229,13 +235,13 @@ decltype(QuestDialogueBranchlessTopicsModel::_data)::iterator QuestDialogueBranc
    return std::upper_bound(
       this->_data.begin(),
       this->_data.end(),
-      item,
-      [](const node_type& a, const node_type& b) -> bool {
-         if (!a.stub && b.stub)
+      &item,
+      [](const node_type* a, const node_type* b) -> bool {
+         if (!a->stub && b->stub)
             return true;
-         if (!b.stub && a.stub)
+         if (!b->stub && a->stub)
             return false;
-         return a.cached.editor_id.compare(b.cached.editor_id, Qt::CaseInsensitive) < 0;
+         return a->cached.editor_id.compare(b->cached.editor_id, Qt::CaseInsensitive) < 0;
       }
    );
 }

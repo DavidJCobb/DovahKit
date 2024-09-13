@@ -1,5 +1,6 @@
 #pragma once
 #include <QAbstractItemModel>
+#include <QPointer>
 #include "./QuestAllDialogueDatastore.h"
 #include "dovah/data/dialogue/category.h"
 #include "dovah/data/dialogue/topic_subtype.h"

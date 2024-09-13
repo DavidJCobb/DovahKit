@@ -17,7 +17,7 @@ namespace dovah::loaded_forms {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
          switch (subrecord.signature()) {
-            case 'TFIC':
+            case 'TIFC':
                //
                // Used for the equivalent of a std::vector::reserve call on the topic's info list.
                //
@@ -50,7 +50,7 @@ namespace dovah::loaded_forms {
                   intfc.warn_if_ref_is_wrong_type(this->owning_forms.quest, form_type::quest, subrecord.signature());
                break;
             case 'SNAM':
-               if (subrecord.read(this->subtype)) {
+               if (subrecord.read_signature(this->subtype)) {
                   loaded_snam = true;
                   auto idx = dialogue::topic_subtype_signature_to_index(this->subtype);
                   if (idx != (size_t)-1) {
@@ -117,7 +117,7 @@ namespace dovah::loaded_forms {
                if (subrecord.read(formID))
                   uib.extra_form_ids[stored_qnam] = formID;
                break;
-            case 'TFIC':
+            case 'TIFC':
             case 'FULL':
             case 'XIDX':
             case 'DATA':
@@ -165,7 +165,7 @@ namespace dovah::loaded_forms {
       DATA.write(this->data.subtype);
       DATA.close();
       auto& SNAM = record.open_next_subrecord('SNAM');
-      SNAM.write(this->subtype);
+      SNAM.write_signature(this->subtype);
       SNAM.close();
       //
       auto& TIFC = record.open_next_subrecord('TIFC');

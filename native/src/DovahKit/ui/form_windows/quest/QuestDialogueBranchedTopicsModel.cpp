@@ -102,23 +102,23 @@ void QuestDialogueBranchedTopicsModel::setDatastore(datastore_type* ds) {
       this->_root = nullptr;
    }
    if (ds) {
-      QObject::connect(ds, datastore_type::on_filled, this, &QuestDialogueBranchedTopicsModel::_fill);
+      QObject::connect(ds, &datastore_type::on_filled, this, &QuestDialogueBranchedTopicsModel::_fill);
 
       QObject::connect(ds, &QObject::destroyed, this, [this]() {
          this->_root = nullptr;
          this->_fill();
       });
-      QObject::connect(ds, datastore_type::on_cleared, this, [this]() {
+      QObject::connect(ds, &datastore_type::on_cleared, this, [this]() {
          this->_root = nullptr;
          this->_fill();
       });
-      QObject::connect(ds, datastore_type::on_branch_removed, this, [this](const container_type& node) {
+      QObject::connect(ds, &datastore_type::on_branch_removed, this, [this](const container_type& node) {
          if (this->_root != &node)
             return;
          this->_root = nullptr;
          this->_fill();
       });
-      QObject::connect(ds, datastore_type::on_topic_added, this, [this](const node_type& node) {
+      QObject::connect(ds, &datastore_type::on_topic_added, this, [this](const node_type& node) {
          if (!this->_root || node.parent != this->_root)
             return;
 
@@ -130,8 +130,8 @@ void QuestDialogueBranchedTopicsModel::setDatastore(datastore_type* ds) {
 
          this->_re_sort_node(node);
       });
-      QObject::connect(ds, datastore_type::on_topic_edited, this, &QuestDialogueBranchedTopicsModel::_on_node_edited);
-      QObject::connect(ds, datastore_type::on_topic_removed, this, [this](const node_type& node) {
+      QObject::connect(ds, &datastore_type::on_topic_edited, this, &QuestDialogueBranchedTopicsModel::_on_node_edited);
+      QObject::connect(ds, &datastore_type::on_topic_removed, this, [this](const node_type& node) {
          if (!this->_root || node.parent != this->_root)
             return;
 
@@ -257,13 +257,13 @@ decltype(QuestDialogueBranchedTopicsModel::_data)::iterator QuestDialogueBranche
    return std::upper_bound(
       this->_data.begin(),
       this->_data.end(),
-      item,
-      [](const node_type& a, const node_type& b) -> bool {
-         if (!a.stub && b.stub)
+      &item,
+      [](const node_type* a, const node_type* b) -> bool {
+         if (!a->stub && b->stub)
             return true;
-         if (!b.stub && a.stub)
+         if (!b->stub && a->stub)
             return false;
-         return a.cached.editor_id.compare(b.cached.editor_id, Qt::CaseInsensitive) < 0;
+         return a->cached.editor_id.compare(b->cached.editor_id, Qt::CaseInsensitive) < 0;
       }
    );
 }
