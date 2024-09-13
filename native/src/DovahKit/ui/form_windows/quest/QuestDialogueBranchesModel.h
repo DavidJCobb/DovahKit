@@ -49,6 +49,8 @@ class QuestDialogueBranchesModel : public QAbstractItemModel {
       inline datastore_type* datastore() const { return this->_datastore; }
       void setDatastore(datastore_type*);
 
+      const node_type* node(size_t row) const;
+
    protected:
       void _fill();
       void _on_node_edited(const node_type&);

@@ -51,6 +51,9 @@ QuestDialogueTopicInfosModel::QuestDialogueTopicInfosModel(QObject* parent) : QA
             case Column::FormID:
                return editor_helpers::form_id_to_string(item.stub->formID);
             case Column::Conditions:
+               if (role == Qt::ToolTipRole) {
+                  return item.cached.conditions_tooltip;
+               }
                return item.cached.conditions;
             case Column::Flags:
                {
@@ -95,7 +98,23 @@ QuestDialogueTopicInfosModel::QuestDialogueTopicInfosModel(QObject* parent) : QA
             case Column::Target:
                return item.cached.target;
             case Column::InfoText:
-               return item.cached.responses;
+               {
+                  QString text;
+                  if (role == Qt::ToolTipRole) {
+                     text = item.cached.responses_tooltip;
+                     if (item.deleted)
+                        text.prepend("<b>DELETED</b> - ");
+                     if (item.cached.uses_shared_info)
+                        text.prepend("<b>&lt;&lt;Shared&gt;&gt;</b> ");
+                  } else {
+                     text = item.cached.responses;
+                     if (item.deleted)
+                        text.prepend("DELETED - ");
+                     if (item.cached.uses_shared_info)
+                        text.prepend("<<Shared>> ");
+                  }
+                  return text;
+               }
             case Column::ResponseCount:
                return item.cached.response_count;
          }
@@ -221,6 +240,7 @@ void QuestDialogueTopicInfosModel::setDatastore(datastore_type* ds) {
             return;
          }
       });
+      QObject::connect(ds, &datastore_type::on_info_reordered, this, &QuestDialogueTopicInfosModel::_find_node_and_handle_reordering);
    }
    this->_fill();
 }
@@ -279,6 +299,18 @@ void QuestDialogueTopicInfosModel::_on_node_edited(const node_type& node) {
    if (!this->_root || node.parent != this->_root)
       return;
 
+   size_t i = this->_find_node_and_handle_reordering(node);
+   if (i == (size_t)-1)
+      return;
+
+   auto tl = this->index(i, 0, {});
+   auto br = this->index(i, ColumnCount - 1, {});
+   emit dataChanged(tl, br);
+}
+size_t QuestDialogueTopicInfosModel::_find_node_and_handle_reordering(const node_type& node) {
+   if (!this->_root || node.parent != this->_root)
+      return (size_t)-1;
+
    size_t index_prior = 0;
    size_t index_after = 0;
    {
@@ -291,8 +323,9 @@ void QuestDialogueTopicInfosModel::_on_node_edited(const node_type& node) {
             found       = true;
          }
       }
+      assert(found);
       if (!found)
-         return;
+         return (size_t)-1;
    }
    {
       auto&  dst_list = this->_data;
@@ -304,16 +337,14 @@ void QuestDialogueTopicInfosModel::_on_node_edited(const node_type& node) {
             found       = true;
          }
       }
+      assert(found);
       if (!found)
-         return;
+         return (size_t)-1;
    }
    if (index_prior != index_after) {
       this->_on_node_reordered(node, index_prior, index_after);
    }
-
-   auto tl = this->index(index_after, 0, {});
-   auto br = this->index(index_after, ColumnCount - 1, {});
-   emit dataChanged(tl, br);
+   return index_after;
 }
 void QuestDialogueTopicInfosModel::_on_node_reordered(const node_type& node, size_t from, size_t to) {
    auto& list = this->_data;
@@ -327,17 +358,9 @@ void QuestDialogueTopicInfosModel::_on_node_reordered(const node_type& node, siz
       from, // first to move
       from, // last  to move
       {},
-      to
+      moving_upward_in_list ? to : to + 1 // Qt API design jank
    );
-   if (!moving_upward_in_list) {
-      //
-      // We move `entry` by first removing it from the list, and then inserting it into the 
-      // list at the desired index. If we're moving `entry` downward within the list, then 
-      // its removal will displace the intended destination by -1.
-      //
-      --to;
-   }
-   list.erase(list.begin() + from);
-   list.insert(list.begin() + to, &node);
+   bool moved = cobb::vectors::move_item_within<false>(list, from, (int)to - (int)from);
+   assert(moved);
    this->endMoveRows();
 }

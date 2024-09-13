@@ -63,9 +63,10 @@ class QuestDialogueTopicInfosModel : public QAbstractItemModel {
       const node_type* node(size_t row) const;
 
    protected:
-      void _fill();
-      void _on_root_destroyed();
-      void _on_node_edited(const node_type&);
-      void _on_node_reordered(const node_type&, size_t from, size_t to);
+      void   _fill();
+      void   _on_root_destroyed();
+      void   _on_node_edited(const node_type&);
+      size_t _find_node_and_handle_reordering(const node_type&); // returns index in our parent, or -1. calls _on_node_reordered if appropriate
+      void   _on_node_reordered(const node_type&, size_t from, size_t to);
       
 };

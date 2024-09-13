@@ -29,11 +29,13 @@ class QuestAllDialogueDatastore : public QObject {
             QString  editor_id;
             size_t   response_count = 0;
             QString  responses;
+            QString  responses_tooltip;
             QString  speaker;
             QString  target;
             QString  voicetype;
             QString  faction;
             QString  conditions;
+            QString  conditions_tooltip;
             bool     links_to_any_topics = false;
             bool     has_end_fragment    = false;
             bool     has_own_prompt      = false;
@@ -42,6 +44,10 @@ class QuestAllDialogueDatastore : public QObject {
             uint32_t flags = 0;
          } cached;
 
+         void recache_conditions_from_stub(
+            dovah::form_stub& owning_quest
+         );
+         void recache_responses_from_stub();
          void recache_from_stub(
             dovah::form_stub& owning_quest
          );
@@ -133,6 +139,7 @@ class QuestAllDialogueDatastore : public QObject {
       void on_info_added(const Info&);
       void on_info_edited(const Info&);
       void on_info_removed(const Info&); // emitted after the node is removed from the datastore and just before it's deleted; node.parent still points to the old parent
+      void on_info_reordered(const Info&);
 
    protected:
       void _sync_info_order_to_form(const Topic&);

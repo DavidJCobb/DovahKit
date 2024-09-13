@@ -2700,6 +2700,9 @@
     <ClCompile Include="ui\form_windows\quest\QuestDialogueTabBody.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="helpers\qt\strings\to_no_op_html.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6816,6 +6819,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\vectors\move_range_within.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\qt\strings\to_no_op_html.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\set_tableview_column_widths.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

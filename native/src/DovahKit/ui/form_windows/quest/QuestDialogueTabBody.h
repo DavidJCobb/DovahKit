@@ -36,6 +36,8 @@ class QuestDialogueTabBody : public QWidget {
 
       void _set_up_topic_selection_model();
 
+      void _reset_selection_of(QTableView*);
+
       void _branch_selection_changed();
       void _topic_selection_changed();
       void _info_selection_changed();

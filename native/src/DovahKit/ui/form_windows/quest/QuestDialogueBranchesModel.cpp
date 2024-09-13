@@ -132,6 +132,12 @@ void QuestDialogueBranchesModel::setDatastore(datastore_type* ds) {
    this->_fill();
 }
 
+const QuestDialogueBranchesModel::node_type* QuestDialogueBranchesModel::node(size_t row) const {
+   if (row >= this->_data.size())
+      return nullptr;
+   return this->_data[row];
+}
+
 void QuestDialogueBranchesModel::_fill() {
    this->beginResetModel();
    this->_data.clear();

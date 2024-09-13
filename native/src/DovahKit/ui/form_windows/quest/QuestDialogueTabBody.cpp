@@ -11,6 +11,7 @@
 #include "editor/form_stub_meta_type.h"
 #include "editor/open_window_for_form.h"
 #include "ui/utils/set_tableview_column_flex.h"
+#include "ui/utils/set_tableview_column_widths.h"
 #include "ui/utils/typical_tableview_config.h"
 
 #include "./QuestDialogueBranchesModel.h"
@@ -170,12 +171,17 @@ QuestDialogueTabBody::QuestDialogueTabBody(QWidget* parent) : QWidget(parent) {
       auto* model = this->_models.branches = new QuestDialogueBranchesModel(this);
       view->setModel(model);
       ui::typical_tableview_config(view);
+      ui::set_tableview_column_flex(view, [](DKHeaderView& header, const QFontMetrics& metrics) {
+         header.setColumnFlex(QuestDialogueBranchesModel::Column::EditorID, 1, 0, 100);
+         header.setColumnFlex(QuestDialogueBranchesModel::Column::FormID,   0, 0, 4);
+         header.setColumnFlex(QuestDialogueBranchesModel::Column::Flags,    0, 0, metrics.boundingRect("XX").width() * 1.5F + 4);
+      });
 
       auto* sel_model = view->selectionModel();
       QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &QuestDialogueTabBody::_branch_selection_changed);
 
-      QObject::connect(this->ui.buttonBranchNew, &QPushButton::clicked, this, &QuestDialogueTabBody::_branch_button_new);
-      QObject::connect(this->ui.buttonBranchEdit, &QPushButton::clicked, this, &QuestDialogueTabBody::_branch_button_edit);
+      QObject::connect(this->ui.buttonBranchNew,    &QPushButton::clicked, this, &QuestDialogueTabBody::_branch_button_new);
+      QObject::connect(this->ui.buttonBranchEdit,   &QPushButton::clicked, this, &QuestDialogueTabBody::_branch_button_edit);
       QObject::connect(this->ui.buttonBranchDelete, &QPushButton::clicked, this, &QuestDialogueTabBody::_branch_button_delete);
    }
    {
@@ -183,12 +189,19 @@ QuestDialogueTabBody::QuestDialogueTabBody(QWidget* parent) : QWidget(parent) {
       auto* model = this->_models.topics.branched = new QuestDialogueBranchedTopicsModel(this);
       view->setModel(model);
       ui::typical_tableview_config(view);
+      ui::set_tableview_column_flex(view, [](DKHeaderView& header, const QFontMetrics& metrics) {
+         header.setColumnFlex(QuestDialogueBranchedTopicsModel::Column::EditorID,    1, 0, 100);
+         header.setColumnFlex(QuestDialogueBranchedTopicsModel::Column::FormID,      0, 0, 4);
+         header.setColumnFlex(QuestDialogueBranchedTopicsModel::Column::DisplayText, 1, 0, 100);
+         header.setColumnFlex(QuestDialogueBranchlessTopicsModel::Column::Subtype,   0, 0, metrics.boundingRect("CombatCombat").width() * 1.5F + 4);
+         header.setColumnFlex(QuestDialogueBranchedTopicsModel::Column::Priority,    0, 0, metrics.boundingRect("100").width() * 1.5F + 4);
+      });
 
       // Don't forget the alternate model, too!
       this->_models.topics.branchless = new QuestDialogueBranchlessTopicsModel(this);
       
-      QObject::connect(this->ui.buttonTopicNew, &QPushButton::clicked, this, &QuestDialogueTabBody::_topic_button_new);
-      QObject::connect(this->ui.buttonTopicEdit, &QPushButton::clicked, this, &QuestDialogueTabBody::_topic_button_edit);
+      QObject::connect(this->ui.buttonTopicNew,    &QPushButton::clicked, this, &QuestDialogueTabBody::_topic_button_new);
+      QObject::connect(this->ui.buttonTopicEdit,   &QPushButton::clicked, this, &QuestDialogueTabBody::_topic_button_edit);
       QObject::connect(this->ui.buttonTopicDelete, &QPushButton::clicked, this, &QuestDialogueTabBody::_topic_button_delete);
    }
    {
@@ -196,15 +209,28 @@ QuestDialogueTabBody::QuestDialogueTabBody(QWidget* parent) : QWidget(parent) {
       auto* model = this->_models.infos = new QuestDialogueTopicInfosModel(this);
       view->setModel(model);
       ui::typical_tableview_config(view);
+      ui::set_tableview_column_widths(view, [](QHeaderView& header, const QFontMetrics& metrics) {
+         header.resizeSection(QuestDialogueTopicInfosModel::Column::InfoText,        200);
+         header.resizeSection(QuestDialogueTopicInfosModel::Column::EditorID,        4);
+         header.resizeSection(QuestDialogueTopicInfosModel::Column::FormID,          4);
+         header.resizeSection(QuestDialogueTopicInfosModel::Column::Flags,           metrics.boundingRect("EEEEEO(1.00)").width() * 1.5F + 4);
+         header.resizeSection(QuestDialogueTopicInfosModel::Column::ResponseCount,   metrics.boundingRect("10").width() * 1.5F + 4);
+         header.resizeSection(QuestDialogueTopicInfosModel::Column::Speaker,         metrics.boundingRect("Protagonist").width() * 1.5F + 4);
+         header.resizeSection(QuestDialogueTopicInfosModel::Column::Target,          metrics.boundingRect("Protagonist").width() * 1.5F + 4);
+         header.resizeSection(QuestDialogueTopicInfosModel::Column::InFaction,       metrics.boundingRect("Protagonist").width() * 1.5F + 4);
+         header.resizeSection(QuestDialogueTopicInfosModel::Column::IsVoiceType,     metrics.boundingRect("FemaleEvenToned").width() * 1.5F + 4);
+         header.resizeSection(QuestDialogueTopicInfosModel::Column::Conditions,      100);
+         header.resizeSection(QuestDialogueTopicInfosModel::Column::HasResultScript, metrics.boundingRect("Y").width() * 1.5F + 4);
+      });
 
       auto* sel_model = view->selectionModel();
       QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &QuestDialogueTabBody::_info_selection_changed);
       
-      QObject::connect(this->ui.buttonInfoNew, &QPushButton::clicked, this, &QuestDialogueTabBody::_info_button_new);
-      QObject::connect(this->ui.buttonInfoEdit, &QPushButton::clicked, this, &QuestDialogueTabBody::_info_button_edit);
-      QObject::connect(this->ui.buttonInfoMoveUp, &QPushButton::clicked, this, &QuestDialogueTabBody::_info_button_move_up);
+      QObject::connect(this->ui.buttonInfoNew,      &QPushButton::clicked, this, &QuestDialogueTabBody::_info_button_new);
+      QObject::connect(this->ui.buttonInfoEdit,     &QPushButton::clicked, this, &QuestDialogueTabBody::_info_button_edit);
+      QObject::connect(this->ui.buttonInfoMoveUp,   &QPushButton::clicked, this, &QuestDialogueTabBody::_info_button_move_up);
       QObject::connect(this->ui.buttonInfoMoveDown, &QPushButton::clicked, this, &QuestDialogueTabBody::_info_button_move_down);
-      QObject::connect(this->ui.buttonInfoDelete, &QPushButton::clicked, this, &QuestDialogueTabBody::_info_button_delete);
+      QObject::connect(this->ui.buttonInfoDelete,   &QPushButton::clicked, this, &QuestDialogueTabBody::_info_button_delete);
    }
 
    // Do this last, as signals triggered will try to access the other models.
@@ -227,10 +253,21 @@ void QuestDialogueTabBody::setCategory(dovah::dialogue::category c) {
    if (c == dovah::dialogue::category::topic) {
       this->_models.branches->setDatastore(this->datastore());
       this->ui.branches->setEnabled(true);
+      this->ui.buttonBranchNew->setEnabled(true);
+      this->ui.buttonBranchEdit->setEnabled(false);
+      this->ui.buttonBranchDelete->setEnabled(false);
+
       this->ui.topics->setModel(this->_models.topics.branched);
+
+      this->_reset_selection_of(this->ui.branches);
+      this->_branch_selection_changed(); // just in case; see other situation where sel-changed funcs needed to be called manually
    } else {
       this->_models.branches->setDatastore(nullptr);
       this->ui.branches->setEnabled(false);
+      this->ui.buttonBranchNew->setEnabled(false);
+      this->ui.buttonBranchEdit->setEnabled(false);
+      this->ui.buttonBranchDelete->setEnabled(false);
+
       this->ui.topics->setModel(this->_models.topics.branchless);
       this->_models.topics.branchless->setCategory(c);
    }
@@ -251,6 +288,10 @@ void QuestDialogueTabBody::_set_up_topic_selection_model() {
    this->_topic_selection_changed();
 }
 
+void QuestDialogueTabBody::_reset_selection_of(QTableView* view) {
+   view->selectionModel()->clear();
+}
+
 void QuestDialogueTabBody::_branch_selection_changed() {
    dovah::form_stub* stub = this->selected_branch();
 
@@ -260,6 +301,8 @@ void QuestDialogueTabBody::_branch_selection_changed() {
    this->ui.buttonTopicNew->setEnabled(stub_is_valid);
 
    this->_models.topics.branched->setRootBranch(stub);
+   _reset_selection_of(this->ui.topics);
+   _topic_selection_changed(); // I guess if the underlying model gets reset it doesn't trigger a selection change?! so we gotta fire it manually. Ugh...
 }
 void QuestDialogueTabBody::_topic_selection_changed() {
    dovah::form_stub* stub = this->selected_topic();
@@ -270,6 +313,8 @@ void QuestDialogueTabBody::_topic_selection_changed() {
    this->ui.buttonInfoNew->setEnabled(stub_is_valid);
 
    this->_models.infos->setRootTopic(stub);
+   _reset_selection_of(this->ui.infos);
+   _info_selection_changed(); // I guess if the underlying model gets reset it doesn't trigger a selection change?! so we gotta fire it manually. Ugh...
 }
 void QuestDialogueTabBody::_info_selection_changed() {
    dovah::form_stub* stub = this->selected_info();

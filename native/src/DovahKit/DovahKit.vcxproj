@@ -614,6 +614,7 @@
     <ClCompile Include="helpers\math\matrix.cpp" />
     <ClCompile Include="helpers\math\permutation_parity.tests.cpp" />
     <ClCompile Include="helpers\math\to_ratio.tests.cpp" />
+    <ClCompile Include="helpers\qt\strings\to_no_op_html.cpp" />
     <ClCompile Include="helpers\string\backslash_escape.tests.cpp" />
     <ClCompile Include="helpers\utf8\append.tests.cpp" />
     <ClCompile Include="helpers\utf8\for_each.cpp" />
@@ -1270,6 +1271,7 @@
     <ClInclude Include="editor\subsystems\message_log\model.h" />
     <ClInclude Include="helpers\arrays\filled.h" />
     <ClInclude Include="helpers\hashing\crc32.h" />
+    <ClInclude Include="helpers\qt\strings\to_no_op_html.h" />
     <ClInclude Include="helpers\vectors\move_item_within.h" />
     <ClInclude Include="helpers\vectors\move_range_within.h" />
     <ClInclude Include="nif\blocks\BSValueNode.h" />
@@ -1372,6 +1374,7 @@
     <QtMoc Include="widgets\DKAttackDataWidget.h" />
     <QtMoc Include="widgets\DKFloatSlider.h" />
     <ClInclude Include="ui\utils\set_tableview_column_flex.h" />
+    <ClInclude Include="ui\utils\set_tableview_column_widths.h" />
     <ClInclude Include="ui\utils\typical_tableview_config.h" />
     <QtMoc Include="widgets\DKTabBar.h" />
     <QtMoc Include="widgets\DKTabWidget.h" />

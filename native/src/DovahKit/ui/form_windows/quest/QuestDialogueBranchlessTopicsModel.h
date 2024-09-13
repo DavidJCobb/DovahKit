@@ -57,6 +57,8 @@ class QuestDialogueBranchlessTopicsModel : public QAbstractItemModel {
       void setCategory(dovah::dialogue::category);
       void setDatastore(datastore_type*);
 
+      const node_type* node(size_t row) const;
+
    protected:
       void _fill();
       void _on_node_edited(const node_type&);

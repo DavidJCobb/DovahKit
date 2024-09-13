@@ -63,10 +63,10 @@ namespace cobb::vectors {
          if constexpr (Clamp) {
             if (i == 0)
                return false;
-            if (i <= -by)
+            if (i < -by)
                by = -(int)i;
          } else {
-            if (i <= -by)
+            if (i < -by)
                return false;
          }
          if (by == -1) {

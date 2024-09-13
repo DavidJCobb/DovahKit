@@ -54,6 +54,8 @@ class QuestDialogueBranchedTopicsModel : public QAbstractItemModel {
       void setDatastore(datastore_type*);
       void setRootBranch(dovah::form_stub*);
 
+      const node_type* node(size_t row) const;
+
    protected:
       void _fill();
       void _on_node_edited(const node_type&);

@@ -74,25 +74,25 @@ QuestDialogueBranchlessTopicsModel::QuestDialogueBranchlessTopicsModel(QObject* 
          return flags;
       }
    #pragma endregion
-      /*virtual*/ QVariant QuestDialogueBranchlessTopicsModel::headerData(int section, Qt::Orientation orientation, int role) const /*override*/ {
-         if (orientation != Qt::Orientation::Horizontal)
-            return {};
-         if (role != Qt::DisplayRole && role != Qt::ToolTipRole)
-            return {};
-         switch (section) {
-            case Column::EditorID:
-               return tr("Editor ID");
-            case Column::FormID:
-               return tr("Form ID");
-            case Column::Subtype:
-               return tr("Subtype");
-            case Column::Priority:
-               return tr("Priority");
-            case Column::DisplayText:
-               return tr("Display Text");
-         }
+   /*virtual*/ QVariant QuestDialogueBranchlessTopicsModel::headerData(int section, Qt::Orientation orientation, int role) const /*override*/ {
+      if (orientation != Qt::Orientation::Horizontal)
          return {};
+      if (role != Qt::DisplayRole && role != Qt::ToolTipRole)
+         return {};
+      switch (section) {
+         case Column::EditorID:
+            return tr("Editor ID");
+         case Column::FormID:
+            return tr("Form ID");
+         case Column::Subtype:
+            return tr("Subtype");
+         case Column::Priority:
+            return tr("Priority");
+         case Column::DisplayText:
+            return tr("Display Text");
       }
+      return {};
+   }
 #pragma endregion
       
 void QuestDialogueBranchlessTopicsModel::setCategory(dovah::dialogue::category c) {
@@ -154,6 +154,12 @@ void QuestDialogueBranchlessTopicsModel::setDatastore(datastore_type* ds) {
       });
    }
    this->_fill();
+}
+
+const QuestDialogueBranchlessTopicsModel::node_type* QuestDialogueBranchlessTopicsModel::node(size_t row) const {
+   if (row >= this->_data.size())
+      return nullptr;
+   return this->_data[row];
 }
 
 void QuestDialogueBranchlessTopicsModel::_fill() {

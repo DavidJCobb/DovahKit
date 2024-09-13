@@ -181,6 +181,12 @@ void QuestDialogueBranchedTopicsModel::setRootBranch(dovah::form_stub* stub) {
    this->endResetModel();
 }
 
+const QuestDialogueBranchedTopicsModel::node_type* QuestDialogueBranchedTopicsModel::node(size_t row) const {
+   if (row >= this->_data.size())
+      return nullptr;
+   return this->_data[row];
+}
+
 void QuestDialogueBranchedTopicsModel::_fill() {
    this->beginResetModel();
    this->_data.clear();

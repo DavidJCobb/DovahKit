@@ -1,5 +1,6 @@
 #include "./QuestAllDialogueDatastore.h"
 #include <cassert>
+#include "helpers/qt/strings/to_no_op_html.h"
 #include "helpers/vectors/move_item_within.h"
 #include "helpers/vectors/move_range_within.h"
 #include "dovah/data/conditions/all_function_info.h"
@@ -22,6 +23,268 @@
 #include "editor/core.h"
 
 #pragma region Info
+   void QuestAllDialogueDatastore::Info::recache_conditions_from_stub(dovah::form_stub& owning_quest) {
+      using condition         = dovah::loaded_forms::components::condition;
+      using condition_context = dovah::loaded_forms::components::conditions::context;
+      using condition_list    = dovah::loaded_forms::components::condition_list;
+      using loaded_form_type  = dovah::loaded_forms::TopicInfo;
+      //
+      constexpr const auto or_flag = dovah::loaded_forms::components::condition::flag::or_linked;
+      //
+      constexpr auto _condition_qualifier = [](const condition::comparison_data& cmp) constexpr -> int {
+         if (!std::holds_alternative<float>(cmp.operand))
+            //
+            // Skip comparisons to globals.
+            //
+            return -1;
+         float operand = std::get<float>(cmp.operand);
+         switch (cmp.op) {
+            using enum dovah::loaded_forms::components::comparison_operator;
+            case equal:
+               return operand != 1;
+            case not_equal:
+               return operand == 1;
+            case less:
+               return operand <= 1;
+            case less_or_equal:
+               return operand < 1;
+            case greater:
+               return operand >= 1;
+            case greater_or_equal:
+               return operand > 1;
+         }
+      };
+      constexpr auto _extract_form_param = [](const dovah::loaded_forms::components::conditions::working_parameter& variant) constexpr -> dovah::form_stub* {
+         if (!std::holds_alternative<dovah::form_stub*>(variant))
+            return nullptr;
+         return std::get<dovah::form_stub*>(variant);
+      };
+
+      this->cached.speaker.clear();
+      this->cached.target.clear();
+      this->cached.faction.clear();
+      this->cached.voicetype.clear();
+
+      if (!this->stub)
+         return;
+      dovah::loaded_form_ptr<loaded_form_type> loaded = stub->load().ptr_cast<loaded_form_type>();
+      if (!loaded)
+         return;
+
+      struct logical_summary {
+         QString& dst;
+         bool     prev_was_or  = false;
+         bool     inside_or    = false;
+         bool     or_confirmed = false; // at least 2 items in the or-grouping
+
+         void append_prev_sign() {
+            if (this->dst.isEmpty())
+               return;
+            if (this->prev_was_or) {
+               this->dst += " OR ";
+               if (this->inside_or)
+                  this->or_confirmed = true;
+            } else {
+               this->dst += " AND ";
+            }
+         }
+         void enter_or() {
+            if (this->inside_or)
+               return;
+            this->dst += "(";
+            this->inside_or = true;
+         }
+         void close_or() {
+            if (this->inside_or) {
+               this->dst += ")";
+               this->inside_or = false;
+            }
+            this->prev_was_or = false;
+         }
+
+         void finalize() {
+            if (this->inside_or) {
+               if (this->or_confirmed) {
+                  this->close_or();
+               } else {
+                  auto i = this->dst.lastIndexOf('(');
+                  if (i >= 0)
+                     this->dst.remove(i, 1);
+               }
+            }
+         }
+      };
+
+      struct {
+         logical_summary speaker;
+         logical_summary target;
+         logical_summary faction;
+         logical_summary voicetype;
+      } states = {
+         { this->cached.speaker },
+         { this->cached.target },
+         { this->cached.faction },
+         { this->cached.voicetype },
+      };
+
+      auto& list_1 = loaded->conditions.locked;
+      auto& list_2 = loaded->conditions.normal;
+
+      dovah::loaded_forms::components::conditions::context context;
+      context.quest = &owning_quest;
+
+      auto _process_list = [this, &context, &states](const condition_list& list, bool never_the_end) {
+         constexpr const auto id_GetIsID        = dovah::conditions::function_id_by_name("GetIsID");
+         constexpr const auto id_GetInFaction   = dovah::conditions::function_id_by_name("GetInFaction");
+         constexpr const auto id_GetIsVoiceType = dovah::conditions::function_id_by_name("GetIsVoiceType");
+
+         size_t size = list.size();
+         if (!size)
+            return;
+
+         auto& dst_cnd = this->cached.conditions;
+
+         for (size_t i = 0; i < size; ++i) {
+            bool is_the_end = !never_the_end && i == size - 1;
+
+            const auto& src = list[i];
+
+            {
+               QString append = editor_helpers::stringify_condition(src, context);
+               if (!is_the_end) {
+                  append += ' ';
+                  append += editor_helpers::stringify_condition_boolean_operator(src);
+                  append += ' ';
+               }
+               this->cached.conditions += append;
+               if (!is_the_end)
+                  append.back() = '\n';
+               this->cached.conditions_tooltip += append;
+            }
+
+            const dovah::form_stub* param = nullptr;
+            logical_summary*        logic = nullptr;
+            //
+            auto& run_on     = src.get_run_on_data();
+            bool  is_or      = src.get_flags() & or_flag;
+            bool  is_negated = false;
+            switch (src.get_function_id()) {
+               case id_GetIsID:
+                  if (run_on.type == dovah::conditions::run_on_type::subject || run_on.type == dovah::conditions::run_on_type::target) {
+                     bool is_subject = run_on.type == dovah::conditions::run_on_type::subject;
+
+                     param = _extract_form_param(src.get_parameter(0));
+                     if (!param || param->form_type != dovah::form_type::actor_base)
+                        break;
+                     logic = &(is_subject ? states.speaker : states.target);
+                  }
+                  break;
+               case id_GetInFaction:
+                  if (run_on.type == dovah::conditions::run_on_type::subject) {
+                     param = _extract_form_param(src.get_parameter(0));
+                     if (!param || param->form_type != dovah::form_type::faction)
+                        break;
+                     logic = &states.faction;
+                  }
+                  break;
+               case id_GetIsVoiceType:
+                  if (run_on.type == dovah::conditions::run_on_type::subject) {
+                     param = _extract_form_param(src.get_parameter(0));
+                     if (!param)
+                        break;
+                     if (param->form_type != dovah::form_type::voicetype && param->form_type != dovah::form_type::formlist)
+                        break;
+                     logic = &states.voicetype;
+                  }
+                  break;
+               default:
+                  break;
+            }
+            QString param_str;
+            if (logic && param) {
+               switch (_condition_qualifier(src.get_comparison())) {
+                  case -1:
+                     param_str = "MAYBE ";
+                     break;
+                  case 0:
+                     break;
+                  case 1:
+                     param_str = "NOT ";
+                     break;
+               }
+               param_str += QString::fromStdString(param->editorID);
+            }
+            if (logic) {
+               logic->append_prev_sign();
+            }
+            if (is_the_end || !is_or) {
+               if (logic) {
+                  logic->dst += param_str;
+               }
+               states.speaker.close_or();
+               states.target.close_or();
+               states.faction.close_or();
+               states.voicetype.close_or();
+            } else {
+               if (logic) {
+                  logic->enter_or();
+                  logic->dst += param_str;
+               }
+            }
+            if (logic)
+               logic->prev_was_or = is_or;
+         }
+      };
+
+      _process_list(list_1, !list_2.empty());
+      _process_list(list_2, false);
+      states.speaker.finalize();
+      states.target.finalize();
+      states.faction.finalize();
+      states.voicetype.finalize();
+
+   }
+   void QuestAllDialogueDatastore::Info::recache_responses_from_stub() {
+      using loaded_form_type = dovah::loaded_forms::TopicInfo;
+
+      auto& display = this->cached.responses;
+      auto& tooltip = this->cached.responses_tooltip;
+
+      this->cached.response_count = 0;
+      display.clear();
+      tooltip.clear();
+
+      dovah::form_stub* stub = this->stub;
+      if (!stub)
+         return;
+      dovah::loaded_form_ptr<loaded_form_type> loaded;
+      {
+         loaded = stub->load().ptr_cast<loaded_form_type>();
+         if (!loaded)
+            return;
+         if (loaded->use_shared_info) {
+            stub   = loaded->use_shared_info.get_form_stub();
+            loaded = stub->load().ptr_cast<loaded_form_type>();
+            if (!loaded)
+               return;
+         }
+      }
+
+      this->cached.response_count = loaded->responses.size();
+
+      const QString delim = tr(" | ", "response delimiter (in table cell)");
+
+      auto& editor = DovahKitCore::get();
+      for (size_t i = 0; i < loaded->responses.size(); ++i) {
+         auto str = editor.convert_localized_string(loaded->responses[i].text);
+         if (i > 0) {
+            display += delim;
+            tooltip += "<hr>";
+         }
+         display += str;
+         tooltip += cobb::qt::strings::to_no_op_html(str, "span"); // So tool-tips for this value can word-wrap.
+      }
+   }
    void QuestAllDialogueDatastore::Info::recache_from_stub(dovah::form_stub& owning_quest) {
       using loaded_form_type = dovah::loaded_forms::TopicInfo;
 
@@ -37,20 +300,7 @@
       }
 
       this->cached.editor_id = QString::fromStdString(this->stub->editorID);
-      this->cached.response_count = loaded->responses.size();
-      {
-         const QString delim = tr(" | ");
-
-         auto& editor = DovahKitCore::get();
-         auto& dst    = this->cached.responses;
-         for (size_t i = 0; i < loaded->responses.size(); ++i) {
-            auto str = editor.convert_localized_string(loaded->responses[i].text);
-            if (i > 0) {
-               dst += delim;
-            }
-            dst += str;
-         }
-      }
+      this->recache_responses_from_stub();
       this->cached.flags = loaded->info_flags;
       this->cached.uses_shared_info    = loaded->use_shared_info != nullptr;
       this->cached.links_to_any_topics = !loaded->link_to.normal.empty() || !loaded->link_to.locked.empty();
@@ -70,190 +320,7 @@
                this->cached.has_end_fragment = true;
          }
       }
-      {
-         constexpr const auto or_flag = dovah::loaded_forms::components::condition::flag::or_linked;
-
-         dovah::loaded_forms::components::conditions::context context;
-         context.quest = &owning_quest;
-
-         size_t end = loaded->conditions.locked.size() + loaded->conditions.normal.size();
-         auto&  dst = this->cached.conditions;
-
-         auto _stringify_list = [&context, &dst, end](const dovah::loaded_forms::components::condition_list& list, size_t offset = 0) {
-            size_t size = list.size();
-            if (!size)
-               return;
-            for (size_t i = 0; i < size - 1; ++i) {
-               const auto& src = list[i];
-               dst += editor_helpers::stringify_condition(src, context);
-               dst += ' ';
-               dst += editor_helpers::stringify_condition_boolean_operator(src);
-               dst += ' ';
-            }
-            if (size) {
-               const auto& src = list[size - 1];
-               dst += editor_helpers::stringify_condition(src, context);
-               if (size < end) {
-                  dst += ' ';
-                  dst += editor_helpers::stringify_condition_boolean_operator(src);
-                  dst += ' ';
-               }
-            }
-         };
-         _stringify_list(loaded->conditions.locked);
-         _stringify_list(loaded->conditions.normal, loaded->conditions.locked.size());
-      }
-      {
-         constexpr const auto id_GetIsID        = dovah::conditions::function_id_by_name("GetIsID");
-         constexpr const auto id_GetInFaction   = dovah::conditions::function_id_by_name("GetInFaction");
-         constexpr const auto id_GetIsVoicetype = dovah::conditions::function_id_by_name("GetIsVoicetype");
-
-         struct logical_operator_state {
-            bool inside_or  = false;
-            bool last_is_or = false;
-         };
-
-         struct {
-            logical_operator_state speaker;
-            logical_operator_state target;
-            logical_operator_state faction;
-            logical_operator_state voicetype;
-         } states;
-
-         auto _process = [this, &states](const dovah::loaded_forms::components::condition_list& list) {
-            constexpr const auto or_flag = dovah::loaded_forms::components::condition::flag::or_linked;
-
-            auto _form_arg = [](const dovah::loaded_forms::components::conditions::working_parameter& variant) -> dovah::form_stub* {
-               if (!std::holds_alternative<dovah::form_stub*>(variant))
-                  return nullptr;
-               return std::get<dovah::form_stub*>(variant);
-            };
-
-            for (const auto& condition : list) {
-               const auto run_on = condition.get_run_on_data();
-               const auto func   = condition.get_function_id();
-
-               const dovah::form_stub* param = nullptr;
-               logical_operator_state* logic = nullptr;
-               QString* dst_p = nullptr;
-
-               bool this_is_or = condition.test_flags(or_flag);
-
-               bool this_is_negated = false;
-               {
-                  auto cmp = condition.get_comparison();
-                  if (std::holds_alternative<float>(cmp.operand)) {
-                     float operand = std::get<float>(cmp.operand);
-                     switch (cmp.op) {
-                        using enum dovah::loaded_forms::components::comparison_operator;
-                        case equal:
-                           this_is_negated = operand != 1;
-                           break;
-                        case not_equal:
-                           this_is_negated = operand == 1;
-                           break;
-                        case less:
-                           this_is_negated = operand <= 1;
-                           break;
-                        case less_or_equal:
-                           this_is_negated = operand < 1;
-                           break;
-                        case greater:
-                           this_is_negated = operand >= 1;
-                           break;
-                        case greater_or_equal:
-                           this_is_negated = operand > 1;
-                           break;
-                     }
-                  } else {
-                     //
-                     // Skip comparisons to globals.
-                     //
-                     continue;
-                  }
-               }
-
-               switch (func) {
-                  case id_GetIsID:
-                     if (run_on.type != dovah::conditions::run_on_type::subject && run_on.type != dovah::conditions::run_on_type::target) {
-                        break;
-                     }
-                     {
-                        param = _form_arg(condition.get_parameter(0));
-                        if (!param || param->form_type != dovah::form_type::actor_base)
-                           break;
-
-                        bool is_subject = run_on.type == dovah::conditions::run_on_type::subject;
-
-                        logic = &(is_subject ? states.speaker : states.target);
-                        dst_p = &(is_subject ? this->cached.speaker : this->cached.target);
-                     }
-                     break;
-                  case id_GetInFaction:
-                     if (run_on.type != dovah::conditions::run_on_type::subject)
-                        break;
-                     {
-                        param = _form_arg(condition.get_parameter(0));
-                        if (!param || param->form_type != dovah::form_type::faction)
-                           break;
-
-                        logic = &states.faction;
-                        dst_p = &this->cached.faction;
-                     }
-                     break;
-                  case id_GetIsVoicetype:
-                     if (run_on.type != dovah::conditions::run_on_type::subject)
-                        break;
-                     {
-                        param = _form_arg(condition.get_parameter(0));
-                        if (!param)
-                           break;
-                        if (param->form_type != dovah::form_type::voicetype && param->form_type != dovah::form_type::formlist)
-                           break;
-
-                        logic = &states.voicetype;
-                        dst_p = &this->cached.voicetype;
-                     }
-                     break;
-               }
-
-               if (dst_p) {
-                  assert(logic != nullptr);
-                  assert(param != nullptr);
-                  auto& dst = *dst_p;
-                  if (!dst.isEmpty()) {
-                     if (logic->last_is_or) {
-                        dst += " | ";
-                     } else {
-                        if (logic->inside_or) {
-                           dst += ")";
-                        }
-                        dst += " & ";
-                        logic->inside_or = this_is_or;
-                        if (this_is_or)
-                           dst += "(";
-                     }
-                  }
-                  if (this_is_negated) {
-                     dst += "NOT ";
-                  }
-                  dst += QString::fromStdString(param->editorID);
-               }
-            }
-         };
-
-         _process(loaded->conditions.locked);
-         _process(loaded->conditions.normal);
-
-         auto _finalize = [](const logical_operator_state& state, QString& dst) {
-            if (state.inside_or)
-               dst += ")";
-         };
-         _finalize(states.speaker,   this->cached.speaker);
-         _finalize(states.target,    this->cached.target);
-         _finalize(states.faction,   this->cached.faction);
-         _finalize(states.voicetype, this->cached.voicetype);
-      }
+      this->recache_conditions_from_stub(owning_quest); // TEST
    }
 #pragma endregion
 
@@ -526,6 +593,7 @@
          if (!done)
             return;
          _sync_info_order_to_form(*topic);
+         emit this->on_info_reordered(info);
       }
       void QuestAllDialogueDatastore::reorder_infos(const Topic& topic, size_t start, size_t count, int by) {
          if (!by || !count)
@@ -552,6 +620,10 @@
          }
          cobb::vectors::move_range(const_cast<Topic&>(topic).infos, start, count, start + by);
          _sync_info_order_to_form(topic);
+         for (size_t i = 0; i < count; ++i) {
+            auto* info = topic.infos[start + by + i];
+            emit this->on_info_reordered(*info);
+         }
       }
    #pragma endregion
 
