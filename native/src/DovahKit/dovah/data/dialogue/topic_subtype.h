@@ -9,18 +9,26 @@ namespace dovah::dialogue {
       uint32_t         signature = 0;
       category         category  = category::topic;
       std::string_view internal_name;
+      bool             is_reusable = false; // Can multiple topics of this subtype exist in the same branch / top-level in the same quest?
 
+      // Every subtype has a corresponding game setting. It's unclear what this is used for; 
+      // possibly default topic text, if the topic itself has none?
       constexpr std::string game_setting_for_name() const;
    };
 
    constexpr const topic_subtype* topic_subtype_by_signature(uint32_t signature);
    constexpr size_t topic_subtype_signature_to_index(uint32_t);
 
-   constexpr const std::array<topic_subtype, 0x67> all_topic_subtypes = {
+   constexpr size_t topic_subtype_index(const topic_subtype&);
+
+   constexpr const topic_subtype* default_subtype_for_category(category);
+
+   inline constexpr const std::array<topic_subtype, 0x67> all_topic_subtypes = {
       topic_subtype{
          .signature     = 'CUST',
          .category      = category::topic,
          .internal_name = "Custom",
+         .is_reusable   = true,
       },
       topic_subtype{
          .signature     = 'PFGT',
@@ -36,6 +44,7 @@ namespace dovah::dialogue {
          .signature     = 'FVDL',
          .category      = category::favor_dialogue,
          .internal_name = "Custom",
+         .is_reusable   = true,
       },
       topic_subtype{
          .signature     = 'INTI',
@@ -91,6 +100,7 @@ namespace dovah::dialogue {
          .signature     = 'SCEN',
          .category      = category::scene,
          .internal_name = "Custom",
+         .is_reusable   = true,
       },
       topic_subtype{
          .signature     = 'SHOW',

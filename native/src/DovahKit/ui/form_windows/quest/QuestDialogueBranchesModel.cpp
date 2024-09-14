@@ -1,4 +1,5 @@
 #include "./QuestDialogueBranchesModel.h"
+#include "helpers/vectors/move_item_within.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/form_stub_meta_type.h"
 
@@ -154,6 +155,13 @@ void QuestDialogueBranchesModel::_fill() {
       auto& src = this->_datastore->all_branches();
       for (auto* item : src)
          this->_data.push_back(item);
+      std::sort(
+         this->_data.begin(),
+         this->_data.end(),
+         [](const node_type* a, const node_type* b) -> bool {
+            return a->cached.editor_id.localeAwareCompare(b->cached.editor_id) < 0;
+         }
+      );
    }
    this->endResetModel();
 }
@@ -196,18 +204,10 @@ void QuestDialogueBranchesModel::_re_sort_node(const node_type& item) {
       from, // first to move
       from, // last  to move
       {},
-      to
+      moving_upward_in_list ? to : to + 1 // Qt API design jank
    );
-   if (!moving_upward_in_list) {
-      //
-      // We move `entry` by first removing it from the list, and then inserting it into the 
-      // list at the desired index. If we're moving `entry` downward within the list, then 
-      // its removal will displace the intended destination by -1.
-      //
-      --to;
-   }
-   list.erase(entry_it);
-   list.insert(list.begin() + to, &item);
+   bool moved = cobb::vectors::move_item_within<false>(list, from, (int)to - (int)from);
+   assert(moved);
    this->endMoveRows();
 }
 decltype(QuestDialogueBranchesModel::_data)::iterator QuestDialogueBranchesModel::_insertion_point_for(const node_type& item) {
@@ -227,7 +227,7 @@ decltype(QuestDialogueBranchesModel::_data)::iterator QuestDialogueBranchesModel
             return true;
          if (!b->stub && a->stub)
             return false;
-         return a->cached.editor_id.compare(b->cached.editor_id, Qt::CaseInsensitive) < 0;
+         return a->cached.editor_id.localeAwareCompare(b->cached.editor_id) < 0;
       }
    );
 }

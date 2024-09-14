@@ -3,7 +3,6 @@
 #include <QPointer>
 #include "./QuestAllDialogueDatastore.h"
 #include "dovah/data/dialogue/category.h"
-#include "dovah/data/dialogue/topic_subtype.h"
 
 class QuestDialogueBranchlessTopicsModel : public QAbstractItemModel {
    Q_OBJECT;
@@ -31,8 +30,6 @@ class QuestDialogueBranchlessTopicsModel : public QAbstractItemModel {
       dovah::dialogue::category     _category = dovah::dialogue::category::topic;
       QPointer<datastore_type>      _datastore;
       std::vector<const node_type*> _data;
-
-      std::array<QString, dovah::dialogue::all_topic_subtypes.size()> _subtype_names;
 
    public:
       QuestDialogueBranchlessTopicsModel(QObject* parent = nullptr);

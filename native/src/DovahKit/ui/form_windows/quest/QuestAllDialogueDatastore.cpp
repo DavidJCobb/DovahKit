@@ -850,37 +850,66 @@
                if (branch_prior && branch_after)
                   break;
             }
+            if (!branch_after) {
+               //
+               // It may be a branchless topic. Check.
+               //
+               for (auto* topic : this->_data.branchless_topics) {
+                  if (topic->stub == &stub) {
+                     topic_item = topic;
+                     break;
+                  }
+               }
+            }
          }
          if (branch_prior != branch_after) {
             //
             // Topic moved across branches.
             //
-            if (!topic_item) {
-               //
-               // Topic moved to a different quest?!
-               //
-               if (!branch_prior)
+            if (branch_prior) {
+               if (!branch_after) {
+                  //
+                  // Topic moved to a different quest?!
+                  //
+                  this->_remove_topic_from_datastore(*branch_prior, index_prior);
                   return;
-               this->_remove_topic_from_datastore(*branch_prior, index_prior);
-               return;
-            }
-            //
-            // Remove from branch_prior:
-            //
-            {
-               auto& list = branch_prior->topics;
-               list.erase(list.begin() + index_prior);
-               emit this->on_topic_removed(*topic_item);
-            }
-            //
-            // Add to branch_after:
-            //
-            {
-               topic_item->parent = branch_after;
-               topic_item->recache_from_stub();
-               branch_after->topics.push_back(topic_item);
+               }
+               //
+               // Remove from branch_prior:
+               //
+               {
+                  auto& list = branch_prior->topics;
+                  list.erase(list.begin() + index_prior);
+                  emit this->on_topic_removed(*topic_item);
+               }
+               //
+               // Add to branch_after:
+               //
+               {
+                  topic_item->parent = branch_after;
+                  topic_item->recache_from_stub();
+                  branch_after->topics.push_back(topic_item);
+                  emit this->on_topic_added(*topic_item);
+               }
+            } else if (branch_after) {
+               //
+               // Topic moved in from a different quest?!
+               //
+               this->_add_topic_to_datastore(*branch_after, stub);
+               topic_item = branch_after->topics.back();
+               assert(topic_item && topic_item->stub == &stub);
                emit this->on_topic_added(*topic_item);
             }
+            return;
+         }
+         if (!branch_after && !topic_item) {
+            //
+            // Branchless topic moved in from a different quest?!
+            //
+            this->_add_branchless_topic_to_datastore(stub);
+            topic_item = this->_data.branchless_topics.back();
+            assert(topic_item && topic_item->stub == &stub);
+            emit this->on_topic_added(*topic_item);
             return;
          }
          //

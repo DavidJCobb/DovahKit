@@ -806,6 +806,7 @@
     <ClCompile Include="ui\form_windows\static.cpp" />
     <ClCompile Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.cpp" />
     <ClCompile Include="ui\form_windows\textureset.cpp" />
+    <ClCompile Include="ui\form_windows\topic.cpp" />
     <ClCompile Include="ui\form_windows\visual_effect.cpp" />
     <ClCompile Include="ui\form_windows\voicetype.cpp" />
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
@@ -1344,6 +1345,7 @@
     <ClInclude Include="ui\form_windows\shared\HeadPartPickerFilter.h" />
     <QtMoc Include="ui\form_windows\soul_gem.h" />
     <QtMoc Include="ui\form_windows\visual_effect.h" />
+    <QtMoc Include="ui\form_windows\topic.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_float_slider.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h" />

@@ -1,17 +1,10 @@
 #include "./QuestDialogueBranchlessTopicsModel.h"
+#include "helpers/vectors/move_item_within.h"
+#include "dovah/data/dialogue/topic_subtype.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/form_stub_meta_type.h"
-#include "editor/subsystems/game_settings/core.h"
-#include "editor/core.h"
 
 QuestDialogueBranchlessTopicsModel::QuestDialogueBranchlessTopicsModel(QObject* parent) : QAbstractItemModel(parent) {
-   auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, &QuestDialogueBranchlessTopicsModel::_update_all_topic_subtype_names);
-   if (editor.has_data())
-      this->_update_all_topic_subtype_names();
-
-   auto& gss = dovahkit::subsystems::game_settings::core::get();
-   QObject::connect(&gss, &std::decay_t<decltype(gss)>::settingValueChanged, this, &QuestDialogueBranchlessTopicsModel::_update_topic_subtype_name);
 }
    
 #pragma region QAbstractItemModel overrides
@@ -180,6 +173,13 @@ void QuestDialogueBranchlessTopicsModel::_fill() {
             continue;
          this->_data.push_back(item);
       }
+      std::sort(
+         this->_data.begin(),
+         this->_data.end(),
+         [](const node_type* a, const node_type* b) -> bool {
+            return a->cached.editor_id.localeAwareCompare(b->cached.editor_id) < 0;
+         }
+      );
    }
    this->endResetModel();
 }
@@ -224,18 +224,10 @@ void QuestDialogueBranchlessTopicsModel::_re_sort_node(const node_type& item) {
       from, // first to move
       from, // last  to move
       {},
-      to
+      moving_upward_in_list ? to : to + 1 // Qt API design jank
    );
-   if (!moving_upward_in_list) {
-      //
-      // We move `entry` by first removing it from the list, and then inserting it into the 
-      // list at the desired index. If we're moving `entry` downward within the list, then 
-      // its removal will displace the intended destination by -1.
-      //
-      --to;
-   }
-   list.erase(entry_it);
-   list.insert(list.begin() + to, &item);
+   bool moved = cobb::vectors::move_item_within<false>(list, from, (int)to - (int)from);
+   assert(moved);
    this->endMoveRows();
 }
 decltype(QuestDialogueBranchlessTopicsModel::_data)::iterator QuestDialogueBranchlessTopicsModel::_insertion_point_for(const node_type& item) {
@@ -255,87 +247,14 @@ decltype(QuestDialogueBranchlessTopicsModel::_data)::iterator QuestDialogueBranc
             return true;
          if (!b->stub && a->stub)
             return false;
-         return a->cached.editor_id.compare(b->cached.editor_id, Qt::CaseInsensitive) < 0;
+         return a->cached.editor_id.localeAwareCompare(b->cached.editor_id) < 0;
       }
    );
 }
 
 QString QuestDialogueBranchlessTopicsModel::_subtype_name(uint32_t subtype_signature) const {
-   auto& list = dovah::dialogue::all_topic_subtypes;
-   for (size_t i = 0; i < list.size(); ++i) {
-      if (list[i].signature == subtype_signature) {
-         return this->_subtype_names[i];
-      }
-   }
+   auto* info = dovah::dialogue::topic_subtype_by_signature(subtype_signature);
+   if (info)
+      return QString::fromLatin1(info->internal_name.data(), info->internal_name.size());
    return "";
-}
-
-void QuestDialogueBranchlessTopicsModel::_update_topic_subtype_name(const char* game_setting_name) {
-   constexpr const std::string_view gmst_prefix = "sTopicSubtypeText";
-
-   std::string_view gs_name = game_setting_name;
-   std::string_view gs_subtype;
-   {
-      if (!gs_name.starts_with(gmst_prefix))
-         return;
-
-      auto c_name      = dovah::dialogue::internal_name_for_category(this->_category);
-      auto gs_category = gs_name.substr(gmst_prefix.size());
-      if (!gs_category.starts_with(c_name))
-         return;
-      gs_subtype = gs_category.substr(gs_category.size());
-   }
-
-   auto& gss     = dovahkit::subsystems::game_settings::core::get();
-   auto  variant = gss.get_setting_value(game_setting_name);
-   
-   QString value;
-   if (std::holds_alternative<dovah::localized_string>(variant)) {
-      value = DovahKitCore::get().convert_localized_string(std::get<dovah::localized_string>(variant));
-   }
-   if (value.isEmpty()) {
-      variant = gss.get_setting_default_value(game_setting_name);
-      if (std::holds_alternative<dovah::localized_string>(variant)) {
-         value = DovahKitCore::get().convert_localized_string(std::get<dovah::localized_string>(variant));
-      }
-   }
-
-   auto&  list = dovah::dialogue::all_topic_subtypes;
-   size_t size = list.size();
-   for (size_t i = 0; i < size; ++i) {
-      auto& dfn = list[i];
-      if (dfn.category != this->_category)
-         continue;
-      if (gs_subtype != dfn.internal_name)
-         continue;
-
-      if (value.isEmpty())
-         value = QString::fromStdString(std::string(dfn.internal_name));
-      this->_subtype_names[i] = value;
-      break;
-   }
-}
-void QuestDialogueBranchlessTopicsModel::_update_all_topic_subtype_names() {
-   auto& gss = dovahkit::subsystems::game_settings::core::get();
-   auto& src = dovah::dialogue::all_topic_subtypes;
-   auto& dst = this->_subtype_names;
-   for (size_t i = 0; i < dst.size(); ++i) {
-      auto gs_name = src[i].game_setting_for_name();
-      auto variant = gss.get_setting_value(gs_name.c_str());
-      
-      QString value;
-      if (std::holds_alternative<dovah::localized_string>(variant)) {
-         value = DovahKitCore::get().convert_localized_string(std::get<dovah::localized_string>(variant));
-      }
-      if (value.isEmpty()) {
-         variant = gss.get_setting_default_value(gs_name.c_str());
-         if (std::holds_alternative<dovah::localized_string>(variant)) {
-            value = DovahKitCore::get().convert_localized_string(std::get<dovah::localized_string>(variant));
-         }
-         if (value.isEmpty()) {
-            value = QString::fromStdString(std::string(src[i].internal_name));
-         }
-      }
-      dst[i] = value;
-   }
 }

@@ -2709,6 +2709,9 @@
     <ClCompile Include="ui\form_windows\dialogue_branch\DialogueBranchStartingTopicFormFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\topic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -7732,6 +7735,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\dialogue_branch.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\topic.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

@@ -9,7 +9,7 @@ namespace dovah::papyrus {
       std::string_view name;
    };
 
-   constexpr const std::array<native_class, 71> native_classes = {{
+   inline constexpr const std::array<native_class, 71> native_classes = {{
       { dovah::form_type::alias,                "Alias" },
       { dovah::form_type::reference_alias,      "ReferenceAlias" },
       { dovah::form_type::location_alias,       "LocationAlias" },

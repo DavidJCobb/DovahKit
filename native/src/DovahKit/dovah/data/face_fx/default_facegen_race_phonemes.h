@@ -54,7 +54,7 @@ namespace dovah::face_fx {
 #include "./default_facegen_race_phonemes.inl"
 
 namespace dovah::face_fx {
-   constexpr const default_facegen_race_phonemes_type default_facegen_race_phonemes = []() -> default_facegen_race_phonemes_type {
+   inline constexpr const default_facegen_race_phonemes_type default_facegen_race_phonemes = []() -> default_facegen_race_phonemes_type {
       default_facegen_race_phonemes_type out;
 
       out.morph_names = {{

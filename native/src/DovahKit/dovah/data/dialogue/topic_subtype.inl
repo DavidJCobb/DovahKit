@@ -1,4 +1,5 @@
 #pragma once
+#include <iterator> // std::distance
 #include <string>
 #include "./topic_subtype.h"
 
@@ -21,5 +22,21 @@ namespace dovah::dialogue {
          if (all_topic_subtypes[i].signature == signature)
             return i;
       return (size_t)-1;
+   }
+
+   constexpr size_t topic_subtype_index(const topic_subtype& item) {
+      return std::distance(all_topic_subtypes.data(), &item);
+   }
+
+   constexpr const topic_subtype* default_subtype_for_category(category c) {
+      switch (c) {
+         case category::topic:
+            return topic_subtype_by_signature('CUST');
+         case category::scene:
+            return topic_subtype_by_signature('SCEN');
+         case category::favor_dialogue:
+            return topic_subtype_by_signature('FVDL');
+      }
+      return nullptr;
    }
 }
