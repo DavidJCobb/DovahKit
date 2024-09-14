@@ -58,6 +58,7 @@ class QuestDialogueBranchlessTopicsModel : public QAbstractItemModel {
       void setDatastore(datastore_type*);
 
       const node_type* node(size_t row) const;
+      size_t index_of(const dovah::form_stub&) const;
 
    protected:
       void _fill();

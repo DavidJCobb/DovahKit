@@ -232,13 +232,32 @@ void DeleteFormDialogListModel::insertDeletions(const dovah::form_deletion_reque
    this->commitQueuedAdditions();
 }
 void DeleteFormDialogListModel::insertUsers(const dovah::form_deletion_request& request) {
-   auto list = request.get_forms_pending_delete();
-   for (auto* stub : list) {
-      for (auto& pair : stub->inbound) {
-         auto& entry = pair.second;
-         if (this->contains(*entry.other))
+   const auto list = request.get_forms_pending_delete();
+
+   auto _will_be_deleted = [&list](const dovah::form_stub& stub) {
+      for (auto* s : list)
+         if (s == &stub)
+            return true;
+      return false;
+   };
+
+   for (const auto* stub : list) {
+      for (const auto& pair : stub->inbound) {
+         const auto& entry = pair.second;
+         const auto& stub  = *entry.other;
+         {  // Don't show child forms unless they have a use of the to-be-deleted form besides childhood
+            auto* parent = stub.get_parent_form();
+            if (parent) {
+               if (_will_be_deleted(*parent) && entry.refcount == 1) {
+                  continue;
+               }
+            }
+         }
+         if (_will_be_deleted(stub))
             continue;
-         this->insert(*entry.other, true);
+         if (this->contains(stub))
+            continue;
+         this->insert(stub, true);
       }
    }
    this->commitQueuedAdditions();

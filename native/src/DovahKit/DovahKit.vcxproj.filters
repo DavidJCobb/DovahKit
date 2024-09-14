@@ -2703,6 +2703,12 @@
     <ClCompile Include="helpers\qt\strings\to_no_op_html.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\dialogue_branch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\dialogue_branch\DialogueBranchStartingTopicFormFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6827,6 +6833,9 @@
     <ClInclude Include="ui\utils\set_tableview_column_widths.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\form_windows\dialogue_branch\DialogueBranchStartingTopicFormFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -7720,6 +7729,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\quest\QuestDialogueTabBody.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\dialogue_branch.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

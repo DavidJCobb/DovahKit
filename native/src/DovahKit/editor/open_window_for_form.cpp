@@ -1,7 +1,9 @@
 #include "open_window_for_form.h"
 #include <QMessageBox>
-#include "../dovah/form_stub.h"
-#include "core.h"
+#include "dovah/form_stub.h"
+#include "dovah/form_stubs/helpers/get_dialogue_branch_quest.h"
+#include "dovah/form_stubs/helpers/get_dialogue_topic_quest.h"
+#include "./core.h"
 #include "../ui/main_window/form_use_info.h"
 #include "../ui/form_windows/acoustic_space.h"
 #include "../ui/form_windows/activator.h"
@@ -13,6 +15,7 @@
 #include "../ui/form_windows/class.h"
 #include "../ui/form_windows/color.h"
 #include "../ui/form_windows/container.h"
+#include "../ui/form_windows/dialogue_branch.h"
 #include "../ui/form_windows/door.h"
 #include "../ui/form_windows/dual_cast_data.h"
 #include "../ui/form_windows/equip_slot.h"
@@ -63,6 +66,7 @@ namespace {
       std::pair{ dovah::form_type::combat_class,      _make<FormDialogClass> },
       std::pair{ dovah::form_type::color,             _make<FormDialogColor> },
       std::pair{ dovah::form_type::container,         _make<FormDialogContainer> },
+      std::pair{ dovah::form_type::dialogue_branch,   _make<FormDialogDialogueBranch> },
       std::pair{ dovah::form_type::door,              _make<FormDialogDoor> },
       std::pair{ dovah::form_type::dual_cast_data,    _make<FormDialogDualCastData> },
       std::pair{ dovah::form_type::equip_slot,        _make<FormDialogEquipSlot> },
@@ -167,31 +171,89 @@ void open_use_info_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
    dialog->show();
 }
 void open_edit_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
+   auto& editor = DovahKitCore::get();
+
+   auto _get_extant_dialog = [](dovah::form_stub& stub) -> QDialog* {
+      auto& editor = DovahKitCore::get();
+      auto  it     = editor.extant_form_edit_dialogs.find(stub.formID);
+      if (it != editor.extant_form_edit_dialogs.end()) {
+         return it->second;
+      }
+      return nullptr;
+   };
+
    //
    // First, let's check if there's already a window for this form. If so, we should just 
    // refocus that window instead of opening a new one.
    //
-   auto  formID = stub.formID;
-   auto& editor = DovahKitCore::get();
-   auto  it     = editor.extant_form_edit_dialogs.find(formID);
-   if (it != editor.extant_form_edit_dialogs.end()) {
-      auto dialog = it->second;
-      if (dialog) {
-         dialog->raise();
-         dialog->activateWindow();
-         return;
-      }
+   if (auto* dialog = _get_extant_dialog(stub)) {
+      dialog->raise();
+      dialog->activateWindow();
+      return;
    }
    //
    // If we made it to here, then there isn't already a window for this form, so let's 
    // open one.
    //
    if (parent == nullptr) {
-      //
-      // TODO: If this is a child form (e.g. DIAL, INFO), reuse or open windows for its 
-      // ancestor forms (e.g. QUST, DIAL) and use the appropriate one as the parent.
-      //
-      parent = &MainWindow::get();
+      switch (stub.form_type) {
+         //
+         // Dialogue-related forms should be accessed via the edit dialog for their 
+         // associated quest.
+         //
+         case dovah::form_type::dialogue_branch:
+         case dovah::form_type::topic:
+         case dovah::form_type::topic_info:
+            {
+               dovah::form_stub* quest_stub = nullptr;
+               switch (stub.form_type) {
+                  case dovah::form_type::dialogue_branch:
+                     quest_stub = dovah::form_stub_helpers::get_dialogue_branch_quest(&stub);
+                     break;
+                  case dovah::form_type::topic:
+                     quest_stub = dovah::form_stub_helpers::get_dialogue_topic_quest(&stub);
+                     break;
+                  case dovah::form_type::topic_info:
+                     quest_stub = dovah::form_stub_helpers::get_dialogue_topic_quest(stub.get_parent_form());
+                     break;
+               }
+               if (quest_stub) {
+                  open_edit_dialog_for_form(*quest_stub);
+                  auto* dialog = qobject_cast<FormDialogQuest*>(_get_extant_dialog(*quest_stub));
+                  if (dialog) {
+                     //
+                     // Check if there's a modal in the way. If so, abort.
+                     //
+                     if (auto* modal = QApplication::activeModalWidget()) {
+                        for (auto* parent = modal->parentWidget(); parent; parent = parent->parentWidget())
+                           if (parent == dialog)
+                              return;
+                     }
+                     //
+                     // We're good to go. Set the dialog we've found as the parent for 
+                     // the one we want to open, and focus the appropriate content in 
+                     // the found dialog's dialogue browser.
+                     //
+                     parent = dialog;
+                     switch (stub.form_type) {
+                        case dovah::form_type::dialogue_branch:
+                           dialog->focus_dialogue_branch(stub);
+                           break;
+                        case dovah::form_type::topic:
+                           dialog->focus_dialogue_topic(stub);
+                           break;
+                        case dovah::form_type::topic_info:
+                           dialog->focus_dialogue_info(stub);
+                           break;
+                     }
+                  }
+               }
+            }
+            break;
+      }
+      if (!parent) {
+         parent = &MainWindow::get();
+      }
    }
    QDialog* opened = nullptr;
    for (auto& pair : factory) {
@@ -202,7 +264,7 @@ void open_edit_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
    }
    if (opened) {
       editor.extant_form_edit_dialogs[stub.formID] = opened;
-      QObject::connect(opened, &QDialog::finished, &editor, [formID, opened]() {
+      QObject::connect(opened, &QDialog::finished, &editor, [formID = stub.formID, opened]() {
          auto& editor = DovahKitCore::get();
          auto& map    = editor.extant_form_edit_dialogs;
          auto  it     = map.find(formID);

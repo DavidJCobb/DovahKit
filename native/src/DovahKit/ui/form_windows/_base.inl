@@ -109,6 +109,8 @@ void CLASS_NAME::initialize(this auto&& self, dovah::form_stub& stub) {
    });
    if constexpr (uses_working_copy) {
       QObject::connect(dialog, &QDialog::rejected, dialog, [&self]() {
+         if (!self.stub) // this will happen if we're closing because our stub is about to be deleted out from under us
+            return;
          auto& editor = DovahKitCore::get();
          //
          emit editor.formWorkingCopyDeleteImminent(self.stub);

@@ -3,6 +3,7 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include "dovah/data/dialogue/topic_subtype.h"
+#include "dovah/form_stubs/helpers/get_dialogue_topic_branch.h"
 #include "dovah/forms/DialogueBranch.h"
 #include "dovah/forms/Topic.h"
 #include "dovah/forms/TopicInfo.h"
@@ -442,7 +443,8 @@ dovah::form_stub* QuestDialogueTabBody::_spawn_info(dovah::form_stub* topic) {
          auto* stub = selected_branch();
          if (!stub)
             return;
-         open_edit_dialog_for_form(*stub, this);
+         //open_edit_dialog_for_form(*stub, this);
+         open_edit_dialog_for_form(*stub);
       }
       void QuestDialogueTabBody::_branch_button_delete() {
          auto* stub = selected_branch();
@@ -572,4 +574,93 @@ dovah::form_stub* QuestDialogueTabBody::selected_info() const {
    if (rows.isEmpty())
       return nullptr;
    return this->_models.infos->data(rows[0], QuestDialogueTopicInfosModel::FormStubRole).value<dovah::form_stub*>();
+}
+
+void QuestDialogueTabBody::select_branch(dovah::form_stub* stub) {
+   auto* view  = this->ui.branches;
+   auto* model = this->_models.branches;
+   if (!stub) {
+      this->_reset_selection_of(view);
+      this->_branch_selection_changed();
+      return;
+   }
+
+   size_t i = model->index_of(*stub);
+   if (i == (size_t)-1)
+      return;
+
+   view->selectionModel()->select(
+      {
+         model->index(i, 0, {}),
+         model->index(i, model->columnCount() - 1, {})
+      },
+      QItemSelectionModel::SelectionFlag::ClearAndSelect
+   );
+}
+void QuestDialogueTabBody::select_topic(dovah::form_stub* stub) {
+   auto* view = this->ui.topics;
+   if (!stub) {
+      this->_reset_selection_of(view);
+      this->_topic_selection_changed();
+      return;
+   }
+
+   QModelIndex tl;
+   QModelIndex br;
+   if (this->_category == dovah::dialogue::category::topic) {
+      auto* branch_stub = dovah::form_stub_helpers::get_dialogue_topic_branch(stub);
+      if (!branch_stub)
+         return;
+      this->select_branch(branch_stub);
+
+      auto*  model = this->_models.topics.branched;
+      size_t i     = model->index_of(*stub);
+      if (i == (size_t)-1)
+         return;
+      tl = model->index(i, 0, {});
+      br = model->index(i, model->columnCount() - 1, {});
+   } else {
+      auto* branch_stub = dovah::form_stub_helpers::get_dialogue_topic_branch(stub);
+      if (branch_stub)
+         return;
+      
+      auto*  model = this->_models.topics.branchless;
+      size_t i     = model->index_of(*stub);
+      if (i == (size_t)-1)
+         return;
+      tl = model->index(i, 0, {});
+      br = model->index(i, model->columnCount() - 1, {});
+   }
+   view->selectionModel()->select(
+      { tl, br },
+      QItemSelectionModel::SelectionFlag::ClearAndSelect
+   );
+}
+void QuestDialogueTabBody::select_info(dovah::form_stub* stub) {
+   auto* view = this->ui.infos;
+   if (!stub) {
+      this->_reset_selection_of(view);
+      this->_info_selection_changed();
+      return;
+   }
+
+   auto* parent = stub->get_parent_form();
+   if (parent && parent->form_type != dovah::form_type::topic)
+      parent = nullptr;
+   this->select_topic(parent);
+   if (!parent)
+      return;
+
+   auto*  model = this->_models.infos;
+   size_t i     = model->index_of(*stub);
+   if (i == (size_t)-1)
+      return;
+
+   view->selectionModel()->select(
+      {
+         model->index(i, 0, {}),
+         model->index(i, model->columnCount() - 1, {})
+      },
+      QItemSelectionModel::SelectionFlag::ClearAndSelect
+   );
 }

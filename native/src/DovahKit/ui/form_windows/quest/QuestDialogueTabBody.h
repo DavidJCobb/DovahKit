@@ -73,4 +73,8 @@ class QuestDialogueTabBody : public QWidget {
       dovah::form_stub* selected_branch() const;
       dovah::form_stub* selected_topic() const;
       dovah::form_stub* selected_info() const;
+
+      void select_branch(dovah::form_stub*);
+      void select_topic(dovah::form_stub*);
+      void select_info(dovah::form_stub*);
 };

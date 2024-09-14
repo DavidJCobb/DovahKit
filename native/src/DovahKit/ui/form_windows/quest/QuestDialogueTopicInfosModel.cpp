@@ -279,6 +279,14 @@ const QuestDialogueTopicInfosModel::node_type* QuestDialogueTopicInfosModel::nod
       return nullptr;
    return this->_data[row];
 }
+size_t QuestDialogueTopicInfosModel::index_of(const dovah::form_stub& stub) const {
+   auto&  list = this->_data;
+   size_t size = list.size();
+   for (size_t i = 0; i < size; ++i)
+      if (list[i]->stub == &stub)
+         return i;
+   return (size_t)-1;
+}
 
 void QuestDialogueTopicInfosModel::_fill() {
    this->beginResetModel();

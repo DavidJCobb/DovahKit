@@ -242,3 +242,91 @@ void FormDialogQuest::_save_impl() {
 
    // TODO: EVERYTHING THAT DOESN'T MODIFY THE WORKING COPY IN REAL-TIME
 }
+
+#include <QApplication>
+#include "dovah/data/dialogue/topic_subtype.h"
+#include "dovah/form_stubs/helpers/get_dialogue_branch_quest.h"
+#include "dovah/form_stubs/helpers/get_dialogue_topic_quest.h"
+#include "dovah/forms/Topic.h"
+
+void FormDialogQuest::focus_dialogue_branch(dovah::form_stub& stub) {
+   auto* quest = dovah::form_stub_helpers::get_dialogue_branch_quest(&stub);
+   if (quest != this->formStub())
+      return;
+
+   this->ui.tabWidget->setCurrentWidget(this->ui.tabDialogue);
+   this->ui.dialogueTabbox->setCurrentWidget(this->ui.tabDialoguePlayer);
+   this->subwidgets.dialogue_tab_bodies.player->select_branch(&stub);
+}
+void FormDialogQuest::focus_dialogue_topic(dovah::form_stub& stub, dovah::form_stub* info) {
+   auto* quest = dovah::form_stub_helpers::get_dialogue_topic_quest(&stub);
+   if (quest != this->formStub())
+      return;
+
+   dovah::dialogue::category cat;
+   {
+      auto loaded = stub.load().ptr_cast<dovah::loaded_forms::Topic>();
+      if (!loaded)
+         return;
+      auto* info = dovah::dialogue::topic_subtype_by_signature(loaded->subtype);
+      if (!info)
+         return;
+      cat = info->category;
+   }
+
+   QuestDialogueTabBody* browser = nullptr;
+   QWidget* tab = nullptr;
+   switch (cat) {
+      case dovah::dialogue::category::topic:
+         tab     = this->ui.tabDialoguePlayer;
+         browser = this->subwidgets.dialogue_tab_bodies.player;
+         break;
+      case dovah::dialogue::category::scene:
+         //
+         // TODO: Implement this once we have scene editing done!
+         //
+         break;
+      case dovah::dialogue::category::favor_dialogue:
+         tab     = this->ui.tabDialogueFavorOld;
+         browser = this->subwidgets.dialogue_tab_bodies.favor_a;
+         break;
+      case dovah::dialogue::category::favors:
+         tab     = this->ui.tabDialogueFavor;
+         browser = this->subwidgets.dialogue_tab_bodies.favor_b;
+         break;
+      case dovah::dialogue::category::combat:
+         tab     = this->ui.tabDialogueCombat;
+         browser = this->subwidgets.dialogue_tab_bodies.combat;
+         break;
+      case dovah::dialogue::category::detection:
+         tab     = this->ui.tabDialogueDetection;
+         browser = this->subwidgets.dialogue_tab_bodies.detection;
+         break;
+      case dovah::dialogue::category::service:
+         tab     = this->ui.tabDialogueService;
+         browser = this->subwidgets.dialogue_tab_bodies.services;
+         break;
+      case dovah::dialogue::category::miscellaneous:
+         tab     = this->ui.tabDialogueMisc;
+         browser = this->subwidgets.dialogue_tab_bodies.misc;
+         break;
+   }
+   if (!browser || !tab)
+      return;
+
+   this->ui.tabWidget->setCurrentWidget(this->ui.tabDialogue);
+   this->ui.dialogueTabbox->setCurrentWidget(tab);
+
+   if (info)
+      browser->select_info(info);
+   else
+      browser->select_topic(&stub);
+}
+void FormDialogQuest::focus_dialogue_info(dovah::form_stub& stub) {
+   if (stub.form_type != dovah::form_type::topic_info)
+      return;
+   auto* parent = stub.get_parent_form();
+   if (!parent || parent->form_type != dovah::form_type::topic)
+      return;
+   this->focus_dialogue_topic(*parent, &stub);
+}

@@ -41,4 +41,9 @@ class FormDialogQuest :
       
       virtual void _load_impl() override;
       virtual void _save_impl() override;
+
+   public:
+      void focus_dialogue_branch(dovah::form_stub&);
+      void focus_dialogue_topic(dovah::form_stub& topic, dovah::form_stub* info = nullptr);
+      void focus_dialogue_info(dovah::form_stub&);
 };

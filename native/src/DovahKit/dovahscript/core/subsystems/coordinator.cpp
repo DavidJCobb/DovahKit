@@ -63,6 +63,8 @@ namespace dovahscript::core::subsystems {
       //
       auto& editor = DovahKitCore::get();
       QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
+         if (!this->running)
+            return;
          if (!will_be_flagged)
             return;
          auto& list = this->expected_deletions;

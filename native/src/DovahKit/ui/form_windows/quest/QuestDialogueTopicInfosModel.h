@@ -61,6 +61,7 @@ class QuestDialogueTopicInfosModel : public QAbstractItemModel {
       void setRootTopic(dovah::form_stub*);
 
       const node_type* node(size_t row) const;
+      size_t index_of(const dovah::form_stub&) const;
 
    protected:
       void   _fill();

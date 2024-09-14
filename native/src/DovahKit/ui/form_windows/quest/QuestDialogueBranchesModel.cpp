@@ -64,6 +64,7 @@ QuestDialogueBranchesModel::QuestDialogueBranchesModel(QObject* parent) : QAbstr
                   if (item.cached.exclusive) {
                      flags += "E";
                   }
+                  return flags;
                }
                break;
          }
@@ -136,6 +137,14 @@ const QuestDialogueBranchesModel::node_type* QuestDialogueBranchesModel::node(si
    if (row >= this->_data.size())
       return nullptr;
    return this->_data[row];
+}
+size_t QuestDialogueBranchesModel::index_of(const dovah::form_stub& stub) const {
+   auto&  list = this->_data;
+   size_t size = list.size();
+   for (size_t i = 0; i < size; ++i)
+      if (list[i]->stub == &stub)
+         return i;
+   return (size_t)-1;
 }
 
 void QuestDialogueBranchesModel::_fill() {

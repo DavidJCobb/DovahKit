@@ -161,6 +161,14 @@ const QuestDialogueBranchlessTopicsModel::node_type* QuestDialogueBranchlessTopi
       return nullptr;
    return this->_data[row];
 }
+size_t QuestDialogueBranchlessTopicsModel::index_of(const dovah::form_stub& stub) const {
+   auto&  list = this->_data;
+   size_t size = list.size();
+   for (size_t i = 0; i < size; ++i)
+      if (list[i]->stub == &stub)
+         return i;
+   return (size_t)-1;
+}
 
 void QuestDialogueBranchlessTopicsModel::_fill() {
    this->beginResetModel();
