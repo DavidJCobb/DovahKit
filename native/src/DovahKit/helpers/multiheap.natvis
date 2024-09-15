@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="cobb::multiheap&lt;*,*&gt;::State">
+      <Expand>
+         <Item Name="subheaps">subheaps</Item>
+         <Item Name="subheaps_lock">subheaps_lock</Item>
+         <Item Name="unowned">unowned</Item>
+         <Item Name="unowned_lock">unowned_lock</Item>
+      </Expand>
+   </Type>
+   
+   <Type Name="cobb::multiheap&lt;*,*&gt;::subheap">
+      <Expand>
+         <Item Optional="true" Name="[thread ID]">threadID</Item>
+         <LinkedListItems>
+            <HeadPointer>first</HeadPointer>
+            <NextPointer>info.next</NextPointer>
+            <ValueNode>this</ValueNode>
+         </LinkedListItems>
+      </Expand>
+   </Type>
+   
+   <Type Name="cobb::multiheap&lt;*,*&gt;::block_t">
+      <Expand>
+         <Item Name="info">info</Item>
+         <Item Name="[count]">$T2 - info.remaining</Item>
+         <Item Name="[next alloc index]">info.start_from</Item>
+         <Synthetic Name="[items]">
+            <Expand>
+               <CustomListItems MaxItemsPerView="5000" ExcludeView="Test">
+                  <Variable Name="i"         InitialValue="0" />
+                  <Variable Name="max_count" InitialValue="$T2" />
+                  <Variable Name="stride"    InitialValue="sizeof(buffer) / $T2" />
+                  
+                  <Variable Name="bitset_ci"  InitialValue="0" />
+                  <Variable Name="bitset_bit" InitialValue="0" />
+
+                  <Loop>
+                     <Exec>bitset_ci  = i / 32</Exec>
+                     <Exec>bitset_bit = this-&gt;info.presence.data[bitset_ci]</Exec>
+                     <If Condition="bitset_bit == 0">
+                        <Exec>i += 32</Exec>
+                     </If>
+                     <If Condition="bitset_bit != 0">
+                        <Exec>bitset_bit &amp;= 1 &lt;&lt; (i % 32)</Exec>
+                        <If Condition="bitset_bit != 0">
+                           <Item Name="{i}">($T1*)&amp;buffer[stride * i]</Item>
+                        </If>
+                        <Exec>++i</Exec>
+                     </If>
+                     <Break Condition="i &gt;= max_count" />
+                  </Loop>
+               </CustomListItems>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+</AutoVisualizer>
