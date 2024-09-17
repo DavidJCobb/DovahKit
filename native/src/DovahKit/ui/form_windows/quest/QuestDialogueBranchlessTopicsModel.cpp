@@ -218,6 +218,17 @@ void QuestDialogueBranchlessTopicsModel::_re_sort_node(const node_type& item) {
       //
       to = std::distance(list.begin(), dst_it);
       moving_upward_in_list = dst_it < entry_it;
+
+      if (!moving_upward_in_list)
+         //
+         // NOTE: `_insertion_point_for` gets the position at which we'd INSERT a NEW node, 
+         //       but in this case, we're instead MOVING a node. The node itself is "in the 
+         //       way" and needs to be accounted for.
+         //
+         --to;
+
+      if (to == from)
+         return;
    }
    this->beginMoveRows(
       {},

@@ -33,15 +33,6 @@ namespace {
    constexpr const bool allow_del_key_on_tint_layer_list = false;
 }
 
-namespace {
-   constexpr const bool just_let_me_compile =
-      false
-      #if _DEBUG
-         || true
-      #endif
-   ;
-}
-
 FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
 

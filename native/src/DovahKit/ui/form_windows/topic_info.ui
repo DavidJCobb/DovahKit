@@ -94,7 +94,17 @@
     </layout>
    </item>
    <item row="1" column="2" rowspan="3">
-    <layout class="QGridLayout" name="linkedTopicsLayout" columnstretch="0,1,0">
+    <layout class="QGridLayout" name="linkedTopicsLayout" columnstretch="0,0,0">
+     <item row="0" column="2">
+      <widget class="QCheckBox" name="flagInvisContinue">
+       <property name="whatsThis">
+        <string>If this option is checked, then you can only link this info to one topic. When an NPC finishes saying this info, the conversation will immediately move to that other topic without any dialogue options (e.g. the topic's text) being shown.</string>
+       </property>
+       <property name="text">
+        <string>Invisible Continue</string>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="0" colspan="3">
       <widget class="QTableView" name="linkedTopics">
        <property name="whatsThis">
@@ -105,16 +115,6 @@
    &lt;li&gt;&lt;p&gt;One of these topics can be designated the &quot;Walk Away Topic,&quot; to be used if the player backs out of the dialogue menu in response to this info. You can choose to omit the Walk Away Topic from the list of dialogue options made available to the player.&lt;/p&gt;
 &lt;/ul&gt;
 &lt;p&gt;If there are no usable linked topics that can be shown to the player as dialogue options, then the NPC's top-level topic list will be shown instead.&lt;/p&gt;</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="2">
-      <widget class="QCheckBox" name="flagInvisContinue">
-       <property name="whatsThis">
-        <string>If this option is checked, then you can only link this info to one topic. When an NPC finishes saying this info, the conversation will immediately move to that other topic without any dialogue options (e.g. the topic's text) being shown.</string>
-       </property>
-       <property name="text">
-        <string>Invisible Continue</string>
        </property>
       </widget>
      </item>

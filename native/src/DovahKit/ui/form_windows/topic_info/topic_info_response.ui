@@ -18,8 +18,15 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="2">
-      <widget class="QLabel" name="promptPreview">
+     <item row="2" column="0" colspan="3">
+      <widget class="Line" name="line">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="topicTextPreview">
        <property name="text">
         <string>--</string>
        </property>
@@ -28,13 +35,6 @@
        </property>
        <property name="textInteractionFlags">
         <set>Qt::NoTextInteraction</set>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Prompt:</string>
        </property>
       </widget>
      </item>
@@ -54,8 +54,8 @@
        </property>
       </spacer>
      </item>
-     <item row="0" column="2">
-      <widget class="QLabel" name="topicTextPreview">
+     <item row="1" column="2">
+      <widget class="QLabel" name="promptPreview">
        <property name="text">
         <string>--</string>
        </property>
@@ -67,41 +67,10 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="0" colspan="3">
-      <layout class="QHBoxLayout" name="responseNavLayout">
-       <item>
-        <widget class="QPushButton" name="buttonGoToPrevious">
-         <property name="text">
-          <string>Previous Response</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="buttonGoToNext">
-         <property name="text">
-          <string>Next Response</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="3" column="0" colspan="3">
-      <widget class="Line" name="line">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Prompt:</string>
        </property>
       </widget>
      </item>

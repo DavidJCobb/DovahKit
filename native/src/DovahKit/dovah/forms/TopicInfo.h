@@ -4,6 +4,7 @@
 #include <vector>
 #include "Form.h"
 #include "_common.h"
+#include "../data/dialogue/emotion.h"
 #include "components/conditions.h"
 #include "components/legacy_script.h"
 #include "components/papyrus.h"
@@ -55,21 +56,6 @@ namespace dovah::loaded_forms {
          #pragma endregion
 
          struct response {
-            struct emotion_type {
-               emotion_type() = delete;
-               enum type : uint32_t {
-                  neutral  = 0,
-                  anger    = 1,
-                  disgust  = 2,
-                  fear     = 3,
-                  sad      = 4,
-                  happy    = 5,
-                  surprise = 6,
-                  puzzled  = 7,
-               };
-            };
-            using emotion_type_t = std::underlying_type_t<emotion_type::type>;
-
             struct flag {
                flag() = delete;
                enum type : uint8_t {
@@ -79,7 +65,7 @@ namespace dovah::loaded_forms {
             using flags_t = std::underlying_type_t<flag::type>;
             
             struct {
-               emotion_type_t type = emotion_type::neutral;
+               dovah::dialogue::emotion type = dovah::dialogue::emotion::neutral;
                int32_t value = 50;
             } emotion;
             uint32_t unused;
