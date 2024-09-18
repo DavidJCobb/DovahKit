@@ -10,10 +10,14 @@
 #include "editor/open_window_for_form.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/typical_tableview_config.h"
+#include "./topic_info/topic_info_response.h"
 #include "./topic_info/TopicInfoLinkedTopicsModel.h"
 #include "./topic_info/TopicInfoResponseTableviewModel.h"
 #include "./topic_info/TopicInfoSharedInfoFormFilter.h"
 #include "./topic_info/TopicInfoWalkAwayTopicFormFilter.h"
+
+#include "widgets/DKFormPickerDialog.h"
+#include "./topic_info/TopicInfoLinkedTopicsFormFilter.h"
 
 FormDialogTopicInfo::FormDialogTopicInfo(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
@@ -106,6 +110,11 @@ FormDialogTopicInfo::FormDialogTopicInfo(dovah::form_stub& stub, QWidget* parent
       view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
       ui::typical_tableview_config(view);
 
+      {
+         auto* filter = this->_filters.new_linked_topic = new TopicInfoLinkedTopicsFormFilter(this);
+         filter->setModel(model);
+      }
+
       view->installEventFilter(this); // Delete key
       {
          auto& menu  = this->_context_menus.linked_topics.menu;
@@ -190,11 +199,13 @@ void FormDialogTopicInfo::_load_impl() {
 
    this->_update_topic_text_preview();
    {
-      auto* filter = this->_filters.shared_info;
+      dovah::form_stub* owning_quest = nullptr;
       if (auto* topic = this->formStub()->get_parent_form(); topic && topic->form_type == dovah::form_type::topic) {
-         auto* quest = dovah::form_stub_helpers::get_dialogue_topic_quest(topic);
-         filter->setOwningQuest(quest);
+         owning_quest = dovah::form_stub_helpers::get_dialogue_topic_quest(topic);
       }
+
+      this->_filters.new_linked_topic->setOwningQuest(owning_quest);
+      this->_filters.shared_info->setOwningQuest(owning_quest);
    }
 
    //ui::bind(this->ui.editorID, this->editor_id());
@@ -249,13 +260,7 @@ void FormDialogTopicInfo::_load_impl() {
          });
       }
    }
-   {  // Conditions
-      static_assert(false, "TODO");
-      //
-      // This is a little more complicated: we need to list both the normal and locked conditions, 
-      // but not allow editing, reordering, or removing the locked conditions.
-      //
-   }
+   this->ui.conditions->importBifurcatedList(working, working.conditions.locked, working.conditions.normal);
    {  // Link to Topics
       ui::bind(this->ui.flagInvisContinue, working.info_flags, loaded_form_type::info_flag::invisible_continue);
       this->_models.linked_topics->importFrom(working.link_to.locked, working.link_to.normal);
@@ -307,6 +312,7 @@ void FormDialogTopicInfo::_save_impl() {
    }
    
    editor.assign_localized_string(working.override_topic_text, this->ui.prompt->text());
+   this->ui.conditions->exportBifurcatedList(working, working.conditions.locked, working.conditions.normal);
    {  // Link To list
       this->_models.linked_topics->exportTo(working.link_to.normal, working);
    }
@@ -373,7 +379,16 @@ void FormDialogTopicInfo::_update_topic_text_preview() {
 }
 
 #pragma region Handlers: Linkedtopics
-   void FormDialogTopicInfo::_add_linked_topic(); // if argument is nullptr, pops a choice dialog
+   void FormDialogTopicInfo::_add_linked_topic() {
+      auto* dialog = new DKFormPickerDialog(this);
+      dialog->setCustomFilter(this->_filters.new_linked_topic);
+      auto  result = dialog->exec();
+      if (result == QDialog::Rejected)
+         return;
+
+      this->_models.linked_topics->addTopic(dialog->formStub());
+      dialog->deleteLater();
+   }
    void FormDialogTopicInfo::_move_linked_topic(int by) {
       auto rows = this->ui.linkedTopics->selectionModel()->selectedRows();
       if (rows.isEmpty())
@@ -433,8 +448,16 @@ void FormDialogTopicInfo::_update_topic_text_preview() {
       if (row >= list.size())
          return;
       auto& response = list[row];
-      static_assert(false, "TODO: pop dialog; abort if it's canceled");
 
+      auto* dialog = new FormSubdialogTopicInfoResponse(this);
+      dialog->importFrom(*this->form, response);
+      auto  result = dialog->exec();
+      if (result == QDialog::Rejected)
+         return;
+      dialog->exportTo(*this->form, response);
+      //
+      // And update our listview:
+      //
       TopicInfoResponseTableviewModel::node_type node;
       node.edited  = true;
       node.emotion = {

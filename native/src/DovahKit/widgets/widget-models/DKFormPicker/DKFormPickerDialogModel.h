@@ -7,7 +7,7 @@
 #include "dovah/form_types.h"
 
 namespace ui::impl::DKFormPicker {
-   class DialogModel : public QAbstractItemModel {
+   class DialogModel : public QAbstractItemModel, public DKCustomFormFilterableModelMixin {
       Q_OBJECT;
       protected:
          using item_type = typename shared_datastore::item_type;
@@ -38,6 +38,11 @@ namespace ui::impl::DKFormPicker {
                virtual Qt::ItemFlags flags(const QModelIndex& index) const override;
                virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
             #pragma endregion
+         #pragma endregion
+               
+         #pragma region DKCustomFormFilterableModelMixin overrides
+            virtual void recheck_custom_filter_for_all_forms() override;
+            virtual void recheck_custom_filter_for_form(dovah::form_stub&) override;
          #pragma endregion
 
       protected:

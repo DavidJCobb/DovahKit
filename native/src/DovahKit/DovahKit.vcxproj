@@ -616,6 +616,7 @@
     <ClCompile Include="helpers\math\to_ratio.tests.cpp" />
     <ClCompile Include="helpers\qt\strings\to_no_op_html.cpp" />
     <ClCompile Include="helpers\string\backslash_escape.tests.cpp" />
+    <ClCompile Include="helpers\string\stricontains_ascii.cpp" />
     <ClCompile Include="helpers\utf8\append.tests.cpp" />
     <ClCompile Include="helpers\utf8\for_each.cpp" />
     <ClCompile Include="helpers\windows.cpp" />
@@ -807,6 +808,13 @@
     <ClCompile Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.cpp" />
     <ClCompile Include="ui\form_windows\textureset.cpp" />
     <ClCompile Include="ui\form_windows\topic.cpp" />
+    <ClCompile Include="ui\form_windows\topic_info.cpp" />
+    <ClCompile Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsFormFilter.cpp" />
+    <ClCompile Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsModel.cpp" />
+    <ClCompile Include="ui\form_windows\topic_info\TopicInfoResponseTableviewModel.cpp" />
+    <ClCompile Include="ui\form_windows\topic_info\TopicInfoSharedInfoFormFilter.cpp" />
+    <ClCompile Include="ui\form_windows\topic_info\TopicInfoWalkAwayTopicFormFilter.cpp" />
+    <ClCompile Include="ui\form_windows\topic_info\topic_info_response.cpp" />
     <ClCompile Include="ui\form_windows\visual_effect.cpp" />
     <ClCompile Include="ui\form_windows\voicetype.cpp" />
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
@@ -1013,8 +1021,8 @@
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
     <ClCompile Include="widgets\DKVulkanView.cpp" />
-    <ClCompile Include="widgets\widget-data\DKFormListPaneCustomFilter.cpp" />
-    <ClCompile Include="widgets\widget-data\DKFormPickerCustomFilter.cpp" />
+    <ClCompile Include="widgets\widget-data\DKCustomFormFilter.cpp" />
+    <ClCompile Include="widgets\widget-data\DKCustomFormFilterableModelMixin.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBSABrowseDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBoundScriptDialog.cpp" />
@@ -1056,6 +1064,7 @@
     <ClInclude Include="dovah\data\conditions\parameter_underlying_type.h" />
     <ClInclude Include="dovah\data\conditions\run_on_type.h" />
     <ClInclude Include="dovah\data\dialogue\category.h" />
+    <ClInclude Include="dovah\data\dialogue\emotion.h" />
     <ClInclude Include="dovah\data\dialogue\topic_subtype.h" />
     <ClInclude Include="dovah\data\face_fx\default_facegen_race_phonemes.h" />
     <ClInclude Include="dovah\data\face_fx\phonemes.h" />
@@ -1275,6 +1284,7 @@
     <ClInclude Include="helpers\arrays\filled.h" />
     <ClInclude Include="helpers\hashing\crc32.h" />
     <ClInclude Include="helpers\qt\strings\to_no_op_html.h" />
+    <ClInclude Include="helpers\string\stricontains_ascii.h" />
     <ClInclude Include="helpers\vectors\move_item_within.h" />
     <ClInclude Include="helpers\vectors\move_range_within.h" />
     <ClInclude Include="nif\blocks\BSValueNode.h" />
@@ -1346,6 +1356,13 @@
     <QtMoc Include="ui\form_windows\soul_gem.h" />
     <QtMoc Include="ui\form_windows\visual_effect.h" />
     <QtMoc Include="ui\form_windows\topic.h" />
+    <QtMoc Include="ui\form_windows\topic_info.h" />
+    <ClInclude Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsFormFilter.h" />
+    <ClInclude Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsModel.h" />
+    <ClInclude Include="ui\form_windows\topic_info\TopicInfoResponseTableviewModel.h" />
+    <ClInclude Include="ui\form_windows\topic_info\TopicInfoSharedInfoFormFilter.h" />
+    <ClInclude Include="ui\form_windows\topic_info\TopicInfoWalkAwayTopicFormFilter.h" />
+    <QtMoc Include="ui\form_windows\topic_info\topic_info_response.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_float_slider.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h" />
@@ -1376,7 +1393,6 @@
     <QtMoc Include="widgets\DKComboBox.h" />
     <QtMoc Include="widgets\DKFormInventoryWidget.h" />
     <QtMoc Include="widgets\widget-dialogs\DKLeveledListPreviewDialog.h" />
-    <QtMoc Include="widgets\widget-data\DKFormPickerCustomFilter.h" />
     <QtMoc Include="widgets\DKAttackDataWidget.h" />
     <QtMoc Include="widgets\DKFloatSlider.h" />
     <ClInclude Include="ui\utils\set_tableview_column_flex.h" />
@@ -1385,7 +1401,8 @@
     <QtMoc Include="widgets\DKTabBar.h" />
     <QtMoc Include="widgets\DKTabWidget.h" />
     <QtMoc Include="widgets\DKStatusBar.h" />
-    <QtMoc Include="widgets\widget-data\DKFormListPaneCustomFilter.h" />
+    <QtMoc Include="widgets\widget-data\DKCustomFormFilter.h" />
+    <ClInclude Include="widgets\widget-data\DKCustomFormFilterableModelMixin.h" />
     <ClInclude Include="widgets\widget-models\DKAttackDataModel.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />
@@ -3042,6 +3059,7 @@
     <None Include="vulkan\scene_entities\base.inl" />
     <None Include="vulkan\scene_gizmo_state.inl" />
     <None Include="vulkan\_docs\rotation-related identities and relationships.md" />
+    <None Include="widgets\widget-data\DKCustomFormFilter.md" />
     <None Include="widgets\widget-models\bound-scripts\property.inl" />
     <None Include="widgets\widget-models\DKBoundScriptModel.inl" />
     <None Include="widgets\widget-models\DKFormListPaneModel.inl" />
@@ -3072,6 +3090,7 @@
     <Natvis Include="helpers\glm\vec.natvis" />
     <Natvis Include="helpers\grid.natvis" />
     <Natvis Include="helpers\keyboard\key.natvis" />
+    <Natvis Include="helpers\multiheap.natvis" />
     <Natvis Include="helpers\qt\keycodes.natvis" />
     <Natvis Include="helpers\resizable_grid.natvis" />
     <Natvis Include="helpers\tree\node.natvis" />

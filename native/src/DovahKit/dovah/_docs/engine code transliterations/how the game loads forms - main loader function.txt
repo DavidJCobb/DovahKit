@@ -85,14 +85,14 @@ lAfterTypeMismatchCheck:
          }
          Arg3->LoadPartial(Arg1); // virtual 0x07
          Arg3->sub004515F0(Arg1);
+         if (tls_is_in_HotLoadPlugin == 0) {
+            Arg3->ModifyFlag00000008(false); // clear flag
+         }
+         if (Arg1.sub00444720()) { // tests flag 0x00000008 on TESFile::unk3E8
+            Arg3->SetAlteredFlag(true);
+         }
+         return true;
       }
-      if (tls_is_in_HotLoadPlugin == 0) {
-         Arg3->ModifyFlag00000008(false); // clear flag
-      }
-      if (Arg1.sub00444720()) { // tests flag 0x00000008 on TESFile::unk3E8
-         Arg3->SetAlteredFlag(true);
-      }
-      return true;
    }
 lAfterPartialParentHandling:
    // at 0x0044036F
@@ -103,7 +103,8 @@ lAfterPartialParentHandling:
       if ((Arg1.recordFormID >> 0x18) == Arg1.GetModIndex()) {
          //
          // If a non-injected non-override record is flagged as partial, we strip 
-         // the partial flag.
+         // the partial flag. Note that the jump here will cause us to skip all 
+         // handling of the "deleted" flag.
          //
          Arg1.recordFlags &= ~0x00004000; // clear "partial" flag
          goto lAfterDeletedCheck;
@@ -114,14 +115,17 @@ lAfterPartialParentHandling:
       //
       return false;
    }
+lHandleOverride:
    // at 0x004403C9
+   // skipped via gotos above if Arg3 is nullptr i.e. if the form doesn't exist in memory yet
    if (!(Arg1.recordFlags & 0x00000020)) { // if form is not deleted
       //
-      // Whenever we load an override of a non-deleted, non-effectively-partial form, 
-      // we clear its data by hand to enforce the Rule of One.
+      // Whenever we load an override that isn't flagged as deleted, and isn't a 
+      // partial-flagged parent form, we clear the existing form data by hand to 
+      // enforce the Rule of One.
       //
       if (Arg3->formType >= 0x3D) {
-         if (Arg3->formType <= 0x46) { // REFR ande all subclasses
+         if (Arg3->formType <= 0x46) { // REFR and all subclasses
             refr_ptr ebpn10 = Arg3; // smart pointer
             if (auto* eax = Arg3->GetParentOrPersistentCell()) {
                if (eax != current_loaded_cell) {
@@ -152,10 +156,15 @@ lAfterPartialParentHandling:
       //
       Arg3->ClearAllComponentData();
       Arg3->ClearData();
-      Arg3->sub00450C50();
+      Arg3->InitializeAllComponentData(); // NOTE: no-op for actions, refs, land, navmesh, and packages; only initializes TESFullName for cells; normal for all other types
       Arg3->InitializeData();
       // vm->~unknown_ptr();
    }
+   //
+   // Note: the game only clears override refs if they're not flagged as deleted... but if 
+   // a record IS flagged as deleted, then this function, at least, doesn't completely skip 
+   // loading it.
+   //
 lAfterDeletedCheck:
    // at 0x004404C8
    //
@@ -355,12 +364,12 @@ lAfterDeletedCheck:
                // at 0x00440973
                if (Arg3->flags & 0x20) // "deleted"
                   break; // jumps to 0x004409A3
-               Arg3->baseForm->Unk_46();
+               Arg3->baseForm->IncRef(); // TESObject virtual 0x46 in LE
                break; // jumps to 0x004409A3
             }
             // at 0x0044098B
             if (Arg3->flags & 0x20) // "deleted"
-               Arg3->baseForm->Unk_47();
+               Arg3->baseForm->DecRef(); // TESObject virtual 0x47 in LE
          }
          // at 0x004409A3
          // ebpp14.~refr_ptr();
@@ -474,4 +483,38 @@ lAfterDeletedCheck:
    // at 0x00440D20
    tls2EB = false;
    return true;
+}
+
+bool LoadFormAndMaybeDoOtherStuff(TESForm* form, TESFile& file) {
+   //
+   // It looks like some Creation Kit state flags are mixed into the file format. 
+   // The "active" flag on files almost certainly refers to the Active File, i.e. 
+   // the file you've selected for editing; and the "altered" flag on forms almost 
+   // certainly indicates that a form is defined in the active file.
+   //
+   // Moreover, file flags are also record flags. This makes sense: do recall that 
+   // they're the flags on the TES4 record. Strangely, though, at least some of 
+   // them apply to all record types, as we see here.
+   //
+   bool bl    = form->flags & 1;
+   bool esp10 = form->Load(file);
+   //
+   // We want the "master" flag on a form to be true if the form is defined in any 
+   // master-flagged file, even if it's subsequently overridden by a non-master.
+   //
+   if (bl) {
+      form->ModifyFlag00000001(true); // set "master" flag on form... to what it already is
+   } else {
+      form->ModifyFlag00000001(file.IsMaster()); // set "master" flag on form to match this file
+   }
+   //
+   // Creation Kit bookkeeping (still in TESV.exe):
+   //
+   if (file.IsActive()) { // file header flag 0x8
+      file->SetAltered(true); // form flag 0x2
+   }
+   //
+   // Return result of original "load form" operation:
+   //
+   return esp10;
 }

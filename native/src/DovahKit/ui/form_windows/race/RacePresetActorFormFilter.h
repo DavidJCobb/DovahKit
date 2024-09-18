@@ -1,11 +1,11 @@
 #pragma once
 #include <QPointer>
-#include "widgets/widget-data/DKFormListPaneCustomFilter.h"
+#include "widgets/widget-data/DKCustomFormFilter.h"
 #include "./RaceTintLayerModel.h"
 
-class RacePresetActorFormFilter final : public DKFormListPaneCustomFilter {
+class RacePresetActorFormFilter final : public DKCustomFormFilter {
    public:
-      using DKFormListPaneCustomFilter::DKFormListPaneCustomFilter;
+      using DKCustomFormFilter::DKCustomFormFilter;
 
       virtual bool form_matches(dovah::form_stub& stub) const noexcept override;
 

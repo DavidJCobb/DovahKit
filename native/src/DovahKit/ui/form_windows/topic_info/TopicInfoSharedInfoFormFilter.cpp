@@ -5,7 +5,7 @@
 #include "dovah/form_stubs/helpers/get_dialogue_topic_quest.h"
 #include "dovah/forms/Topic.h"
 
-/*virtual*/ bool TopicInfoSharedInfoFormFilter::form_matches(const dovah::form_stub& stub) const noexcept /*override*/ {
+/*virtual*/ bool TopicInfoSharedInfoFormFilter::form_matches(dovah::form_stub& stub) const noexcept /*override*/ {
    if (stub.form_type != dovah::form_type::topic_info)
       return false;
 

@@ -703,6 +703,30 @@ Some specific ideas, first written down on 4/28/2024:
 
     This would be an improvement over the current design, wherein form loaders, form use info builders, and any custom parses (e.g. the frontend caching subrecords of interest) can just choose not to obey the file structure -- to pluck arbitrary bytes out of a record without bothering to heed subrecord boundaries.
 
+#### Observations
+
+* File flags versus record flags
+  * TESV.exe only cares about three flags from the `TES4` record header: `master`, `optimized`, and `localized_string_table`; these are stored on the `TESFile`; the rest are discarded.
+  * TESV.exe sets the `checked` flag on `TESFile` instances if they pass all of the following checks, though it's not clear when (or if) files even get checked:
+    * File version is not too new (i.e. greater than 1.7)
+    * For each master:
+      * The master exists
+      * File version of the master is not too new (i.e. greater than 1.7)
+      * These checks pass for the master (i.e. recurse, and set the master as checked if appropriate (yes, this means they redundantly check the version twice))
+  * The `active` flag is probably set on the active `TESFile` at run-time, by the Creation Kit.
+  * It's not clear what the situation is with "internal" record/form flags, i.e. whether they ever get forcibly cleared somewhere. The flags at issue would be `1 << 0` (master) and `1 << 1` (altered), though `1 << 3` and `1 << 4` are also a mystery.
+    * Form flag `1 << 2` is not a standard record flag and can be used by different form types.
+    * Form flag `1 << 5` indicates a deleted record.
+    * Form flag `1 << 7` is not a standard record flag and can be used by different form types.
+    * Form flag `1 << 8` is not a standard record flag and can be used by different form types.
+    * Form flag `1 << 12` indicates an ignored record.
+      * **TODO:** The loader skips these. Do we?
+    * Form flag `1 << 14` indicates a partial record.
+    * Form flag `1 << 18` indicates a compressed record.
+  * TESV.exe sets record flag 1 (matching `tes_file_flag::master`) on a form if any of its records come from a master (even if it's overridden by a non-master).
+  * TESV.exe sets record flag 2 (matching `tes_file_flag::altered`) on a form if any of its records come from an `active`-flagged file (even if it's overridden by a non-active file).
+  * That leaves two flags in `tes_file_flag` unexplained: `temp_id_owner` and `precalc_data_only`.
+
 ### Form stubs
 
 The `load` function will fail, returning without loading form data, under the following circumstances:

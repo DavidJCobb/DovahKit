@@ -15,6 +15,9 @@ namespace dovah {
 namespace ui::impl::DKFormPicker {
    class DialogModel;
 }
+#if !defined(QT_DESIGNER_LIB)
+   class DKCustomFormFilter;
+#endif
 
 class DKFormPickerDialog : public QDialog {
    Q_OBJECT;
@@ -36,6 +39,11 @@ class DKFormPickerDialog : public QDialog {
       #if !defined(QT_DESIGNER_LIB)
          constexpr dovah::form_stub* formStub() const noexcept { return this->_value; }
          void setFormStub(dovah::form_stub*) noexcept;
+      #endif
+
+      #if !defined(QT_DESIGNER_LIB)
+         DKCustomFormFilter* customFilter() const;
+         void setCustomFilter(DKCustomFormFilter* v);
       #endif
          
    protected:

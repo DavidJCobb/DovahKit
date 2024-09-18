@@ -17,7 +17,7 @@ class DKFormListPaneModel;
    #include "widget-models/DKFormListPaneModel.h"
 #endif
 #if !defined(QT_DESIGNER_LIB)
-   class DKFormListPaneCustomFilter;
+   class DKCustomFormFilter;
 #endif
 
 namespace dovah {
@@ -111,8 +111,8 @@ class DKFormListPane : public QWidget {
       #endif
 
       #if !defined(QT_DESIGNER_LIB)
-         DKFormListPaneCustomFilter* customFilter() const;
-         void setCustomFilter(DKFormListPaneCustomFilter* v);
+         DKCustomFormFilter* customFilter() const;
+         void setCustomFilter(DKCustomFormFilter* v);
       #endif
 
       #if !defined(QT_DESIGNER_LIB)

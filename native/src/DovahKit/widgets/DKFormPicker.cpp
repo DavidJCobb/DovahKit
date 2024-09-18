@@ -503,21 +503,10 @@ void DKFormPicker::clear() {
 }
 
 #if !defined(QT_DESIGNER_LIB)
-DKFormPickerCustomFilter* DKFormPicker::customFilter() const {
-   return this->_rawModel()->customFilter();
+DKCustomFormFilter* DKFormPicker::customFilter() const {
+   return this->_rawModel()->get_custom_filter();
 }
-void DKFormPicker::setCustomFilter(DKFormPickerCustomFilter* v) {
-   auto* model = this->_rawModel();
-   auto* prior = model->customFilter();
-   if (prior == v) {
-      return;
-   }
-   model->setCustomFilter(v);
-   if (model->customFilter() == v) {
-      if (prior) {
-         prior->_unhookFromModel(model);
-      }
-      v->_hookToModel(model);
-   }
+void DKFormPicker::setCustomFilter(DKCustomFormFilter* v) {
+   this->_rawModel()->set_custom_filter(v);
 }
 #endif

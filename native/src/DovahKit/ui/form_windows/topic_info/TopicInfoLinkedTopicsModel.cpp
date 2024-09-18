@@ -96,6 +96,8 @@ Qt::ItemFlags TopicInfoLinkedTopicsModel::flags_of(const node_type&, size_t colu
 }
 
 void TopicInfoLinkedTopicsModel::addTopic(dovah::form_stub* stub) {
+   if (!stub)
+      return;
    if (stub->form_type != dovah::form_type::topic)
       return;
    if (this->containsTopic(stub))
@@ -138,6 +140,8 @@ void TopicInfoLinkedTopicsModel::reorderTopic(size_t row, int by) {
    DKGenericListModel::moveItem(this->index(row, 0, {}), by);
 }
 void TopicInfoLinkedTopicsModel::removeTopic(dovah::form_stub* stub) {
+   if (!stub)
+      return;
    if (stub->form_type != dovah::form_type::topic)
       return;
 

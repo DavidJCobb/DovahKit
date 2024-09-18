@@ -118,8 +118,8 @@ bool DKFormListPaneModel::_allowsForm(dovah::form_stub& stub) {
       if (!this->allowed_form_types.contains(stub.form_type))
          return false;
    }
-   if (this->custom_filter)
-      if (!this->custom_filter->form_matches(stub))
+   if (this->_custom_filter)
+      if (!this->_custom_filter->form_matches(stub))
          return false;
    return true;
 }
@@ -238,8 +238,8 @@ void DKFormListPaneModel::formModified(dovah::form_stub* stub) {
       if (item->stub != stub)
          continue;
 
-      if (this->custom_filter) {
-         if (!this->custom_filter->form_matches(*item->stub)) {
+      if (this->_custom_filter) {
+         if (!this->_custom_filter->form_matches(*item->stub)) {
             this->beginRemoveRows({}, i, i);
             delete item;
             list.removeAt(i);
@@ -467,6 +467,50 @@ void DKFormListPaneModel::formsRenumberedEnMasse() {
          return Qt::CopyAction;
       }
    #pragma endregion
+#pragma endregion
+               
+#pragma region DKCustomFormFilterableModelMixin overrides
+   /*virtual*/ void DKFormListPaneModel::recheck_custom_filter_for_all_forms() /*override*/ {
+      if (!this->_custom_filter)
+         return;
+      auto&  list = this->children;
+      size_t size = list.size();
+      for (size_t i = 0; i < size; ++i) {
+         auto* item = list[i];
+         if (!item->stub)
+            continue;
+
+         if (!this->_custom_filter->form_matches(*item->stub)) {
+            this->beginRemoveRows({}, i, i);
+            list.removeAt(i);
+            delete item;
+            --i;
+            --size;
+         }
+      }
+   }
+   /*virtual*/ void DKFormListPaneModel::recheck_custom_filter_for_form(dovah::form_stub& stub) /*override*/ {
+      if (!this->_custom_filter)
+         return;
+      auto&  list = this->children;
+      size_t size = list.size();
+      for (size_t i = 0; i < size; ++i) {
+         auto* item = list[i];
+         if (item->stub != &stub)
+            continue;
+
+         if (!this->_custom_filter->form_matches(stub)) {
+            this->beginRemoveRows({}, i, i);
+            list.removeAt(i);
+            delete item;
+            --i;
+            --size;
+         }
+
+         if (!this->allow_dupes)
+            break;
+      }
+   }
 #pragma endregion
 
 void DKFormListPaneModel::addStub(dovah::form_stub* stub) {
@@ -782,55 +826,3 @@ void DKFormListPaneModel::removeExtraColumn(size_t which) {
    this->endRemoveColumns();
 }
 #pragma endregion
-
-DKFormListPaneCustomFilter* DKFormListPaneModel::customFilter() const {
-   return this->custom_filter;
-}
-void DKFormListPaneModel::setCustomFilter(DKFormListPaneCustomFilter* v) {
-   if (this->custom_filter == v)
-      return;
-   this->custom_filter = v;
-   this->forceRecheckFilter();
-}
-
-void DKFormListPaneModel::forceRecheckFilterOn(dovah::form_stub& stub) {
-   if (!this->custom_filter)
-      return;
-   auto&  list = this->children;
-   size_t size = list.size();
-   for (size_t i = 0; i < size; ++i) {
-      auto* item = list[i];
-      if (item->stub != &stub)
-         continue;
-
-      if (!this->custom_filter->form_matches(stub)) {
-         this->beginRemoveRows({}, i, i);
-         list.removeAt(i);
-         delete item;
-         --i;
-         --size;
-      }
-
-      if (!this->allow_dupes)
-         break;
-   }
-}
-void DKFormListPaneModel::forceRecheckFilter() {
-   if (!this->custom_filter)
-      return;
-   auto&  list = this->children;
-   size_t size = list.size();
-   for (size_t i = 0; i < size; ++i) {
-      auto* item = list[i];
-      if (!item->stub)
-         continue;
-
-      if (!this->custom_filter->form_matches(*item->stub)) {
-         this->beginRemoveRows({}, i, i);
-         list.removeAt(i);
-         delete item;
-         --i;
-         --size;
-      }
-   }
-}

@@ -2,14 +2,14 @@
 #include <optional>
 #include "dovah/data/sex.h"
 #include "dovah/forms/Race.h"
-#include "widgets/widget-data/DKFormPickerCustomFilter.h"
+#include "widgets/widget-data/DKCustomFormFilter.h"
 
 namespace impl {
-   class FaceHairColorPickerFilter final : public DKFormPickerCustomFilter {
+   class FaceHairColorPickerFilter final : public DKCustomFormFilter {
       public:
-         using DKFormPickerCustomFilter::DKFormPickerCustomFilter;
+         using DKCustomFormFilter::DKCustomFormFilter;
 
-         virtual bool form_matches(const dovah::form_stub& stub) const noexcept override;
+         virtual bool form_matches(dovah::form_stub& stub) const noexcept override;
 
       public:
          void setRequiredRace(dovah::form_stub*);

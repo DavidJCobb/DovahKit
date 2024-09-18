@@ -48,8 +48,9 @@ class FormDialogTopicInfo :
          } responses;
       } _context_menus;
       struct {
-         TopicInfoSharedInfoFormFilter*    shared_info     = nullptr;
-         TopicInfoWalkAwayTopicFormFilter* walk_away_topic = nullptr;
+         TopicInfoLinkedTopicsFormFilter*  new_linked_topic = nullptr;
+         TopicInfoSharedInfoFormFilter*    shared_info      = nullptr;
+         TopicInfoWalkAwayTopicFormFilter* walk_away_topic  = nullptr;
       } _filters;
       struct {
          TopicInfoLinkedTopicsModel*      linked_topics = nullptr;

@@ -420,12 +420,29 @@ QVariant DKConditionListModel::data_of(const node_type& node, Qt::ItemDataRole r
    return {};
 }
 Qt::ItemFlags DKConditionListModel::flags_of(const node_type& node, size_t column) const {
-   return Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable;
+   Qt::ItemFlags flags = Qt::ItemFlag::ItemIsSelectable;
+   if (this->_allow_modifications_from == 0) {
+      flags |= Qt::ItemFlag::ItemIsEnabled;
+   } else {
+      bool enabled = true;
+
+      assert(this->_allow_modifications_from < this->_nodes.size());
+      for (size_t i = 0; i < this->_allow_modifications_from; ++i) {
+         if (this->_nodes[i] == &node) {
+            enabled = false;
+            break;
+         }
+      }
+      if (enabled)
+         flags |= Qt::ItemFlag::ItemIsEnabled;
+   }
+   return flags;
 }
       
 void DKConditionListModel::clear() {
    DKGenericListModel::clear();
    this->_context = {};
+   this->_allow_modifications_from = 0;
 }
 
 /*virtual*/ QVariant DKConditionListModel::headerData(int section, Qt::Orientation orientation, int role) const /*override*/ {
@@ -463,11 +480,19 @@ void DKConditionListModel::duplicate(const QItemSelection& indices) {
    for (const QItemSelectionRange& range : indices) {
       int top    = range.top();
       int bottom = range.bottom();
+      int at     = bottom;
       int diff   = bottom - top;
-      this->beginInsertRows(dummy, bottom, bottom + diff);
+      if (at < this->_allow_modifications_from) {
+         //
+         // If some of the conditions we're duplicating are in the locked range, 
+         // ensure that we duplicate them below that range.
+         //
+         at = this->_allow_modifications_from;
+      }
+      this->beginInsertRows(dummy, at, at + diff);
       for (int i = bottom; i >= top; --i) {
          auto* clone = new node_type{ *this->_nodes[i] };
-         this->_nodes.insert(this->_nodes.begin() + bottom + 1, clone);
+         this->_nodes.insert(this->_nodes.begin() + at + 1, clone);
       }
       this->endInsertRows();
    }
@@ -475,6 +500,11 @@ void DKConditionListModel::duplicate(const QItemSelection& indices) {
 QModelIndex DKConditionListModel::insertAt(const Condition& data, size_t at) {
    if (at >= this->_nodes.size())
       at = this->_nodes.size();
+   if (at < this->_allow_modifications_from)
+      //
+      // Do not allow insertions into the locked range.
+      //
+      at = this->_allow_modifications_from;
 
    this->beginInsertRows({}, at, at);
    auto* clone = new node_type{ data };
@@ -493,10 +523,35 @@ void DKConditionListModel::move(const QItemSelection& indices, int down) {
       int to;
       int top    = range.top();
       int bottom = range.bottom();
+      if (top < this->_allow_modifications_from) {
+         //
+         // Some of the conditions we wish to move are locked. Omit them from 
+         // the move operation.
+         //
+         if (bottom < this->_allow_modifications_from)
+            //
+            // Actually, all of the conditions we wish to move are locked. 
+            // Skip this move operation.
+            //
+            continue;
+      }
       if (down < 0) {
          if (top < -down)
             continue;
          to = top + down;
+
+         if (to < this->_allow_modifications_from) {
+            //
+            // We're trying to move the conditions into the locked range. Stop 
+            // just short of it.
+            //
+            to = this->_allow_modifications_from;
+            if (top == to)
+               //
+               // We can't move them any further.
+               //
+               continue;
+         }
       } else if (down > 0) {
          if (bottom + down >= size)
             continue;
@@ -520,6 +575,19 @@ void DKConditionListModel::remove(const QItemSelection& indices) {
    for (const QItemSelectionRange& range : indices) {
       int top    = range.top();
       int bottom = range.bottom();
+      if (top < this->_allow_modifications_from) {
+         //
+         // Some of the conditions we're trying to edit are locked. Omit them from 
+         // the removal operation.
+         //
+         if (bottom < this->_allow_modifications_from)
+            //
+            // Actually, all of the conditions we wish to remove are locked. Skip 
+            // this removal operation.
+            //
+            continue;
+         top = this->_allow_modifications_from;
+      }
       this->beginRemoveRows(dummy, top, bottom);
       list.erase(list.begin() + top, list.begin() + bottom + 1);
       this->endRemoveRows();
@@ -534,6 +602,11 @@ const DKConditionListModel::Condition* DKConditionListModel::getCondition(size_t
 void DKConditionListModel::setCondition(size_t row, const Condition& src) {
    if (row >= this->_nodes.size())
       return;
+   if (row < this->_allow_modifications_from)
+      //
+      // Do not allow overwriting conditions in the locked range.
+      //
+      return;
    *this->_nodes[row] = src;
 
    auto tl = this->index(row, 0, {});
@@ -545,6 +618,8 @@ void DKConditionListModel::setCondition(size_t row, const Condition& src) {
 size_t DKConditionListModel::importFrom(dovah::loaded_forms::Form& src_form, const BackendConditionList& src) {
    size_t invalid = 0;
    this->performReset([this, &src_form, &src, &invalid]() {
+      this->_allow_modifications_from = 0;
+
       size_t size = src.size();
       this->_nodes.reserve(size);
       for (size_t i = 0; i < size; ++i) {
@@ -559,4 +634,40 @@ size_t DKConditionListModel::importFrom(dovah::loaded_forms::Form& src_form, con
       this->_context = ui::types::conditions::context(src_form.stub, src_form.is_working_copy);
    });
    return invalid;
+}
+
+size_t DKConditionListModel::importBifurcatedList(dovah::loaded_forms::Form& src_form, const BackendConditionList& locked, const BackendConditionList& normal) {
+   size_t invalid = 0;
+   this->performReset([this, &src_form, &invalid, &locked, &normal]() {
+      this->_allow_modifications_from = 0;
+
+      auto _handle = [this, &invalid](const BackendConditionList& src, bool is_locked) {
+         size_t size = src.size();
+         this->_nodes.reserve(size);
+         for (size_t i = 0; i < size; ++i) {
+            auto* node = new node_type{ src[i] };
+            if (!is_locked) {
+               if (!node->valid()) {
+                  ++invalid;
+                  delete node;
+                  continue;
+               }
+            }
+            this->_nodes.push_back(node);
+         }
+      };
+      _handle(locked, true);
+      _handle(normal, false);
+
+      this->_context = ui::types::conditions::context(src_form.stub, src_form.is_working_copy);
+   });
+   return invalid;
+}
+void DKConditionListModel::exportBifurcatedList(dovah::loaded_forms::Form& dst_form, BackendConditionList& locked, BackendConditionList& normal) {
+   normal.clear(dst_form);
+   for (size_t i = this->_allow_modifications_from; i < this->_nodes.size(); ++i) {
+      auto& src_item = *this->_nodes[i];
+      auto& dst_item = normal.emplace_back();
+      dst_item.commit(dst_form, src_item);
+   }
 }

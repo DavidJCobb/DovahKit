@@ -1,6 +1,6 @@
 #include "./DKFormPickerExcludeSingleFormFilter.h"
 
-/*virtual*/ bool DKFormPickerExcludeSingleFormFilter::form_matches(const dovah::form_stub& stub) const noexcept /*override*/ {
+/*virtual*/ bool DKFormPickerExcludeSingleFormFilter::form_matches(dovah::form_stub& stub) const noexcept /*override*/ {
    return &stub != this->_exclude;
 }
 

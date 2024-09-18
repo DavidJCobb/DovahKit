@@ -162,6 +162,13 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
       this->_model->clear();
       this->_owning_stub = nullptr;
    }
+
+   void DKConditionList::importBifurcatedList(dovah::loaded_forms::Form& owner, const BackendConditionList& locked, const BackendConditionList& normal) {
+      this->_model->importBifurcatedList(owner, locked, normal);
+   }
+   void DKConditionList::exportBifurcatedList(dovah::loaded_forms::Form& owner, BackendConditionList& locked, BackendConditionList& normal) {
+      this->_model->exportBifurcatedList(owner, locked, normal);
+   }
 #endif
 
 void DKConditionList::openCreateConditionModal() {

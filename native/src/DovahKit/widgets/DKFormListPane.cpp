@@ -6,7 +6,7 @@
 #include "DKHeaderView.h"
 #if !defined(QT_DESIGNER_LIB)
    #include "../editor/open_window_for_form.h"
-   #include "./widget-data/DKFormListPaneCustomFilter.h"
+   #include "./widget-data/DKCustomFormFilter.h"
 #endif
 
 namespace {
@@ -348,22 +348,11 @@ void DKFormListPane::setShowRemoveButton(bool v) {
    
 
 #if !defined(QT_DESIGNER_LIB)
-   DKFormListPaneCustomFilter* DKFormListPane::customFilter() const {
-      return this->_model()->customFilter();
+   DKCustomFormFilter* DKFormListPane::customFilter() const {
+      return this->_model()->get_custom_filter();
    }
-   void DKFormListPane::setCustomFilter(DKFormListPaneCustomFilter* v) {
-      auto* model = this->_model();
-      auto* prior = model->customFilter();
-      if (prior == v) {
-         return;
-      }
-      model->setCustomFilter(v);
-      if (model->customFilter() == v) {
-         if (prior) {
-            prior->_unhookFromModel(model);
-         }
-         v->_hookToModel(model);
-      }
+   void DKFormListPane::setCustomFilter(DKCustomFormFilter* v) {
+      this->_model()->set_custom_filter(v);
    }
 #endif
    

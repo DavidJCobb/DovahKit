@@ -11,13 +11,13 @@
 #include <QVarLengthArray>
 #include "dovah/core.h"
 #include "dovah/form_stub.h"
-#include "../widget-data/DKFormListPaneCustomFilter.h"
+#include "../widget-data/DKCustomFormFilterableModelMixin.h"
 
 namespace dovah::loaded_forms {
    class Form;
 }
 
-class DKFormListPaneModel : public QAbstractTableModel {
+class DKFormListPaneModel : public QAbstractTableModel, public DKCustomFormFilterableModelMixin {
    Q_OBJECT;
    public:
       struct Column {
@@ -73,7 +73,6 @@ class DKFormListPaneModel : public QAbstractTableModel {
          QVector<ExtraColumnInfo> list;
          bool any_getters_take_loaded_form = false;
       } extra_columns;
-      QPointer<DKFormListPaneCustomFilter> custom_filter;
 
       bool _allowsForm(dovah::form_stub&);
       void _emitRowChanged(size_t row);
@@ -129,6 +128,11 @@ class DKFormListPaneModel : public QAbstractTableModel {
             virtual Qt::DropActions supportedDropActions() const override;
          #pragma endregion
       #pragma endregion
+               
+      #pragma region DKCustomFormFilterableModelMixin overrides
+         virtual void recheck_custom_filter_for_all_forms() override;
+         virtual void recheck_custom_filter_for_form(dovah::form_stub&) override;
+      #pragma endregion
       
       
    public slots:
@@ -152,12 +156,6 @@ class DKFormListPaneModel : public QAbstractTableModel {
    public: // Ensure these are not Qt slots; slots can't have moved&& parameters
       void addExtraColumn(QString header, extra_column_handler&&);
       void removeExtraColumn(size_t index);
-
-      DKFormListPaneCustomFilter* customFilter() const;
-      void setCustomFilter(DKFormListPaneCustomFilter*);
-
-      void forceRecheckFilterOn(dovah::form_stub&);
-      void forceRecheckFilter();
 };
 
 #include "./DKFormListPaneModel.inl"

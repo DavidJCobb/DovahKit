@@ -1,13 +1,13 @@
 #pragma once
 #include <QPointer>
-#include "widgets/widget-data/DKFormPickerCustomFilter.h"
+#include "widgets/widget-data/DKCustomFormFilter.h"
 #include "./RaceTintLayerModel.h"
 
-class RaceTintDefaultColorPickerFilter final : public DKFormPickerCustomFilter {
+class RaceTintDefaultColorPickerFilter final : public DKCustomFormFilter {
    public:
-      using DKFormPickerCustomFilter::DKFormPickerCustomFilter;
+      using DKCustomFormFilter::DKCustomFormFilter;
 
-      virtual bool form_matches(const dovah::form_stub& stub) const noexcept override;
+      virtual bool form_matches(dovah::form_stub& stub) const noexcept override;
 
    public:
       void setModel(RaceTintLayerModel*);

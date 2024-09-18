@@ -1,7 +1,7 @@
 #include "./RaceTintDefaultColorPickerFilter.h"
 #include "dovah/form_stub.h"
 
-/*virtual*/ bool RaceTintDefaultColorPickerFilter::form_matches(const dovah::form_stub& stub) const noexcept /*override*/ {
+/*virtual*/ bool RaceTintDefaultColorPickerFilter::form_matches(dovah::form_stub& stub) const noexcept /*override*/ {
    if (!this->_model || !this->_layer.isValid() || this->_layer.model() != this->_model)
       return true;
    return this->_model->layer_has_color(this->_layer, stub);

@@ -391,6 +391,15 @@ namespace ui::impl::DKFormPicker {
             }
          #pragma endregion
       #pragma endregion
+               
+      #pragma region DKCustomFormFilterableModelMixin overrides
+         /*virtual*/ void Model::recheck_custom_filter_for_all_forms() /*override*/ {
+            this->forceRefill();
+         }
+         /*virtual*/ void Model::recheck_custom_filter_for_form(dovah::form_stub& stub) /*override*/ {
+            this->forceRecheckFilterOn(stub);
+         }
+      #pragma endregion
 
       bool Model::_entry_matches_params(const item_type& item, const filter_parameters& params) const {
          if (!params.form_types.isEmpty()) {
@@ -828,16 +837,6 @@ namespace ui::impl::DKFormPicker {
          if (!item || !item->default_exclude_from_listings)
             return;
          this->_on_item_exclusion_state_changed(*item, !force_include);
-      }
-
-      DKFormPickerCustomFilter* Model::customFilter() const {
-         return this->_custom_filter;
-      }
-      void Model::setCustomFilter(DKFormPickerCustomFilter* v) {
-         if (this->_custom_filter == v)
-            return;
-         this->_custom_filter = v;
-         this->forceRefill();
       }
 
       void Model::forceRefill() {

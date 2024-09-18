@@ -1,7 +1,7 @@
 #include "./FormPickerFromFormListPaneFilter.h"
 #include "widgets/DKFormListPane.h"
 
-/*virtual*/ bool FormPickerFromFormListPaneFilter::form_matches(const dovah::form_stub& stub) const noexcept /*override*/ {
+/*virtual*/ bool FormPickerFromFormListPaneFilter::form_matches(dovah::form_stub& stub) const noexcept /*override*/ {
    if (!this->_pane) {
       return false;
    }

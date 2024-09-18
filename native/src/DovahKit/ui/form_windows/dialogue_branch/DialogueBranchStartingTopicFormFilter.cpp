@@ -2,7 +2,7 @@
 #include "dovah/form_stub.h"
 #include "dovah/form_stubs/helpers/get_dialogue_topic_branch.h"
 
-/*virtual*/ bool DialogueBranchStartingTopicFormFilter::form_matches(const dovah::form_stub& stub) const noexcept /*override*/ {
+/*virtual*/ bool DialogueBranchStartingTopicFormFilter::form_matches(dovah::form_stub& stub) const noexcept /*override*/ {
    if (stub.form_type != dovah::form_type::topic)
       return false;
    if (dovah::form_stub_helpers::get_dialogue_topic_branch(&stub) != this->branch)

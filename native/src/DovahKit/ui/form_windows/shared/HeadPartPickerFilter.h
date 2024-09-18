@@ -4,14 +4,14 @@
 #include "dovah/data/sex.h"
 #include "widgets/widget-data/DKFormPickerCustomFilter.h"
 
-class HeadPartPickerFilter final : public DKFormPickerCustomFilter {
+class HeadPartPickerFilter final : public DKCustomFormFilter {
    public:
       using head_part_type = dovah::head_part_type;
 
    public:
-      using DKFormPickerCustomFilter::DKFormPickerCustomFilter;
+      using DKCustomFormFilter::DKCustomFormFilter;
          
-      virtual bool form_matches(const dovah::form_stub& stub) const noexcept override;
+      virtual bool form_matches(dovah::form_stub& stub) const noexcept override;
 
    public:
       void setRequiredRace(dovah::form_stub*);

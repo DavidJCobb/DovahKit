@@ -11,7 +11,7 @@
 #include <QPointer>
 #include <QTimer>
 #include "dovah/form_types.h"
-#include "../../widget-data/DKFormPickerCustomFilter.h"
+#include "../../widget-data/DKCustomFormFilterableModelMixin.h"
 
 namespace dovah {
    class form_stub;
@@ -63,7 +63,7 @@ namespace ui::impl::DKFormPicker {
    // Items are gathered over time rather than all at once, to avoid blocking the UI; 
    // they are then sorted, also over time.
    //
-   class Model : public QAbstractItemModel {
+   class Model : public QAbstractItemModel, public DKCustomFormFilterableModelMixin {
       Q_OBJECT;
       protected:
          using item_type = typename shared_datastore::item_type;
@@ -94,7 +94,6 @@ namespace ui::impl::DKFormPicker {
       protected:
          std::vector<const item_type*>        _items;
          std::vector<const dovah::form_stub*> _force_included_forms;
-         QPointer<DKFormPickerCustomFilter> _custom_filter = nullptr;
          filter_parameters _last_completed_fill_params;
          struct {
             filter_parameters params;
@@ -133,6 +132,11 @@ namespace ui::impl::DKFormPicker {
                virtual Qt::ItemFlags flags(const QModelIndex& index) const override;
             #pragma endregion
          #pragma endregion
+               
+         #pragma region DKCustomFormFilterableModelMixin overrides
+            virtual void recheck_custom_filter_for_all_forms() override;
+            virtual void recheck_custom_filter_for_form(dovah::form_stub&) override;
+         #pragma endregion
 
       protected:
          bool _entry_matches_params(const item_type&, const filter_parameters&) const;
@@ -170,9 +174,6 @@ namespace ui::impl::DKFormPicker {
 
          bool willNeverDefaultExcludeForm(dovah::form_stub&) const;
          void setFormNeverDefaultExcluded(dovah::form_stub&, bool force_include);
-
-         DKFormPickerCustomFilter* customFilter() const;
-         void setCustomFilter(DKFormPickerCustomFilter*);
 
          void forceRefill();
          void forceRecheckFilterOn(const dovah::form_stub&);

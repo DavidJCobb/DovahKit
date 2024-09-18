@@ -2406,9 +2406,6 @@
     <ClCompile Include="editor\subsystems\form_info_cache\cached_voicetype_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\widget-data\DKFormPickerCustomFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\forms\Class.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2595,9 +2592,6 @@
     <ClCompile Include="ui\form_windows\race\RaceAvailableFaceMorphsModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\widget-data\DKFormListPaneCustomFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ui\form_windows\race\RacePresetActorFormFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2710,6 +2704,36 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\form_windows\topic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\topic_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\topic_info\TopicInfoSharedInfoFormFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers\string\stricontains_ascii.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\topic_info\TopicInfoResponseTableviewModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\topic_info\TopicInfoWalkAwayTopicFormFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\topic_info\topic_info_response.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-data\DKCustomFormFilterableModelMixin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-data\DKCustomFormFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsFormFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -6839,6 +6863,30 @@
     <ClInclude Include="ui\form_windows\dialogue_branch\DialogueBranchStartingTopicFormFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\form_windows\topic_info\TopicInfoSharedInfoFormFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\string\stricontains_ascii.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\topic_info\TopicInfoResponseTableviewModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\dialogue\emotion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\topic_info\TopicInfoWalkAwayTopicFormFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-data\DKCustomFormFilterableModelMixin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsFormFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -7611,9 +7659,6 @@
     <QtMoc Include="ui\form_windows\association_type.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\widget-data\DKFormPickerCustomFilter.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="ui\form_windows\class.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -7677,9 +7722,6 @@
     <QtMoc Include="ui\form_windows\race\RaceAvailableFaceMorphsModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\widget-data\DKFormListPaneCustomFilter.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="ui\form_windows\race\RacePhonemeMorphsModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -7738,6 +7780,15 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\topic.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\topic_info.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\topic_info\topic_info_response.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\widget-data\DKCustomFormFilter.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -8196,6 +8247,7 @@
     <None Include="ui\form_windows\quest\QuestAllDialogueDatastore.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="widgets\widget-data\DKCustomFormFilter.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
@@ -8262,5 +8314,6 @@
     <Natvis Include="dovah\files\bsa\packed_folder_info.natvis" />
     <Natvis Include="dovah\bs_hash.natvis" />
     <Natvis Include="dovah\utils\classed_stat_points.natvis" />
+    <Natvis Include="helpers\multiheap.natvis" />
   </ItemGroup>
 </Project>

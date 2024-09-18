@@ -111,6 +111,15 @@ void DKFormPickerDialog::setFormStub(dovah::form_stub* stub) noexcept {
    this->_value = stub;
 }
 
+#if !defined(QT_DESIGNER_LIB)
+   DKCustomFormFilter* DKFormPickerDialog::customFilter() const {
+      return this->_model->get_custom_filter();
+   }
+   void DKFormPickerDialog::setCustomFilter(DKCustomFormFilter* v) {
+      this->_model->set_custom_filter(v);
+   }
+#endif
+
 void DKFormPickerDialog::_updateColumnVisibility() {
    if (!this->isVisible())
       return;

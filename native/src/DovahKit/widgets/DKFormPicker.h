@@ -17,7 +17,7 @@ namespace ui::impl::DKFormPicker {
 class DKComboBox;
 class QComboBox;
 #if !defined(QT_DESIGNER_LIB)
-   class DKFormPickerCustomFilter;
+   class DKCustomFormFilter;
 #endif
 
 class DKFormPicker : public QWidget {
@@ -76,8 +76,8 @@ class DKFormPicker : public QWidget {
       constexpr bool isSplittingTypes() const noexcept { return this->_state.is_splitting_types; }
 
       #if !defined(QT_DESIGNER_LIB)
-         DKFormPickerCustomFilter* customFilter() const;
-         void setCustomFilter(DKFormPickerCustomFilter* v);
+         DKCustomFormFilter* customFilter() const;
+         void setCustomFilter(DKCustomFormFilter* v);
       #endif
 
    protected:

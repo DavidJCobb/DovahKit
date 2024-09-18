@@ -132,6 +132,27 @@ namespace ui::impl::DKFormPicker {
          }
       #pragma endregion
    #pragma endregion
+               
+   #pragma region DKCustomFormFilterableModelMixin overrides
+      /*virtual*/ void DialogModel::recheck_custom_filter_for_all_forms() /*override*/ {
+         this->_refill();
+      }
+      /*virtual*/ void DialogModel::recheck_custom_filter_for_form(dovah::form_stub& stub) /*override*/ {
+         const auto* item = shared_datastore::get().item_for_stub(&stub);
+         if (!item)
+            return;
+
+         bool show = this->_entry_matches_params(*item);
+         if (show)
+            if (item->default_exclude_from_listings)
+               show = false;
+         if (show) {
+            this->_force_insert_item(*item);
+         } else {
+            this->_force_remove_item(*item);
+         }
+      }
+   #pragma endregion
 
    bool DialogModel::_entry_matches_params(const item_type& item) const {
       if (!this->_allowed_form_types.isEmpty()) {

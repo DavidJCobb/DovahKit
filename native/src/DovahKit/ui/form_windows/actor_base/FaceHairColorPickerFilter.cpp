@@ -2,7 +2,7 @@
 #include "dovah/form_stub.h"
 
 namespace impl {
-   /*virtual*/ bool FaceHairColorPickerFilter::form_matches(const dovah::form_stub& stub) const noexcept /*override*/ {
+   /*virtual*/ bool FaceHairColorPickerFilter::form_matches(dovah::form_stub& stub) const noexcept /*override*/ {
       if (!this->_race)
          return true;
       auto& head = this->_race->by_sex[this->_sex].head_data;

@@ -1,7 +1,7 @@
 #include "./HeadPartPickerFilter.h"
 #include "editor/subsystems/form_info_cache/core.h"
 
-/*virtual*/ bool HeadPartPickerFilter::form_matches(const dovah::form_stub& stub) const noexcept /*override*/ {
+/*virtual*/ bool HeadPartPickerFilter::form_matches(dovah::form_stub& stub) const noexcept /*override*/ {
    auto& fic  = dovahkit::subsystems::form_info_cache::core::get();
    auto* info = fic.get_head_part_info(stub);
    if (!info)
