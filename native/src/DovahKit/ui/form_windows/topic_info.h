@@ -7,6 +7,7 @@
 namespace dovah::loaded_forms::components::papyrus {
    class topic_info_fragment_data;
 }
+class TopicInfoLinkedTopicsFormFilter;
 class TopicInfoLinkedTopicsModel;
 class TopicInfoResponseTableviewModel;
 class TopicInfoSharedInfoFormFilter;

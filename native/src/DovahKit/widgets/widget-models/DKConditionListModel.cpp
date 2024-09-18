@@ -6,6 +6,7 @@
 #include "dovah/data/conditions/all_parameter_types.h"
 #include "dovah/data/conditions/event_function.h"
 #include "dovah/data/hardcoded_form_ids.h"
+#include "dovah/forms/components/conditions.h"
 #include "editor/helpers/actor_value_index_to_name.h"
 #include "editor/helpers/form_type_name_to_string.h"
 #include "editor/core.h"

@@ -22,7 +22,7 @@
 #include "dovah/forms/Race.h"
 #include "dovah/utils/compute_classed_stat_points.h"
 
-#include "widgets/widget-data/DKFormPickerCustomFilter.h"
+#include "widgets/widget-data/DKCustomFormFilter.h"
 #include "widgets/DKHeaderView.h"
 
 #include "./actor_base/ActorBaseCreatureSoundsModel.h"
@@ -57,19 +57,19 @@ namespace {
 }
 
 namespace impl {
-   class CrimeFactionPickerFilter final : public DKFormPickerCustomFilter {
+   class CrimeFactionPickerFilter final : public DKCustomFormFilter {
       protected:
          using fic_type = dovahkit::subsystems::form_info_cache::core;
 
       public:
-         CrimeFactionPickerFilter(QObject* parent) : DKFormPickerCustomFilter(parent) {
+         CrimeFactionPickerFilter(QObject* parent) : DKCustomFormFilter(parent) {
             auto& fic = fic_type::get();
             QObject::connect(&fic, &fic_type::cachedFactionChanged, this, [this](dovah::form_stub& stub) {
                this->_refilter_form(stub);
             });
          }
          
-         virtual bool form_matches(const dovah::form_stub& stub) const noexcept override {
+         virtual bool form_matches(dovah::form_stub& stub) const noexcept override {
             if (!this->_model)
                return true;
 
@@ -114,19 +114,19 @@ namespace impl {
       protected:
          ActorBaseFactionsModel* _model = nullptr;
    };
-   class VoicetypePickerFilter final : public DKFormPickerCustomFilter {
+   class VoicetypePickerFilter final : public DKCustomFormFilter {
       protected:
          using fic_type = dovahkit::subsystems::form_info_cache::core;
 
       public:
-         VoicetypePickerFilter(QObject* parent) : DKFormPickerCustomFilter(parent) {
+         VoicetypePickerFilter(QObject* parent) : DKCustomFormFilter(parent) {
             auto& fic = fic_type::get();
             QObject::connect(&fic, &fic_type::cachedVoicetypeChanged, this, [this](dovah::form_stub& stub) {
                this->_refilter_form(stub);
             });
          }
 
-         virtual bool form_matches(const dovah::form_stub& stub) const noexcept override {
+         virtual bool form_matches(dovah::form_stub& stub) const noexcept override {
             auto& fic  = fic_type::get();
             auto* info = fic.get_voicetype_info(stub);
             if (!info)

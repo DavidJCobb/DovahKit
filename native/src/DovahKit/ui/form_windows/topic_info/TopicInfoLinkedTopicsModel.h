@@ -51,7 +51,7 @@ class TopicInfoLinkedTopicsModel : public DKGenericListModel<TopicInfoLinkedTopi
       void removeTopic(dovah::form_stub*);
       void removeTopic(size_t);
 
-      constexpr const bool containsTopic(const dovah::form_stub* stub) const noexcept {
+      inline const bool containsTopic(const dovah::form_stub* stub) const noexcept {
          for (auto* node : this->_nodes)
             if (node->stub == stub)
                return true;

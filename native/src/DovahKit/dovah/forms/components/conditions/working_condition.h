@@ -32,7 +32,7 @@ namespace dovah::loaded_forms::components::conditions {
       package_data,
    };
 
-   struct working_condition {
+   class working_condition {
       public:
          constexpr working_condition() {}
          working_condition(const condition& src);

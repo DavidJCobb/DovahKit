@@ -40,7 +40,7 @@ FormDialogTopicInfo::FormDialogTopicInfo(dovah::form_stub& stub, QWidget* parent
          }
          {
             auto* action = items.edit = menu.addAction(tr("Edit..."));
-            QObject::connect(action, &QAction::triggered, this, &FormDialogTopicInfo::_edit_response);
+            QObject::connect(action, &QAction::triggered, this, [this]() { this->_edit_response(); });
          }
          {
             auto* action = items.move_up = menu.addAction(tr("Move Up"));

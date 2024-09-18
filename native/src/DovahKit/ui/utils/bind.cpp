@@ -9,7 +9,7 @@
 #include "widgets/DKCompactObjectReferencePicker.h"
 #include "widgets/DKFloatSlider.h"
 #include "widgets/DKFormPicker.h"
-#include "widgets/widget-data/DKFormPickerCustomFilter.h"
+#include "widgets/widget-data/DKCustomFormFilter.h"
 #include "widgets/DKFormListPane.h"
 #include "widgets/DKGameFilePicker.h"
 #include "widgets/DKNavmeshGenerationImportOptionPicker.h"
@@ -64,10 +64,27 @@ namespace ui {
       // signal for setting the initial value.)
       //
       if (auto* stub = target) {
+         bool changed = false;
          if (auto* filter = widget->customFilter()) {
             if (!filter->form_matches(*stub)) {
-               target = widget->formStub();
+               changed = true;
             }
+         }
+         if (!changed) {
+            auto& list    = widget->allowedFormTypes();
+            bool  allowed = list.empty();
+            for (auto ft : list) {
+               if (target->form_type == ft) {
+                  allowed = true;
+                  break;
+               }
+            }
+            if (!allowed)
+               changed = true;
+         }
+
+         if (changed) {
+            target = widget->formStub();
          }
       } else if (!widget->allowNone()) {
          if (auto* after = widget->formStub())

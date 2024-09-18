@@ -43,7 +43,8 @@ class DKFormPicker : public QWidget {
       inline void setAllowedFormType(dovah::form_type ft) noexcept { this->setAllowedFormTypes({ ft }); }
       //
       inline bool allowsFormType(dovah::form_type ft) const noexcept {
-         return this->_properties.allowed_form_types.contains(ft);
+         auto& list = this->_properties.allowed_form_types;
+         return list.empty() || list.contains(ft);
       }
 
       constexpr bool allowNone() const noexcept { return this->_properties.allow_none; }

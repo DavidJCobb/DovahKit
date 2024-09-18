@@ -2,7 +2,7 @@
 #include <optional>
 #include "dovah/data/headparts.h"
 #include "dovah/data/sex.h"
-#include "widgets/widget-data/DKFormPickerCustomFilter.h"
+#include "widgets/widget-data/DKCustomFormFilter.h"
 
 class HeadPartPickerFilter final : public DKCustomFormFilter {
    public:

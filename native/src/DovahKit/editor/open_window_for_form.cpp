@@ -46,6 +46,7 @@
 #include "../ui/form_windows/static.h"
 #include "../ui/form_windows/textureset.h"
 #include "../ui/form_windows/topic.h"
+#include "../ui/form_windows/topic_info.h"
 #include "../ui/form_windows/visual_effect.h"
 #include "../ui/form_windows/voicetype.h"
 #include "../ui/form_windows/word_of_power.h"
@@ -98,6 +99,7 @@ namespace {
       std::pair{ dovah::form_type::statik,            _make<FormDialogStatic> },
       std::pair{ dovah::form_type::texture_set,       _make<FormDialogTextureSet> },
       std::pair{ dovah::form_type::topic,             _make<FormDialogTopic> },
+      std::pair{ dovah::form_type::topic_info,        _make<FormDialogTopicInfo> },
       std::pair{ dovah::form_type::visual_effect,     _make<FormDialogVisualEffect> },
       std::pair{ dovah::form_type::voicetype,         _make<FormDialogVoicetype> },
       std::pair{ dovah::form_type::word_of_power,     _make<FormDialogWordOfPower> },

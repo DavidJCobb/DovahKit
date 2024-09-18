@@ -13,7 +13,7 @@
    #include "editor/form_stub_meta_type.h"
 
    #include "./widget-models/DKFormPicker/DKFormPickerModel.h"
-   #include "./widget-data/DKFormPickerCustomFilter.h"
+   #include "./widget-data/DKCustomFormFilter.h"
 #endif
 #include "./DKComboBox.h"
 
