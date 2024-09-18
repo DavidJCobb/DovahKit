@@ -126,9 +126,9 @@ QModelIndex CLASS_NAME::qmi_for_node(const node_type& node, size_t column) const
          if (first_row_index + count > this->rowCount())
             return false;
 
+         bool moving_down  = to_position > first_row_index;
          auto last_to_move = first_row_index + count - 1;
          {
-            bool moving_down = to_position > first_row_index;
 
             if (first_row_index == to_position)
                return false;
@@ -147,13 +147,14 @@ QModelIndex CLASS_NAME::qmi_for_node(const node_type& node, size_t column) const
             return false;
 
          {
-            bool moving_down = to_position > first_row_index;
+            auto slice = this->_nodes.mid(first_row_index, count);
+            this->_nodes.remove(first_row_index, count);
             if (moving_down) {
-               while (count--)
-                  this->_nodes.move(first_row_index + count, to_position - count);
+               for (int i = slice.size() - 1; i >= 0; --i)
+                  this->_nodes.insert(to_position - count, slice[i]);
             } else {
-               while (count--)
-                  this->_nodes.move(first_row_index + count, to_position);
+               for (size_t i = 0; i < slice.size(); ++i)
+                  this->_nodes.insert(to_position + i, slice[i]);
             }
          }
 

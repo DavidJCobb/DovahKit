@@ -9,6 +9,7 @@
 #include "editor/core.h"
 #include "editor/open_window_for_form.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/set_tableview_column_flex.h"
 #include "ui/utils/typical_tableview_config.h"
 #include "./topic_info/topic_info_response.h"
 #include "./topic_info/TopicInfoLinkedTopicsModel.h"
@@ -28,6 +29,12 @@ FormDialogTopicInfo::FormDialogTopicInfo(dovah::form_stub& stub, QWidget* parent
       view->setModel(model);
       view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
       ui::typical_tableview_config(view);
+      view->setWordWrap(false);
+      ui::set_tableview_column_flex(view, [](DKHeaderView& header, const QFontMetrics& metrics) {
+         header.setColumnFlex(TopicInfoResponseTableviewModel::Column::Text,    1, 0, metrics.boundingRect("   ").width() * 1.5F + 4);
+         header.setColumnFlex(TopicInfoResponseTableviewModel::Column::Emotion, 0, 0, metrics.boundingRect("Super Duper Angry").width() * 1.5F + 4);
+         header.setColumnFlex(TopicInfoResponseTableviewModel::Column::Edited,  0, 0, metrics.boundingRect("Edited").width() * 1.5F + 4);
+      });
 
       view->installEventFilter(this); // Delete key
       QObject::connect(view, &QAbstractItemView::doubleClicked, this, &FormDialogTopicInfo::_edit_response);

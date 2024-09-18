@@ -9,6 +9,8 @@ namespace {
 }
 
 FormSubdialogTopicInfoResponse::FormSubdialogTopicInfoResponse(QWidget* parent) {
+   this->ui.setupUi(this);
+
    this->ui.animSpeaker->setAllowedFormType(dovah::form_type::idle);
    this->ui.animListener->setAllowedFormType(dovah::form_type::idle);
 

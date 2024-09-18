@@ -3076,6 +3076,8 @@
   <ItemGroup>
     <Natvis Include="dovah\bs_hash.natvis" />
     <Natvis Include="dovah\files\bsa\packed_folder_info.natvis" />
+    <Natvis Include="dovah\forms\components\conditions\working_comparison.natvis" />
+    <Natvis Include="dovah\forms\components\conditions\working_condition.natvis" />
     <Natvis Include="dovah\forms\Landscape.natvis" />
     <Natvis Include="dovah\form_stub.natvis" />
     <Natvis Include="dovah\utils\classed_stat_points.natvis" />

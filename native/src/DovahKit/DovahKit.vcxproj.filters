@@ -8315,5 +8315,7 @@
     <Natvis Include="dovah\bs_hash.natvis" />
     <Natvis Include="dovah\utils\classed_stat_points.natvis" />
     <Natvis Include="helpers\multiheap.natvis" />
+    <Natvis Include="dovah\forms\components\conditions\working_comparison.natvis" />
+    <Natvis Include="dovah\forms\components\conditions\working_condition.natvis" />
   </ItemGroup>
 </Project>
