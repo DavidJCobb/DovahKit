@@ -33,5 +33,7 @@
    #include "./by_form_type/race/wrong_weight_count_per_phoneme.h"
    #include "./by_form_type/shout/wrong_word_count.h"
    #include "./by_form_type/topic_info/response_addendum_subrecord_too_early.h"
+   #include "./by_form_type/topic_info/response_has_id_zero.h"
+   #include "./by_form_type/topic_info/response_ids_are_not_unique.h"
    #include "./by_form_type/worldspace/is_own_parent.h"
 #pragma endregion

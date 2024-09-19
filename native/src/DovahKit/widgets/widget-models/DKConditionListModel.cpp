@@ -171,7 +171,7 @@ QString DKConditionListModel::_stringify_condition_parameter(const Condition& co
    #pragma endregion
 
    if (condition.get_argument_typeinfo(i) == &dovah::conditions::parameter_types::ActorValue) {
-      if (auto* casted = std::get_if<uint32_t>(&parameter)) {
+      if (auto* casted = std::get_if<int32_t>(&parameter)) {
          QString out = editor_helpers::actor_value_index_to_name(*casted);
          if (!out.isEmpty())
             return out;

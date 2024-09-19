@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <limits>
 #include <string>
 #include <vector>
 #include "Form.h"
@@ -14,6 +15,8 @@ namespace dovah::loaded_forms {
       public:
          static constexpr const enum form_type form_type = form_type::topic_info;
          TopicInfo(const constructor_params& c) : Form(form_type, c) {};
+
+         static constexpr const size_t max_available_response_ids = std::numeric_limits<uint8_t>::max();
 
          #pragma region Enums and flags masks
          struct info_flag {
@@ -69,7 +72,7 @@ namespace dovah::loaded_forms {
                int32_t value = 50;
             } emotion;
             uint32_t unused;
-            uint8_t  response_number;
+            uint8_t  id = 0; // Should not be 0. The game and CK both use "New Response" as part of the filename if you specify 0.
             // 3 padding bytes here
             form_reference_t sound; // plays instead of any normal voice line, if set
             flags_t flags = 0;
@@ -84,7 +87,7 @@ namespace dovah::loaded_forms {
 
             void clear(TopicInfo& owner);
             void clone_from(const response& other, loaded_forms::Form& my_owner);
-            void save(tes_file_writing::record& record, load_order_interfaces::form_save& intfc, uint8_t response_number);
+            void save(tes_file_writing::record& record, load_order_interfaces::form_save& intfc);
             void sever_outbound_references_to(TopicInfo& owner, form_stub& target);
          };
 

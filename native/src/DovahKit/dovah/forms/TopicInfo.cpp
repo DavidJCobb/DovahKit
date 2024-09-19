@@ -2,6 +2,10 @@
 #include "_common_cpp.h"
 
 #include "../notices/form_load_warnings/by_form_type/topic_info/response_addendum_subrecord_too_early.h"
+#include "../notices/form_load_warnings/by_form_type/topic_info/response_has_id_zero.h"
+#include "../notices/form_load_warnings/by_form_type/topic_info/response_ids_are_not_unique.h"
+
+#include "helpers/bitset.h"
 
 namespace {
    namespace specific_load_warnings {
@@ -24,7 +28,7 @@ namespace dovah::loaded_forms {
    void TopicInfo::response::clone_from(const response& other, loaded_forms::Form& my_owner) {
       this->emotion = other.emotion;
       this->unused  = other.unused;
-      this->response_number = other.response_number;
+      this->id = other.id;
       this->sound.set(my_owner, other.sound);
       this->flags = other.flags;
       this->text = other.text;
@@ -33,12 +37,12 @@ namespace dovah::loaded_forms {
       this->idles.speaker.set(my_owner, other.idles.speaker);
       this->idles.listener.set(my_owner, other.idles.listener);
    }
-   void TopicInfo::response::save(tes_file_writing::record& record, load_order_interfaces::form_save& intfc, uint8_t response_number) {
+   void TopicInfo::response::save(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
       auto& TRDT = record.open_next_subrecord('TRDT');
       TRDT.write(this->emotion.type);
       TRDT.write(this->emotion.value);
       TRDT.write(this->unused);
-      TRDT.write(response_number);
+      TRDT.write(this->id);
       TRDT.skip_bytes(3);
       TRDT.write(this->sound);
       TRDT.write(this->flags);
@@ -197,7 +201,7 @@ namespace dovah::loaded_forms {
                   subrecord.read(r.emotion.type);
                   subrecord.read(r.emotion.value);
                   subrecord.read(r.unused);
-                  subrecord.read(r.response_number);
+                  subrecord.read(r.id);
                   subrecord.skip_bytes(3);
                   if (subrecord.read(r.sound)) {
                      intfc.warn_if_ref_is_wrong_type(r.sound, form_type::sound_descriptor, subrecord.signature());
@@ -293,6 +297,47 @@ namespace dovah::loaded_forms {
             default:
                intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
+         }
+      }
+
+      {  // Check for and warn on reused response IDs.
+         cobb::bitset<256> seen;
+         cobb::bitset<256> dupes;
+         for (auto& response : this->responses) {
+            if (seen.test(response.id)) {
+               dupes.set(response.id);
+            }
+            seen.set(response.id);
+         }
+         if (dupes.any()) {
+            std::vector<uint8_t> reused_ids;
+            for (size_t i = 0; i < 256; ++i) {
+               if (dupes.get_span<uint32_t>(i) == 0) {
+                  i += 32;
+                  i--;
+                  continue;
+               }
+               bool reused = dupes.test(i);
+               if (reused)
+                  reused_ids.push_back(i);
+            }
+            specific_load_warnings::response_ids_are_not_unique notice(
+               this->stub,
+               this->responses.size(),
+               reused_ids
+            );
+            intfc.log_load_warning(notice);
+         }
+         if (seen.test(0)) {
+            size_t count = 0;
+            for (auto& response : this->responses)
+               if (response.id == 0)
+                  ++count;
+            specific_load_warnings::response_has_id_zero notice(
+               this->stub,
+               count
+            );
+            intfc.log_load_warning(notice);
          }
       }
    }
@@ -486,7 +531,7 @@ namespace dovah::loaded_forms {
          // responses' cached indices only go up to 255?
          //
          for (size_t i = 0; i < size; ++i) {
-            this->responses[i].save(record, intfc, i);
+            this->responses[i].save(record, intfc);
          }
       }
       //

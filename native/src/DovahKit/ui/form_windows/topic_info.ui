@@ -91,6 +91,19 @@
      <item row="2" column="1">
       <widget class="DKFormPicker" name="audioOutputOverride"/>
      </item>
+     <item row="0" column="0">
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>8</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
     </layout>
    </item>
    <item row="1" column="2" rowspan="3">
@@ -187,7 +200,7 @@
    </item>
    <item row="0" column="0" colspan="2">
     <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="0">
+     <item row="1" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
         <string>Topic Text:</string>
@@ -197,7 +210,7 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
+     <item row="2" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
         <string>Override with Prompt:</string>
@@ -207,7 +220,7 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
+     <item row="1" column="1">
       <widget class="QLineEdit" name="topicText">
        <property name="enabled">
         <bool>false</bool>
@@ -217,8 +230,21 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
+     <item row="2" column="1">
       <widget class="QLineEdit" name="prompt"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_13">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
      </item>
     </layout>
    </item>
@@ -257,9 +283,6 @@
         <cstring>sharedInfo</cstring>
        </property>
       </widget>
-     </item>
-     <item row="0" column="3">
-      <widget class="QLineEdit" name="sharedInfoSearch"/>
      </item>
      <item row="1" column="3">
       <widget class="DKFormPicker" name="sharedInfo"/>
@@ -328,6 +351,9 @@
         <string>&lt;p&gt;These are the lines of dialogue that the NPC says as part of this info. Each line is separated by a short delay (determined by the &lt;code&gt;fGameplayVoiceFilePadding&lt;/code&gt; game setting). Double-click a line to edit it, or right-click for more options.&lt;/p&gt;</string>
        </property>
       </widget>
+     </item>
+     <item row="0" column="3" colspan="2">
+      <widget class="QLineEdit" name="sharedInfoSearch"/>
      </item>
     </layout>
    </item>
@@ -536,9 +562,11 @@
   </customwidget>
  </customwidgets>
  <tabstops>
+  <tabstop>editorID</tabstop>
   <tabstop>topicText</tabstop>
   <tabstop>prompt</tabstop>
   <tabstop>speaker</tabstop>
+  <tabstop>audioOutputOverride</tabstop>
   <tabstop>sharedInfoSearch</tabstop>
   <tabstop>sharedInfo</tabstop>
   <tabstop>buttonEditSharedInfo</tabstop>
@@ -550,6 +578,7 @@
   <tabstop>flagRandom</tabstop>
   <tabstop>flagRandomEnd</tabstop>
   <tabstop>flagCanMoveWhileGreeting</tabstop>
+  <tabstop>flagReqPostprocess</tabstop>
   <tabstop>flagSpendsFavorPoints</tabstop>
   <tabstop>favorLevel</tabstop>
   <tabstop>hoursUntilReset</tabstop>

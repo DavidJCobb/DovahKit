@@ -2,6 +2,7 @@
 #include <limits>
 #include <QKeyEvent>
 #include "helpers/vectors/move_item_within.h"
+#include "helpers/bitset.h"
 #include "dovah/core.h"
 #include "dovah/form_stubs/helpers/get_dialogue_topic_quest.h"
 #include "dovah/forms/components/papyrus/fragment_data/topic_info_fragment_data.h"
@@ -215,7 +216,7 @@ void FormDialogTopicInfo::_load_impl() {
       this->_filters.shared_info->setOwningQuest(owning_quest);
    }
 
-   //ui::bind(this->ui.editorID, this->editor_id());
+   ui::bind(this->ui.editorID, this->editor_id());
    this->ui.prompt->setText(editor.convert_localized_string(working.override_topic_text));
 
    {
@@ -417,10 +418,29 @@ void FormDialogTopicInfo::_update_topic_text_preview() {
    }
 #pragma endregion
 
+std::optional<uint8_t> FormDialogTopicInfo::_allocate_new_response_id() const {
+   cobb::bitset<256> used;
+   used.set(0);
+
+   for (auto& response : this->form->responses) {
+      used.set(response.id);
+   }
+   auto first = used.find_first_clear();
+   if (first < 0)
+      return {};
+   return first;
+}
+
 #pragma region Handlers: Responses
    void FormDialogTopicInfo::_create_response() {
       if (this->form->use_shared_info)
          return;
+
+      auto num = this->_allocate_new_response_id();
+      if (!num.has_value()) {
+         // TODO: Warn user: too many responses.
+         return;
+      }
 
       auto* widget    = this->ui.responses;
       auto* model     = this->_models.responses;
@@ -429,6 +449,12 @@ void FormDialogTopicInfo::_update_topic_text_preview() {
       auto added = model->create();
       if (!added.has_value())
          return;
+
+      {
+         auto& list = this->form->responses;
+         auto& resp = list.emplace_back();
+         resp.id = num.value();
+      }
 
       auto tl = model->index(added.value(), 0, {});
       auto br = model->index(added.value(), model->column_count - 1, {});

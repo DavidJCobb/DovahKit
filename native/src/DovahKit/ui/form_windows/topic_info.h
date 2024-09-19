@@ -1,4 +1,5 @@
 #pragma once
+#include <optional>
 #include <QMenu>
 #include "./_base.h"
 #include "dovah/forms/TopicInfo.h"
@@ -68,6 +69,8 @@ class FormDialogTopicInfo :
          void _move_linked_topic(int by);
          void _remove_linked_topic();
       #pragma endregion
+
+      std::optional<uint8_t> _allocate_new_response_id() const;
 
       #pragma region Handlers: Responses
          void _create_response();

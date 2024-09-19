@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::loaded_forms::components::conditions::working_comparison">
+      <Intrinsic Name="_is_form_stub" Expression="operand._Which == 1"/>
+      
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::equal            &amp;&amp; !_is_form_stub()">== {operand._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::not_equal        &amp;&amp; !_is_form_stub()">!= {operand._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::greater          &amp;&amp; !_is_form_stub()">&gt; {operand._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::greater_or_equal &amp;&amp; !_is_form_stub()">&gt;= {operand._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::less             &amp;&amp; !_is_form_stub()">&lt; {operand._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::less_or_equal    &amp;&amp; !_is_form_stub()">&lt;= {operand._Head}</DisplayString>
+      
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::equal            &amp;&amp; _is_form_stub()">== {operand._Tail._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::not_equal        &amp;&amp; _is_form_stub()">!= {operand._Tail._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::greater          &amp;&amp; _is_form_stub()">&gt; {operand._Tail._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::greater_or_equal &amp;&amp; _is_form_stub()">&gt;= {operand._Tail._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::less             &amp;&amp; _is_form_stub()">&lt; {operand._Tail._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::less_or_equal    &amp;&amp; _is_form_stub()">&lt;= {operand._Tail._Head}</DisplayString>
+      <Expand>
+         <Item Name="[operator]">op</Item>
+         <Item Name="[operand]" Condition="!_is_form_stub()">operand._Head</Item>
+         <Item Name="[operand]" Condition="_is_form_stub()">operand._Tail._Head</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

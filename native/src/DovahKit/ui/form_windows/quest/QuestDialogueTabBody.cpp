@@ -43,7 +43,7 @@ namespace {
             QObject::connect(button, &QPushButton::clicked, dialog, &QDialog::accept);
          }
          {
-            auto* button = new QPushButton(QuestDialogueTabBody::tr("OK"), dialog);
+            auto* button = new QPushButton(QuestDialogueTabBody::tr("Cancel"), dialog);
             btn->addWidget(button);
             QObject::connect(button, &QPushButton::clicked, dialog, &QDialog::reject);
          }
@@ -70,23 +70,7 @@ namespace {
             if (used)
                continue;
 
-            QString name;
-            {
-               auto gs_name = dfn.game_setting_for_name();
-               auto variant = gss.get_setting_value(gs_name.c_str());
-               if (std::holds_alternative<dovah::localized_string>(variant)) {
-                  name = editor.convert_localized_string(std::get<dovah::localized_string>(variant));
-               }
-               if (name.isEmpty()) {
-                  variant = gss.get_setting_default_value(gs_name.c_str());
-                  if (std::holds_alternative<dovah::localized_string>(variant)) {
-                     name = editor.convert_localized_string(std::get<dovah::localized_string>(variant));
-                  }
-                  if (name.isEmpty()) {
-                     name = QString::fromStdString(std::string(dfn.internal_name));
-                  }
-               }
-            }
+            QString name = QString::fromStdString(std::string(dfn.internal_name));
 
             auto* item = new QListWidgetItem(name);
             item->setData(Qt::UserRole, dfn.signature);
@@ -103,7 +87,11 @@ namespace {
          );
          return 0;
       }
-      dialog->exec();
+      {
+         auto result = dialog->exec();
+         if (result == QDialog::Rejected)
+            return 0;
+      }
       dialog->deleteLater();
 
       uint32_t subtype = 0;
@@ -377,10 +365,10 @@ dovah::form_stub* QuestDialogueTabBody::_spawn_topic(QString editor_id, dovah::f
    request.editorID = editor_id.toStdString();
    auto* topic = request.commit();
 
-   auto t_loaded = branch->load().ptr_cast<dovah::loaded_forms::Topic>();
+   auto t_loaded = topic->load().ptr_cast<dovah::loaded_forms::Topic>();
    assert(t_loaded != nullptr);
    {
-      emit editor.formModificationImminent(branch);
+      emit editor.formModificationImminent(topic);
       {
          for (size_t i = 0; i < dovah::dialogue::all_topic_subtypes.size(); ++i) {
             if (dovah::dialogue::all_topic_subtypes[i].signature == subtype_signature) {
@@ -393,7 +381,7 @@ dovah::form_stub* QuestDialogueTabBody::_spawn_topic(QString editor_id, dovah::f
       }
       t_loaded->owning_forms.quest.set(*t_loaded,  quest);
       t_loaded->owning_forms.branch.set(*t_loaded, branch);
-      emit editor.formModified(branch);
+      emit editor.formModified(topic);
    }
    return topic;
 }
@@ -456,12 +444,12 @@ dovah::form_stub* QuestDialogueTabBody::_spawn_info(dovah::form_stub* topic) {
    #pragma region Topics
       void QuestDialogueTabBody::_topic_button_new() {
          auto* branch = this->selected_branch();
-         if (!branch)
-            return;
 
          uint32_t subtype = 0;
          switch (this->_category) {
             case dovah::dialogue::category::topic:
+               if (!branch)
+                  return;
                subtype = 'CUST';
                break;
             case dovah::dialogue::category::scene:
@@ -506,10 +494,14 @@ dovah::form_stub* QuestDialogueTabBody::_spawn_info(dovah::form_stub* topic) {
          if (!topic)
             return;
 
+         dovah::form_stub* info = nullptr;
          try {
-            this->_spawn_info(topic);
+            info = this->_spawn_info(topic);
          } catch (const dovah::exceptions::form_creation_failed& ex) {
             _report_form_create_error(this, ex.code);
+         }
+         if (info) {
+            open_edit_dialog_for_form(*info, this);
          }
       }
       void QuestDialogueTabBody::_info_button_edit() {

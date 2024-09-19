@@ -849,6 +849,36 @@ namespace editor_helpers {
                      disambig
                   ).arg(subject).arg(subrecord);
                }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::topic_info::response_has_id_zero*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString count   = QString::number(casted->num_responses_using);
+                  //
+                  return QObject::tr(
+                     "TopicInfo %1 contains %2 response(s) which use(s) ID zero. Responses must have a unique ID, "
+                     "but ID zero will cause the game and Creation Kit to use an incorrect filename for a response's "
+                     "voice files.",
+                     disambig
+                  ).arg(subject).arg(count);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::topic_info::response_ids_are_not_unique*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  QString responses = QString::number(casted->response_count);
+                  QString ids;
+                  {
+                     auto& src = casted->reused_ids;
+                     for (size_t i = 0; i < src.size(); ++i) {
+                        ids += QString::number(src[i]);
+                        if (i + 1 < src.size())
+                           ids += ", ";
+                     }
+                  }
+                  //
+                  return QObject::tr(
+                     "TopicInfo %1 contained %2 responses, each of which must have a unique ID. However, there are "
+                     "only 255 IDs available per response, and the following IDs are reused: %3.",
+                     disambig
+                  ).arg(subject).arg(responses).arg(ids);
+               }
             #pragma endregion
             #pragma region worldspace
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::worldspace::is_own_parent*>(&warning)) {

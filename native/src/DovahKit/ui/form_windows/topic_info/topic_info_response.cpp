@@ -1,5 +1,8 @@
 #include "./topic_info_response.h"
 #include <array>
+#include "dovah/form_stubs/helpers/get_dialogue_topic_quest.h"
+#include "dovah/forms/Topic.h"
+#include "dovah/utils/compute_voice_file_location.h"
 #include "editor/core.h"
 
 namespace {
@@ -37,6 +40,9 @@ FormSubdialogTopicInfoResponse::FormSubdialogTopicInfoResponse(QWidget* parent) 
       this->ui.voiceFilesTable->setVisible(false);
       this->ui.buttonViewVoicetypeNPCs->setVisible(false);
    }
+
+   QObject::connect(this->ui.buttonOK,     &QPushButton::clicked, this, &QDialog::accept);
+   QObject::connect(this->ui.buttonCancel, &QPushButton::clicked, this, &QDialog::reject);
 }
 
 void FormSubdialogTopicInfoResponse::importFrom(const loaded_form_type& src_form, const response_type& src) {
@@ -53,6 +59,44 @@ void FormSubdialogTopicInfoResponse::importFrom(const loaded_form_type& src_form
    this->ui.emotionValue->setValue(src.emotion.value);
 
    this->ui.useSound->setFormStub(src.sound.get_form_stub());
+
+   auto* info  = &src_form.stub;
+   auto* topic = info->get_parent_form();
+   auto* quest = dovah::form_stub_helpers::get_dialogue_topic_quest(topic);
+   {  // Topic Text and Prompt preview
+      {
+         auto prompt = editor.convert_localized_string(src_form.override_topic_text);
+         if (!prompt.isEmpty())
+            this->ui.promptPreview->setText(prompt);
+      }
+      if (topic && topic->form_type == dovah::form_type::topic) {
+         auto loaded = topic->load().ptr_cast<dovah::loaded_forms::Topic>();
+         if (loaded) {
+            auto prompt = editor.convert_localized_string(loaded->text);
+            if (!prompt.isEmpty())
+               this->ui.topicTextPreview->setText(prompt);
+         }
+      }
+   }
+   {  // Filename
+      std::string_view quest_editor_id;
+      std::string_view topic_editor_id;
+      if (topic) {
+         topic_editor_id = topic->editorID;
+         if (quest)
+            quest_editor_id = quest->editorID;
+      }
+
+      auto filename = dovah::compute_voice_filename(
+         quest_editor_id,
+         topic_editor_id,
+         info->formID,
+         src.id
+      );
+      if (!filename.empty()) {
+         this->ui.expectedVoiceFilename->setText(QString::fromStdString(filename));
+      }
+   }
 }
 void FormSubdialogTopicInfoResponse::exportTo(loaded_form_type& dst_form, response_type& dst) {
    auto& editor = DovahKitCore::get();

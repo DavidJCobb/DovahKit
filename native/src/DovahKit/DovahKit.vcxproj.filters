@@ -2736,6 +2736,9 @@
     <ClCompile Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsFormFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\utils\compute_voice_file_location.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6885,6 +6888,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsFormFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\compute_voice_file_location.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_ids_are_not_unique.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_has_id_zero.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

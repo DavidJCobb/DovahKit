@@ -1067,16 +1067,7 @@
          if (branch == nullptr) {
             if (i == (size_t)-1)
                return;
-            auto& list = this->_data.branchless_topics;
-            auto* item = list[i];
-            list.erase(list.begin() + i);
-            try {
-               emit on_topic_removed(*item);
-               delete item;
-            } catch (...) {
-               delete item;
-               throw;
-            }
+            this->_remove_branchless_topic_from_datastore(i);
             return;
          }
          assert(i != (size_t)-1);
@@ -1097,7 +1088,7 @@
          for (size_t i = 0; i < size; ++i) {
             auto* item = list[i];
             if (item->stub != &stub)
-               return;
+               continue;
             if (just_being_flagged) {
                item->deleted = true;
                emit this->on_info_edited(*item);

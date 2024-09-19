@@ -1308,6 +1308,8 @@ void DKConditionEditDialog::_update_parameter_ui(size_t index) {
             } else {
                widget->setEnabled(false);
             }
+
+            param.stack->setCurrentWidget(widget);
          }
          break;
       case underlying_type::float32:
