@@ -121,6 +121,7 @@ QModelIndex ActorBaseCreatureSoundsModel::overwrite(int row, const node_type& sr
    auto tl = this->index(row, 0, {});
    auto br = this->index(row, column_count, {});
    emit dataChanged(tl, br);
+   return tl; // TODO: Do we want to sort the sounds by type?
 }
 const ActorBaseCreatureSoundsModel::node_type* ActorBaseCreatureSoundsModel::item(int row) const {
    if (row < 0 || row >= this->_nodes.size())

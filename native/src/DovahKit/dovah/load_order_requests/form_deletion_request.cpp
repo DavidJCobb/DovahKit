@@ -73,8 +73,39 @@ namespace dovah {
             throw ex;
          }
          //
+         bool should_delete = false;
          if (entry.flags & use_info_entry::flag::parent_child) {
             assert(!entry.other->is_hardcoded() && "How is a hardcoded form a descendant of a form that can be deleted (and in fact is currently being deleted)?");
+            should_delete = true;
+         } else if (this->delete_dialogue_children) {
+            //
+            // Quests aren't literally the parents of their contained dialogue branches 
+            // and topics, but the design for dialogue is that all dialogue is parented 
+            // to a quest, and all dialogue-tree topics are parented to a branch. By 
+            // default, deleting either of these "pseudo-parents" will also trigger the 
+            // deletion of their "pseudo-children" and downward.
+            //
+            switch (start->form_type) {
+               case dovah::form_type::quest:
+                  if (entry.flags & use_info_entry::flag::dialogue_quest) {
+                     switch (entry.other->form_type) {
+                        case dovah::form_type::dialogue_branch:
+                        case dovah::form_type::topic:
+                           should_delete = true;
+                           break;
+                     }
+                  }
+                  break;
+               case dovah::form_type::dialogue_branch:
+                  if (entry.flags & use_info_entry::flag::dialogue_branch) {
+                     if (entry.other->form_type == dovah::form_type::topic)
+                        should_delete = true;
+                  }
+                  break;
+            }
+         }
+         //
+         if (should_delete) {
             if (_form_should_be_flagged(*entry.other)) {
                this->forms_needing_flag.insert(entry.other);
             } else {

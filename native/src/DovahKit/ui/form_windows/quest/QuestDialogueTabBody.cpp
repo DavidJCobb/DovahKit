@@ -7,10 +7,10 @@
 #include "dovah/forms/DialogueBranch.h"
 #include "dovah/forms/Topic.h"
 #include "dovah/forms/TopicInfo.h"
-#include "editor/subsystems/game_settings/core.h"
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
 #include "editor/open_window_for_form.h"
+#include "ui/utils/set_custom_context_menu.h"
 #include "ui/utils/set_tableview_column_flex.h"
 #include "ui/utils/set_tableview_column_widths.h"
 #include "ui/utils/typical_tableview_config.h"
@@ -52,28 +52,14 @@ namespace {
 
       bool any_subtypes_available = false;
       {
-         auto& existing_topics = ds->all_branchless_topics();
+         auto subtypes = ds->get_available_branchless_topic_subtypes(cat);
+         any_subtypes_available = !subtypes.empty();
 
-         auto& editor = DovahKitCore::get();
-         auto& gss    = dovahkit::subsystems::game_settings::core::get();
-         for (auto& dfn : dovah::dialogue::all_topic_subtypes) {
-            if (dfn.category != cat)
-               continue;
-
-            bool used = false;
-            for (auto* item : existing_topics) {
-               if (item->cached.subtype == dfn.signature) {
-                  used = true;
-                  break;
-               }
-            }
-            if (used)
-               continue;
-
-            QString name = QString::fromStdString(std::string(dfn.internal_name));
+         for (auto* dfn : subtypes) {
+            QString name = QString::fromStdString(std::string(dfn->internal_name));
 
             auto* item = new QListWidgetItem(name);
-            item->setData(Qt::UserRole, dfn.signature);
+            item->setData(Qt::UserRole, dfn->signature);
             list->addItem(item);
             any_subtypes_available = true;
          }
@@ -104,7 +90,6 @@ namespace {
       return subtype;
    }
 }
-
 
 #include "dovah/exceptions/form_creation_failed.h"
 namespace {
@@ -152,6 +137,44 @@ namespace {
    }
 }
 
+#pragma region context_menu_definition
+   void QuestDialogueTabBody::context_menu_definition::make_for(QWidget& widget, bool allow_reordering, QString transplant_label) {
+      auto& menu  = this->menu;
+      auto& items = this->actions;
+      ui::set_custom_context_menu(widget, menu);
+
+      items.create = menu.addAction(tr("New..."));
+      items.edit   = menu.addAction(tr("Edit..."));
+      if (allow_reordering) {
+         items.move_up   = menu.addAction(tr("Move Up"));
+         items.move_down = menu.addAction(tr("Move Down"));
+      }
+      if (!transplant_label.isEmpty()) {
+         //
+         // If you pass a label for the transplant option (e.g. "Move to other branch"), then 
+         // we'll create the option. Currently, though, transplantation is not implemented.
+         //
+         items.transplant = menu.addAction(transplant_label);
+      }
+      items.remove   = menu.addAction(tr("Delete"));
+      items.use_info = menu.addAction(tr("Use Info"));
+   }
+   void QuestDialogueTabBody::context_menu_definition::update_enable_states(bool has_datastore, bool has_item) {
+      auto& items = this->actions;
+      items.create->setEnabled(has_datastore);
+      items.edit->setEnabled(has_item);
+      if (items.move_up) {
+         items.move_up->setEnabled(has_item);
+         items.move_down->setEnabled(has_item);
+      }
+      if (items.transplant) {
+         items.transplant->setEnabled(has_item);
+      }
+      items.remove->setEnabled(has_item);
+      items.use_info->setEnabled(has_item);
+   }
+#pragma endregion
+
 QuestDialogueTabBody::QuestDialogueTabBody(QWidget* parent) : QWidget(parent) {
    this->ui.setupUi(this);
 
@@ -166,12 +189,31 @@ QuestDialogueTabBody::QuestDialogueTabBody(QWidget* parent) : QWidget(parent) {
          header.setColumnFlex(QuestDialogueBranchesModel::Column::Flags,    0, 0, metrics.boundingRect("XX").width() * 1.5F + 4);
       });
 
+      QObject::connect(view, &QAbstractItemView::doubleClicked, this, &QuestDialogueTabBody::_branch_button_edit);
+
       auto* sel_model = view->selectionModel();
       QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &QuestDialogueTabBody::_branch_selection_changed);
 
       QObject::connect(this->ui.buttonBranchNew,    &QPushButton::clicked, this, &QuestDialogueTabBody::_branch_button_new);
       QObject::connect(this->ui.buttonBranchEdit,   &QPushButton::clicked, this, &QuestDialogueTabBody::_branch_button_edit);
       QObject::connect(this->ui.buttonBranchDelete, &QPushButton::clicked, this, &QuestDialogueTabBody::_branch_button_delete);
+
+      {
+         auto& cm = this->_context_menus.branches;
+         cm.make_for(*view, false);
+         QObject::connect(cm.actions.create,   &QAction::triggered, this, &QuestDialogueTabBody::_branch_button_new);
+         QObject::connect(cm.actions.edit,     &QAction::triggered, this, &QuestDialogueTabBody::_branch_button_edit);
+         QObject::connect(cm.actions.remove,   &QAction::triggered, this, &QuestDialogueTabBody::_branch_button_delete);
+         QObject::connect(cm.actions.use_info, &QAction::triggered, this, [this]() {
+            if (auto* stub = this->selected_branch())
+               open_use_info_dialog_for_form(*stub);
+         });
+         QObject::connect(&cm.menu, &QMenu::aboutToShow, this, [this, &cm]() {
+            bool has_datastore = this->datastore();
+            bool has_item      = this->selected_branch();
+            cm.update_enable_states(has_datastore, has_item);
+         });
+      }
    }
    {
       auto* view = this->ui.topics;
@@ -186,12 +228,31 @@ QuestDialogueTabBody::QuestDialogueTabBody(QWidget* parent) : QWidget(parent) {
          header.setColumnFlex(QuestDialogueBranchedTopicsModel::Column::Priority,    0, 0, metrics.boundingRect("100").width() * 1.5F + 4);
       });
 
+      QObject::connect(view, &QAbstractItemView::doubleClicked, this, &QuestDialogueTabBody::_topic_button_edit);
+
       // Don't forget the alternate model, too!
       this->_models.topics.branchless = new QuestDialogueBranchlessTopicsModel(this);
       
       QObject::connect(this->ui.buttonTopicNew,    &QPushButton::clicked, this, &QuestDialogueTabBody::_topic_button_new);
       QObject::connect(this->ui.buttonTopicEdit,   &QPushButton::clicked, this, &QuestDialogueTabBody::_topic_button_edit);
       QObject::connect(this->ui.buttonTopicDelete, &QPushButton::clicked, this, &QuestDialogueTabBody::_topic_button_delete);
+
+      {
+         auto& cm = this->_context_menus.topics;
+         cm.make_for(*view, false);
+         QObject::connect(cm.actions.create,   &QAction::triggered, this, &QuestDialogueTabBody::_topic_button_new);
+         QObject::connect(cm.actions.edit,     &QAction::triggered, this, &QuestDialogueTabBody::_topic_button_edit);
+         QObject::connect(cm.actions.remove,   &QAction::triggered, this, &QuestDialogueTabBody::_topic_button_delete);
+         QObject::connect(cm.actions.use_info, &QAction::triggered, this, [this]() {
+            if (auto* stub = this->selected_topic())
+               open_use_info_dialog_for_form(*stub);
+         });
+         QObject::connect(&cm.menu, &QMenu::aboutToShow, this, [this, &cm]() {
+            bool has_datastore = this->datastore();
+            bool has_item      = this->selected_topic();
+            cm.update_enable_states(has_datastore, has_item);
+         });
+      }
    }
    {
       auto* view = this->ui.infos;
@@ -212,6 +273,8 @@ QuestDialogueTabBody::QuestDialogueTabBody(QWidget* parent) : QWidget(parent) {
          header.resizeSection(QuestDialogueTopicInfosModel::Column::HasResultScript, metrics.boundingRect("Y").width() * 1.5F + 4);
       });
 
+      QObject::connect(view, &QAbstractItemView::doubleClicked, this, &QuestDialogueTabBody::_info_button_edit);
+
       auto* sel_model = view->selectionModel();
       QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &QuestDialogueTabBody::_info_selection_changed);
       
@@ -220,6 +283,25 @@ QuestDialogueTabBody::QuestDialogueTabBody(QWidget* parent) : QWidget(parent) {
       QObject::connect(this->ui.buttonInfoMoveUp,   &QPushButton::clicked, this, &QuestDialogueTabBody::_info_button_move_up);
       QObject::connect(this->ui.buttonInfoMoveDown, &QPushButton::clicked, this, &QuestDialogueTabBody::_info_button_move_down);
       QObject::connect(this->ui.buttonInfoDelete,   &QPushButton::clicked, this, &QuestDialogueTabBody::_info_button_delete);
+
+      {
+         auto& cm = this->_context_menus.infos;
+         cm.make_for(*view, true);
+         QObject::connect(cm.actions.create,    &QAction::triggered, this, &QuestDialogueTabBody::_info_button_new);
+         QObject::connect(cm.actions.edit,      &QAction::triggered, this, &QuestDialogueTabBody::_info_button_edit);
+         QObject::connect(cm.actions.move_up,   &QAction::triggered, this, &QuestDialogueTabBody::_info_button_move_up);
+         QObject::connect(cm.actions.move_down, &QAction::triggered, this, &QuestDialogueTabBody::_info_button_move_down);
+         QObject::connect(cm.actions.remove,    &QAction::triggered, this, &QuestDialogueTabBody::_info_button_delete);
+         QObject::connect(cm.actions.use_info,  &QAction::triggered, this, [this]() {
+            if (auto* stub = this->selected_info())
+               open_use_info_dialog_for_form(*stub);
+         });
+         QObject::connect(&cm.menu, &QMenu::aboutToShow, this, [this, &cm]() {
+            bool has_datastore = this->datastore();
+            bool has_item      = this->selected_info();
+            cm.update_enable_states(has_datastore, has_item);
+         });
+      }
    }
 
    // Do this last, as signals triggered will try to access the other models.
@@ -426,6 +508,12 @@ dovah::form_stub* QuestDialogueTabBody::_spawn_info(dovah::form_stub* topic) {
          } catch (const dovah::exceptions::form_creation_failed& ex) {
             _report_form_create_error(this, ex.code);
          }
+         if (branch_stub) {
+            if (topic_stub)
+               this->select_topic(topic_stub);
+            else
+               this->select_branch(branch_stub);
+         }
       }
       void QuestDialogueTabBody::_branch_button_edit() {
          auto* stub = selected_branch();
@@ -469,11 +557,14 @@ dovah::form_stub* QuestDialogueTabBody::_spawn_info(dovah::form_stub* topic) {
             if (!ok)
                return;
          }
+         dovah::form_stub* stub = nullptr;
          try {
-            this->_spawn_topic(topic_editor_id, branch, subtype);
+            stub = this->_spawn_topic(topic_editor_id, branch, subtype);
          } catch (const dovah::exceptions::form_creation_failed& ex) {
             _report_form_create_error(this, ex.code);
          }
+         if (stub)
+            this->select_topic(stub);
       }
       void QuestDialogueTabBody::_topic_button_edit() {
          auto* stub = selected_topic();
@@ -501,6 +592,7 @@ dovah::form_stub* QuestDialogueTabBody::_spawn_info(dovah::form_stub* topic) {
             _report_form_create_error(this, ex.code);
          }
          if (info) {
+            this->select_info(info);
             open_edit_dialog_for_form(*info, this);
          }
       }

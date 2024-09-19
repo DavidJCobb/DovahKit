@@ -1,5 +1,6 @@
 #include "./QuestAllDialogueDatastore.h"
 #include <cassert>
+#include <utility>
 #include "helpers/qt/strings/to_no_op_html.h"
 #include "helpers/vectors/move_item_within.h"
 #include "helpers/vectors/move_range_within.h"
@@ -53,6 +54,7 @@
             case greater_or_equal:
                return operand > 1;
          }
+         std::unreachable();
       };
       constexpr auto _extract_form_param = [](const dovah::loaded_forms::components::conditions::working_parameter& variant) constexpr -> dovah::form_stub* {
          if (!std::holds_alternative<dovah::form_stub*>(variant))
@@ -626,6 +628,55 @@
          }
       }
    #pragma endregion
+
+   [[nodiscard]] std::vector<const dovah::dialogue::topic_subtype*> QuestAllDialogueDatastore::get_available_branchless_topic_subtypes(dovah::dialogue::category cat) const {
+      std::vector<const dovah::dialogue::topic_subtype*> out;
+      for (auto& dfn : dovah::dialogue::all_topic_subtypes) {
+         if (dfn.category != cat)
+            continue;
+         if (dfn.is_reusable) {
+            out.push_back(&dfn);
+            continue;
+         }
+
+         bool used = false;
+         for (auto* item : this->_data.branchless_topics) {
+            if (item->cached.subtype == dfn.signature) {
+               used = true;
+               break;
+            }
+         }
+         if (used)
+            continue;
+
+         out.push_back(&dfn);
+      }
+      return out;
+   }
+   [[nodiscard]] std::vector<const dovah::dialogue::topic_subtype*> QuestAllDialogueDatastore::get_available_branch_topic_subtypes(const Branch& branch) const {
+      std::vector<const dovah::dialogue::topic_subtype*> out;
+      for (auto& dfn : dovah::dialogue::all_topic_subtypes) {
+         if (dfn.category != dovah::dialogue::category::topic)
+            continue;
+         if (dfn.is_reusable) {
+            out.push_back(&dfn);
+            continue;
+         }
+
+         bool used = false;
+         for (auto* item : branch.topics) {
+            if (item->cached.subtype == dfn.signature) {
+               used = true;
+               break;
+            }
+         }
+         if (used)
+            continue;
+
+         out.push_back(&dfn);
+      }
+      return out;
+   }
 
    void QuestAllDialogueDatastore::_sync_info_order_to_form(const Topic& topic) {
       auto&  src_list = topic.infos;

@@ -889,6 +889,7 @@
     <ClCompile Include="ui\utils\bind.cpp" />
     <ClCompile Include="ui\utils\DKStyledItemDelegate.cpp" />
     <ClCompile Include="ui\utils\item_indices_to_data.cpp" />
+    <ClCompile Include="ui\utils\set_custom_context_menu.cpp" />
     <ClCompile Include="ui\utils\typical_tableview_config.cpp" />
     <ClCompile Include="vulkan\abstract_renderer.cpp" />
     <ClCompile Include="vulkan\asset_loading\reserve_meshes_for_nif.cpp" />
@@ -1393,6 +1394,7 @@
     <QtMoc Include="widgets\DKNavmeshGenerationImportOptionPicker.h" />
     <ClInclude Include="ui\utils\get_selection.h" />
     <ClInclude Include="ui\utils\item_indices_to_data.h" />
+    <ClInclude Include="ui\utils\set_custom_context_menu.h" />
     <ClInclude Include="ui\utils\set_range.h" />
     <QtMoc Include="widgets\DKComboBox.h" />
     <QtMoc Include="widgets\DKFormInventoryWidget.h" />

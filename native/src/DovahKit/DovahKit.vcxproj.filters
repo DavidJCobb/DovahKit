@@ -2739,6 +2739,9 @@
     <ClCompile Include="dovah\utils\compute_voice_file_location.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\utils\set_custom_context_menu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6897,6 +6900,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_has_id_zero.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\set_custom_context_menu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -30,7 +30,8 @@ namespace dovah {
          void _prep_for_delete(form_stub&, bool flag); // use for deletion and for flagging as deleted
          
       public:
-         bool force_delete_overrides = false; // if (true), then we will straight-up delete ALL forms. if (false), then forms outside the active file are overridden and FLAGGED AS deleted.
+         bool delete_dialogue_children = true;  // if `true`, then deleting a quest deletes branches, topics, etc., even though they aren't literal child forms; and thus also to branches taking their topics with them
+         bool force_delete_overrides   = false; // if (true), then we will straight-up delete ALL forms. if (false), then forms outside the active file are overridden and FLAGGED AS deleted.
          
          std::vector<form_stub*> get_forms_pending_delete(bool include_flagged = true) const noexcept;
          std::vector<form_stub*> get_forms_pending_flagging() const noexcept;

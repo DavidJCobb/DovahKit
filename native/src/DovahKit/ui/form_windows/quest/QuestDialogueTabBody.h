@@ -1,4 +1,5 @@
 #pragma once
+#include <QMenu>
 #include "dovah/data/dialogue/category.h"
 #include "ui_quest_dialogue_tab_body.h" // generated
 
@@ -22,9 +23,31 @@ class QuestDialogueTabBody : public QWidget {
       void setDatastore(QuestAllDialogueDatastore*);
 
    protected:
+      struct context_menu_definition {
+         QMenu menu;
+         struct {
+            QAction* create     = nullptr;
+            QAction* edit       = nullptr;
+            QAction* move_up    = nullptr;
+            QAction* move_down  = nullptr;
+            QAction* transplant = nullptr;
+            QAction* remove     = nullptr;
+            QAction* use_info   = nullptr;
+         } actions;
+
+         void make_for(QWidget&, bool allow_reordering, QString transplant_label = "");
+         void update_enable_states(bool has_datastore, bool has_item);
+      };
+
+   protected:
       Ui::QuestDialogueTabBody ui;
 
       dovah::dialogue::category _category = dovah::dialogue::category::topic;
+      struct {
+         context_menu_definition branches;
+         context_menu_definition topics;
+         context_menu_definition infos;
+      } _context_menus;
       struct {
          QuestDialogueBranchesModel* branches = nullptr;
          struct {

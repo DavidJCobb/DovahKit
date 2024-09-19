@@ -6,6 +6,9 @@
 #include "dovah/data/dialogue/category.h"
 
 namespace dovah {
+   namespace dialogue {
+      struct topic_subtype;
+   }
    class form_stub;
 }
 
@@ -121,6 +124,12 @@ class QuestAllDialogueDatastore : public QObject {
          void reorder_info(const Info&, int by);
          void reorder_infos(const Topic&, size_t start, size_t count, int by); // I wish there was a language convention for "The caller can't modify this, so it's const&, but the callee can."
       #pragma endregion
+
+      // When creating a new topic, you'll want to consult these lists and ensure that the 
+      // topic subtype you wish to create is actually available (i.e. it's reusalbe or it 
+      // isn't already being used at the destination).
+      [[nodiscard]] std::vector<const dovah::dialogue::topic_subtype*> get_available_branchless_topic_subtypes(dovah::dialogue::category) const;
+      [[nodiscard]] std::vector<const dovah::dialogue::topic_subtype*> get_available_branch_topic_subtypes(const Branch&) const;
 
    signals:
       void on_cleared();

@@ -10,6 +10,7 @@
 #include "editor/core.h"
 #include "editor/open_window_for_form.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/set_custom_context_menu.h"
 #include "ui/utils/set_tableview_column_flex.h"
 #include "ui/utils/typical_tableview_config.h"
 #include "./topic_info/topic_info_response.h"
@@ -42,6 +43,7 @@ FormDialogTopicInfo::FormDialogTopicInfo(dovah::form_stub& stub, QWidget* parent
       {
          auto& menu  = this->_context_menus.responses.menu;
          auto& items = this->_context_menus.responses.actions;
+         ui::set_custom_context_menu(*view, menu);
          {
             auto* action = items.create = menu.addAction(tr("New..."));
             QObject::connect(action, &QAction::triggered, this, &FormDialogTopicInfo::_create_response);
@@ -127,6 +129,7 @@ FormDialogTopicInfo::FormDialogTopicInfo(dovah::form_stub& stub, QWidget* parent
       {
          auto& menu  = this->_context_menus.linked_topics.menu;
          auto& items = this->_context_menus.linked_topics.actions;
+         ui::set_custom_context_menu(*view, menu);
          {
             auto* action = items.create = menu.addAction(tr("Add Topic..."));
             QObject::connect(action, &QAction::triggered, this, &FormDialogTopicInfo::_add_linked_topic);
