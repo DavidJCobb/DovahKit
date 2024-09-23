@@ -191,6 +191,11 @@ FormDialogTopicInfo::FormDialogTopicInfo(dovah::form_stub& stub, QWidget* parent
    }
    this->ui.hoursUntilReset->setRange(0, 24);
 
+   {  // Scripts
+      this->ui.fragmentBegin->setSourceWidget(this->ui.scriptListPane);
+      this->ui.fragmentEnd->setSourceWidget(this->ui.scriptListPane);
+   }
+
    {
       auto& editor = DovahKitCore::get();
       QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
@@ -228,28 +233,15 @@ void FormDialogTopicInfo::_load_impl() {
    }
    {  // Responses editor
       ui::bind(this->ui.sharedInfo, working.use_shared_info, working);
-      {
-         std::vector<TopicInfoResponseTableviewModel::node_type> nodes;
-
-         dovah::loaded_form_ptr<loaded_form_type> src_form;
-         std::vector<loaded_form_type::response>* src_list = &working.responses;
-         if (auto* stub = working.use_shared_info.get_form_stub()) {
-            src_form = stub->load().ptr_cast<loaded_form_type>();
-            if (src_form)
-               src_list = &src_form->responses;
-         }
-
-         for (auto& src : *src_list) {
-            auto& node = nodes.emplace_back();
-            node.edited  = false;
-            node.emotion = {
-               .type  = src.emotion.type,
-               .value = src.emotion.value,
-            };
-            node.response_text = editor.convert_localized_string(src.text);
-         }
-         this->_models.responses->overwriteAllItems(nodes);
-      }
+      QObject::connect(this->ui.sharedInfo, &DKFormPicker::formChanged, this, [this](dovah::form_stub* stub) {
+         //
+         // NOTE: We have to attach this signal after the ui::bind call, so that 
+         // the working data's shared-info pointer is changed before this handler 
+         // runs.
+         //
+         this->_refresh_responses_listview();
+      });
+      this->_refresh_responses_listview(); // initial update
    }
    {  // Flags and similar
       auto& flags = working.info_flags;
@@ -279,6 +271,7 @@ void FormDialogTopicInfo::_load_impl() {
       ui::bind(this->ui.flagWalkAwayTopicInvis, working.info_flags, loaded_form_type::info_flag::walk_away_invisible_in_menu);
    }
    {  // Scripts
+      this->ui.scriptListPane->setFormWorkingCopy(&working); // handle this widget first since the fragment pickers use it as a data source
       {
          auto* fragdata = (papyrus_fragment_data_type*) working.script_data.fragment_data;
          if (fragdata) {
@@ -288,21 +281,20 @@ void FormDialogTopicInfo::_load_impl() {
                auto& src = opt.value();
                auto* dst = this->ui.fragmentBegin;
                dst->setCurrentScriptname(src.script);
-               dst->setCurrentFunction(src.function);
                if (src.script.empty())
                   dst->setCurrentScriptname(fragdata->filename);
+               dst->setCurrentFunction(src.function);
             }
             if (auto& opt = fragdata->fragments.on_end; opt.has_value()) {
                auto& src = opt.value();
                auto* dst = this->ui.fragmentEnd;
                dst->setCurrentScriptname(src.script);
-               dst->setCurrentFunction(src.function);
                if (src.script.empty())
                   dst->setCurrentScriptname(fragdata->filename);
+               dst->setCurrentFunction(src.function);
             }
          }
       }
-      this->ui.scriptListPane->setFormWorkingCopy(&working);
    }
 }
 void FormDialogTopicInfo::_save_impl() {
@@ -387,6 +379,30 @@ void FormDialogTopicInfo::_update_topic_text_preview() {
    } else {
       widget->setText("");
    }
+}
+
+void FormDialogTopicInfo::_refresh_responses_listview() {
+   std::vector<TopicInfoResponseTableviewModel::node_type> nodes;
+
+   dovah::loaded_form_ptr<loaded_form_type> src_form;
+   const std::vector<loaded_form_type::response>* src_list = &this->form->responses;
+   if (auto* stub = this->form->use_shared_info.get_form_stub()) {
+      src_form = stub->load().ptr_cast<loaded_form_type>();
+      if (src_form)
+         src_list = &src_form->responses;
+   }
+
+   auto& editor = DovahKitCore::get();
+   for (auto& src : *src_list) {
+      auto& node = nodes.emplace_back();
+      node.edited  = false;
+      node.emotion = {
+         .type  = src.emotion.type,
+         .value = src.emotion.value,
+      };
+      node.response_text = editor.convert_localized_string(src.text);
+   }
+   this->_models.responses->overwriteAllItems(nodes);
 }
 
 #pragma region Handlers: Linkedtopics

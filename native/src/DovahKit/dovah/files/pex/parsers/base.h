@@ -12,7 +12,7 @@ namespace dovah::pex::parsers {
       protected:
          struct {
             const BufferItemType* _buffer = nullptr;
-            uint32_t _pos    = 0;
+            size_t   _pos    = 0;
             size_t   _size   = 0;
          } file;
          bool _needs_endian_swap = false;
@@ -67,6 +67,8 @@ namespace dovah::pex::parsers {
             };
          }
 
+         constexpr const void* get_buffer_data() const { return (const void*)this->file._buffer; }
+         constexpr size_t get_buffer_size() const { return this->file._size; }
          constexpr size_t get_position() const { return this->file._pos; }
 
          constexpr size_t bytes_remaining() const { return this->file._size - get_position(); }

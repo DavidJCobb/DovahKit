@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::pex::compiled_named_function">
+      <Intrinsic Name="is_global" ReturnType="bool" Expression="(function_flags &amp; 1) != 0" />
+      <Intrinsic Name="is_native" ReturnType="bool" Expression="(function_flags &amp; 2) != 0" />
+      
+      <Intrinsic Name="_is_compiler_generated_GetState" ReturnType="bool" Expression="
+         stricmp(name.data(), &quot;GetState&quot;) == 0
+         &amp;&amp; stricmp(return_type.data(), &quot;String&quot;) == 0
+         &amp;&amp; arguments.size() == 0
+         &amp;&amp; locals.size() == 0
+         &amp;&amp; opcodes.size() == 1
+         &amp;&amp; opcodes[0].type == dovah::pex::opcode_type::ret
+         &amp;&amp; stricmp(opcodes[0].operands[0].as_object_name(), &quot;::state&quot;) == 0
+      " />
+      
+      <Intrinsic Name="_is_compiler_generated_GotoState" ReturnType="bool" Expression="
+         stricmp(name.data(), &quot;GotoState&quot;) == 0
+         &amp;&amp; stricmp(return_type.data(), &quot;None&quot;) == 0
+         &amp;&amp; arguments.size() == 1
+         &amp;&amp; locals.size() == 1
+         &amp;&amp; stricmp(locals[0].type.data(), &quot;None&quot;) == 0
+         &amp;&amp; opcodes.size() == 3
+         &amp;&amp; opcodes[0].type == dovah::pex::opcode_type::call_method
+         &amp;&amp; opcodes[0].operands.size() == 3
+         &amp;&amp; stricmp(opcodes[0].operands[0].as_object_name(), &quot;onEndState&quot;) == 0
+         &amp;&amp; stricmp(opcodes[0].operands[1].as_object_name(), &quot;self&quot;) == 0
+         &amp;&amp; opcodes[1].type == dovah::pex::opcode_type::set
+         &amp;&amp; opcodes[1].operands.size() == 2
+         &amp;&amp; stricmp(opcodes[1].operands[0].as_object_name(), &quot;::state&quot;) == 0
+         &amp;&amp; opcodes[2].type == dovah::pex::opcode_type::call_method
+         &amp;&amp; opcodes[2].operands.size() == 3
+         &amp;&amp; stricmp(opcodes[2].operands[0].as_object_name(), &quot;onBeginState&quot;) == 0
+         &amp;&amp; stricmp(opcodes[2].operands[1].as_object_name(), &quot;self&quot;) == 0
+      " />
+      
+      <DisplayString Condition="_is_compiler_generated_GetState()">&lt;compiler-generated GetState function&gt;</DisplayString>
+      <DisplayString Condition="_is_compiler_generated_GotoState()">&lt;compiler-generated GotoState function&gt;</DisplayString>
+      <DisplayString Condition="is_global() &amp;&amp; is_native()">{return_type,nasb} Function {name,nasb}(...) Global Native with {arguments.size(),u} args</DisplayString>
+      <DisplayString Condition="is_global()">{return_type,nasb} Function {name,nasb}(...) Global with {arguments.size(),u} args</DisplayString>
+      <DisplayString Condition="is_native()">{return_type,nasb} Function {name,nasb}(...) Native with {arguments.size(),u} args</DisplayString>
+      <DisplayString>{return_type,nasb} Function {name,nasb}(...) with {arguments.size(),u} args</DisplayString>
+      <Expand>
+         <Item Name="name">name</Item>
+         <ExpandedItem>(dovah::pex::compiled_function*)this</ExpandedItem>
+      </Expand>
+   </Type>
+</AutoVisualizer>

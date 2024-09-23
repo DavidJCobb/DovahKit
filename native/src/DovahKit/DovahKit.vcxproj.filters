@@ -2742,6 +2742,9 @@
     <ClCompile Include="ui\utils\set_custom_context_menu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\widget-models\DKPapyrusFragmentFunctionModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6905,6 +6908,12 @@
     <ClInclude Include="ui\utils\set_custom_context_menu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\files\pex\parsers\function_collector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\pex\parsers\util\file_string_table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -7809,6 +7818,9 @@
     <QtMoc Include="widgets\widget-data\DKCustomFormFilter.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="widgets\widget-models\DKPapyrusFragmentFunctionModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -8266,6 +8278,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="widgets\widget-data\DKCustomFormFilter.md" />
+    <None Include="dovah\files\pex\parsers\function_collector.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
@@ -8335,5 +8350,11 @@
     <Natvis Include="helpers\multiheap.natvis" />
     <Natvis Include="dovah\forms\components\conditions\working_comparison.natvis" />
     <Natvis Include="dovah\forms\components\conditions\working_condition.natvis" />
+    <Natvis Include="dovah\files\pex\compiled_opcode.natvis" />
+    <Natvis Include="dovah\files\pex\value.natvis" />
+    <Natvis Include="dovah\files\pex\compiled_function.natvis" />
+    <Natvis Include="dovah\files\pex\tabled_string.natvis" />
+    <Natvis Include="dovah\files\pex\variable_declaration.natvis" />
+    <Natvis Include="dovah\files\pex\parsers\util\file_string_table.natvis" />
   </ItemGroup>
 </Project>

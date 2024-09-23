@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::pex::variable_declaration">
+      <DisplayString>{type,nasb} {name,nasb}</DisplayString>
+      <DisplayString>variable `{name,nasb}` of type `{type,nasb}`</DisplayString>
+   </Type>
+</AutoVisualizer>

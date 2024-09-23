@@ -153,6 +153,11 @@ DKPapyrusBoundScriptListPane::DKPapyrusBoundScriptListPane(QWidget* parent) : QW
          auto qmi = this->model->addScript(scriptname);
          assert(qmi.isValid()); // TODO: if the operation above can fail, it should throw a detailed exception and we should catch that here
          this->subwidgets.view->selectionModel()->select(qmi, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+         {
+            auto name = this->model->boundScriptName(qmi);
+            if (!name.isEmpty())
+               emit this->scriptAdded(name);
+         }
       });
       QObject::connect(this->subwidgets.buttons.properties,    &QPushButton::clicked, this, [this]() { this->_editSelected(); });
       QObject::connect(this->subwidgets.buttons.toggle_delete, &QPushButton::clicked, this, [this]() {
@@ -170,10 +175,16 @@ DKPapyrusBoundScriptListPane::DKPapyrusBoundScriptListPane(QWidget* parent) : QW
          auto opt = this->model->status(script_qmi);
          if (!opt.has_value())
             return;
-         if (opt.value() != vmad::script_status::removed)
+         auto name = this->model->boundScriptName(script_qmi);
+         if (opt.value() != vmad::script_status::removed) {
+            size_t size_prior = this->model->rowCount({});
             this->model->removeScript(script_qmi);
-         else
+            size_t size_after = this->model->rowCount({});
+            emit this->scriptRemoved(name, size_prior == size_after);
+         } else {
             this->model->undeleteScript(script_qmi);
+            emit this->scriptAdded(name);
+         }
          this->_updateButtons();
       });
    #endif
@@ -271,6 +282,7 @@ void DKPapyrusBoundScriptListPane::_updateGroupbox() {
 
          this->subwidgets.buttons.wrapper->setEnabled(false);
          this->model->clear();
+         emit this->scriptListReset();
          return;
       }
 
@@ -301,6 +313,7 @@ void DKPapyrusBoundScriptListPane::_updateGroupbox() {
       }
 
       this->subwidgets.buttons.wrapper->setEnabled(true);
+      emit this->scriptListReset();
    }
    void DKPapyrusBoundScriptListPane::setQuestWorkingCopyAndAliasVMAD(working_copy_type* quest_working_copy, vmad_type& target) {
       if (!quest_working_copy) {
@@ -308,6 +321,7 @@ void DKPapyrusBoundScriptListPane::_updateGroupbox() {
 
          this->subwidgets.buttons.wrapper->setEnabled(false);
          this->model->clear();
+         emit this->scriptListReset();
          return;
       }
 
@@ -317,6 +331,7 @@ void DKPapyrusBoundScriptListPane::_updateGroupbox() {
 
       this->model->initializeFrom(target);
       this->subwidgets.buttons.wrapper->setEnabled(true);
+      emit this->scriptListReset();
    }
 
    void DKPapyrusBoundScriptListPane::commit() {
@@ -334,4 +349,13 @@ void DKPapyrusBoundScriptListPane::setUsesGroupbox(bool v) {
       return;
    this->state.use_groupbox = v;
    this->_updateGroupbox();
+}
+
+std::vector<QString> DKPapyrusBoundScriptListPane::allNonDeletedScriptnames() const {
+   auto list = this->model->getAllBoundScriptNames(false);
+
+   std::vector<QString> str;
+   for (auto& item : list)
+      str.push_back(QString::fromUtf8(item.data(), item.size()));
+   return str;
 }

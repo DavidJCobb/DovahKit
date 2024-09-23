@@ -14,7 +14,7 @@ namespace {
    static_assert(std::numeric_limits<decltype(dovah::loaded_forms::Quest::Stage::index)>::min() > no_stage, "The sentinel value that this UI uses for \"no stage\" needs to be outside of the range of valid stage IDs.");
 }
 
-QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent) : QWidget(parent), stub(s), form(q) {
+QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, DKPapyrusBoundScriptListPane& script_list_pane, QWidget* parent) : QWidget(parent), stub(s), form(q) {
    ui.setupUi(this);
 
    #pragma region Stage list
@@ -290,12 +290,8 @@ QuestTabStages::QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent
       #pragma region Fragment
          {
             auto* widget = this->ui.logEntryFragment;
-            widget->setScriptnameMaxLength(std::numeric_limits<uint16_t>::max());
-            widget->setFunctionMaxLength(std::numeric_limits<uint16_t>::max());
-            auto& papyrus = this->form.script_data;
-            for (auto& script : papyrus.scripts)
-               widget->addScriptname(script.name.c_str());
-            //
+            widget->setSourceWidget(&script_list_pane);
+            
             QObject::connect(widget, &DKPapyrusFragmentFunctionPicker::currentScriptnameChanged, this, [this](const QString& name) {
                auto* lo = this->_get_log_entry();
                if (lo) 
@@ -575,7 +571,8 @@ void QuestTabStages::_redraw_entry_settings() {
       this->ui.logEntryNextQuest->setFormStub(nullptr);
       this->ui.logEntryConditions->clear();
       this->ui.logEntryText->clear();
-      this->ui.logEntryFragment->clearCurrentValues();
+      this->ui.logEntryFragment->setCurrentScriptname(QString{});
+      this->ui.logEntryFragment->setCurrentFunction(QString{});
       return;
    }
    //

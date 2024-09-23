@@ -1053,6 +1053,7 @@
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKLeveledListPreviewModel.cpp" />
+    <ClCompile Include="widgets\widget-models\DKPapyrusFragmentFunctionModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -1095,6 +1096,8 @@
     <ClInclude Include="dovah\exceptions\invalid_load_order\desired_active_file_is_a_dependency.h" />
     <ClInclude Include="dovah\exceptions\invalid_load_order\load_order_would_have_too_many_files.h" />
     <ClInclude Include="dovah\exceptions\object_reference_move_failed.h" />
+    <ClInclude Include="dovah\files\pex\parsers\function_collector.h" />
+    <ClInclude Include="dovah\files\pex\parsers\util\file_string_table.h" />
     <ClInclude Include="dovah\forms\AcousticSpace.h" />
     <ClInclude Include="dovah\forms\ActorAction.h" />
     <ClInclude Include="dovah\forms\ArtObject.h" />
@@ -1271,6 +1274,7 @@
     <ClInclude Include="editor\helpers\face_fx_phoneme_name.h" />
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
+    <QtMoc Include="widgets\widget-models\DKPapyrusFragmentFunctionModel.h" />
     <QtMoc Include="widgets\widget-models\DKLeveledListPreviewModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormInventoryModel.h" />
     <QtMoc Include="editor\subsystems\message_log\dovahkit_message_log.h" />
@@ -2854,6 +2858,7 @@
     <None Include="dovah\files\pex\parsers\base.inl" />
     <None Include="dovah\files\pex\parsers\class_info_collector.inl" />
     <None Include="dovah\files\pex\parsers\full.inl" />
+    <None Include="dovah\files\pex\parsers\function_collector.inl" />
     <None Include="dovah\files\pex\property_declaration.inl" />
     <None Include="dovah\files\pex\script_object.inl" />
     <None Include="dovah\files\pex\state.inl" />
@@ -3082,6 +3087,12 @@
   <ItemGroup>
     <Natvis Include="dovah\bs_hash.natvis" />
     <Natvis Include="dovah\files\bsa\packed_folder_info.natvis" />
+    <Natvis Include="dovah\files\pex\compiled_function.natvis" />
+    <Natvis Include="dovah\files\pex\compiled_opcode.natvis" />
+    <Natvis Include="dovah\files\pex\parsers\util\file_string_table.natvis" />
+    <Natvis Include="dovah\files\pex\tabled_string.natvis" />
+    <Natvis Include="dovah\files\pex\value.natvis" />
+    <Natvis Include="dovah\files\pex\variable_declaration.natvis" />
     <Natvis Include="dovah\forms\components\conditions\working_comparison.natvis" />
     <Natvis Include="dovah\forms\components\conditions\working_condition.natvis" />
     <Natvis Include="dovah\forms\Landscape.natvis" />

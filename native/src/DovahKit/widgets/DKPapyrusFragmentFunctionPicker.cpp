@@ -3,27 +3,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #if !defined(QT_DESIGNER_LIB)
-   #include <QSortFilterProxyModel>
-   #include <QStandardItemModel>
-   #include "dovah/files/papyrus/compiled_script.h"
-   #include "editor/papyrus_dictionary.h"
-#endif
-
-#if !defined(QT_DESIGNER_LIB)
-namespace {
-   inline void _append_combobox_item(QComboBox* widget, QStandardItem* item) {
-      auto* proxy = (QSortFilterProxyModel*) widget->model();
-      auto* model = (QStandardItemModel*) proxy->sourceModel();
-      model->appendRow(item);
-   }
-   inline void _append_combobox_item(QComboBox* widget, const QString& text, const QVariant& userdata = QVariant()) {
-      auto* proxy = (QSortFilterProxyModel*) widget->model();
-      auto* model = (QStandardItemModel*) proxy->sourceModel();
-      auto* item  = new QStandardItem(text);
-      item->setData(userdata, Qt::UserRole);
-      model->appendRow(item);
-   }
-}
+   #include "./widget-models/DKPapyrusFragmentFunctionModel.h"
 #endif
 
 DKPapyrusFragmentFunctionPicker::DKPapyrusFragmentFunctionPicker(QWidget* parent) : QWidget(parent) {
@@ -66,59 +46,62 @@ DKPapyrusFragmentFunctionPicker::DKPapyrusFragmentFunctionPicker(QWidget* parent
    this->setTabOrder(this->_subwidgets.scriptname, this->_subwidgets.function);
 
    #if !defined(QT_DESIGNER_LIB)
-   QObject::connect(this->_subwidgets.scriptname, &QComboBox::currentTextChanged, this, [this](const QString& name) {
-      auto* widget = this->_subwidgets.function;
-      widget->clear();
-      //
-      auto* entry = this->_getOrCreateScriptData(name);
-      if (entry) {
-         auto* compiled = entry->compiled;
-         if (compiled) {
-            for (auto& object : compiled->objects) {
-               if (name.compare(object.name.c_str(), Qt::CaseInsensitive) != 0)
-                  continue;
-               auto* state = object.get_auto_state();
-               if (!state)
-                  continue;
-               for (auto& function : state->functions) {
-                  if (!function.arguments.empty())
-                     continue;
-                  if (function.flags & dovah::compiled_papyrus_script::function::flag::global)
-                     continue;
-                  if (function.name == "GetState") // apparently this isn't hardcoded, then?
-                     continue;
-                  // QComboBox::addItem seems to break when using a QSortFilterProxyModel, so we have to do it ourselves...
-                  _append_combobox_item(widget, function.name.c_str(), true);
-               }
+      this->_model = new DKPapyrusFragmentFunctionModel(this);
+      this->_subwidgets.scriptname->setInsertPolicy(QComboBox::InsertPolicy::NoInsert);
+      this->_subwidgets.scriptname->setEditable(true);
+      this->_subwidgets.scriptname->lineEdit()->setMaxLength(std::numeric_limits<uint16_t>::max());
+      this->_subwidgets.function->setInsertPolicy(QComboBox::InsertPolicy::NoInsert);
+      this->_subwidgets.function->setEditable(true);
+      this->_subwidgets.function->lineEdit()->setMaxLength(std::numeric_limits<uint16_t>::max());
+
+      this->_subwidgets.scriptname->setModel(this->_model);
+      this->_subwidgets.function->setModel(this->_model);
+      this->_subwidgets.function->setRootModelIndex(this->_model->noneScriptQMI());
+
+      QObject::connect(this->_subwidgets.scriptname, &QComboBox::editTextChanged, this, [this](const QString& name) {
+         const auto none_qmi = this->_model->noneScriptQMI();
+         if (name.isEmpty()) {
+            auto i   = this->_subwidgets.scriptname->currentIndex();
+            auto qmi = this->_model->index(i, 0, {});
+            if (qmi.isValid()) {
+               this->_subwidgets.function->setRootModelIndex(qmi);
+               return;
+            }
+            this->_subwidgets.function->setRootModelIndex(none_qmi);
+            this->_subwidgets.function->setEditText("");
+            return;
+         }
+         auto qmi = this->_model->scriptQMI(name);
+         if (qmi != none_qmi) {
+            this->_subwidgets.function->setRootModelIndex(qmi);
+            return;
+         }
+         //
+         // The user typed a custom scriptname in.
+         //
+         this->_model->setUserItemScriptname(name);
+         this->_subwidgets.function->setRootModelIndex(this->_model->userItemQMI());
+      });
+      QObject::connect(this->_subwidgets.scriptname, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int i) {
+         if (i < 0) {
+            this->_subwidgets.function->setRootModelIndex(this->_model->noneScriptQMI());
+         } else {
+            auto qmi = this->_model->index(i, 0, {});
+            if (qmi.isValid()) {
+               this->_subwidgets.function->setRootModelIndex(qmi);
+            } else {
+               this->_subwidgets.function->setRootModelIndex(this->_model->noneScriptQMI());
+               this->_subwidgets.function->setEditText("");
             }
          }
-      }
-      emit currentScriptnameChanged(name);
-   });
-   QObject::connect(this->_subwidgets.function, &QComboBox::currentTextChanged, this, [this](const QString& name) {
-      emit currentFunctionChanged(name);
-   });
-   #endif
-
-   #if !defined(QT_DESIGNER_LIB)
-   #pragma region sorting
-   {
-      auto* widget = this->_subwidgets.scriptname;
-      auto* model  = new QStandardItemModel(widget); // can't reuse the original model; QComboBox kills it when you call setModel
-      auto* proxy  = new QSortFilterProxyModel(widget);
-      proxy->setSourceModel(model);
-      widget->setModel(proxy);
-      proxy->sort(0);
-   }
-   {
-      auto* widget = this->_subwidgets.function;
-      auto* model  = new QStandardItemModel(widget); // can't reuse the original model; QComboBox kills it when you call setModel
-      auto* proxy  = new QSortFilterProxyModel(widget);
-      proxy->setSourceModel(model);
-      widget->setModel(proxy);
-      proxy->sort(0);
-   }
-   #pragma endregion
+         emit currentScriptnameChanged(this->_subwidgets.scriptname->currentText());
+      });
+      QObject::connect(this->_subwidgets.scriptname, &QComboBox::currentTextChanged, this, [this](const QString& name) {
+         emit currentScriptnameChanged(name);
+      });
+      QObject::connect(this->_subwidgets.function, &QComboBox::currentTextChanged, this, [this](const QString& name) {
+         emit currentFunctionChanged(name);
+      });
    #endif
 }
 
@@ -141,94 +124,15 @@ void DKPapyrusFragmentFunctionPicker::setCurrentFunction(const QString& value) {
 void DKPapyrusFragmentFunctionPicker::setCurrentFunction(const std::string_view value) {
    this->_subwidgets.function->setCurrentText(QString::fromUtf8(QByteArray(value.data(), value.size())));
 }
-
-int DKPapyrusFragmentFunctionPicker::scriptnameMaxLength() const noexcept {
-   if (auto* line = this->_subwidgets.scriptname->lineEdit())
-      return line->maxLength();
-   return -1;
-}
-void DKPapyrusFragmentFunctionPicker::setScriptnameMaxLength(size_t s) noexcept {
-   if (auto* line = this->_subwidgets.scriptname->lineEdit())
-      line->setMaxLength(s);
-}
-int DKPapyrusFragmentFunctionPicker::functionMaxLength() const noexcept {
-   if (auto* line = this->_subwidgets.function->lineEdit())
-      return line->maxLength();
-   return -1;
-}
-void DKPapyrusFragmentFunctionPicker::setFunctionMaxLength(size_t s) noexcept {
-   if (auto* line = this->_subwidgets.function->lineEdit())
-      line->setMaxLength(s);
-}
-
-void DKPapyrusFragmentFunctionPicker::addScriptname(const QString& scriptname) {
-   if (this->_getScriptData(scriptname)) {
-      _append_combobox_item(this->_subwidgets.scriptname, scriptname, true);
-      return;
-   }
-   auto* data = DovahKitPapyrusDictionary::get().get_script_for(this, scriptname);
-   if (data) {
-      script entry;
-      entry.name     = scriptname;
-      entry.compiled = data;
-      this->scripts.append(entry);
-   }
-   // QComboBox::addItem seems to break when using a QSortFilterProxyModel, so we have to do it ourselves...
-   _append_combobox_item(this->_subwidgets.scriptname, scriptname, true);
-}
-void DKPapyrusFragmentFunctionPicker::clearAvailableScriptnames() {
-   this->_subwidgets.scriptname->clear();
-   //
-   auto& dictionary = DovahKitPapyrusDictionary::get();
-   for (auto& script : this->scripts)
-      dictionary.relinquish_script_from(this, script.name);
-   this->scripts.clear();
-}
-void DKPapyrusFragmentFunctionPicker::clearCurrentValues() {
-   this->_subwidgets.scriptname->clearEditText();
-   this->_subwidgets.function->clearEditText();
-}
-void DKPapyrusFragmentFunctionPicker::removeScriptname(const QString& name) {
-   auto& list = this->scripts;
-   for (auto it = list.begin(); it != list.end(); ++it) {
-      if (it->name == name) {
-         list.erase(it);
-         DovahKitPapyrusDictionary::get().relinquish_script_from(this, name);
-         return;
-      }
-   }
-}
-
-DKPapyrusFragmentFunctionPicker::script* DKPapyrusFragmentFunctionPicker::_getScriptData(const QString& name) {
-   if (name.isEmpty())
-      return nullptr;
-   for (auto& entry : this->scripts) {
-      if (entry.name == name)
-         return &entry;
-   }
-   return nullptr;
-}
-DKPapyrusFragmentFunctionPicker::script* DKPapyrusFragmentFunctionPicker::_getOrCreateScriptData(const QString& name) {
-   if (name.isEmpty())
-      return nullptr;
-   for (auto& entry : this->scripts)
-      if (entry.name == name)
-         return &entry;
-   auto* data = DovahKitPapyrusDictionary::get().get_script_for(this, name);
-   if (!data)
-      return nullptr;
-   script entry;
-   entry.name     = name;
-   entry.compiled = data;
-   this->scripts.append(entry);
-   return &(this->scripts.back());
-}
 #endif
-
 
 QString DKPapyrusFragmentFunctionPicker::headerText() const {
    return this->_subwidgets.header->text();
 }
 void DKPapyrusFragmentFunctionPicker::setHeaderText(QString v) {
    this->_subwidgets.header->setText(v);
+}
+
+void DKPapyrusFragmentFunctionPicker::setSourceWidget(DKPapyrusBoundScriptListPane* src) {
+   this->_model->setSourceWidget(src);
 }

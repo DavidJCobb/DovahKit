@@ -1,18 +1,24 @@
 #pragma once
+#include <limits>
 #include <string_view>
 #include <QComboBox>
 #include <QLabel>
+#include <QPointer>
 #include <QWidget>
 
-namespace dovah {
-   class compiled_papyrus_script;
-}
+#if !defined(QT_DESIGNER_LIB)
+   class DKPapyrusBoundScriptListPane;
+   class DKPapyrusFragmentFunctionModel;
+#endif
 
 class DKPapyrusFragmentFunctionPicker : public QWidget {
    Q_OBJECT;
    Q_PROPERTY(QString headerText READ headerText WRITE setHeaderText DESIGNABLE true);
    public:
       DKPapyrusFragmentFunctionPicker(QWidget* parent = nullptr);
+
+      static constexpr const size_t maxScriptnameLength   = std::numeric_limits<uint16_t>::max();
+      static constexpr const size_t maxFunctionNameLength = std::numeric_limits<uint16_t>::max();
 
       #if !defined(QT_DESIGNER_LIB)
          QString currentScriptname() const noexcept;
@@ -21,40 +27,24 @@ class DKPapyrusFragmentFunctionPicker : public QWidget {
          void setCurrentScriptname(const std::string_view);
          void setCurrentFunction(const QString&);
          void setCurrentFunction(const std::string_view);
-      
-         int scriptnameMaxLength() const noexcept;
-         void setScriptnameMaxLength(size_t) noexcept;
-         int functionMaxLength() const noexcept;
-         void setFunctionMaxLength(size_t) noexcept;
-      
-         void addScriptname(const QString&);
-         void clearAvailableScriptnames();
-         void clearCurrentValues();
-         void removeScriptname(const QString&);
       #endif
 
       QString headerText() const;
       void setHeaderText(QString);
+
+      void setSourceWidget(DKPapyrusBoundScriptListPane*);
       
    signals:
       void currentScriptnameChanged(const QString&);
       void currentFunctionChanged(const QString&);
       
    protected:
-      struct script {
-         QString name;
-         dovah::compiled_papyrus_script* compiled = nullptr;
-      };
-
-      QList<script> scripts;
+      #if !defined(QT_DESIGNER_LIB)
+         DKPapyrusFragmentFunctionModel* _model = nullptr;
+      #endif
       struct {
          QLabel*    header     = nullptr;
          QComboBox* scriptname = nullptr;
          QComboBox* function   = nullptr;
       } _subwidgets;
-
-      #if !defined(QT_DESIGNER_LIB)
-      script* _getScriptData(const QString& name);
-      script* _getOrCreateScriptData(const QString& name);
-      #endif
 };

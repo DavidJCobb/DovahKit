@@ -88,7 +88,7 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
          page->setLayout(layout);
       };
       
-      _insert(1, (this->tabs.stages     = new QuestTabStages(stub, *this->form)));
+      _insert(1, (this->tabs.stages     = new QuestTabStages(stub, *this->form, *this->ui.scriptListPane)));
       _insert(2, (this->tabs.objectives = new QuestTabObjectives(stub, *this->form)));
    }
    {

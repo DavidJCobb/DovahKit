@@ -42,7 +42,12 @@ class DKPapyrusBoundScriptListPane : public QWidget {
       constexpr bool usesGroupbox() const noexcept { return this->state.use_groupbox; }
       void setUsesGroupbox(bool);
 
+      std::vector<QString> allNonDeletedScriptnames() const;
+
    signals:
+      void scriptAdded(QString scriptname);
+      void scriptRemoved(QString scriptname, bool inherited_and_removed);
+      void scriptListReset();
 
    protected:
       struct {

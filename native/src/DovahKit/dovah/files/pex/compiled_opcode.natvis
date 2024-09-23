@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::pex::compiled_opcode">
+      <Intrinsic Name="_is_thiscall" Expression="type == dovah::pex::opcode_type::call_method" />
+      <Intrinsic Name="_is_return" Expression="type == dovah::pex::opcode_type::ret" />
+      
+      <Intrinsic Name="_argcount" Expression="operands.size()" />
+      <Intrinsic Name="_arg" Expression="operands[i]">
+         <Parameter Name="i" Type="size_t" />
+      </Intrinsic>
+      
+      <!-- display strings: -->
+      
+      <DisplayString Condition="type == dovah::pex::opcode_type::set &amp;&amp; _argcount() &gt;= 2">{_arg(0)} = {_arg(1)}</DisplayString>
+      
+      <DisplayString Condition="type == dovah::pex::opcode_type::cast &amp;&amp; _argcount() &gt;= 2">{_arg(0)} = {_arg(1)} as [[destination type]]</DisplayString>
+      
+      <DisplayString Condition="_is_thiscall() &amp;&amp; _argcount() == 3">{_arg(2)} = {_arg(1)}.{_arg(0)}()</DisplayString>
+      <DisplayString Condition="_is_thiscall() &amp;&amp; _argcount() == 4">{_arg(2)} = {_arg(1)}.{_arg(0)}({_arg(3)})</DisplayString>
+      <DisplayString Condition="_is_thiscall() &amp;&amp; _argcount() == 5">{_arg(2)} = {_arg(1)}.{_arg(0)}({_arg(3)}, {_arg(4)})</DisplayString>
+      <DisplayString Condition="_is_thiscall() &amp;&amp; _argcount() == 6">{_arg(2)} = {_arg(1)}.{_arg(0)}({_arg(3)}, {_arg(4)}, {_arg(5)})</DisplayString>
+      <DisplayString Condition="_is_thiscall() &amp;&amp; _argcount() == 7">{_arg(2)} = {_arg(1)}.{_arg(0)}({_arg(3)}, {_arg(4)}, {_arg(5)}, {_arg(6)})</DisplayString>
+      <DisplayString Condition="_is_thiscall() &amp;&amp; _argcount() &gt;= 3">{_arg(2)} = {_arg(1)}.{_arg(0)}(...)</DisplayString>
+      
+      <DisplayString Condition="_is_return() &amp;&amp; _argcount() &gt;= 1">Return {_arg(0)}</DisplayString>
+      <DisplayString Condition="_is_return() &amp;&amp; _argcount() == 0">Return</DisplayString>
+      
+      <Expand>
+         <Item Name="[type]">type</Item>
+         <Item Condition="_is_thiscall() &amp;&amp; _argcount() &gt;= 3" Name="[destination]">operands[2]</Item>
+         <Item Condition="_is_thiscall() &amp;&amp; _argcount() &gt;= 3" Name="[context]">operands[1]</Item>
+         <Item Condition="_is_thiscall() &amp;&amp; _argcount() &gt;= 3" Name="[method]">operands[0]</Item>
+         <Synthetic Name="[arguments]" Condition="_is_thiscall() &amp;&amp; _argcount() &gt; 3">
+            <DisplayString Condition="_argcount() == 4">{_argcount() - 3,u} argument</DisplayString>
+            <DisplayString>{_argcount() - 3,u} arguments</DisplayString>
+            <Expand>
+               <ArrayItems Condition="_is_thiscall() &amp;&amp; _argcount() &gt; 3">
+                  <Size>_argcount() - 3</Size>
+                  <ValuePointer>operands._Mypair._Myval2._Myfirst + 3</ValuePointer>
+               </ArrayItems>
+            </Expand>
+         </Synthetic>
+         <Item Condition="!_is_thiscall() || _argcount() &lt; 3" Name="[operands]">operands</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

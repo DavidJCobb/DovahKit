@@ -386,10 +386,24 @@ bool DKBoundScriptListModel::undeleteScript(const QModelIndex& qmi) {
    return true;
 }
 
-std::vector<std::string> DKBoundScriptListModel::getAllBoundScriptNames() const {
+std::vector<std::string> DKBoundScriptListModel::getAllBoundScriptNames(bool include_inherited_and_removed) const {
    std::vector<std::string> names;
    for (const auto* script : this->_scripts) {
+      if (!include_inherited_and_removed) {
+         if (script->inherited && script->status == vmad_script_status::removed)
+            continue;
+      }
       names.push_back(script->name.toUtf8().toStdString());
    }
    return names;
+}
+QString DKBoundScriptListModel::boundScriptName(const QModelIndex& qmi) const {
+   if (!qmi.isValid())
+      return {};
+   return this->boundScriptName(qmi.row());
+}
+QString DKBoundScriptListModel::boundScriptName(size_t row) const {
+   if (row >= this->_scripts.size())
+      return {};
+   return this->_scripts[row]->name;
 }

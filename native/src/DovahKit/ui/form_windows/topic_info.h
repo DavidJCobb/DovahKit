@@ -64,6 +64,8 @@ class FormDialogTopicInfo :
 
       void _update_topic_text_preview();
 
+      void _refresh_responses_listview();
+
       #pragma region Handlers: Linkedtopics
          void _add_linked_topic();
          void _move_linked_topic(int by);

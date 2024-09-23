@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::pex::value">
+      <Intrinsic Name="as_object_name" ReturnType="const char*" Expression="
+         type == dovah::pex::underlying_value_type::object ? content._Tail._Tail._Tail._Tail._Head.data() : nullptr
+      " />
+      <Intrinsic Name="as_string" ReturnType="const char*" Expression="
+         type == dovah::pex::underlying_value_type::string ? content._Tail._Tail._Tail._Tail._Head.data() : nullptr
+      " />
+      
+      <DisplayString Condition="type == dovah::pex::underlying_value_type::none">None</DisplayString>
+      <DisplayString Condition="type == dovah::pex::underlying_value_type::boolean">{content._Tail._Head}</DisplayString>
+      <DisplayString Condition="type == dovah::pex::underlying_value_type::float32">{content._Tail._Tail._Head}</DisplayString>
+      <DisplayString Condition="type == dovah::pex::underlying_value_type::integer">{content._Tail._Tail._Tail._Head}</DisplayString>
+      <DisplayString Condition="type == dovah::pex::underlying_value_type::string">{content._Tail._Tail._Tail._Tail._Head}</DisplayString>
+      <DisplayString Condition="type == dovah::pex::underlying_value_type::object">{content._Tail._Tail._Tail._Tail._Head,nasb}</DisplayString>
+      <DisplayString>{{type={type} content={content} }}</DisplayString>
+   </Type>
+</AutoVisualizer>

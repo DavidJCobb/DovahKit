@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::pex::parsers::util::file_string_table">
+      <Expand>
+         <Item Name="[count]">count</Item>
+         <CustomListItems MaxItemsPerView="5000">
+            <Variable Name="i" InitialValue="0" />
+
+            <Size>count</Size>
+            <Loop>
+               <Item>data._Mydata + offsets[i],[lengths[i]]na</Item>
+               <Exec>++i</Exec>
+               <Break Condition="i &gt;= count" />
+            </Loop>
+         </CustomListItems>
+      </Expand>
+   </Type>
+</AutoVisualizer>

@@ -6,12 +6,14 @@
 #include "../../../dovah/form_stub.h"
 #include "../../../dovah/forms/Quest.h"
 
+class DKPapyrusBoundScriptListPane;
+
 class QuestTabStages : public QWidget {
    Q_OBJECT
    private:
       using loaded_t = dovah::loaded_forms::Quest;
    public:
-      QuestTabStages(dovah::form_stub& s, loaded_t& q, QWidget* parent = Q_NULLPTR);
+      QuestTabStages(dovah::form_stub& s, loaded_t& q, DKPapyrusBoundScriptListPane& script_list_pane, QWidget* parent = Q_NULLPTR);
       //
    private slots:
       void deactivate();
