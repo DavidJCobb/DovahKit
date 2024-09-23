@@ -9,7 +9,7 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 
 ## General
 
-* Consider altering the subclasses of `form_reference_t` to rely on a template. We can avoid a dependency on the form stub header if we move `use_info_entry` to its own file (and perhaps even move the use info entry flags-mask out of that struct and into its own separate file, too).
+* Consider altering the subclasses of `form_reference_t` to rely on a template.
 
 * Need to support expanded ESLs: new SSE versions allow files to define new forms in the range [0x001, 0x7FF]. (Are there any specific constraints, e.g. the new forms cannot be of the same type as hardcoded forms with the same IDs?) Ideally we should support loading these forms, but should only ever use these IDs when no other IDs are available within the active file, as new forms with these IDs crash older versions of the game during plug-in load.
   * Backend should support this
@@ -60,10 +60,8 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 
 ### Components
 * Make the helper functions on `object_bounds` `constexpr`.
-* `container_entry::condition` is a struct containing a presence bool and a float; change it to `std::optional<float>`.
 
 ### ActorBase (NPC_)
-* NAM9 (Face Morphs) should not be serialized if all the values are 0.
 * NAMA (Face Parts) is not serialized by the CK if the values are unset/default. However, I don't know what the unset/default values are.
 * Investigate omitting fields that would be disabled/suppressed by template actor flags; alternatively, have the frontend do that. Main concern with doing it at save time is use info (i.e. unused form uses still *are* form uses and need to be severed bidirectionally).
 
