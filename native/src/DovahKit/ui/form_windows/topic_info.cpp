@@ -364,6 +364,15 @@ void FormDialogTopicInfo::_save_impl() {
       }
       this->ui.scriptListPane->commit();
    }
+   //
+   // Next: If we set the info to use a SharedInfo, then clear its responses.
+   //
+   if (working.use_shared_info) {
+      for (auto& item : working.responses) {
+         item.clear(working);
+      }
+      working.responses.clear();
+   }
 }
 
 void FormDialogTopicInfo::_update_topic_text_preview() {
