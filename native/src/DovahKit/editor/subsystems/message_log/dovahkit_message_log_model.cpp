@@ -44,6 +44,7 @@ namespace dovahkit::subsystems::message_log {
 
    void model::initialize(cobb::passkey<model, core>) {
       auto& editor  = DovahKitCore::get();
+      QObject::connect(&editor, &DovahKitCore::dataAcquireFailed,       this, &model::dataAcquireFailed);
       QObject::connect(&editor, &DovahKitCore::dataAcquireComplete,     this, &model::dataAcquireComplete);
       QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,     this, &model::dataAbandonImminent);
       QObject::connect(&editor, &DovahKitCore::dataSaveImminent,        this, &model::dataSaveImminent);
@@ -60,6 +61,13 @@ namespace dovahkit::subsystems::message_log {
    }
 
    #pragma region Handlers
+      void model::dataAcquireFailed(QString text) {
+         this->_createLogItem(
+            tr("Failed to load data files due to the following error:\n\n%1", "log window").arg(text),
+            ui::types::log_item_type::error,
+            ui::types::log_item_context::file_load
+         );
+      }
       void model::dataAcquireComplete() {
          int none_stubs = 0;
          DovahKitCore::get().for_each_form_of_type(dovah::form_type::none, [&none_stubs](dovah::form_stub* stub) {

@@ -31,8 +31,6 @@ namespace DovahKitEditorInternals {
          stats.microseconds = benchmark.microseconds() % 1000;
          stats.file_count   = editor.load_order->file_count();
          emit complete(stats);
-      } else {
-         emit failed();
       }
       emit ended();
    }

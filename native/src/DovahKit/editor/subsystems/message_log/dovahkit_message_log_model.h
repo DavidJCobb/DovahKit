@@ -51,6 +51,7 @@ namespace dovahkit::subsystems::message_log {
          bool _has_matching_notice(dovah::bare_form_id_t, QString text) const;
 
          #pragma region Handlers
+            void dataAcquireFailed(QString);
             void dataAcquireComplete();
             void dataAbandonImminent();
             void dataSaveImminent();
