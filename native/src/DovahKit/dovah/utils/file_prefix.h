@@ -8,10 +8,11 @@ namespace dovah {
          struct flag {
             flag() = delete;
             enum : uint16_t {
-               is_light = 0x1000,
+               is_light                    = 0x1000,
+               cannibalize_hardcoded_range = 0x2000,
             };
          };
-         static constexpr uint16_t undefined = 0xFFFF & ~flag::is_light;
+         static constexpr uint16_t undefined = 0xFFFF & ~(flag::is_light | flag::cannibalize_hardcoded_range);
          
       public:
          uint16_t value_and_flags = undefined;
@@ -26,9 +27,11 @@ namespace dovah {
          constexpr bool is_light() const noexcept;
          constexpr uint8_t load_prefix() const noexcept;
          constexpr uint16_t light_prefix() const noexcept;
+         constexpr bool can_cannibalize_hardcoded_range() const noexcept;
          
          constexpr void set_load_prefix(uint8_t v) noexcept;
          constexpr void set_light_prefix(uint16_t v) noexcept;
+         constexpr void set_can_cannibalize_hardcoded_range(bool) noexcept;
          
          constexpr bare_form_id_t min_form_id() const noexcept;
          constexpr bare_form_id_t max_form_id() const noexcept;

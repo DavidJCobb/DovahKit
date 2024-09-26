@@ -117,7 +117,11 @@ namespace dovah::tes_file_writing {
       {  // HEDR
          auto& subrecord = record.open_next_subrecord('HEDR');
          subrecord.reserve_more(0xC);
-         subrecord.write(1.7F);
+         if (this->config.use_file_version.has_value()) {
+            subrecord.write(this->config.use_file_version.value());
+         } else {
+            subrecord.write(std::max(1.7F, this->source.header.file_version));
+         }
          //
          this->fixup_data.record_and_group_count.offset = this->get_output_position();
          subrecord.write(uint32_t(0));
@@ -742,6 +746,8 @@ namespace dovah::tes_file_writing {
       //
       header.flags = this->config.file_flags;
       cobb::edit_bit(header.flags, tes_file_flag::localized_string_table, this->use_string_table);
+      if (this->config.use_file_version.has_value())
+         header.file_version = this->config.use_file_version.value();
       //
       header.masters.clear();
       this->owner.for_each_load_order_filename([&header](std::filesystem::path name, bool is_active_file) { // MAST, DATA

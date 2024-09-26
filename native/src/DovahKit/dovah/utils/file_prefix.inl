@@ -33,6 +33,9 @@ namespace dovah {
          return 0;
       return this->value_and_flags & 0x0FFF;
    }
+   constexpr bool file_prefix::can_cannibalize_hardcoded_range() const noexcept {
+      return this->value_and_flags & flag::cannibalize_hardcoded_range;
+   }
 
    constexpr void file_prefix::set_load_prefix(uint8_t v) noexcept {
       this->value_and_flags = v;
@@ -40,11 +43,20 @@ namespace dovah {
    constexpr void file_prefix::set_light_prefix(uint16_t v) noexcept {
       this->value_and_flags = (v & 0x0FFF) | flag::is_light;
    }
+   constexpr void file_prefix::set_can_cannibalize_hardcoded_range(bool v) noexcept {
+      if (v)
+         this->value_and_flags |= flag::cannibalize_hardcoded_range;
+      else
+         this->value_and_flags &= ~flag::cannibalize_hardcoded_range;
+   }
 
    constexpr bare_form_id_t file_prefix::min_form_id() const noexcept {
       bare_form_id_t id = (bare_form_id_t)this->load_prefix() << 0x18;
       id |= (bare_form_id_t)this->light_prefix() << 0x0C;
-      id |= 0x800;
+      if (this->can_cannibalize_hardcoded_range())
+         id |= 0x001;
+      else
+         id |= 0x800;
       return id;
    }
    constexpr bare_form_id_t file_prefix::max_form_id() const noexcept {
@@ -61,8 +73,10 @@ namespace dovah {
       id &= ~0xFF000000;
       if (this->is_light())
          id &= ~0xFFFFF000;
-      if (id < 0x800)
-         id = 0x800;
+      if (!this->can_cannibalize_hardcoded_range()) {
+         if (id < 0x800)
+            id = 0x800;
+      }
       id |= (bare_form_id_t)this->load_prefix() << 0x18;
       id |= (bare_form_id_t)this->light_prefix() << 0x0C;
       return id;

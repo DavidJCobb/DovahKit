@@ -1,0 +1,219 @@
+
+/*
+
+   TESFile::ReadRecordHeader is where the game corrects form IDs that are in the hardcoded 
+   form ID range.
+   
+   Some terminology we'll be using:
+   
+      LIGHT FILE
+         An ESL-flagged file.
+      
+      HEAVY FILE
+         A file that isn't ESL-flagged, or any file in Legendary Edition.
+      
+      RECORD ID
+         The "form ID" loaded from a record, containing "local" indices referring to the 
+         containing file's dependency ("master") list.
+      
+      FORM ID
+         The final, loaded form ID, after all local indices are resolved to "global" ones 
+         pertaining to files in the game's active load order.
+      
+      HEAVY INDEX
+         The most-significant byte of a record ID or form ID.
+      
+      LIGHT INDEX
+         The third-, fourth-, and fifth-most significant digits of a record ID or form 
+         ID. Using "H" to indicate the heavy index and "L," the light index, such an ID 
+         would look like HHLLLxxx.
+
+*/
+
+bool IsHardcodedFormID(uint32_t formID) {
+   return formID && formID <= 0x7FF;
+}
+
+#pragma region Stuff we don't super care about
+   size_t TESFile::subID_69029(void* dst, size_t expected_size); // at 0xB29A10 in LE
+
+   size_t TESFile::subID_69418(void* dst, size_t expected_size) { // at A57E70 in LE
+      FILE* file = // type identified based on it being Arg3 to a call to `fread` in subID_69029
+         #if _WIN64
+            this->unk38
+         #else
+            this->unk24
+         #endif
+      ;
+      if (!file) {
+         this->Unk_08(0, 0);
+      }
+      eax = this->subID_69029(dst, expected_size);
+      this->unk150 += eax;
+      return eax;
+   }
+
+   size_t TESFile::WeirdoReadCall(void* dst, size_t expected_size) {
+      #if _WIN64
+         if (!INI::Archive::bLoadESMInMemory.b || !this->threadSafeFileMap.unk19) {
+            return this->subID_69418(dst, expected_size);
+         }
+         //
+         // weirdo read code:
+         //
+         if (!this->threadSafeFileMap.unk08)
+            return 0;
+         r9 = this->threadSafeFileMap.unk08;
+         if (!r9)
+            return 0;
+         r8d = this->threadSafeFileMap.unk14;
+         edx = this->threadSafeFileMap.unk10;
+         if (r8d >= edx)
+            return 0;
+         eax = r8 + expected_size;
+         ecx = edx - r8d;
+         esi = (eax > edx) ? ecx : expected_size;
+         r8  += r9;
+         memcpy_s(dst, esi, r8, esi); // memcpy_s is at AddressLib ID 11037
+         this->threadSafeFileMap.unk14 += esi;
+         return esi;
+      #else
+         return this->subID_69418(dst, expected_size);
+      #endif
+   }
+#pragma endregion
+
+bool TESFile::ReadRecordHeader() {
+   #if !_WIN64
+      if (this->unk10) {
+         return false;
+      }
+   #endif
+   size_t read = this->WeirdoReadCall(&this->currentForm, sizeof(this->currentForm));
+   if (read != 0x18) {
+      this->currentForm = { 0 };
+      return false;
+   }
+   if (this->isBigEndian) {
+      this->currentForm = std::byteswap(this->currentForm);
+   }
+   if (this->currentForm.signature == 'GRUP' || this->currentForm.signature == 'TOFT')
+      return true;
+   
+   TESFile* file = this;
+   if (this->masterPtrs) {
+      auto* eax = this->GetFileByLoadPrefix((this->currentForm.formID >> 0x18) + 1);
+      if (eax)
+         file = eax;
+   }
+   #if _WIN64
+      //
+      // As of SSE 1.6.1170.0, we only treat a record ID as a reference to a hardcoded 
+      // form if the record ID uses the local heavy prefix 0x00. In other words, the 
+      // form ID would only be treated as hardcoded if it fell into the specific range 
+      // [00000001, 000007FF].
+      //
+      if (!IsHardcodedFormID(this->currentForm.formID)) {
+         this->currentForm.formID &= 0x00FFFFFF; // shear off the local heavy index
+         if (file->recordFlags & RecordFlag::kSmallFile) {
+            //
+            // Handle forms defined in "light" files (i.e. ESLs).
+            //
+            this->currentForm.formID &= 0x00000FFF; // shear off the local light index
+            this->currentForm.formID |= 0xFE000000; // add heavy index for light files (0xFE)
+            this->currentForm.formID |= (file->smallFileCompileIndex) << 0xC; // add global light index
+            return true;
+         }
+         //
+         // Handle forms defined in "heavy" files (i.e. not ESLs).
+         //
+         this->currentForm.formID |= file->compileIndex << 0x18; // add global heavy index
+      }
+   #else
+      //
+      // Prior to the introduction of extended ESLs, we would treat a record ID as a 
+      // reference to a hardcoded form if, should we ignore the local heavy prefix, the 
+      // ID fell into the hardcoded range (i.e. [xx000001, xx0007FF]).
+      //
+      this->currentForm.formID &= 0x00FFFFFF; // shear off the local heavy index
+      uint32_t zero_prefixed = this->currentForm.formID;
+      this->currentForm.formID |= (file->compileIndex << 0x18); // add global heavy index
+      if (IsHardcodedFormID(zero_prefixed))
+         this->currentForm.formID = zero_prefixed;
+   #endif
+   
+   return true;
+}
+
+#if 0
+#if _WIN64
+   bool TESFile::ReadRecordHeader() {
+      FORM*  rdi = &this->currentForm;
+      size_t esi = this->WeirdoReadCall(rdi, 0x18);
+      if (esi != 0x18) {
+         *rdi = { 0 };
+         return false;
+      }
+      
+      if (this->isBigEndian) {
+         *rdi = std::byteswap(*rdi); // inlined
+      }
+      if (rdi->signature == 'GRUP' || rdi->signature == 'TOFT')
+         return true;
+      
+      TESFile* rdi = nullptr;
+      if (this->masterPtrs) {
+         uint32_t eax = (this->currentForm.formID >> 0x18) + 1;
+         if (eax > this->masterCount) {
+            rdi = this;
+         } else {
+            --eax;
+            rdi = this->masterPtrs[eax];
+         }
+      }
+      if (!rdi)
+         rdi = this;
+      
+      if (!IsHardcodedFormID(this->currentForm.formID)) {
+         this->currentForm.formID &= 0x00FFFFFF;
+         if (rdi->recordFlags & RecordFlag::kSmallFile) {
+            this->currentForm.formID &= 0x00000FFF;
+            this->currentForm.formID |= 0xFE000000;
+            this->currentForm.formID |= (rdi->smallFileCompileIndex) << 0xC;
+            return true;
+         }
+         this->currentForm.formID |= rdi->compileIndex << 0x18;
+      }
+      return true;
+   }
+#else
+   bool TESFile::ReadRecordHeader() {
+      if (this->unk10) {
+         return false;
+      }
+      FORM* edi = &this->currentForm;
+      if (this->subID_69418(&edi) != 0x18) {
+         *edi = { 0 };
+         return false;
+      }
+      if (this->isBigEndian) {
+         *edi = std::byteswap(*edi);
+      }
+      if (edi->signature == 'GRUP' || edi->signature == 'TOFT')
+         return true;
+      
+      TESFile* file = this;
+      if (this->masterPtrs) {
+         auto* eax = this->GetFileByLoadPrefix((this->currentForm.formID >> 0x18) + 1);
+         if (eax)
+            file = eax;
+      }
+      this->currentForm.formID = (file->compileIndex << 0x18) | (this->currentForm.formID & 0x00FFFFFF);
+      
+      uint32_t zero_prefixed = this->currentForm.formID & 0x00FFFFFF;
+      if (IsHardcodedFormID(zero_prefixed))
+         this->currentForm.formID = zero_prefixed;
+      return true;
+   }
+#endif
+#endif

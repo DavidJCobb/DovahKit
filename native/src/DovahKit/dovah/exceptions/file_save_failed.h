@@ -27,6 +27,8 @@ namespace dovah::exceptions {
             zlib_buffer_error,
             zlib_unknown_error,
 
+            desired_file_version_does_not_support_cannibalizing_the_hardcoded_form_id_range,
+
             // Cannot save an ESL file: some of the forms in the active file lie outside 
             // the range of valid form IDs for light plugins.
             forms_out_of_esl_form_id_range,

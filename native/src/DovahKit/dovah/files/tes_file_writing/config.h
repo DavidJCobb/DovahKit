@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <optional>
 #include "../common.h"
 #include "../../data/game.h"
 
@@ -26,6 +27,7 @@ namespace dovah::tes_file_writing {
       };
       uint16_t version_control_2 = 0;
       game     output_game       = game::skyrim_classic;
+      std::optional<float> use_file_version; // if not set, upgrades the version number only as necessary. if set, save fails if we use features from a newer version
 
       struct {
          bool add_flag_when_needed      = false;
