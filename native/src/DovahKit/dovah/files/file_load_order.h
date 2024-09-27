@@ -305,7 +305,6 @@ namespace dovah {
          #pragma region Finding files
          file_prefix file_prefix_for(const std::filesystem::path& filename) const noexcept;
          file_prefix file_prefix_for(const loaded_file& file) const noexcept;
-         file_prefix file_prefix_for(const loaded_file& file, bool pretend_is_or_isnt_light) const noexcept;
          inline uint8_t load_prefix_for(const std::filesystem::path& f) const noexcept {
             return this->file_prefix_for(f).load_prefix();
          }
@@ -318,14 +317,17 @@ namespace dovah {
          inline uint8_t light_prefix_for(const loaded_file& f) const noexcept {
             return this->file_prefix_for(f).light_prefix();
          }
-         file_prefix active_file_prefix() const noexcept;
-         //
+
+         // Returns the heavy and light indices, and other associated qualifiers, that 
+         // the active file has while resident in memory and will have once it's saved.
+         file_prefix expected_active_file_prefix_post_save(std::optional<bool> pretend_is_or_isnt_light = {}) const noexcept;
+         
          int index_of_file(const loaded_file&) const noexcept;
          int index_of_prefix(file_prefix) const noexcept;
-         //
+         
          const loaded_file* get_file_by_prefix(file_prefix) const noexcept;
          const loaded_file* get_file_by_index(int) const noexcept;
-         //
+         
          bool file_is_active(const loaded_file&) const noexcept;
          bool has_file(const std::filesystem::path& filename) const noexcept;
          bool has_non_active_file(const std::filesystem::path& filename) const noexcept;

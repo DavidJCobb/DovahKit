@@ -573,9 +573,8 @@ namespace dovah {
          return;
       auto& list  = this->outbound;
       auto& entry = list[toFormID];
-      auto& lo    = this->_get_load_order();
       if (!entry.other)
-         entry.other = lo.get_form(toFormID, false);
+         entry.other = this->_get_load_order().get_form(toFormID, false);
       entry.refcount++;
       //
       if (flags) {

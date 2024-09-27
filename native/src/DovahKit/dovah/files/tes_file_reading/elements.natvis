@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::tes_file_reading::record">
+      <Intrinsic Name="has_flag" ReturnType="bool" Expression="(header.flags &amp; flag) != 0">
+         <Parameter Name="flag" Type="uint32_t" />
+      </Intrinsic>
+      <Intrinsic Name="is_compressed" ReturnType="bool" Expression="has_flag(dovah::tes_file_record_header::flag::compressed)" />
+      
+      <Intrinsic Name="data_ptr" Expression="data._data" />
+      <Intrinsic Name="data_ptr_at" Expression="(void*)((const uint8_t*)data_ptr() + offset)">
+         <Parameter Name="offset" Type="uint32_t" />
+      </Intrinsic>
+      <Intrinsic Name="data_ptr_at_current_position" Expression="data_ptr_at(offset)" />
+      
+      <Intrinsic Name="_signature_char" Expression="
+         ((const char*)&amp;header.signature + (3 - a)),[1]nasb
+      ">
+         <Parameter Name="a" Type="uint32_t" />
+      </Intrinsic>
+      
+      <DisplayString>{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{header.formID,Xb} v{header.version,d}</DisplayString>
+      <Expand>
+         <Item Name="[file or reader]" ExcludeView="dovahkit_tesfile_already_in_file">owner</Item>
+         <Synthetic Name="[signature]">
+            <DisplayString>{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}</DisplayString>
+         </Synthetic>
+         <Item Name="[record ID]">header.formID</Item>
+         <Item Condition="is_compressed()" Name="[size, serialized]">header.size</Item>
+         <Item Condition="is_compressed()" Name="[size, uncompressed]">data._size</Item>
+         <Item Condition="!is_compressed()" Name="[size]">data._size</Item>
+         <Item Name="[data]">data._data</Item>
+         <Item Name="[data at current position]">data_ptr_at_current_position()</Item>
+         <Synthetic Name="[flags]">
+            <DisplayString>{{ deleted={has_flag(dovah::tes_file_record_header::flag::deleted)}, ignored={has_flag(dovah::tes_file_record_header::flag::ignored)}, partial={has_flag(dovah::tes_file_record_header::flag::partial)} }}</DisplayString>
+            <Expand>
+               <Item Name="[raw]">header.flags</Item>
+               <Item Name="[deleted]">has_flag(dovah::tes_file_record_header::flag::deleted)</Item>
+               <Item Name="[ignored]">has_flag(dovah::tes_file_record_header::flag::ignored)</Item>
+               <Item Name="[partial]">has_flag(dovah::tes_file_record_header::flag::partial)</Item>
+            </Expand>
+         </Synthetic>
+         <Item Name="[version]">header.version,d</Item>
+         <Synthetic Name="[version control]" Condition="header.version_control != 0">
+            <Expand>
+               <Item Name="[day]">header.vc_day,d</Item>
+               <Item Name="[month]">header.vc_month,d</Item>
+               <Item Name="[last editor]">header.vc_last_editor</Item>
+               <Item Name="[current editor]">header.vc_current_editor</Item>
+               <Item Name="[VC 2]">header.version_control_2</Item>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="[file offsets]">
+            <Expand>
+               <Item Name="[header]">head_pos</Item>
+               <Item Name="[body]">body_pos</Item>
+               <Item Name="[end]">end</Item>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+   <Type Name="dovah::tes_file_reading::subrecord">
+      <Intrinsic Name="_sizeof_header" Expression="6" />
+      
+      <Intrinsic Name="data_ptr" Expression="owner._record.data_ptr_at(body_start - _sizeof_header())" />
+      <Intrinsic Name="data_ptr_at" Expression="owner._record.data_ptr_at(body_start - _sizeof_header() + offset)">
+         <Parameter Name="offset" Type="uint32_t" />
+      </Intrinsic>
+      
+      <Intrinsic Name="_record_signature_char" Expression="
+         ((const char*)&amp;owner._record.header.signature + (3 - a)),[1]nasb
+      ">
+         <Parameter Name="a" Type="uint32_t" />
+      </Intrinsic>
+      <Intrinsic Name="_signature_char" Expression="
+         ((const char*)&amp;header.signature + (3 - a)),[1]nasb
+      ">
+         <Parameter Name="a" Type="uint32_t" />
+      </Intrinsic>
+      
+      <DisplayString>{_record_signature_char(0),[1]nasb}{_record_signature_char(1),[1]nasb}{_record_signature_char(2),[1]nasb}{_record_signature_char(3),[1]nasb}/{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}</DisplayString>
+      <Expand>
+         <Item Name="[file or reader]" ExcludeView="dovahkit_tesfile_already_in_file">owner</Item>
+         <Item Name="[containing record]">owner._record</Item>
+         <Item Name="[size]">header.size</Item>
+         <Synthetic Name="[pointers]">
+            <Expand>
+               <!-- handle XXXX subrecords: -->
+               <Item Condition="header.size &gt; 0xFFFF" Name="[extension header start]">(void*)((const uint8_t*)data_ptr() - 4 - 2 - 4)</Item>
+               
+               <Item Name="[start]">data_ptr()</Item>
+               <Item Name="[body]">data_ptr_at(_sizeof_header())</Item>
+               <Item Name="[current position]">owner._record.data_ptr_at_current_position()</Item>
+               <Item Name="[end]">data_ptr_at(_sizeof_header() + header.size)</Item>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+</AutoVisualizer>

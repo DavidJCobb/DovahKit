@@ -2745,6 +2745,15 @@
     <ClCompile Include="widgets\widget-models\DKPapyrusFragmentFunctionModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\structs\world_large_ref_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\form_stub_use_info_builder_form_specific_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\world_max_height_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6917,7 +6926,19 @@
     <ClInclude Include="helpers\enum_in.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\data\game\game_can_cannibalize_hardcoded_form_id_space.h">
+    <ClInclude Include="dovah\data\game\hardcoded_form_ids_ignore_record_id_prefix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\form_id_constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\world_large_ref_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_stub_use_info_builder_form_specific_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\world_max_height_data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -8363,5 +8384,6 @@
     <Natvis Include="dovah\files\pex\variable_declaration.natvis" />
     <Natvis Include="dovah\files\pex\parsers\util\file_string_table.natvis" />
     <Natvis Include="helpers\enum_in.natvis" />
+    <Natvis Include="dovah\files\tes_file_reading\elements.natvis" />
   </ItemGroup>
 </Project>

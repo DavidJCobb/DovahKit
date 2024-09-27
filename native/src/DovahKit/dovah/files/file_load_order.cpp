@@ -2,6 +2,8 @@
 #include "helpers/performance.h"
 #include "helpers/string/strieq_ascii.h"
 #include "helpers/unordered_map.h"
+#include "../data/game/hardcoded_form_ids_ignore_record_id_prefix.h"
+#include "../data/form_id_constants.h"
 #include "../form_stub.h"
 #include "../form_stub_addenda.h"
 #include "../form_stubs/helpers/get_worldspace_cell_by_grid.h"
@@ -1368,65 +1370,92 @@ namespace dovah {
 
    #pragma region Finding files
    file_prefix file_load_order::file_prefix_for(const std::filesystem::path& filename) const noexcept {
-      uint8_t  heavy = 0xFF;
-      uint16_t light = 0xFFFF;
+      uint8_t     heavy = 0xFF;   // start at -1
+      uint16_t    light = 0xFFFF; // start at -1
+      file_prefix prefix;
       for (auto* f : this->files) {
          bool is_light = this->is_light_plugin_support_enabled() && (f->header.flags & tes_file_flag::light);
          bool is_equal = f->get_filename() == filename;
          if (is_light) {
             ++light;
             if (is_equal)
-               return file_prefix::make_light(light);
+               prefix = file_prefix::make_light(light);
          } else {
             ++heavy;
             if (is_equal)
-               return file_prefix::make_heavy(heavy);
+               prefix = file_prefix::make_heavy(heavy);
+         }
+         if (is_equal) {
+            if (!game_feature_support::hardcoded_form_ids_ignore_record_id_prefix(this->current_game, f->header.file_version))
+               prefix.set_can_co_opt_hardcoded_range(true);
+            break;
          }
       }
-      return file_prefix();
+      return prefix;
    }
    file_prefix file_load_order::file_prefix_for(const loaded_file& file) const noexcept {
-      uint8_t  heavy = 0xFF;
-      uint16_t light = 0xFFFF;
+      uint8_t     heavy = 0xFF;   // start at -1
+      uint16_t    light = 0xFFFF; // start at -1
+      file_prefix prefix;
       for (auto* f : this->files) {
          bool is_light = this->is_light_plugin_support_enabled() && (f->header.flags & tes_file_flag::light);
          bool is_equal = f == &file;
          if (is_light) {
             ++light;
             if (is_equal)
-               return file_prefix::make_light(light);
+               prefix = file_prefix::make_light(light);
          } else {
             ++heavy;
             if (is_equal)
-               return file_prefix::make_heavy(heavy);
+               prefix = file_prefix::make_heavy(heavy);
+         }
+         if (is_equal) {
+            if (!game_feature_support::hardcoded_form_ids_ignore_record_id_prefix(this->current_game, f->header.file_version))
+               prefix.set_can_co_opt_hardcoded_range(true);
+            break;
          }
       }
-      return file_prefix();
+      return prefix;
    }
-   file_prefix file_load_order::file_prefix_for(const loaded_file& file, bool pretend_is_or_isnt_light) const noexcept {
-      uint8_t  heavy = 0xFF;
-      uint16_t light = 0xFFFF;
-      for (auto* f : this->files) {
-         bool is_light = this->is_light_plugin_support_enabled() && (f->header.flags & tes_file_flag::light);
-         bool is_equal = f == &file;
-         if (is_equal)
-            is_light = pretend_is_or_isnt_light;
-         if (is_light) {
-            ++light;
-            if (is_equal)
-               return file_prefix::make_light(light);
-         } else {
-            ++heavy;
-            if (is_equal)
-               return file_prefix::make_heavy(heavy);
+   file_prefix file_load_order::expected_active_file_prefix_post_save(std::optional<bool> pretend_is_or_isnt_light) const noexcept {
+      if (!this->active_file)
+         return {};
+
+      bool can_co_opt_hardcoded_id_space = false;
+      if (!game_feature_support::hardcoded_form_ids_always_ignore_record_id_prefix(this->current_game)) {
+         //
+         // Even in a game where hardcoded form IDs aren't prefix-agnostic, the active file 
+         // can only *use* that ID space if it has at least one master. If the active file 
+         // has no masters, then its own record ID prefix is 0x00, and it still has to avoid 
+         // the range [00000001, 000007FF].
+         //
+         if (this->files.size() > 1) {
+            can_co_opt_hardcoded_id_space = true;
          }
       }
-      return file_prefix();
-   }
-   file_prefix file_load_order::active_file_prefix() const noexcept {
-      if (this->active_file)
-         return this->file_prefix_for(*this->active_file);
-      return file_prefix();
+      file_prefix prefix;
+      {
+         uint8_t  heavy = 0xFF;   // start at -1
+         uint16_t light = 0xFFFF; // start at -1
+         for (auto* f : this->files) {
+            bool is_light = this->is_light_plugin_support_enabled() && (f->header.flags & tes_file_flag::light);
+            bool is_equal = f == this->active_file;
+            if (is_equal && pretend_is_or_isnt_light.has_value()) {
+               is_light = pretend_is_or_isnt_light.value();
+            }
+            if (is_light) {
+               ++light;
+               prefix = file_prefix::make_light(light);
+            } else {
+               ++heavy;
+               prefix = file_prefix::make_heavy(heavy);
+            }
+            if (is_equal)
+               break;
+         }
+      }
+      prefix.set_can_co_opt_hardcoded_range(can_co_opt_hardcoded_id_space);
+      return prefix;
    }
    //
    int file_load_order::index_of_file(const loaded_file& f) const noexcept {
@@ -1613,7 +1642,7 @@ namespace dovah {
       return false;
    }
    bare_form_id_t file_load_order::find_first_free_form_id_in_active_file(bare_form_id_t id) const noexcept {
-      auto active_prefix = this->active_file_prefix();
+      auto active_prefix = this->expected_active_file_prefix_post_save();
       if (active_prefix.is_undefined())
          return 0;
       auto min_id = active_prefix.min_form_id();
@@ -1666,7 +1695,7 @@ namespace dovah {
       if (!decltype(this->forms_by_type)::supports_form_type(form_type))
          return false;
       //
-      auto active_prefix = this->active_file_prefix();
+      auto active_prefix = this->expected_active_file_prefix_post_save();
       if (active_prefix.is_undefined())
          return false;
       auto min_id = active_prefix.min_form_id();
@@ -1809,7 +1838,7 @@ namespace dovah {
       result.form_type = ft;
       //
       if (is_valid_form_type(ft) && this->active_file) {
-         auto prefix = this->active_file_prefix();
+         auto prefix = this->expected_active_file_prefix_post_save();
          auto formID = prefix.coerce_form_id(this->active_file->header.nextFormID);
          
          auto  guard = std::lock_guard(this->form_creation_request_info.lock);
@@ -1994,23 +2023,29 @@ namespace dovah {
       if (desiredID == 0) {
          throw exception(error_code::form_id_is_zero, stub);
       }
-      if ((desiredID & plugin_form_id_mask) == 0) {
-         throw exception(error_code::form_id_is_in_hardcoded_range, stub);
+      if (!this->active_file) {
+         throw exception(error_code::no_active_file, stub);
+      }
+      if (game_feature_support::hardcoded_form_ids_always_ignore_record_id_prefix(this->current_game)) {
+         if (desiredID < 0x800) {
+            throw exception(error_code::form_id_is_in_hardcoded_range, stub);
+         }
+      } else {
+         if ((desiredID & 0x00FFFFFF) < 0x800) {
+            throw exception(error_code::form_id_is_in_hardcoded_range, stub);
+         }
       }
       if (!this->is_defined_in_active_file(stub)) {
          throw exception(error_code::form_is_not_from_active_file, stub);
       }
       if (!this->files.empty()) {
-         auto prefix = this->file_prefix_for(*this->files.back());
+         auto prefix = this->expected_active_file_prefix_post_save();
          auto max    = prefix.max_form_id();
          if (desiredID > max) {
             throw exception(error_code::form_id_is_out_of_bounds, stub);
          }
       }
       //
-      if (!this->active_file) {
-         throw exception(error_code::no_active_file, stub);
-      }
       auto guard1 = std::lock_guard(this->forms.lock);
       auto guard2 = std::lock_guard(this->form_creation_request_info.lock);
       if (this->has_form(desiredID)) {
@@ -2218,7 +2253,7 @@ namespace dovah {
       //
       // If we made it here, then no, so let's find a form ID.
       //
-      auto prefix = this->active_file_prefix();
+      auto prefix = this->expected_active_file_prefix_post_save();
       if (prefix.is_undefined()) {
          throw exception(error_code::no_active_file, request.setting.name);
       }
@@ -2338,9 +2373,19 @@ namespace dovah {
    }
 
    file_load_order::form_id_status file_load_order::local_formID_to_global_formID(const loaded_file* file, uint32_t& id) const {
-      if ((id & plugin_form_id_mask) == 0) { // hardcoded
-         id = id & hardcoded_form_id_mask;
+      if (id == 0) {
          return form_id_status::valid;
+      }
+      if (game_feature_support::hardcoded_form_ids_ignore_record_id_prefix(this->current_game, file->header.file_version)) {
+         auto id_to_test = id & 0x00FFFFFF;
+         if (id_to_test <= max_hardcoded_form_id) {
+            id = id_to_test;
+            return form_id_status::valid;
+         }
+      } else {
+         if (id <= max_hardcoded_form_id) {
+            return form_id_status::valid;
+         }
       }
       if (!file) {
          id = 0;
@@ -2367,37 +2412,13 @@ namespace dovah {
       return form_id_status::valid;
    }
    file_load_order::form_id_status file_load_order::local_formID_to_global_formID(form_stub* stub, uint32_t& out) const {
-      if ((stub->formID & plugin_form_id_mask) == 0) { // Handle form IDs for hardcoded forms.
-         //
-         // All forms between xx000001 and xx0007FF, inclusive, are hardcoded forms and the 
-         // load order prefix is ignored.
-         //
-         out = stub->formID & hardcoded_form_id_mask;
-         return form_id_status::valid;
-      }
-      auto    file   = stub->get_file_at_index(-1);
-      uint8_t local  = file->header.masters.size();
-      uint8_t prefix = stub->formID >> 0x18;
-      if (prefix == local) {
-         auto file_prefix = this->file_prefix_for(*file);
-         out = file_prefix.coerce_form_id(stub->formID);
-         return form_id_status::valid;
-      }
-      if (prefix > local) {
-         out = 0;
-         return form_id_status::out_of_bounds;
-      }
-      auto& name        = file->header.masters[prefix].master;
-      auto  file_prefix = this->file_prefix_for(name);
-      if (file_prefix.is_undefined()) {
-         out = 0;
-         return form_id_status::missing_master;
-      }
-      out = file_prefix.coerce_form_id(stub->formID);
-      return form_id_status::valid;
+      auto* file = stub->get_file_at_index(-1);
+      assert(file != nullptr);
+      out = stub->formID;
+      return local_formID_to_global_formID(file, out);
    }
    bare_form_id_t file_load_order::remap_formID_for_save(bare_form_id_t id) const noexcept {
-      auto prefix = file_prefix::from_form_id(id, !this->is_light_plugin_support_enabled());
+      auto prefix = file_prefix::from_form_id(id, !this->is_light_plugin_support_enabled()); // just need this to see whether to use a light or heavy form ID
       if (prefix.is_undefined())
          return 0;
       auto index = this->index_of_prefix(prefix);

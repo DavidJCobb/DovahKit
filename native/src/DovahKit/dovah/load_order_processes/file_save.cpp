@@ -10,7 +10,7 @@
 #include "../exceptions/game_change_failed.h"
 #include "../load_order_requests/form_deletion_request.h"
 
-#include "../data/game/game_can_cannibalize_hardcoded_form_id_space.h"
+#include "../data/game/hardcoded_form_ids_ignore_record_id_prefix.h"
 
 namespace dovah::load_order_processes {
    void file_save::execute() {
@@ -63,12 +63,12 @@ namespace dovah::load_order_processes {
          bool verify_all_ids_in_light_range           = (_save_as_light_plugin && !_was_originally_light);
          bool verify_no_cannibalizing_hardcoded_range = false;
          if (active_load_order.current_game != this->write_config.output_game) {
-            auto min_ver_opt = game_can_cannibalize_hardcoded_form_id_space(this->write_config.output_game);
+            auto min_ver_opt = game_feature_support::hardcoded_form_ids_ignore_record_id_prefix_until_file_version(this->write_config.output_game);
             if (min_ver_opt.has_value()) {
                auto min_ver = min_ver_opt.value();
                if (desired_file_version < min_ver) {
                   if (this->write_config.use_file_version.has_value()) {
-                     throw exception(error_code::desired_file_version_does_not_support_cannibalizing_the_hardcoded_form_id_range);
+                     throw exception(error_code::desired_file_version_does_not_support_co_opting_the_hardcoded_form_id_range);
                   }
                   desired_file_version = min_ver;
                }
@@ -86,7 +86,7 @@ namespace dovah::load_order_processes {
                if (verify_no_cannibalizing_hardcoded_range) {
                   auto remapped = active_load_order.remap_formID_for_save(id);
                   if ((remapped & 0x00FFFFFF) < 0x800) {
-                     throw exceptions::game_change_failed(dovah::game_change_failure_reason::active_file_cannibalizes_the_hardcoded_form_id_range, active_load_order.current_game, this->write_config.output_game);
+                     throw exceptions::game_change_failed(dovah::game_change_failure_reason::active_file_co_opts_the_hardcoded_form_id_range, active_load_order.current_game, this->write_config.output_game);
                   }
                }
             }
@@ -174,7 +174,7 @@ namespace dovah::load_order_processes {
          // We have changed whether the active file is a light plug-in, so we need to change all 
          // of its form IDs in memory.
          //
-         auto new_prefix = active_load_order.file_prefix_for(*active_load_order.active_file, this->_save_as_light_plugin);
+         auto new_prefix = active_load_order.expected_active_file_prefix_post_save(this->_save_as_light_plugin);
          //
          std::vector<form_stub*> stubs;
          for (auto& pair : active_load_order.active_file_forms.forms) {

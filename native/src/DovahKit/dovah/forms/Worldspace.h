@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 #include "Form.h"
@@ -7,6 +8,8 @@
 #include "../../helpers/vector3.h"
 #include "components/model.h"
 #include "components/papyrus.h"
+#include "structs/world_large_ref_data.h"
+#include "structs/world_max_height_data.h"
 
 namespace dovah::loaded_forms {
    class Worldspace : public Form {
@@ -47,50 +50,6 @@ namespace dovah::loaded_forms {
             };
          };
 
-         struct large_reference_t { // RNAM (SSE-only); one subrecord per entry
-            struct ref {
-               form_reference_t form;
-               int16_t y;
-               int16_t x;
-            };
-            struct entry {
-               int16_t y;
-               int16_t x;
-               std::vector<ref> refs;
-            };
-            //
-            std::vector<entry> entries;
-            //
-            void clone_from(const large_reference_t& original, loaded_forms::Form& my_owner) noexcept;
-            void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
-            void clear(loaded_forms::Form& my_owner);
-         };
-
-         struct max_height_data_t {
-            struct quad_heights {
-               int8_t sw;
-               int8_t se;
-               int8_t nw;
-               int8_t ne;
-            };
-            //
-            struct {
-               int16_t x;
-               int16_t y;
-            } min;
-            struct {
-               int16_t x;
-               int16_t y;
-            } max;
-            bool present = false;
-            std::vector<quad_heights> cells;
-            //
-            void clear() {
-               this->present = false;
-               this->cells.clear();
-            }
-         };
-
          struct offset_data_t {
             //
             // OFST is skipped if it is zero-length. Otherwise, it's a two-dimensional array of 
@@ -111,9 +70,10 @@ namespace dovah::loaded_forms {
             }
          };
 
-         large_reference_t large_references;
-         localized_string  name; // FULL
-         max_height_data_t max_height_data; // MHDT
+         localized_string name; // FULL
+         //
+         structs::world_large_ref_data large_ref_data;  // RNAM (SSE-only)
+         std::optional<structs::world_max_height_data> max_height_data; // MHDT
          struct {
             int16_t x = 0;
             int16_t y = 0;
@@ -127,8 +87,8 @@ namespace dovah::loaded_forms {
          form_reference_t water_type_lod;    // NAM3
          float            lod_water_height;  // NAM4
          struct {
-            float default_land_height;
-            float default_water_height;
+            float default_land_height  = -2048.0F;
+            float default_water_height =     0.0F;
          } land_data; // DNAM
          struct {
             form_reference_t form; // WNAM
@@ -162,7 +122,7 @@ namespace dovah::loaded_forms {
             // Indicates where and how map markers are displayed relative to 
             // the parent worldspace.
             //
-            float scale; // world map scale
+            float scale = 1.0F; // world map scale
             cobb::vector3<float> offset; // offset, measured in world units (i.e. cell grid * 4096)
          } map_offset_data; // ONAM
          float   distant_lod_multiplier = 1.0F; // NAMA
@@ -176,12 +136,12 @@ namespace dovah::loaded_forms {
             // NOTE: huge values can cause performance hits; xEdit warns if any value is outside of +/- 256
             //
             struct {
-               float x = 0;
-               float y = 0;
+               float x = std::numeric_limits<float>::max();
+               float y = std::numeric_limits<float>::max();
             } min; // NAM0
             struct {
-               float x = 0;
-               float y = 0;
+               float x = std::numeric_limits<float>::min();
+               float y = std::numeric_limits<float>::min();
             } max; // NAM9
          } bounds;
          std::string tree_canopy_shadow; // NNAM // unused

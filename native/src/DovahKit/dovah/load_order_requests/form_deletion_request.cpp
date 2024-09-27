@@ -17,7 +17,7 @@ namespace dovah {
       if (this->target.is_hardcoded() || this->target.formID < minimum_plugin_form_id)
          throw exception(error_code::form_is_hardcoded, this->target);
 
-      this->active_file_prefix = this->owner.active_file_prefix();
+      this->active_file_prefix = this->owner.expected_active_file_prefix_post_save();
       
       if (_form_should_be_flagged(this->target)) {
          this->forms_needing_flag.insert(&this->target);
@@ -33,15 +33,22 @@ namespace dovah {
       //
       this->force_delete_overrides = other.force_delete_overrides;
       //
-      this->active_file_prefix = this->owner.active_file_prefix();
+      this->active_file_prefix = this->owner.expected_active_file_prefix_post_save();
    }
    bool form_deletion_request::_form_should_be_flagged(form_stub& stub) noexcept {
       if (this->force_delete_overrides)
          return false;
       if (stub.is_hardcoded()) // we don't currently allow any kind of deletion of hardcoded forms, but it never hurts to be prepared for what might change
          return true;
-      if (!this->active_file_prefix.contains_form_id(stub.formID))
+      if (!this->active_file_prefix.contains_form_id(stub.formID)) {
+         if (stub.file_list_includes(this->owner.active_file))
+            //
+            // A form can be defined in the active file yet stored outside of the active 
+            // file's ID range if it's an injected record.
+            //
+            return false;
          return true;
+      }
       return false;
    }
    void form_deletion_request::_gather_others(form_stub* start) {

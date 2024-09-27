@@ -13,6 +13,6 @@ namespace dovah {
       // The active file defines new forms in the range [xx000001, xx0007FF], and the 
       // target game doesn't support any version of the file format that allows this (all 
       // such IDs are treated as overriding hardcoded forms).
-      active_file_cannibalizes_the_hardcoded_form_id_range,
+      active_file_co_opts_the_hardcoded_form_id_range,
    };
 }

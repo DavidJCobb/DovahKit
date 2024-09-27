@@ -290,13 +290,10 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
       // specify a context object (i.e. the QObject before your functor). If you don't, Qt WILL fail 
       // an assertion when the signal is received, before even executing any of the code in your 
       // signal handler, and the assertion message WILL be misleading.
-      //
-      // Presumably it has something to do with Qt::AutoConnection, which is supposed to adapt signals 
-      // across threads; I assume it can't do that if you don't explicitly provide a context object 
-      // for it to adapt to. (All QObjects are aware of their owning thread, apparently.)
       // 
-      // Naturally, none of this is mentioned in their documentation or examples for QThread, at least 
-      // as of this writing. It's far from the only thing missing, either.
+      // This is probably because emitting signals cross-thread requires thread synchronization and 
+      // Qt only knows it's a cross-thread signal by checking the thread affinity of the sender and 
+      // the recipient; ergo there must *be* a recipient.
       //
       QObject::connect(worker, &DovahKitEditorInternals::load_task::complete, this, [this, worker](file_load_stats stats) {
          if (auto* bsa_list = this->load_order->get_archive_list())
@@ -326,12 +323,9 @@ bool DovahKitCore::acquire_load_order_data(bool async) {
       });
       QObject::connect(worker, &DovahKitEditorInternals::load_task::ended, this, [this, thread]() {
          //
-         // As a bonus, we also have to call QThread::quit() manually when our work is complete. For 
-         // some reason, QThread isn't cognizant of its no longer having any work to do. The documen-
-         // tation for QThread does not mention this, and the examples actively omit it. I managed to 
-         // find it explained over at <https://stackoverflow.com/a/17094375>, which has exactly the 
-         // level of detail that you should be able to expect from the official documentation, but 
-         // can't.
+         // We have to call QThread::quit() manually when our work is done. QThreads don't automatically 
+         // exit, probably in order to keep spinning an event loop so QObjects living on the thread can 
+         // receive signals. See also: <https://stackoverflow.com/a/17094375>.
          //
          thread->quit();
       });

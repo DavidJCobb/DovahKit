@@ -6,9 +6,9 @@ namespace dovah {
       tes_file_flag() = delete;
       enum type {
          master                 = 0x0001,
-         altered                = 0x0002, // listed in xEdit defs. what does it mean?
-         checked                = 0x0004, // listed in xEdit defs. what does it mean?
-         active                 = 0x0008, // listed in xEdit defs. what does it mean?
+         altered                = 0x0002, // apparently run-time state for forms; indicates a form that has been edited during the current session.
+         checked                = 0x0004, // apparently run-time state for files; indicates that a file's header and dependencies have been checked for correctness?
+         active                 = 0x0008, // apparently run-time state for forms and files; indicates the active file and any forms defined/overridden therein
          optimized              = 0x0010, // listed in xEdit defs. what does it mean?
          temp_id_owner          = 0x0020, // listed in xEdit defs. what does it mean?
          localized_string_table = 0x0080,
@@ -112,9 +112,9 @@ namespace dovah {
       static constexpr uint32_t non_data_flags = flag::compressed; // when serializing a form, the serializer should decide whether these flags remain set
       //
       uint32_t signature = 0;
-      uint32_t size;
-      uint32_t flags;
-      uint32_t formID = 0;
+      uint32_t size      = 0;
+      uint32_t flags     = 0;
+      uint32_t formID    = 0;
       union {
          struct {
             uint8_t vc_day;
@@ -122,10 +122,10 @@ namespace dovah {
             uint8_t vc_last_editor;
             uint8_t vc_current_editor;
          };
-         uint32_t version_control;
+         uint32_t version_control = 0;
       };
-      uint16_t version;
-      uint16_t version_control_2;
+      uint16_t version = 0;
+      uint16_t version_control_2 = 0;
       //
       constexpr bool body_is_compressed() const noexcept { return (this->flags & flag::compressed) != 0; }
       //

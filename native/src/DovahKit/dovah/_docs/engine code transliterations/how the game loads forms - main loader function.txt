@@ -31,6 +31,7 @@ enum form_type : uint8_t; // i'm not gonna dump a 120-line enum in here, sorry
 //  - TESForm* Arg3 == An already-existing form to load (when loading content on-demand rather than at startup)
 //  - bool     Arg4 == 
 //
+// AddressLib ID (SSE 1.6.1170.0): 13763
 bool TESDataHandler::sub004401B0(TESFile& Arg1, bool Arg2, TESForm* Arg3, bool Arg4) {
    tls2EB = true;
    // [EBP-0x0C] == this
@@ -84,11 +85,11 @@ lAfterTypeMismatchCheck:
             case form_type::topic:      current_loaded_dial = Arg3; break;
          }
          Arg3->LoadPartial(Arg1); // virtual 0x07
-         Arg3->sub004515F0(Arg1);
+         Arg3->sub004515F0(Arg1); // SSE 1.6.1170.0 AddressLib ID 14623
          if (tls_is_in_HotLoadPlugin == 0) {
-            Arg3->ModifyFlag00000008(false); // clear flag
+            Arg3->ModifyActiveFileFlag(false); // clear flag
          }
-         if (Arg1.sub00444720()) { // tests flag 0x00000008 on TESFile::unk3E8
+         if (Arg1.IsActive()) { // tests flag 0x00000008 on TESFile::unk3E8
             Arg3->SetAlteredFlag(true);
          }
          return true;

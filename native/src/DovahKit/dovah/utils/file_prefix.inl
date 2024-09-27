@@ -1,5 +1,6 @@
 #pragma once
 #include "./file_prefix.h"
+#include "../data/form_id_constants.h"
 
 namespace dovah {
    /*static*/ constexpr file_prefix file_prefix::make_light(uint16_t l) {
@@ -33,8 +34,8 @@ namespace dovah {
          return 0;
       return this->value_and_flags & 0x0FFF;
    }
-   constexpr bool file_prefix::can_cannibalize_hardcoded_range() const noexcept {
-      return this->value_and_flags & flag::cannibalize_hardcoded_range;
+   constexpr bool file_prefix::can_co_opt_hardcoded_range() const noexcept {
+      return this->value_and_flags & flag::co_opt_hardcoded_range;
    }
 
    constexpr void file_prefix::set_load_prefix(uint8_t v) noexcept {
@@ -43,20 +44,20 @@ namespace dovah {
    constexpr void file_prefix::set_light_prefix(uint16_t v) noexcept {
       this->value_and_flags = (v & 0x0FFF) | flag::is_light;
    }
-   constexpr void file_prefix::set_can_cannibalize_hardcoded_range(bool v) noexcept {
+   constexpr void file_prefix::set_can_co_opt_hardcoded_range(bool v) noexcept {
       if (v)
-         this->value_and_flags |= flag::cannibalize_hardcoded_range;
+         this->value_and_flags |= flag::co_opt_hardcoded_range;
       else
-         this->value_and_flags &= ~flag::cannibalize_hardcoded_range;
+         this->value_and_flags &= ~flag::co_opt_hardcoded_range;
    }
 
    constexpr bare_form_id_t file_prefix::min_form_id() const noexcept {
       bare_form_id_t id = (bare_form_id_t)this->load_prefix() << 0x18;
       id |= (bare_form_id_t)this->light_prefix() << 0x0C;
-      if (this->can_cannibalize_hardcoded_range())
+      if (this->can_co_opt_hardcoded_range())
          id |= 0x001;
       else
-         id |= 0x800;
+         id |= max_hardcoded_form_id + 1;
       return id;
    }
    constexpr bare_form_id_t file_prefix::max_form_id() const noexcept {
@@ -73,9 +74,9 @@ namespace dovah {
       id &= ~0xFF000000;
       if (this->is_light())
          id &= ~0xFFFFF000;
-      if (!this->can_cannibalize_hardcoded_range()) {
-         if (id < 0x800)
-            id = 0x800;
+      if (!this->can_co_opt_hardcoded_range()) {
+         if (id <= max_hardcoded_form_id)
+            id = max_hardcoded_form_id + 1;
       }
       id |= (bare_form_id_t)this->load_prefix() << 0x18;
       id |= (bare_form_id_t)this->light_prefix() << 0x0C;

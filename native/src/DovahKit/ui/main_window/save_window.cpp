@@ -97,6 +97,9 @@ namespace {
             return QObject::tr("The file was successfully saved, but some forms were lost during the conversion. Internal errors occurred while trying to remove these forms from memory. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
          case error_code::post_save_none_stub_cleanup_failed:
             return QObject::tr("The file was successfully saved, but internal errors occurred while trying to clean up information on dangling form-to-form references. Further editing is no longer possible; you can keep using DovahKit, but all currently loaded data will be unloaded. ", "write error");
+
+         case error_code::desired_file_version_does_not_support_co_opting_the_hardcoded_form_id_range:
+            return QObject::tr("The active file defines forms that fall within the hardcoded form ID range [xx000001, xx0007FF]. The desired save version doesn't support this.", "write error");
       }
       return QObject::tr("An unknown problem occurred while trying to save this file.", "write error");
    }
@@ -240,6 +243,14 @@ void ActiveFileSaveDialog::commit() {
          case error_code::load_order_contains_light_files:
             message = tr("The current load order would not be possible in %1. The load order contains ESL files (besides the active file).", "write error")
                .arg(target_game);
+            break;
+         case error_code::active_file_co_opts_the_hardcoded_form_id_range:
+            message = tr(
+               "The active file would not be possible in %1. The active file contains form IDs in the range [xx000001, xx0007FF]. In %1, "
+               "form IDs in this range are reserved for hardcoded forms regardless of the load order prefix they're saved with. To convert "
+               "your file for the target game, you must first renumber all such forms to use valid form IDs outside of that range.",
+               "write error"
+            ).arg(target_game);
             break;
          default:
             message = tr("An unknown problem occurred while trying to save this file for %1.", "write error").arg(target_game);

@@ -11,8 +11,8 @@ namespace dovah::notices::form_save_errors::by_type::landscape {
          MAKE_ERROR_OVERLOADS;
       public:
          static constexpr const std::pair<float, float> allowed_height_range = { // min, max
-            std::numeric_limits<int8_t>::min() * 8.0,
-            std::numeric_limits<int8_t>::max() * 8.0
+            std::numeric_limits<int8_t>::min() * 8.0F,
+            std::numeric_limits<int8_t>::max() * 8.0F
          };
 
       public:

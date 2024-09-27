@@ -177,7 +177,9 @@
     <ClCompile Include="dovah\forms\SoulGem.cpp" />
     <ClCompile Include="dovah\forms\structs\actor_creature_sounds.cpp" />
     <ClCompile Include="dovah\forms\structs\container_object_extra_data.cpp" />
+    <ClCompile Include="dovah\forms\structs\world_large_ref_data.cpp" />
     <ClCompile Include="dovah\forms\structs\movement_type_speeds.cpp" />
+    <ClCompile Include="dovah\forms\structs\world_max_height_data.cpp" />
     <ClCompile Include="dovah\forms\VisualEffect.cpp" />
     <ClCompile Include="dovah\form_reference_t.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_base_form.cpp" />
@@ -189,6 +191,7 @@
     <ClCompile Include="dovah\form_stubs\helpers\get_worldspace_cell_by_grid.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_worldspace_persistent_cell.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\is_worldspace_persistent_cell.cpp" />
+    <ClCompile Include="dovah\form_stub_use_info_builder_form_specific_data.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\file_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_save.cpp" />
@@ -1072,8 +1075,9 @@
     <ClInclude Include="dovah\data\face_fx\default_facegen_race_phonemes.h" />
     <ClInclude Include="dovah\data\face_fx\phonemes.h" />
     <ClInclude Include="dovah\data\face_tints.h" />
+    <ClInclude Include="dovah\data\form_id_constants.h" />
     <ClInclude Include="dovah\data\game.h" />
-    <ClInclude Include="dovah\data\game\game_can_cannibalize_hardcoded_form_id_space.h" />
+    <ClInclude Include="dovah\data\game\hardcoded_form_ids_ignore_record_id_prefix.h" />
     <ClInclude Include="dovah\data\hardcoded_form_ids.h" />
     <ClInclude Include="dovah\data\headparts.h" />
     <ClInclude Include="dovah\data\sex.h" />
@@ -1134,8 +1138,10 @@
     <ClInclude Include="dovah\forms\structs\actor_creature_sounds.h" />
     <ClInclude Include="dovah\forms\structs\actor_facegen_morphs.h" />
     <ClInclude Include="dovah\forms\structs\container_object_extra_data.h" />
+    <ClInclude Include="dovah\forms\structs\world_large_ref_data.h" />
     <ClInclude Include="dovah\forms\structs\movement_type_speeds.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
+    <ClInclude Include="dovah\forms\structs\world_max_height_data.h" />
     <ClInclude Include="dovah\forms\VisualEffect.h" />
     <ClInclude Include="dovah\form_reference_t.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_child_form.h" />
@@ -1154,6 +1160,7 @@
     <ClInclude Include="dovah\form_stubs\helpers\get_worldspace_persistent_cell.h" />
     <ClInclude Include="dovah\form_stubs\helpers\is_persistent.h" />
     <ClInclude Include="dovah\form_stubs\helpers\is_worldspace_persistent_cell.h" />
+    <ClInclude Include="dovah\form_stub_use_info_builder_form_specific_data.h" />
     <ClInclude Include="dovah\game_change_failure_reason.h" />
     <ClInclude Include="dovah\load_order_interfaces\file_load.h" />
     <ClInclude Include="dovah\load_order_interfaces\form_load.h" />
@@ -3095,6 +3102,7 @@
     <Natvis Include="dovah\files\pex\tabled_string.natvis" />
     <Natvis Include="dovah\files\pex\value.natvis" />
     <Natvis Include="dovah\files\pex\variable_declaration.natvis" />
+    <Natvis Include="dovah\files\tes_file_reading\elements.natvis" />
     <Natvis Include="dovah\forms\components\conditions\working_comparison.natvis" />
     <Natvis Include="dovah\forms\components\conditions\working_condition.natvis" />
     <Natvis Include="dovah\forms\Landscape.natvis" />

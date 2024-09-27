@@ -6,6 +6,8 @@
 
 #include "../exceptions/default_object_assign_failed.h"
 
+#include "../form_stub_use_info_builder_form_specific_data.h"
+
 namespace dovah::loaded_forms {
    form_stub* DefaultObjectManager::get_entry(signature_t signature) const noexcept {
       entry none;
@@ -60,16 +62,13 @@ namespace dovah::loaded_forms {
    }
    /*static*/ void DefaultObjectManager::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       //
-      // DOBJ coalesces data across multiple files, so we kinda need a bit of a sledgehammer here... 
-      // I modified the use info builder to be able to store a single untyped pointer, which forms 
-      // can use for whatever purpose they need. We'll be using it for an unordered map.
+      // DOBJ coalesces data across multiple files, so we kinda need some help here... The 
+      // use info builder gives us a storage area for relatively complex arrangements of 
+      // to-be-committed use info. We'll make use of that. Said storage area automatically 
+      // commits any outbound uses we put inside of it, so we just need to add the uses.
       //
-      using _pending_dobj_use_info_map = std::unordered_map<signature_t, form_id_t>;
-      //
-      if (!uib.extra_pointer)
-         uib.extra_pointer = new _pending_dobj_use_info_map;
-      //
-      auto& entries = *(_pending_dobj_use_info_map*)uib.extra_pointer;
+      auto& dst_opt = uib.get_form_specific_data()->by_form_type.default_object_manager;
+      auto& dst     = dst_opt.has_value() ? dst_opt.value() : dst_opt.emplace();
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'DNAM':
@@ -77,22 +76,10 @@ namespace dovah::loaded_forms {
                   signature_t key;
                   form_id_t   form;
                   if (subrecord.read(key) && subrecord.read(form) && key)
-                     entries[key] = form;
+                     dst.default_objects[key] = form;
                }
                break;
          }
-      }
-      if (uib.is_final_file()) {
-         //
-         // We're loading the last source file for the Default Object Manager. Here, we'll apply the 
-         // form-to-form references we've spotted across all pertinent source files, and then we'll 
-         // discard the map after it's served its purpose.
-         //
-         for (auto& pair : entries)
-            if (pair.second)
-               uib.add_outbound_reference(pair.second);
-         delete uib.extra_pointer;
-         uib.extra_pointer = nullptr;
       }
    }
    void DefaultObjectManager::_clone_impl(Form* out) const noexcept {

@@ -34,8 +34,8 @@ namespace dovah {
          public:
             basic_reader* owner = nullptr;
             header_t      header;
-            uint32_t      pos;
-            uint32_t      end;
+            uint32_t      pos = 0;
+            uint32_t      end = 0;
             
             constexpr operator bool() const noexcept { return this->header.signature != 0; }
             constexpr bool exists() const noexcept { return this->header.signature != 0; }
@@ -74,9 +74,9 @@ namespace dovah {
          protected:
             basic_reader& owner;
             header_t      header;
-            uint32_t      head_pos; // position in the file (start of the record)
-            uint32_t      body_pos; // position in the file (start of the record body)
-            uint32_t      end;
+            uint32_t      head_pos = 0; // position in the file (start of the record)
+            uint32_t      body_pos = 0; // position in the file (start of the record body)
+            uint32_t      end      = 0;
             //
             cobb::generic_buffer data; // record body (uncompressed)
             uint32_t offset = 0; // offset for reading, within the uncompressed record body
@@ -145,7 +145,7 @@ namespace dovah {
             //
             basic_reader& owner;
             header_t header;
-            uint32_t body_start; // start of the subrecord body within the containing record
+            uint32_t body_start = 0; // start of the subrecord body within the containing record
             //
             void _fix_up_form_id(uint32_t& id) const noexcept;
             bool _read_form_id(form_id_t& field) const noexcept;

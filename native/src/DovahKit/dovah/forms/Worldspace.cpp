@@ -20,81 +20,6 @@ namespace {
 }
 
 namespace dovah::loaded_forms {
-   void Worldspace::large_reference_t::clone_from(const large_reference_t& original, loaded_forms::Form& my_owner) noexcept {
-      if (!this->entries.empty()) {
-         for (auto& entry : this->entries) {
-            for (auto& ref : entry.refs)
-               ref.form.set(my_owner, nullptr);
-         }
-         this->entries.clear();
-      }
-      //
-      size_t size = original.entries.size();
-      this->entries.resize(size);
-      for (size_t i = 0; i < size; ++i) {
-         auto& entry = this->entries[i];
-         auto& from  = original.entries[i];
-         entry.y = from.y;
-         entry.x = from.x;
-         //
-         size_t rs = from.refs.size();
-         entry.refs.resize(rs);
-         for (size_t j = 0; j < rs; ++j) {
-            auto& ref   = entry.refs[j];
-            auto& other = from.refs[j];
-            ref.form.set(my_owner, other.form);
-            ref.y = other.y;
-            ref.x = other.x;
-         }
-      }
-   }
-   void Worldspace::large_reference_t::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
-      bool removals_pending = false;
-      for (auto& entry : this->entries) {
-         bool edited = false;
-         for (auto& ref : entry.refs) {
-            if (ref.form == &target) {
-               ref.form.set(my_owner, nullptr);
-               edited = true;
-            }
-         }
-         if (edited) {
-            auto& list = entry.refs;
-            list.erase(
-               std::remove_if(
-                  list.begin(),
-                  list.end(),
-                  [](ref& e) {
-                     return e.form == nullptr;
-                  }
-               ),
-               list.end()
-            );
-            if (list.empty())
-               removals_pending = true;
-         }
-      }
-      if (removals_pending) {
-         auto& list = this->entries;
-         list.erase(
-            std::remove_if(
-               list.begin(),
-               list.end(),
-               [](entry& e) {
-                  return e.refs.empty();
-               }
-            ),
-            list.end()
-         );
-      }
-   }
-   void Worldspace::large_reference_t::clear(loaded_forms::Form& my_owner) {
-      for (auto& entry : this->entries)
-         for (auto& ref : entry.refs)
-            ref.form.set(my_owner, nullptr);
-      this->entries.clear();
-   }
-
    void Worldspace::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       if (intfc.is_partial_record) { // TESWorldSpace::LoadPartial only loads NAM0 and NAM9
@@ -118,26 +43,51 @@ namespace dovah::loaded_forms {
             }
          }
          return;
+      } else if (!intfc.is_winning_record) {
+         //
+         // As far as I know, the following information is coalesced across all records.
+         //
+         while (auto& subrecord = record.next_subrecord()) {
+            switch (subrecord.signature()) {
+               if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
+                  continue;
+               case 'NAM0':
+                  {
+                     float temporary;
+                     if (subrecord.read(temporary) && temporary > this->bounds.min.x)
+                        this->bounds.min.x = temporary;
+                     if (subrecord.read(temporary) && temporary > this->bounds.min.y)
+                        this->bounds.min.y = temporary;
+                  }
+                  break;
+               case 'NAM9':
+                  {
+                     float temporary;
+                     if (subrecord.read(temporary) && temporary > this->bounds.max.x)
+                        this->bounds.max.x = temporary;
+                     if (subrecord.read(temporary) && temporary > this->bounds.max.y)
+                        this->bounds.max.y = temporary;
+                  }
+                  break;
+               case 'RNAM':
+                  this->large_ref_data.load(subrecord, intfc);
+                  break;
+               case 'WCTR':
+                  subrecord.read(this->center_cell_coordinates.x);
+                  subrecord.read(this->center_cell_coordinates.y);
+                  break;
+            }
+         }
+         return;
       }
-      //
+      
       form_id_t formID;
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
          switch (subrecord.signature()) {
             case 'RNAM':
-               if (record.is_skyrim_special()) {  // SSE-only data. If we see an SSE record in Classic (i.e. SSE version), then we'll load it anyway.
-                  auto& data  = this->large_references;
-                  auto& entry = data.entries.emplace_back();
-                  subrecord.read(entry.y);
-                  subrecord.read(entry.x);
-                  while (subrecord.is_in_bounds(8)) {
-                     auto& ref = entry.refs.emplace_back();
-                     subrecord.unchecked_read(ref.form);
-                     subrecord.unchecked_read(ref.y);
-                     subrecord.unchecked_read(ref.x);
-                  }
-               }
+               this->large_ref_data.load(subrecord, intfc);
                break;
             case 'DATA':
                if (subrecord.size() == 4) { // this is how the game does it
@@ -149,21 +99,7 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'MHDT':
-               {
-                  auto& mhdt = this->max_height_data;
-                  mhdt.present = true;
-                  subrecord.read(mhdt.min.x);
-                  subrecord.read(mhdt.min.y);
-                  subrecord.read(mhdt.max.x);
-                  subrecord.read(mhdt.max.y);
-                  while (subrecord.is_in_bounds(4)) {
-                     auto& entry = mhdt.cells.emplace_back();
-                     subrecord.unchecked_read(entry.sw);
-                     subrecord.unchecked_read(entry.se);
-                     subrecord.unchecked_read(entry.nw);
-                     subrecord.unchecked_read(entry.ne);
-                  }
-               }
+               this->max_height_data.emplace().load(subrecord, intfc);
                break;
             case 'OBND':
                //
@@ -253,12 +189,22 @@ namespace dovah::loaded_forms {
                subrecord.read(this->distant_lod_multiplier);
                break;
             case 'NAM0':
-               subrecord.read(this->bounds.min.x);
-               subrecord.read(this->bounds.min.y);
+               {
+                  float temporary;
+                  if (subrecord.read(temporary) && temporary > this->bounds.min.x)
+                     this->bounds.min.x = temporary;
+                  if (subrecord.read(temporary) && temporary > this->bounds.min.y)
+                     this->bounds.min.y = temporary;
+               }
                break;
             case 'NAM9':
-               subrecord.read(this->bounds.max.x);
-               subrecord.read(this->bounds.max.y);
+               {
+                  float temporary;
+                  if (subrecord.read(temporary) && temporary > this->bounds.max.x)
+                     this->bounds.max.x = temporary;
+                  if (subrecord.read(temporary) && temporary > this->bounds.max.y)
+                     this->bounds.max.y = temporary;
+               }
                break;
             case 'ZNAM':
                subrecord.read(this->music);
@@ -296,11 +242,16 @@ namespace dovah::loaded_forms {
    /*static*/ void Worldspace::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       if (uib.is_partial_record) // TESWorldSpace::LoadPartial only pays attention to NAM0 and NAM9
          return;
-      if (!uib.is_final_file())
-         //
-         // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)
-         //
+      if (!uib.is_final_file()) {
+         while (auto& subrecord = record.next_subrecord()) {
+            switch (subrecord.signature()) {
+               case 'RNAM': // large references // SSE-only, but we'll still load it if we see it in a Classic file.
+                  structs::world_large_ref_data::generate_use_info(subrecord, uib);
+                  break;
+            }
+         }
          return;
+      }
       //
       form_id_t climate;
       form_id_t lighting_template;
@@ -340,15 +291,7 @@ namespace dovah::loaded_forms {
                subrecord.read(music_type);
                break;
             case 'RNAM': // large references // SSE-only, but we'll still load it if we see it in a Classic file.
-               if (!subrecord.is_skyrim_special())
-                  break;
-               subrecord.skip_bytes(4);
-               while (subrecord.is_in_bounds(8)) {
-                  form_id_t formID;
-                  if (subrecord.read(formID))
-                     uib.add_outbound_reference(formID);
-                  subrecord.skip_bytes(4);
-               }
+               structs::world_large_ref_data::generate_use_info(subrecord, uib);
                break;
          }
       }
@@ -363,15 +306,18 @@ namespace dovah::loaded_forms {
    }
    void Worldspace::setup(const file_load_order& load_order) noexcept {
       auto* default_water = load_order.get_form(hardcoded_form_ids::DefaultWater);
-      //
       this->water_type.set(*this, default_water);
       this->water_type_lod.set(*this, default_water);
+
+      if (!this->stub.is_hardcoded()) {
+         this->world_flags |= world_flag::small_world;
+      }
    }
    void Worldspace::_clone_impl(Form* out) const noexcept {
       assert(out->type == form_type);
       auto copy = (Worldspace*)out;
       
-      copy->large_references.clone_from(this->large_references, *copy);
+      copy->large_ref_data.clone_from(this->large_ref_data, *copy);
       copy->name = this->name;
       copy->max_height_data = this->max_height_data;
       copy->center_cell_coordinates = this->center_cell_coordinates;
@@ -415,37 +361,21 @@ namespace dovah::loaded_forms {
       //
       bool is_fixed_dimensions = this->world_flags & world_flag::fixed_dimensions;
       if constexpr (KEEP_WORLDSPACE_LARGE_REFERENCES) {
-         for (auto& entry : this->large_references.entries) {
+         if (!this->large_ref_data.empty()) {
             auto& subrecord = record.open_next_subrecord('RNAM');
-            subrecord.write(entry.y);
-            subrecord.write(entry.x);
-            for (auto& ref : entry.refs) {
-               subrecord.write(ref.form);
-               subrecord.write(ref.y);
-               subrecord.write(ref.x);
-            }
+            this->large_ref_data.save(subrecord, intfc);
             subrecord.close();
          }
       } else {
-         for (auto& item : this->large_references.entries)
-            for (auto& ref : item.refs)
-               ref.form.set(*this, nullptr);
-         this->large_references.entries.clear();
+         this->large_ref_data.clear(*this);
       }
-      if (this->max_height_data.present) { // under what conditions is this generated?
-         auto& MHDT = record.open_next_subrecord('MHDT');
-         auto& data = this->max_height_data;
-         MHDT.write(data.min.x);
-         MHDT.write(data.min.y);
-         MHDT.write(data.max.x);
-         MHDT.write(data.max.y);
-         for (auto& entry : data.cells) {
-            MHDT.write(entry.sw);
-            MHDT.write(entry.se);
-            MHDT.write(entry.nw);
-            MHDT.write(entry.ne);
+      if (auto& opt = this->max_height_data; opt.has_value()) {
+         auto& src = opt.value();
+         if (!src.empty()) {
+            auto& MHDT = record.open_next_subrecord('MHDT');
+            src.save(MHDT, intfc);
+            MHDT.close();
          }
-         MHDT.close();
       }
       auto& FULL = record.open_next_subrecord('FULL');
       FULL.write(this->name);
@@ -523,14 +453,25 @@ namespace dovah::loaded_forms {
       auto& DATA = record.open_next_subrecord('DATA');
       DATA.write(this->world_flags);
       DATA.close();
-      auto& NAM0 = record.open_next_subrecord('NAM0');
-      NAM0.write(this->bounds.min.x);
-      NAM0.write(this->bounds.min.y);
-      NAM0.close();
-      auto& NAM9 = record.open_next_subrecord('NAM9');
-      NAM9.write(this->bounds.max.x);
-      NAM9.write(this->bounds.max.y);
-      NAM9.close();
+      {
+         auto& bounds = this->bounds;
+         if (
+            this->stub.has_multiple_source_files() ||
+            bounds.min.x != std::numeric_limits<float>::max() ||
+            bounds.min.y != std::numeric_limits<float>::max() ||
+            bounds.max.x != std::numeric_limits<float>::min() ||
+            bounds.max.y != std::numeric_limits<float>::min()
+         ) {
+            auto& NAM0 = record.open_next_subrecord('NAM0');
+            NAM0.write(this->bounds.min.x);
+            NAM0.write(this->bounds.min.y);
+            NAM0.close();
+            auto& NAM9 = record.open_next_subrecord('NAM9');
+            NAM9.write(this->bounds.max.x);
+            NAM9.write(this->bounds.max.y);
+            NAM9.close();
+         }
+      }
       if (this->music)
          record.write_formID_subrecord('ZNAM', this->music);
       if (!this->tree_canopy_shadow.empty()) {
@@ -569,6 +510,7 @@ namespace dovah::loaded_forms {
    void Worldspace::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);
       //
+      this->large_ref_data.sever_outbound_references_to(other, *this);
       this->climate.clear_if(*this, other);
       this->lighting_template.clear_if(*this, other);
       this->encounter_zone.clear_if(*this, other);
@@ -579,9 +521,9 @@ namespace dovah::loaded_forms {
       this->music.clear_if(*this, other);
    }
    void Worldspace::_clear_impl() noexcept {
-      this->large_references.clear(*this);
+      this->large_ref_data.clear(*this);
       this->name.reset();
-      this->max_height_data.clear();
+      this->max_height_data = {};
       this->center_cell_coordinates = { 0, 0 };
       this->climate.set(*this, nullptr);
       this->lighting_template.set(*this, nullptr);

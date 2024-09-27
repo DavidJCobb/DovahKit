@@ -1,7 +1,14 @@
 #include "form_stub_use_info_builder.h"
+#include "./form_stub_use_info_builder_form_specific_data.h"
 
 namespace dovah {
    form_stub_use_info_builder::form_stub_use_info_builder(form_stub& s) : _stub(s) {
+   }
+   form_stub_use_info_builder::~form_stub_use_info_builder() {
+      if (auto*& p = this->_form_specific_data) {
+         delete p;
+         p = nullptr;
+      }
    }
 
    void form_stub_use_info_builder::add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {
@@ -12,6 +19,10 @@ namespace dovah {
       }
    }
    void form_stub_use_info_builder::add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
+#if _DEBUG
+if (toFormID == 0x23)
+   __debugbreak();
+#endif
       if (++this->_pending.size < preallocated_array_size) {
          this->_pending.fixed[this->_pending.size - 1] = _pending_entry(toFormID, flags);
       } else {
@@ -59,6 +70,9 @@ namespace dovah {
       }
    }
    void form_stub_use_info_builder::commit() {
+      if (auto* fsd = this->_form_specific_data) {
+         fsd->commit(*this);
+      }
       size_t size = this->_pending.size;
       if (!size)
          return;
@@ -79,7 +93,7 @@ namespace dovah {
       }
       this->clear_pending_use_info();
    }
-   //
+   
    [[nodiscard]] form_stub_use_info_builder* form_stub_use_info_builder::spawn_subordinate() const noexcept {
       auto sub = new form_stub_use_info_builder(this->_stub);
       sub->_is_final_file     = this->_is_final_file;
@@ -94,8 +108,11 @@ namespace dovah {
       sub.is_partial_record  = this->is_partial_record;
       return sub;
    }
-   //
+   
    void form_stub_use_info_builder::clear_pending_use_info() noexcept {
+      if (auto* fsd = this->_form_specific_data) {
+         fsd->clear();
+      }
       this->_pending.size = 0;
       this->_pending.extra.clear();
    }
@@ -116,5 +133,12 @@ namespace dovah {
          parent_entry.refcount = 1;
          stub.outbound[parent->formID] = parent_entry;
       }
+   }
+
+   form_stub_use_info_builder::form_specific_data* form_stub_use_info_builder::get_form_specific_data() {
+      if (auto* p = this->_form_specific_data)
+         return p;
+      this->_form_specific_data = new form_specific_data;
+      return this->_form_specific_data;
    }
 }
