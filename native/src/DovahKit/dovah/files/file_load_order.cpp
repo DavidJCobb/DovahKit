@@ -775,13 +775,7 @@ namespace dovah {
       // Place the stub inside of the active file form maps, if appropriate.
       //
       if (this->active_file) {
-         bool store = stub->file_list_includes(this->active_file);
-         if (!store) {
-            auto active_prefix = this->active_file_prefix();
-            if (active_prefix.contains_form_id(formID))
-               store = true;
-         }
-         if (store) {
+         if (stub->file_list_includes(this->active_file)) {
             this->active_file_forms.forms[formID] = stub;
             auto& at = this->active_file_forms_by_type[stub->form_type];
             at.forms[formID] = stub;

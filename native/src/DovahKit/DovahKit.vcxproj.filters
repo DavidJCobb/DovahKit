@@ -6914,6 +6914,12 @@
     <ClInclude Include="dovah\files\pex\parsers\util\file_string_table.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\enum_in.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\game\game_can_cannibalize_hardcoded_form_id_space.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -8356,5 +8362,6 @@
     <Natvis Include="dovah\files\pex\tabled_string.natvis" />
     <Natvis Include="dovah\files\pex\variable_declaration.natvis" />
     <Natvis Include="dovah\files\pex\parsers\util\file_string_table.natvis" />
+    <Natvis Include="helpers\enum_in.natvis" />
   </ItemGroup>
 </Project>

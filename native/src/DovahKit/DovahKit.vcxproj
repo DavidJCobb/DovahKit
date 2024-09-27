@@ -1073,6 +1073,7 @@
     <ClInclude Include="dovah\data\face_fx\phonemes.h" />
     <ClInclude Include="dovah\data\face_tints.h" />
     <ClInclude Include="dovah\data\game.h" />
+    <ClInclude Include="dovah\data\game\game_can_cannibalize_hardcoded_form_id_space.h" />
     <ClInclude Include="dovah\data\hardcoded_form_ids.h" />
     <ClInclude Include="dovah\data\headparts.h" />
     <ClInclude Include="dovah\data\sex.h" />
@@ -1291,6 +1292,7 @@
     <QtMoc Include="editor\subsystems\message_log\dovahkit_message_log_model.h" />
     <ClInclude Include="editor\subsystems\message_log\model.h" />
     <ClInclude Include="helpers\arrays\filled.h" />
+    <ClInclude Include="helpers\enum_in.h" />
     <ClInclude Include="helpers\hashing\crc32.h" />
     <ClInclude Include="helpers\qt\strings\to_no_op_html.h" />
     <ClInclude Include="helpers\string\stricontains_ascii.h" />
@@ -3105,6 +3107,7 @@
     <Natvis Include="editor\subsystems\worldinput\input_sequence.natvis" />
     <Natvis Include="helpers\bitfield_array.natvis" />
     <Natvis Include="helpers\eight_cc.natvis" />
+    <Natvis Include="helpers\enum_in.natvis" />
     <Natvis Include="helpers\glm\mat.natvis" />
     <Natvis Include="helpers\glm\vec.natvis" />
     <Natvis Include="helpers\grid.natvis" />

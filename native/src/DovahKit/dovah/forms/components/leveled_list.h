@@ -53,7 +53,7 @@ namespace dovah::loaded_forms::components {
 
          // For use by the containing form's `generate_use_info` function.
          struct use_info_builder {
-            bare_form_id_t global = 0;
+            form_id_t global = 0;
 
             use_info_builder(form_stub_use_info_builder& owner) : owner(owner) {}
 

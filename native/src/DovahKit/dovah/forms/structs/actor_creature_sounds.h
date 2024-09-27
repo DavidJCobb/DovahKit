@@ -46,8 +46,8 @@ namespace dovah::loaded_forms::structs {
                use_info_builder(form_stub_use_info_builder& owner) : owner(owner) {}
 
                form_stub_use_info_builder& owner;
-               bare_form_id_t inherit_from = 0;
-               std::vector<bare_form_id_t> sounds;
+               form_id_t inherit_from = 0; // must be form_id_t to load properly
+               std::vector<bare_form_id_t> sounds; // we use a form_id_t local variable. making that the value_type causes an MSVC internal compiler error
                bool pending_entry_is_valid = false;
 
             public:
