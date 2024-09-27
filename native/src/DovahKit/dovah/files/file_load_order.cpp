@@ -1680,6 +1680,8 @@ namespace dovah {
             continue;
          if (id < min_id || id > max_id)
             continue;
+         if (stub->is_injected())
+            continue;
          if (functor(stub))
             return true;
       }
@@ -1747,14 +1749,6 @@ namespace dovah {
    }
    bool file_load_order::is_defined_or_overridden_in_active_file(const form_stub& stub) const noexcept {
       return stub.file_list_includes(this->active_file);
-   }
-   bool file_load_order::is_active_file_formID(bare_form_id_t id) const noexcept {
-      auto active_prefix = this->active_file_prefix();
-      if (active_prefix.is_undefined())
-         return false;
-      auto min_id = active_prefix.min_form_id();
-      auto max_id = active_prefix.max_form_id();
-      return id >= min_id && id <= max_id;
    }
 
    bool file_load_order::for_each_active_file_game_setting(std::function<bool(const loaded_game_setting&)> functor) {
