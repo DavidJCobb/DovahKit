@@ -202,7 +202,7 @@ namespace {
 
                if (signature == 'SNAM') {
                   uint32_t subtype;
-                  if (subrecord.read(subtype)) {
+                  if (subrecord.read_signature(subtype)) {
                      topic_is_sharedinfo_topic = subtype == desired_subtype.signature;
                   }
                } else if (signature == 'DATA') {

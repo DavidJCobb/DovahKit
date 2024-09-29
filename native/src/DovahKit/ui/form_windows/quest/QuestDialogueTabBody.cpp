@@ -220,12 +220,12 @@ QuestDialogueTabBody::QuestDialogueTabBody(QWidget* parent) : QWidget(parent) {
       auto* model = this->_models.topics.branched = new QuestDialogueBranchedTopicsModel(this);
       view->setModel(model);
       ui::typical_tableview_config(view);
-      ui::set_tableview_column_flex(view, [](DKHeaderView& header, const QFontMetrics& metrics) {
-         header.setColumnFlex(QuestDialogueBranchedTopicsModel::Column::EditorID,    1, 0, 100);
-         header.setColumnFlex(QuestDialogueBranchedTopicsModel::Column::FormID,      0, 0, 4);
-         header.setColumnFlex(QuestDialogueBranchedTopicsModel::Column::DisplayText, 1, 0, 100);
-         header.setColumnFlex(QuestDialogueBranchlessTopicsModel::Column::Subtype,   0, 0, metrics.boundingRect("CombatCombat").width() * 1.5F + 4);
-         header.setColumnFlex(QuestDialogueBranchedTopicsModel::Column::Priority,    0, 0, metrics.boundingRect("100").width() * 1.5F + 4);
+      ui::set_tableview_column_widths(view, [](QHeaderView& header, const QFontMetrics& metrics) {
+         header.resizeSection(QuestDialogueBranchedTopicsModel::Column::EditorID,    100);
+         header.resizeSection(QuestDialogueBranchedTopicsModel::Column::FormID,      4);
+         header.resizeSection(QuestDialogueBranchedTopicsModel::Column::DisplayText, 100);
+         header.resizeSection(QuestDialogueBranchlessTopicsModel::Column::Subtype,   metrics.boundingRect("CombatCombat").width() * 1.5F + 4);
+         header.resizeSection(QuestDialogueBranchedTopicsModel::Column::Priority,    metrics.boundingRect("100").width() * 1.5F + 4);
       });
 
       QObject::connect(view, &QAbstractItemView::doubleClicked, this, &QuestDialogueTabBody::_topic_button_edit);

@@ -212,30 +212,16 @@ void QuestDialogueBranchlessTopicsModel::_re_sort_node(const node_type& item) {
    bool   moving_upward_in_list;
    {
       auto dst_it = this->_insertion_point_for(item);
-      //
-      // Can't use the iterator directly because we'll be doing a removal first, which will 
-      // invalidate it.
-      //
-      to = std::distance(list.begin(), dst_it);
-      moving_upward_in_list = dst_it < entry_it;
-
-      if (!moving_upward_in_list)
-         //
-         // NOTE: `_insertion_point_for` gets the position at which we'd INSERT a NEW node, 
-         //       but in this case, we're instead MOVING a node. The node itself is "in the 
-         //       way" and needs to be accounted for.
-         //
-         --to;
-
-      if (to == from)
+      if (dst_it == entry_it)
          return;
+      to = std::distance(list.begin(), dst_it);
    }
    this->beginMoveRows(
       {},
       from, // first to move
       from, // last  to move
       {},
-      moving_upward_in_list ? to : to + 1 // Qt API design jank
+      to
    );
    bool moved = cobb::vectors::move_item_within<false>(list, from, (int)to - (int)from);
    assert(moved);

@@ -285,7 +285,14 @@
       </widget>
      </item>
      <item row="1" column="3">
-      <widget class="DKFormPicker" name="sharedInfo"/>
+      <widget class="DKFormPicker" name="sharedInfo">
+       <property name="minimumSize">
+        <size>
+         <width>200</width>
+         <height>0</height>
+        </size>
+       </property>
+      </widget>
      </item>
      <item row="0" column="2" alignment="Qt::AlignRight">
       <widget class="QLabel" name="label_5">

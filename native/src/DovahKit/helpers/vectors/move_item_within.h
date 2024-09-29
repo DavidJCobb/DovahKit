@@ -31,7 +31,8 @@ namespace cobb::vectors {
    // for.
    // 
    // You can find a good explanation of how the use of std::rotate here works 
-   // at this page:
+   // at this page. Note that they use the term "last" for vector positions that 
+   // would more properly be called "end."
    // https://www.fluentcpp.com/2018/04/20/ways-reordering-collection-stl/
    //
    template<bool Clamp, is_std_vector Vector>
@@ -58,7 +59,7 @@ namespace cobb::vectors {
             return true;
          }
          auto to = from + by;
-         std::rotate(from, from, to);
+         std::rotate(from, from + 1, to);
       } else {
          if constexpr (Clamp) {
             if (i == 0)
@@ -74,7 +75,7 @@ namespace cobb::vectors {
             return true;
          }
          auto to = from + by;
-         std::rotate(to, from, from);
+         std::rotate(to, from, from + 1);
       }
       return true;
    }
