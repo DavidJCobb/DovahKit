@@ -3,10 +3,11 @@
 #include <cassert>
 #include <type_traits>
 #include "helpers/enum_flags.h"
-#include "editor/core.h" // DovahKitCore
-
 #include "dovah/form_stub.h"
+#include "editor/core.h" // DovahKitCore
+#include "./cache_containers/entire_cache.h"
 
+#include "dovah/data/dialogue/topic_subtype.h" // for SharedInfo topics
 #include "dovah/forms/components/papyrus.h"
 #include "dovah/forms/_all.h" // dovah::all_loaded_form_types + access to relevant loaded-form classes
 #include "dovah/forms/Quest.h" // quest alias update logic
@@ -30,9 +31,7 @@
 namespace {
    using known_script_ptr = dovahkit::subsystems::papyrus::known_script_ptr;
 
-   namespace vmad {
-      using namespace dovah::loaded_forms::components::papyrus;
-   }
+   constexpr const auto& sharedinfo_topic_subtype = *dovah::dialogue::topic_subtype_by_signature('IDAT');
 }
 
 namespace {
@@ -63,6 +62,9 @@ namespace {
       if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::voicetype_info::form_class_is_of_interest<Current>) {
          return true;
       }
+      if constexpr (Current::form_type == dovah::form_type::topic) { // for the sharedinfo list
+         return true;
+      }
       return false;
    }>;
 }
@@ -70,7 +72,7 @@ namespace {
 namespace {
    template<dovah::form_type FormType>
    void _skim_record(
-      dovahkit::subsystems::form_info_cache::cache_map_collection& cache,
+      dovahkit::subsystems::form_info_cache::entire_cache& cache,
       dovah::form_stub& stub,
       dovah::tes_file_reading::record& record
    ) {
@@ -108,9 +110,15 @@ namespace {
 
       std::conditional_t<
          (FormType == dovah::form_type::head_part),
-         cached_head_part_info,
+         cached_data::by_form::head_part,
          uint8_t // dummy type
       > head_part_info = {};
+
+      std::conditional_t<
+         (FormType == dovah::form_type::topic),
+         bool,
+         uint8_t // dummy type
+      > topic_is_sharedinfo_topic = {};
 
       while (auto& subrecord = record.next_subrecord()) {
          const auto signature = subrecord.signature();
@@ -131,27 +139,12 @@ namespace {
                }
             } else {
                if (signature == 'VMAD') {
-                  cached_vmad_info info(subrecord);
+                  cached_data::attached_scripts info(subrecord);
                   if (!info.empty())
-                     cache.attached_scripts.threadedInsert(stub, std::move(info));
+                     cache.attached_scripts.threaded_insert(stub, std::move(info));
+                  continue;
                }
             }
-         }
-         if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(FormType)) {
-            //
-            // Factions: For now, we only care about the DATA subrecord.
-            //
-            if (signature == 'DATA') {
-               cached_faction_info info;
-               info.skim_subrecord(subrecord);
-               cache.factions.threadedInsert(stub, info);
-            }
-         }
-         if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(FormType)) {
-            //
-            // HeadParts: We need to read multiple subrecords.
-            //
-            head_part_info.skim_subrecord(subrecord);
          }
          if constexpr (cacheable_traits::model_path::form_type_is_of_interest(FormType)) {
             //
@@ -160,7 +153,8 @@ namespace {
             if (signature == 'MODL') {
                std::string raw;
                subrecord.read(raw);
-               cache.model_paths.threadedInsert(stub, QString::fromStdString(raw));
+               cache.model_paths.threaded_insert(stub, QString::fromStdString(raw));
+               continue;
             }
          }
          if constexpr (cacheable_traits::quest_filter::form_type_is_of_interest(FormType)) {
@@ -170,34 +164,76 @@ namespace {
             if (signature == 'FLTR') {
                std::string raw;
                subrecord.read(raw);
-               cache.quest_filters.threadedInsert(stub, QString::fromStdString(raw));
+               cache.quest_filters.threaded_insert(stub, QString::fromStdString(raw));
+               continue;
             }
          }
-         if constexpr (cacheable_traits::voicetype_info::form_type_is_of_interest(FormType)) {
+         if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(FormType)) {
+            //
+            // Factions: For now, we only care about the DATA subrecord.
+            //
+            if (signature == 'DATA') {
+               cached_data::by_form::faction info;
+               info.skim_subrecord(subrecord);
+               cache.by_form_type.factions.threaded_insert(stub, info);
+            }
+         } else if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(FormType)) {
+            //
+            // HeadParts: We need to read multiple subrecords.
+            //
+            head_part_info.skim_subrecord(subrecord);
+         } else if constexpr (cacheable_traits::voicetype_info::form_type_is_of_interest(FormType)) {
             //
             // Voicetypes: We only care about the DNAM subrecord.
             //
             if (signature == 'DNAM') {
-               cached_voicetype_info info;
+               cached_data::by_form::voicetype info;
                info.skim_subrecord(subrecord);
-               cache.voicetypes.threadedInsert(stub, info);
+               cache.by_form_type.voicetypes.threaded_insert(stub, info);
+            }
+         } else if constexpr (FormType == dovah::form_type::topic) {
+            using loaded_form_type = dovah::loaded_forms::Topic;
+            //
+            // SharedInfo topics
+            //
+            {
+               constexpr const auto&  desired_subtype       = sharedinfo_topic_subtype;
+               constexpr const size_t desired_subtype_index = dovah::dialogue::topic_subtype_index(desired_subtype);
+
+               if (signature == 'SNAM') {
+                  uint32_t subtype;
+                  if (subrecord.read(subtype)) {
+                     topic_is_sharedinfo_topic = subtype == desired_subtype.signature;
+                  }
+               } else if (signature == 'DATA') {
+                  subrecord.skip_bytes(sizeof(decltype(loaded_form_type::data)::flags));
+                  subrecord.skip_bytes(sizeof(decltype(loaded_form_type::data)::category));
+                  loaded_form_type::subtype_index index;
+                  if (subrecord.read(index)) {
+                     topic_is_sharedinfo_topic = index == desired_subtype_index;
+                  }
+               }
             }
          }
       }
-
+      //
+      // All subrecords have now been read.
+      //
       if constexpr (FormType == dovah::form_type::quest) {
          if (!quest_skimmer.empty())
-            cache.attached_scripts.threadedInsert(stub, quest_skimmer.bake());
-      }
-      if constexpr (FormType == dovah::form_type::head_part) {
-         cache.head_parts.threadedInsert(stub, std::move(head_part_info));
+            cache.attached_scripts.threaded_insert(stub, quest_skimmer.bake());
+      } else if constexpr (FormType == dovah::form_type::head_part) {
+         cache.by_form_type.head_parts.threaded_insert(stub, std::move(head_part_info));
+      } else if constexpr (FormType == dovah::form_type::topic) {
+         if (topic_is_sharedinfo_topic)
+            cache.sharedinfo_topics.threaded_insert(stub);
       }
    }
 
    template<typename LoadedForm>
    void _update_form(
       dovahkit::subsystems::form_info_cache::core& core,
-      dovahkit::subsystems::form_info_cache::cache_map_collection& cache,
+      dovahkit::subsystems::form_info_cache::entire_cache& cache,
       LoadedForm& loaded
    ) {
       using namespace dovahkit::subsystems::form_info_cache;
@@ -211,80 +247,77 @@ namespace {
 
          QString prior;
          bool    changed;
-         if (value.isEmpty()) {
-            auto result = dst.takeAndReport(stub);
-            changed = result.has_value();
-            if (changed)
+         {
+            std::optional<QString> result;
+            if (value.isEmpty())
+               result = dst.take(stub);
+            else
+               result = dst.take_and_replace(stub, value);
+            
+            if (changed = result.has_value())
                prior = result.value();
-         } else {
-            changed = dst.replaceTakeAndReport(stub, value, prior);
          }
          if (changed)
             emit core.cachedQuestFilterChanged(stub, prior, value);
       }
       
       if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(LoadedForm::form_type)) {
-         auto& dst_list = cache.factions;
-         auto  dst_it   = dst_list.find(&stub);
-         if (dst_it != dst_list.end()) {
-            auto& dst = *dst_it;
-            if (dst.update(loaded)) {
+         auto& dst = cache.by_form_type.factions;
+         if (auto* item = dst.get(stub)) {
+            if (item->update(loaded)) {
                emit core.cachedFactionChanged(stub);
             }
          } else {
-            cached_faction_info info;
+            cached_data::by_form::faction info;
             info.update(loaded);
-            dst_list.insert(&stub, std::move(info));
+            dst.insert(stub, std::move(info));
             emit core.cachedFactionChanged(stub);
          }
       }
 
       if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(LoadedForm::form_type)) {
-         auto& dst_list = cache.head_parts;
-         auto  dst_it   = dst_list.find(&stub);
-         if (dst_it != dst_list.end()) {
-            auto& dst = *dst_it;
-            if (dst.update(loaded)) {
+         auto& dst = cache.by_form_type.head_parts;
+         if (auto* item = dst.get(stub)) {
+            if (item->update(loaded)) {
                emit core.cachedHeadPartChanged(stub);
             }
          } else {
-            cached_head_part_info info;
+            cached_data::by_form::head_part info;
             info.update(loaded);
-            dst_list.insert(&stub, std::move(info));
+            dst.insert(stub, std::move(info));
             emit core.cachedHeadPartChanged(stub);
          }
       }
 
       if constexpr (cacheable_traits::voicetype_info::form_type_is_of_interest(LoadedForm::form_type)) {
-         auto& dst_list = cache.voicetypes;
-         auto  dst_it   = dst_list.find(&stub);
-         if (dst_it != dst_list.end()) {
-            auto& dst = *dst_it;
-            if (dst.update(loaded)) {
+         auto& dst = cache.by_form_type.voicetypes;
+         if (auto* item = dst.get(stub)) {
+            if (item->update(loaded)) {
                emit core.cachedVoicetypeChanged(stub);
             }
          } else {
-            cached_voicetype_info info;
+            cached_data::by_form::voicetype info;
             info.update(loaded);
-            dst_list.insert(&stub, std::move(info));
+            dst.insert(stub, std::move(info));
             emit core.cachedVoicetypeChanged(stub);
          }
       }
 
       if constexpr (cacheable_traits::model_path::form_type_is_of_interest(LoadedForm::form_type)) {
-         auto& dst = cache.model_paths;
-
-         auto path = QString::fromStdString(loaded.model.model_path);
+         auto& dst  = cache.model_paths;
+         auto  path = QString::fromStdString(loaded.model.model_path);
 
          QString prior;
          bool    changed;
-         if (path.isEmpty()) {
-            auto result = dst.takeAndReport(stub);
-            changed = result.has_value();
-            if (changed)
+         {
+            std::optional<QString> result;
+            if (path.isEmpty())
+               result = dst.take(stub);
+            else
+               result = dst.take_and_replace(stub, path);
+            
+            if (changed = result.has_value())
                prior = result.value();
-         } else {
-            changed = dst.replaceTakeAndReport(stub, path, prior);
          }
          if (changed)
             emit core.cachedModelPathChanged(stub, prior, path);
@@ -294,7 +327,7 @@ namespace {
          auto& dst = cache.attached_scripts;
          auto& src = loaded.script_data;
 
-         cached_vmad_info new_info(src);
+         cached_data::attached_scripts new_info(src);
          if constexpr (std::is_same_v<LoadedForm, dovah::loaded_forms::Quest>) {
             //
             // Quest aliases require special handling.
@@ -334,18 +367,35 @@ namespace {
          
          bool changed;
          if (new_info.empty()) {
-            changed = dst.eraseAndReport(stub);
+            changed = dst.erase(stub);
          } else {
-            changed = dst.replaceAndReport(stub, new_info);
+            changed = dst.replace(stub, new_info);
          }
          if (changed)
             emit core.cachedScriptsChanged(stub);
+      }
+
+      if constexpr (LoadedForm::form_type == dovah::form_type::topic) {
+         auto& dst = cache.sharedinfo_topics;
+         
+         bool is_sharedinfo_topic = loaded.subtype == sharedinfo_topic_subtype.signature;
+         bool changed = false;
+         if (is_sharedinfo_topic) {
+            changed = dst.insert(stub);
+         } else {
+            changed = dst.erase(stub);
+         }
+         if (changed)
+            emit core.cachedSharedInfoTopicChanged(stub, is_sharedinfo_topic);
       }
    }
 }
 
 namespace dovahkit::subsystems::form_info_cache {
    core::core() {
+      this->_cache = new entire_cache;
+      assert(this->_cache != nullptr && "FIC cache allocation must not fail.");
+
       auto& editor = DovahKitCore::get();
       QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &core::clear);
       QObject::connect(&editor, &DovahKitCore::dataAcquireComplete,  this, &core::buildAllData);
@@ -355,7 +405,7 @@ namespace dovahkit::subsystems::form_info_cache {
             if (stub->form_type == Current::form_type) {
                auto loaded = stub->load().ptr_cast<Current>();
                assert(loaded);
-               _update_form<Current>(*this, this->_cache, *loaded);
+               _update_form<Current>(*this, *this->_cache, *loaded);
                return true;
             }
             return false;
@@ -367,19 +417,21 @@ namespace dovahkit::subsystems::form_info_cache {
             if (stub->form_type != Current::form_type)
                return false;
 
+            auto& cache = *this->_cache;
+
             if constexpr (cacheable_traits::quest_filter::form_type_is_of_interest(Current::form_type)) {
-               auto result = this->_cache.quest_filters.takeAndReport(*stub);
+               auto result = cache.quest_filters.take(*stub);
                if (result.has_value()) {
                   emit this->cachedQuestFilterChanged(*stub, result.value(), {});
                }
             }
 
             if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(Current::form_type)) {
-               this->_cache.factions.takeAndReport(*stub);
+               cache.by_form_type.factions.take(*stub);
             }
 
             if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(Current::form_type)) {
-               this->_cache.head_parts.takeAndReport(*stub);
+               cache.by_form_type.head_parts.take(*stub);
                //
                // Don't emit a "head part changed" signal for this. HeadParts with blank info 
                // would be mistaken for HeadParts that have no restrictions and are available 
@@ -388,39 +440,46 @@ namespace dovahkit::subsystems::form_info_cache {
                //
             }
             if constexpr (cacheable_traits::head_part_info::form_type_is_referred_to(Current::form_type)) {
-               auto& map = this->_cache.head_parts;
-               for (auto it = map.keyValueBegin(); it != map.keyValueEnd(); ++it) {
-                  auto& info = it->second;
-                  if (info.sever_outbound_references_to(stub)) {
-                     emit this->cachedHeadPartChanged(*(dovah::form_stub*)it->first);
+               cache.by_form_type.head_parts.for_each([this](const dovah::form_stub& stub, cached_data::by_form::head_part& info) {
+                  if (info.sever_outbound_references_to(&stub)) {
+                     emit this->cachedHeadPartChanged(*(dovah::form_stub*)&stub);
                   }
-               }
+               });
             }
 
             if constexpr (cacheable_traits::model_path::form_type_is_of_interest(Current::form_type)) {
-               auto result = this->_cache.model_paths.takeAndReport(*stub);
+               auto result = cache.model_paths.take(*stub);
                if (result.has_value()) {
                   emit this->cachedModelPathChanged(*stub, result.value(), {});
                }
             }
             if constexpr (cacheable_traits::attached_scripts::form_class_is_of_interest<Current>) {
-               if (this->_cache.attached_scripts.eraseAndReport(*stub)) {
+               if (cache.attached_scripts.erase(*stub)) {
                   emit this->cachedScriptsChanged(*stub);
                }
+            }
+
+            if constexpr (Current::form_type == dovah::form_type::topic) {
+               cache.sharedinfo_topics.erase(*stub);
             }
 
             return true;
          });
       });
    }
-   
+   core::~core() {
+      if (auto*& p = this->_cache) {
+         delete p;
+         p = nullptr;
+      }
+   }
 
    template<dovah::form_type FormType>
    void core::_skim_record(dovah::form_stub& stub, dovah::tes_file_reading::record& record, dovah::load_order_interfaces::form_load& intfc) {
       if (!intfc.is_winning_record)
          return;
 
-      ::_skim_record<FormType>(this->_cache, stub, record);
+      ::_skim_record<FormType>(*this->_cache, stub, record);
    }
 
    void core::buildAllData() {
@@ -461,8 +520,8 @@ namespace dovahkit::subsystems::form_info_cache {
             return false;
          });
       });
-      this->_cache.model_paths.reserve(counts.models / 1.5);
-      this->_cache.quest_filters.reserve(counts.quests / 1.5);
+      this->_cache->model_paths.reserve(counts.models / 1.5);
+      this->_cache->quest_filters.reserve(counts.quests / 1.5);
 
       bench_prep.end();
       qDebug("Time to prep form-info-cache scan: %u ms", bench_prep.milliseconds());
@@ -480,57 +539,57 @@ namespace dovahkit::subsystems::form_info_cache {
 
    void core::clear() {
       qDebug("[dovahkit::subsystems::form_info_cache::core::clear] Clearing all cached form info...");
-      this->_cache.clear();
+      (*this->_cache) = {};
       emit this->cachedDataCleared();
    }
 
    //
 
    QString core::get_form_model_path(const dovah::form_stub& stub) const {
-      return this->_cache.model_paths.value(&stub);
+      return *this->_cache->model_paths.get(stub);
    }
    QString core::get_quest_filter(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::quest)
          return {};
-      return this->_cache.quest_filters.value(&stub);
+      return *this->_cache->quest_filters.get(stub);
    }
-   const cached_faction_info* core::get_faction_info(const dovah::form_stub& stub) const {
+   const cached_data::by_form::faction* core::get_faction_info(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::faction)
          return nullptr;
-      return this->_cache.factions.valuePointer(stub);
+      return this->_cache->by_form_type.factions.get(stub);
    }
-   const cached_head_part_info* core::get_head_part_info(const dovah::form_stub& stub) const {
+   const cached_data::by_form::head_part* core::get_head_part_info(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::head_part)
          return nullptr;
-      return this->_cache.head_parts.valuePointer(stub);
+      return this->_cache->by_form_type.head_parts.get(stub);
    }
-   const cached_voicetype_info* core::get_voicetype_info(const dovah::form_stub& stub) const {
+   const cached_data::by_form::voicetype* core::get_voicetype_info(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::voicetype)
          return nullptr;
-      return this->_cache.voicetypes.valuePointer(stub);
+      return this->_cache->by_form_type.voicetypes.get(stub);
    }
 
    script_attach_state core::form_script_attachment(const dovah::form_stub& stub, std::string_view scriptname) const {
-      auto it = this->_cache.attached_scripts.find(&stub);
-      if (it == this->_cache.attached_scripts.end())
+      auto* item = this->_cache->attached_scripts.get(stub);
+      if (!item)
          return script_attach_state::not_present;
 
-      for (auto& known : it->deleted)
+      for (auto& known : item->deleted)
          if (known->name_matches(scriptname))
             return script_attach_state::removed;
 
-      for (auto& known : it->attached)
+      for (auto& known : item->attached)
          if (known->name_matches(scriptname))
             return script_attach_state::attached;
 
       return script_attach_state::not_present;
    }
    bool core::quest_has_alias_with_script(const dovah::form_stub& stub, std::string_view scriptname) const {
-      auto it = this->_cache.attached_scripts.find(&stub);
-      if (it == this->_cache.attached_scripts.end())
+      auto* item = this->_cache->attached_scripts.get(stub);
+      if (!item)
          return false;
 
-      for (auto& known : it->aliases)
+      for (auto& known : item->aliases)
          if (known->name_matches(scriptname))
             return true;
 
@@ -538,14 +597,14 @@ namespace dovahkit::subsystems::form_info_cache {
    }
 
    std::vector<const subsystems::papyrus::known_script*> core::get_scripts_attached_to_form(const dovah::form_stub& stub) const {
-      auto it = this->_cache.attached_scripts.find(&stub);
-      if (it == this->_cache.attached_scripts.end())
+      auto* item = this->_cache->attached_scripts.get(stub);
+      if (!item)
          return {};
       
       std::vector<const subsystems::papyrus::known_script*> out;
-      for (auto& known : it->attached) {
+      for (auto& known : item->attached) {
          bool is_removed = false;
-         for (auto& removed : it->deleted) {
+         for (auto& removed : item->deleted) {
             if (known == removed) {
                is_removed = true;
                break;
@@ -558,14 +617,32 @@ namespace dovahkit::subsystems::form_info_cache {
       return out;
    }
    std::vector<const subsystems::papyrus::known_script*> core::get_scripts_attached_to_quest_aliases(const dovah::form_stub& quest) const {
-      auto it = this->_cache.attached_scripts.find(&quest);
-      if (it == this->_cache.attached_scripts.end())
+      auto* item = this->_cache->attached_scripts.get(quest);
+      if (!item)
          return {};
       
       std::vector<const subsystems::papyrus::known_script*> out;
-      for (auto& known : it->aliases) {
+      for (auto& known : item->aliases) {
          out.push_back(known.get());
       }
       return out;
+   }
+
+   bool core::topic_is_sharedinfo_topic(const dovah::form_stub& topic) const {
+      return this->_cache->sharedinfo_topics.contains(topic);
+   }
+   
+   void core::for_all_form_model_paths(std::function<void(const dovah::form_stub&, QString)> functor) {
+      this->_cache->model_paths.for_each(functor);
+   }
+   void core::for_all_quest_filters(std::function<void(QString)> functor) {
+      this->_cache->quest_filters.for_each([&functor](const dovah::form_stub&, QString v) {
+         (functor)(v);
+      });
+   }
+   void core::for_all_head_parts(std::function<void(const cached_data::by_form::head_part&)> functor) {
+      this->_cache->by_form_type.head_parts.for_each([&functor](const dovah::form_stub&, const auto& info) {
+         (functor)(info);
+      });
    }
 }

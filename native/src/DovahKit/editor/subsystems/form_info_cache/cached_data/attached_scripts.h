@@ -1,5 +1,5 @@
 #pragma once
-#include "../papyrus/known_script_ptr.h"
+#include "../../papyrus/known_script_ptr.h"
 
 namespace dovah {
    namespace tes_file_reading {
@@ -10,11 +10,11 @@ namespace dovah {
    }
 }
 
-namespace dovahkit::subsystems::form_info_cache {
-   struct cached_vmad_info {
-      constexpr cached_vmad_info() {}
-      cached_vmad_info(dovah::tes_file_reading::subrecord& vmad);
-      cached_vmad_info(const dovah::loaded_forms::components::papyrus::attachment_data&);
+namespace dovahkit::subsystems::form_info_cache::cached_data {
+   struct attached_scripts {
+      constexpr attached_scripts() {}
+      attached_scripts(dovah::tes_file_reading::subrecord& vmad);
+      attached_scripts(const dovah::loaded_forms::components::papyrus::attachment_data&);
 
       std::vector<papyrus::known_script_ptr> attached;
       std::vector<papyrus::known_script_ptr> deleted; // for REFRs choosing not to inherit a base-form script
@@ -24,8 +24,8 @@ namespace dovahkit::subsystems::form_info_cache {
          return this->attached.empty() && this->deleted.empty() && this->aliases.empty();
       }
 
-      constexpr bool operator==(const cached_vmad_info&) const;
+      constexpr bool operator==(const attached_scripts&) const;
    };
 }
 
-#include "./cached_vmad_info.inl"
+#include "./attached_scripts.inl"

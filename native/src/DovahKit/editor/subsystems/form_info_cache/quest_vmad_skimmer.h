@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <string>
-#include "./cached_vmad_info.h"
+#include "./cached_data/attached_scripts.h"
 
 namespace dovah {
    namespace tes_file_reading {
@@ -40,6 +40,6 @@ namespace dovahkit::subsystems::form_info_cache {
       void skim_alias_header(const dovah::form_stub& quest, dovah::tes_file_reading::subrecord& alias_subrecord); // ALLS or ALST
       void skim_vmad(const dovah::form_stub& quest, dovah::tes_file_reading::subrecord& vmad);
 
-      cached_vmad_info bake();
+      cached_data::attached_scripts bake();
    };
 }

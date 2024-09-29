@@ -1,4 +1,4 @@
-#include "./cached_head_part_info.h"
+#include "./head_part.h"
 #include "dovah/files/tes_file_reading/elements.h"
 #include "dovah/forms/HeadPart.h"
 #include "dovah/core.h"
@@ -9,8 +9,8 @@ namespace {
    }
 }
 
-namespace dovahkit::subsystems::form_info_cache {
-   void cached_head_part_info::skim_subrecord(dovah::tes_file_reading::subrecord& subrecord) {
+namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {
+   void head_part::skim_subrecord(dovah::tes_file_reading::subrecord& subrecord) {
       using loaded_form_type = dovah::loaded_forms::HeadPart;
 
       switch (subrecord.signature()) {
@@ -53,14 +53,14 @@ namespace dovahkit::subsystems::form_info_cache {
             break;
       }
    }
-   bool cached_head_part_info::sever_outbound_references_to(const dovah::form_stub* target) {
+   bool head_part::sever_outbound_references_to(const dovah::form_stub* target) {
       if (this->race_list == target) {
          this->race_list = nullptr;
          return true;
       }
       return false;
    }
-   bool cached_head_part_info::update(const dovah::loaded_forms::HeadPart& src) {
+   bool head_part::update(const dovah::loaded_forms::HeadPart& src) {
       using loaded_form_type = dovah::loaded_forms::HeadPart;
 
       const auto prior = *this;

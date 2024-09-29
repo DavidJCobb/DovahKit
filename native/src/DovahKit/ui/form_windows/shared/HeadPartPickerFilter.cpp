@@ -1,4 +1,6 @@
 #include "./HeadPartPickerFilter.h"
+#include "dovah/form_stub.h"
+#include "editor/subsystems/form_info_cache/cached_data/by_form_type/head_part.h"
 #include "editor/subsystems/form_info_cache/core.h"
 
 /*virtual*/ bool HeadPartPickerFilter::form_matches(dovah::form_stub& stub) const noexcept /*override*/ {

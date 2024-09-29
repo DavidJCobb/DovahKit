@@ -1,4 +1,4 @@
-#include "./cached_voicetype_info.h"
+#include "./voicetype.h"
 #include "dovah/files/tes_file_reading/elements.h"
 #include "dovah/forms/Voicetype.h"
 #include "dovah/core.h"
@@ -7,8 +7,8 @@ namespace {
    using loaded_form_type = dovah::loaded_forms::Voicetype;
 }
 
-namespace dovahkit::subsystems::form_info_cache {
-   void cached_voicetype_info::skim_subrecord(dovah::tes_file_reading::subrecord& subrecord) {
+namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {
+   void voicetype::skim_subrecord(dovah::tes_file_reading::subrecord& subrecord) {
       switch (subrecord.signature()) {
          case 'DNAM':
             {
@@ -21,7 +21,7 @@ namespace dovahkit::subsystems::form_info_cache {
             break;
       }
    }
-   bool cached_voicetype_info::update(const dovah::loaded_forms::Voicetype& src) {
+   bool voicetype::update(const dovah::loaded_forms::Voicetype& src) {
       auto flags = src.voicetype_flags;
 
       bool allow  = flags & loaded_form_type::voicetype_flag::allow_default_dialogue;

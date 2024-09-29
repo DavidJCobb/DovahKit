@@ -1,13 +1,10 @@
 #pragma once
-#include <mutex>
-#include <QHash>
+#include <functional>
+#include <vector>
 #include <QObject>
 #include <QString>
 #include "helpers/singleton_ex.h"
-
 #include "dovah/form_types.h"
-
-#include "./cache_map_collection.h"
 
 namespace dovah {
    namespace load_order_interfaces {
@@ -17,6 +14,16 @@ namespace dovah {
       class record;
    }
    class form_stub;
+}
+namespace dovahkit::subsystems::form_info_cache {
+   namespace cached_data {
+      namespace by_form {
+         struct faction;
+         struct head_part;
+         struct voicetype;
+      }
+   }
+   struct entire_cache;
 }
 namespace dovahkit::subsystems::papyrus {
    class known_script;
@@ -34,6 +41,7 @@ namespace dovahkit::subsystems::form_info_cache {
       Q_OBJECT;
       protected:
          core();
+         ~core();
 
       private:
          template<dovah::form_type FormType>
@@ -45,7 +53,7 @@ namespace dovahkit::subsystems::form_info_cache {
          }
 
       protected:
-         cache_map_collection _cache;
+         entire_cache* _cache = nullptr; // use a pointer for the PImpl idiom, to hopefully avoid recompiling more than is necessary if we add/edit a cached data type
 
       protected slots:
          void buildAllData();
@@ -61,13 +69,14 @@ namespace dovahkit::subsystems::form_info_cache {
          void cachedQuestFilterChanged(dovah::form_stub&, QString old_value, QString new_value);
          void cachedScriptsChanged(dovah::form_stub&);
          void cachedVoicetypeChanged(dovah::form_stub&);
+         void cachedSharedInfoTopicChanged(dovah::form_stub&, bool became_sharedinfo_topic);
 
       public:
          QString get_form_model_path(const dovah::form_stub&) const;
          QString get_quest_filter(const dovah::form_stub&) const;
-         const cached_faction_info*   get_faction_info(const dovah::form_stub&) const;
-         const cached_head_part_info* get_head_part_info(const dovah::form_stub&) const;
-         const cached_voicetype_info* get_voicetype_info(const dovah::form_stub&) const;
+         const cached_data::by_form::faction*   get_faction_info(const dovah::form_stub&) const;
+         const cached_data::by_form::head_part* get_head_part_info(const dovah::form_stub&) const;
+         const cached_data::by_form::voicetype* get_voicetype_info(const dovah::form_stub&) const;
 
          script_attach_state form_script_attachment(const dovah::form_stub&, std::string_view scriptname) const;
          bool quest_has_alias_with_script(const dovah::form_stub&, std::string_view scriptname) const;
@@ -75,23 +84,10 @@ namespace dovahkit::subsystems::form_info_cache {
          std::vector<const subsystems::papyrus::known_script*> get_scripts_attached_to_form(const dovah::form_stub&) const;
          std::vector<const subsystems::papyrus::known_script*> get_scripts_attached_to_quest_aliases(const dovah::form_stub& quest) const;
 
-         template<typename Functor> requires std::is_invocable_v<Functor, dovah::form_stub&, QString>
-         void for_all_form_model_paths(Functor&& functor) {
-            auto& list = this->_cache.model_paths;
-            for (auto it = list.constKeyValueBegin(); it != list.constKeyValueEnd(); ++it)
-               functor(*(it->first), it->second);
-         }
-         
-         template<typename Functor> requires std::is_invocable_v<Functor, QString>
-         void for_all_quest_filters(Functor&& functor) {
-            for (auto path : this->_cache.quest_filters)
-               functor(path);
-         }
-         
-         template<typename Functor> requires std::is_invocable_v<Functor, const cached_head_part_info&>
-         void for_all_head_parts(Functor&& functor) {
-            for (const auto& info : this->_cache.head_parts)
-               functor(info);
-         }
+         bool topic_is_sharedinfo_topic(const dovah::form_stub& topic) const;
+
+         void for_all_form_model_paths(std::function<void(const dovah::form_stub&, QString)> functor);
+         void for_all_quest_filters(std::function<void(QString)> functor);
+         void for_all_head_parts(std::function<void(const cached_data::by_form::head_part&)> functor);
    };
 }

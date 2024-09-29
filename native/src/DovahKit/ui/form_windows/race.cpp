@@ -9,6 +9,7 @@
 #include "editor/helpers/face_fx_phoneme_name.h"
 #include "editor/helpers/skill_name_to_string.h"
 #include "editor/subsystems/form_info_cache/core.h"
+#include "editor/subsystems/form_info_cache/cached_data/by_form_type/head_part.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/get_selection.h"
 #include "ui/utils/set_range.h"

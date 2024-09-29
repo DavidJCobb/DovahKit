@@ -3,6 +3,7 @@
 #include "dovah/utils/form_list_contains.h"
 #include "dovah/form_stub.h"
 #include "editor/helpers/form_stub_drag_drop.h"
+#include "editor/subsystems/form_info_cache/cached_data/by_form_type/head_part.h"
 #include "editor/subsystems/form_info_cache/core.h"
 #include "editor/core.h"
 
@@ -78,7 +79,7 @@ FaceExtraHeadPartsModel::FaceExtraHeadPartsModel(QObject* parent) : QAbstractIte
       }
    });
    QObject::connect(&fic, &std::decay_t<decltype(fic)>::cachedHeadPartChanged, this, [this, &fic](dovah::form_stub& stub) {
-      const form_info_cache::cached_head_part_info* info = nullptr;
+      const form_info_cache::cached_data::by_form::head_part* info = nullptr;
 
       auto&  list = this->_items;
       size_t size = list.size();

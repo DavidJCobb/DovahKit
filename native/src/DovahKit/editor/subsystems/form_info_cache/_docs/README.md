@@ -5,16 +5,17 @@ Current list:
 
 * Quest filter strings (the Object Window nesting options)
 * Model paths
+* List of all DIALs that can legally contain SharedInfos
 * VMAD info
   * Needed to help with the Papyrus subsystem
 * General form info
-  * Faction info
+  * Faction (FACT) info
     * Tracks crime?
-  * HeadPart info
+  * HeadPart (HDPT) info
     * Is extra?
     * Is playable?
     * Race list
     * Sex
     * Type
-  * Voicetype info
+  * Voicetype (VTYP) info
     * Is female?

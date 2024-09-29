@@ -1,8 +1,8 @@
 #pragma once
-#include "./cached_vmad_info.h"
+#include "./attached_scripts.h"
 
-namespace dovahkit::subsystems::form_info_cache {
-   constexpr bool cached_vmad_info::operator==(const cached_vmad_info& o) const {
+namespace dovahkit::subsystems::form_info_cache::cached_data {
+   constexpr bool attached_scripts::operator==(const attached_scripts& o) const {
       if (this == &o)
          return true;
 

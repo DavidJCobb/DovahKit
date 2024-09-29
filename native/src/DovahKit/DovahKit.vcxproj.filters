@@ -2115,9 +2115,6 @@
     <ClCompile Include="editor\subsystems\form_info_cache\form_info_cache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\form_info_cache\cached_vmad_info.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\form_info_cache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2382,9 +2379,6 @@
     <ClCompile Include="ui\form_windows\head_part.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\form_info_cache\cached_head_part_info.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\forms\Outfit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2401,9 +2395,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\form_windows\association_type.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\form_info_cache\cached_voicetype_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\forms\Class.cpp">
@@ -2428,9 +2419,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\form_windows\actor_base\ActorBaseFactionsModel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="editor\subsystems\form_info_cache\cached_faction_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\utils\item_indices_to_data.cpp">
@@ -2752,6 +2740,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\forms\structs\world_max_height_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\form_info_cache\cache_containers\presence_cache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\faction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\head_part.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\voicetype.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -6029,15 +6032,6 @@
     <ClInclude Include="editor\subsystems\papyrus\known_script_ptr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\form_info_cache\cached_vmad_info.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\form_info_cache\cache_map.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\form_info_cache\cache_map_collection.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\form_info_cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -6554,9 +6548,6 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\head_part\invalid_morph_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\form_info_cache\cached_head_part_info.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\head_part_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -6570,9 +6561,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\voicetype_info.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\form_info_cache\cached_voicetype_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\data\skills.h">
@@ -6630,9 +6618,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\form_windows\actor_base\ActorBaseFactionsModel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\form_info_cache\cached_faction_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\faction_info.h">
@@ -6939,6 +6924,27 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\structs\world_max_height_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cache_containers\presence_cache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cache_containers\data_cache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cache_containers\entire_cache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\faction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\head_part.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\voicetype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -8245,9 +8251,6 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="editor\subsystems\papyrus\_docs\thread-safety.md" />
-    <None Include="editor\subsystems\form_info_cache\cached_vmad_info.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="widgets\widget-models\bound-scripts\property.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -8306,6 +8309,12 @@
     </None>
     <None Include="widgets\widget-data\DKCustomFormFilter.md" />
     <None Include="dovah\files\pex\parsers\function_collector.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\form_info_cache\cache_containers\data_cache.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

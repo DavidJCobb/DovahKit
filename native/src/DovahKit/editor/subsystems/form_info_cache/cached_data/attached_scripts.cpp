@@ -1,4 +1,6 @@
-#include "./cached_vmad_info.h"
+#include "./attached_scripts.h"
+#include <string>
+#include <vector>
 #include "dovah/files/tes_file_reading/elements.h"
 #include "dovah/forms/components/papyrus.h"
 #include "editor/subsystems/papyrus/core.h"
@@ -9,8 +11,8 @@ namespace {
    }
 }
 
-namespace dovahkit::subsystems::form_info_cache {
-   cached_vmad_info::cached_vmad_info(dovah::tes_file_reading::subrecord& subrecord) {
+namespace dovahkit::subsystems::form_info_cache::cached_data {
+   attached_scripts::attached_scripts(dovah::tes_file_reading::subrecord& subrecord) {
       auto& papyrus = dovahkit::subsystems::papyrus::core::get();
 
       std::vector<std::string> attached_scripts;
@@ -30,7 +32,7 @@ namespace dovahkit::subsystems::form_info_cache {
          );
       }
    }
-   cached_vmad_info::cached_vmad_info(const vmad::attachment_data& src) {
+   attached_scripts::attached_scripts(const vmad::attachment_data& src) {
       auto& papyrus = dovahkit::subsystems::papyrus::core::get();
 
       for (auto& script : src.scripts) {

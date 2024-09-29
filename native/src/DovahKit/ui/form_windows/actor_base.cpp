@@ -12,6 +12,9 @@
 #include "ui/utils/typical_tableview_config.h"
 
 #include "editor/subsystems/form_info_cache/core.h"
+#include "editor/subsystems/form_info_cache/cached_data/by_form_type/faction.h"
+#include "editor/subsystems/form_info_cache/cached_data/by_form_type/head_part.h"
+#include "editor/subsystems/form_info_cache/cached_data/by_form_type/voicetype.h"
 #include "editor/subsystems/game_settings/core.h"
 #include "editor/subsystems/message_log/core.h"
 #include "editor/open_window_for_form.h"

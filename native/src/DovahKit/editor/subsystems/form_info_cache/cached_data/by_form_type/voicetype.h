@@ -9,9 +9,9 @@ namespace dovah {
    }
 }
 
-namespace dovahkit::subsystems::form_info_cache {
-   struct cached_voicetype_info {
-      constexpr cached_voicetype_info() {}
+namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {
+   struct voicetype {
+      constexpr voicetype() {}
 
       bool allow_default_dialogue = false;
       bool female = false;

@@ -118,7 +118,7 @@ namespace dovahkit::subsystems::form_info_cache {
             subject = &this->aliases.emplace_back(per_alias{ .alias_id = owner.alias_id });
          }
          //
-         for (const auto& item : retained) {
+         for (auto& item : retained) {
             bool exists = false;
             for (const auto& prior : subject->scriptnames) {
                if (dovah::papyrus::helpers::name_equals(item, prior)) {
@@ -132,10 +132,10 @@ namespace dovahkit::subsystems::form_info_cache {
       }
    }
 
-   cached_vmad_info quest_vmad_skimmer::bake() {
+   cached_data::attached_scripts quest_vmad_skimmer::bake() {
       auto& papyrus = dovahkit::subsystems::papyrus::core::get();
 
-      cached_vmad_info out;
+      cached_data::attached_scripts out;
       
       for (auto& name : this->attached) {
          out.attached.push_back(

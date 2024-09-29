@@ -1,4 +1,4 @@
-#include "./cached_faction_info.h"
+#include "./faction.h"
 #include "dovah/files/tes_file_reading/elements.h"
 #include "dovah/forms/Faction.h"
 #include "dovah/core.h"
@@ -7,8 +7,8 @@ namespace {
    using loaded_form_type = dovah::loaded_forms::Faction;
 }
 
-namespace dovahkit::subsystems::form_info_cache {
-   void cached_faction_info::skim_subrecord(dovah::tes_file_reading::subrecord& subrecord) {
+namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {
+   void faction::skim_subrecord(dovah::tes_file_reading::subrecord& subrecord) {
       switch (subrecord.signature()) {
          case 'DATA':
             {
@@ -20,7 +20,7 @@ namespace dovahkit::subsystems::form_info_cache {
             break;
       }
    }
-   bool cached_faction_info::update(const dovah::loaded_forms::Faction& src) {
+   bool faction::update(const dovah::loaded_forms::Faction& src) {
       auto flags = src.faction_flags;
 
       bool tracks_crime = flags & loaded_form_type::faction_flag::track_crime;

@@ -3,6 +3,7 @@
 #include "dovah/utils/form_list_contains.h"
 #include "editor/core.h"
 #include "editor/helpers/form_stub_drag_drop.h"
+#include "editor/subsystems/form_info_cache/cached_data/by_form_type/head_part.h"
 #include "editor/subsystems/form_info_cache/core.h"
 
 namespace {
