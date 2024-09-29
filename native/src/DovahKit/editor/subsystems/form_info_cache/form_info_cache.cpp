@@ -546,12 +546,16 @@ namespace dovahkit::subsystems::form_info_cache {
    //
 
    QString core::get_form_model_path(const dovah::form_stub& stub) const {
-      return *this->_cache->model_paths.get(stub);
+      if (auto* item = this->_cache->model_paths.get(stub))
+         return *item;
+      return {};
    }
    QString core::get_quest_filter(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::quest)
          return {};
-      return *this->_cache->quest_filters.get(stub);
+      if (auto* item = this->_cache->quest_filters.get(stub))
+         return *item;
+      return {};
    }
    const cached_data::by_form::faction* core::get_faction_info(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::faction)

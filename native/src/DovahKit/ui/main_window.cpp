@@ -91,8 +91,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    this->subwindows.cell_view.flags = Qt::CustomizeWindowHint | Qt::WindowTitleHint;
    this->subwindows.cell_view.open(this->ui.mdi);
    this->subwindows.log.open(this->ui.mdi);
-   this->subwindows.render.flags = Qt::CustomizeWindowHint | Qt::WindowTitleHint;
-   this->subwindows.render.open(this->ui.mdi);
+   this->subwindows.render.flags = Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowCloseButtonHint;
+   //this->subwindows.render.open(this->ui.mdi);
+   // // don't open by default; Render Window performance currently sucks
+   // // (high frame rates, but bogs down CPU. actual CPU usage isn't that 
+   // // high but maybe too much CPU-to-GPU I/O by accident somewhere?)
 
    // Status bar
    {
@@ -139,6 +142,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       action = new QAction(menu);
       action->setText(tr("Object Window", "main window - window menu"));
       QObject::connect(action, &QAction::triggered, this, [this]() { this->subwindows.object.open(this->ui.mdi); });
+      menu->addAction(action);
+      //
+      action = new QAction(menu);
+      action->setText(tr("Render Window", "main window - window menu"));
+      QObject::connect(action, &QAction::triggered, this, [this]() { this->subwindows.render.open(this->ui.mdi); });
       menu->addAction(action);
       //
       this->form_edit_window_menu = new QMenu;

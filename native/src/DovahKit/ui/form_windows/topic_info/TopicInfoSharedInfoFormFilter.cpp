@@ -1,9 +1,7 @@
 #include "./TopicInfoSharedInfoFormFilter.h"
 #include "helpers/string/stricontains_ascii.h"
 #include "dovah/form_stub.h"
-#include "dovah/form_stubs/helpers/get_dialogue_topic_branch.h"
-#include "dovah/form_stubs/helpers/get_dialogue_topic_quest.h"
-#include "dovah/forms/Topic.h"
+#include "editor/subsystems/form_info_cache/core.h"
 
 /*virtual*/ bool TopicInfoSharedInfoFormFilter::form_matches(dovah::form_stub& stub) const noexcept /*override*/ {
    if (stub.form_type != dovah::form_type::topic_info)
@@ -17,18 +15,13 @@
    auto* topic = stub.get_parent_form();
    if (!topic || topic->form_type != dovah::form_type::topic)
       return false;
-   if (dovah::form_stub_helpers::get_dialogue_topic_quest(topic) != this->_quest)
-      return false;
-   if (dovah::form_stub_helpers::get_dialogue_topic_branch(topic))
+   if (!dovahkit::subsystems::form_info_cache::core::get().topic_is_sharedinfo_topic(*topic))
+      //
+      // You can reference a SharedInfo existing in any quest, as long as it belongs to 
+      // an IDAT-subtype topic.
+      //
       return false;
 
-   {
-      auto loaded = topic->load().ptr_cast<dovah::loaded_forms::Topic>();
-      if (!loaded)
-         return false;
-      if (loaded->subtype != 'IDAT')
-         return false;
-   }
    return true;
 }
 
