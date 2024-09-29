@@ -1,5 +1,5 @@
 #include "./QuestDialogueBranchesModel.h"
-#include "helpers/vectors/move_item_within.h"
+#include "helpers/vectors/re_sort_item_within.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/form_stub_meta_type.h"
 
@@ -187,25 +187,34 @@ void QuestDialogueBranchesModel::_re_sort_node(const node_type& item) {
    auto entry_it = std::find(list.begin(), list.end(), &item);
    if (entry_it == list.end())
       return;
-   size_t from = std::distance(list.begin(), entry_it);
-   size_t to;
-   bool   moving_upward_in_list;
-   {
-      auto dst_it = this->_insertion_point_for(item);
-      if (dst_it == entry_it)
-         return;
-      to = std::distance(list.begin(), dst_it);
-   }
-   this->beginMoveRows(
-      {},
-      from, // first to move
-      from, // last  to move
-      {},
-      to
+
+   bool moved = false;
+   cobb::vectors::re_sort_item_within(
+      list,
+      entry_it,
+      [](const node_type* a, const node_type* b) -> bool {
+         if (!a->stub && b->stub)
+            return true;
+         if (!b->stub && a->stub)
+            return false;
+         return a->cached.editor_id.localeAwareCompare(b->cached.editor_id) < 0;
+      },
+      [&moved, this, &list](decltype(_data)::iterator from_it, decltype(_data)::iterator to_it) {
+         moved = true;
+         size_t from  = std::distance(list.begin(), from_it);
+         size_t to    = std::distance(list.begin(), to_it);
+
+         this->beginMoveRows(
+            {},
+            from, // first to move
+            from, // last  to move
+            {},
+            (to < from) ? to : to + 1 // Qt API design jank
+         );
+      }
    );
-   bool moved = cobb::vectors::move_item_within<false>(list, from, (int)to - (int)from);
-   assert(moved);
-   this->endMoveRows();
+   if (moved)
+      this->endMoveRows();
 }
 decltype(QuestDialogueBranchesModel::_data)::iterator QuestDialogueBranchesModel::_insertion_point_for(const node_type& item) {
    if (!item.stub)

@@ -1310,6 +1310,7 @@
     <ClInclude Include="helpers\string\stricontains_ascii.h" />
     <ClInclude Include="helpers\vectors\move_item_within.h" />
     <ClInclude Include="helpers\vectors\move_range_within.h" />
+    <ClInclude Include="helpers\vectors\re_sort_item_within.h" />
     <ClInclude Include="nif\blocks\BSValueNode.h" />
     <ClInclude Include="nif\utils\find_all_retexturable_blocks.h" />
     <ClInclude Include="nif\utils\precache_nif_info.h" />

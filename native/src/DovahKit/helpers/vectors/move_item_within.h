@@ -30,12 +30,10 @@ namespace cobb::vectors {
    // the move will fail if the item can't move the full distance you've asked 
    // for.
    // 
-   // You can find a good explanation of how the use of std::rotate here works 
-   // at this page. Note that they use the term "last" for vector positions that 
-   // would more properly be called "end."
-   // https://www.fluentcpp.com/2018/04/20/ways-reordering-collection-stl/
+   // See also:
+   // https://stackoverflow.com/a/65203019
    //
-   template<bool Clamp, is_std_vector Vector>
+   template<bool Clamp = false, is_std_vector Vector>
    constexpr bool move_item_within(Vector& list, size_t i, int by) {
       if (by == 0)
          return true;
@@ -59,7 +57,7 @@ namespace cobb::vectors {
             return true;
          }
          auto to = from + by;
-         std::rotate(from, from + 1, to);
+         std::rotate(from, from + 1, to + 1);
       } else {
          if constexpr (Clamp) {
             if (i == 0)
@@ -79,4 +77,47 @@ namespace cobb::vectors {
       }
       return true;
    }
+
+   #pragma region Correctness checks
+      static_assert([]() -> bool {
+         std::vector<int> list = { 0, 1, 4, 2, 3 };
+         size_t from = 2;
+         size_t to   = 4;
+         move_item_within<false>(list, from, to - from);
+         for (size_t i = 1; i < list.size(); ++i)
+            if (list[i] <= list[i - 1])
+               return false;
+         return true;
+      }(), "cobb::move_item_within: moving item forward by distance greater than 1");
+      static_assert([]() -> bool {
+         std::vector<int> list = { 0, 1, 3, 4, 2 };
+         size_t from = 4;
+         size_t to   = 2;
+         move_item_within<false>(list, from, to - from);
+         for (size_t i = 1; i < list.size(); ++i)
+            if (list[i] <= list[i - 1])
+               return false;
+         return true;
+      }(), "cobb::move_item_within: moving item backward by distance greater than 1");
+      static_assert([]() -> bool {
+         std::vector<int> list = { 0, 1, 2, 4, 3 };
+         size_t from = 3;
+         size_t to   = 4;
+         move_item_within<false>(list, from, to - from);
+         for (size_t i = 1; i < list.size(); ++i)
+            if (list[i] <= list[i - 1])
+               return false;
+         return true;
+      }(), "cobb::move_item_within: moving item forward by 1");
+      static_assert([]() -> bool {
+         std::vector<int> list = { 0, 1, 3, 2, 4 };
+         size_t from = 3;
+         size_t to   = 2;
+         move_item_within<false>(list, from, to - from);
+         for (size_t i = 1; i < list.size(); ++i)
+            if (list[i] <= list[i - 1])
+               return false;
+         return true;
+      }(), "cobb::move_item_within: moving item backward by 1");
+   #pragma endregion
 }

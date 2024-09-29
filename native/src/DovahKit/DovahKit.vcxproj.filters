@@ -6947,6 +6947,9 @@
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\vectors\re_sort_item_within.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
