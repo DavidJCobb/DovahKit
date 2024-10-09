@@ -158,7 +158,7 @@ namespace dovah::loaded_forms {
       auto& PNAM = record.open_next_subrecord('PNAM');
       PNAM.write(this->priority);
       PNAM.close();
-      record.write_formID_subrecord('BNAM', this->owning_forms.branch);
+      record.write_formID_subrecord('BNAM', this->owning_forms.branch, true);
       record.write_formID_subrecord('QNAM', this->owning_forms.quest);
       auto& DATA = record.open_next_subrecord('DATA');
       DATA.write(this->data.flags);

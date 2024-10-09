@@ -142,7 +142,7 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'ENAM':
-               if (subrecord.is_in_bounds(8)) {
+               if (subrecord.is_in_bounds(4)) {
                   subrecord.unchecked_read(this->info_flags);
                   subrecord.unchecked_read(this->raw_hours_until_reset);
                }
@@ -508,7 +508,7 @@ namespace dovah::loaded_forms {
    }
    /*virtual*/ void TopicInfo::_save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
-      if (this->info_flags || this->raw_hours_until_reset) {
+      {
          auto& ENAM = record.open_next_subrecord('ENAM');
          ENAM.write(this->info_flags);
          ENAM.write(this->raw_hours_until_reset);

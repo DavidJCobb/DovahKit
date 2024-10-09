@@ -36,7 +36,17 @@ namespace dovah::tes_file_reading::threads {
       public:
          static constexpr int recommended_thread_count = 1;
          static constexpr int heavy_duty_thread_count  = 0;
-         //
+
+         // WARNING: Do not increase the thread count for loading dialogue forms without 
+         // redesigning how we generate `topic_stub->addenda->ordered_children`. The 
+         // default order for INFOs is the order their records appear in within the file 
+         // that defines them. Currently, we add INFOs to the list as they're found, 
+         // without any locking. The following two functions (a callee and its caller) 
+         // would need revisions to change this and use a thread-safe approach:
+         // 
+         //  - form_stub::_insert_child_topic_info
+         //  - file_or_file_part_loader::extract_high_value_subrecords_for_stub
+         
       protected:
          struct queued_group {
             uint32_t signature = 0;

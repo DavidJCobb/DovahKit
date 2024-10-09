@@ -103,17 +103,24 @@ namespace dovah::tes_file_reading {
       //
       auto& record = this->get_current_record();
       bool  is_ext = stub.is_exterior_cell();
-      //
+      
+      constexpr const size_t end_of_parent_topic_child_list =
+         (std::string::npos == 0xFFFFFFFF) ? // (uint32_t)-1 has special meaning in the file format
+            std::string::npos - 1
+         :
+            std::string::npos
+      ;
+
       #pragma region INFO pre-handling
-      size_t     insert_info_at = 0;
-      form_stub* parent_topic = nullptr;
+      size_t     insert_info_at = end_of_parent_topic_child_list;
+      form_stub* parent_topic   = nullptr;
       if (stub.form_type == form_type::topic_info) {
          parent_topic = stub.get_parent_form();
          if (parent_topic && parent_topic->form_type != form_type::topic)
             parent_topic = nullptr;
       }
       #pragma endregion
-      //
+      
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'EDID':
@@ -129,9 +136,14 @@ namespace dovah::tes_file_reading {
                   subrecord.read(formID);
                   //
                   if (auto* stub = formID.get_form_stub()) {
-                     insert_info_at = parent_topic->index_of_child_info(*stub) + 1;
+                     insert_info_at = parent_topic->index_of_child_info(*stub);
+                     if (insert_info_at == std::string::npos) {
+                        insert_info_at = 0;
+                     } else {
+                        ++insert_info_at;
+                     }
                   } else {
-                     insert_info_at = std::string::npos;
+                     insert_info_at = end_of_parent_topic_child_list;
                   }
                }
                break;
