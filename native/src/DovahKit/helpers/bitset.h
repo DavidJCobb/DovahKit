@@ -112,7 +112,7 @@ namespace cobb {
          
          constexpr bool all() const noexcept {
             for (size_t i = 0; i < undershoot_cc; i++)
-               if (this->data[i] == all_bits_set)
+               if (this->data[i] != all_bits_set)
                   return false;
             if constexpr (has_partial_chunk) {
                if (this->data[chunk_count - 1] != partial_chunk_max)

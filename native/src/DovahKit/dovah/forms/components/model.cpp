@@ -188,129 +188,122 @@ namespace dovah::loaded_forms::components {
       }
    }
 
-   void model::save(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
-      switch (subrecord.signature()) {
-         case 'MODL':
-         case 'MOD2':
-         case 'DMDL': // for destruction stages
-            subrecord.write(this->model_path);
-            break;
-         case 'MODT':
-         case 'MO2T':
-         case 'DMDT': // for destruction stages
-            {
-               auto& record = subrecord.get_containing_record();
-               if (record.version() < 0x26)
-                  break;
-               auto& data = this->precached_info;
-               if (record.version() >= 0x28) {
-                  uint32_t texture_hashes_count = data.texture_hashes.size();
-                  uint32_t addon_node_ids_count = data.addon_node_ids.size();
-                  //
-                  if constexpr (clip_the_precached_lists) {
-                     if (texture_hashes_count > max_usable_texture_hashes) {
-                        texture_hashes_count = max_usable_texture_hashes;
-                     }
-                     if (addon_node_ids_count > max_usable_addon_node_ids) {
-                        addon_node_ids_count = max_usable_addon_node_ids;
-                     }
-                  }
-
-                  bool write_addon_ids = !data.addon_node_ids.empty();
-                  bool write_materials = subrecord.is_skyrim_special() && !data.material_hashes.empty();
-
-                  if (!write_addon_ids && !write_materials) {
-                     //
-                     // NOTE: We're inconsistent with Bethesda here. They seem to always write both 
-                     //       counts even if the lists are empty (i.e. 00000002 00000000 00000000).
-                     //
-                     if (data.texture_hashes.empty()) {
-                        subrecord.write(uint32_t(0));
-                        break;
-                     }
-                     subrecord.write(uint32_t(1));
-                     subrecord.write(uint32_t(texture_hashes_count));
-                  } else {
-                     if (!write_materials) {
-                        subrecord.write(uint32_t(2));
-                        subrecord.write(uint32_t(texture_hashes_count));
-                        subrecord.write(uint32_t(addon_node_ids_count));
-                     } else {
-                        subrecord.write(uint32_t(3));
-                        subrecord.write(uint32_t(texture_hashes_count));
-                        subrecord.write(uint32_t(addon_node_ids_count));
-                        subrecord.write(uint32_t(data.material_hashes.size()));
-                     }
-                  }
-                  for (size_t i = 0; i < texture_hashes_count; ++i) {
-                     const auto& item = data.texture_hashes[i];
-                     subrecord.write(item.file_hash);
-                     subrecord.write_signature(item.extension);
-                     subrecord.write(item.folder_hash);
-                  }
-                  if (write_addon_ids) {
-                     for (size_t i = 0; i < addon_node_ids_count; ++i) {
-                        subrecord.write(data.addon_node_ids[i]);
-                     }
-                  }
-                  if (write_materials) {
-                     for (auto& item : data.material_hashes) {
-                        subrecord.write(item.file_hash);
-                        subrecord.write_signature(item.extension);
-                        subrecord.write(item.folder_hash);
-                     }
-                  }
-               }
-               if (record.version() >= 0x26) {
-                  uint32_t texture_hashes_count = data.texture_hashes.size();
-                  //
-                  if constexpr (clip_the_precached_lists) {
-                     if (texture_hashes_count > max_usable_texture_hashes) {
-                        texture_hashes_count = max_usable_texture_hashes;
-                     }
-                  }
-                  
-                  for (size_t i = 0; i < texture_hashes_count; ++i) {
-                     const auto& item = data.texture_hashes[i];
-                     subrecord.write(item.file_hash);
-                     subrecord.write_signature(item.extension);
-                     subrecord.write(item.folder_hash);
-                  }
-               }
+   void model::save_model_path(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
+      subrecord.write(this->model_path);
+   }
+   void model::save_precached_info(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
+      auto& record = subrecord.get_containing_record();
+      if (record.version() < 0x26)
+         return;
+      auto& data = this->precached_info;
+      if (record.version() >= 0x28) {
+         uint32_t texture_hashes_count = data.texture_hashes.size();
+         uint32_t addon_node_ids_count = data.addon_node_ids.size();
+         //
+         if constexpr (clip_the_precached_lists) {
+            if (texture_hashes_count > max_usable_texture_hashes) {
+               texture_hashes_count = max_usable_texture_hashes;
             }
-            break;
-         case 'MODD':
-         case 'MOSD':
-            subrecord.write(this->facegen_flags);
-            break;
+            if (addon_node_ids_count > max_usable_addon_node_ids) {
+               addon_node_ids_count = max_usable_addon_node_ids;
+            }
+         }
+
+         bool write_addon_ids = !data.addon_node_ids.empty();
+         bool write_materials = subrecord.is_skyrim_special() && !data.material_hashes.empty();
+
+         if (!write_addon_ids && !write_materials) {
+            //
+            // NOTE: We're inconsistent with Bethesda here. They seem to always write both 
+            //       counts even if the lists are empty (i.e. 00000002 00000000 00000000).
+            //
+            if (data.texture_hashes.empty()) {
+               subrecord.write(uint32_t(0));
+               return;
+            }
+            subrecord.write(uint32_t(1));
+            subrecord.write(uint32_t(texture_hashes_count));
+         } else {
+            if (!write_materials) {
+               subrecord.write(uint32_t(2));
+               subrecord.write(uint32_t(texture_hashes_count));
+               subrecord.write(uint32_t(addon_node_ids_count));
+            } else {
+               subrecord.write(uint32_t(3));
+               subrecord.write(uint32_t(texture_hashes_count));
+               subrecord.write(uint32_t(addon_node_ids_count));
+               subrecord.write(uint32_t(data.material_hashes.size()));
+            }
+         }
+         for (size_t i = 0; i < texture_hashes_count; ++i) {
+            const auto& item = data.texture_hashes[i];
+            subrecord.write(item.file_hash);
+            subrecord.write_signature(item.extension);
+            subrecord.write(item.folder_hash);
+         }
+         if (write_addon_ids) {
+            for (size_t i = 0; i < addon_node_ids_count; ++i) {
+               subrecord.write(data.addon_node_ids[i]);
+            }
+         }
+         if (write_materials) {
+            for (auto& item : data.material_hashes) {
+               subrecord.write(item.file_hash);
+               subrecord.write_signature(item.extension);
+               subrecord.write(item.folder_hash);
+            }
+         }
+      }
+      if (record.version() >= 0x26) {
+         uint32_t texture_hashes_count = data.texture_hashes.size();
+         //
+         if constexpr (clip_the_precached_lists) {
+            if (texture_hashes_count > max_usable_texture_hashes) {
+               texture_hashes_count = max_usable_texture_hashes;
+            }
+         }
+                  
+         for (size_t i = 0; i < texture_hashes_count; ++i) {
+            const auto& item = data.texture_hashes[i];
+            subrecord.write(item.file_hash);
+            subrecord.write_signature(item.extension);
+            subrecord.write(item.folder_hash);
+         }
       }
    }
-   void model_ts::save(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
-      model::save(subrecord, intfc);
-      switch (subrecord.signature()) {
-         case 'MODS':
-         case 'MO2S':
-         case 'DMDS': // for destruction stages
-            subrecord.write(uint32_t(this->texture_swaps.size()));
-            for (auto& entry : this->texture_swaps) {
-               subrecord.write_length_prefixed_string<4>(entry.nif_block_name);
-               subrecord.write(entry.texture_set);
-               subrecord.write(entry.nif_leaf_index);
-            }
-            break;
+
+   void model_ts::save_texture_swaps(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
+      subrecord.write(uint32_t(this->texture_swaps.size()));
+      for (auto& entry : this->texture_swaps) {
+         subrecord.write_length_prefixed_string<4>(entry.nif_block_name);
+         subrecord.write(entry.texture_set);
+         subrecord.write(entry.nif_leaf_index);
       }
+   }
+
+   void model::save_facegen_flags(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
+      subrecord.write(this->facegen_flags);
    }
 
    void model::save(tes_record_writer& record, load_order_interfaces::form_save& intfc, uint32_t signature_path, uint32_t signature_hash) {
-      if (!this->model_path.empty())
-         this->save(record.open_next_subrecord(signature_path), intfc);
-      if (this->has_precached_info())
-         this->save(record.open_next_subrecord(signature_hash), intfc);
+      if (!this->model_path.empty()) {
+         auto& subrecord = record.open_next_subrecord(signature_path);
+         this->save_model_path(subrecord, intfc);
+         subrecord.close();
+      }
+      if (this->has_precached_info()) {
+         auto& subrecord = record.open_next_subrecord(signature_hash);
+         this->save_precached_info(subrecord, intfc);
+         subrecord.close();
+      }
    }
    void model_ts::save(tes_record_writer& record, load_order_interfaces::form_save& intfc, uint32_t signature_path, uint32_t signature_hash, uint32_t signature_swap) {
       model::save(record, intfc, signature_path, signature_hash);
-      if (!this->texture_swaps.empty())
-         this->save(record.open_next_subrecord(signature_swap), intfc);
+      if (!this->texture_swaps.empty()) {
+         auto& subrecord = record.open_next_subrecord(signature_swap);
+         this->save_texture_swaps(subrecord, intfc);
+         subrecord.close();
+      }
    }
 
    void model::clear() {

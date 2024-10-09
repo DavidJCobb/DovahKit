@@ -32,9 +32,13 @@ namespace dovah::loaded_forms::components {
 
          bool load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc); // returns (true) if the subrecord is recognized and handled
          static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
-         void save(tes_subrecord_writer&, load_order_interfaces::form_save&); // open the subrecord before calling
-         void save(tes_record_writer&, load_order_interfaces::form_save&, uint32_t signature_path, uint32_t signature_hash); // opens the subrecords, etc., for you
+
+         void save_model_path(tes_subrecord_writer&, load_order_interfaces::form_save&);
+         void save_precached_info(tes_subrecord_writer&, load_order_interfaces::form_save&);
+         void save_facegen_flags(tes_subrecord_writer&, load_order_interfaces::form_save&); // typically in MODD or MOSD
          //
+         void save(tes_record_writer&, load_order_interfaces::form_save&, uint32_t signature_path, uint32_t signature_hash); // opens the subrecords, etc., for you
+         
          void clear();
          void clone_from(const model& original) noexcept;
          void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;
@@ -55,10 +59,12 @@ namespace dovah::loaded_forms::components {
          
          bool load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc); // returns (true) if the subrecord is recognized and handled
          static void generate_use_info(tes_subrecord_reader&, form_stub_use_info_builder&);
-         void save(tes_subrecord_writer&, load_order_interfaces::form_save&); // open the subrecord before calling
+
+         void save_texture_swaps(tes_subrecord_writer&, load_order_interfaces::form_save&);
+         //
          void save(tes_record_writer&, load_order_interfaces::form_save&, uint32_t signature_path, uint32_t signature_hash) = delete;
          void save(tes_record_writer&, load_order_interfaces::form_save&, uint32_t signature_path, uint32_t signature_hash, uint32_t signature_swap); // opens the subrecords, etc., for you
-         //
+         
          void clear(loaded_forms::Form& my_owner);
          void clone_from(const model_ts& original, loaded_forms::Form& owner_of_clone) noexcept;
          void sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept;

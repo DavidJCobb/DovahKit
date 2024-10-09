@@ -1508,13 +1508,16 @@ namespace dovah::loaded_forms {
          record.write_formID_subrecord('UNES', this->equipment.unarmed_equip_slot, true);
       }
       {
-         for (auto& name : this->phonemes.morph_names)
+         auto& names = this->phonemes.morph_names;
+         for (auto& name : names)
             record.write_string_subrecord('PHTN', name);
-         for (auto& list : this->phonemes.weights) {
-            auto& PHWT = record.open_next_subrecord('PHWT');
-            for (float f : list)
-               PHWT.write(f);
-            PHWT.close();
+         if (!names.empty() || this->uses_default_facegen_phonemes()) {
+            for (auto& list : this->phonemes.weights) {
+               auto& PHWT = record.open_next_subrecord('PHWT');
+               for (float f : list)
+                  PHWT.write(f);
+               PHWT.close();
+            }
          }
       }
       record.write_formID_subrecord('WKMV', this->movement.types.walk, true);
@@ -1588,6 +1591,7 @@ namespace dovah::loaded_forms {
                auto& TINI = record.open_next_subrecord('TINI');
                TINI.write(tint.index);
                TINI.close();
+               record.write_string_subrecord('TINT', tint.texture);
                if (tint.type != face_tint_type::none) {
                   auto& TINP = record.open_next_subrecord('TINP');
                   TINP.write(tint.type);

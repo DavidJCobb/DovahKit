@@ -183,6 +183,8 @@ namespace dovah {
          field.clear();
          auto length = this->size();
          field.resize(length);
+         if (length == 0)
+            return true;
          if (!this->read(const_cast<char*>(field.data()), length))
             return false;
          if (field[length - 1] == '\0') // C++ std::strings + direct reading + null terminators = horrible, horrible mess
