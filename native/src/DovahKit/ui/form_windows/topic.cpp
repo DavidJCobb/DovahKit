@@ -114,6 +114,9 @@ void FormDialogTopic::_load_impl() {
          auto*      widget  = this->ui.subtype;
          const auto blocker = QSignalBlocker(widget);
          widget->setDisabled(true);
+         //
+         this->_initial_category = info->category;
+         this->_update_available_subtypes();
          widget->setCurrentIndex(widget->findData(dovah::dialogue::topic_subtype_index(*info)));
       }
    }
