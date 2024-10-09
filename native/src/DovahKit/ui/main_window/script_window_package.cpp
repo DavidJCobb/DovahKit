@@ -147,7 +147,7 @@ void EditorScriptPackageWindow::browseForPackage() {
    for (auto& prior : this->user_loaded_packages) {
       if (prior.root_folder == folder) {
          prior = parser.result();
-         prior.root_folder = folder;
+         prior.root_folder.setPath(folder);
          //
          int i = widget->findData(prior.root_folder.path(), Qt::UserRole);
          if (i >= 0)
@@ -158,7 +158,7 @@ void EditorScriptPackageWindow::browseForPackage() {
    }
    this->user_loaded_packages.push_back(parser.result());
    auto& added = this->user_loaded_packages.back();
-   added.root_folder = folder;
+   added.root_folder.setPath(folder);
    widget->addItem(added.name, added.root_folder.path());
    widget->setCurrentIndex(widget->count() - 1);
 }

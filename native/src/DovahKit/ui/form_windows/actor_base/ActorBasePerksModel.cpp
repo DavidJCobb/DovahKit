@@ -1,18 +1,18 @@
-#include "./ActorBaseFactionsModel.h"
+#include "./ActorBasePerksModel.h"
 #include "dovah/form_stub.h"
 #include "editor/core.h"
 #include "editor/helpers/form_stub_drag_drop.h"
 
-ActorBaseFactionsModel::ActorBaseFactionsModel(QObject* parent) : DKGenericListModel(parent) {
+ActorBasePerksModel::ActorBasePerksModel(QObject* parent) : DKGenericListModel(parent) {
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &ActorBaseFactionsModel::clear);
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &ActorBasePerksModel::clear);
    QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
       for(size_t i = 0; i < this->_nodes.size(); ++i) {
          auto* node = this->_nodes[i];
-         if (node->faction == stub) {
+         if (node->perk == stub) {
             node->cached.editorID = QString::fromStdString(stub->editorID);
 
-            auto qmi = this->index(i, Column::Faction, {});
+            auto qmi = this->index(i, Column::Perk, {});
             emit this->dataChanged(qmi, qmi);
          }
       }
@@ -21,7 +21,7 @@ ActorBaseFactionsModel::ActorBaseFactionsModel(QObject* parent) : DKGenericListM
       size_t size = this->_nodes.size();
       for (size_t i = 0; i < size; ++i) {
          auto* node = this->_nodes[i];
-         if (node->faction == stub) {
+         if (node->perk == stub) {
             this->beginRemoveRows({}, i, i);
             this->_nodes.erase(this->_nodes.begin() + i);
             delete node;
@@ -33,7 +33,7 @@ ActorBaseFactionsModel::ActorBaseFactionsModel(QObject* parent) : DKGenericListM
    });
 }
 
-QVariant ActorBaseFactionsModel::data_of(const node_type& node, Qt::ItemDataRole role, size_t column) const {
+QVariant ActorBasePerksModel::data_of(const node_type& node, Qt::ItemDataRole role, size_t column) const {
    switch (role) {
       case Qt::TextAlignmentRole:
          switch (column) {
@@ -45,7 +45,7 @@ QVariant ActorBaseFactionsModel::data_of(const node_type& node, Qt::ItemDataRole
       case Qt::DisplayRole:
       case Qt::ToolTipRole:
          switch (column) {
-            case Column::Faction:
+            case Column::Perk:
                return node.cached.editorID;
             case Column::Rank:
                return node.rank;
@@ -54,29 +54,28 @@ QVariant ActorBaseFactionsModel::data_of(const node_type& node, Qt::ItemDataRole
    }
    return {};
 }
-Qt::ItemFlags ActorBaseFactionsModel::flags_of(const node_type&, size_t column) const {
+Qt::ItemFlags ActorBasePerksModel::flags_of(const node_type&, size_t column) const {
    auto flags = Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled | Qt::ItemNeverHasChildren;
    return flags;
 }
 
-/*virtual*/ QVariant ActorBaseFactionsModel::headerData(int section, Qt::Orientation orientation, int role) const /*override*/ {
+/*virtual*/ QVariant ActorBasePerksModel::headerData(int section, Qt::Orientation orientation, int role) const /*override*/ {
    if (role != Qt::DisplayRole)
       return {};
    if (orientation != Qt::Orientation::Horizontal)
       return {};
    switch (section) {
       using enum Column::enumeration;
-      case Faction:
-         return tr("Faction Name");
+      case Perk:
+         return tr("Perk");
       case Rank:
          return tr("Rank");
    }
    return {};
 }
 
-
 #pragma region Drag-and-drop
-   bool ActorBaseFactionsModel::canDropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) const {
+   bool ActorBasePerksModel::canDropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) const {
       if (action != Qt::DropAction::CopyAction)
          return false;
       if (!data)
@@ -85,7 +84,7 @@ Qt::ItemFlags ActorBaseFactionsModel::flags_of(const node_type&, size_t column) 
          return false;
       return true;
    }
-   bool ActorBaseFactionsModel::dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) {
+   bool ActorBasePerksModel::dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) {
       if (!this->canDropMimeData(data, action, row, column, parent))
          return false;
       if (action == Qt::IgnoreAction)
@@ -96,9 +95,9 @@ Qt::ItemFlags ActorBaseFactionsModel::flags_of(const node_type&, size_t column) 
          return true;
 
       for (auto* stub : stubs) {
-         if (stub->form_type != dovah::form_type::faction)
+         if (stub->form_type != dovah::form_type::perk)
             continue;
-         if (this->containsFaction(stub))
+         if (this->containsPerk(stub))
             continue;
 
          size_t i = this->_nodes.size();
@@ -106,35 +105,35 @@ Qt::ItemFlags ActorBaseFactionsModel::flags_of(const node_type&, size_t column) 
          this->_nodes.push_back(new node_type{});
          {
             auto* node = this->_nodes.back();
-            node->faction = stub;
-            node->rank    = 0;
+            node->perk = stub;
+            node->rank = 0;
             node->cached.editorID = QString::fromStdString(stub->editorID);
          }
          this->endInsertRows();
       }
       return true;
    }
-   QStringList ActorBaseFactionsModel::mimeTypes() const {
+   QStringList ActorBasePerksModel::mimeTypes() const {
       return QStringList(QString(editor_helpers::form_stub_array_mime_type));
    }
-   Qt::DropActions ActorBaseFactionsModel::supportedDropActions() const {
+   Qt::DropActions ActorBasePerksModel::supportedDropActions() const {
       return Qt::CopyAction;
    }
 #pragma endregion
 
-QModelIndex ActorBaseFactionsModel::create() {
+QModelIndex ActorBasePerksModel::create() {
    auto i = this->_nodes.size();
    this->beginInsertRows({}, i, i);
    this->_nodes.push_back(new node_type{});
    this->endInsertRows();
    return this->index(i, 0, {});
 }
-QModelIndex ActorBaseFactionsModel::overwrite(int row, const node_type& src) {
+QModelIndex ActorBasePerksModel::overwrite(int row, const node_type& src) {
    if (row < 0 || row >= this->_nodes.size())
       return {};
    auto* node = this->_nodes[row];
    *node = src;
-   if (auto* stub = node->faction)
+   if (auto* stub = node->perk)
       node->cached.editorID = QString::fromStdString(stub->editorID);
    else
       node->cached.editorID = "";
@@ -144,19 +143,19 @@ QModelIndex ActorBaseFactionsModel::overwrite(int row, const node_type& src) {
    emit dataChanged(tl, br);
    return tl;
 }
-const ActorBaseFactionsModel::node_type* ActorBaseFactionsModel::item(int row) const {
+const ActorBasePerksModel::node_type* ActorBasePerksModel::item(int row) const {
    if (row < 0 || row >= this->_nodes.size())
       return nullptr;
    return this->_nodes[row];
 }
 
-void ActorBaseFactionsModel::overwriteAllItems(const std::vector<node_type>& src) {
+void ActorBasePerksModel::overwriteAllItems(const std::vector<node_type>& src) {
    this->performReset([this, &src]() {
       size_t size = src.size();
       this->_nodes.resize(size);
       for (size_t i = 0; i < size; ++i) {
          auto* node = this->_nodes[i] = new node_type{ src[i] };
-         if (auto* stub = node->faction)
+         if (auto* stub = node->perk)
             node->cached.editorID = QString::fromStdString(stub->editorID);
       }
    });

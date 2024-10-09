@@ -16,9 +16,9 @@
 #include "blocks/NiGeometry.h"
 #include "blocks/NiGeometryData.h"
 //
+#include "dovah/data/hardcoded_form_ids.h" // for NullTextureSet form ID
 #include "dovah/forms/components/model.h"
 #include "dovah/forms/TextureSet.h"
-#include "dovah/forms/factories/hardcoded.h"
 
 namespace nifDK {
    /*static*/ file_version file_version::from_string(const std::string& s) {
@@ -310,7 +310,7 @@ namespace nifDK {
                   }
 
                   auto* textureset_stub = tex_swap->texture_set.get_form_stub();
-                  if (textureset_stub->formID == dovah::hardcoded_form_ids::NullTextureSet) { // TODO: if it's NullTextureSet
+                  if (textureset_stub->formID == dovah::hardcoded_form_ids::NullTextureSet) {
                      current_block->flags |= block_types::NiAVObject::flag::culled_by_application;
                   } else {
                      auto txst = textureset_stub->load().ptr_cast<dovah::loaded_forms::TextureSet>();

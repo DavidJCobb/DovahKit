@@ -54,7 +54,7 @@ namespace dovah::loaded_forms {
 
          localized_string name; // FULL
          std::vector<relationship> relationships; // XNAM, one subrecord per
-         uint32_t         faction_flags; // DATA
+         uint32_t         faction_flags = 0; // DATA
          form_reference_t prison_marker; // JAIL
          form_reference_t follower_wait_marker; // WAIT
          form_reference_t evidence_chest; // STOL

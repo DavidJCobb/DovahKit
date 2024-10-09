@@ -222,7 +222,7 @@ namespace dovah::loaded_forms {
             float angular_acceleration_rate = 0; // DATA+0x74
             float angular_tolerance = 0; // DATA+0x78
             //
-            float flight_radius;
+            float flight_radius = 0;
 
             union {
                struct {

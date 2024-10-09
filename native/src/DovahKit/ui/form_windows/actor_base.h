@@ -16,6 +16,7 @@ namespace impl {
 class ActorBaseCreatureSoundsModel;
 class ActorBaseTintLayerModel;
 class ActorBaseFactionsModel;
+class ActorBasePerksModel;
 class ActorBaseRelationshipsModel;
 class ActorBaseSkillsModel;
 class DKFormPickerExcludeSingleFormFilter;
@@ -56,6 +57,7 @@ class FormDialogActorBase :
          ActorBaseFactionsModel*       factions         = nullptr;
          FaceBaseHeadPartsModel*       head_parts_base  = nullptr;
          FaceExtraHeadPartsModel*      head_parts_extra = nullptr;
+         ActorBasePerksModel*          perks            = nullptr;
          ActorBaseRelationshipsModel*  relationships    = nullptr;
          ActorBaseSkillsModel*         skills           = nullptr;
       } _models;
@@ -81,6 +83,9 @@ class FormDialogActorBase :
 
       void _pull_faction_to_ui();
       void _push_faction_from_ui();
+
+      void _pull_perk_to_ui();
+      void _push_perk_from_ui();
 
       void _set_creature_sound_inherit_actor(dovah::form_stub* stub); // NOTE: If we can't legally inherit from `stub`, makes no change but still updates UI.
       void _creature_sound_inheritance_changed();

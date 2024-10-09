@@ -124,6 +124,11 @@ namespace dovah::loaded_forms {
          using skill_value_type      = uint8_t;
          using skill_offset_type     = skill_value_type; // negative offsets are not allowed
 
+         struct perk_and_rank {
+            form_reference_t perk;
+            uint8_t          rank = 0;
+         };
+
          struct tint_layer {
             // The Race-side tint layer that we're configuring.
             face_tint_index_type index = 0;
@@ -177,10 +182,10 @@ namespace dovah::loaded_forms {
             mood       mood         = mood::neutral;
             assistance assistance   = assistance::helps_friends_and_allies;
             struct {
-               bool     use_radius = false;
-               uint32_t warn;        // warn targets while they're in this radius                        // at run-time, this is clamped to 0xFFFF and stored as a uint16_t
-               uint32_t warn_attack; // warn targets while they're in this radius; attack if they remain // at run-time, this is clamped to 0xFFFF and stored as a uint16_t
-               uint32_t attack;      // attack targets that enter this radius                            // at run-time, this is clamped to 0xFFFF and stored as a uint16_t
+               bool     use_radius  = false;
+               uint32_t warn        = 0xFFFF; // warn targets while they're in this radius                        // at run-time, this is clamped to 0xFFFF and stored as a uint16_t
+               uint32_t warn_attack = 0xFFFF; // warn targets while they're in this radius; attack if they remain // at run-time, this is clamped to 0xFFFF and stored as a uint16_t
+               uint32_t attack      = 0xFFFF; // attack targets that enter this radius                            // at run-time, this is clamped to 0xFFFF and stored as a uint16_t
             } aggro;
          } ai;
          struct {
@@ -206,12 +211,12 @@ namespace dovah::loaded_forms {
                data_by_skill<skill_value_type> calculated; // DNAM+0x00
                data_by_skill<skill_value_type> offsets;    // DNAM+0x18
             } skills;
-            int16_t  level;              // ABCS+0x08 // this is a multiplier (fixed-point; convert to a float by dividing by 1000) if the PC Level Mult flag is set
+            int16_t  level          = 1; // ABCS+0x08 // this is a multiplier (fixed-point; convert to a float by dividing by 1000) if the PC Level Mult flag is set
             int16_t  calc_min_level = 0; // ABCS+0x0A // applies if the PC Level Mult flag is set
             int16_t  calc_max_level = 0; // ABCS+0x0C // applies if the PC Level Mult flag is set
             int16_t  speed_mult     = 0; // ABCS+0x0E // this is a percentage, i.e. a raw value of 100 means a multiplier of 1
             int16_t  disposition    = 0; // ABCS+0x10
-            uint16_t bleedout_threshold; // ABCS+0x16 // override the Bleedout Default on the actor's CLAS form, if the Bleedout Override actor flag is set
+            uint16_t bleedout_threshold = 0; // ABCS+0x16 // override the Bleedout Default on the actor's CLAS form, if the Bleedout Override actor flag is set
             form_reference_t combat_class; // CNAM
             form_reference_t combat_style; // ZNAM
          } stats;
@@ -226,7 +231,7 @@ namespace dovah::loaded_forms {
          std::vector<faction_membership> faction_memberships; // SNAM[]
          uint8_t geared_up_weapons = 0; // DNAM+0x30 // unused
          form_reference_t gift_filter; // GNAM // a FormList
-         std::vector<form_reference_t> perks;
+         std::vector<perk_and_rank> perks;
          uint8_t sound_level = 0;
          struct {
             float r = 255.0F; // value in the range of [0.0F, 255.0F]... but then why the hell is it encoded as a float?

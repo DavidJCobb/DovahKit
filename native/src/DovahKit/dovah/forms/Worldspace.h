@@ -85,7 +85,7 @@ namespace dovah::loaded_forms {
          form_reference_t music;             // ZNAM
          form_reference_t water_type;        // NAM2
          form_reference_t water_type_lod;    // NAM3
-         float            lod_water_height;  // NAM4
+         float            lod_water_height = 0; // NAM4
          struct {
             float default_land_height  = -2048.0F;
             float default_water_height =     0.0F;

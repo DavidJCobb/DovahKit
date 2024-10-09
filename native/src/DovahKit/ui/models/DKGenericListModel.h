@@ -39,6 +39,12 @@ class DKGenericListModel : public QAbstractItemModel {
 
       QVariant      data_of(const node_type&, Qt::ItemDataRole, size_t column) const;
       Qt::ItemFlags flags_of(const node_type&, size_t column) const;
+
+      // Controls whether the user can drop items into the view generally (as opposed to 
+      // onto a specific item, overwriting that item).
+      bool allow_inbound_drag_and_drop() const {
+         return false;
+      }
    #pragma endregion
 
    private:

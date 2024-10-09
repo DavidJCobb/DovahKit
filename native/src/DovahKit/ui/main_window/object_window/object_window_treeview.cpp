@@ -1,4 +1,5 @@
 #include "./object_window_treeview.h"
+#include <algorithm>
 #include "dovah/form_stub_addenda.h"
 #include "editor/core.h"
 #include "editor/subsystems/form_info_cache/cacheable_traits/model_path.h"
@@ -102,7 +103,7 @@ void ObjectWindowTreeItem::recursiveSort() {
 }
 void ObjectWindowTreeItem::sort() {
    auto& list = this->children;
-   qSort(list.begin(), list.end(), [](const ObjectWindowTreeItem* a, const ObjectWindowTreeItem* b) {
+   std::sort(list.begin(), list.end(), [](const ObjectWindowTreeItem* a, const ObjectWindowTreeItem* b) {
       return a->name.compare(b->name, Qt::CaseInsensitive) < 0;
    });
 }
@@ -344,7 +345,7 @@ void ObjectWindowTreeItem::sort() {
       sorted.reserve(size);
       for (auto* child : list)
          sorted.push_back(child);
-      qSort(sorted.begin(), sorted.end(), [](const item_type* a, const item_type* b) {
+      std::sort(sorted.begin(), sorted.end(), [](const item_type* a, const item_type* b) {
          return a->name.compare(b->name, Qt::CaseInsensitive) < 0;
       });
       //

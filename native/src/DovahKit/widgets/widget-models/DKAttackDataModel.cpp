@@ -152,6 +152,7 @@ QModelIndex DKAttackDataModel::overwrite(int row, const node_type& src) {
    auto tl = this->index(row, 0, {});
    auto br = this->index(row, column_count, {});
    emit dataChanged(tl, br);
+   return tl;
 }
 const DKAttackDataModel::node_type* DKAttackDataModel::item(int row) const {
    if (row < 0 || row >= this->_nodes.size())

@@ -1,4 +1,5 @@
 #include "./DKPapyrusFragmentFunctionModel.h"
+#include <memory> // std::unique_ptr
 #include "dovah/data/papyrus/native_classes.h"
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "dovah/files/pex/parsers/function_collector.h"
@@ -375,7 +376,29 @@ void DKPapyrusFragmentFunctionModel::_update_script_functions(const QModelIndex&
             std::filesystem::path path = "scripts";
             path /= name;
             path.replace_extension("pex");
-            auto file = std::unique_ptr<dovah::bsa_archived_file>(assets.lookup_game_asset(path));
+            //
+            // 10/9/2024: We cannot use `auto` for this next variable without causing MSVC to 
+            //            completely break, apparently as the result of updating Visual Studio 
+            // to version 17.11.5. Using `auto` worked prior to that update. The breakage occurs 
+            // as follows:
+            // 
+            // * All access to member functions of `dovah::bsa_archived_file` e.g. `file->data()` 
+            //   trigger spurious errors claiming that those functions don't exist.
+            // 
+            // * `file.get()->data()` triggers spurious errors claiming that `get` is not a 
+            //   member function of `std::unique_ptr`; ditto for any other member functions on 
+            //   `bsa_archived_file`.
+            // 
+            // * The former error does not generalize: other source files that work with instances 
+            //   of `bsa_archived_file` without using `std::unique_ptr` can invoke its member 
+            //   functions just fine.
+            // 
+            // I can't figure out how to repro this in Godbolt, so I can't report it to Microsoft 
+            // and have no idea what's causing the compiler to have a fucking aneurysm. We just 
+            // have to write the variable declaration and initializer in this ugly way and hope 
+            // they don't somehow break that too.
+            //
+            std::unique_ptr<dovah::bsa_archived_file> file = std::unique_ptr<dovah::bsa_archived_file>(assets.lookup_game_asset(path));
             if (!file)
                return;
 

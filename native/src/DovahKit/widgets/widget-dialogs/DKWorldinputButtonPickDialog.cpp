@@ -31,7 +31,7 @@ DKWorldinputButtonPickDialog::DKWorldinputButtonPickDialog(QWidget* parent) : QD
       constexpr const auto buttons = std::array{
          Qt::MouseButton::LeftButton,
          Qt::MouseButton::RightButton,
-         Qt::MouseButton::MidButton,
+         Qt::MouseButton::MiddleButton,
          Qt::MouseButton::ExtraButton1,
          Qt::MouseButton::ExtraButton2,
          Qt::MouseButton::ExtraButton3,

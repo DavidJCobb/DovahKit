@@ -2160,14 +2160,71 @@
          <property name="title">
           <string>Perks</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_8">
-          <item>
-           <widget class="DKFormListPane" name="perks">
-            <property name="whatsThis">
-             <string>&lt;p&gt;The perks that this actor has.&lt;/p&gt;
-&lt;p&gt;Papyrus can be used to add or remove the player's perks, but not NPCs' perks; those are set in stone. If an NPC needs to be given a perk during play, you'll need to make it so that the NPC always has the perk (by adding it to this list), and then use conditions on the perk's entry points to limit when the perk actually does anything.&lt;/p&gt;</string>
-            </property>
-           </widget>
+         <layout class="QGridLayout" name="gridLayout_33">
+          <item row="0" column="1">
+           <layout class="QVBoxLayout" name="verticalLayout_6">
+            <item>
+             <widget class="QPushButton" name="buttonPerkMoveUp">
+              <property name="text">
+               <string>Move Up</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonPerkMoveDown">
+              <property name="text">
+               <string>Move Down</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="buttonPerkRemove">
+              <property name="text">
+               <string>Remove</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_18">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item row="0" column="0">
+           <widget class="QTableView" name="perks"/>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <layout class="QHBoxLayout" name="horizontalLayout_9">
+            <item>
+             <widget class="DKFormPicker" name="currentPerkForm">
+              <property name="allowNone">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="currentPerkRank">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="minimum">
+               <number>-128</number>
+              </property>
+              <property name="maximum">
+               <number>127</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
@@ -3897,6 +3954,11 @@
   <tabstop>inventory</tabstop>
   <tabstop>spells</tabstop>
   <tabstop>perks</tabstop>
+  <tabstop>buttonPerkMoveUp</tabstop>
+  <tabstop>buttonPerkMoveDown</tabstop>
+  <tabstop>buttonPerkRemove</tabstop>
+  <tabstop>currentPerkForm</tabstop>
+  <tabstop>currentPerkRank</tabstop>
   <tabstop>soundLevel</tabstop>
   <tabstop>inheritSoundsFrom</tabstop>
   <tabstop>buttonCreaSoundAdd</tabstop>
@@ -3952,6 +4014,7 @@
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
   <tabstop>aggroRadii</tabstop>
+  <tabstop>faceTintColorPreset</tabstop>
  </tabstops>
  <resources/>
  <connections/>

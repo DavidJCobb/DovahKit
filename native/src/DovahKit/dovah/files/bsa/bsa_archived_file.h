@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <string>
 #include "../../../helpers/memory.h"
 
@@ -33,13 +34,13 @@ namespace dovah {
             this->shared.size = s;
          }
          
-         inline const void* data() const noexcept {
+         constexpr const void* data() const noexcept {
             const void* d = this->owned.data();
             if (!d)
                d = this->shared.data;
             return d;
          }
-         inline uint64_t size() const noexcept {
+         constexpr uint64_t size() const noexcept {
             if (this->owned.data())
                return this->owned.size();
             return this->shared.size;

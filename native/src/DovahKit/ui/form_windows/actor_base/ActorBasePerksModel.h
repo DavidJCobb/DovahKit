@@ -6,8 +6,8 @@ namespace dovah {
    class form_stub;
 }
 
-struct ActorBaseFactionsModelNode {
-   dovah::form_stub* faction = nullptr;
+struct ActorBasePerksModelNode {
+   dovah::form_stub* perk = nullptr;
    int32_t rank = 0;
 
    struct {
@@ -15,12 +15,12 @@ struct ActorBaseFactionsModelNode {
    } cached;
 };
 
-class ActorBaseFactionsModel : public DKGenericListModel<ActorBaseFactionsModel, ActorBaseFactionsModelNode> {
+class ActorBasePerksModel : public DKGenericListModel<ActorBasePerksModel, ActorBasePerksModelNode> {
    public:
       struct Column {
          Column() = delete;
          enum enumeration : size_t {
-            Faction,
+            Perk,
             Rank,
 
             __COUNT
@@ -29,7 +29,7 @@ class ActorBaseFactionsModel : public DKGenericListModel<ActorBaseFactionsModel,
       static constexpr const size_t column_count = Column::__COUNT; // override
 
    public:
-      ActorBaseFactionsModel(QObject* parent);
+      ActorBasePerksModel(QObject* parent);
 
       using DKGenericListModel::clear;
       using DKGenericListModel::deleteItems;
@@ -57,9 +57,9 @@ class ActorBaseFactionsModel : public DKGenericListModel<ActorBaseFactionsModel,
 
       void overwriteAllItems(const std::vector<node_type>& src);
 
-      inline const bool containsFaction(const dovah::form_stub* stub) const noexcept {
+      inline const bool containsPerk(const dovah::form_stub* stub) const noexcept {
          for (auto* node : this->_nodes)
-            if (node->faction == stub)
+            if (node->perk == stub)
                return true;
          return false;
       }

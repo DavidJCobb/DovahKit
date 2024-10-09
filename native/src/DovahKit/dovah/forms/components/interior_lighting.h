@@ -27,8 +27,8 @@ namespace dovah::loaded_forms::components {
       float   fog_distance_near;
       float   fog_distance_far;
       struct {
-         uint32_t xy;
-         uint32_t z;
+         uint32_t xy = 0;
+         uint32_t z  = 0;
       } rotation;
       float directional_fade  = 1.0F;
       float fog_distance_clip;

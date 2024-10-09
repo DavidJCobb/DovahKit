@@ -1,4 +1,5 @@
 #include "sincos.h"
+#include <utility> // index_sequence and friends
 #include "./cosine.h"
 #include "./sine.h"
 #include "./rotation/unit_conversion.h"

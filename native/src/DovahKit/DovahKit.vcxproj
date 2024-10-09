@@ -743,6 +743,7 @@
     <ClCompile Include="ui\form_windows\actor_action.cpp" />
     <ClCompile Include="ui\form_windows\actor_base.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\ActorBaseFactionsModel.cpp" />
+    <ClCompile Include="ui\form_windows\actor_base\ActorBasePerksModel.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\ActorBaseRelationshipsModel.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\ActorBaseSkillsModel.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\ActorBaseCreatureSoundsModel.cpp" />
@@ -892,6 +893,7 @@
     <ClCompile Include="ui\types\papyrus\property_value.cpp" />
     <ClCompile Include="ui\utils\bind.cpp" />
     <ClCompile Include="ui\utils\DKStyledItemDelegate.cpp" />
+    <ClCompile Include="ui\utils\enable_inbound_drag_and_drop_insertions.cpp" />
     <ClCompile Include="ui\utils\item_indices_to_data.cpp" />
     <ClCompile Include="ui\utils\set_custom_context_menu.cpp" />
     <ClCompile Include="ui\utils\typical_tableview_config.cpp" />
@@ -1334,6 +1336,7 @@
     <QtMoc Include="ui\form_windows\actor_action.h" />
     <QtMoc Include="ui\form_windows\acoustic_space.h" />
     <ClInclude Include="ui\form_windows\actor_base\ActorBaseFactionsModel.h" />
+    <ClInclude Include="ui\form_windows\actor_base\ActorBasePerksModel.h" />
     <ClInclude Include="ui\form_windows\actor_base\ActorBaseRelationshipsModel.h" />
     <QtMoc Include="ui\form_windows\actor_base\ActorBaseSkillsModel.h" />
     <ClInclude Include="ui\form_windows\actor_base\ActorBaseCreatureSoundsModel.h" />
@@ -1411,6 +1414,7 @@
     <QtMoc Include="widgets\widget-models\DKConditionListModel.h" />
     <QtMoc Include="widgets\widget-dialogs\DKConditionEditDialog.h" />
     <QtMoc Include="widgets\DKNavmeshGenerationImportOptionPicker.h" />
+    <ClInclude Include="ui\utils\enable_inbound_drag_and_drop_insertions.h" />
     <ClInclude Include="ui\utils\get_selection.h" />
     <ClInclude Include="ui\utils\item_indices_to_data.h" />
     <ClInclude Include="ui\utils\set_custom_context_menu.h" />

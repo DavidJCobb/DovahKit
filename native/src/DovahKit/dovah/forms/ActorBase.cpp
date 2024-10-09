@@ -110,7 +110,19 @@ namespace dovah::loaded_forms {
             break;
          case template_flag::use_spells:
             this->spells.clone_from(src_actor.spells, *this);
-            copy_form_reference_list(*this, this->perks, src_actor.perks);
+            {  // Perks and ranks
+               const auto& src = src_actor.perks;
+               auto& dst = this->perks;
+
+               for (auto& item : dst)
+                  item.perk.set(*this, nullptr);
+               size_t size = src.size();
+               dst.resize(size);
+               for (size_t i = 0; i < size; ++i) {
+                  _copy_form(dst[i].perk, src[i].perk);
+                  dst[i].rank = src[i].rank;
+               }
+            }
             break;
          case template_flag::use_ai_data:
             {
@@ -235,22 +247,22 @@ namespace dovah::loaded_forms {
             #pragma region Package override lists
             case 'SCOR':
                if (subrecord.read(this->ai.package_override_lists.spectator)) {
-                  intfc.warn_if_ref_is_wrong_type(this->ai.package_override_lists.spectator, form_type::package, subrecord.signature());
+                  intfc.warn_if_ref_is_wrong_type(this->ai.package_override_lists.spectator, form_type::formlist, subrecord.signature());
                }
                break;
             case 'OCOR':
                if (subrecord.read(this->ai.package_override_lists.observe_corpse)) {
-                  intfc.warn_if_ref_is_wrong_type(this->ai.package_override_lists.observe_corpse, form_type::package, subrecord.signature());
+                  intfc.warn_if_ref_is_wrong_type(this->ai.package_override_lists.observe_corpse, form_type::formlist, subrecord.signature());
                }
                break;
             case 'GWOR':
                if (subrecord.read(this->ai.package_override_lists.guard_warn)) {
-                  intfc.warn_if_ref_is_wrong_type(this->ai.package_override_lists.guard_warn, form_type::package, subrecord.signature());
+                  intfc.warn_if_ref_is_wrong_type(this->ai.package_override_lists.guard_warn, form_type::formlist, subrecord.signature());
                }
                break;
             case 'ECOR':
                if (subrecord.read(this->ai.package_override_lists.combat)) {
-                  intfc.warn_if_ref_is_wrong_type(this->ai.package_override_lists.combat, form_type::package, subrecord.signature());
+                  intfc.warn_if_ref_is_wrong_type(this->ai.package_override_lists.combat, form_type::formlist, subrecord.signature());
                }
                break;
             #pragma endregion
@@ -264,8 +276,12 @@ namespace dovah::loaded_forms {
                break;
             case 'PRKR':
                if (subrecord.read(form_id)) {
-                  this->perks.push_back(form_id);
                   intfc.warn_if_ref_is_wrong_type(form_id, form_type::perk, subrecord.signature());
+
+                  auto& entry = this->perks.emplace_back();
+                  entry.perk.unmanaged_set(form_id.get_form_stub());
+                  subrecord.read(entry.rank);
+                  subrecord.skip_bytes(3);
                }
                break;
             #pragma endregion
@@ -428,6 +444,7 @@ namespace dovah::loaded_forms {
                   subrecord.skip_bytes(2);
                   subrecord.unchecked_read(this->far_away.distance);
                   subrecord.unchecked_read(this->geared_up_weapons);
+                  subrecord.skip_bytes(3);
                }
                break;
             case 'FNAM':
@@ -502,7 +519,7 @@ namespace dovah::loaded_forms {
                break;
             case 'DPLT':
                if (subrecord.read(this->ai.default_package_list)) {
-                  intfc.warn_if_ref_is_wrong_type(this->ai.default_package_list, form_type::package, subrecord.signature());
+                  intfc.warn_if_ref_is_wrong_type(this->ai.default_package_list, form_type::formlist, subrecord.signature());
                }
                break;
             case 'FTST':
@@ -891,7 +908,15 @@ namespace dovah::loaded_forms {
       }
       copy->geared_up_weapons = this->geared_up_weapons;
       copy->gift_filter.set(*copy, this->gift_filter);
-      copy_form_reference_list(*copy, copy->perks, this->perks);
+      {
+         auto& src = this->perks;
+         auto& dst = copy->perks;
+         dst.resize(src.size());
+         for (size_t i = 0; i < src.size(); ++i) {
+            dst[i].perk.set(*copy, src[i].perk);
+            dst[i].rank = src[i].rank;
+         }
+      }
       copy->sound_level = this->sound_level;
       copy->texture_lighting = this->texture_lighting;
       copy->tint_layers = this->tint_layers;
@@ -962,7 +987,11 @@ namespace dovah::loaded_forms {
             PRKZ.close();
          }
          for (const auto& entry : this->perks) {
-            record.write_formID_subrecord('PRKR', entry);
+            auto& PRKR = record.open_next_subrecord('PRKR');
+            PRKR.write(entry.perk);
+            PRKR.write(entry.rank);
+            PRKR.skip_bytes(3);
+            PRKR.close();
          }
       }
       this->inventory.save(record, intfc);
@@ -977,15 +1006,8 @@ namespace dovah::loaded_forms {
          AIDT.write(this->ai.aggro.use_radius);  // 06
          AIDT.skip_bytes(1);                     // 07
          AIDT.write(this->ai.aggro.warn);        // 08
-         if (record.version() < 0x21) {
-            AIDT.write(this->ai.aggro.warn_attack); // 08
-            AIDT.write(this->ai.aggro.warn_attack); // 0C // unused
-            AIDT.write(this->ai.aggro.attack);      // 10
-         } else {
-            AIDT.write(this->ai.aggro.warn);        // 08
-            AIDT.write(this->ai.aggro.warn_attack); // 0C
-            AIDT.write(this->ai.aggro.attack);      // 10
-         }
+         AIDT.write(this->ai.aggro.warn_attack); // 0C
+         AIDT.write(this->ai.aggro.attack);      // 10
          AIDT.close();
       }
       for (const auto& entry : this->ai.package_list) {
@@ -1019,6 +1041,7 @@ namespace dovah::loaded_forms {
          DNAM.skip_bytes(2);
          DNAM.write(this->far_away.distance);
          DNAM.write(this->geared_up_weapons);
+         DNAM.skip_bytes(3);
          DNAM.close();
       }
       for (const auto& entry : this->facegen.head_parts) {
@@ -1072,7 +1095,7 @@ namespace dovah::loaded_forms {
             NAM9.write(f);
          NAM9.close();
       }
-      {
+      if (!this->facegen.morphs.all_indexed_morphs_zeroed()) {
          auto& NAMA = record.open_next_subrecord('NAMA');
          for (auto v : this->facegen.morphs.indices)
             NAMA.write(v);
@@ -1161,7 +1184,18 @@ namespace dovah::loaded_forms {
          }
       }
       this->gift_filter.clear_if(*this, other);
-      remove_form_from_reference_list(this->perks,  other, *this);
+      {
+         bool  any = false;
+         auto& dst = this->perks;
+         for (auto& entry : dst) {
+            entry.perk.clear_if(*this, other);
+            if (entry.perk == nullptr)
+               any = true;
+         }
+         if (any) {
+            std::erase_if(dst, [](const auto& entry) -> bool { return entry.perk == nullptr; });
+         }
+      }
       this->voicetype.clear_if(*this, other);
       this->skin.clear_if(*this, other);
    }
@@ -1249,7 +1283,13 @@ namespace dovah::loaded_forms {
       }
       this->geared_up_weapons = 0;
       this->gift_filter.set(*this, nullptr);
-      clear_form_reference_list(this->perks, *this);
+      {
+         auto& dst = this->perks;
+         for (size_t i = 0; i < dst.size(); ++i) {
+            dst[i].perk.set(*this, nullptr);
+         }
+         dst.clear();
+      }
       this->sound_level = 0;
       this->texture_lighting = {};
       this->tint_layers.clear();

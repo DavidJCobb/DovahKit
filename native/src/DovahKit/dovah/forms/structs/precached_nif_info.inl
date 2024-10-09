@@ -1,5 +1,6 @@
 #pragma once
 #include "./precached_nif_info.h"
+#include <string>
 #include "helpers/hashing/crc32.h"
 
 namespace dovah::loaded_forms {

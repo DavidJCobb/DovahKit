@@ -493,6 +493,10 @@ namespace dovah::loaded_forms {
                      break;
                   case 'INDX':
                      //
+                     // A single INDX, whose value is always zero, annotates both of the now-unused body 
+                     // texture models (*.egt), appearing just before the MODL. Aside from that, INDX is 
+                     // used for HeadParts.
+                     //
                      // INDX is the index of each HeadPart in the list that it came from... but it's not 
                      // actually used anywhere. The loader reads it but never uses the variable it reads 
                      // into; and the CK's save code just writes, for each HeadPart, its index in the 
@@ -1317,7 +1321,7 @@ namespace dovah::loaded_forms {
       FULL.write(this->name);
       FULL.close();
 
-      auto& DESC = record.open_next_subrecord('FULL');
+      auto& DESC = record.open_next_subrecord('DESC');
       DESC.write(this->description);
       DESC.close();
 
@@ -1394,10 +1398,10 @@ namespace dovah::loaded_forms {
          this->by_sex.female.skeleton_nif.save(record, intfc, 'ANAM', 'MODT');
       }
       {
-         constexpr const auto types = std::array{ 'WALK', 'RUN1', 'SNEK', 'BLD0', 'SWIM' };
+         constexpr const auto types = std::array{ 'BLDO', 'RUN1', 'SNEK', 'SWIM', 'WALK' };
          for (uint32_t type : types) {
             auto& MTNM = record.open_next_subrecord('MTNM');
-            MTNM.write(types);
+            MTNM.write_signature(type);
             MTNM.close();
          }
       }
@@ -1439,10 +1443,20 @@ namespace dovah::loaded_forms {
          record.open_next_subrecord('NAM1').close();
          {
             record.open_next_subrecord('MNAM').close();
+            {  // jank
+               auto& INDX = record.open_next_subrecord('INDX');
+               INDX.write((uint32_t)0);
+               INDX.close();
+            }
             this->by_sex.male.lighting_model.save(record, intfc, 'MODL', 'MODT');
          }
          {
             record.open_next_subrecord('FNAM').close();
+            {  // jank
+               auto& INDX = record.open_next_subrecord('INDX');
+               INDX.write((uint32_t)0);
+               INDX.close();
+            }
             this->by_sex.female.lighting_model.save(record, intfc, 'MODL', 'MODT');
          }
       }
@@ -1466,7 +1480,7 @@ namespace dovah::loaded_forms {
       record.write_formID_subrecord('NAM5', this->impact_data_set, true);
       record.write_formID_subrecord('NAM7', this->decapitation_effect, true);
       record.write_formID_subrecord('ONAM', this->container_sounds.open, true);
-      record.write_formID_subrecord('LNAM', this->container_sounds.open, true);
+      record.write_formID_subrecord('LNAM', this->container_sounds.close, true);
       for (size_t i = 0; i < this->biped_object_info.names.size(); ++i) {
          auto& name = this->biped_object_info.names[i];
          if (name.size() > max_biped_object_name_length) {
@@ -1553,7 +1567,7 @@ namespace dovah::loaded_forms {
             {
                auto& list = head.hair_colors;
                if (!list.empty()) {
-                  auto signature = (s == sex::male) ? 'ACHM' : 'ACHF';
+                  auto signature = (s == sex::male) ? 'AHCM' : 'AHCF';
                   for (auto& item : list)
                      record.write_formID_subrecord(signature, item, true);
                }

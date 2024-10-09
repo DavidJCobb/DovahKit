@@ -1,4 +1,5 @@
 #include "./stricontains_ascii.h"
+#include <string> // std::string::npos
 #include "./strieq_ascii.h"
 
 namespace cobb {

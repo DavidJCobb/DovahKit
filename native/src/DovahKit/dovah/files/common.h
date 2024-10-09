@@ -76,9 +76,9 @@ namespace dovah {
       using type_t = tes_file_group_type;
       //
       uint32_t signature = 0; // should always be 'GRUP'
-      uint32_t size;
-      uint32_t label;
-      type_t   type;
+      uint32_t size  = 0;
+      uint32_t label = 0;
+      type_t   type  = type_t::none;
       union {
          struct {
             uint8_t vc_day;
@@ -86,9 +86,9 @@ namespace dovah {
             uint8_t vc_last_editor;
             uint8_t vc_current_editor;
          };
-         uint32_t version_control;
+         uint32_t version_control = 0;
       };
-      uint32_t unknown; // TODO: this can be 1 for some interior CELL groups; why?
+      uint32_t unknown = 0; // TODO: this can be 1 for some interior CELL groups; why?
       //
       static constexpr uint32_t uninitialized_unknown = 0xCCCCCCCC; // seen in Bethesda content; MSVC can use this for uninitialized memory, especially in Debug
       //

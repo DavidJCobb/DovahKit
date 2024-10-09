@@ -25,7 +25,7 @@ namespace dovah::loaded_forms::structs {
                constexpr ~indexed_morph_list() { list.~array(); }
 
             protected:
-               std::array<value_type, 4> list = { 0, no_morph_index, 0, 0 };
+               std::array<value_type, 4> list = { 0, 0, 0, 0 };
 
                using array_type = decltype(list);
 
@@ -117,6 +117,12 @@ namespace dovah::loaded_forms::structs {
          indexed_morph_list indices;
          slider_list        sliders;
 
+         constexpr bool all_indexed_morphs_zeroed() const noexcept {
+            for (auto v : this->indices)
+               if (v)
+                  return false;
+            return true;
+         }
          constexpr bool all_sliders_zeroed() const noexcept {
             for (auto f : this->sliders)
                if (f)

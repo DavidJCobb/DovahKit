@@ -27,6 +27,7 @@ namespace dovah::loaded_forms {
                   subrecord.unchecked_read(this->data.flags);
                   subrecord.unchecked_read(this->data.category);
                   subrecord.unchecked_read(this->data.subtype);
+                  this->subtype = 0; // clear SNAM if DATA loads after it
                }
                break;
             case 'FULL':

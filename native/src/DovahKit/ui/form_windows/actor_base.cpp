@@ -6,6 +6,7 @@
 #include "dovah/core.h"
 #include "dovah/exceptions/actor_base_template_is_cyclical.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/enable_inbound_drag_and_drop_insertions.h"
 #include "ui/utils/item_indices_to_data.h"
 #include "ui/utils/set_range.h"
 #include "ui/utils/set_tableview_column_flex.h"
@@ -30,6 +31,7 @@
 
 #include "./actor_base/ActorBaseCreatureSoundsModel.h"
 #include "./actor_base/ActorBaseFactionsModel.h"
+#include "./actor_base/ActorBasePerksModel.h"
 #include "./actor_base/ActorBaseRelationshipsModel.h"
 #include "./actor_base/ActorBaseSkillsModel.h"
 #include "./actor_base/ActorBaseTintLayerModel.h"
@@ -292,7 +294,7 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
          auto* model  = this->_models.factions = new ActorBaseFactionsModel(this);
          widget->setModel(model);
          this->_filters.crime_faction->setModel(model);
-
+         ui::enable_inbound_drag_and_drop_insertions(widget);
          ui::typical_tableview_config(widget);
          widget->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
          ui::set_tableview_column_flex(widget, [](DKHeaderView& header, const QFontMetrics& metrics) {
@@ -420,7 +422,39 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
          dovah::form_type::leveled_spell,
          dovah::form_type::shout,
       });
-      this->ui.perks->setAllowedFormTypes({ dovah::form_type::perk });
+      #pragma region Perks
+         {
+            auto* widget = this->ui.perks;
+            auto* model  = this->_models.perks = new ActorBasePerksModel(this);
+            widget->setModel(model);
+            ui::enable_inbound_drag_and_drop_insertions(widget);
+            ui::typical_tableview_config(widget);
+            widget->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+            ui::set_tableview_column_flex(widget, [](DKHeaderView& header, const QFontMetrics& metrics) {
+               header.setColumnFlex(ActorBasePerksModel::Column::Perk, 1, 0);
+               header.setColumnFlex(ActorBasePerksModel::Column::Rank, 0, 0, metrics.boundingRect("99999").width() * 1.5F + 4);
+            });
+
+            auto* sel_model = widget->selectionModel();
+            QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &FormDialogActorBase::_pull_perk_to_ui);
+            
+            QObject::connect(this->ui.buttonPerkRemove, &QPushButton::clicked, this, [this, model, sel_model]() {
+               size_t row;
+               {
+                  auto rows = sel_model->selectedRows();
+                  if (rows.isEmpty())
+                     return;
+                  row = rows[0].row();
+               }
+               model->deleteItems(row, 1);
+            });
+         }
+         this->ui.currentPerkForm->setAllowedFormType(dovah::form_type::perk);
+         ui::set_range<int8_t>(this->ui.currentPerkRank);
+
+         QObject::connect(this->ui.currentPerkForm, &DKFormPicker::formChanged, this, &FormDialogActorBase::_push_perk_from_ui);
+         QObject::connect(this->ui.currentPerkRank, QOverload<int>::of(&QSpinBox::valueChanged), this, &FormDialogActorBase::_push_perk_from_ui);
+      #pragma endregion
    #pragma endregion
    #pragma region Sounds tab
       ui::item_indices_to_data(this->ui.soundLevel);
@@ -538,11 +572,7 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
          auto* view  = this->ui.baseHeadPartsTable;
          auto* model = this->_models.head_parts_base = new FaceBaseHeadPartsModel(this);
          view->setModel(model);
-         view->setAcceptDrops(true);
-         view->setDragDropMode(QAbstractItemView::DragDropMode::DropOnly);
-         view->setDragDropOverwriteMode(false);
-         view->setDropIndicatorShown(true);
-
+         ui::enable_inbound_drag_and_drop_insertions(view);
          ui::typical_tableview_config(view);
          view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
          ui::set_tableview_column_flex(view, [](DKHeaderView& header, const QFontMetrics& metrics) {
@@ -593,11 +623,7 @@ FormDialogActorBase::FormDialogActorBase(dovah::form_stub& stub, QWidget* parent
          auto* view  = this->ui.additionalHeadParts;
          auto* model = this->_models.head_parts_extra = new FaceExtraHeadPartsModel(this);
          view->setModel(model);
-         view->setAcceptDrops(true);
-         view->setDragDropMode(QAbstractItemView::DragDropMode::DropOnly);
-         view->setDragDropOverwriteMode(false);
-         view->setDropIndicatorShown(true);
-
+         ui::enable_inbound_drag_and_drop_insertions(view);
          ui::typical_tableview_config(view);
          view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
          ui::set_tableview_column_flex(view, [](DKHeaderView& header, const QFontMetrics& metrics) {
@@ -851,8 +877,11 @@ void FormDialogActorBase::_load_impl() {
 
          std::vector<ActorBaseFactionsModelNode> nodes;
          for (const auto& entry : working.faction_memberships) {
+            auto* stub = entry.faction.get_form_stub();
+            if (!stub || stub->form_type != dovah::form_type::faction)
+               continue;
             auto& dst = nodes.emplace_back();
-            dst.faction = entry.faction.get_form_stub();
+            dst.faction = stub;
             dst.rank    = entry.rank;
          }
          model->overwriteAllItems(nodes);
@@ -902,7 +931,24 @@ void FormDialogActorBase::_load_impl() {
    #pragma endregion
    #pragma region Magic and Perks tab
       this->ui.spells->pullStubs(working.spells.forms);
-      this->ui.perks->pullStubs(working.perks);
+      #pragma region Perks
+         {
+            auto* model = this->_models.perks;
+            model->clear();
+
+            std::vector<ActorBasePerksModelNode> nodes;
+            for (const auto& entry : working.perks) {
+               auto* stub = entry.perk.get_form_stub();
+               if (!stub || stub->form_type != dovah::form_type::perk)
+                  continue;
+               auto& dst = nodes.emplace_back();
+               dst.perk = stub;
+               dst.rank = entry.rank;
+            }
+            model->overwriteAllItems(nodes);
+         }
+         this->_pull_perk_to_ui();
+      #pragma endregion
    #pragma endregion
    #pragma region Sounds tab
       this->_set_creature_sound_inherit_actor(working.creature_sounds.inherits_from());
@@ -1087,8 +1133,28 @@ void FormDialogActorBase::_save_impl() {
          this->ui.inventory->commitTo(working.inventory, working);
       #pragma endregion
       #pragma region Magic and Perks
-         this->ui.perks->commitStubs(working.perks, working);
          this->ui.spells->commitStubs(working.spells.forms, working);
+         #pragma region Perks
+            {
+               auto* model = this->_models.perks;
+               auto& dst   = working.perks;
+               for (auto& item : dst)
+                  item.perk.set(working, nullptr);
+               dst.clear();
+
+               size_t size = model->rowCount();
+               for (size_t i = 0; i < size; ++i) {
+                  auto* src_item = model->item(i);
+                  if (!src_item)
+                     break;
+                  if (!src_item->perk)
+                     continue;
+                  auto& dst_item = dst.emplace_back();
+                  dst_item.rank = src_item->rank;
+                  write_form_ref(dst_item.perk, src_item->perk);
+               }
+            }
+         #pragma endregion
       #pragma endregion
       #pragma region Sounds
       {
@@ -1152,8 +1218,30 @@ void FormDialogActorBase::_save_impl() {
       #pragma endregion
       #pragma region Face Morphs
          //
-         // All data is bound, widget-to-field, and live-updated.
+         // All data is bound, widget-to-field, and live-updated. We do want to make one 
+         // slight correction, though.
          //
+         {
+            bool all     = true;
+            bool nonzero = false;
+            for (auto v : working.facegen.morphs.indices) {
+               if (v != 0) {
+                  nonzero = true;
+                  if (v != -1) {
+                     all = false;
+                     break;
+                  }
+               }
+            }
+            if (all && nonzero) {
+               //
+               // If all morph indices are None, set them to 0 instead of -1. Why? The 
+               // CK skips serializing NPC_/NAMA if the indices are all zero, but not 
+               // if they're all zero-or-negative.
+               //
+               working.facegen.morphs.indices = {};
+            }
+         }
       #pragma endregion
    #pragma endregion
 }
@@ -1488,8 +1576,11 @@ void FormDialogActorBase::_push_data_to_ui(loaded_form_type::template_flag::type
 
                std::vector<ActorBaseFactionsModelNode> nodes;
                for (const auto& entry : working.faction_memberships) {
+                  auto* stub = entry.faction.get_form_stub();
+                  if (!stub || stub->form_type != dovah::form_type::faction)
+                     continue;
                   auto& dst = nodes.emplace_back();
-                  dst.faction = entry.faction.get_form_stub();
+                  dst.faction = stub;
                   dst.rank    = entry.rank;
                }
                model->overwriteAllItems(nodes);
@@ -1500,7 +1591,28 @@ void FormDialogActorBase::_push_data_to_ui(loaded_form_type::template_flag::type
          break;
       case template_flag::use_spells:
          this->ui.spells->pullStubs(working.spells.forms);
-         this->ui.perks->pullStubs(working.perks);
+         {
+            const auto blockers = std::array{
+               QSignalBlocker(this->ui.currentPerkForm),
+               QSignalBlocker(this->ui.currentPerkRank),
+            };
+            {
+               auto* model = this->_models.perks;
+               model->clear();
+
+               std::vector<ActorBasePerksModelNode> nodes;
+               for (const auto& entry : working.perks) {
+                  auto* stub = entry.perk.get_form_stub();
+                  if (!stub || stub->form_type != dovah::form_type::perk)
+                     continue;
+                  auto& dst = nodes.emplace_back();
+                  dst.perk = stub;
+                  dst.rank = entry.rank;
+               }
+               model->overwriteAllItems(nodes);
+            }
+            this->_pull_perk_to_ui();
+         }
          break;
       case template_flag::use_ai_data:
          {
@@ -1765,6 +1877,58 @@ void FormDialogActorBase::_push_faction_from_ui() {
    auto overwrite = *node;
    overwrite.faction = this->ui.currentFactionForm->formStub();
    overwrite.rank    = this->ui.currentFactionRank->value();
+   model->overwrite(row, overwrite);
+}
+
+void FormDialogActorBase::_pull_perk_to_ui() {
+   auto* widget = this->ui.perks;
+   auto* model = this->_models.perks;
+   auto* sel_model = widget->selectionModel();
+
+   const ActorBasePerksModelNode* node = nullptr;
+   {
+      auto rows = sel_model->selectedRows();
+      if (!rows.isEmpty())
+         node = model->item(rows[0].row());
+   }
+
+   const auto blockers = std::array{
+      QSignalBlocker(this->ui.currentPerkForm),
+      QSignalBlocker(this->ui.currentPerkRank),
+   };
+
+   this->ui.currentPerkForm->setEnabled(node != nullptr);
+   this->ui.currentPerkRank->setEnabled(node != nullptr);
+   if (!node) {
+      this->ui.currentPerkForm->setAllowNone(true);
+      this->ui.currentPerkForm->setFormStub(nullptr);
+      this->ui.currentPerkRank->setValue(-1);
+      return;
+   }
+   this->ui.currentPerkForm->setAllowNone(false);
+   this->ui.currentPerkForm->setFormStub(node->perk);
+   this->ui.currentPerkRank->setValue(node->rank);
+}
+void FormDialogActorBase::_push_perk_from_ui() {
+   auto* widget = this->ui.perks;
+   auto* model = this->_models.perks;
+   auto* sel_model = widget->selectionModel();
+
+   const ActorBasePerksModelNode* node = nullptr;
+   size_t row;
+   {
+      auto rows = sel_model->selectedRows();
+      if (!rows.isEmpty()) {
+         row = rows[0].row();
+         node = model->item(row);
+      }
+   }
+   if (!node)
+      return;
+
+   auto overwrite = *node;
+   overwrite.perk = this->ui.currentPerkForm->formStub();
+   overwrite.rank = this->ui.currentPerkRank->value();
    model->overwrite(row, overwrite);
 }
 

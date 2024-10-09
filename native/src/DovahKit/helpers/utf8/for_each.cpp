@@ -1,5 +1,6 @@
 #include "./for_each.h"
 #include <array>
+#include <string>
 
 static_assert(
    []() -> bool {

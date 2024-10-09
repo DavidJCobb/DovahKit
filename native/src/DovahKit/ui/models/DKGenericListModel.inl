@@ -175,8 +175,11 @@ QModelIndex CLASS_NAME::qmi_for_node(const node_type& node, size_t column) const
 
       CLASS_TEMPLATE_PARAMS
       Qt::ItemFlags CLASS_NAME::flags(const QModelIndex& index) const {
-         if (!index.isValid())
+         if (!index.isValid()) {
+            if (((const self_type*)this)->allow_inbound_drag_and_drop())
+               return Qt::ItemFlag::ItemIsDropEnabled;
             return {};
+         }
          const auto* node = node_for_qmi(index);
          if (!node)
             return {};

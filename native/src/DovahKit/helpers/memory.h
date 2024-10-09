@@ -13,7 +13,7 @@ namespace cobb {
          uint32_t _capacity = 0;
       public:
          void clear(); // checks whether (data) is nullptr
-         inline void* raw() { return this->_data; }
+         constexpr void* raw() { return this->_data; }
          void shrink_to_fit();
          void resize(uint32_t bytes);
          void reserve(uint32_t bytes);
@@ -21,16 +21,16 @@ namespace cobb {
             this->reserve(this->size() + bytes);
          }
 
-         inline uint8_t* data() const noexcept { return (uint8_t*)this->_data; }
+         constexpr uint8_t* data() const noexcept { return (uint8_t*)this->_data; }
 
-         inline uint32_t size() const noexcept { return this->_size; }
-         inline uint32_t capacity() const noexcept { return this->_capacity; }
-         inline bool empty() const noexcept {
+         constexpr uint32_t size() const noexcept { return this->_size; }
+         constexpr uint32_t capacity() const noexcept { return this->_capacity; }
+         constexpr bool empty() const noexcept {
             return this->_data == nullptr && !this->_size;
          }
 
-         inline void* operator->() { return this->_data; }
-         inline void* operator*() { return this->_data; }
+         constexpr void* operator->() { return this->_data; }
+         constexpr void* operator*() { return this->_data; }
 
          inline operator char*() { return (char*)this->_data; }
          inline operator void*() { return this->_data; }

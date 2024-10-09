@@ -69,8 +69,8 @@ namespace dovah::loaded_forms {
          };
 
          struct max_height_data_t {
-            float offset;
-            std::array<std::array<int8_t, 32>, 32> grid;
+            float offset  = 0.0F;
+            std::array<std::array<int8_t, 32>, 32> grid = { 0 };
             bool  present = false;
             //
             void clear() {
