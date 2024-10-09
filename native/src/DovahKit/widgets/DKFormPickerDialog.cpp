@@ -17,14 +17,14 @@ DKFormPickerDialog::DKFormPickerDialog(QWidget* parent) : QDialog(parent) {
 
    this->setLayout(layout);
    {
-      auto* sublayout = new QHBoxLayout(this);
+      auto* sublayout = new QHBoxLayout();
+      layout->addItem(sublayout);
 
       auto* label = new QLabel(tr("Filter:"), this);
       label->setBuddy(this->_subwidgets.filter);
 
       sublayout->addWidget(label);
       sublayout->addWidget(this->_subwidgets.filter);
-      layout->addItem(sublayout);
    }
    layout->addWidget(this->_subwidgets.table);
    layout->addWidget(buttonOK);
@@ -72,9 +72,7 @@ DKFormPickerDialog::DKFormPickerDialog(QWidget* parent) : QDialog(parent) {
       this->_model->setFilterString(text);
    });
 
-   QObject::connect(buttonOK, &QPushButton::clicked, this, [this]() {
-      this->accept();
-   });
+   QObject::connect(buttonOK, &QPushButton::clicked, this, &QDialog::accept);
 }
 
 void DKFormPickerDialog::setAllowedFormTypes(QList<dovah::form_type> ft) noexcept {
@@ -150,6 +148,14 @@ void DKFormPickerDialog::_updateColumnVisibility() {
 }
 
 /*virtual*/ void DKFormPickerDialog::showEvent(QShowEvent* event) /*override*/ {
+   #if _DEBUG
+      if (this->_properties.allowed_form_types.empty()) {
+         qDebug(
+            "WARNING: DKFormPickerDialog being shown with no form type restrictions. For Skyrim.esm it'll end up iterating over 200,000 forms!\n"
+            "         If you're using a custom filter, that still has to run on 200K forms. Set a form type restriction too!!!"
+         );
+      }
+   #endif
    this->_updateColumnVisibility();
    this->_model->setUpdatesEnabled(true);
 }

@@ -150,7 +150,7 @@ namespace ui::impl::DKFormPicker {
    #pragma endregion
 
    #pragma region Model
-      Model::Model(QObject* parent) {
+      Model::Model(QObject* parent) : QAbstractItemModel(parent) {
          QObject::connect(&this->_ongoing_fill.timer, &QTimer::timeout, this, [this]() {
             this->fetchMore({});
          });

@@ -4,11 +4,13 @@
 
 #include <bitset>
 #include "dovah/data/dialogue/topic_subtype.h"
+#include "dovah/form_stubs/helpers/for_each_child_form.h"
 #include "dovah/form_stubs/helpers/for_each_dialogue_branch_topic.h"
 #include "dovah/form_stubs/helpers/for_each_quest_topic.h"
 #include "dovah/form_stubs/helpers/get_dialogue_branch_quest.h"
 #include "dovah/form_stubs/helpers/get_dialogue_topic_branch.h"
 #include "dovah/form_stubs/helpers/get_dialogue_topic_quest.h"
+#include "dovah/forms/TopicInfo.h"
 
 FormDialogTopic::FormDialogTopic(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
@@ -79,7 +81,47 @@ void FormDialogTopic::_load_impl() {
       this->form->data.category = dfn.category;
       this->form->data.subtype  = i;
    });
-   {
+   if (working.subtype == 'IDAT') {
+      //
+      // This topic contains SharedInfos. If any are in use by other Infos, then disallow changing 
+      // the subtype.
+      //
+      dovah::form_stub_helpers::for_each_child_form(&working.stub, [this](dovah::form_stub* child) -> bool {
+         if (child->form_type != dovah::form_type::topic_info)
+            return false;
+
+         for (const auto& pair : child->inbound) {
+            auto* other = pair.second.other;
+            if (!other || other->form_type != dovah::form_type::topic_info)
+               continue;
+
+            auto loaded = other->load().ptr_cast<dovah::loaded_forms::TopicInfo>();
+            if (!loaded)
+               continue;
+            if (loaded->use_shared_info.get_form_stub() == child) {
+               this->_any_shared_infos_in_use = true;
+               return true;
+            }
+         }
+         return false;
+      });
+      if (this->_any_shared_infos_in_use) {
+         constexpr const auto* info = dovah::dialogue::topic_subtype_by_signature('IDAT');
+         static_assert(info != nullptr);
+         //
+         // Disable the subtype drop-down, and set its initial selection.
+         //
+         auto*      widget  = this->ui.subtype;
+         const auto blocker = QSignalBlocker(widget);
+         widget->setDisabled(true);
+         widget->setCurrentIndex(widget->findData(dovah::dialogue::topic_subtype_index(*info)));
+      }
+   }
+   if (!this->_any_shared_infos_in_use) {
+      //
+      // If this topic is in the wrong category for its subtype, then change its subtype to something 
+      // appropriate.
+      //
       auto* dfn = dovah::dialogue::topic_subtype_by_signature(working.subtype);
       if (dfn) {
          this->_initial_category = dfn->category;

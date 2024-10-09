@@ -21,6 +21,7 @@ class FormDialogTopic :
       struct {
          std::vector<dovah::form_stub*> sibling_topics;
       } _subtypes;
+      bool _any_shared_infos_in_use = false;
       
       virtual void _load_impl() override;
       virtual void _save_impl() override;

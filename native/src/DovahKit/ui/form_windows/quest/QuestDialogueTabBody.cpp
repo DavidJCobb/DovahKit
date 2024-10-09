@@ -251,6 +251,9 @@ QuestDialogueTabBody::QuestDialogueTabBody(QWidget* parent) : QWidget(parent) {
             bool has_datastore = this->datastore();
             bool has_item      = this->selected_topic();
             cm.update_enable_states(has_datastore, has_item);
+            if (has_item && !this->_can_delete_selected_topic()) {
+               cm.actions.remove->setEnabled(false);
+            }
          });
       }
    }
@@ -382,6 +385,11 @@ void QuestDialogueTabBody::_topic_selection_changed() {
    this->ui.buttonTopicEdit->setEnabled(stub_is_valid);
    this->ui.buttonTopicDelete->setEnabled(stub_is_valid);
    this->ui.buttonInfoNew->setEnabled(stub_is_valid);
+   if (stub_is_valid) {
+      this->ui.buttonTopicDelete->setEnabled(this->_can_delete_selected_topic());
+   } else {
+      this->ui.buttonTopicDelete->setEnabled(false);
+   }
 
    this->_models.infos->setRootTopic(stub);
    _reset_selection_of(this->ui.infos);
@@ -395,6 +403,23 @@ void QuestDialogueTabBody::_info_selection_changed() {
    this->ui.buttonInfoMoveUp->setEnabled(stub_is_valid);
    this->ui.buttonInfoMoveDown->setEnabled(stub_is_valid);
    this->ui.buttonInfoDelete->setEnabled(stub_is_valid);
+}
+
+bool QuestDialogueTabBody::_can_delete_selected_topic() const {
+   auto* view = this->ui.topics;
+   if (view->model() != this->_models.topics.branched)
+      return true;
+
+   auto  rows = view->selectionModel()->selectedRows();
+   if (rows.isEmpty())
+      return false;
+   auto* node = this->_models.topics.branched->node(rows[0].row());
+   if (!node)
+      return false;
+
+   if (node->parent && node == node->parent->starting_topic)
+      return false;
+   return true;
 }
 
 dovah::form_stub* QuestDialogueTabBody::_quest() const {
@@ -575,6 +600,8 @@ dovah::form_stub* QuestDialogueTabBody::_spawn_info(dovah::form_stub* topic) {
       void QuestDialogueTabBody::_topic_button_delete() {
          auto* stub = selected_topic();
          if (!stub)
+            return;
+         if (!this->_can_delete_selected_topic())
             return;
          DovahKitCore::get().delete_form(*stub, this);
       }

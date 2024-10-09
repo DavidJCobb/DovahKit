@@ -65,6 +65,8 @@ class QuestDialogueTabBody : public QWidget {
       void _topic_selection_changed();
       void _info_selection_changed();
 
+      bool _can_delete_selected_topic() const;
+
       dovah::form_stub* _quest() const;
 
       // These JUST create and configure the new forms; they don't do anything within the UI.

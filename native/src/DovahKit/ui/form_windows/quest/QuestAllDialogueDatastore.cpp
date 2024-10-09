@@ -685,6 +685,7 @@
       auto* addenda = topic.stub->addenda;
       if (!addenda) {
          assert(src_size == 0 && "If QuestAllDialogueDatastore has INFOs in a DIAL, but the DIAL has no addenda, then something failed to properly maintain the DIAL's ordered-child list.");
+         addenda = &topic.stub->get_or_create_addenda();
       }
       
       auto&  dst_list = addenda->ordered_children;
@@ -1016,15 +1017,17 @@
             //
             // Info moved across topics.
             //
-            if (!info_item) {
+            if (!info_item || !topic_after) {
                //
-               // Info moved to a different quest?!
+               // Info moved out of this quest?!
                //
                if (!topic_prior)
                   return;
                this->_remove_info_from_datastore(*topic_prior, index_prior);
                return;
             }
+            assert(topic_prior != nullptr);
+            assert(topic_after != nullptr);
             //
             // Remove from topic_prior:
             //

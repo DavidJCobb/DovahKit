@@ -6,7 +6,7 @@
 #include "editor/helpers/form_identifiers_to_string.h"
 
 namespace ui::impl::DKFormPicker {
-   DialogModel::DialogModel(QObject* parent) {
+   DialogModel::DialogModel(QObject* parent) : QAbstractItemModel(parent) {
       auto& source = shared_datastore::get();
       QObject::connect(&source, &shared_datastore::rowsInserted, this, [this](size_t first, size_t last) {
          auto& source = shared_datastore::get();
@@ -161,6 +161,10 @@ namespace ui::impl::DKFormPicker {
       }
       if (!item.stub)
          return false;
+      if (this->_custom_filter) {
+         if (!this->_custom_filter->form_matches(*item.stub))
+            return false;
+      }
       if (!_entry_matches_filter_string(item))
          return false;
       return true;

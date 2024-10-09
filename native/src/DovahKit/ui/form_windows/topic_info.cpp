@@ -417,6 +417,7 @@ void FormDialogTopicInfo::_refresh_responses_listview() {
 #pragma region Handlers: Linkedtopics
    void FormDialogTopicInfo::_add_linked_topic() {
       auto* dialog = new DKFormPickerDialog(this);
+      dialog->setAllowedFormType(dovah::form_type::topic);
       dialog->setCustomFilter(this->_filters.new_linked_topic);
       auto  result = dialog->exec();
       if (result == QDialog::Rejected)

@@ -140,6 +140,7 @@ class QuestAllDialogueDatastore : public QObject {
       void on_branch_removed(const Branch&); // emitted after the node is removed from the datastore and just before it's deleted
 
       // A view of a branch's topics must listen for the topic signals, as well as for `on_cleared` and `on_branch_removed`.
+      // If a topic is moved across branches, this is treated as it being removed and then re-added.
       void on_topic_added(const Topic&);
       void on_topic_edited(const Topic&);
       void on_topic_removed(const Topic&); // emitted after the node is removed from the datastore and just before it's deleted; node.parent still points to the old parent
