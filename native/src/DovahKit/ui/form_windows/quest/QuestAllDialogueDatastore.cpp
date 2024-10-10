@@ -717,7 +717,7 @@
          assert(dst_i == dst_size);
       }
       std::swap(addenda->ordered_children.active_file, replacement);
-      topic.stub->set_edited(true);
+      //topic.stub->set_edited(true);
    }
 
    QuestAllDialogueDatastore::Topic* QuestAllDialogueDatastore::_make_datastore_item_for_topic(dovah::form_stub& stub) {

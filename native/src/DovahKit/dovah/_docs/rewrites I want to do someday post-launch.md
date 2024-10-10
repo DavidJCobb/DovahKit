@@ -385,8 +385,6 @@ In practice, there are some holes in this design, stemming in large part from th
 
 * DIALs' ordered-child lists should be non-public and require specialized accessors to edit. Currently, to reorder a DIAL's INFOs, our UI code just bulldozes the "active file" ordered child list, which gets the job done but isn't exactly *great*. In general, I feel we should improve on what data is accessible when, in form stubs and associated structures.
 
-  * These accessors should flag the DIAL as edited to ensure we actually save it (and any INFOs that need fixup). Currently, we have to flag it manually.
-
 * Currently, we don't correct type-mismatched form references; for example, if `NPC_/DOFT` is a Landscape instead of an Outfit, we'll emit a warning but we won't clear that form use. If we wanted to perform this kind of validation, we'd have to do it both when building use info (by checking referenced form stubs' types) and when loading forms. I think we should add an option to `file_load_order` which controls this validation, and which can only be set before you load files.
 
 ### Conditions

@@ -18,6 +18,15 @@ extern "C" {
 #include "../../exceptions/file_save_failed.h"
 
 namespace {
+   // If this is set to `true`, then when we save a non-edited form, we flag its record 
+   // as "partial" and save only what data would be appropriate for partial records. This 
+   // is an attempt to take advantage of the fact that the Rule of One is waived for a 
+   // partial record; however, I've seen reports of bugs (e.g. CELLs' refs failing to 
+   // load) when this is done, so I want to test it extensively before I make use of it.
+   constexpr const bool enable_partial_flagged_containers = false;
+}
+
+namespace {
    using exception  = dovah::exceptions::file_save_failed;
    using error_code = exception::error_code;
 
@@ -221,10 +230,14 @@ namespace dovah::tes_file_writing {
       assert(is_valid_form_type(stub->form_type) && "Stub form type is out of bounds.");
       auto& record = this->_open_next_record(form_type_info::lookup(stub->form_type).signature, stub->formID);
       record.header.flags = stub->get_record_flags() & ~tes_file_record_header::non_data_flags;
-      if (stub->is_edited())
+      if (stub->is_edited()) {
          record.header.flags &= ~tes_file_record_header::flag::partial; // if the stub was previously a partial record in the active file but is now edited, clear the "partial" flag
-      else if (!stub->file_list_includes(&this->source))
-         record.header.flags |= tes_file_record_header::flag::partial; // if the stub is not in the active file, thne we must be saving it because one of its new child forms is, so set the "partial" flag
+      } else {
+         if constexpr (enable_partial_flagged_containers) {
+            if (!stub->file_list_includes(&this->source))
+               record.header.flags |= tes_file_record_header::flag::partial; // if the stub is not in the active file, thne we must be saving it because one of its new child forms is, so set the "partial" flag
+         }
+      }
       //
       auto intfc = load_order_interfaces::form_save(this->owner, *this);
       intfc.previous_child = previous_child;
@@ -765,9 +778,6 @@ namespace dovah::tes_file_writing {
             this->_write_game_settings();
             continue;
          }
-         if (!this->owner.active_file_has_forms_of_type(form_type))
-            continue;
-         //
          if (form_type_info::lookup(form_type).flags & form_type_info::flag::is_singleton) { // special case
             //
             // Singleton forms need special handling. We should only write out the "canonical" form stub, 
@@ -788,12 +798,18 @@ namespace dovah::tes_file_writing {
             this->_write_interior_cells();
             continue;
          }
-         //
-         this->open_group(tes_file_group_type::forms_of_type, _byteswap_ulong(signature), 0);
-         this->owner.for_each_top_level_form_needing_save(form_type, [this](form_stub* stub) {
+         
+         bool group_opened = false;
+         this->owner.for_each_top_level_form_needing_save(form_type, [this, signature, &group_opened](form_stub* stub) {
+            if (!group_opened) {
+               group_opened = true;
+               this->open_group(tes_file_group_type::forms_of_type, _byteswap_ulong(signature), 0);
+            }
             return !this->_write_form(stub);
          });
-         this->close_current_group();
+         if (group_opened) {
+            this->close_current_group();
+         }
       }
       //
       auto pos = this->get_stream_position();

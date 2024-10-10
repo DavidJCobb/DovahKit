@@ -822,7 +822,24 @@ namespace dovah {
       auto& owner = this->_get_load_order();
       if (owner.is_defined_or_overridden_in_active_file(*this))
          return true;
-      return this->does_descendant_form_need_save();
+      if (this->does_descendant_form_need_save())
+         return true;
+      if (this->form_type == form_type::topic) {
+         if (auto* addenda = this->addenda) {
+            auto& list_d = addenda->ordered_children.dependencies;
+            auto& list_a = addenda->ordered_children.active_file;
+            if (list_d != list_a) {
+               //
+               // No child forms were added nor reparented into these lists (else they 
+               // would've tripped the `does_descendant_form_need_save` check for the 
+               // "edited" flag), but child forms may have been reordered without ever 
+               // actually being modified.
+               //
+               return true;
+            }
+         }
+      }
+      return false;
    }
 
    [[nodiscard]] bool form_stub::is_exterior_cell() const noexcept {

@@ -1746,11 +1746,17 @@ namespace dovah {
             auto* stub = it->second;
             if (!stub)
                continue;
-            if (stub->is_edited() || stub->file_list_includes(this->active_file) || stub->does_descendant_form_need_save())
+            if (stub->needs_save())
                if (functor(stub))
                   return true;
          }
       } else {
+         //
+         // - only loop over active file forms
+         // - skip some of the checks in `form_stub::needs_save`
+         //    - TODO: break that function apart into the general checks and parent checks; have the 
+         //      latter call the former; choose which to invoke in this function
+         //
          auto& list = this->active_file_forms_by_type[form_type].forms;
          for (auto it = list.begin(); it != list.end(); ++it) {
             auto* stub = it->second;
