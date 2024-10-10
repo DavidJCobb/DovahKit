@@ -301,7 +301,7 @@
          return;
       }
 
-      this->cached.editor_id = QString::fromStdString(this->stub->editorID);
+      this->cached.editor_id = this->stub ? QString::fromStdString(this->stub->editorID) : "";
       this->recache_responses_from_stub();
       this->cached.flags = loaded->info_flags;
       this->cached.uses_shared_info    = loaded->use_shared_info != nullptr;
@@ -346,7 +346,7 @@
             this->cached.editor_id = QString::fromStdString(this->stub->editorID);
          return;
       }
-      this->cached.editor_id = QString::fromStdString(this->stub->editorID);
+      this->cached.editor_id = this->stub ? QString::fromStdString(this->stub->editorID) : "";
       {
          auto& editor = DovahKitCore::get();
          this->cached.display_text = editor.convert_localized_string(loaded->text);
@@ -386,7 +386,7 @@
             this->cached.editor_id = QString::fromStdString(this->stub->editorID);
          return;
       }
-      this->cached.editor_id = QString::fromStdString(this->stub->editorID);
+      this->cached.editor_id = this->stub ? QString::fromStdString(this->stub->editorID) : "";
 
       this->cached.exclusive = loaded->branch_flags & loaded_form_type::branch_flag::exclusive;
       if (loaded->branch_flags & loaded_form_type::branch_flag::blocking) {
@@ -717,6 +717,7 @@
          assert(dst_i == dst_size);
       }
       std::swap(addenda->ordered_children.active_file, replacement);
+      topic.stub->set_edited(true);
    }
 
    QuestAllDialogueDatastore::Topic* QuestAllDialogueDatastore::_make_datastore_item_for_topic(dovah::form_stub& stub) {
@@ -731,7 +732,7 @@
       };
 
       if (const auto* addenda = stub.addenda) {
-         for (auto* child : addenda->ordered_children) {
+         for (auto* child : addenda->ordered_children.active_file) {
             _handle_info(child);
          }
       } else {

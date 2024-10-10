@@ -125,6 +125,14 @@ namespace dovah::loaded_forms {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
          switch (subrecord.signature()) {
+            case 'PNAM':
+               //
+               // Skip PNAM. We'll have handled it originally when we loaded the file, 
+               // as part of building the parent DIAL's ordered-child lists. We need 
+               // to explicitly skip it here so we don't emit a spurious warning about 
+               // an unrecognized subrecord.
+               //
+               break;
             case 'DATA':
                if (subrecord.is_in_bounds(8)) {
                   float days_until_reset;

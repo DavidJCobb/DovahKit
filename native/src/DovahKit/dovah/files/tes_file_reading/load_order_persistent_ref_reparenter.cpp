@@ -21,8 +21,10 @@ namespace dovah::tes_file_reading {
             return *item;
          }
          for (auto* cell : this->unsorted) {
-            auto& sg = cell->addenda->grid_coords;
-            if (sg.x == gx && sg.y == gy)
+            const auto& sg = cell->addenda->grid_position;
+            if (!sg.has_value())
+               continue;
+            if (sg.value().x == gx && sg.value().y == gy)
                return cell;
          }
          return nullptr;
@@ -40,11 +42,11 @@ namespace dovah::tes_file_reading {
             assert((cell->get_parent_form() == &world) && "How did a worldspace form a parent/child relationship with a cell that doesn't consider that world its parent?");
             if (cell == p_cell)
                continue;
-            if (!cell->addenda)
+            if (!cell->addenda || !cell->addenda->grid_position.has_value())
                continue;
             //
-            auto gx = cell->addenda->grid_coords.x;
-            auto gy = cell->addenda->grid_coords.y;
+            auto gx = cell->addenda->grid_position.value().x;
+            auto gy = cell->addenda->grid_position.value().y;
             if (auto* item = this->sorted.at(gx, gy))
                *item = cell;
             else
@@ -84,10 +86,11 @@ namespace dovah::tes_file_reading {
             }
             form_stub* cell = cells.cell_for_position(x, y);
             if (cell) {
+               assert(cell->addenda->grid_position.has_value());
                refr._set_parent_form_one_way({}, cell);
                item.cell = cell;
-               item.gx   = cell->addenda->grid_coords.x;
-               item.gy   = cell->addenda->grid_coords.y;
+               item.gx   = cell->addenda->grid_position.value().x;
+               item.gy   = cell->addenda->grid_position.value().y;
             }
          });
          ++this->progress.current;
