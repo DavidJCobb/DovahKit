@@ -69,11 +69,7 @@ namespace dovah::tes_file_reading::threads {
                //
                auto* stub = this->make_stub_for_record();
                if (stub->form_type == form_type::topic_info) {
-                  uint32_t topicID = group.getRawIDOfParentTopic();
-                  lo.local_formID_to_global_formID(this->loader, topicID);
-                  this->set_stub_parent(stub, topicID);
-                  if (!topicID)
-                     dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->loader->get_filename(), stub->formID);
+                  dovah::logging::print_line("[dovah::tes_file_reading::threads::basic:%s] TopicInfo %08X is not in a topic?", this->loader->get_filename(), stub->formID);
                }
                if (!this->commit_stub(stub)) {
                   continue;

@@ -1,5 +1,6 @@
 #include "form_stub.h"
 #include <cassert>
+#include <optional>
 #include "../helpers/vectors/move_item_within.h"
 #include "../helpers/bitwise.h"
 #include "load_order_interfaces/form_load.h"
@@ -612,13 +613,22 @@ namespace dovah {
 
    void form_stub::_insert_child_topic_info(form_stub_passkeys::build_use_info_during_load, form_stub& info, size_t at) {
       assert(info.get_parent_form() == this);
-      //
-      if (!this->addenda)
-         this->addenda = new form_stub_addenda;
-      auto& list_a = this->addenda->ordered_children.dependencies;
-      auto& list_b = this->addenda->ordered_children.active_file;
+      
+      bool is_loading_active_file = info._get_load_order().is_defined_in_active_file(info);
 
-      auto it = std::find(list_a.begin(), list_a.end(), &info);
+      auto& oc = this->get_or_create_addenda().ordered_children;
+      //
+      // Check if this INFO is already in the destination list(s).
+      //
+      std::optional<size_t> prior_position = [&oc, &info]() -> std::optional<size_t> {
+         auto& list = oc.active_file;
+         auto  it   = std::find(list.begin(), list.end(), &info);
+         if (it == list.end())
+            return {};
+         return std::distance(list.begin(), it);
+      }();
+      //
+      // Normalize the position we want to insert/move the INFO to.
       //
       if (at == 0xFFFFFFFF) {
          //
@@ -626,30 +636,28 @@ namespace dovah {
          // in any topic's info list, or place it at the end of the parent topic's info 
          // list otherwise.
          //
-         if (it != list_a.end()) // already in our list
+         if (prior_position.has_value()) // already in our list
             return;
          at = std::numeric_limits<size_t>::max();
       }
-      if (at >= list_a.size()) {
-         list_a.push_back(&info);
-         list_b.push_back(&info);
-         return;
+      if (at > oc.active_file.size()) {
+         at = oc.active_file.size();
       }
-      //
-      if (it != list_a.end()) {
-         //
-         // This info is already in this topic's info list. Remove it now, so that 
-         // the later insertion ends up just moving it.
-         //
-         size_t i = std::distance(list_a.begin(), it);
-         if (i < at)
-            --at; // Removing this info will shift the insertion position up.
-         //
-         list_a.erase(it);
-         list_b.erase(list_b.begin() + i);
+
+      if (prior_position.has_value()) {
+         auto pp = prior_position.value();
+         if (!is_loading_active_file) {
+            assert(oc.active_file[pp] == oc.dependencies[pp]);
+         }
+         cobb::vectors::move_item_within(oc.active_file, pp, (int)at - pp);
+         if (!is_loading_active_file) {
+            cobb::vectors::move_item_within(oc.dependencies, pp, (int)at - pp);
+         }
+      } else {
+         oc.active_file.insert(oc.active_file.begin() + at, &info);
+         if (!is_loading_active_file)
+            oc.dependencies.insert(oc.dependencies.begin() + at, &info);
       }
-      list_a.insert(list_a.begin() + at, &info);
-      list_b.insert(list_b.begin() + at, &info);
    }
    void form_stub::_remove_child_topic_info(form_stub_passkeys::build_use_info_during_load, form_stub& info, bool loading) {
       if (loading && info.test_record_flags(tes_file_record_header::flag::partial))
