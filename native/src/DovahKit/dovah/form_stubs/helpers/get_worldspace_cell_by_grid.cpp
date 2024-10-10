@@ -21,10 +21,11 @@ namespace dovah::form_stub_helpers {
             continue;
          if (!cell->addenda)
             continue;
-         if (!(cell->addenda->flags & form_stub_addenda::flag::has_grid_coordinates))
+         auto& opt = cell->addenda->grid_position;
+         if (!opt.has_value())
             continue;
-         auto& g = cell->addenda->grid_coords;
-         if (g.x == x && g.y == y)
+         auto& pos = opt.value();
+         if (pos.x == x && pos.y == y)
             return cell;
       }
       return nullptr;

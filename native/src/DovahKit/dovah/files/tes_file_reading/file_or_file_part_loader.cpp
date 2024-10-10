@@ -149,16 +149,9 @@ namespace dovah::tes_file_reading {
                break;
             case 'XCLC':
                if (is_ext) {
-                  int32_t x;
-                  int32_t y;
-                  if (!stub.addenda)
-                     stub.addenda = new form_stub_addenda;
-                  auto& g = stub.addenda->grid_coords;
-                  subrecord.read(x);
-                  subrecord.read(y);
-                  g.x = x;
-                  g.y = y;
-                  stub.addenda->flags |= form_stub_addenda::flag::has_grid_coordinates;
+                  auto& pos = stub.get_or_create_addenda().grid_position.emplace();
+                  subrecord.read(pos.x);
+                  subrecord.read(pos.y);
                }
                break;
             default:

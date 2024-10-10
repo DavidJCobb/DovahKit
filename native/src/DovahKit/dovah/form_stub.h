@@ -154,6 +154,8 @@ namespace dovah {
          void _set_source_file_list(const std::vector<file_data>&);
          
          constexpr file_data* _get_source_file_info(int16_t file_index = -1) noexcept;
+
+         void _insert_child_topic_info_post_load(form_stub& info, size_t at = std::string::npos);
          
       public:
          #pragma region Passkeyed methods
@@ -245,10 +247,6 @@ namespace dovah {
          bool get_grid_coordinates(int32_t& x, int32_t& y) const noexcept;
          size_t child_info_count() const noexcept;
          size_t index_of_child_info(form_stub& info) const noexcept; // search a topic's list of infos; returns std::string::npos if no match
-         void insert_child_topic_info(form_stub& info, size_t at = std::string::npos); // also forces (info)'s parent to (this) if that isn't already the case
-         void remove_child_topic_info(form_stub& info); // also orphans (info)
-         //
-         void sever_addenda_references_to(form_stub& other);
          #pragma endregion
 
          #pragma region Parenthood functions

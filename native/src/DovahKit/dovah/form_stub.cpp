@@ -615,8 +615,10 @@ namespace dovah {
       //
       if (!this->addenda)
          this->addenda = new form_stub_addenda;
-      auto& list = this->addenda->ordered_children;
-      auto  it   = std::find(list.begin(), list.end(), &info);
+      auto& list_a = this->addenda->ordered_children.dependencies;
+      auto& list_b = this->addenda->ordered_children.active_file;
+
+      auto it = std::find(list_a.begin(), list_a.end(), &info);
       //
       if (at == 0xFFFFFFFF) {
          //
@@ -624,35 +626,42 @@ namespace dovah {
          // in any topic's info list, or place it at the end of the parent topic's info 
          // list otherwise.
          //
-         if (it != list.end()) // already in our list
+         if (it != list_a.end()) // already in our list
             return;
          at = std::numeric_limits<size_t>::max();
       }
-      if (at >= list.size()) {
-         list.push_back(&info);
+      if (at >= list_a.size()) {
+         list_a.push_back(&info);
+         list_b.push_back(&info);
          return;
       }
       //
-      if (it != list.end()) {
+      if (it != list_a.end()) {
          //
          // This info is already in this topic's info list. Remove it now, so that 
          // the later insertion ends up just moving it.
          //
-         size_t i = std::distance(list.begin(), it);
+         size_t i = std::distance(list_a.begin(), it);
          if (i < at)
             --at; // Removing this info will shift the insertion position up.
          //
-         list.erase(it);
+         list_a.erase(it);
+         list_b.erase(list_b.begin() + i);
       }
-      list.insert(list.cbegin() + at, &info);
+      list_a.insert(list_a.begin() + at, &info);
+      list_b.insert(list_b.begin() + at, &info);
    }
    void form_stub::_remove_child_topic_info(form_stub_passkeys::build_use_info_during_load, form_stub& info, bool loading) {
       if (loading && info.test_record_flags(tes_file_record_header::flag::partial))
          return;
       if (!this->addenda)
          return;
-      auto& list = this->addenda->ordered_children;
+      auto& list = this->addenda->ordered_children.active_file;
       list.erase(std::remove(list.begin(), list.end(), &info), list.end());
+      if (loading) {
+         auto& list = this->addenda->ordered_children.dependencies;
+         list.erase(std::remove(list.begin(), list.end(), &info), list.end());
+      }
    }
 
    #pragma region Addenda helper functions
@@ -665,11 +674,9 @@ namespace dovah {
    bool form_stub::get_grid_coordinates(int32_t& x, int32_t& y) const noexcept {
       x = 0;
       y = 0;
-      if (!this->addenda)
+      if (!this->addenda || !this->addenda->grid_position.has_value())
          return false;
-      if (!(this->addenda->flags & form_stub_addenda::flag::has_grid_coordinates))
-         return false;
-      auto& gc = this->addenda->grid_coords;
+      auto& gc = this->addenda->grid_position.value();
       x = gc.x;
       y = gc.y;
       return true;
@@ -679,56 +686,37 @@ namespace dovah {
          return 0;
       if (!this->addenda)
          return 0;
-      return this->addenda->ordered_children.size();
+      return this->addenda->ordered_children.active_file.size();
    }
    size_t form_stub::index_of_child_info(form_stub& info) const noexcept {
       if (this->form_type != form_type::topic || info.form_type != form_type::topic_info)
          return std::string::npos;
       if (!this->addenda)
          return std::string::npos;
-      auto&  list = this->addenda->ordered_children;
+      auto&  list = this->addenda->ordered_children.active_file;
       size_t size = list.size();
       for (size_t i = 0; i < size; ++i)
          if (list[i] == &info)
             return i;
       return std::string::npos;
    }
-   void form_stub::insert_child_topic_info(form_stub& info, size_t at) {
-      if (this->form_type != form_type::topic)
-         return;
-      if (info.form_type != form_type::topic_info)
-         return;
-      if (info.get_parent_form() != this) {
-         info.set_parent_form(this);
-         if (at == std::string::npos)
-            return;
-      }
-      //
-      // Reposition (info) within the list:
-      //
-      assert(this->addenda);
-      auto& list = this->addenda->ordered_children;
+   void form_stub::_insert_child_topic_info_post_load(form_stub& info, size_t at) {
+      assert(this->form_type == form_type::topic);
+      assert(info.form_type == form_type::topic_info);
+      assert(info.get_parent_form() == this);
+      auto& list = this->get_or_create_addenda().ordered_children.active_file;
       auto  size = list.size();
-      if (at >= size)
-         at = size - 1;
-      auto it = std::find(list.begin(), list.end(), &info);
-      assert(it != list.end());
-      if (it != list.begin() + at)
-         std::move(it, it + 1, list.begin() + at);
-   }
-   void form_stub::remove_child_topic_info(form_stub& info) {
-      if (this->form_type != form_type::topic)
-         return;
-      if (info.form_type != form_type::topic_info)
-         return;
-      if (info.get_parent_form() != this)
-         return;
-      info.orphan();
-   }
-   //
-   void form_stub::sever_addenda_references_to(form_stub& other) {
-      if (this->addenda)
-         this->addenda->sever_references_to(other);
+      auto  it   = std::find(list.begin(), list.end(), &info);
+      if (it == list.end()) {
+         if (at >= size)
+            at = size;
+         list.insert(list.begin() + at, &info);
+      } else {
+         if (at >= size)
+            at = size - 1;
+         auto i = std::distance(list.begin(), it);
+         cobb::vectors::move_item_within(list, i, (int)at - i);
+      }
    }
    #pragma endregion
 
@@ -773,6 +761,10 @@ namespace dovah {
          parent->_remove_child_topic_info({}, *this, false);
    }
    void form_stub::set_parent_form(form_stub* target) noexcept {
+      //
+      // This function is only used after files have been loaded. During file load, we 
+      // use the `_set_parent_form_one_way` function instead.
+      //
       auto* parent = this->get_parent_form();
       if (target == parent)
          return;
@@ -781,7 +773,7 @@ namespace dovah {
          return;
       this->replace_outbound_reference(0, target, use_info_entry::flag::parent_child);
       if (target->form_type == form_type::topic && this->form_type == form_type::topic_info)
-         target->_insert_child_topic_info({}, *this);
+         target->_insert_child_topic_info_post_load(*this);
    }
    #pragma endregion
 
@@ -843,13 +835,9 @@ namespace dovah {
       if (this->form_type != form_type::cell)
          return 0;
       if (this->is_exterior_cell()) {
-         if (!this->addenda)
+         if (!this->addenda || !this->addenda->grid_position.has_value())
             return 0;
-         auto& gc = this->addenda->grid_coords;
-         _cell_grid_dword value;
-         value.x = gc.x / 8 / 4;
-         value.y = gc.y / 8 / 4;
-         return value.merged;
+         return this->addenda->grid_position.value().to_cell_block();
       }
       return (this->formID % 10);
    }
@@ -857,13 +845,9 @@ namespace dovah {
       if (this->form_type != form_type::cell)
          return 0;
       if (this->is_exterior_cell()) {
-         if (!this->addenda)
+         if (!this->addenda || !this->addenda->grid_position.has_value())
             return 0;
-         auto& gc = this->addenda->grid_coords;
-         _cell_grid_dword value;
-         value.x = gc.x / 8;
-         value.y = gc.y / 8;
-         return value.merged;
+         return this->addenda->grid_position.value().to_cell_sub_block();
       }
       return (this->formID % 100) / 10;
    }

@@ -208,7 +208,7 @@ namespace dovah::tes_file_writing {
       record._close();
       --this->fixup_data.record_and_group_count.value; // this should not include the file-header record
    }
-   bool file_writer::_write_form(form_stub* stub, form_stub* previous_child) {
+   bool file_writer::_write_form(form_stub* stub, std::optional<form_stub*> previous_child) {
       this->_current_target = stub;
 
       auto loaded = stub->load_even_if_unsafe({});
@@ -401,22 +401,82 @@ namespace dovah::tes_file_writing {
    void file_writer::_write_child_forms_for_topic(form_stub* stub) {
       if (!stub->addenda)
          return;
-      auto& list = stub->addenda->ordered_children;
-      if (list.empty())
+
+      auto& list_a = stub->addenda->ordered_children.active_file;
+      auto& list_d = stub->addenda->ordered_children.dependencies;
+      if (list_a.empty())
          return;
-      //
+      
       auto& group = this->open_group(tes_file_group_type::topic_children, stub->formID, tes_file_group_header::uninitialized_unknown);
-      //
-      int index = -1;
-      for (auto* child : list) {
-         ++index;
-         if (child->form_type != form_type::topic_info)
-            continue;
-         if (!child->needs_save())
-            continue;
-         this->_write_form(child);
+      
+      bool is_new_form = stub->get_owning_load_order().is_defined_in_active_file(*stub);
+      if (is_new_form) {
+         //
+         // If this DIAL is new -- defined in the active file -- then we don't have 
+         // to worry about the pre-active-file ordering of its INFOs.
+         //
+         for (dovah::form_stub* child : list_a) {
+            if (child->form_type != form_type::topic_info)
+               continue;
+            if (!child->needs_save())
+               continue;
+            this->_write_form(child);
+         }
+      } else {
+         //
+         // We're overriding this DIAL and, potentially, its INFOs. We need to compare 
+         // the order of its children from the master files to the order we wish to 
+         // serialize them in now, and write INFO/PNAM as appropriate.
+         //
+         size_t ia = 0;
+         size_t id = 0;
+         for (; ia < list_a.size(); ++ia) {
+            auto* child = list_a[ia];
+            if (child->form_type != form_type::topic_info)
+               continue;
+
+            dovah::form_stub* previous = nullptr;
+            if (ia > 0) {
+               previous = list_a[ia - 1];
+            }
+
+            bool child_is_new = child->get_owning_load_order().is_defined_in_active_file(*child);
+            if (!child_is_new) {
+               //
+               // This INFO was originally defined in one of the master files. Its 
+               // order may have changed.
+               //
+               auto it = std::find(list_d.begin(), list_d.end(), child);
+               if (it == list_d.end()) {
+                  //
+                  // The INFO isn't newly-defined in the active file, but has been 
+                  // transplanted into this DIAL by the active file.
+                  //
+                  child_is_new = true;
+               }
+            }
+            //
+            // Now we need to decide whether to serialize INFO/PNAM based on the info 
+            // above. Notably, if you reorder INFOs in the Creation Kit from ABCD to 
+            // ACBD, the CK actually serializes overrides for A, B, and C, even though 
+            // in theory only B and C should need changes to their PNAMs. We're not 
+            // gonna try and do that because frankly, uh, it's easier not to bother.
+            //
+            if (child_is_new) {
+               this->_write_form(child, previous);
+            } else {
+               if (child == list_d[id]) {
+                  if (child->needs_save())
+                     this->_write_form(child);
+               } else {
+                  child->set_edited(true); // because we have to serialize a potentially different INFO/PNAM
+                  this->_write_form(child, previous);
+               }
+               ++id;
+            }
+         }
       }
-      //
+      
       this->close_current_group();
    }
    //

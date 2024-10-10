@@ -423,7 +423,9 @@ using working_parameter = std::variant<
 
 The "working" struct looks cleaner, but in practice, you need to query the containing condition to find the `parameter_underlying_type` for the parameter (given the condition function to which it is a parameter). As indicated by the comments, several of the C++-level types represent multiple `parameter_underlying_type`s; for example, `uint32_t` can be: an unsigned integer; the ID of an alias on the condition's owning quest; the index of a package-data on the condition's owning package; or, if this isn't the first parameter, it can be the ID of a quest stage, belonging to the quest indicated by the previous-sibling parameter.
 
-In other words, it's a "split variant," where you need to consult two pieces of information to identify the meaning of the value inside: the variant's current contained type; and the value of a `parameter_underlying_type` enum. Worse: the enum isn't retained as state *on the parameter*, but rather is deduced from separate state (the condition function ID) on the containing condition.
+In other words, it's a "split variant," where you need to consult two pieces of information to identify the meaning of the value inside: the variant's current contained type; and the value of a `parameter_underlying_type` enum. Worse: the enum isn't retained as state *on the parameter*, but rather is deduced from separate state (the condition function ID) on the containing condition. On top of all of this, you still need to know the underlying C++ type with which a `parameter_underlying_type` is being represented: you have to know that enumeration values are stored as `int32_t`s specifically.
+
+An alternative approach would be to use `std::variant` indices: you can have more than one of the same type in a `std::variant`, and then identify the variant variations by index rather than by type. If the indices match the `parameter_underlying_type` enum, then you can just cast it to `size_t`. Better still would be a custom type that wraps `std::variant` and offers more ergonomic access using the `parameter_underlying_type` enum rather than `size_t` or typenames.
 
 #### Unifying the split variant
 
@@ -802,6 +804,30 @@ We don't have to solve this for Sustain Phase 1; we can give it its own phase la
 ### Minor improvements
 
 * Use separate types for ILSTRINGS, DLSTRINGS, and LSTRINGS (i.e. `localized_info_string`, `localized_desc_string`, and `localized_string`). Currently we just have the one type with constructor args, and those are easy to forget when setting up new form types.
+
+### Broader plans
+Originally written 9/7/2024.
+
+We need to know what stubs are using a given localized string, both so we know when an l-string is safe to delete and so we can show varying UI to the user. We don't need to know much else. L-strings therefore need inbound use info, but form stubs only need use info outbound to L-strings so we can sever on the L-string side if the form is deleted; enlarging the form stub struct is a necessary evil but we may be able to lessen the impact with a custom container. Forms would need to build L-string use info alongside normal form-to-form use info (trivial), and would need the ability to sever all references to a to-be-deleted L-string. Additionally, `localized_string` and friends would need to work like `form_use` (currently `form_reference_t`).
+
+UI for working with L-strings would be enabled either program-wide or per active file. When L-strings are disabled, the UI for editing an L-string works as it does presently: you just see a single textbox, and edit a single language, and we write that content directly into your ESP when saving. When L-strings are enabled for the active file:
+
+* Form fields for editing L-strings are read-only but not greyed out, and have two associated buttons: Replace and Edit.
+
+* The Replace button allows you to set the given field (e.g. item name) to any appropriate L-string in the file. (This is subject to the current string type, i.e. the differences between LSTRING, DLSTRING, and ILSTRING.)
+
+* The Edit button would open a dialog similar to the localized string editor in ReachVariantTool. The buttons for this dialogue would be arranged vertically (rather than the usual horizontal for dialog-close action buttons) and would be labeled:
+  * Change this string just in this one place
+  * Change this string everywhere it is used
+  * Cancel all changes to this string
+
+  The first button would fork the current L-string ref (e.g. `QImage::detach`) while the middle would edit the L-string directly and so affect all inbound refs to it.
+
+  Notably, these options are being designed for the scenario of you editing localized data in a new form that you're defining. When overriding a form, we'd necessarily have to duplicate its original string content into your file. We could in that scenario just automatically search for any exact-duplicate strings owned by your file, and have the new override share the first such string it finds; and then subsequent changes to the override's localized text would lead to the above decision to make.
+
+Additionally, when saving an existing active file, we'd want to update any extant string files; when saving a new active file, we'd want to warn if its filename or those of any localization are taken; and when overriding a form from a localized master, when the user commits the form dialog, we'd want to use an existing L-string in the active file (if an L-string in the edited form is exactly identical for all languages) or create a new L-string (otherwise).
+
+Lastly: we want a default language: if you only know three languages, you shouldn't have to copy and paste one language into nine textboxes to prevent missing string errors; instead, the string you write in the default language should be written to the other languages by default (QPlainTextEdit placeholder). Unfortunately, English has to be the default language: character sets vary by language and I believe ASCII may be the only commonality between them.
 
 ## Game settings
 

@@ -35,7 +35,7 @@ namespace {
             lua_newtable(L);
             return 1;
          }
-         auto&  list = addenda->ordered_children;
+         auto&  list = addenda->ordered_children.active_file;
          size_t size = list.size();
          lua_createtable(L, size, 0);
          size_t j = 0;

@@ -515,8 +515,10 @@ namespace dovah::loaded_forms {
          ENAM.close();
       }
       record.write_formID_subrecord('TPIC', this->topic, true);
-      if (const auto* prev = intfc.get_previous_child()) {
-         record.write_formID_subrecord('PNAM', prev, true);
+      {
+         auto prev = intfc.get_previous_child();
+         if (prev.has_value())
+            record.write_formID_subrecord('PNAM', prev.value(), false);
       }
       auto& CNAM = record.open_next_subrecord('CNAM');
       CNAM.write(this->favor_level);

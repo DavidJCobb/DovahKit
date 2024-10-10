@@ -688,7 +688,7 @@
          addenda = &topic.stub->get_or_create_addenda();
       }
       
-      auto&  dst_list = addenda->ordered_children;
+      auto&  dst_list = addenda->ordered_children.active_file;
       size_t dst_size = src_list.size();
       assert(dst_size >= src_size);
 
@@ -716,7 +716,7 @@
          }
          assert(dst_i == dst_size);
       }
-      std::swap(addenda->ordered_children, replacement);
+      std::swap(addenda->ordered_children.active_file, replacement);
    }
 
    QuestAllDialogueDatastore::Topic* QuestAllDialogueDatastore::_make_datastore_item_for_topic(dovah::form_stub& stub) {

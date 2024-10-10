@@ -1959,12 +1959,10 @@ namespace dovah {
       //
       if (request.cell_grid_coordinates.has_value()) {
          auto& src = request.cell_grid_coordinates.value();
-         if (!stub->addenda)
-            stub->addenda = new form_stub_addenda;
-         auto& a = *stub->addenda;
-         a.flags |= form_stub_addenda::flag::has_grid_coordinates;
-         a.grid_coords.x = src.x;
-         a.grid_coords.y = src.y;
+         stub->get_or_create_addenda().grid_position = cell_grid_position{
+            .x = src.x,
+            .y = src.y,
+         };
       }
       //
       {

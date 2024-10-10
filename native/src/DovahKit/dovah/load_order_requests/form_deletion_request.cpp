@@ -3,6 +3,7 @@
 #include "../files/file_load_order.h"
 #include "../forms/Form.h"
 #include "../form_stub.h"
+#include "../form_stub_addenda.h"
 #include "../exceptions/form_deletion_failed.h"
 
 namespace {
@@ -132,8 +133,8 @@ namespace dovah {
          auto* other = entry.other;
          auto  form = other->load();
          pending.push_back(other); // gather forms to process later. we don't want to sever refs now, as that will change use info and potentially invalidate iterators during the loop
-         if (!flag)
-            other->sever_addenda_references_to(stub);
+         if (other->addenda)
+            other->addenda->sever_references_to_deleted_form(stub, flag);
          other->set_edited(true);
       }
       for (auto* user : pending) {
