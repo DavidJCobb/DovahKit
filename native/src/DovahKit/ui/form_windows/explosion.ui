@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogExplosion</class>
+ <widget class="QDialog" name="FormDialogExplosion">
+  <property name="windowTitle">
+   <string>Explosion</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Model:</string>
+       </property>
+       <property name="buddy">
+        <cstring>model</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Name:</string>
+       </property>
+       <property name="buddy">
+        <cstring>name</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="name"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="DKFormNIFPicker" name="model"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Gameplay</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_11">
+        <property name="text">
+         <string>Vertical Offset Mult:</string>
+        </property>
+        <property name="buddy">
+         <cstring>verticalOffset</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="1">
+       <widget class="DKFormPicker" name="chainProjectile">
+        <property name="whatsThis">
+         <string>This option is used for Chain Lightning and similar spells. If enabled, you can select a projectile to spawn for each &quot;bounce.&quot; The projectile you select here must be of the same type (beam, missile, etc.) as the projectile that originally spawned the explosion.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QCheckBox" name="flagPushSourceOnly">
+        <property name="whatsThis">
+         <string>&lt;p&gt;If checked, the explosion will only physically displace the object that spawned it.&lt;/p&gt;
+&lt;p&gt;This can be used to make destructible objects break apart with more flair: you can make an object blast apart slightly when destroyed, without influencing the objects around it, by setting its destruction stages to use an explosion with this box checked.&lt;/p&gt;</string>
+        </property>
+        <property name="text">
+         <string>Push Source Ref Only</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Detection Sound Level:</string>
+        </property>
+        <property name="buddy">
+         <cstring>detectionSoundLevel</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QDoubleSpinBox" name="radius">
+        <property name="whatsThis">
+         <string>The radius of the explosion's effect: any rigid body within this radius is pushed, and any ref within it may be damaged.</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="force">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QDoubleSpinBox" name="damage">
+        <property name="whatsThis">
+         <string>The amount of damage that refs within the blast radius may receive.</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QComboBox" name="detectionSoundLevel">
+        <property name="whatsThis">
+         <string>Control how loud this explosion is for NPC AI.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="1">
+       <widget class="DKFormPicker" name="spawnObject">
+        <property name="minimumSize">
+         <size>
+          <width>250</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="whatsThis">
+         <string>You can optionally spawn an object at the explosion's position, when the explosion itself spawns.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Knock Down Living Actors:</string>
+        </property>
+        <property name="buddy">
+         <cstring>knockdown</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Enchantment:</string>
+        </property>
+        <property name="buddy">
+         <cstring>spell</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Force:</string>
+        </property>
+        <property name="buddy">
+         <cstring>force</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="DKFormPicker" name="spell">
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="whatsThis">
+         <string>An enchantment whose effects will be applied to any actors within the blast radius. (Think of it like hitting those actors with an enchanted weapon, except the weapon is an explosion.)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="0">
+       <widget class="QCheckBox" name="flagChain">
+        <property name="text">
+         <string>Chain via Projectile:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QDoubleSpinBox" name="verticalOffset">
+        <property name="whatsThis">
+         <string>An offset applied to the explosion's spawn location.</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Spawn Object:</string>
+        </property>
+        <property name="buddy">
+         <cstring>spawnObject</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Damage:</string>
+        </property>
+        <property name="buddy">
+         <cstring>damage</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Radius:</string>
+        </property>
+        <property name="buddy">
+         <cstring>radius</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1">
+       <widget class="QComboBox" name="knockdown">
+        <item>
+         <property name="text">
+          <string>Never</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>By Formula</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>NPCs Only</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Always</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="flagIgnoreLOS">
+        <property name="whatsThis">
+         <string>If checked, the explosion will ignore solid cover such as walls and static objects, displacing and potentially damaging objects behind cover.</string>
+        </property>
+        <property name="text">
+         <string>Ignore LOS Check</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Art</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="imagespaceRadius">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="DKFormPicker" name="sound2">
+        <property name="whatsThis">
+         <string>You can set up to two sound effects to play during the explosion.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_13">
+        <property name="text">
+         <string>Imagespace Radius:</string>
+        </property>
+        <property name="buddy">
+         <cstring>imagespaceRadius</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="DKFormPicker" name="sound1">
+        <property name="whatsThis">
+         <string>You can set up to two sound effects to play during the explosion.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1">
+       <widget class="QCheckBox" name="flagNoRumble">
+        <property name="text">
+         <string>No Controller Vibration</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="flagIgnoreImagespaceSwap">
+        <property name="whatsThis">
+         <string>According to Bethesda's documentation, this overrides a &quot;close-proximity explosion optimization.&quot;</string>
+        </property>
+        <property name="text">
+         <string>Ignore Imagespace Swap</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="DKFormPicker" name="light"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_15">
+        <property name="text">
+         <string>Sound 1:</string>
+        </property>
+        <property name="buddy">
+         <cstring>sound1</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_16">
+        <property name="text">
+         <string>Sound 2:</string>
+        </property>
+        <property name="buddy">
+         <cstring>sound2</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_14">
+        <property name="text">
+         <string>Light:</string>
+        </property>
+        <property name="buddy">
+         <cstring>light</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QCheckBox" name="flagAlwaysWorldOrient">
+        <property name="whatsThis">
+         <string>Control whether the explosion is aligned with the ground at the point where it spaw</string>
+        </property>
+        <property name="text">
+         <string>Always Uses World Orientation</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>Imagespace Mod:</string>
+        </property>
+        <property name="buddy">
+         <cstring>imagespaceMod</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="DKFormPicker" name="imagespaceMod"/>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="label_17">
+        <property name="text">
+         <string>Impact Data Set:</string>
+        </property>
+        <property name="buddy">
+         <cstring>impactDataSet</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="DKFormPicker" name="impactDataSet">
+        <property name="whatsThis">
+         <string>Control the impact effect that the explosion has on different materials as the blast radiates outward.</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>model</tabstop>
+  <tabstop>force</tabstop>
+  <tabstop>flagPushSourceOnly</tabstop>
+  <tabstop>flagIgnoreLOS</tabstop>
+  <tabstop>damage</tabstop>
+  <tabstop>radius</tabstop>
+  <tabstop>verticalOffset</tabstop>
+  <tabstop>spell</tabstop>
+  <tabstop>knockdown</tabstop>
+  <tabstop>detectionSoundLevel</tabstop>
+  <tabstop>spawnObject</tabstop>
+  <tabstop>flagChain</tabstop>
+  <tabstop>chainProjectile</tabstop>
+  <tabstop>imagespaceMod</tabstop>
+  <tabstop>imagespaceRadius</tabstop>
+  <tabstop>flagIgnoreImagespaceSwap</tabstop>
+  <tabstop>light</tabstop>
+  <tabstop>sound1</tabstop>
+  <tabstop>sound2</tabstop>
+  <tabstop>impactDataSet</tabstop>
+  <tabstop>flagNoRumble</tabstop>
+  <tabstop>flagAlwaysWorldOrient</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

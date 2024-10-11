@@ -7255,6 +7255,30 @@
     <QtUic Include="ui\form_windows\topic_info\topic_info_response.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="ui\form_windows\weapon.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\ammo.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\hazard.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\addon_node.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\anim_object.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\explosion.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\collision_layer.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\armor.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\main_window.h">

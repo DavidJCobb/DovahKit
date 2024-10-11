@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogAddonNode</class>
+ <widget class="QDialog" name="FormDialogAddonNode">
+  <property name="windowTitle">
+   <string>Add-on Node</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Model:</string>
+       </property>
+       <property name="buddy">
+        <cstring>model</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" colspan="2">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Add-on Node Index:</string>
+         </property>
+         <property name="buddy">
+          <cstring>addonID</cstring>
+         </property>
+        </widget>
+       </item>
+       <item alignment="Qt::AlignRight">
+        <widget class="QSpinBox" name="addonID">
+         <property name="whatsThis">
+          <string>A numeric ID that NIF files can use to refer to this add-on node. This ID must be unique across all loaded add-on nodes.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="maximum">
+          <number>99999999</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="DKFormNIFPicker" name="model"/>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Sound:</string>
+       </property>
+       <property name="buddy">
+        <cstring>sound</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="DKFormPicker" name="sound"/>
+     </item>
+     <item row="4" column="0" colspan="2">
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Master Particle System Cap:</string>
+         </property>
+         <property name="buddy">
+          <cstring>masterParticleSystemCap</cstring>
+         </property>
+        </widget>
+       </item>
+       <item alignment="Qt::AlignRight">
+        <widget class="QSpinBox" name="masterParticleSystemCap">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="maximum">
+          <number>99999999</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="5" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagAlwaysLoaded">
+       <property name="text">
+        <string>Always Loaded</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>addonID</tabstop>
+  <tabstop>model</tabstop>
+  <tabstop>sound</tabstop>
+  <tabstop>masterParticleSystemCap</tabstop>
+  <tabstop>flagAlwaysLoaded</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,1481 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogWeapon</class>
+ <widget class="QDialog" name="FormDialogWeapon">
+  <property name="windowTitle">
+   <string>Weapon</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0">
+   <item row="2" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="baseDataLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Enchantment:</string>
+       </property>
+       <property name="buddy">
+        <cstring>enchantmentForm</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Max Charge:</string>
+       </property>
+       <property name="buddy">
+        <cstring>enchantmentCharge</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Value:</string>
+       </property>
+       <property name="buddy">
+        <cstring>value</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Name:</string>
+       </property>
+       <property name="buddy">
+        <cstring>name</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Template:</string>
+       </property>
+       <property name="buddy">
+        <cstring>templateForm</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="name"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="DKFormPicker" name="enchantmentForm">
+       <property name="whatsThis">
+        <string>You can optionally attach an enchantment to this weapon. This can be used for pre-enchanted loot or to provide a staff with its unique effect.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QSpinBox" name="enchantmentCharge">
+       <property name="whatsThis">
+        <string>If the weapon comes with a built-in enchantment, the enchantment's max and initial charge can be set here. For reference, a Grand Soul Gem provides 3000 charge.</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="maximum">
+        <number>65535</number>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QSpinBox" name="value">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="DKFormPicker" name="templateForm">
+       <property name="whatsThis">
+        <string>&lt;p&gt;If this is set to another Weapon form, then this weapon will inherit all of its Game Data and Art and Sound options from that other weapon, and you will not be able to alter those options here.&lt;/p&gt;
+&lt;p&gt;The main purpose of this option is to support variant weapons, such as pre-made enchantments. Every pre-enchanted Daedric Battleaxe, for example, uses the non-enchanted Daedric Battleaxe form as a template, so that their baseline gameplay and art settings can all be edited in one place.&lt;/p&gt;</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="1">
+    <widget class="DKPapyrusBoundScriptListPane" name="scriptListPane"/>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <widget class="QTabWidget" name="tabbox">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tabGameData">
+      <attribute name="title">
+       <string>Game Data</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_9" columnstretch="1,1">
+       <item row="0" column="0">
+        <layout class="QVBoxLayout" name="gameDataColumnLeft">
+         <item>
+          <layout class="QGridLayout" name="gridLayout_3">
+           <item row="2" column="1">
+            <widget class="QDoubleSpinBox" name="speed">
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>6</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="1" column="3">
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string># Projectiles:</string>
+             </property>
+             <property name="buddy">
+              <cstring>projectileCount</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="4">
+            <widget class="QSpinBox" name="projectileCount">
+             <property name="whatsThis">
+              <string>The number of projectiles spawned per ammo object consumed.</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="maximum">
+              <number>255</number>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QLabel" name="label_8">
+             <property name="text">
+              <string>Damage:</string>
+             </property>
+             <property name="buddy">
+              <cstring>damage</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QDoubleSpinBox" name="weight">
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QDoubleSpinBox" name="stagger">
+             <property name="whatsThis">
+              <string>&lt;p&gt;The amount of stagger applied when this weapon hits a target. A value of 1.0 plays the full stagger animation.&lt;/p&gt;
+&lt;p&gt;Values above 1.0 won't cause targets to stagger any more intensely. However, stagger can be reduced by a variety of factors, so values above 1.0 can still be useful.&lt;/p&gt;</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_11">
+             <property name="text">
+              <string>Speed:</string>
+             </property>
+             <property name="buddy">
+              <cstring>speed</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_9">
+             <property name="text">
+              <string>Reach:</string>
+             </property>
+             <property name="buddy">
+              <cstring>reach</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1" colspan="4">
+            <widget class="QComboBox" name="skill">
+             <property name="whatsThis">
+              <string>&lt;p&gt;Set the weapon skill associated with this weapon. This skill influences the weapon's damage, and the player will gain experience in this skill when using the weapon.&lt;/p&gt;&lt;!-- TODO: What is the precise operational definition of &quot;using&quot; here? Landing hits? Dealing damage? --&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_50">
+             <property name="text">
+              <string>Skill:</string>
+             </property>
+             <property name="buddy">
+              <cstring>skill</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="4">
+            <widget class="QDoubleSpinBox" name="ironsightFOV">
+             <property name="whatsThis">
+              <string>For ranged weapons, this is the camera field of view used for ironsights. This is what allows the player to zoom in when wielding a ranged weapon.</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="maximum">
+              <double>179.900000000000006</double>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="3">
+            <widget class="QLabel" name="label_12">
+             <property name="text">
+              <string>Ironsight FOV:</string>
+             </property>
+             <property name="buddy">
+              <cstring>ironsightFOV</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>Weight:</string>
+             </property>
+             <property name="buddy">
+              <cstring>weight</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QDoubleSpinBox" name="reach">
+             <property name="whatsThis">
+              <string>&lt;p&gt;Controls how far a melee weapon can reach. Has no effect for ranged weapons.&lt;/p&gt;
+&lt;p&gt;A weapon's computed reach is the &lt;var&gt;fCombatDistance&lt;/var&gt; game setting, times the wielding actor's scale, times the weapon form's reach setting.&lt;/p&gt;</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_14">
+             <property name="text">
+              <string>Stagger:</string>
+             </property>
+             <property name="buddy">
+              <cstring>stagger</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_51">
+             <property name="text">
+              <string>Equip Type:</string>
+             </property>
+             <property name="buddy">
+              <cstring>equipType</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1" colspan="4">
+            <widget class="DKFormPicker" name="equipType">
+             <property name="whatsThis">
+              <string>Control which hands are needed to use this weapon.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="4">
+            <widget class="QSpinBox" name="damage">
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="maximum">
+              <number>65535</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QGridLayout" name="gridLayout_7">
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_24">
+             <property name="text">
+              <string>Dismemberment on Hit:</string>
+             </property>
+             <property name="buddy">
+              <cstring>onHitCalc</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_22">
+             <property name="text">
+              <string>Relevant Damage Resistance:</string>
+             </property>
+             <property name="buddy">
+              <cstring>resist</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_23">
+             <property name="text">
+              <string>Base VATS Chance to Hit:</string>
+             </property>
+             <property name="buddy">
+              <cstring>baseVATSChance</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="resist">
+             <property name="whatsThis">
+              <string>You can optionally select an Actor Value that acts as an actor's damage resistance, scaling inbound damage dealt by this weapon. Only valid damage resistance Actor Values can be used.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QComboBox" name="onHitCalc">
+             <item>
+              <property name="text">
+               <string>Normal formula behavior</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Dismember only</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Explode only</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Never dismember or explode</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QSpinBox" name="baseVATSChance">
+             <property name="whatsThis">
+              <string>Unused.</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="maximum">
+              <number>255</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="combatAIRangeGroupbox">
+           <property name="title">
+            <string>Effective ranges for combat AI</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_6">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_20">
+              <property name="text">
+               <string>Minimum:</string>
+              </property>
+              <property name="buddy">
+               <cstring>combatAIRangeMin</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDoubleSpinBox" name="combatAIRangeMin">
+              <property name="whatsThis">
+               <string>The weapon's minimum effective range: combat AI don't need to get any closer than this to use the weapon effectively.</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2" alignment="Qt::AlignRight">
+             <widget class="QLabel" name="label_21">
+              <property name="text">
+               <string>Maximum:</string>
+              </property>
+              <property name="buddy">
+               <cstring>combatAIRangeMax</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <widget class="QDoubleSpinBox" name="combatAIRangeMax">
+              <property name="whatsThis">
+               <string>The weapon's maximum effective range: combat AI should try not to be any further from their target than this distance.</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0" colspan="4">
+             <widget class="QCheckBox" name="flagFixedAIRange">
+              <property name="text">
+               <string>Don't apply combat style multipliers to these ranges</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <layout class="QGridLayout" name="gridLayout_8">
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="flagBurstShot">
+             <property name="text">
+              <string>Burst Shot</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="flagLongBursts">
+             <property name="text">
+              <string>Long Bursts</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_3">
+           <property name="title">
+            <string>Keywords</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_10">
+            <item row="0" column="0">
+             <widget class="DKFormListPane" name="keywords"/>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item row="0" column="1">
+        <layout class="QVBoxLayout" name="gameDataColumnRight">
+         <item>
+          <widget class="QGroupBox" name="groupBox">
+           <property name="title">
+            <string>Flags</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_2">
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="flagNPCsUseAmmo">
+              <property name="whatsThis">
+               <string>By default, NPCs don't use up any of the ammo in their inventory. If this box is checked, however, then NPCs will consume ammo while using this weapon.</string>
+              </property>
+              <property name="text">
+               <string>NPCs use ammo</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QCheckBox" name="flagNoJam">
+              <property name="whatsThis">
+               <string>Unused.</string>
+              </property>
+              <property name="text">
+               <string>No jam after reload</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QCheckBox" name="flagIgnoresNormalResist">
+              <property name="whatsThis">
+               <string>Unused?</string>
+              </property>
+              <property name="text">
+               <string>Ignores normal weapon resistance</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QCheckBox" name="flagMinorCrime">
+              <property name="whatsThis">
+               <string>Ordinarily, attacking an NPC is an assault — a major crime. If this box is checked, however, then attacking an NPC with this weapon will only be a minor crime.</string>
+              </property>
+              <property name="text">
+               <string>Minor crime</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QCheckBox" name="flagAutomatic">
+              <property name="whatsThis">
+               <string>Unused?</string>
+              </property>
+              <property name="text">
+               <string>Automatic</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QCheckBox" name="flagHideBackpack">
+              <property name="whatsThis">
+               <string>If checked, the weapon will be invisible while sheathed, and only visible when it is drawn and held in one or both hands.</string>
+              </property>
+              <property name="text">
+               <string>Hide backpack</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QCheckBox" name="flagCantDrop">
+              <property name="whatsThis">
+               <string>If this is checked, then an actor using this weapon cannot be disarmed, and the weapon isn't dropped when the actor dies. This option is intended for weapons that are mounted onto the actor or its armor.</string>
+              </property>
+              <property name="text">
+               <string>Can't drop</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QCheckBox" name="flagPlayable">
+              <property name="whatsThis">
+               <string>If checked, the player can see this weapon in other actors' inventories, and can equip and use it. If unchecked, the player cannot see the weapon listed in inventory menus, and cannot equip it.</string>
+              </property>
+              <property name="text">
+               <string>Playable</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QCheckBox" name="flagNotUsedInNormalCombat">
+              <property name="whatsThis">
+               <string>If checked, NPCs will never use this weapon unless a Use Weapon AI package directs them to.</string>
+              </property>
+              <property name="text">
+               <string>Not used in normal combat</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="QCheckBox" name="flagPlayerOnly">
+              <property name="whatsThis">
+               <string>If checked, NPCs will not use this weapon, and they won't pick it up if they see it lying around.</string>
+              </property>
+              <property name="text">
+               <string>Player only</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QCheckBox" name="flagNonHostile">
+              <property name="whatsThis">
+               <string>If checked, an actor that is hit by this weapon will not consider that to be an aggressive act, and the weapon will not force combat.</string>
+              </property>
+              <property name="text">
+               <string>Non-hostile</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QCheckBox" name="flagBound">
+              <property name="whatsThis">
+               <string>Controls whether this weapon can be used for a &quot;Bound Weapon&quot; Magic Effect.</string>
+              </property>
+              <property name="text">
+               <string>Bound weapon</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_2">
+           <property name="title">
+            <string>Critical Hits</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_4">
+            <item row="1" column="1">
+             <widget class="QDoubleSpinBox" name="critDamage">
+              <property name="whatsThis">
+               <string>The amount of extra damage inflicted by critical hits with this weapon. This is a flat value added to the weapon's computed damage, and it's added after armor-related calculations, so it bypasses the target's armor.</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_19">
+              <property name="text">
+               <string>Spell to Apply:</string>
+              </property>
+              <property name="buddy">
+               <cstring>critEffect</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_17">
+              <property name="text">
+               <string>Crit Chance Mult.:</string>
+              </property>
+              <property name="buddy">
+               <cstring>critChanceMult</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDoubleSpinBox" name="critChanceMult">
+              <property name="whatsThis">
+               <string>A multiplier which will be applied to the CritChance actor value for this weapon's wielder.</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="DKFormPicker" name="critEffect">
+              <property name="whatsThis">
+               <string>A spell to apply to targets when this weapon is used to land a critical hit on them. The spell must have only self-targeted effects.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_18">
+              <property name="text">
+               <string>Added Damage:</string>
+              </property>
+              <property name="buddy">
+               <cstring>critDamage</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QCheckBox" name="flagCritEffectOnlyOnDeath">
+              <property name="text">
+               <string>Apply spell only for killing blows</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="embedded">
+           <property name="whatsThis">
+            <string>&lt;p&gt;This functionality isn't used in Skyrim.&lt;/p&gt;
+&lt;p&gt;For Fallout 3 and Fallout: New Vegas, this data is used for weapons that are built-in parts of a creature. It allows the weapon to be attached to a specific node in the wielder's animation skeleton, and it allows the weapon to be targeted in VATS, using a given actor value on the wielder.&lt;/p&gt;</string>
+           </property>
+           <property name="title">
+            <string>Embedded weapon</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_5">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_15">
+              <property name="text">
+               <string>Node:</string>
+              </property>
+              <property name="buddy">
+               <cstring>embeddedToNode</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="embeddedToNode"/>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_16">
+              <property name="text">
+               <string>Actor Value:</string>
+              </property>
+              <property name="buddy">
+               <cstring>embeddedAV</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QComboBox" name="embeddedAV"/>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabArt">
+      <attribute name="title">
+       <string>Art and Sound</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <layout class="QGridLayout" name="gridLayout_12">
+           <item row="7" column="1">
+            <widget class="DKFormPicker" name="impactDataSetBlockBash"/>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_48">
+             <property name="text">
+              <string>Inventory Icon:</string>
+             </property>
+             <property name="buddy">
+              <cstring>iconInventory</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="0">
+            <widget class="QLabel" name="label_38">
+             <property name="text">
+              <string>Alternate Block Material:</string>
+             </property>
+             <property name="buddy">
+              <cstring>alternateBlockMaterial</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0" colspan="2">
+            <widget class="DKFormDestructionDataButton" name="destructionData"/>
+           </item>
+           <item row="6" column="0">
+            <widget class="QLabel" name="label_36">
+             <property name="text">
+              <string>Impact Data Set:</string>
+             </property>
+             <property name="buddy">
+              <cstring>impactDataSet</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_34">
+             <property name="text">
+              <string>Model:</string>
+             </property>
+             <property name="buddy">
+              <cstring>model</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1">
+            <widget class="DKFormPicker" name="impactDataSet"/>
+           </item>
+           <item row="0" column="1">
+            <widget class="DKFormNIFPicker" name="model">
+             <property name="whatsThis">
+              <string>The 3D model used for this weapon when it's seen in the world, or when it's seen wielded from a third-person perspective.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="0">
+            <widget class="QLabel" name="label_37">
+             <property name="text">
+              <string>I.D.S. (Block Bash):</string>
+             </property>
+             <property name="buddy">
+              <cstring>impactDataSetBlockBash</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="1">
+            <widget class="DKFormPicker" name="alternateBlockMaterial"/>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_35">
+             <property name="text">
+              <string>First-Person Model:</string>
+             </property>
+             <property name="buddy">
+              <cstring>firstPersonModel</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="DKFormPicker" name="firstPersonModel">
+             <property name="whatsThis">
+              <string>The weapon model object used for this weapon when it's seen from a first-person perspective. For some reason, this is a Static form and not just a NIF path.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_49">
+             <property name="text">
+              <string>Message Icon:</string>
+             </property>
+             <property name="buddy">
+              <cstring>iconMessage</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="DKGameFilePicker" name="iconInventory">
+             <property name="whatsThis">
+              <string>Unused.</string>
+             </property>
+             <property name="standardConfiguration">
+              <enum>DKGameFilePicker::Textures</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="DKGameFilePicker" name="iconMessage">
+             <property name="whatsThis">
+              <string>Unused.</string>
+             </property>
+             <property name="standardConfiguration">
+              <enum>DKGameFilePicker::Textures</enum>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_5">
+           <property name="title">
+            <string>Animation</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_14">
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_43">
+              <property name="text">
+               <string>Attack Speed Mult.:</string>
+              </property>
+              <property name="buddy">
+               <cstring>animAttackMult</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_42">
+              <property name="text">
+               <string>Attack Animation:</string>
+              </property>
+              <property name="buddy">
+               <cstring>attackAnim</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QDoubleSpinBox" name="animShotsPerSec">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QLabel" name="label_44">
+              <property name="text">
+               <string>Shots per sec.:</string>
+              </property>
+              <property name="buddy">
+               <cstring>animShotsPerSec</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0" colspan="4">
+             <widget class="QCheckBox" name="flagNoFirstPersonISAnims">
+              <property name="text">
+               <string>Don't use first-person ironsight animations</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QDoubleSpinBox" name="animAttackMult">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="value">
+               <double>1.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_41">
+              <property name="text">
+               <string>Type:</string>
+              </property>
+              <property name="buddy">
+               <cstring>weaponType</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1" colspan="3">
+             <widget class="QComboBox" name="attackAnim"/>
+            </item>
+            <item row="0" column="1" colspan="3">
+             <widget class="QComboBox" name="weaponType"/>
+            </item>
+            <item row="4" column="0" colspan="4">
+             <widget class="QCheckBox" name="flagNoThirdPersonISAnims">
+              <property name="text">
+               <string>Don't use third-person ironsight animations</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="scopeGroupbox">
+           <property name="title">
+            <string>Has Scope</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_13">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_39">
+              <property name="text">
+               <string>Target NIF:</string>
+              </property>
+              <property name="buddy">
+               <cstring>scopeTargetNIF</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="DKFormNIFPicker" name="scopeTargetNIF">
+              <property name="whatsThis">
+               <string>A 3D model to serve as a screen overlay when using the weapon's scope.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_40">
+              <property name="text">
+               <string>Effect:</string>
+              </property>
+              <property name="buddy">
+               <cstring>scopeEffect</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="DKFormPicker" name="scopeEffect">
+              <property name="whatsThis">
+               <string>An EffectShader to be applied to the target or the view when the scope is used.</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QGroupBox" name="groupBox_4">
+           <property name="title">
+            <string>Sounds</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_11">
+            <item row="5" column="1">
+             <widget class="DKFormPicker" name="soundEquip">
+              <property name="whatsThis">
+               <string>The sound made when this weapon is drawn from its sheathe.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
+             <widget class="QLabel" name="label_30">
+              <property name="text">
+               <string>Sheathe:</string>
+              </property>
+              <property name="buddy">
+               <cstring>soundUnequip</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="1">
+             <widget class="DKFormPicker" name="soundIdle"/>
+            </item>
+            <item row="8" column="0">
+             <widget class="QLabel" name="label_32">
+              <property name="text">
+               <string>Drop:</string>
+              </property>
+              <property name="buddy">
+               <cstring>soundDrop</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_25">
+              <property name="text">
+               <string>Attack (2D):</string>
+              </property>
+              <property name="buddy">
+               <cstring>soundAttack2D</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="DKFormPicker" name="soundAttack"/>
+            </item>
+            <item row="7" column="1">
+             <widget class="DKFormPicker" name="soundPickup">
+              <property name="whatsThis">
+               <string>The sound made when the player picks up this item.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="DKFormPicker" name="soundUnequip">
+              <property name="whatsThis">
+               <string>The sound made when this weapon is returned to its sheathe.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_27">
+              <property name="text">
+               <string>Attack Loop:</string>
+              </property>
+              <property name="buddy">
+               <cstring>soundAttackLoop</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="DKFormPicker" name="soundAttackFail">
+              <property name="whatsThis">
+               <string>The sound made by a melee weapon when it misses, or the sound made by a ranged weapon if its wielder tries to fire it while out of ammo.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_13">
+              <property name="text">
+               <string>Attack:</string>
+              </property>
+              <property name="buddy">
+               <cstring>soundAttack</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="0">
+             <widget class="QLabel" name="label_31">
+              <property name="text">
+               <string>Pickup:</string>
+              </property>
+              <property name="buddy">
+               <cstring>soundPickup</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_28">
+              <property name="text">
+               <string>Idle:</string>
+              </property>
+              <property name="buddy">
+               <cstring>soundIdle</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="1">
+             <widget class="DKFormPicker" name="soundDrop">
+              <property name="whatsThis">
+               <string>The sound made when the player drops this item.</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="DKFormPicker" name="soundAttack2D"/>
+            </item>
+            <item row="2" column="1">
+             <widget class="DKFormPicker" name="soundAttackLoop"/>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="label_29">
+              <property name="text">
+               <string>Draw:</string>
+              </property>
+              <property name="buddy">
+               <cstring>soundEquip</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_26">
+              <property name="text">
+               <string>Attack Fail:</string>
+              </property>
+              <property name="buddy">
+               <cstring>soundAttackFail</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="0" colspan="2">
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <item>
+               <widget class="QLabel" name="label_33">
+                <property name="text">
+                 <string>Detection Sound Level:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>detectionSoundLevel</cstring>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="detectionSoundLevel">
+                <property name="whatsThis">
+                 <string>Control how easily NPC AI can hear this weapon, for detection purposes.</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_6">
+           <property name="title">
+            <string>Controller vibration</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_16">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_45">
+              <property name="text">
+               <string>Left motor strength:</string>
+              </property>
+              <property name="buddy">
+               <cstring>rumbleStrengthL</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3" colspan="2">
+             <widget class="QCheckBox" name="flagAlternateRumble">
+              <property name="text">
+               <string>Alternate</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="4">
+             <widget class="QDoubleSpinBox" name="rumbleStrengthR">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_47">
+              <property name="text">
+               <string>Duration:</string>
+              </property>
+              <property name="buddy">
+               <cstring>rumbleDuration</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QDoubleSpinBox" name="rumbleDuration">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <widget class="QLabel" name="label_46">
+              <property name="text">
+               <string>Right:</string>
+              </property>
+              <property name="buddy">
+               <cstring>rumbleStrengthR</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QDoubleSpinBox" name="rumbleStrengthL">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <spacer name="horizontalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Fixed</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>6</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormDestructionDataButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormDestructionDataButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKPapyrusBoundScriptListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKPapyrusBoundScriptListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKGameFilePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKGameFilePicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>enchantmentForm</tabstop>
+  <tabstop>enchantmentCharge</tabstop>
+  <tabstop>value</tabstop>
+  <tabstop>templateForm</tabstop>
+  <tabstop>scriptListPane</tabstop>
+  <tabstop>tabbox</tabstop>
+  <tabstop>weight</tabstop>
+  <tabstop>damage</tabstop>
+  <tabstop>reach</tabstop>
+  <tabstop>projectileCount</tabstop>
+  <tabstop>speed</tabstop>
+  <tabstop>ironsightFOV</tabstop>
+  <tabstop>stagger</tabstop>
+  <tabstop>skill</tabstop>
+  <tabstop>equipType</tabstop>
+  <tabstop>resist</tabstop>
+  <tabstop>onHitCalc</tabstop>
+  <tabstop>baseVATSChance</tabstop>
+  <tabstop>flagNPCsUseAmmo</tabstop>
+  <tabstop>flagNoJam</tabstop>
+  <tabstop>flagIgnoresNormalResist</tabstop>
+  <tabstop>flagMinorCrime</tabstop>
+  <tabstop>flagAutomatic</tabstop>
+  <tabstop>flagHideBackpack</tabstop>
+  <tabstop>flagCantDrop</tabstop>
+  <tabstop>flagPlayable</tabstop>
+  <tabstop>flagNotUsedInNormalCombat</tabstop>
+  <tabstop>flagPlayerOnly</tabstop>
+  <tabstop>flagNonHostile</tabstop>
+  <tabstop>flagBound</tabstop>
+  <tabstop>combatAIRangeMin</tabstop>
+  <tabstop>combatAIRangeMax</tabstop>
+  <tabstop>flagFixedAIRange</tabstop>
+  <tabstop>flagBurstShot</tabstop>
+  <tabstop>flagLongBursts</tabstop>
+  <tabstop>critChanceMult</tabstop>
+  <tabstop>critDamage</tabstop>
+  <tabstop>critEffect</tabstop>
+  <tabstop>flagCritEffectOnlyOnDeath</tabstop>
+  <tabstop>keywords</tabstop>
+  <tabstop>embedded</tabstop>
+  <tabstop>embeddedToNode</tabstop>
+  <tabstop>embeddedAV</tabstop>
+  <tabstop>model</tabstop>
+  <tabstop>firstPersonModel</tabstop>
+  <tabstop>iconInventory</tabstop>
+  <tabstop>iconMessage</tabstop>
+  <tabstop>destructionData</tabstop>
+  <tabstop>impactDataSet</tabstop>
+  <tabstop>impactDataSetBlockBash</tabstop>
+  <tabstop>alternateBlockMaterial</tabstop>
+  <tabstop>weaponType</tabstop>
+  <tabstop>attackAnim</tabstop>
+  <tabstop>animAttackMult</tabstop>
+  <tabstop>animShotsPerSec</tabstop>
+  <tabstop>flagNoFirstPersonISAnims</tabstop>
+  <tabstop>flagNoThirdPersonISAnims</tabstop>
+  <tabstop>scopeGroupbox</tabstop>
+  <tabstop>scopeTargetNIF</tabstop>
+  <tabstop>scopeEffect</tabstop>
+  <tabstop>soundAttack</tabstop>
+  <tabstop>soundAttack2D</tabstop>
+  <tabstop>soundAttackLoop</tabstop>
+  <tabstop>soundAttackFail</tabstop>
+  <tabstop>soundIdle</tabstop>
+  <tabstop>soundEquip</tabstop>
+  <tabstop>soundUnequip</tabstop>
+  <tabstop>soundPickup</tabstop>
+  <tabstop>soundDrop</tabstop>
+  <tabstop>detectionSoundLevel</tabstop>
+  <tabstop>rumbleStrengthL</tabstop>
+  <tabstop>rumbleStrengthR</tabstop>
+  <tabstop>rumbleDuration</tabstop>
+  <tabstop>flagAlternateRumble</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

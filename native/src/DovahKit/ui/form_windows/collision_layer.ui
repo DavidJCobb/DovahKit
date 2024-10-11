@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogCollisionLayer</class>
+ <widget class="QDialog" name="FormDialogCollisionLayer">
+  <property name="windowTitle">
+   <string>Collision Layer</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Name:</string>
+       </property>
+       <property name="buddy">
+        <cstring>name</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="DKColorPickerButton" name="color"/>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Debug Color:</string>
+       </property>
+       <property name="buddy">
+        <cstring>color</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Description:</string>
+         </property>
+         <property name="buddy">
+          <cstring>description</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="description">
+         <property name="whatsThis">
+          <string>A description of what objects this collision layer ought to be applied to. This can be used as documentation for other developers.</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="name"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Unique ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>layerID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QSpinBox" name="layerID">
+       <property name="whatsThis">
+        <string>A unique numeric ID for this layer. Collision data in NIF files can refer to the layer by this</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Collides with...</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="DKFormListPane" name="collidesWith">
+        <property name="whatsThis">
+         <string>&lt;p&gt;Objects that belong to this collision layer can only collide with objects that belong to any collision layer in this list. You can drag and drop layers from the Object Window to add them to this list.&lt;/p&gt;
+&lt;p&gt;Note that this implies that two objects in the same layer can only collide with each other if the layer is set to collide with itself.&lt;/p&gt;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_3">
+     <item row="1" column="0">
+      <widget class="QCheckBox" name="checkBox_2">
+       <property name="whatsThis">
+        <string>Controls whether collision primitives in this layer should act as trigger volumes and fire trigger-related script events (e.g. OnTrigger).</string>
+       </property>
+       <property name="text">
+        <string>Trigger Volume</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QCheckBox" name="checkBox">
+       <property name="text">
+        <string>Sensor</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QCheckBox" name="checkBox_3">
+       <property name="whatsThis">
+        <string>Indicates whether collision geometry of this type should dynamically cut the navmesh. This is primarily intended for the &lt;code&gt;L_NAVCUT&lt;/code&gt; layer.</string>
+       </property>
+       <property name="text">
+        <string>Navmesh Obstacle</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKColorPickerButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKColorPickerButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormListPane.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>layerID</tabstop>
+  <tabstop>description</tabstop>
+  <tabstop>color</tabstop>
+  <tabstop>collidesWith</tabstop>
+  <tabstop>checkBox</tabstop>
+  <tabstop>checkBox_2</tabstop>
+  <tabstop>checkBox_3</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

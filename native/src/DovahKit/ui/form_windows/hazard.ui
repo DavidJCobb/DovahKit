@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogHazard</class>
+ <widget class="QDialog" name="FormDialogHazard">
+  <property name="windowTitle">
+   <string>Hazard</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Sound:</string>
+       </property>
+       <property name="buddy">
+        <cstring>sound</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="DKFormNIFPicker" name="model"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Name:</string>
+       </property>
+       <property name="buddy">
+        <cstring>name</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="DKFormPicker" name="sound"/>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>Impact Data Set:</string>
+       </property>
+       <property name="buddy">
+        <cstring>impactDataSet</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Imagespace Mod:</string>
+       </property>
+       <property name="buddy">
+        <cstring>imagespaceMod</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="DKFormPicker" name="imagespaceMod">
+       <property name="whatsThis">
+        <string>An imagespace modifier to be applied when the camera is within the Imagespace Radius of the hazard.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Model:</string>
+       </property>
+       <property name="buddy">
+        <cstring>model</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="name"/>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Spell:</string>
+       </property>
+       <property name="buddy">
+        <cstring>spell</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Light:</string>
+       </property>
+       <property name="buddy">
+        <cstring>light</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="DKFormPicker" name="impactDataSet"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="3" column="1">
+      <widget class="DKFormPicker" name="light">
+       <property name="whatsThis">
+        <string>Light emitted by the hazard.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="DKFormPicker" name="spell">
+       <property name="whatsThis">
+        <string>A concentration spell to apply to any actors inside of the hazard's radius. The spell will not be applied to the hazard's caster — that is, whatever actor cast the spell whose &quot;Spawn Hazard&quot; magic effect produced this hazard.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>Imagespace Radius:</string>
+       </property>
+       <property name="buddy">
+        <cstring>imagespaceRadius</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QDoubleSpinBox" name="imagespaceRadius">
+       <property name="whatsThis">
+        <string>The hazard's imagespace modifier will be applied when the camera is within this radius of the hazard.</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Lifecycle</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Effect Interval:</string>
+        </property>
+        <property name="buddy">
+         <cstring>interval</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="interval">
+        <property name="whatsThis">
+         <string>&lt;p&gt;The interval, in seconds, between each occurrence of the hazard's effect.&lt;/p&gt;
+&lt;p&gt;For example, if the hazard has an interval of 5 seconds, and it casts a spell with a duration of 60 seconds, then the hazard will cast a spell every 65 seconds: if you stand inside the hazard and just let it keep hitting you, five seconds will pass between each block of time you spend being affected by the spell.&lt;/p&gt;</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_11">
+        <property name="text">
+         <string>Lifetime (0 = Indefinite):</string>
+        </property>
+        <property name="buddy">
+         <cstring>lifetime</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="lifetime">
+        <property name="whatsThis">
+         <string>The amount of seconds for which the hazard will exist. If this is set to zero, then the hazard exists indefinitely.</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>Max Count (0 = No Limit):</string>
+        </property>
+        <property name="buddy">
+         <cstring>maxCount</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QDoubleSpinBox" name="maxCount">
+        <property name="whatsThis">
+         <string>&lt;p&gt;The maximum amount of this hazard that can be present once. When the limit is passed, the oldest hazards of this type will be despawned until the game is back under the limit. Set this to zero to disable the limit and allow an unlimited number of hazards to exist.&lt;/p&gt;&lt;!-- TODO: Present where? In the loaded area, specifically? I would assume so but it's worth verifying. --&gt;</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Flags</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QCheckBox" name="flagPlayerOnly">
+        <property name="whatsThis">
+         <string>If checked, this hazard will only consider casting spells on the player. Note that if the player is this hazard's caster — if they cast the spell whose &quot;Spawn Hazard&quot; magic effect produced this hazard — then they won't be affected by the hazard's spell, even if this box is checked.</string>
+        </property>
+        <property name="text">
+         <string>Only affects player</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="flagInheritDuration">
+        <property name="text">
+         <string>Inherit duration from source spell</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="flagInheritRadius">
+        <property name="text">
+         <string>Inherit radius from source spell</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="flagAlignToImpactNormal">
+        <property name="whatsThis">
+         <string>&lt;p&gt;Rotates the hazard such that its local up-vector matches the surface normal of the surface upon which it spawned.&lt;/p&gt;
+&lt;p&gt;Put more simply: the hazard will align itself to the surface it is spawned against. Spawn it on a slope, and it'll be angled to match the slope. Spawn it against a wall, and it'll point out of the wall.&lt;/p&gt;</string>
+        </property>
+        <property name="text">
+         <string>Align to impact normal</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="flagDropToGround">
+        <property name="whatsThis">
+         <string>If checked, the hazard's model will drop to the ground when spawned.</string>
+        </property>
+        <property name="text">
+         <string>Drop to ground</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>model</tabstop>
+  <tabstop>light</tabstop>
+  <tabstop>sound</tabstop>
+  <tabstop>spell</tabstop>
+  <tabstop>imagespaceMod</tabstop>
+  <tabstop>imagespaceRadius</tabstop>
+  <tabstop>impactDataSet</tabstop>
+  <tabstop>interval</tabstop>
+  <tabstop>lifetime</tabstop>
+  <tabstop>maxCount</tabstop>
+  <tabstop>flagPlayerOnly</tabstop>
+  <tabstop>flagInheritDuration</tabstop>
+  <tabstop>flagInheritRadius</tabstop>
+  <tabstop>flagAlignToImpactNormal</tabstop>
+  <tabstop>flagDropToGround</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
