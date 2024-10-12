@@ -2681,11 +2681,13 @@
     <QtUic Include="ui\form_windows\art_object.ui" />
     <QtUic Include="ui\form_windows\association_type.ui" />
     <QtUic Include="ui\form_windows\book.ui" />
+    <QtUic Include="ui\form_windows\camera_shot.ui" />
     <QtUic Include="ui\form_windows\cell.ui" />
     <QtUic Include="ui\form_windows\class.ui" />
     <QtUic Include="ui\form_windows\collision_layer.ui" />
     <QtUic Include="ui\form_windows\color.ui" />
     <QtUic Include="ui\form_windows\combat_style.ui" />
+    <QtUic Include="ui\form_windows\constructible_object.ui" />
     <QtUic Include="ui\form_windows\container.ui" />
     <QtUic Include="ui\form_windows\dialogue_branch.ui" />
     <QtUic Include="ui\form_windows\door.ui" />
@@ -2707,6 +2709,8 @@
     <QtUic Include="ui\form_windows\leveled_item.ui" />
     <QtUic Include="ui\form_windows\leveled_spell.ui" />
     <QtUic Include="ui\form_windows\light.ui" />
+    <QtUic Include="ui\form_windows\loading_screen.ui" />
+    <QtUic Include="ui\form_windows\material_object.ui" />
     <QtUic Include="ui\form_windows\material_type.ui" />
     <QtUic Include="ui\form_windows\misc_item.ui" />
     <QtUic Include="ui\form_windows\movement_type.ui" />
@@ -2724,8 +2728,10 @@
     <QtUic Include="ui\form_windows\race.ui" />
     <QtUic Include="ui\form_windows\reference.ui" />
     <QtUic Include="ui\form_windows\relationship.ui" />
+    <QtUic Include="ui\form_windows\shader_particle_geometry_data.ui" />
     <QtUic Include="ui\form_windows\shout.ui" />
     <QtUic Include="ui\form_windows\soul_gem.ui" />
+    <QtUic Include="ui\form_windows\sound.ui" />
     <QtUic Include="ui\form_windows\spell.ui" />
     <QtUic Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.ui" />
     <QtUic Include="ui\form_windows\static.ui" />
