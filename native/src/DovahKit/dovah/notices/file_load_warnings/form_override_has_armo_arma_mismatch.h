@@ -11,7 +11,7 @@ namespace dovah::notices::file_load_warnings {
          MAKE_CLONE_OVERLOAD;
 
       public:
-         constexpr form_override_has_armo_arma_mismatch(form_stub& a, form_stub& b) : overridden_form({ .stub = a }), overriding_form({ .stub = b }) {}
+         constexpr form_override_has_armo_arma_mismatch(form_stub& overridden_stub) : overridden_form({ .stub = overridden_stub }) {}
 
          struct {
             std::string source_file;
@@ -19,7 +19,6 @@ namespace dovah::notices::file_load_warnings {
          } overridden_form;
          struct {
             std::string source_file;
-            form_stub&  stub; // NOTE: Because the stub is actively still being loaded, its `formID` isn't correct. Use `form_ids.global`.
             struct {
                bare_form_id_t local  = 0;
                bare_form_id_t global = 0;

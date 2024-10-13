@@ -2,16 +2,35 @@
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
    <Type Name="cobb::multiheap&lt;*,*&gt;::State">
       <Expand>
-         <Item Name="subheaps">subheaps</Item>
-         <Item Name="subheaps_lock">subheaps_lock</Item>
-         <Item Name="unowned">unowned</Item>
-         <Item Name="unowned_lock">unowned_lock</Item>
+         <Item Name="[subheaps]">subheaps</Item>
+         <Synthetic Name="[unowned blocks]">
+            <Expand>
+               <CustomListItems MaxItemsPerView="5000" ExcludeView="Test">
+                  <Variable Name="i"     InitialValue="0" />
+                  <Variable Name="block" InitialValue="(block_t*)nullptr" />
+                  
+                  <Exec>block = this-&gt;unowned_blocks</Exec>
+                  <If Condition="block != nullptr">
+                     <Item Name="[{i,d}]">block</Item>
+                     <Exec>++i</Exec>
+                     <Loop>
+                        <Exec>block = block-&gt;info.next</Exec>
+                        <If Condition="block != nullptr">
+                           <Item Name="[{i,d}]">block</Item>
+                           <Exec>++i</Exec>
+                        </If>
+                        <Break Condition="block == nullptr" />
+                     </Loop>
+                  </If>
+               </CustomListItems>
+            </Expand>
+         </Synthetic>
       </Expand>
    </Type>
    
    <Type Name="cobb::multiheap&lt;*,*&gt;::subheap">
       <Expand>
-         <Item Optional="true" Name="[thread ID]">threadID</Item>
+         <Item Optional="true" Name="[thread ID]">thread_id</Item>
          <LinkedListItems>
             <HeadPointer>first</HeadPointer>
             <NextPointer>info.next</NextPointer>
@@ -21,10 +40,19 @@
    </Type>
    
    <Type Name="cobb::multiheap&lt;*,*&gt;::block_t">
+      <DisplayString>{{ count={$T2 - info.remaining,d}, remaining={info.remaining,d} }}</DisplayString>
       <Expand>
          <Item Name="info">info</Item>
-         <Item Name="[count]">$T2 - info.remaining</Item>
+         <Synthetic Name="[count]">
+            <DisplayString>{$T2 - info.remaining,d} / {$T2,d} ({info.remaining,d} remaining)</DisplayString>
+         </Synthetic>
          <Item Name="[next alloc index]">info.start_from</Item>
+         <Synthetic Name="[buffer]">
+            <Expand>
+               <Item Name="[start]">(void*)&amp;buffer</Item>
+               <Item Name="[end]">(void*)((size_t)&amp;buffer + sizeof(buffer))</Item>
+            </Expand>
+         </Synthetic>
          <Synthetic Name="[items]">
             <Expand>
                <CustomListItems MaxItemsPerView="5000" ExcludeView="Test">
@@ -53,6 +81,7 @@
                </CustomListItems>
             </Expand>
          </Synthetic>
+         <Item Name="[next block]" Condition="info.next != nullptr">info.next</Item>
       </Expand>
    </Type>
 </AutoVisualizer>

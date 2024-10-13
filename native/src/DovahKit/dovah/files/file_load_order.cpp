@@ -601,7 +601,7 @@ namespace dovah {
             auto* file_b = stub->get_file_at_index(-1);
 
             if (is_armo_arma) {
-               notices::file_load_warnings::form_override_has_armo_arma_mismatch notice(*existing_form, *stub);
+               notices::file_load_warnings::form_override_has_armo_arma_mismatch notice(*existing_form);
                if (file_b)
                   notice.source_file = file_b->get_filename();
                if (file_a)
@@ -647,7 +647,7 @@ namespace dovah {
             //
             auto* old_parent = existing_form->get_parent_form();
             if (old_parent && old_parent != new_parent) {
-               old_parent->_remove_child_topic_info({}, *existing_form, false);
+               old_parent->_remove_child_topic_info({}, *existing_form, true);
                //
                if (stub->test_record_flags(tes_file_record_header::flag::partial)) {
                   //

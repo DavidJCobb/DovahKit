@@ -8378,6 +8378,10 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\utils\cell_grid_position.inl" />
+    <None Include="helpers\multiheap.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="helpers\multiheap.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

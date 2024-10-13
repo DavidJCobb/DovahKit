@@ -660,8 +660,6 @@ namespace dovah {
       }
    }
    void form_stub::_remove_child_topic_info(form_stub_passkeys::build_use_info_during_load, form_stub& info, bool loading) {
-      if (loading && info.test_record_flags(tes_file_record_header::flag::partial))
-         return;
       if (!this->addenda)
          return;
       auto& list = this->addenda->ordered_children.active_file;

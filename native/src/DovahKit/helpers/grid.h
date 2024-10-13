@@ -39,7 +39,9 @@ namespace cobb {
          }
 
          void clear() {
-            this->_data = {};
+            for (auto& item : this->_data) {
+               item = {};
+            }
          }
 
          static constexpr bool coordinates_in_bounds(coordinate_type x, coordinate_type y) {

@@ -51,10 +51,9 @@ namespace editor_helpers {
          }
          if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::form_override_has_armo_arma_mismatch*>(&warning)) {
             auto overridden_form = form_identifiers_to_string(&casted->overridden_form.stub);
-            auto overriding_form = QString("[%1:%2]%3")
-               .arg(editor_helpers::form_signature_to_string(&casted->overriding_form.stub))
-               .arg(editor_helpers::form_id_to_string(casted->overriding_form.form_ids.global))
-               .arg(casted->overriding_form.stub.get_editor_id());
+            auto overriding_form = QString("[%1:%2]")
+               .arg(casted->overridden_form.stub.form_type == dovah::form_type::armor ? "ARMA" : "ARMO")
+               .arg(editor_helpers::form_id_to_string(casted->overriding_form.form_ids.global));
 
             auto overridden_file = QString::fromStdString(casted->overridden_form.source_file);
             auto overriding_file = QString::fromStdString(casted->overriding_form.source_file);
