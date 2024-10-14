@@ -62,7 +62,7 @@ namespace nifDK::block_types {
             reader.read_vector_contents(this->bitangents);
          }
       }
-      bool use_unknown_values = (reader.version() >= file_version::from_parts<20, 3, 0, 9> && (reader.user_version<1>() == 0x20000 || reader.user_version<1>() == 0x30000));
+      const bool use_unknown_values = (reader.version() >= file_version::from_parts<20, 3, 0, 9> && (reader.user_version<1>() == 0x20000 || reader.user_version<1>() == 0x30000));
       if (use_unknown_values) {
          reader.read(presence);
          if (presence) {

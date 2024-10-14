@@ -9,6 +9,7 @@
 #include "../ui/form_windows/activator.h"
 #include "../ui/form_windows/actor_action.h"
 #include "../ui/form_windows/actor_base.h"
+#include "../ui/form_windows/addon_node.h"
 #include "../ui/form_windows/art_object.h"
 #include "../ui/form_windows/association_type.h"
 #include "../ui/form_windows/cell.h"
@@ -57,11 +58,12 @@ namespace {
       return new T(f, p);
    }
 
-   constexpr std::array factory = {
+   constexpr const auto factory = std::array{
       std::pair{ dovah::form_type::acoustic_space,    _make<FormDialogAcousticSpace> },
       std::pair{ dovah::form_type::activator,         _make<FormDialogActivator> },
       std::pair{ dovah::form_type::action,            _make<FormDialogActorAction> },
       std::pair{ dovah::form_type::actor_base,        _make<FormDialogActorBase> },
+      std::pair{ dovah::form_type::addon_node,        _make<FormDialogAddOnNode> },
       std::pair{ dovah::form_type::art_object,        _make<FormDialogArtObject> },
       std::pair{ dovah::form_type::association_type,  _make<FormDialogAssociationType> },
       std::pair{ dovah::form_type::cell,              _make<FormDialogCell> },

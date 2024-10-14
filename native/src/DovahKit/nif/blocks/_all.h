@@ -52,6 +52,8 @@
             #include "BSTriShape.h"
             #include "NiDynamicEffect.h"
             #include "NiGeometry.h"
+               #include "NiParticles.h"
+                  #include "NiParticleSystem.h"
                #include "NiTriBasedGeom.h"
                   #include "BSLODTriShape.h"
                   #include "NiTriShape.h"
@@ -59,6 +61,7 @@
             #include "NiNode.h"
                #include "BSFadeNode.h"
                #include "BSLeafAnimNode.h"
+               #include "BSMasterParticleSystem.h"
                #include "BSMultiBoundNode.h"
                #include "BSOrderedNode.h"
                #include "BSRangeNode.h"
@@ -73,6 +76,12 @@
                #include "BSShaderProperty.h"
                   #include "BSEffectShaderProperty.h"
                   #include "BSLightingShaderProperty.h"
+      #include "NiParticlesData.h"
+         #include "NiPSysData.h"
+      #include "NiPSysEmitterCtlrData.h"
+      #include "NiPSysModifier.h"
+         #include "NiPSysEmitter.h"
+            #include "NiPSysVolumeEmitter.h"
       #include "NiSkinData.h"
       #include "NiSkinInstance.h"
          #include "BSDismemberSkinInstance.h"
@@ -82,6 +91,9 @@
             #include "NiSingleInterpController.h"
                #include "NiFloatInterpController.h"
                   #include "BSLightingShaderPropertyFloatController.h"
+               #include "NiPSysModifierCtlr.h"
+                  #include "NiPSysEmitterCtlr.h"
+                     #include "BSPSysMultiTargetEmitterCtlr.h"
 #pragma endregion
 
 namespace nifDK {
@@ -124,12 +136,14 @@ namespace nifDK {
       block_types::BSLightingShaderProperty,
       block_types::BSLightingShaderPropertyFloatController,
       block_types::BSLODTriShape,
+      block_types::BSMasterParticleSystem,
       block_types::BSMultiBound,
       block_types::BSMultiBoundData,
       block_types::BSMultiBoundDataOBB,
       block_types::BSMultiBoundDataSphere,
       block_types::BSMultiBoundNode,
       block_types::BSOrderedNode,
+      block_types::BSPSysMultiTargetEmitterCtlr,
       block_types::BSRangeNode,
       block_types::BSShaderProperty,
       block_types::BSShaderTextureSet,
@@ -151,7 +165,15 @@ namespace nifDK {
       block_types::NiNode,
       block_types::NiObject,
       block_types::NiObjectNET,
+      block_types::NiParticlesData,
       block_types::NiProperty,
+      block_types::NiPSysData,
+      block_types::NiPSysEmitter,
+      block_types::NiPSysEmitterCtlr,
+      block_types::NiPSysEmitterCtlrData,
+      block_types::NiPSysModifier,
+      block_types::NiPSysModifierCtlr,
+      block_types::NiPSysVolumeEmitter,
       block_types::NiShadeProperty,
       block_types::NiSingleInterpController,
       block_types::NiSkinData,

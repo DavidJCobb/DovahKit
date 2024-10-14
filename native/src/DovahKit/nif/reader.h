@@ -261,7 +261,7 @@ namespace nifDK {
          }
 
          template<bool checked, int N, typename F, glm::qualifier Q> void _read_half_vector_contents(std::vector<glm::vec<N, F, Q>>& out) {
-            auto size = out.size();
+            auto size = out.size() * N;
             //
             if constexpr (checked) {
                this->_require_size(size * sizeof(uint16_t));

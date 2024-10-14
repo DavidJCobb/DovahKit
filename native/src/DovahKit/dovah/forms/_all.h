@@ -10,6 +10,7 @@
    #include "Actor.h"
    #include "ActorAction.h"
    #include "ActorBase.h"
+   #include "AddOnNode.h"
    #include "ArtObject.h"
    #include "AssociationType.h"
    #include "Cell.h"
@@ -69,6 +70,7 @@ namespace dovah {
       loaded_forms::Actor,
       loaded_forms::ActorAction,
       loaded_forms::ActorBase,
+      loaded_forms::AddOnNode,
       loaded_forms::ArtObject,
       loaded_forms::AssociationType,
       loaded_forms::Cell,

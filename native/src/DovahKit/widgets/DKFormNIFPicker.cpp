@@ -40,6 +40,7 @@ DKFormNIFPicker::DKFormNIFPicker(QWidget* parent) : QWidget(parent) {
          this->_value.precached_nif_info = dialog->precachedNIFInfo();
 
          this->_subwidgets.path->setText(dialog->modelPath());
+         emit this->dataChanged();
       });
       QObject::connect(dialog, &QDialog::finished, dialog, [dialog]() {
          dialog->deleteLater();
@@ -56,6 +57,7 @@ DKFormNIFPicker::DKFormNIFPicker(QWidget* parent) : QWidget(parent) {
       this->_value.initializeFrom(src);
 
       this->_subwidgets.path->setText(QString::fromStdString(this->_value.model_path));
+      emit this->dataChanged();
    }
    void DKFormNIFPicker::commitTo(dovah::loaded_forms::components::model& dst, dovah::loaded_forms::Form& dst_owner) {
       this->_value.commitTo(dst, dst_owner);
@@ -65,5 +67,6 @@ DKFormNIFPicker::DKFormNIFPicker(QWidget* parent) : QWidget(parent) {
       this->_value = src;
 
       this->_subwidgets.path->setText(QString::fromStdString(src.model_path));
+      emit this->dataChanged();
    }
 #endif
