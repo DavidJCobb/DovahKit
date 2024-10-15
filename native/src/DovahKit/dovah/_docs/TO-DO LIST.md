@@ -57,6 +57,9 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 ### General
 * Review all form types and form component types written prior to 2/4/2024 and look for places where `std::optional` can be used. Offhand I know `Worldspace::max_height_data_t` has an embedded presence bool and that could be replaced with using `optional`.
 * `dovah/forms/components/conditions.cpp`: `condition_context::condition_context`: ensure that the if/else tree for getting condition-relevant-parent forms is complete.
+* In form data, every place that accepts a reference to a SNDR (BGSSoundDescriptor) form also accepts a reference to a SOUN (TESSound) form. The latter form was deprecated and converted into a thin wrapper around the former, just holding one pointer. When forms resolve form IDs to form pointers &mdash; that is, when doing that for sounds specifically &mdash; they check if the pointed-to form's ID is that for SOUN, and if so, they reach through the TESSound to the wrapped BGSSoundDescriptor and that's the pointer they retain.
+  * As a consequence of this, if a form that refers to a SOUN is loaded in the Creation Kit, when resaved it will refer to whatever SNDR the SOUN wrapped.
+  * I've observed this behavior myself in the loaders for BGSExplosion and BGSHazard. Robert on the xEdit Discord confirms (#decoding, 10/14/2024) that it applies to all references (basically, he tested round-tripping a pre-SNDR version of Skyrim.esm through the CK and saw everything be upgraded to SNDRs).
 
 ### Components
 * Make the helper functions on `object_bounds` `constexpr`.

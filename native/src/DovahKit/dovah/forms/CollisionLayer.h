@@ -1,0 +1,47 @@
+#pragma once
+#include <cstdint>
+#include <limits>
+#include <string>
+#include <vector>
+#include "Form.h"
+#include "_common.h"
+#include "components/papyrus.h"
+#include "structs/color_dword.h"
+
+namespace dovah::loaded_forms {
+   class CollisionLayer : public Form {
+      public:
+         static constexpr const enum form_type form_type = form_type::collision_layer;
+         CollisionLayer(const constructor_params& c) : Form(form_type, c) {};
+
+         static constexpr const size_t max_collides_with_layers = std::numeric_limits<uint32_t>::max();
+         static constexpr const size_t max_name_length = 259; // does not include null terminator, which must be present
+
+         struct layer_flag {
+            layer_flag() = delete;
+            enum type : uint32_t {
+               trigger_volume   = 1,
+               sensor           = 2,
+               navmesh_obstacle = 4,
+            };
+         };
+
+         components::papyrus_attachment_data script_data; // VMAD
+         //
+         localized_string description = localized_string(localized_string_type::description); // DESC
+         int32_t  unique_id   = 0; // BNAM
+         color_t  debug_color;     // FNAM
+         uint32_t layer_flags = 0; // GNAM
+         std::string name; // MNAM
+         std::vector<form_reference_t> collides_with; // CNAM
+
+         void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
+         //
+      protected:
+         virtual void _clone_impl(Form* out) const noexcept override;
+         virtual void _save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) override;
+         virtual void _clear_impl() noexcept override;
+         virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
+   };
+}

@@ -11,10 +11,13 @@
    #include "ActorAction.h"
    #include "ActorBase.h"
    #include "AddOnNode.h"
+   #include "Ammo.h"
+   #include "AnimationProp.h"
    #include "ArtObject.h"
    #include "AssociationType.h"
    #include "Cell.h"
    #include "Class.h"
+   #include "CollisionLayer.h"
    #include "Color.h"
    #include "Container.h"
    #include "DefaultObjectManager.h"
@@ -22,12 +25,14 @@
    #include "Door.h"
    #include "DualCastData.h"
    #include "EquipSlot.h"
+   #include "Explosion.h"
    #include "Faction.h"
    #include "Flora.h"
    #include "Footstep.h"
    #include "FormList.h"
    #include "Global.h"
    #include "Grass.h"
+   #include "Hazard.h"
    #include "HeadPart.h"
    #include "Key.h"
    #include "Keyword.h"
@@ -71,10 +76,13 @@ namespace dovah {
       loaded_forms::ActorAction,
       loaded_forms::ActorBase,
       loaded_forms::AddOnNode,
+      loaded_forms::Ammo,
+      loaded_forms::AnimationProp,
       loaded_forms::ArtObject,
       loaded_forms::AssociationType,
       loaded_forms::Cell,
       loaded_forms::Class,
+      loaded_forms::CollisionLayer,
       loaded_forms::Color,
       loaded_forms::Container,
       loaded_forms::DefaultObjectManager,
@@ -82,12 +90,14 @@ namespace dovah {
       loaded_forms::Door,
       loaded_forms::DualCastData,
       loaded_forms::EquipSlot,
+      loaded_forms::Explosion,
       loaded_forms::Faction,
       loaded_forms::Flora,
       loaded_forms::Footstep,
       loaded_forms::FormList,
       loaded_forms::Global,
       loaded_forms::Grass,
+      loaded_forms::Hazard,
       loaded_forms::HeadPart,
       loaded_forms::Key,
       loaded_forms::Keyword,

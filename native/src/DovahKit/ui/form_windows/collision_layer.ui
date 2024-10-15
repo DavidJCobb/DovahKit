@@ -110,7 +110,7 @@
    <item>
     <layout class="QGridLayout" name="gridLayout_3">
      <item row="1" column="0">
-      <widget class="QCheckBox" name="checkBox_2">
+      <widget class="QCheckBox" name="flagTriggerVolume">
        <property name="whatsThis">
         <string>Controls whether collision primitives in this layer should act as trigger volumes and fire trigger-related script events (e.g. OnTrigger).</string>
        </property>
@@ -120,14 +120,14 @@
       </widget>
      </item>
      <item row="0" column="0">
-      <widget class="QCheckBox" name="checkBox">
+      <widget class="QCheckBox" name="flagSensor">
        <property name="text">
         <string>Sensor</string>
        </property>
       </widget>
      </item>
      <item row="2" column="0">
-      <widget class="QCheckBox" name="checkBox_3">
+      <widget class="QCheckBox" name="flagNavmeshObstacle">
        <property name="whatsThis">
         <string>Indicates whether collision geometry of this type should dynamically cut the navmesh. This is primarily intended for the &lt;code&gt;L_NAVCUT&lt;/code&gt; layer.</string>
        </property>
@@ -203,9 +203,9 @@
   <tabstop>description</tabstop>
   <tabstop>color</tabstop>
   <tabstop>collidesWith</tabstop>
-  <tabstop>checkBox</tabstop>
-  <tabstop>checkBox_2</tabstop>
-  <tabstop>checkBox_3</tabstop>
+  <tabstop>flagSensor</tabstop>
+  <tabstop>flagTriggerVolume</tabstop>
+  <tabstop>flagNavmeshObstacle</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
  </tabstops>

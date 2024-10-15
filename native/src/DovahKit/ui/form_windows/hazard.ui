@@ -8,18 +8,22 @@
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="4" column="0">
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>Sound:</string>
-       </property>
-       <property name="buddy">
-        <cstring>sound</cstring>
+     <item row="6" column="1">
+      <widget class="DKFormPicker" name="spell">
+       <property name="whatsThis">
+        <string>A concentration spell to apply to any actors inside of the hazard's radius. The spell will not be applied to the hazard's caster — that is, whatever actor cast the spell whose &quot;Spawn Hazard&quot; magic effect produced this hazard.</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="DKFormNIFPicker" name="model"/>
+     <item row="8" column="1">
+      <widget class="QDoubleSpinBox" name="imagespaceRadius">
+       <property name="whatsThis">
+        <string>The hazard's imagespace modifier will be applied when the camera is within this radius of the hazard.</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
      </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label_2">
@@ -31,10 +35,7 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
-      <widget class="DKFormPicker" name="sound"/>
-     </item>
-     <item row="8" column="0">
+     <item row="9" column="0">
       <widget class="QLabel" name="label_8">
        <property name="text">
         <string>Impact Data Set:</string>
@@ -44,22 +45,18 @@
        </property>
       </widget>
      </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="label_7">
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_5">
        <property name="text">
-        <string>Imagespace Mod:</string>
+        <string>Sound:</string>
        </property>
        <property name="buddy">
-        <cstring>imagespaceMod</cstring>
+        <cstring>sound</cstring>
        </property>
       </widget>
      </item>
-     <item row="6" column="1">
-      <widget class="DKFormPicker" name="imagespaceMod">
-       <property name="whatsThis">
-        <string>An imagespace modifier to be applied when the camera is within the Imagespace Radius of the hazard.</string>
-       </property>
-      </widget>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
      </item>
      <item row="2" column="0">
       <widget class="QLabel" name="label_3">
@@ -71,10 +68,7 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="name"/>
-     </item>
-     <item row="5" column="0">
+     <item row="6" column="0">
       <widget class="QLabel" name="label_6">
        <property name="text">
         <string>Spell:</string>
@@ -83,19 +77,6 @@
         <cstring>spell</cstring>
        </property>
       </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Light:</string>
-       </property>
-       <property name="buddy">
-        <cstring>light</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="1">
-      <widget class="DKFormPicker" name="impactDataSet"/>
      </item>
      <item row="0" column="0">
       <widget class="QLabel" name="label">
@@ -107,24 +88,40 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="editorID"/>
+     <item row="7" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Imagespace Mod:</string>
+       </property>
+       <property name="buddy">
+        <cstring>imagespaceMod</cstring>
+       </property>
+      </widget>
      </item>
-     <item row="3" column="1">
+     <item row="5" column="1">
+      <widget class="DKFormPicker" name="sound"/>
+     </item>
+     <item row="4" column="1">
       <widget class="DKFormPicker" name="light">
        <property name="whatsThis">
         <string>Light emitted by the hazard.</string>
        </property>
       </widget>
      </item>
-     <item row="5" column="1">
-      <widget class="DKFormPicker" name="spell">
+     <item row="7" column="1">
+      <widget class="DKFormPicker" name="imagespaceMod">
        <property name="whatsThis">
-        <string>A concentration spell to apply to any actors inside of the hazard's radius. The spell will not be applied to the hazard's caster — that is, whatever actor cast the spell whose &quot;Spawn Hazard&quot; magic effect produced this hazard.</string>
+        <string>An imagespace modifier to be applied when the camera is within the Imagespace Radius of the hazard.</string>
        </property>
       </widget>
      </item>
-     <item row="7" column="0">
+     <item row="9" column="1">
+      <widget class="DKFormPicker" name="impactDataSet"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="DKFormNIFPicker" name="model"/>
+     </item>
+     <item row="8" column="0">
       <widget class="QLabel" name="label_9">
        <property name="text">
         <string>Imagespace Radius:</string>
@@ -134,11 +131,31 @@
        </property>
       </widget>
      </item>
-     <item row="7" column="1">
-      <widget class="QDoubleSpinBox" name="imagespaceRadius">
-       <property name="whatsThis">
-        <string>The hazard's imagespace modifier will be applied when the camera is within this radius of the hazard.</string>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="name"/>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Light:</string>
        </property>
+       <property name="buddy">
+        <cstring>light</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_13">
+       <property name="text">
+        <string>Radius:</string>
+       </property>
+       <property name="buddy">
+        <cstring>radius</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QDoubleSpinBox" name="radius">
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
@@ -204,7 +221,7 @@
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QDoubleSpinBox" name="maxCount">
+       <widget class="QSpinBox" name="maxCount">
         <property name="whatsThis">
          <string>&lt;p&gt;The maximum amount of this hazard that can be present once. When the limit is passed, the oldest hazards of this type will be despawned until the game is back under the limit. Set this to zero to disable the limit and allow an unlimited number of hazards to exist.&lt;/p&gt;&lt;!-- TODO: Present where? In the loaded area, specifically? I would assume so but it's worth verifying. --&gt;</string>
         </property>
@@ -332,6 +349,7 @@
   <tabstop>editorID</tabstop>
   <tabstop>name</tabstop>
   <tabstop>model</tabstop>
+  <tabstop>radius</tabstop>
   <tabstop>light</tabstop>
   <tabstop>sound</tabstop>
   <tabstop>spell</tabstop>

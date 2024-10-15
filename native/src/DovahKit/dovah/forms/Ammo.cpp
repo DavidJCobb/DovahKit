@@ -1,12 +1,15 @@
-#include "MiscItem.h"
+#include "Ammo.h"
 #include "_common_cpp.h"
 
 namespace dovah::loaded_forms {
-   void MiscItem::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+   void Ammo::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
+      //
       if (!intfc.is_winning_record)
          return;
-
+      //
+      bool content_loaded = false;
+      form_reference_t form_id;
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
@@ -21,6 +24,9 @@ namespace dovah::loaded_forms {
                break;
             case 'FULL':
                subrecord.read(this->name);
+               break;
+            case 'DESC':
+               subrecord.read(this->description);
                break;
             case 'MODL':
             case 'MODS':
@@ -49,8 +55,13 @@ namespace dovah::loaded_forms {
                this->keywords.load(subrecord, intfc);
                break;
             case 'DATA':
+               subrecord.read(this->projectile);
+               subrecord.read(this->ammo_flags);
+               subrecord.read(this->damage);
                subrecord.read(this->value);
-               subrecord.read(this->weight);
+               if (subrecord.is_skyrim_special()) {
+                  subrecord.read(this->weight);
+               }
                break;
             case 'YNAM':
                if (subrecord.read(this->take_sound)) {
@@ -62,19 +73,23 @@ namespace dovah::loaded_forms {
                   intfc.warn_if_ref_is_wrong_type(this->drop_sound, form_type::sound_descriptor, subrecord.signature());
                }
                break;
+            case 'ONAM':
+               subrecord.read(this->short_name);
+               break;
             default:
                intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
       }
    }
-   /*static*/ void MiscItem::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+   /*static*/ void Ammo::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       if (!uib.is_final_file())
          //
          // There is no data in this form type that is coalesced across multiple files. (TODO: CONFIRM THIS)
          //
          return;
-      
+
+      form_id_t projectile;
       form_id_t take_sound;
       form_id_t drop_sound;
       components::destruction_stage_data::use_info_builder destruction_uib(uib);
@@ -113,6 +128,7 @@ namespace dovah::loaded_forms {
                components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
             case 'DATA':
+               subrecord.read(projectile);
                break;
             case 'YNAM':
                subrecord.read(take_sound);
@@ -122,13 +138,14 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+      uib.add_outbound_reference(projectile);
       uib.add_outbound_reference(take_sound);
       uib.add_outbound_reference(drop_sound);
       destruction_uib.done();
    }
-   void MiscItem::_clone_impl(Form* out) const noexcept {
+   void Ammo::_clone_impl(Form* out) const noexcept {
       assert(out->type == form_type);
-      auto copy = (MiscItem*)out;
+      auto copy = (Ammo*)out;
       
       copy->script_data.clone_from(this->script_data, *copy);
       copy->bounds = this->bounds;
@@ -147,12 +164,21 @@ namespace dovah::loaded_forms {
       }
       copy->keywords.clone_from(this->keywords, *copy);
       copy->name         = this->name;
+      copy->description  = this->description;
       copy->icon         = this->icon;
       copy->message_icon = this->message_icon;
       copy->drop_sound.set(*copy, this->drop_sound);
       copy->take_sound.set(*copy, this->take_sound);
+
+      copy->projectile.set(*copy, this->projectile);
+      copy->ammo_flags = this->ammo_flags;
+      copy->damage     = this->damage;
+      copy->value      = this->value;
+      copy->weight     = this->weight;
+
+      copy->short_name = this->short_name;
    }
-   void MiscItem::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+   void Ammo::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       auto& OBND = record.open_next_subrecord('OBND');
       this->bounds.save(OBND, intfc);
@@ -169,13 +195,26 @@ namespace dovah::loaded_forms {
          this->destruction_data.value().save(record, intfc);
       record.write_formID_subrecord('YNAM', this->take_sound, true);
       record.write_formID_subrecord('ZNAM', this->drop_sound, true);
+      {
+         auto& DESC = record.open_next_subrecord('DESC');
+         DESC.write(this->description);
+         DESC.close();
+      }
       this->keywords.save(record, intfc);
+
       auto& DATA = record.open_next_subrecord('DATA');
+      DATA.write(this->projectile);
+      DATA.write(this->ammo_flags);
+      DATA.write(this->damage);
       DATA.write(this->value);
-      DATA.write(this->weight);
+      if (record.is_skyrim_special()) {
+         DATA.write(this->weight);
+      } else {
+         this->weight = 0.0F;
+      }
       DATA.close();
    }
-   void MiscItem::_clear_impl() noexcept {
+   void Ammo::_clear_impl() noexcept {
       this->bounds.clear();
       if (this->destruction_data.has_value()) {
          this->destruction_data.value().clear(*this);
@@ -186,13 +225,21 @@ namespace dovah::loaded_forms {
       this->script_data.clear(*this);
       this->drop_sound.set(*this, nullptr);
       this->take_sound.set(*this, nullptr);
+      this->projectile.set(*this, nullptr);
+      {
+         this->ammo_flags = 0;
+         if (this->stub.test_record_flags(form_flag::non_playable))
+            this->ammo_flags |= ammo_flag::non_playable;
+      }
+      this->damage = 0;
       this->value  = 0;
       this->weight = 0;
       this->name.reset();
+      this->description.reset();
       this->icon.clear();
       this->message_icon.clear();
    }
-   void MiscItem::_sever_outbound_references_impl(form_stub& other) noexcept {
+   void Ammo::_sever_outbound_references_impl(form_stub& other) noexcept {
       if (this->destruction_data.has_value())
          this->destruction_data.value().sever_outbound_references_to(other, *this);
       this->keywords.sever_outbound_references_to(other, *this);
@@ -200,5 +247,6 @@ namespace dovah::loaded_forms {
       this->script_data.sever_outbound_references_to(other, *this);
       this->drop_sound.clear_if(*this, other);
       this->take_sound.clear_if(*this, other);
+      this->projectile.clear_if(*this, other);
    }
 }

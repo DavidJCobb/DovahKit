@@ -10,22 +10,27 @@
 #include "../ui/form_windows/actor_action.h"
 #include "../ui/form_windows/actor_base.h"
 #include "../ui/form_windows/addon_node.h"
+#include "../ui/form_windows/ammo.h"
+#include "../ui/form_windows/animation_prop.h"
 #include "../ui/form_windows/art_object.h"
 #include "../ui/form_windows/association_type.h"
 #include "../ui/form_windows/cell.h"
 #include "../ui/form_windows/class.h"
+#include "../ui/form_windows/collision_layer.h"
 #include "../ui/form_windows/color.h"
 #include "../ui/form_windows/container.h"
 #include "../ui/form_windows/dialogue_branch.h"
 #include "../ui/form_windows/door.h"
 #include "../ui/form_windows/dual_cast_data.h"
 #include "../ui/form_windows/equip_slot.h"
+#include "../ui/form_windows/explosion.h"
 #include "../ui/form_windows/faction.h"
 #include "../ui/form_windows/flora.h"
 #include "../ui/form_windows/footstep.h"
 #include "../ui/form_windows/formlist.h"
 #include "../ui/form_windows/global.h"
 #include "../ui/form_windows/grass.h"
+#include "../ui/form_windows/hazard.h"
 #include "../ui/form_windows/head_part.h"
 #include "../ui/form_windows/key.h"
 #include "../ui/form_windows/keyword.h"
@@ -64,22 +69,27 @@ namespace {
       std::pair{ dovah::form_type::action,            _make<FormDialogActorAction> },
       std::pair{ dovah::form_type::actor_base,        _make<FormDialogActorBase> },
       std::pair{ dovah::form_type::addon_node,        _make<FormDialogAddOnNode> },
+      std::pair{ dovah::form_type::ammo,              _make<FormDialogAmmo> },
+      std::pair{ dovah::form_type::animation_prop,    _make<FormDialogAnimationProp> },
       std::pair{ dovah::form_type::art_object,        _make<FormDialogArtObject> },
       std::pair{ dovah::form_type::association_type,  _make<FormDialogAssociationType> },
       std::pair{ dovah::form_type::cell,              _make<FormDialogCell> },
       std::pair{ dovah::form_type::combat_class,      _make<FormDialogClass> },
+      std::pair{ dovah::form_type::collision_layer,   _make<FormDialogCollisionLayer> },
       std::pair{ dovah::form_type::color,             _make<FormDialogColor> },
       std::pair{ dovah::form_type::container,         _make<FormDialogContainer> },
       std::pair{ dovah::form_type::dialogue_branch,   _make<FormDialogDialogueBranch> },
       std::pair{ dovah::form_type::door,              _make<FormDialogDoor> },
       std::pair{ dovah::form_type::dual_cast_data,    _make<FormDialogDualCastData> },
       std::pair{ dovah::form_type::equip_slot,        _make<FormDialogEquipSlot> },
+      std::pair{ dovah::form_type::explosion,         _make<FormDialogExplosion> },
       std::pair{ dovah::form_type::faction,           _make<FormDialogFaction> },
       std::pair{ dovah::form_type::flora,             _make<FormDialogFlora> },
       std::pair{ dovah::form_type::footstep,          _make<FormDialogFootstep> },
       std::pair{ dovah::form_type::formlist,          _make<FormDialogFormList> },
       std::pair{ dovah::form_type::global,            _make<FormDialogGlobal> },
       std::pair{ dovah::form_type::grass,             _make<FormDialogGrass> },
+      std::pair{ dovah::form_type::hazard,            _make<FormDialogHazard> },
       std::pair{ dovah::form_type::head_part,         _make<FormDialogHeadPart> },
       std::pair{ dovah::form_type::key,               _make<FormDialogKey> },
       std::pair{ dovah::form_type::keyword,           _make<FormDialogKeyword> },

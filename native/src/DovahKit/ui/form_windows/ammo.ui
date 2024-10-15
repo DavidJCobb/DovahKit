@@ -36,7 +36,51 @@
        <item row="3" column="1">
         <widget class="DKFormPicker" name="projectile"/>
        </item>
-       <item row="5" column="0" colspan="2">
+       <item row="4" column="1">
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QSpinBox" name="value">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>6</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_13">
+           <property name="text">
+            <string>Damage:</string>
+           </property>
+           <property name="buddy">
+            <cstring>damage</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDoubleSpinBox" name="damage">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="7" column="0" colspan="2">
         <layout class="QGridLayout" name="gridLayout_3">
          <item row="1" column="0">
           <widget class="QCheckBox" name="flagPlayable">
@@ -93,63 +137,37 @@
        <item row="2" column="1">
         <widget class="QLineEdit" name="shortName">
          <property name="whatsThis">
-          <string>An abbreviated name to be used in the HUD, where space is tight.</string>
+          <string>&lt;p&gt;An abbreviated name to be used in the HUD, where space is tight.&lt;/p&gt;
+&lt;p&gt;This string can't be localized, which is probably why Bethesda never uses it.&lt;/p&gt;</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="0" colspan="2">
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QLabel" name="label_12">
-           <property name="text">
-            <string>Value:</string>
-           </property>
-           <property name="buddy">
-            <cstring>value</cstring>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QSpinBox" name="value">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_3">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Fixed</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>6</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_13">
-           <property name="text">
-            <string>Damage:</string>
-           </property>
-           <property name="buddy">
-            <cstring>damage</cstring>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDoubleSpinBox" name="damage">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_12">
+         <property name="text">
+          <string>Value:</string>
+         </property>
+         <property name="buddy">
+          <cstring>value</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>Weight:</string>
+         </property>
+         <property name="buddy">
+          <cstring>weight</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1" alignment="Qt::AlignLeft">
+        <widget class="QDoubleSpinBox" name="weight">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -376,6 +394,7 @@
   <tabstop>projectile</tabstop>
   <tabstop>value</tabstop>
   <tabstop>damage</tabstop>
+  <tabstop>weight</tabstop>
   <tabstop>flagIgnoreDamageResist</tabstop>
   <tabstop>flagPlayable</tabstop>
   <tabstop>flagCrossbowBolt</tabstop>
