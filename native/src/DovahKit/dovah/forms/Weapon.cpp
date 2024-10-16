@@ -351,7 +351,7 @@ namespace dovah::loaded_forms {
                      subrecord.read(this->reach); // DNAM+0x08
                      _load_flags_a(); // DNAM+0x0C
                      subrecord.read(this->unk_dnam_0D); // DNAM+0x0D
-                     subrecord.skip_bytes(1); // DNAM+0x0F
+                     subrecord.skip_bytes(2); // DNAM+0x0E
                      subrecord.read(this->ironsight_fov); // DNAM+0x10
                      subrecord.read(this->unk_dnam_14); // DNAM+0x14
                      subrecord.read(this->base_vats_hit_chance); // DNAM+0x18
@@ -629,9 +629,12 @@ namespace dovah::loaded_forms {
       copy->speed = this->speed;
       copy->stagger = this->stagger;
       copy->type  = this->type;
+
+      copy->unk_dnam_0D = this->unk_dnam_0D;
       copy->unk_dnam_14 = this->unk_dnam_14;
       copy->fire_rate = this->fire_rate;
       copy->damage_to_weapon_mult = this->damage_to_weapon_mult;
+      copy->shots_per_second = this->shots_per_second;
 
       copy->block_bash.alternate_material.set(*copy, this->block_bash.alternate_material);
       copy->block_bash.impact_data_set.set(*copy, this->block_bash.impact_data_set);
@@ -716,7 +719,7 @@ namespace dovah::loaded_forms {
          subrecord.write(this->speed);
          subrecord.write(this->reach);
          {
-            auto flags = cobb::join_flags<uint16_t>(
+            auto flags = cobb::join_flags<uint8_t>(
                this->flags.ignores_normal_weapon_resist,
                this->flags.automatic,
                this->flags.has_scope,
@@ -729,7 +732,7 @@ namespace dovah::loaded_forms {
             subrecord.write(flags);
          }
          subrecord.write(this->unk_dnam_0D);
-         subrecord.skip_bytes(1);
+         subrecord.skip_bytes(2);
          subrecord.write(this->ironsight_fov);
          subrecord.write(this->unk_dnam_14);
          subrecord.write(this->base_vats_hit_chance);
@@ -846,7 +849,7 @@ namespace dovah::loaded_forms {
       this->item_data.weight = 0;
       //
       this->type = weapon_type::one_hand_dagger;
-      this->speed = 0;
+      this->speed = 1;
       this->reach = 0;
       this->flags = {};
       this->ironsight_fov = 0;
@@ -863,6 +866,12 @@ namespace dovah::loaded_forms {
       this->resist_av = -1;
       this->stagger = 0;
       this->loudness = detection_loudness::normal;
+
+      this->unk_dnam_0D = 0;
+      this->unk_dnam_14 = 0;
+      this->fire_rate = 5.0F;
+      this->damage_to_weapon_mult = 1.0F;
+      this->shots_per_second = 0.33F;
    }
    void Weapon::_sever_outbound_references_impl(form_stub& other) noexcept {
       if (this->destruction_data.has_value())

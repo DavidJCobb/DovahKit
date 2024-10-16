@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>FormDialogWeapon</class>
  <widget class="QDialog" name="FormDialogWeapon">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>754</width>
-    <height>1004</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Weapon</string>
   </property>
@@ -169,7 +161,7 @@
    <item row="1" column="0" colspan="2">
     <widget class="QTabWidget" name="tabbox">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tabGameData">
       <attribute name="title">

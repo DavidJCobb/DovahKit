@@ -1,7 +1,8 @@
 #pragma once
+#include <cstdint>
 
 namespace dovah {
-   enum class weapon_type {
+   enum class weapon_type : uint8_t {
       hand_to_hand_melee,
       one_hand_sword,
       one_hand_dagger,
