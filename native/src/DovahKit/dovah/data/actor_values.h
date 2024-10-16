@@ -18,7 +18,7 @@ namespace dovah {
       struct flag {
          flag() = delete;
          enum type : uint32_t {
-            hostile_effects_scale_with_difficulty = 1 <<  1, // strangely, this is only used for combat-related magic skills, despite its effect seemingly being designed for health
+            hostile_effects_scale_with_difficulty = 1 <<  1, // used for combat-related magic skills
             special_stat_clamps_as_nonzero        = 1 <<  2, // only does anything if `clamp_as_special_stat` is set
             clamp_as_special_stat                 = 1 <<  3, // range is [0, 10] or, if `special_stat_clamps_as_nonzero` is set, [1, 10]
             clamp_as_skill                        = 1 <<  4, // range is [0, 100]
@@ -31,7 +31,7 @@ namespace dovah {
             base_value_computed_from_race         = 1 << 11, // base value computed from each individual actor. AI process cached values are updated on race change.
             cannot_be_altered_by_scripts          = 1 << 14, // Papyrus functions throw an error if asked to modify the value
             base_value_is_always_zero             = 1 << 15,
-            base_value_is_always_one              = 1 << 16, // used for some multipliers, but not all of them, because bethesda made some mistakes
+            base_value_is_always_one              = 1 << 16, // used for some multipliers, but not all of them, because Bethesda made some mistakes
             base_value_is_always_one_hundred      = 1 << 17, // used for limb condition AVs
             ai_process_caches_current_value       = 1 << 18,
             ai_process_caches_max_value           = 1 << 19, // similar to the "cache current value" flag, but omitted for AVs that have no maximum (e.g. AI behavior enum AVs)

@@ -89,7 +89,7 @@ namespace dovah::loaded_forms {
          uint8_t     unk_dnam_0D = 0; // DNAM+0x0D // TESObjectWEAP::GameData::unk33 in LE; TESObjectWEAP::Data::unk37 in SSE
          float       unk_dnam_14 = 0; // DNAM+0x10
          float       fire_rate = 5.0F; // DNAM+0x30 // TESObjectWEAP::RangedData::unk04 // Fallout 3 leftover
-         float       damage_to_weapon_mult = 0; // DNAM+0x40 // TESObjectWEAP::GameData::unk18 in LE; TESObjectWEAP::Data::unk1C in SSE // Fallout 3 leftover
+         float       damage_to_weapon_mult = 0; // DNAM+0x40 // Fallout 3 leftover. requires `overrides_condition_degradation` flag
          float       shots_per_second = 0.33F; // DNAM+0x44 // Fallout 3 leftover
          float       ironsight_fov = 0; // DNAM+0x14
          uint8_t     base_vats_hit_chance = 0; // DNAM+0x1C
@@ -128,29 +128,29 @@ namespace dovah::loaded_forms {
             //  - uint16_t DNAM+0x0C: Weapon Flags A
             //  - uint32_t DNAM+0x2C: Weapon Flags B
             // 
-            bool automatic                      = false; // flags A, bit (1 << 1)
-            bool bound_weapon                   = false; // flags B, bit (1 << 13)
-            bool burst_shot                     = false; // flags B, bit (1 << 9)
-            bool cant_drop                      = false; // flags A, bit (1 << 3)
-            bool embedded                       = false; // flags A, bit (1 << 5)
-            bool fixed_ai_range                 = false; // flags B, bit (1 << 5)
-            bool has_scope                      = false; // flags A, bit (1 << 2)
-            bool hide_backpack                  = false; // flags A, bit (1 << 4)
-            bool ignores_normal_weapon_resist   = false; // flags A, bit (1 << 0)
-            bool long_bursts                    = false; // flags B, bit (1 << 11)
-            bool minor_crime                    = false; // flags B, bit (1 << 4)
-            bool never_jams_after_reload        = false; // flags B, bit (1 << 2)
-            bool no_first_person_ironsight_anim = false; // flags A, bit (1 << 6)
-            bool no_third_person_ironsight_anim = false; // flags B, bit (1 << 8)
-            bool non_hostile                    = false; // flags B, bit (1 << 12)
-            bool non_playable                   = false; // flags A, bit (1 << 7)
-            bool not_used_in_normal_combat      = false; // flags B, bit (1 << 6)
-            bool npcs_use_ammo                  = false; // flags B, bit (1 << 1)
-            bool player_only                    = false; // flags B, bit (1 << 0)
-            bool rumble_alternate               = false; // flags B, bit (1 << 10)
+            bool automatic                       = false; // flags A, bit (1 << 1)
+            bool bound_weapon                    = false; // flags B, bit (1 << 13)
+            bool burst_shot                      = false; // flags B, bit (1 << 9)
+            bool cant_drop                       = false; // flags A, bit (1 << 3)
+            bool embedded                        = false; // flags A, bit (1 << 5)
+            bool fixed_ai_range                  = false; // flags B, bit (1 << 5)
+            bool has_scope                       = false; // flags A, bit (1 << 2)
+            bool hide_backpack                   = false; // flags A, bit (1 << 4)
+            bool ignores_normal_weapon_resist    = false; // flags A, bit (1 << 0)
+            bool long_bursts                     = false; // flags B, bit (1 << 11)
+            bool minor_crime                     = false; // flags B, bit (1 << 4)
+            bool never_jams_after_reload         = false; // flags B, bit (1 << 2)
+            bool no_first_person_ironsight_anim  = false; // flags A, bit (1 << 6)
+            bool no_third_person_ironsight_anim  = false; // flags B, bit (1 << 8)
+            bool non_hostile                     = false; // flags B, bit (1 << 12)
+            bool non_playable                    = false; // flags A, bit (1 << 7)
+            bool not_used_in_normal_combat       = false; // flags B, bit (1 << 6)
+            bool npcs_use_ammo                   = false; // flags B, bit (1 << 1)
+            bool overrides_condition_degradation = false; // flags B, bit (1 << 7)
+            bool player_only                     = false; // flags B, bit (1 << 0)
+            bool rumble_alternate                = false; // flags B, bit (1 << 10)
             //
             bool unk_flag_b_3 = false; // flags B, bit (1 << 3)
-            bool unk_flag_b_7 = false; // flags B, bit (1 << 7)
          } flags;
          struct {
             float   weight = 0; // DATA+0x04
