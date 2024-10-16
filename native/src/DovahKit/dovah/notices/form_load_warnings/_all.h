@@ -35,5 +35,7 @@
    #include "./by_form_type/topic_info/response_addendum_subrecord_too_early.h"
    #include "./by_form_type/topic_info/response_has_id_zero.h"
    #include "./by_form_type/topic_info/response_ids_are_not_unique.h"
+   #include "./by_form_type/weapon/invalid_resistance.h"
+   #include "./by_form_type/weapon/invalid_skill.h"
    #include "./by_form_type/worldspace/is_own_parent.h"
 #pragma endregion

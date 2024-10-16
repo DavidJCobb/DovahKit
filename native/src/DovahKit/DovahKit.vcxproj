@@ -1286,6 +1286,8 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_addendum_subrecord_too_early.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_ids_are_not_unique.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_has_id_zero.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\weapon\invalid_resistance.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\weapon\invalid_skill.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\worldspace\is_own_parent.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\form_reference_type_mismatch.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\unrecognized_subrecord.h" />

@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 #include "Form.h"
@@ -22,7 +23,8 @@ namespace dovah::loaded_forms {
 
          struct form_flag : public Form::form_flag {
             enum : uint32_t {
-               non_playable = 0x00000004,
+               non_playable                = 0x00000004,
+               has_inherited_from_template = 0x00000008, // run-time flag. cleared on load
             };
          };
 
@@ -55,13 +57,6 @@ namespace dovah::loaded_forms {
             no_dismember_or_explode,
          };
 
-         enum class rumble_pattern : uint32_t {
-            constant,
-            periodic_square,
-            periodic_triangle,
-            periodic_sawtooth,
-         };
-
          components::object_bounds bounds; // OBND
          components::model_ts      model;  // MODL, MODT, MODS
          components::papyrus_attachment_data script_data; // VMAD
@@ -91,14 +86,16 @@ namespace dovah::loaded_forms {
          uint16_t    damage = 0; // DATA+0x08
          float       speed  = 1; // DNAM+0x04
          float       reach  = 0; // DNAM+0x08
-         float       unk_dnam_10 = 0; // DNAM+0x10
-         float       unk_dnam_30 = 0; // DNAM+0x30
-         float       unk_dnam_40 = 0; // DNAM+0x40
+         uint8_t     unk_dnam_0D = 0; // DNAM+0x0D // TESObjectWEAP::GameData::unk33 in LE; TESObjectWEAP::Data::unk37 in SSE
+         float       unk_dnam_14 = 0; // DNAM+0x10
+         float       fire_rate = 5.0F; // DNAM+0x30 // TESObjectWEAP::RangedData::unk04 // Fallout 3 leftover
+         float       damage_to_weapon_mult = 0; // DNAM+0x40 // TESObjectWEAP::GameData::unk18 in LE; TESObjectWEAP::Data::unk1C in SSE // Fallout 3 leftover
+         float       shots_per_second = 0.33F; // DNAM+0x44 // Fallout 3 leftover
          float       ironsight_fov = 0; // DNAM+0x14
          uint8_t     base_vats_hit_chance = 0; // DNAM+0x1C
          uint8_t     projectile_count = 1; // DNAM+0x1E
          hit_gore    hit_gore_behavior = hit_gore::normal; // DNAM+0x28
-         dovah::skill skill = dovah::skill::one_handed;
+         std::optional<dovah::skill> skill;
          int32_t     resist_av = -1;
          float       stagger = 0;
          detection_loudness loudness = detection_loudness::normal; // VNAM
@@ -168,13 +165,14 @@ namespace dovah::loaded_forms {
             } sounds;
          } item_data;
          struct {
-            float left_motor  = 0;
-            float right_motor = 0;
-            float duration    = 0;
-            rumble_pattern pattern = rumble_pattern::constant;
+            float left_motor  = 0.5F;
+            float right_motor = 1.0F;
+            float duration    = 0.33F;
          } rumble;
          components::model scope_model; // MOD3, MO3T, MO3S
          form_reference_t scope_shader; // EFSD
+
+         void copy_data_from_template_weapon(form_stub& source);
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);

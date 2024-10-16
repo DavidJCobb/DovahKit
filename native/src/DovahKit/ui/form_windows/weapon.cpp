@@ -29,6 +29,7 @@ FormDialogWeapon::FormDialogWeapon(dovah::form_stub& stub, QWidget* parent) : QD
       {
          auto* widget = this->ui.skill;
          widget->clear();
+         widget->addItem(tr("None", "skill"), -1);
          for (size_t i = 0; i < dovah::skill_count; ++i) {
             widget->addItem(editor_helpers::skill_name_to_string((dovah::skill)i), (int)i);
          }
@@ -147,14 +148,6 @@ FormDialogWeapon::FormDialogWeapon(dovah::form_stub& stub, QWidget* parent) : QD
          ui::set_unsigned_range<float>(this->ui.rumbleStrengthL);
          ui::set_unsigned_range<float>(this->ui.rumbleStrengthR);
          ui::set_unsigned_range<float>(this->ui.rumbleDuration);
-         {
-            auto* widget = this->ui.rumblePattern;
-            widget->clear();
-            widget->addItem("Constant", (int)loaded_form_type::rumble_pattern::constant);
-            widget->addItem("Periodic Square", (int)loaded_form_type::rumble_pattern::periodic_square);
-            widget->addItem("Periodic Triangle", (int)loaded_form_type::rumble_pattern::periodic_triangle);
-            widget->addItem("Periodic Sawtooth", (int)loaded_form_type::rumble_pattern::periodic_sawtooth);
-         }
       #pragma endregion
    #pragma endregion
 
@@ -172,8 +165,12 @@ void FormDialogWeapon::_load_impl() {
       ui::bind(this->ui.enchantmentForm, working.enchantable.effect, working);
       ui::bind(this->ui.enchantmentCharge, working.enchantable.charge);
       ui::bind(this->ui.value, working.item_data.value);
-      ui::bind(this->ui.templateForm, working.template_weapon, working);
-
+      {
+         auto* widget = this->ui.templateForm;
+         ui::bind(widget, working.template_weapon, working);
+         QObject::connect(widget, &DKFormPicker::formChanged, this, &FormDialogWeapon::_update_from_template_form);
+         this->_update_from_template_form();
+      }
       this->ui.scriptListPane->setFormWorkingCopy(&working);
    #pragma endregion
 
@@ -185,7 +182,27 @@ void FormDialogWeapon::_load_impl() {
       ui::bind(this->ui.speed, working.speed);
       ui::bind(this->ui.ironsightFOV, working.ironsight_fov);
       ui::bind(this->ui.stagger, working.stagger);
-      ui::bind(this->ui.skill, working.skill);
+      {
+         auto* widget = this->ui.skill;
+         {
+            int i = -1;
+            if (working.skill.has_value()) {
+               i = widget->findData((int)working.skill.value());
+            }
+            i = widget->findData(i);
+            if (i < 0)
+               i = widget->findData(-1);
+            widget->setCurrentIndex(i);
+         }
+         QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, widget]() {
+            auto s = widget->currentData().toInt();
+            if (s == -1) {
+               this->form->skill = {};
+            } else {
+               this->form->skill = (dovah::skill)s;
+            }
+         });
+      }
       ui::bind(this->ui.equipType, working.equip_type, working);
       {
          auto* widget = this->ui.resist;
@@ -264,7 +281,6 @@ void FormDialogWeapon::_load_impl() {
       ui::bind(this->ui.rumbleStrengthL, working.rumble.left_motor);
       ui::bind(this->ui.rumbleStrengthR, working.rumble.right_motor);
       ui::bind(this->ui.rumbleDuration, working.rumble.duration);
-      ui::bind(this->ui.rumblePattern, working.rumble.pattern);
       ui::bind(this->ui.flagAlternateRumble, working.flags.rumble_alternate);
    #pragma endregion
 }
@@ -286,4 +302,228 @@ void FormDialogWeapon::_save_impl() {
 
    this->ui.keywords->commitStubs(working.keywords.forms, working);
    this->ui.scriptListPane->commit();
+}
+
+void FormDialogWeapon::_pull_templatable_data_to_ui() {
+   auto _pull_enum = [](QComboBox* widget, auto enumeration) {
+      auto i = widget->findData((int)enumeration);
+      if (i < 0)
+         i = widget->findData(-1);
+      widget->setCurrentIndex(i);
+   };
+
+   const auto& working = *this->form;
+   
+   const auto blockers = std::array{
+      QSignalBlocker(this->ui.weight),
+      QSignalBlocker(this->ui.damage),
+      QSignalBlocker(this->ui.reach),
+      QSignalBlocker(this->ui.projectileCount),
+      QSignalBlocker(this->ui.speed),
+      QSignalBlocker(this->ui.ironsightFOV),
+      QSignalBlocker(this->ui.stagger),
+      QSignalBlocker(this->ui.skill),
+      QSignalBlocker(this->ui.equipType),
+      QSignalBlocker(this->ui.resist),
+      QSignalBlocker(this->ui.onHitCalc),
+      QSignalBlocker(this->ui.baseVATSChance),
+      QSignalBlocker(this->ui.combatAIRangeMin),
+      QSignalBlocker(this->ui.combatAIRangeMax),
+      QSignalBlocker(this->ui.flagFixedAIRange),
+      QSignalBlocker(this->ui.flagBurstShot),
+      QSignalBlocker(this->ui.flagLongBursts),
+      QSignalBlocker(this->ui.keywords),
+      QSignalBlocker(this->ui.flagNPCsUseAmmo),
+      QSignalBlocker(this->ui.flagNoJam),
+      QSignalBlocker(this->ui.flagIgnoresNormalResist),
+      QSignalBlocker(this->ui.flagMinorCrime),
+      QSignalBlocker(this->ui.flagAutomatic),
+      QSignalBlocker(this->ui.flagHideBackpack),
+      QSignalBlocker(this->ui.flagCantDrop),
+      QSignalBlocker(this->ui.flagPlayable),
+      QSignalBlocker(this->ui.flagNotUsedInNormalCombat),
+      QSignalBlocker(this->ui.flagPlayerOnly),
+      QSignalBlocker(this->ui.flagNonHostile),
+      QSignalBlocker(this->ui.flagBound),
+      QSignalBlocker(this->ui.critChanceMult),
+      QSignalBlocker(this->ui.critDamage),
+      QSignalBlocker(this->ui.critEffect),
+      QSignalBlocker(this->ui.flagCritEffectOnlyOnDeath),
+      QSignalBlocker(this->ui.embedded),
+      QSignalBlocker(this->ui.embeddedAV),
+      QSignalBlocker(this->ui.embeddedToNode),
+      QSignalBlocker(this->ui.description),
+      //
+      // Art and Sound:
+      //
+      QSignalBlocker(this->ui.model),
+      QSignalBlocker(this->ui.firstPersonModel),
+      QSignalBlocker(this->ui.iconInventory),
+      QSignalBlocker(this->ui.iconMessage),
+      QSignalBlocker(this->ui.destructionData),
+      QSignalBlocker(this->ui.impactDataSet),
+      QSignalBlocker(this->ui.impactDataSetBlockBash),
+      QSignalBlocker(this->ui.alternateBlockMaterial),
+      QSignalBlocker(this->ui.weaponType),
+      QSignalBlocker(this->ui.attackAnim),
+      QSignalBlocker(this->ui.animAttackMult),
+      QSignalBlocker(this->ui.flagNoFirstPersonISAnims),
+      QSignalBlocker(this->ui.flagNoThirdPersonISAnims),
+      QSignalBlocker(this->ui.scopeGroupbox),
+      QSignalBlocker(this->ui.scopeTargetNIF),
+      QSignalBlocker(this->ui.scopeEffect),
+      //
+      QSignalBlocker(this->ui.soundAttack),
+      QSignalBlocker(this->ui.soundAttack2D),
+      QSignalBlocker(this->ui.soundAttackLoop),
+      QSignalBlocker(this->ui.soundAttackFail),
+      QSignalBlocker(this->ui.soundIdle),
+      QSignalBlocker(this->ui.soundEquip),
+      QSignalBlocker(this->ui.soundUnequip),
+      QSignalBlocker(this->ui.soundTake),
+      QSignalBlocker(this->ui.soundDrop),
+      QSignalBlocker(this->ui.detectionSoundLevel),
+      QSignalBlocker(this->ui.rumbleStrengthL),
+      QSignalBlocker(this->ui.rumbleStrengthR),
+      QSignalBlocker(this->ui.rumbleDuration),
+      QSignalBlocker(this->ui.flagAlternateRumble),
+   };
+   #pragma region Game Data
+      this->ui.weight->setValue(working.item_data.weight);
+      this->ui.damage->setValue(working.damage);
+      this->ui.reach->setValue(working.reach);
+      this->ui.projectileCount->setValue(working.projectile_count);
+      this->ui.speed->setValue(working.speed);
+      this->ui.ironsightFOV->setValue(working.ironsight_fov);
+      this->ui.stagger->setValue(working.stagger);
+      {
+         auto* widget = this->ui.skill;
+         int   i      = -1;
+         if (working.skill.has_value())
+            i = widget->findData((int)working.skill.value());
+         if (i < 0)
+            i = widget->findData(-1);
+         widget->setCurrentIndex(i);
+      }
+      this->ui.equipType->setFormStub(working.equip_type.get_form_stub());
+      _pull_enum(this->ui.resist, working.resist_av);
+      _pull_enum(this->ui.onHitCalc, working.hit_gore_behavior);
+      this->ui.baseVATSChance->setValue(working.base_vats_hit_chance);
+      this->ui.combatAIRangeMin->setValue(working.ai_ranges.minimum);
+      this->ui.combatAIRangeMax->setValue(working.ai_ranges.maximum);
+      this->ui.flagFixedAIRange->setChecked(working.flags.fixed_ai_range);
+      this->ui.flagBurstShot->setChecked(working.flags.burst_shot);
+      this->ui.flagLongBursts->setChecked(working.flags.long_bursts);
+      this->ui.keywords->pullStubs(working.keywords.forms);
+      this->ui.flagNPCsUseAmmo->setChecked(working.flags.npcs_use_ammo);
+      this->ui.flagNoJam->setChecked(working.flags.never_jams_after_reload);
+      this->ui.flagIgnoresNormalResist->setChecked(working.flags.ignores_normal_weapon_resist);
+      this->ui.flagMinorCrime->setChecked(working.flags.minor_crime);
+      this->ui.flagAutomatic->setChecked(working.flags.automatic);
+      this->ui.flagHideBackpack->setChecked(working.flags.hide_backpack);
+      this->ui.flagCantDrop->setChecked(working.flags.cant_drop);
+      this->ui.flagPlayable->setChecked(!working.flags.non_playable);
+      this->ui.flagNotUsedInNormalCombat->setChecked(working.flags.not_used_in_normal_combat);
+      this->ui.flagPlayerOnly->setChecked(working.flags.player_only);
+      this->ui.flagNonHostile->setChecked(working.flags.non_hostile);
+      this->ui.flagBound->setChecked(working.flags.bound_weapon);
+      this->ui.critChanceMult->setValue(working.crit_data.chance_mult);
+      this->ui.critDamage->setValue(working.crit_data.added_damage);
+      this->ui.critEffect->setFormStub(working.crit_data.spell_to_apply.get_form_stub());
+      this->ui.flagCritEffectOnlyOnDeath->setChecked(working.crit_data.apply_spell_only_on_target_death);
+      this->ui.embedded->setChecked(working.flags.embedded);
+      _pull_enum(this->ui.embeddedAV, working.embedded.actor_value);
+      this->ui.embeddedToNode->setText(QString::fromStdString(working.embedded.node));
+      this->ui.description->setPlainText(DovahKitCore::get().convert_localized_string(working.description));
+   #pragma endregion
+   #pragma region Art and Sound
+      this->ui.model->initializeFrom(working.model);
+      this->ui.firstPersonModel->setFormStub(working.first_person_model.get_form_stub());
+      this->ui.iconInventory->setPath(QString::fromStdString(working.item_data.icons.inventory));
+      this->ui.iconMessage->setPath(QString::fromStdString(working.item_data.icons.message));
+      this->ui.destructionData->initializeFrom(working.destruction_data);
+      this->ui.impactDataSet->setFormStub(working.impact_data_set.get_form_stub());
+      this->ui.impactDataSetBlockBash->setFormStub(working.block_bash.impact_data_set.get_form_stub());
+      this->ui.alternateBlockMaterial->setFormStub(working.block_bash.alternate_material.get_form_stub());
+      _pull_enum(this->ui.weaponType, working.type);
+      _pull_enum(this->ui.attackAnim, working.animation.legacy_anim);
+      this->ui.animAttackMult->setValue(working.animation.attack_mult);
+      this->ui.flagNoFirstPersonISAnims->setChecked(working.flags.no_first_person_ironsight_anim);
+      this->ui.flagNoThirdPersonISAnims->setChecked(working.flags.no_third_person_ironsight_anim);
+      this->ui.scopeGroupbox->setChecked(working.flags.has_scope);
+      this->ui.scopeTargetNIF->initializeFrom(working.scope_model);
+      this->ui.scopeEffect->setFormStub(working.scope_shader.get_form_stub());
+      //
+      this->ui.soundAttack->setFormStub(working.sounds.attack.get_form_stub());
+      this->ui.soundAttack2D->setFormStub(working.sounds.attack_2D.get_form_stub());
+      this->ui.soundAttackLoop->setFormStub(working.sounds.attack_loop.get_form_stub());
+      this->ui.soundAttackFail->setFormStub(working.sounds.attack_fail.get_form_stub());
+      this->ui.soundIdle->setFormStub(working.sounds.idle.get_form_stub());
+      this->ui.soundEquip->setFormStub(working.sounds.equip.get_form_stub());
+      this->ui.soundUnequip->setFormStub(working.sounds.unequip.get_form_stub());
+      this->ui.soundTake->setFormStub(working.item_data.sounds.take.get_form_stub());
+      this->ui.soundDrop->setFormStub(working.item_data.sounds.drop.get_form_stub());
+      _pull_enum(this->ui.detectionSoundLevel, working.loudness);
+      this->ui.rumbleStrengthL->setValue(working.rumble.left_motor);
+      this->ui.rumbleStrengthR->setValue(working.rumble.right_motor);
+      this->ui.rumbleDuration->setValue(working.rumble.duration);
+      this->ui.flagAlternateRumble->setChecked(working.flags.rumble_alternate);
+   #pragma endregion
+}
+void FormDialogWeapon::_update_from_template_form() {
+   if (!this->form)
+      return;
+   auto& working = *this->form;
+
+   auto* direct_template_form = working.template_weapon.get_form_stub();
+   {
+      bool enable = direct_template_form == nullptr;
+      this->ui.tabGameData->setEnabled(enable);
+      this->ui.tabArt->setEnabled(enable);
+      if (!direct_template_form)
+         return;
+   }
+   //
+   // Resolve transitive template relationships:
+   //
+   dovah::form_stub* effective_template_form = nullptr;
+   {
+      std::vector<dovah::form_stub*> seen;
+      seen.push_back(&working.stub);
+      [&seen, &effective_template_form](this auto&& recurse, dovah::form_stub* current) -> void {
+         {
+            auto it = std::find(seen.begin(), seen.end(), current);
+            if (it != seen.end()) {
+               //
+               // Cyclical reference. Clear the template-form pointer and abort.
+               //
+               effective_template_form = nullptr;
+               return;
+            }
+         }
+         if (current->form_type != dovah::form_type::weapon) {
+            //
+            // Invalid relationship. The game would just clear the pointer, so we should use 
+            // the last-seen template form and stop here.
+            //
+            return;
+         }
+         auto loaded = current->load().ptr_cast<loaded_form_type>();
+         if (!loaded) {
+            return;
+         }
+         effective_template_form = current;
+         auto* stub = loaded->template_weapon.get_form_stub();
+         if (stub)
+            recurse(stub);
+      }(direct_template_form);
+   }
+   if (!effective_template_form) {
+      return;
+   }
+   //
+   // Copy values and fields.
+   //
+   this->form->copy_data_from_template_weapon(*effective_template_form);
+   this->_pull_templatable_data_to_ui();
 }

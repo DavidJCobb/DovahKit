@@ -51,7 +51,7 @@ namespace dovah {
       actor_value_type type = actor_value_type::miscellaneous;
    };
 
-   constexpr const auto all_actor_value_info = std::array{
+   inline constexpr const auto all_actor_value_info = std::array{
       actor_value_info{ // Aggression
          .enumeration = {
             .value_count = 4,

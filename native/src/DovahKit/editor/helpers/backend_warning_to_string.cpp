@@ -1,6 +1,7 @@
 #include "./backend_warning_to_string.h"
 #include <QObject>
 #include "helpers/dynamic_fast_cast.h"
+#include "dovah/data/actor_values.h"
 #include "dovah/notices/_all_warnings.h"
 
 #include "./face_fx_phoneme_name.h"
@@ -877,6 +878,36 @@ namespace editor_helpers {
                      "only 255 IDs available per response, and the following IDs are reused: %3.",
                      disambig
                   ).arg(subject).arg(responses).arg(ids);
+               }
+            #pragma endregion
+            #pragma region weapon
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::weapon::invalid_resistance*>(&warning)) {
+                  QString subject    = form_identifiers_to_string(&casted->subject);
+                  QString resistance = QString::number(casted->actor_value);
+                  if (casted->actor_value < dovah::all_actor_value_info.size()) {
+                     auto& name = dovah::all_actor_value_info[casted->actor_value].name;
+                     //
+                     // TODO: Once we can load ActorValueInfo form data, prefer the AV's display/localized name 
+                     // if it isn't blank.
+                     //
+                     resistance = QObject::tr("%1: %2").arg(resistance).arg(QString::fromLatin1(name.data(), name.size()));
+                  }
+
+                  return QObject::tr(
+                     "Weapon %1 uses an invalid resistance (%2); weapons must specify an Actor Value that can "
+                     "be used as a damage resistance. The game will correct this to \"None\" on load, so "
+                     "DovahKit does as well.",
+                     disambig
+                  ).arg(subject).arg(resistance);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::weapon::invalid_skill*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Weapon %1 uses an invalid skill (%2). The game will correct this to \"None\" on load, "
+                     "so DovahKit does as well.",
+                     disambig
+                  ).arg(subject).arg(casted->skill);
                }
             #pragma endregion
             #pragma region worldspace

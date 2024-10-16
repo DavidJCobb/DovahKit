@@ -1,8 +1,106 @@
 #include "Weapon.h"
 #include "_common_cpp.h"
+#include "../data/actor_values.h" // for validating loaded resistance AVs
 #include "helpers/split_join_flags.h" // cobb::split_flags and cobb::join_flags
 
+#include "../notices/form_load_warnings/by_form_type/weapon/invalid_resistance.h"
+#include "../notices/form_load_warnings/by_form_type/weapon/invalid_skill.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_type::weapon;
+   }
+}
+
 namespace dovah::loaded_forms {
+   void Weapon::copy_data_from_template_weapon(form_stub& source) {
+      auto template_loaded = source.load().ptr_cast<Weapon>();
+      if (!template_loaded)
+         return;
+
+      auto& src_data = *template_loaded;
+
+      this->model.clone_from(src_data.model, *this); // TESModelTextureSwap
+      this->item_data.icons.inventory = src_data.item_data.icons.inventory; // TESTexture
+      this->item_data.weight = src_data.item_data.weight; // TESWeightForm
+      this->damage = src_data.damage; // TESAttackDamageComponent
+      {  // BGSDestructibleObjectForm
+         auto& src_opt = src_data.destruction_data;
+         auto& dst_opt = this->destruction_data;
+         if (src_opt.has_value()) {
+            if (!dst_opt.has_value()) {
+               dst_opt.emplace();
+            }
+            dst_opt.value().clone_from(src_opt.value(), *this);
+         } else {
+            if (dst_opt.has_value()) {
+               dst_opt.value().clear(*this);
+               dst_opt = {};
+            }
+         }
+      }
+      this->equip_type.set(*this, src_data.equip_type); // BGSEquipType
+      this->item_data.icons.message = src_data.item_data.icons.message; // BGSMessageIcon
+      {  // BGSPickupPutdownSounds
+         this->item_data.sounds.take.set(*this, src_data.item_data.sounds.take);
+         this->item_data.sounds.drop.set(*this, src_data.item_data.sounds.drop);
+      }
+      {  // BGSBlockBashData
+         this->block_bash.alternate_material.set(*this, src_data.block_bash.alternate_material);
+         this->block_bash.impact_data_set.set(*this, src_data.block_bash.impact_data_set);
+      }
+      this->keywords.clone_from(src_data.keywords, *this); // BGSKeywordForm
+      this->description = src_data.description; // TESDescription
+
+      //
+      // Non-component data:
+      //
+
+      this->embedded.node = src_data.embedded.node;
+      this->scope_model.clone_from(src_data.scope_model);
+      this->scope_shader.set(*this, src_data.scope_shader);
+      {  // DNAM
+         {  // TESObjectWEAP::RangedData
+            this->ironsight_fov = src_data.ironsight_fov;
+            this->fire_rate   = src_data.fire_rate;
+            this->rumble = src_data.rumble;
+            this->projectile_count = src_data.projectile_count;
+         }
+         this->speed = src_data.speed;
+         this->reach = src_data.reach;
+         this->ai_ranges = src_data.ai_ranges;
+         this->animation.attack_mult = src_data.animation.attack_mult;
+         // unk1C
+         this->stagger = src_data.stagger;
+         this->hit_gore_behavior = src_data.hit_gore_behavior;
+         this->skill = src_data.skill;
+         this->resist_av = src_data.resist_av;
+         this->flags = src_data.flags;
+         this->base_vats_hit_chance = src_data.base_vats_hit_chance;
+         this->animation.legacy_anim = src_data.animation.legacy_anim;
+         this->embedded.actor_value = src_data.embedded.actor_value;
+         this->type = src_data.type;
+      }
+      {  // CRDT
+         this->crit_data.added_damage = src_data.crit_data.added_damage;
+         this->crit_data.chance_mult = src_data.crit_data.chance_mult;
+         this->crit_data.spell_to_apply.set(*this, src_data.crit_data.spell_to_apply);
+         this->crit_data.apply_spell_only_on_target_death = src_data.crit_data.apply_spell_only_on_target_death;
+      }
+      {  // Sounds
+         auto& src = src_data.sounds;
+         auto& dst = this->sounds;
+         dst.attack.set(*this, src.attack);
+         dst.attack_2D.set(*this, src.attack_2D);
+         dst.attack_loop.set(*this, src.attack_loop);
+         dst.attack_fail.set(*this, src.attack_fail);
+         dst.idle.set(*this, src.idle);
+         dst.equip.set(*this, src.equip);
+         dst.unequip.set(*this, src.unequip);
+      }
+      this->loudness = src_data.loudness;
+   }
+
    void Weapon::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       if (!intfc.is_winning_record)
@@ -132,39 +230,23 @@ namespace dovah::loaded_forms {
                subrecord.read(this->damage);
                break;
             case 'DNAM':
-               subrecord.read(this->type);
-               subrecord.skip_bytes(3);
-               subrecord.read(this->speed);
-               subrecord.read(this->reach);
                {
-                  uint16_t flags = 0;
-                  if (subrecord.read(flags)) {
-                     cobb::split_flags<decltype(flags)>(
-                        this->flags.ignores_normal_weapon_resist,
-                        this->flags.automatic,
-                        this->flags.has_scope,
-                        this->flags.cant_drop,
+                  auto _load_flags_a = [this, &subrecord]() {
+                     uint8_t flags = 0;
+                     subrecord.read(flags);
+                     cobb::split_flags(flags,
                         this->flags.hide_backpack,
+                        this->flags.automatic,
+                        this->flags.cant_drop,
                         this->flags.embedded,
                         this->flags.no_first_person_ironsight_anim,
                         this->flags.non_playable
                      );
-                  }
-               }
-               subrecord.skip_bytes(2);
-               subrecord.read(this->ironsight_fov);
-               subrecord.read(this->unk_dnam_10);
-               subrecord.read(this->base_vats_hit_chance);
-               subrecord.read(this->animation.legacy_anim);
-               subrecord.read(this->projectile_count);
-               subrecord.read(this->embedded.actor_value);
-               subrecord.read(this->ai_ranges.minimum);
-               subrecord.read(this->ai_ranges.maximum);
-               subrecord.read(this->hit_gore_behavior);
-               {
-                  uint32_t flags = 0;
-                  if (subrecord.read(flags)) {
-                     cobb::split_flags<decltype(flags)>(
+                  };
+                  auto _load_flags_b = [this, &subrecord]() {
+                     uint32_t flags = 0;
+                     subrecord.read(flags);
+                     cobb::split_flags(flags,
                         this->flags.player_only,
                         this->flags.npcs_use_ammo,
                         this->flags.never_jams_after_reload,
@@ -180,20 +262,143 @@ namespace dovah::loaded_forms {
                         this->flags.non_hostile,
                         this->flags.bound_weapon
                      );
+                  };
+                  auto _load_skill = [this, &subrecord, &intfc]() {
+                     int32_t data = -1;
+                     subrecord.read(data);
+                     if (data == -1) {
+                        this->skill = {};
+                     } else {
+                        auto skill_index = data - dovah::first_skill_actor_value_index;
+                        if (skill_index < 0 || skill_index >= dovah::skill_count) {
+                           specific_load_warnings::invalid_skill notice(
+                              this->stub,
+                              data
+                           );
+                           intfc.log_load_warning(notice);
+                           this->skill = {};
+                        } else {
+                           this->skill = (dovah::skill)skill_index;
+                        }
+                     }
+                  };
+                  
+                  if (record.version() < 0x11) {
+                     //
+                     // Legacy data. Expected size: 0x88
+                     //
+                     subrecord.read(this->type); // DNAM+0x00
+                     subrecord.skip_bytes(3);
+                     subrecord.read(this->speed); // DNAM+0x04
+                     subrecord.read(this->reach); // DNAM+0x08
+                     _load_flags_a(); // DNAM+0x0C
+                     subrecord.skip_bytes(
+                        sizeof(uint8_t) + // DNAM+0x09: Fallout 3 grip animation
+                        sizeof(uint8_t) + // DNAM+0x0A: Fallout 3 ammo use
+                        sizeof(uint8_t) + // DNAM+0x0B: Fallout 3 reload animation
+                        sizeof(float)   + // DNAM+0x0C: Fallout 3 minimum spread
+                        sizeof(float)   + // DNAM+0x10: Fallout 3 unknown
+                        sizeof(float)   + // DNAM+0x14: Fallout 3 maximum spread
+                        4                 // DNAM+0x18: Fallout 3 unused
+                     );
+                     subrecord.read(this->ironsight_fov); // DNAM+0x1C
+                     subrecord.read(this->unk_dnam_0D); // DNAM+0x20
+                     subrecord.skip_bytes(3); // DNAM+0x21
+                     subrecord.skip_bytes(4); // DNAM+0x24: Fallout 3 projectile
+                     subrecord.read(this->base_vats_hit_chance); // DNAM+0x28
+                     subrecord.read(this->animation.legacy_anim); // DNAM+0x29
+                     subrecord.read(this->projectile_count); // DNAM+0x2A
+                     subrecord.read(this->embedded.actor_value); // DNAM+0x2B
+                     subrecord.read(this->ai_ranges.minimum); // DNAM+0x2C
+                     subrecord.read(this->ai_ranges.maximum); // DNAM+0x30
+                     subrecord.read(this->hit_gore_behavior); // DNAM+0x34
+                     _load_flags_b(); // DNAM+0x38
+                     subrecord.read(this->animation.attack_mult); // DNAM+0x3C
+                     subrecord.read(this->fire_rate); // DNAM+0x40: Fallout 3 fire rate
+                     subrecord.skip_bytes(4); // DNAM+0x44: Fallout 3 override action points
+                     subrecord.read(this->rumble.left_motor); // DNAM+0x48
+                     subrecord.read(this->rumble.right_motor); // DNAM+0x4C
+                     subrecord.read(this->rumble.duration); // DNAM+0x50
+                     subrecord.read(this->damage_to_weapon_mult); // DNAM+0x54: Fallout 3 override damage-to-weapon mult
+                     subrecord.read(this->shots_per_second); // DNAM+0x58
+                     subrecord.skip_bytes(
+                        sizeof(float) + // DNAM+0x5C: Fallout 3 reload time
+                        sizeof(float) + // DNAM+0x60: Fallout 3 jam time
+                        sizeof(float)   // DNAM+0x64: Fallout 3 aim arc
+                     );
+                     _load_skill(); // DNAM+0x68
+                     subrecord.skip_bytes(
+                        sizeof(uint32_t) + // DNAM+0x6C: Fallout 3 rumble pattern
+                        sizeof(float)    + // DNAM+0x70: Fallout 3 rumble wavelength
+                        sizeof(float)      // DNAM+0x74: Fallout 3 limb damage multiplier
+                     );
+                     subrecord.read(this->resist_av); // DNAM+0x78
+                     subrecord.skip_bytes(
+                        sizeof(float) + // DNAM+0x7C: Fallout 3 sight usage
+                        sizeof(float) + // DNAM+0x80: Fallout 3 semi-automatic fire delay minimum
+                        sizeof(float)   // DNAM+0x84: Fallout 3 semi-automatic fire delay maximum
+                     );
+                     // DNAM+0x88
+                     this->stagger = 1.0F;
+                     break;
+                  } else {
+                     //
+                     // Modern data. Expected size: 0x64
+                     //
+                     subrecord.read(this->type); // DNAM+0x00
+                     subrecord.skip_bytes(3);
+                     subrecord.read(this->speed); // DNAM+0x04
+                     subrecord.read(this->reach); // DNAM+0x08
+                     _load_flags_a(); // DNAM+0x0C
+                     subrecord.read(this->unk_dnam_0D); // DNAM+0x0D
+                     subrecord.skip_bytes(1); // DNAM+0x0F
+                     subrecord.read(this->ironsight_fov); // DNAM+0x10
+                     subrecord.read(this->unk_dnam_14); // DNAM+0x14
+                     subrecord.read(this->base_vats_hit_chance); // DNAM+0x18
+                     subrecord.read(this->animation.legacy_anim); // DNAM+0x19
+                     subrecord.read(this->projectile_count); // DNAM+0x1A
+                     subrecord.read(this->embedded.actor_value); // DNAM+0x1B
+                     subrecord.read(this->ai_ranges.minimum); // DNAM+0x1C
+                     subrecord.read(this->ai_ranges.maximum); // DNAM+0x20
+                     subrecord.read(this->hit_gore_behavior); // DNAM+0x24
+                     _load_flags_b(); // DNAM+0x28
+                     subrecord.read(this->animation.attack_mult); // DNAM+0x2C
+                     subrecord.read(this->fire_rate); // DNAM+0x30
+                     subrecord.read(this->rumble.left_motor); // DNAM+0x34
+                     subrecord.read(this->rumble.right_motor); // DNAM+0x38
+                     subrecord.read(this->rumble.duration); // DNAM+0x3C
+                     subrecord.read(this->damage_to_weapon_mult); // DNAM+0x40
+                     subrecord.read(this->shots_per_second); // DNAM+0x44
+                     subrecord.skip_bytes(4); // DNAM+0x48 // unused
+                     _load_skill(); // DNAM+0x4C
+                     subrecord.skip_bytes(8); // DNAM+0x50 // unused
+                     subrecord.read(this->resist_av); // DNAM+0x58
+                     subrecord.skip_bytes(4); // DNAM+0x5C // unused
+                     subrecord.read(this->stagger); // DNAM+0x60
+                     // DNAM+0x64
+                  }
+                  //
+                  // Post-load validation:
+                  //
+                  if (this->resist_av != -1) {
+                     bool bad = false;
+                     if (this->resist_av >= 0 && this->resist_av < all_actor_value_info.size()) {
+                        const auto& info = all_actor_value_info[this->resist_av];
+                        if (info.type != actor_value_type::resistance)
+                           bad = true;
+                     } else {
+                        bad = true;
+                     }
+                     if (bad) {
+                        specific_load_warnings::invalid_resistance notice(
+                           this->stub,
+                           this->resist_av
+                        );
+                        this->resist_av = -1;
+                        intfc.log_load_warning(notice);
+                     }
                   }
                }
-               subrecord.read(this->unk_dnam_30);
-               subrecord.read(this->rumble.left_motor);
-               subrecord.read(this->rumble.right_motor);
-               subrecord.read(this->rumble.duration);
-               subrecord.read(this->unk_dnam_40);
-               subrecord.read(this->rumble.pattern);
-               subrecord.skip_bytes(4); // DNAM+0x48 // unused
-               subrecord.read(this->skill); // DNAM+0x4C
-               subrecord.skip_bytes(8); // DNAM+0x50 // unused
-               subrecord.read(this->resist_av); // DNAM+0x58
-               subrecord.skip_bytes(4); // DNAM+0x5C // unused
-               subrecord.read(this->stagger);
                break;
             case 'CRDT':
                subrecord.read(this->crit_data.added_damage);
@@ -424,9 +629,9 @@ namespace dovah::loaded_forms {
       copy->speed = this->speed;
       copy->stagger = this->stagger;
       copy->type  = this->type;
-      copy->unk_dnam_10 = this->unk_dnam_10;
-      copy->unk_dnam_30 = this->unk_dnam_30;
-      copy->unk_dnam_40 = this->unk_dnam_40;
+      copy->unk_dnam_14 = this->unk_dnam_14;
+      copy->fire_rate = this->fire_rate;
+      copy->damage_to_weapon_mult = this->damage_to_weapon_mult;
 
       copy->block_bash.alternate_material.set(*copy, this->block_bash.alternate_material);
       copy->block_bash.impact_data_set.set(*copy, this->block_bash.impact_data_set);
@@ -523,9 +728,10 @@ namespace dovah::loaded_forms {
             );
             subrecord.write(flags);
          }
-         subrecord.skip_bytes(2);
+         subrecord.write(this->unk_dnam_0D);
+         subrecord.skip_bytes(1);
          subrecord.write(this->ironsight_fov);
-         subrecord.write(this->unk_dnam_10);
+         subrecord.write(this->unk_dnam_14);
          subrecord.write(this->base_vats_hit_chance);
          subrecord.write(this->animation.legacy_anim);
          subrecord.write(this->projectile_count);
@@ -552,14 +758,18 @@ namespace dovah::loaded_forms {
             );
             subrecord.write(flags);
          }
-         subrecord.write(this->unk_dnam_30);
+         subrecord.write(this->fire_rate);
          subrecord.write(this->rumble.left_motor);
          subrecord.write(this->rumble.right_motor);
          subrecord.write(this->rumble.duration);
-         subrecord.write(this->unk_dnam_40);
-         subrecord.write(this->rumble.pattern);
+         subrecord.write(this->damage_to_weapon_mult);
+         subrecord.write(this->shots_per_second);
          subrecord.skip_bytes(4); // DNAM+0x48 // unused
-         subrecord.write(this->skill); // DNAM+0x4C
+         if (this->skill.has_value()) { // DNAM+0x4C
+            subrecord.write((int32_t)this->skill.value());
+         } else {
+            subrecord.write((int32_t)-1);
+         }
          subrecord.skip_bytes(8); // DNAM+0x50 // unused
          subrecord.write(this->resist_av); // DNAM+0x58
          subrecord.skip_bytes(4); // DNAM+0x5C // unused
@@ -640,9 +850,9 @@ namespace dovah::loaded_forms {
       this->reach = 0;
       this->flags = {};
       this->ironsight_fov = 0;
-      this->unk_dnam_10 = 0;
-      this->unk_dnam_30 = 0;
-      this->unk_dnam_40 = 0;
+      this->unk_dnam_14 = 0;
+      this->fire_rate = 0;
+      this->damage_to_weapon_mult = 0;
       this->base_vats_hit_chance = 0;
       this->animation = {};
       this->projectile_count = 1;

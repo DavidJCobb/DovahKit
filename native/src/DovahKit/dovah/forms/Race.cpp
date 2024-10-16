@@ -236,10 +236,10 @@ namespace dovah::loaded_forms {
                      subrecord.read(skill_boost);
                      if (skill_index != -1) {
                         skill_index -= first_skill_actor_value_index;
-                        if (skill_index >= skill_count) {
+                        if (skill_index < 0 || skill_index >= skill_count) {
                            specific_load_warnings::invalid_boosted_skill notice(
                               this->stub,
-                              skill_index,
+                              skill_index + first_skill_actor_value_index,
                               i
                            );
                            intfc.log_load_warning(notice);

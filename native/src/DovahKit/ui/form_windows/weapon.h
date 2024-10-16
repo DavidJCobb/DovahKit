@@ -14,6 +14,9 @@ class FormDialogWeapon :
       
    protected:
       Ui::FormDialogWeapon ui;
+
+      void _pull_templatable_data_to_ui();
+      void _update_from_template_form();
       
       virtual void _load_impl() override;
       virtual void _save_impl() override;
