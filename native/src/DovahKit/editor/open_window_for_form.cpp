@@ -55,6 +55,7 @@
 #include "../ui/form_windows/topic_info.h"
 #include "../ui/form_windows/visual_effect.h"
 #include "../ui/form_windows/voicetype.h"
+#include "../ui/form_windows/weapon.h"
 #include "../ui/form_windows/word_of_power.h"
 #include "ui/main_window.h" // MainWindow::get
 
@@ -114,6 +115,7 @@ namespace {
       std::pair{ dovah::form_type::topic_info,        _make<FormDialogTopicInfo> },
       std::pair{ dovah::form_type::visual_effect,     _make<FormDialogVisualEffect> },
       std::pair{ dovah::form_type::voicetype,         _make<FormDialogVoicetype> },
+      std::pair{ dovah::form_type::weapon,            _make<FormDialogWeapon> },
       std::pair{ dovah::form_type::word_of_power,     _make<FormDialogWordOfPower> },
    };
 

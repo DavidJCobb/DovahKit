@@ -46,13 +46,9 @@ namespace dovah {
       //
       // Next, we'll check the form ID. First, we'll look into the actor values.
       //
-      {  // Actor values
-         auto& list = data::actor_Value_info_list::get();
-         for (uint16_t i = 0; i < list.count; i++) {
-            auto& entry = list.list[i];
-            if (stub.formID == entry.formID)
-               return nullptr; // TODO: we need a class for these
-         }
+      for (auto& item : all_actor_value_info) {
+         if (stub.formID == item.formID)
+            return nullptr; // TODO: we need a class for these, and we'd need to instantiate the loaded-form data and return it here
       }
       //
       // Now, some of the other forms have relationships to each other, which we'll need to set 
@@ -144,14 +140,11 @@ namespace dovah {
       //
       form_stub* Player = nullptr;
       {  // Actor values
-         auto& list = data::actor_Value_info_list::get();
-         for (uint16_t i = 0; i < list.count; i++) {
-            auto& entry = list.list[i];
-            //
+         for (auto& item : all_actor_value_info) {
             auto stub = new form_stub();
-            stub->formID    = entry.formID;
+            stub->formID    = item.formID;
             stub->form_type = form_type_info::signature_to_form_type('AVIF');
-            stub->editorID  = entry.name;
+            stub->editorID  = item.name;
             lo._accept_hardcoded_form(stub);
          }
       }

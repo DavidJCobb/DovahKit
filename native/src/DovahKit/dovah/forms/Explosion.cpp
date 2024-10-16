@@ -33,14 +33,12 @@ namespace dovah::loaded_forms {
                if (auto& dst = this->imagespace_modifier; subrecord.read(dst))
                   intfc.warn_if_ref_is_wrong_type(dst, form_type::imagespace_modifier, subrecord.signature());
                break;
-
             case components::enchantable::subrecord_signature_effect:
             case components::enchantable::subrecord_signature_effect_legacy: // ENAM
             case components::enchantable::subrecord_signature_charge:
             case components::enchantable::subrecord_signature_charge_legacy: // ANAM
                this->enchantable.load(subrecord, intfc);
                break;
-
             case 'DATA':
                if (auto& dst = this->light; subrecord.read(dst))
                   intfc.warn_if_ref_is_wrong_type(dst, form_type::light, subrecord.signature());

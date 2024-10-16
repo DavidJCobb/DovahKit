@@ -34,11 +34,13 @@ namespace dovah::loaded_forms::components {
       switch (subrecord.signature()) {
          case 'MODL':
          case 'MOD2':
+         case 'MOD3':
          case 'DMDL': // for model path
             this->load_model_path(subrecord, intfc);
             return true;
          case 'MODT':
          case 'MO2T':
+         case 'MO3T':
          case 'DMDT': // for texture hashes
             {
                auto& record = subrecord.get_containing_record();
@@ -107,6 +109,7 @@ namespace dovah::loaded_forms::components {
       switch (subrecord.signature()) {
          case 'MODS':
          case 'MO2S':
+         case 'MO3S':
          case 'DMDS':
             break;
          case 'MOSD':

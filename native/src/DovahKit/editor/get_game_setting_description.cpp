@@ -26,6 +26,80 @@ namespace {
       _association("fBlinkDelayMin",                 QObject::tr("The lower bound on the random number of seconds that pass between each time a character blinks their eyes. The upper bound is fBlinkDelayMax.", disambig)), // TODO: Definition from CS wiki; double-check that Skyrim still uses this.
       _association("fBlinkDownTime",                 QObject::tr("The total number of seconds that a blinking character spends closing their eyes and keeping them closed.", disambig)), // TODO: Definition from CS wiki; double-check that Skyrim still uses this.
       _association("fBlinkUpTime",                   QObject::tr("The number of seconds it takes for a blinking character's eyes to move from fully closed to fully open.", disambig)),  // TODO: Definition from CS wiki; double-check that Skyrim still uses this.
+      #pragma region fDiffMultHPByPC*
+         _association(
+            "fDiffMultHPByPCVE",
+            QObject::tr(
+               "A scaling factor applied to damage dealt by the player-character, when on Very Easy difficulty.",
+               disambig
+            )
+         ),
+         _association(
+            "fDiffMultHPByPCE",
+            QObject::tr(
+               "A scaling factor applied to damage dealt by the player-character, when on Easy difficulty.",
+               disambig
+            )
+         ),
+         _association(
+            "fDiffMultHPByPCH",
+            QObject::tr(
+               "A scaling factor applied to damage dealt by the player-character, when on Hard difficulty.",
+               disambig
+            )
+         ),
+         _association(
+            "fDiffMultHPByPCVH",
+            QObject::tr(
+               "A scaling factor applied to damage dealt by the player-character, when on Very Hard difficulty.",
+               disambig
+            )
+         ),
+         _association(
+            "fDiffMultHPByPCL",
+            QObject::tr(
+               "A scaling factor applied to damage dealt by the player-character, when on Legendary difficulty.",
+               disambig
+            )
+         ),
+      #pragma endregion
+      #pragma region fDiffMultHPToPC*
+         _association(
+            "fDiffMultHPToPCVE",
+            QObject::tr(
+               "A scaling factor applied to damage inflicted upon the player-character, when on Very Easy difficulty.",
+               disambig
+            )
+         ),
+         _association(
+            "fDiffMultHPToPCE",
+            QObject::tr(
+               "A scaling factor applied to damage inflicted upon the player-character, when on Easy difficulty.",
+               disambig
+            )
+         ),
+         _association(
+            "fDiffMultHPToPCH",
+            QObject::tr(
+               "A scaling factor applied to damage inflicted upon the player-character, when on Hard difficulty.",
+               disambig
+            )
+         ),
+         _association(
+            "fDiffMultHPToPCVH",
+            QObject::tr(
+               "A scaling factor applied to damage inflicted upon the player-character, when on Very Hard difficulty.",
+               disambig
+            )
+         ),
+         _association(
+            "fDiffMultHPToPCL",
+            QObject::tr(
+               "A scaling factor applied to damage inflicted upon the player-character, when on Legendary difficulty.",
+               disambig
+            )
+         ),
+      #pragma endregion
       _association("fEssentialDeathTime",            QObject::tr("The number of seconds that an essential actor stays in bleedout once their health is drained.", disambig)),
       _association("fGameplayVoiceFilePadding",      QObject::tr("The number of seconds of silence that Skyrim inserts between consecutive voice lines. This is the setting that makes every bard song sound awkward and disjointed.", disambig)),
       _association("fMagicAbsorbVisualTimer",        QObject::tr("The duration in seconds of a visual effect played on actors when they absorb a spell. The visual effect itself is defined as a Default Object.", disambig)),

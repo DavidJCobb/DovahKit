@@ -32,6 +32,8 @@ class DKObjectReferencePicker;
 namespace ui {
    extern void bind(QCheckBox*, bool&);
    extern void bind(QGroupBox*, bool&);
+   extern void bind_inverse(QCheckBox*, bool&);
+   extern void bind_inverse(QGroupBox*, bool&);
 
    template<typename Target, typename Mask>
    void bind(QCheckBox* widget, Target& target, Mask mask) {

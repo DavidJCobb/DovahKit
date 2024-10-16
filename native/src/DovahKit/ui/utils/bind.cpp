@@ -28,6 +28,18 @@ namespace ui {
          target = checked;
       });
    }
+   extern void bind_inverse(QCheckBox* widget, bool& target) {
+      widget->setChecked(!target);
+      QObject::connect(widget, &QCheckBox::stateChanged, widget, [&target](int state) {
+         target = state != Qt::CheckState::Checked;
+      });
+   }
+   extern void bind_inverse(QGroupBox* widget, bool& target) {
+      widget->setChecked(!target);
+      QObject::connect(widget, &QGroupBox::toggled, widget, [&target](bool checked) {
+         target = !checked;
+      });
+   }
 
    extern void bind(QLineEdit* widget, std::string& target) {
       widget->setText(QString::fromUtf8(QByteArray::fromStdString(target)));

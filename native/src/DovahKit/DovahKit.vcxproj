@@ -188,6 +188,7 @@
     <ClCompile Include="dovah\forms\structs\movement_type_speeds.cpp" />
     <ClCompile Include="dovah\forms\structs\world_max_height_data.cpp" />
     <ClCompile Include="dovah\forms\VisualEffect.cpp" />
+    <ClCompile Include="dovah\forms\Weapon.cpp" />
     <ClCompile Include="dovah\form_reference_t.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_base_form.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_cell_landscape.cpp" />
@@ -849,6 +850,7 @@
     <ClCompile Include="ui\form_windows\topic_info\topic_info_response.cpp" />
     <ClCompile Include="ui\form_windows\visual_effect.cpp" />
     <ClCompile Include="ui\form_windows\voicetype.cpp" />
+    <ClCompile Include="ui\form_windows\weapon.cpp" />
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
     <ClCompile Include="ui\generic\QItemSelectionModelEx.cpp" />
@@ -1182,6 +1184,7 @@
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
     <ClInclude Include="dovah\forms\structs\world_max_height_data.h" />
     <ClInclude Include="dovah\forms\VisualEffect.h" />
+    <ClInclude Include="dovah\forms\Weapon.h" />
     <ClInclude Include="dovah\form_reference_t.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_child_form.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_dialogue_branch_topic.h" />
@@ -1347,6 +1350,7 @@
     <ClInclude Include="helpers\enum_in.h" />
     <ClInclude Include="helpers\hashing\crc32.h" />
     <ClInclude Include="helpers\qt\strings\to_no_op_html.h" />
+    <ClInclude Include="helpers\split_join_flags.h" />
     <ClInclude Include="helpers\string\stricontains_ascii.h" />
     <ClInclude Include="helpers\vectors\move_item_within.h" />
     <ClInclude Include="helpers\vectors\move_range_within.h" />
@@ -1449,6 +1453,7 @@
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoSharedInfoFormFilter.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoWalkAwayTopicFormFilter.h" />
     <QtMoc Include="ui\form_windows\topic_info\topic_info_response.h" />
+    <QtMoc Include="ui\form_windows\weapon.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_float_slider.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h" />
