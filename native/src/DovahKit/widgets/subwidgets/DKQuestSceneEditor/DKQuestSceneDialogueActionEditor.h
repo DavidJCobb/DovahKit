@@ -6,10 +6,10 @@ namespace dovah {
    class form_stub;
 }
 
-class DKQuestSceneDialogueActionEditor : public QWidget {
+class DKQuestSceneEditorDialogueAction : public QWidget {
    Q_OBJECT;
    public:
-      DKQuestSceneDialogueActionEditor(QWidget* parent = nullptr);
+      DKQuestSceneEditorDialogueAction(QWidget* parent = nullptr);
 
       #pragma region Overrides
          #pragma region Layout

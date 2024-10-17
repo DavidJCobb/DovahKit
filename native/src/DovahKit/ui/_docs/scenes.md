@@ -13,7 +13,7 @@ The data is organized as follows:
 The data is displayed as follows:
 
 * One column per phase: a grey box divided vertically.
-  * The column has a header at the top consisting of at least one box (showing the phase number and, if it has one, the name). There may be a second box below it showing the phase conditions, if it has any.
+  * The column has a header at the top consisting of at least one box (showing the phase number and, if it has one, the name). There may be a second or third box below it showing the phase conditions, if it has any.
   * If you scroll down so that the header is out of view, a smaller faded-mustard-colored box appears showing just the phase number. Its horizontal position is centered under the phase header.
 * One row per actor: a white horizontal box overlaid over the grey background, and extending slightly past its left and right edges.
   * The actor row shows the alias name and its scene-relevant Actor Behavior settings along the left side. Scrolling horizontally keeps this text in view.
@@ -61,13 +61,21 @@ The Del and Enter keys do nothing.
 
 ## Layout rules
 
+At 100% zoom, the graph is inset from the view by 30px on both axes. The phase grid is indented by 20px (and the action rows are not similarly indented, so they're outdented relative to the phase grid).
+
 ### Phases
 
-The width of a Phase is ironclad; they don't widen or shrink to fit their contents. They have a very narrow minimum width &mdash: two grid cells' width, roughly 24px or 32px at 100% zoom; you can't resize them smaller than that.
+The width of a Phase is ironclad; they don't widen or shrink to fit their contents. They have a very narrow minimum width &mdash: two grid cells' width, roughly 24px or 32px at 100% zoom; you can't resize them smaller than that. The width includes the entire grey column, not just the phase header's inner area. Form data stores the phase width.
+
+A phase header is always two lines tall. The first line lists the phase number; the second, the name (if there is one). The phase name shown in the header does not word-wrap, and is clipped if too wide.
+
+The condition boxes are always four lines tall, each, with "Start condition:" or "Completion condition:" on the first line and conditions beginning on the second. Conditions are word-wrapped and clipped. Condition boxes are not aligned with one another: if Phase 1 has both start and completion conditions, but Phase 2 has only completion conditions, then the Phase 1 start conditions will be at the same Y-position as the Phase 2 completion conditions.
 
 ### Actors
 
 The height of an actor is dependent on the total heights of the actions therein. The minimum height is large enough to show the alias name and actor behavior.
+
+The actor name is fixed-position, being inset by 40px from the view's left edge (at 100% zoom). Without any horizontal scrolling, that works out to a 10px inset from the left edge of the actor row.
 
 ### Actions
 

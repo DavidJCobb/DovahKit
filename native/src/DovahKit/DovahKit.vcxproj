@@ -1058,6 +1058,7 @@
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
     <ClCompile Include="widgets\DKVulkanView.cpp" />
+    <ClCompile Include="widgets\DKQuestSceneEditor.cpp" />
     <ClCompile Include="widgets\widget-data\DKCustomFormFilter.cpp" />
     <ClCompile Include="widgets\widget-data\DKCustomFormFilterableModelMixin.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.cpp" />
@@ -1452,6 +1453,7 @@
     <QtMoc Include="ui\form_windows\quest\QuestDialogueTabBody.h" />
     <ClInclude Include="ui\form_windows\race\RacePresetActorFormFilter.h" />
     <ClInclude Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.h" />
+    <ClInclude Include="ui\form_windows\scene\SceneDatastore.h" />
     <ClInclude Include="ui\form_windows\shared\DKFormPickerExcludeSingleFormFilter.h" />
     <ClInclude Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.h" />
     <ClInclude Include="ui\form_windows\shared\HeadPartPickerFilter.h" />
@@ -1508,6 +1510,7 @@
     <QtMoc Include="widgets\DKStatusBar.h" />
     <QtMoc Include="widgets\widget-data\DKCustomFormFilter.h" />
     <QtMoc Include="widgets\subwidgets\DKQuestSceneEditor\DKQuestSceneDialogueActionEditor.h" />
+    <QtMoc Include="widgets\DKQuestSceneEditor.h" />
     <ClInclude Include="widgets\widget-data\DKCustomFormFilterableModelMixin.h" />
     <ClInclude Include="widgets\widget-models\DKAttackDataModel.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />

@@ -2850,6 +2850,9 @@
     <ClCompile Include="dovah\forms\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\DKQuestSceneEditor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -7169,6 +7172,9 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\scene_actor_subrecords_out_of_order.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\form_windows\scene\SceneDatastore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -8140,6 +8146,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\subwidgets\DKQuestSceneEditor\DKQuestSceneDialogueActionEditor.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKQuestSceneEditor.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
