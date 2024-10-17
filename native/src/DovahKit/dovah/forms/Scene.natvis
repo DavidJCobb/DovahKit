@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::loaded_forms::Scene::actor">
+      <DisplayString>alias ID {alias_id,d}</DisplayString>
+      <Expand>
+         <Item Name="[alias ID]">alias_id,d</Item>
+         <Synthetic Name="[participation flags]">
+            <DisplayString>{participation_flags}</DisplayString>
+            <Expand>
+               <Synthetic Name="[no player activation]">
+                  <DisplayString>{(participation_flags &amp; participation_flag::no_player_activation) != 0}</DisplayString>
+               </Synthetic>
+               <Synthetic Name="[optional]">
+                  <DisplayString>{(participation_flags &amp; participation_flag::optional) != 0}</DisplayString>
+               </Synthetic>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="[behavior flags]">
+            <DisplayString>{behavior_flags}</DisplayString>
+            <Expand>
+               <Synthetic Name="[death]">
+                  <DisplayString Condition="(behavior_flags &amp; behavior_flag::death_pauses) != 0">Pause</DisplayString>
+                  <DisplayString Condition="(behavior_flags &amp; behavior_flag::death_ends) != 0">End</DisplayString>
+                  <DisplayString>N/A</DisplayString>
+               </Synthetic>
+               <Synthetic Name="[combat]">
+                  <DisplayString Condition="(behavior_flags &amp; behavior_flag::combat_pauses) != 0">Pause</DisplayString>
+                  <DisplayString Condition="(behavior_flags &amp; behavior_flag::combat_ends) != 0">End</DisplayString>
+                  <DisplayString>N/A</DisplayString>
+               </Synthetic>
+               <Synthetic Name="[dialogue]">
+                  <DisplayString Condition="(behavior_flags &amp; behavior_flag::dialogue_pauses) != 0">Pause</DisplayString>
+                  <DisplayString Condition="(behavior_flags &amp; behavior_flag::dialogue_ends) != 0">End</DisplayString>
+                  <DisplayString>N/A</DisplayString>
+               </Synthetic>
+               <Synthetic Name="[observe corpse]">
+                  <DisplayString Condition="(behavior_flags &amp; behavior_flag::observe_corpse_pauses) != 0">Pause</DisplayString>
+                  <DisplayString Condition="(behavior_flags &amp; behavior_flag::observe_corpse_ends) != 0">End</DisplayString>
+                  <DisplayString>N/A</DisplayString>
+               </Synthetic>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+   <Type Name="dovah::loaded_forms::Scene::action">
+      <DisplayString Condition="phase_indices.start == phase_indices.end">action {action_id,d} for alias {alias_id,d} in phase {phase_indices.start,d}</DisplayString>
+      <DisplayString>action {action_id,d} for alias {alias_id,d} in phases [{phase_indices.start,d}, {phase_indices.end,d}]</DisplayString>
+      <Expand>
+         <Item Name="[action ID]">action_id,d</Item>
+         <Item Name="[alias ID]">alias_id,d</Item>
+         <Item Name="[name]">name</Item>
+         <Item Name="[flags]">flags</Item>
+         <Synthetic Name="[phases]">
+            <DisplayString>[{phase_indices.start,d}, {phase_indices.end,d}]</DisplayString>
+            <Expand>
+               <Item Name="[start]">phase_indices.start,d</Item>
+               <Item Name="[end]">phase_indices.end,d</Item>
+            </Expand>
+         </Synthetic>
+         <Item Name="[data]">data</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

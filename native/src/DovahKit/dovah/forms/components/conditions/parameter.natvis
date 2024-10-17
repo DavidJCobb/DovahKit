@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::loaded_forms::components::conditions::parameter">
+      <DisplayString Condition="underlying == dovah::conditions::parameter_underlying_type::none">&lt;empty&gt;</DisplayString>
+      <DisplayString Condition="underlying == dovah::conditions::parameter_underlying_type::alias">Alias ID #{integer}</DisplayString>
+      <DisplayString Condition="underlying == dovah::conditions::parameter_underlying_type::character">{(char)integer}</DisplayString>
+      <DisplayString Condition="underlying == dovah::conditions::parameter_underlying_type::enumeration">{integer}</DisplayString>
+      <DisplayString Condition="underlying == dovah::conditions::parameter_underlying_type::float32">{float32}</DisplayString>
+      <DisplayString Condition="underlying == dovah::conditions::parameter_underlying_type::form">{form.stub,na}</DisplayString>
+      <DisplayString Condition="underlying == dovah::conditions::parameter_underlying_type::int_signed">{integer}</DisplayString>
+      <DisplayString Condition="underlying == dovah::conditions::parameter_underlying_type::int_unsigned">{(uint32_t)integer}</DisplayString>
+      <DisplayString Condition="underlying == dovah::conditions::parameter_underlying_type::package_data">Packdata ID #{integer}</DisplayString>
+      <DisplayString Condition="underlying == dovah::conditions::parameter_underlying_type::quest_stage">Quest Stage {integer}</DisplayString>
+      <DisplayString Condition="underlying == dovah::conditions::parameter_underlying_type::string">{string}</DisplayString>
+   </Type> 
+</AutoVisualizer>

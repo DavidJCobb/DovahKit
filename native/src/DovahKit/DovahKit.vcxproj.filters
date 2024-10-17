@@ -2847,6 +2847,9 @@
     <ClCompile Include="ui\form_windows\weapon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\Scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -7139,6 +7142,33 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\weapon\invalid_resistance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\forms\Scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\scene_action_necessary_subrecord_unreadable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\scene_action_necessary_subrecord_missing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\scene_action_base_layout_incorrect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\unexpected_subrecord_in_scene_action.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\invalid_scene_action_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\unexpected_subrecord_in_scene_phase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\unterminated_scene_phase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\scene_actor_subrecords_out_of_order.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -8109,6 +8139,9 @@
     <QtMoc Include="ui\form_windows\weapon.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="widgets\subwidgets\DKQuestSceneEditor\DKQuestSceneDialogueActionEditor.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -8577,6 +8610,7 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="helpers\multiheap.md" />
+    <None Include="ui\_docs\scenes.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
@@ -8654,5 +8688,8 @@
     <Natvis Include="dovah\files\pex\parsers\util\file_string_table.natvis" />
     <Natvis Include="helpers\enum_in.natvis" />
     <Natvis Include="dovah\files\tes_file_reading\elements.natvis" />
+    <Natvis Include="dovah\forms\components\conditions.natvis" />
+    <Natvis Include="dovah\forms\components\conditions\parameter.natvis" />
+    <Natvis Include="dovah\forms\Scene.natvis" />
   </ItemGroup>
 </Project>

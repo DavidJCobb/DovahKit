@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::loaded_forms::components::condition::run_on_data">
+      <DisplayString Condition="type == dovah::conditions::run_on_type::subject">Subject</DisplayString>
+      <DisplayString Condition="type == dovah::conditions::run_on_type::target">Target</DisplayString>
+      <DisplayString Condition="type == dovah::conditions::run_on_type::combat_target">Combat Target</DisplayString>
+      <DisplayString Condition="type == dovah::conditions::run_on_type::linked_ref">Linked Ref</DisplayString>
+      
+      <DisplayString Optional="true" Condition="type == dovah::conditions::run_on_type::reference">Reference({reference.form,na})</DisplayString>
+      <DisplayString Condition="type == dovah::conditions::run_on_type::reference">Reference(???)</DisplayString>
+      <DisplayString Optional="true" Condition="type == dovah::conditions::run_on_type::event_data">EventData({index})</DisplayString>
+      <DisplayString Condition="type == dovah::conditions::run_on_type::event_data">EventData(???)</DisplayString>
+      <DisplayString Optional="true" Condition="type == dovah::conditions::run_on_type::quest_alias">QuestAlias(#{index})</DisplayString>
+      <DisplayString Condition="type == dovah::conditions::run_on_type::quest_alias">QuestAlias(???)</DisplayString>
+      <DisplayString Optional="true" Condition="type == dovah::conditions::run_on_type::package_data">PackData(#{index})</DisplayString>
+      <DisplayString Condition="type == dovah::conditions::run_on_type::package_data">PackData(???)</DisplayString>
+   </Type>
+   
+   <Type Name="dovah::loaded_forms::components::condition::comparison_data">
+      <Intrinsic Name="_is_form_stub" Expression="operand._Which == 1"/>
+      
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::equal            &amp;&amp; !_is_form_stub()">== {operand._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::not_equal        &amp;&amp; !_is_form_stub()">!= {operand._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::greater          &amp;&amp; !_is_form_stub()">&gt; {operand._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::greater_or_equal &amp;&amp; !_is_form_stub()">&gt;= {operand._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::less             &amp;&amp; !_is_form_stub()">&lt; {operand._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::less_or_equal    &amp;&amp; !_is_form_stub()">&lt;= {operand._Head}</DisplayString>
+      
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::equal            &amp;&amp; _is_form_stub()">== {operand._Tail._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::not_equal        &amp;&amp; _is_form_stub()">!= {operand._Tail._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::greater          &amp;&amp; _is_form_stub()">&gt; {operand._Tail._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::greater_or_equal &amp;&amp; _is_form_stub()">&gt;= {operand._Tail._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::less             &amp;&amp; _is_form_stub()">&lt; {operand._Tail._Head}</DisplayString>
+      <DisplayString Condition="op == dovah::conditions::comparison_operator::less_or_equal    &amp;&amp; _is_form_stub()">&lt;= {operand._Tail._Head}</DisplayString>
+      <Expand>
+         <Item Name="[operator]">op</Item>
+         <Item Name="[operand]" Condition="!_is_form_stub()">operand._Head</Item>
+         <Item Name="[operand]" Condition="_is_form_stub()">operand._Tail._Head</Item>
+      </Expand>
+   </Type>
+   
+   <Type Name="dovah::loaded_forms::components::condition">
+      <Intrinsic Name="_function_count" Expression="sizeof(dovah::conditions::all_vanilla_function_info) / sizeof(dovah::conditions::function_info)" />
+      <Intrinsic Name="_has_first_param" Expression="
+         function &lt; _function_count()
+         ?
+            dovah::conditions::all_vanilla_function_info[function].argument_types[0] != &amp;dovah::conditions::parameter_types::None
+         :
+            false
+      " />
+      <Intrinsic Name="_has_second_param" Expression="
+         function &lt; _function_count()
+         ?
+            dovah::conditions::all_vanilla_function_info[function].argument_types[1] != &amp;dovah::conditions::parameter_types::None
+         :
+            false
+      " />
+      
+      <DisplayString Optional="true" Condition="_has_second_param()">{run_on}.{dovah::conditions::all_vanilla_function_info[function].name._Mydata,nasb}({parameters[0],view(DovahKitWorkingConditionParameter)}, {parameters[1],view(DovahKitWorkingConditionParameter)}) {comparison}</DisplayString>
+      <DisplayString Optional="true" Condition="_has_first_param()">{run_on}.{dovah::conditions::all_vanilla_function_info[function].name._Mydata,nasb}({parameters[0],view(DovahKitWorkingConditionParameter)}) {comparison}</DisplayString>
+      <DisplayString Optional="true" Condition="!_has_first_param()">{run_on}.{dovah::conditions::all_vanilla_function_info[function].name._Mydata,nasb}() {comparison}</DisplayString>
+      <DisplayString Optional="true">{run_on}.{dovah::conditions::all_vanilla_function_info[function].name._Mydata,nasb}(...) {comparison}</DisplayString>
+      <DisplayString>{run_on}.{function}(...) {comparison}</DisplayString>
+      <Expand>
+         <Item Name="[flags]">flags</Item>
+         <Item Name="[function ID]">function</Item>
+         <Item Name="[function name]" Optional="true">dovah::conditions::all_vanilla_function_info[function].name._Mydata,nasb</Item>
+         <Synthetic Name="[parameters]">
+            <DisplayString Condition="_has_second_param()">{parameters[0],view(DovahKitWorkingConditionParameter)}, {parameters[1],view(DovahKitWorkingConditionParameter)}</DisplayString>
+            <DisplayString Condition="_has_first_param()">{parameters[0],view(DovahKitWorkingConditionParameter)}</DisplayString>
+            <DisplayString Condition="!_has_first_param()">&lt;none&gt;</DisplayString>
+            <Expand>
+               <Item Name="[0]" Condition="_has_first_param()">parameters[0],view(DovahKitWorkingConditionParameter)</Item>
+               <Item Name="[1]" Condition="_has_second_param()">parameters[1],view(DovahKitWorkingConditionParameter)</Item>
+            </Expand>
+         </Synthetic>
+         <Item Name="[event_parameters]">event_parameters</Item>
+         <Item Name="[comparison]">comparison</Item>
+         <Item Name="[run_on]">run_on</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

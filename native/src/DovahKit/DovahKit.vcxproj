@@ -181,6 +181,7 @@
     <ClCompile Include="dovah\forms\Outfit.cpp" />
     <ClCompile Include="dovah\forms\Race.cpp" />
     <ClCompile Include="dovah\forms\Relationship.cpp" />
+    <ClCompile Include="dovah\forms\Scene.cpp" />
     <ClCompile Include="dovah\forms\SoulGem.cpp" />
     <ClCompile Include="dovah\forms\structs\actor_creature_sounds.cpp" />
     <ClCompile Include="dovah\forms\structs\container_object_extra_data.cpp" />
@@ -1175,6 +1176,7 @@
     <ClInclude Include="dovah\forms\Outfit.h" />
     <ClInclude Include="dovah\forms\Race.h" />
     <ClInclude Include="dovah\forms\Relationship.h" />
+    <ClInclude Include="dovah\forms\Scene.h" />
     <ClInclude Include="dovah\forms\SoulGem.h" />
     <ClInclude Include="dovah\forms\structs\actor_creature_sounds.h" />
     <ClInclude Include="dovah\forms\structs\actor_facegen_morphs.h" />
@@ -1282,6 +1284,14 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\too_many_biped_object_names.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\too_many_phonemes.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\wrong_weight_count_per_phoneme.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\invalid_scene_action_type.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\scene_action_base_layout_incorrect.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\scene_action_necessary_subrecord_missing.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\scene_action_necessary_subrecord_unreadable.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\scene_actor_subrecords_out_of_order.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\unexpected_subrecord_in_scene_action.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\unexpected_subrecord_in_scene_phase.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\unterminated_scene_phase.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\shout\wrong_word_count.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_addendum_subrecord_too_early.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_ids_are_not_unique.h" />
@@ -1497,6 +1507,7 @@
     <QtMoc Include="widgets\DKTabWidget.h" />
     <QtMoc Include="widgets\DKStatusBar.h" />
     <QtMoc Include="widgets\widget-data\DKCustomFormFilter.h" />
+    <QtMoc Include="widgets\subwidgets\DKQuestSceneEditor\DKQuestSceneDialogueActionEditor.h" />
     <ClInclude Include="widgets\widget-data\DKCustomFormFilterableModelMixin.h" />
     <ClInclude Include="widgets\widget-models\DKAttackDataModel.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
@@ -3163,6 +3174,7 @@
     <None Include="ui\types\face_tints\layer.inl" />
     <None Include="ui\types\papyrus\property_value.inl" />
     <None Include="ui\_docs\form-editing dialogs.md" />
+    <None Include="ui\_docs\scenes.md" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />
     <None Include="vulkan\frame_in_flight.inl" />
@@ -3194,9 +3206,12 @@
     <Natvis Include="dovah\files\pex\value.natvis" />
     <Natvis Include="dovah\files\pex\variable_declaration.natvis" />
     <Natvis Include="dovah\files\tes_file_reading\elements.natvis" />
+    <Natvis Include="dovah\forms\components\conditions.natvis" />
+    <Natvis Include="dovah\forms\components\conditions\parameter.natvis" />
     <Natvis Include="dovah\forms\components\conditions\working_comparison.natvis" />
     <Natvis Include="dovah\forms\components\conditions\working_condition.natvis" />
     <Natvis Include="dovah\forms\Landscape.natvis" />
+    <Natvis Include="dovah\forms\Scene.natvis" />
     <Natvis Include="dovah\form_stub.natvis" />
     <Natvis Include="dovah\utils\classed_stat_points.natvis" />
     <Natvis Include="editor\subsystems\papyrus\known_script.natvis" />

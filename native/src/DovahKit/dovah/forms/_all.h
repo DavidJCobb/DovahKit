@@ -54,6 +54,7 @@
    #include "Quest.h"
    #include "Race.h"
    #include "Relationship.h"
+   #include "Scene.h"
    #include "Shout.h"
    #include "SoulGem.h"
    #include "Static.h"
@@ -119,6 +120,7 @@ namespace dovah {
       loaded_forms::Quest,
       loaded_forms::Race,
       loaded_forms::Relationship,
+      loaded_forms::Scene,
       loaded_forms::Shout,
       loaded_forms::SoulGem,
       loaded_forms::Static,

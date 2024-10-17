@@ -19,7 +19,7 @@ namespace dovah::loaded_forms::components {
    }
    void legacy_script::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       switch (subrecord.signature()) {
-         case 'SCHR':
+         case subrecord_signature_header:
             if (subrecord.is_in_bounds(0x14)) {
                subrecord.unchecked_read(this->header.unk00);
                subrecord.unchecked_read(this->header.refs);
@@ -28,7 +28,7 @@ namespace dovah::loaded_forms::components {
                subrecord.unchecked_read(this->header.type);
             }
             break;
-         case 'SCDA':
+         case subrecord_signature_compiled_data:
             this->compiled_data.clear();
             this->compiled_data.resize(subrecord.size());
             for (size_t i = 0; i < subrecord.size(); ++i)
@@ -39,14 +39,14 @@ namespace dovah::loaded_forms::components {
                //
             }
             break;
-         case 'SCTX':
+         case subrecord_signature_source_code:
             subrecord.read(this->source_code);
             break;
-         case 'QNAM':
+         case subrecord_signature_quest:
             subrecord.read(this->quest);
             intfc.warn_if_ref_is_wrong_type(this->quest, form_type::quest, subrecord.signature());
             break;
-         case 'SCRO':
+         case subrecord_signature_ref_objects:
             {
                form_reference_t form;
                if (subrecord.read(form)) {
@@ -55,7 +55,7 @@ namespace dovah::loaded_forms::components {
                }
             }
             break;
-         case 'SCRV':
+         case subrecord_signature_ref_variables:
             //
             // TODO
             //
@@ -67,7 +67,7 @@ namespace dovah::loaded_forms::components {
    bool legacy_script::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       if (this->empty())
          return true;
-      auto& SCHR = record.open_next_subrecord('SCHR');
+      auto& SCHR = record.open_next_subrecord(subrecord_signature_header);
       SCHR.write(this->header.unk00);
       SCHR.write(this->header.refs);
       SCHR.write(this->header.size);
@@ -75,17 +75,17 @@ namespace dovah::loaded_forms::components {
       SCHR.write(this->header.type);
       SCHR.close();
       if (!this->compiled_data.empty()) {
-         auto& SCDA = record.open_next_subrecord('SCDA');
+         auto& SCDA = record.open_next_subrecord(subrecord_signature_compiled_data);
          for(const auto byte : this->compiled_data)
             SCDA.write(byte);
          SCDA.close();
       }
       if (!this->source_code.empty()) {
-         record.write_string_subrecord('SCTX', this->source_code);
+         record.write_string_subrecord(subrecord_signature_source_code, this->source_code);
       }
-      record.write_formID_subrecord('QNAM', this->quest, true);
+      record.write_formID_subrecord(subrecord_signature_quest, this->quest, true);
       for (const auto& id : this->refs)
-         record.write_formID_subrecord('SCRO', id, true);
+         record.write_formID_subrecord(subrecord_signature_ref_objects, id, true);
       return true;
    }
    void legacy_script::clone_from(const legacy_script& other, loaded_forms::Form& my_owner) noexcept {
