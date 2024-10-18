@@ -880,6 +880,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\ui_form_list_pane_extra_col.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_key_picker.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_ref_picker.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_status_bar_segment.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.cpp" />
@@ -1468,6 +1469,7 @@
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoWalkAwayTopicFormFilter.h" />
     <QtMoc Include="ui\form_windows\topic_info\topic_info_response.h" />
     <QtMoc Include="ui\form_windows\weapon.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_float_slider.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h" />

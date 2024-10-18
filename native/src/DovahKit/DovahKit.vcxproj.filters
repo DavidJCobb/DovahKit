@@ -2853,6 +2853,9 @@
     <ClCompile Include="widgets\DKQuestSceneEditor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -7173,6 +7176,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\form_windows\scene\SceneDatastore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
