@@ -2856,6 +2856,24 @@
     <ClCompile Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\Phase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\Actor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\Action.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\DialogueAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\PackageAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\TimerAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -7175,10 +7193,31 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\scene_actor_subrecords_out_of_order.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\form_windows\scene\SceneDatastore.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.h">
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Style.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\ActorBehaviorFlag.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Phase.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Actor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Action.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\DialogueAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\PackageAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\TimerAction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -8149,9 +8188,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\weapon.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="widgets\subwidgets\DKQuestSceneEditor\DKQuestSceneDialogueActionEditor.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKQuestSceneEditor.h">

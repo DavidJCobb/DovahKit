@@ -1092,6 +1092,12 @@
     <ClCompile Include="widgets\widget-models\DKLeveledListPreviewModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKPapyrusFragmentFunctionModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
+    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\Action.cpp" />
+    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\Actor.cpp" />
+    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\DialogueAction.cpp" />
+    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\PackageAction.cpp" />
+    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\Phase.cpp" />
+    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\TimerAction.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\data\all_base_form_types.h" />
@@ -1339,6 +1345,14 @@
     <ClInclude Include="editor\helpers\face_fx_phoneme_name.h" />
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Action.h" />
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Actor.h" />
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\ActorBehaviorFlag.h" />
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\DialogueAction.h" />
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\PackageAction.h" />
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Phase.h" />
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Style.h" />
+    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\TimerAction.h" />
     <QtMoc Include="widgets\widget-models\DKPapyrusFragmentFunctionModel.h" />
     <QtMoc Include="widgets\widget-models\DKLeveledListPreviewModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormInventoryModel.h" />
@@ -1454,7 +1468,6 @@
     <QtMoc Include="ui\form_windows\quest\QuestDialogueTabBody.h" />
     <ClInclude Include="ui\form_windows\race\RacePresetActorFormFilter.h" />
     <ClInclude Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.h" />
-    <ClInclude Include="ui\form_windows\scene\SceneDatastore.h" />
     <ClInclude Include="ui\form_windows\shared\DKFormPickerExcludeSingleFormFilter.h" />
     <ClInclude Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.h" />
     <ClInclude Include="ui\form_windows\shared\HeadPartPickerFilter.h" />
@@ -1511,7 +1524,6 @@
     <QtMoc Include="widgets\DKTabWidget.h" />
     <QtMoc Include="widgets\DKStatusBar.h" />
     <QtMoc Include="widgets\widget-data\DKCustomFormFilter.h" />
-    <QtMoc Include="widgets\subwidgets\DKQuestSceneEditor\DKQuestSceneDialogueActionEditor.h" />
     <QtMoc Include="widgets\DKQuestSceneEditor.h" />
     <ClInclude Include="widgets\widget-data\DKCustomFormFilterableModelMixin.h" />
     <ClInclude Include="widgets\widget-models\DKAttackDataModel.h" />
