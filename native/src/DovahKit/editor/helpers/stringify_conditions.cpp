@@ -150,7 +150,7 @@ namespace editor_helpers {
          dovah::form_stub* stub  = nullptr;
          if (std::holds_alternative<dovah::form_stub*>(cnd.run_on.entity)) {
             stub = std::get<dovah::form_stub*>(cnd.run_on.entity);
-         } else if (std::holds_alternative<uint32_t*>(cnd.run_on.entity)) {
+         } else if (std::holds_alternative<uint32_t>(cnd.run_on.entity)) {
             index = std::get<uint32_t>(cnd.run_on.entity);
          }
          out += _stringify_condition_run_on(ctx, cnd.run_on.type, index, stub);

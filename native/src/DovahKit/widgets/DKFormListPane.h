@@ -89,6 +89,7 @@ class DKFormListPane : public QWidget {
          void clear();
          bool contains(const dovah::form_stub*) const;
          int  indexOf(const dovah::form_stub*) const;
+         void removeStub(dovah::form_stub*);
          void reserve(size_t);
       #endif
 

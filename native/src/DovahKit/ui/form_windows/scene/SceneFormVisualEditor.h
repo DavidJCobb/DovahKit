@@ -45,6 +45,9 @@ class SceneFormVisualEditor : public QWidget {
       void importData();
       void exportData();
 
+   protected:
+      void _clear_data();
+   public:
       void clear();
       void spawnRenderTest();
 

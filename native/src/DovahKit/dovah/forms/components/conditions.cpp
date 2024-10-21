@@ -519,19 +519,27 @@ namespace dovah::loaded_forms::components {
    #pragma endregion
 
    #pragma region condition_list
-   void condition_list::clear(loaded_forms::Form& my_owner) noexcept {
+   void condition_list::clear(loaded_forms::Form& my_containing_form) noexcept {
       for (auto& cnd : *this)
-         cnd.clear(my_owner);
+         cnd.clear(my_containing_form);
       std::vector<condition>::clear();
    }
 
-   void condition_list::append_all_of(loaded_forms::Form& my_owner, const std::vector<condition>& other) {
+   void condition_list::append_all_of(loaded_forms::Form& my_containing_form, const std::vector<condition>& other) {
       this->reserve(this->size() + other.size());
       for (auto& cnd : other)
-         this->emplace_back().clone_from(cnd, my_owner);
+         this->emplace_back().clone_from(cnd, my_containing_form);
    }
    bool condition_list::read_next(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       return this->emplace_back().read(record, intfc);
+   }
+
+   void condition_list::append(loaded_forms::Form& my_containing_form, const conditions::working_condition& src) {
+      this->emplace_back().commit(my_containing_form, src);
+   }
+   void condition_list::append_all_of(loaded_forms::Form& my_containing_form, const std::vector<conditions::working_condition>& src_list) {
+      for(auto& src : src_list)
+         this->emplace_back().commit(my_containing_form, src);
    }
    #pragma endregion
 }

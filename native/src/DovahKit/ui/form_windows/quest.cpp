@@ -14,8 +14,6 @@ static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_
 #include "./quest/QuestAllDialogueDatastore.h"
 #include "./quest/QuestDialogueTabBody.h"
 
-#include "widgets/DKQuestSceneEditor.h" // TODO: move to another path
-
 FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    initialize(stub);
 
@@ -224,7 +222,9 @@ void FormDialogQuest::_load_impl() {
       this->data.dialogue_datastore->set_quest(this->formStub());
    #pragma endregion
    #pragma region Scenes
-      // TODO
+      //
+      // N/A
+      //
    #pragma endregion
    #pragma region Scripts
       this->ui.scriptListPane->setFormWorkingCopy(&working);
@@ -265,7 +265,7 @@ void FormDialogQuest::_save_impl() {
       //
    #pragma endregion
    #pragma region Scenes
-      // TODO
+      this->tabs.scenes->push_data_to_scene_form(); // commit any pending changes for selected scene
    #pragma endregion
    #pragma region Scripts
       this->ui.scriptListPane->commit();

@@ -21,7 +21,7 @@ namespace dovah::loaded_forms {
             scene_flag() = delete;
             enum {
                begin_on_quest_start = 1 << 0,
-               end_on_quest_stop    = 1 << 1,
+               stop_quest_on_end    = 1 << 1,
                // unknown
                loop_while_conditions_are_met = 1 << 3,
                interruptible = 1 << 4,

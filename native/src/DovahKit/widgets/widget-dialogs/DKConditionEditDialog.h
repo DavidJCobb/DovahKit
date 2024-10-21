@@ -11,8 +11,8 @@
 #include "ui/types/conditions/condition.h"
 
 namespace dovah::conditions {
-   class function_info;
-   class parameter_typeinfo;
+   struct function_info;
+   struct parameter_typeinfo;
 }
 
 class DKConditionEditDialog : public QDialog {

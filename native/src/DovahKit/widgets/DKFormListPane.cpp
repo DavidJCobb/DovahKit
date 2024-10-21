@@ -401,6 +401,12 @@ void DKFormListPane::setShowRemoveButton(bool v) {
    int DKFormListPane::indexOf(const dovah::form_stub* stub) const {
       return this->_model()->indexOfStub(stub);
    }
+   void DKFormListPane::removeStub(dovah::form_stub* stub) {
+      auto* model = this->_model();
+      auto  i     = model->indexOfStub(stub);
+      if (i >= 0)
+         model->removeStub(i);
+   }
    void DKFormListPane::reserve(size_t i) {
       this->_model()->reserve(i);
    }

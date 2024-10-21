@@ -26,6 +26,7 @@ class QuestTabScenes : public QObject {
       using quest_form_type = dovah::loaded_forms::Quest;
    public:
       QuestTabScenes(quest_form_type& quest, QuestAllDialogueDatastore&, QWidget* parent = nullptr);
+      ~QuestTabScenes();
 
       void setupUi();
 
@@ -56,11 +57,11 @@ class QuestTabScenes : public QObject {
       void select_scene(dovah::form_stub*);
       void push_data_to_scene_form();
       
-   private:
+   protected:
       QuestAllDialogueDatastore& dialogue_datastore;
       quest_form_type& working_quest;
       struct {
-         dovah::loaded_form_ptr<scene_form_type> loaded_scene;
+         scene_form_type* loaded_scene = nullptr; // working copy
       } _state;
 
       struct {
@@ -75,4 +76,7 @@ class QuestTabScenes : public QObject {
             QAction* moveDown = nullptr;
          } target_list;
       } context_menu_actions;
+      
+      void _on_form_created(dovah::form_stub*);
+      void _on_form_deleted(dovah::form_stub*, bool just_being_flagged);
 };

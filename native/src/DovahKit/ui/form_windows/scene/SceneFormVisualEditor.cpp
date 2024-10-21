@@ -35,6 +35,7 @@ namespace {
 }
 
 SceneFormVisualEditor::SceneFormVisualEditor(QWidget* parent) : QWidget(parent) {
+   this->setSizePolicy({ QSizePolicy::Fixed, QSizePolicy::Fixed });
 }
 
 SceneFormVisualEditor::~SceneFormVisualEditor() {
@@ -94,7 +95,7 @@ QString SceneFormVisualEditor::referenceAliasName(uint32_t id) const {
 }
 
 void SceneFormVisualEditor::importData() {
-   this->clear();
+   this->_clear_data();
 
    if (!this->_context.scene)
       return;
@@ -248,6 +249,7 @@ void SceneFormVisualEditor::importData() {
       }
    }
    this->_update_geometry();
+   this->updateGeometry();
 }
 void SceneFormVisualEditor::exportData() {
    if (!this->_context.scene)
@@ -449,8 +451,7 @@ void SceneFormVisualEditor::popParticipationFlagDialog() {
    dialog->deleteLater();
 }
 
-void SceneFormVisualEditor::clear() {
-   this->_context = {};
+void SceneFormVisualEditor::_clear_data() {
    {
       auto& list = this->_data.phases;
       for (auto* item : list)
@@ -469,6 +470,10 @@ void SceneFormVisualEditor::clear() {
          delete item;
       list.clear();
    }
+}
+void SceneFormVisualEditor::clear() {
+   this->_context = {};
+   this->_clear_data();
 }
 void SceneFormVisualEditor::spawnRenderTest() {
    this->clear();
@@ -493,7 +498,7 @@ void SceneFormVisualEditor::spawnRenderTest() {
       auto* actor = this->_data.actors.back();
       actor->alias_id = pair.second;
       actor->cached.alias_name = pair.first;
-      actor->behavior_flags.dialogue = ActorBehaviorFlag::Pause;
+      actor->behavior_flags.dialogue.pause = true;
    }
    //
    for (const char* name : { "Elenwen", "Razelan", "Ondolemar", "GeneralTullius", "VittoriaVici", "OrthusEndario", "ProventusAvenicci", "Maven" }) {

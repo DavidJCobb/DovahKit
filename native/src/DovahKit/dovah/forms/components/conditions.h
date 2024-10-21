@@ -11,8 +11,8 @@
 
 namespace dovah {
    namespace conditions {
-      class function_info;
-      class parameter_typeinfo;
+      struct function_info;
+      struct parameter_typeinfo;
    }
    namespace loaded_forms {
       class Package;
@@ -98,11 +98,14 @@ namespace dovah::loaded_forms::components {
          using vector::vector;
 
          void clear() noexcept = delete;
-         void clear(loaded_forms::Form& my_owner) noexcept;
+         void clear(loaded_forms::Form& my_containing_form) noexcept;
 
          void resize() = delete; // use reserve + push_back/emplace_back
 
-         void append_all_of(loaded_forms::Form& my_owner, const std::vector<condition>& other);
+         void append_all_of(loaded_forms::Form& my_containing_form, const std::vector<condition>& other);
          bool read_next(tes_record_reader&, load_order_interfaces::form_load&);
+
+         void append(loaded_forms::Form& my_containing_form, const conditions::working_condition&);
+         void append_all_of(loaded_forms::Form& my_containing_form, const std::vector<conditions::working_condition>&);
    };
 }

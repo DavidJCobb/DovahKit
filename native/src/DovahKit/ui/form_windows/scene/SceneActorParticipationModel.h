@@ -9,6 +9,9 @@ namespace SceneFormVisualEditor_impl {
 class SceneActorParticipationModel : public QAbstractItemModel {
    Q_OBJECT;
    public:
+      using QAbstractItemModel::QAbstractItemModel;
+
+   public:
       struct Column {
          Column() = delete;
          enum {

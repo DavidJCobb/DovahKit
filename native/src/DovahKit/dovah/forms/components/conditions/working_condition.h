@@ -11,7 +11,7 @@
 
 namespace dovah {
    namespace conditions {
-      class parameter_typeinfo;
+      struct parameter_typeinfo;
    }
    namespace loaded_forms {
       namespace components {
