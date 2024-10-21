@@ -1,4 +1,5 @@
 #include "./Phase.h"
+#include <type_traits>
 #include "./Style.h"
 #include "./StyleOption.h"
 #include "../SceneFormVisualEditor.h" // for QObject::tr
@@ -6,6 +7,46 @@
 #include "editor/helpers/stringify_conditions.h"
 
 namespace SceneFormVisualEditor_impl {
+   #pragma region Data
+      void PhaseData::importMainData(const dovah::loaded_forms::Scene::phase& phase) {
+         this->name = QString::fromStdString(phase.name);
+         {
+            auto&  src_list = phase.conditions.start;
+            auto&  dst_list = this->conditions.start;
+            size_t size     = src_list.size();
+            dst_list.resize(size);
+            for (size_t i = 0; i < size; ++i) {
+               dst_list[i] = ui::types::conditions::condition(src_list[i]);
+            }
+         }
+         {
+            auto&  src_list = phase.conditions.completion;
+            auto&  dst_list = this->conditions.completion;
+            size_t size     = src_list.size();
+            dst_list.resize(size);
+            for (size_t i = 0; i < size; ++i) {
+               dst_list[i] = ui::types::conditions::condition(src_list[i]);
+            }
+         }
+      }
+      void PhaseData::importFragments(const dovah::loaded_forms::components::papyrus::scene_fragment_data::phase_fragment& frag) {
+         using frag_type = std::decay_t<decltype(frag)>;
+
+         if (frag.flags & frag_type::flag::on_start) {
+            this->fragments.start = {
+               .scriptname = frag.filename,
+               .function   = frag.function,
+            };
+         }
+         if (frag.flags & frag_type::flag::on_completion) {
+            this->fragments.completion = {
+               .scriptname = frag.filename,
+               .function   = frag.function,
+            };
+         }
+      }
+   #pragma endregion
+
    void Phase::paint(QPainter& painter, const Style& style, const StyleOption& option, int index, int height) {
       painter.setBrush(QBrush(style.phase.background));
       painter.setPen(QPen(style.phase.text));
@@ -38,8 +79,8 @@ namespace SceneFormVisualEditor_impl {
 
       {  // Header
          QString text;
-         if (this->name.isEmpty()) {
-            text = SceneFormVisualEditor::tr("Action %1: %2").arg(index).arg(this->name);
+         if (this->data.name.isEmpty()) {
+            text = SceneFormVisualEditor::tr("Action %1: %2").arg(index).arg(this->data.name);
          } else {
             text = SceneFormVisualEditor::tr("Action %1").arg(index);
          }
@@ -75,7 +116,7 @@ namespace SceneFormVisualEditor_impl {
    void Phase::recacheConditionStrings(const ui::types::conditions::context& context) {
       this->cached.conditions = {};
       {
-         auto& src = this->conditions.start;
+         auto& src = this->data.conditions.start;
          auto& dst = this->cached.conditions.start;
          if (!src.empty()) {
             for (size_t i = 0; i < src.size() - 1; ++i) {
@@ -87,7 +128,7 @@ namespace SceneFormVisualEditor_impl {
          }
       }
       {
-         auto& src = this->conditions.completion;
+         auto& src = this->data.conditions.completion;
          auto& dst = this->cached.conditions.completion;
          if (!src.empty()) {
             for (size_t i = 0; i < src.size() - 1; ++i) {

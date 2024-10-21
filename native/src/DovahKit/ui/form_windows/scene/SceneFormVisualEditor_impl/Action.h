@@ -13,6 +13,16 @@ namespace SceneFormVisualEditor_impl {
 }
 
 namespace SceneFormVisualEditor_impl {
+   struct BaseActionData {
+      QString  name;
+      uint32_t alias_id  = -1;
+      uint32_t action_id =  0;
+      struct {
+         uint32_t start = 0;
+         uint32_t end   = 0;
+      } phase_indices;
+   };
+
    class Action {
       public:
          virtual ~Action() = default;
@@ -27,18 +37,7 @@ namespace SceneFormVisualEditor_impl {
          void drawCell(QPainter&, const Style&, QRect, QString, int align_flags = 0) const;
 
       public:
-         QString  name;
-         uint32_t alias_id  = -1;
-         uint32_t action_id = 0;
-         struct {
-            bool face_target      = false;
-            bool looping          = false;
-            bool headtrack_player = false;
-         } flags;
-         struct {
-            uint32_t start = 0;
-            uint32_t end   = 0;
-         } phase_indices;
+         BaseActionData base_data;
          struct {
             QRect rect;
             struct {

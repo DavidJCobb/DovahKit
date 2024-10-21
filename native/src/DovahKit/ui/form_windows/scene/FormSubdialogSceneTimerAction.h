@@ -3,6 +3,7 @@
 #include <QDialog>
 #include "ui_FormSubdialogSceneTimerAction.h" // generated
 #include "./FormSubdialogSceneActionBase.h"
+#include "./SceneFormVisualEditor_impl/TimerAction.h"
 
 namespace dovah::loaded_forms {
    class Scene;
@@ -13,13 +14,7 @@ class FormSubdialogSceneTimerAction : public FormSubdialogSceneActionBase {
    public:
       FormSubdialogSceneTimerAction(dovah::loaded_forms::Scene&, QWidget* parent = nullptr);
 
-      struct {
-         float duration = 0.0F;
-         struct {
-            std::string scriptname;
-            std::string function;
-         } fragment;
-      } data;
+      SceneFormVisualEditor_impl::TimerActionData data;
 
       // After you write to `data`, call this to push state to the UI.
       virtual void refresh() override;

@@ -24,10 +24,10 @@ namespace SceneFormVisualEditor_impl {
       }
 
       QString text;
-      if (!this->name.isEmpty()) {
-         text = SceneFormVisualEditor::tr("Action %1: %2").arg(this->action_id).arg(this->name);
+      if (!this->base_data.name.isEmpty()) {
+         text = SceneFormVisualEditor::tr("Action %1: %2").arg(this->base_data.action_id).arg(this->base_data.name);
       } else {
-         text = SceneFormVisualEditor::tr("Action %1").arg(this->action_id);
+         text = SceneFormVisualEditor::tr("Action %1").arg(this->base_data.action_id);
       }
 
       if (option.selected) {

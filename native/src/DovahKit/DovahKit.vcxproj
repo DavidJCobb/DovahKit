@@ -839,6 +839,7 @@
     <ClCompile Include="ui\form_windows\scene\FormSubdialogSceneTimerAction.cpp" />
     <ClCompile Include="ui\form_windows\scene\SceneActorBehaviorModel.cpp" />
     <ClCompile Include="ui\form_windows\scene\SceneActorParticipationModel.cpp" />
+    <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\ScriptFragment.cpp" />
     <ClCompile Include="ui\form_windows\shared\DKFormPickerExcludeSingleFormFilter.cpp" />
     <ClCompile Include="ui\form_windows\shared\FaceBaseHeadPartsModel.cpp" />
     <ClCompile Include="ui\form_windows\shared\FaceExtraHeadPartsModel.cpp" />
@@ -1368,6 +1369,7 @@
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\PackageAction.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Phase.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\SceneContext.h" />
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\ScriptFragment.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Style.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\StyleOption.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\TimerAction.h" />

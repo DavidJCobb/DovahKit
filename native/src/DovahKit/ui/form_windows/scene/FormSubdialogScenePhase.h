@@ -3,6 +3,7 @@
 #include <QDialog>
 #include "ui_FormSubdialogScenePhase.h" // generated
 #include "ui/types/conditions/condition.h"
+#include "./SceneFormVisualEditor_impl/Phase.h"
 
 namespace dovah::loaded_forms {
    class Scene;
@@ -21,17 +22,7 @@ class FormSubdialogScenePhase : public QDialog {
       FormSubdialogScenePhase(loaded_form_type&, QWidget* parent = nullptr);
 
       loaded_form_type* loaded_form = nullptr;
-      struct {
-         QString name;
-         struct {
-            std::vector<ui::types::conditions::condition> start;
-            std::vector<ui::types::conditions::condition> completion;
-         } conditions;
-         struct {
-            phase_fragment start;
-            phase_fragment completion;
-         } fragments;
-      } data;
+      SceneFormVisualEditor_impl::PhaseData data;
 
       // After you write to `data`, call this to push state to the UI.
       void refresh();

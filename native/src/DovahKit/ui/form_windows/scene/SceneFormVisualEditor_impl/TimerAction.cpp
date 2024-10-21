@@ -24,12 +24,12 @@ namespace SceneFormVisualEditor_impl {
       }
 
       QString text;
-      if (!this->name.isEmpty()) {
-         text = SceneFormVisualEditor::tr("Action %1: %2 (%3 seconds)").arg(this->action_id).arg(this->name);
+      if (!this->base_data.name.isEmpty()) {
+         text = SceneFormVisualEditor::tr("Action %1: %2 (%3 seconds)").arg(this->base_data.action_id).arg(this->base_data.name);
       } else {
-         text = SceneFormVisualEditor::tr("Action %1 (%2 seconds)").arg(this->action_id);
+         text = SceneFormVisualEditor::tr("Action %1 (%2 seconds)").arg(this->base_data.action_id);
       }
-      text = text.arg(this->duration);
+      text = text.arg(this->data.duration);
 
       QRect rect({ 0, 0 }, this->geometry.rect.size());
       if (option.selected) {

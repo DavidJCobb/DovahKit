@@ -5,6 +5,7 @@
 #include "ui_FormSubdialogSceneDialogueAction.h" // generated
 #include "dovah/data/dialogue/emotion.h"
 #include "./FormSubdialogSceneActionBase.h"
+#include "./SceneFormVisualEditor_impl/DialogueAction.h"
 
 namespace dovah {
    class form_stub;
@@ -17,23 +18,7 @@ class FormSubdialogSceneDialogueAction : public FormSubdialogSceneActionBase {
    public:
       FormSubdialogSceneDialogueAction(QuestAllDialogueDatastore&, QWidget* parent = nullptr);
 
-      struct {
-         struct {
-            dovah::dialogue::emotion type = dovah::dialogue::emotion::neutral;
-            uint32_t value = 0;
-         } emotion;
-         struct {
-            uint32_t alias_id    = -1;
-            bool     at_player   = false;
-            bool     face_target = false;
-         } headtrack;
-         struct {
-            bool  enabled = false;
-            float min = 0;
-            float max = 0;
-         } looping;
-         dovah::form_stub* topic = nullptr;
-      } data;
+      SceneFormVisualEditor_impl::DialogueActionData data;
       dovah::form_stub* show_info_on_open = nullptr;
 
       // After you write to `data`, call this to push state to the UI.

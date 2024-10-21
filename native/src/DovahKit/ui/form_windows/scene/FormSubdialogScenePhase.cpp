@@ -32,14 +32,14 @@ FormSubdialogScenePhase::FormSubdialogScenePhase(loaded_form_type& scene, QWidge
          this->data.conditions.completion.clear();
       }
 
-      this->data.fragments.start = {
-         .scriptname = this->ui.startFragment->currentScriptname(),
-         .function   = this->ui.startFragment->currentFunction(),
-      };
-      this->data.fragments.completion = {
-         .scriptname = this->ui.completionFragment->currentScriptname(),
-         .function   = this->ui.completionFragment->currentFunction(),
-      };
+      this->data.fragments.start.setFromQt(
+         this->ui.startFragment->currentScriptname(),
+         this->ui.startFragment->currentFunction()
+      );
+      this->data.fragments.completion.setFromQt(
+         this->ui.completionFragment->currentScriptname(),
+         this->ui.completionFragment->currentFunction()
+      );
    });
 }
 void FormSubdialogScenePhase::refresh() {

@@ -8,22 +8,31 @@ namespace dovah {
 }
 
 namespace SceneFormVisualEditor_impl {
+   struct DialogueActionData {
+      struct {
+         dovah::dialogue::emotion type = dovah::dialogue::emotion::neutral;
+         uint32_t value = 50;
+      } emotion;
+      struct {
+         uint32_t alias_id    = -1;
+         bool     at_player   = false;
+         bool     face_target = false;
+      } headtrack;
+      struct {
+         bool  enabled = false;
+         float min     = 0.0F;
+         float max     = 0.0F;
+      } looping;
+      dovah::form_stub* topic = nullptr;
+   };
+
    class DialogueAction : public Action {
       public:
          virtual void paint(QPainter&, const Style&, const StyleOption&) override;
          virtual void recalcSize(int width, const Style&, const QFontMetrics&) override;
 
       public:
-         dovah::form_stub* topic = nullptr;
-         uint32_t headtrack_alias_id = -1;
-         struct {
-            dovah::dialogue::emotion type = dovah::dialogue::emotion::neutral;
-            uint32_t value = 50;
-         } emotion;
-         struct {
-            float min = 0.0F;
-            float max = 0.0F;
-         } looping;
+         DialogueActionData data;
 
          struct {
             std::vector<QString> infos;

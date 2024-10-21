@@ -19,10 +19,10 @@ FormSubdialogSceneTimerAction::FormSubdialogSceneTimerAction(dovah::loaded_forms
 
    QObject::connect(this, &QDialog::accepted, this, [this]() {
       this->data.duration = this->ui.duration->value();
-      this->data.fragment = {
-         .scriptname = this->ui.fragment->currentScriptname().toStdString(),
-         .function   = this->ui.fragment->currentFunction().toStdString(),
-      };
+      this->data.fragment.setFromQt(
+         this->ui.fragment->currentScriptname(),
+         this->ui.fragment->currentFunction()
+      );
    });
 }
 void FormSubdialogSceneTimerAction::refresh() {

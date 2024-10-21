@@ -7,13 +7,17 @@ namespace dovah {
 }
 
 namespace SceneFormVisualEditor_impl {
+   struct PackageActionData {
+      std::vector<dovah::form_stub*> packages;
+   };
+
    class PackageAction : public Action {
       public:
          virtual void paint(QPainter&, const Style&, const StyleOption&) override;
          virtual void recalcSize(int width, const Style&, const QFontMetrics&) override;
 
       public:
-         std::vector<dovah::form_stub*> packages;
+         PackageActionData data;
          struct {
             std::vector<QString> package_editor_ids;
          } cached;

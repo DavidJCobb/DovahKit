@@ -26,10 +26,10 @@ namespace SceneFormVisualEditor_impl {
       }
 
       QString text;
-      if (!this->name.isEmpty()) {
-         text = SceneFormVisualEditor::tr("Action %1: %2").arg(this->action_id).arg(this->name);
+      if (!this->base_data.name.isEmpty()) {
+         text = SceneFormVisualEditor::tr("Action %1: %2").arg(this->base_data.action_id).arg(this->base_data.name);
       } else {
-         text = SceneFormVisualEditor::tr("Action %1").arg(this->action_id);
+         text = SceneFormVisualEditor::tr("Action %1").arg(this->base_data.action_id);
       }
 
       if (option.selected) {
@@ -45,7 +45,7 @@ namespace SceneFormVisualEditor_impl {
       }
       painter.drawText(this->geometry.rel.header, Qt::AlignTop | Qt::AlignHCenter, text);
 
-      size_t size = this->packages.size();
+      size_t size = this->data.packages.size();
       for (size_t i = 0; i < size; ++i) {
          int y = this->geometry.rel.body.y() + this->body_geometry.row_height * i;
 
@@ -58,7 +58,7 @@ namespace SceneFormVisualEditor_impl {
          if (i < this->cached.package_editor_ids.size()) {
             editor_id = this->cached.package_editor_ids[i];
          }
-         if (auto* stub = this->packages[i]) {
+         if (auto* stub = this->data.packages[i]) {
             form_id = editor_helpers::form_id_to_string(stub->formID);
             if (editor_id.isEmpty())
                editor_id = QString::fromStdString(stub->editorID);
@@ -90,7 +90,7 @@ namespace SceneFormVisualEditor_impl {
       this->body_geometry.row_height = font_metrics.lineSpacing();
       this->body_geometry.row_height += style.action.cell.padding * 2;
       this->body_geometry.row_height += cell_border_width * 2;
-      height += this->body_geometry.row_height * this->packages.size();
+      height += this->body_geometry.row_height * this->data.packages.size();
 
       this->geometry.rel.body = QRect(QPoint{ 0, header_height }, QSize{ width, height - header_height });
 

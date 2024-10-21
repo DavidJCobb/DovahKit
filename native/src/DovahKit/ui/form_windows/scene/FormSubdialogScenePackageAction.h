@@ -3,15 +3,14 @@
 #include <QDialog>
 #include "ui_FormSubdialogScenePackageAction.h" // generated
 #include "./FormSubdialogSceneActionBase.h"
+#include "./SceneFormVisualEditor_impl/PackageAction.h"
 
 class FormSubdialogScenePackageAction : public FormSubdialogSceneActionBase {
    Q_OBJECT;
    public:
       FormSubdialogScenePackageAction(QWidget* parent = nullptr);
 
-      struct {
-         std::vector<dovah::form_stub*> packages;
-      } data;
+      SceneFormVisualEditor_impl::PackageActionData data;
 
       // After you write to `data`, call this to push state to the UI.
       virtual void refresh() override;
