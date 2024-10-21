@@ -1358,6 +1358,7 @@
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\PackageAction.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Phase.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Style.h" />
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\StyleOption.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\TimerAction.h" />
     <QtMoc Include="widgets\widget-models\DKPapyrusFragmentFunctionModel.h" />
     <QtMoc Include="widgets\widget-models\DKLeveledListPreviewModel.h" />

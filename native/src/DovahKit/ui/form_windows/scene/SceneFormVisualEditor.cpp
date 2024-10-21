@@ -7,6 +7,7 @@
 #include "dovah/forms/Scene.h"
 #include "./SceneFormVisualEditor_impl/Actor.h"
 #include "./SceneFormVisualEditor_impl/Phase.h"
+#include "./SceneFormVisualEditor_impl/StyleOption.h"
 
 #include "./SceneFormVisualEditor_impl/DialogueAction.h"
 #include "./SceneFormVisualEditor_impl/PackageAction.h"
@@ -35,7 +36,81 @@ namespace {
 }
 
 SceneFormVisualEditor::SceneFormVisualEditor(QWidget* parent) : QWidget(parent) {
+   this->setFocusPolicy(Qt::FocusPolicy::StrongFocus);
    this->setSizePolicy({ QSizePolicy::Fixed, QSizePolicy::Fixed });
+
+   auto palette = this->palette();
+   this->_style.selection = {
+      .background = palette.highlight().color(),
+      .text       = palette.highlightedText().color(),
+   };
+   palette.setCurrentColorGroup(QPalette::ColorGroup::Inactive);
+   this->_style.selection.inactive = {
+      .background = palette.highlight().color(),
+      .text       = palette.highlightedText().color(),
+   };
+
+   {
+      auto& menu  = this->_context_menu.menu;
+      auto& items = this->_context_menu;
+      {
+         auto* item = items.new_actor = new QAction(tr("Add actor..."), this);
+         menu.addAction(item);
+      }
+      {
+         auto& submenu = items.new_action;
+         menu.addMenu(&submenu);
+         submenu.setTitle(tr("Add action"));
+         {
+            auto* item = items.new_action_type.dialogue = new QAction(tr("Dialogue"), this);
+            submenu.addAction(item);
+         }
+         {
+            auto* item = items.new_action_type.package = new QAction(tr("Package"), this);
+            submenu.addAction(item);
+         }
+         {
+            auto* item = items.new_action_type.timer = new QAction(tr("Timer"), this);
+            submenu.addAction(item);
+         }
+      }
+      {
+         auto& submenu = items.new_phase;
+         menu.addMenu(&submenu);
+         submenu.setTitle(tr("Add phase"));
+         {
+            auto* item = items.new_phase_where.before_here = new QAction(tr("Before this phase"), this);
+            submenu.addAction(item);
+         }
+         {
+            auto* item = items.new_phase_where.after_here = new QAction(tr("After this phase"), this);
+            submenu.addAction(item);
+         }
+         {
+            auto* item = items.new_phase_where.at_end = new QAction(tr("At end"), this);
+            submenu.addAction(item);
+         }
+      }
+      {
+         auto* item = items.edit = new QAction(tr("Edit..."), this);
+         menu.addAction(item);
+      }
+      {
+         auto* item = items.remove = new QAction(tr("Delete"), this);
+         menu.addAction(item);
+      }
+
+      QObject::connect(&menu, &QMenu::aboutToShow, this, [this]() {
+         auto& items = this->_context_menu;
+         if (!this->_selected_action() && !this->_selected_phase()) {
+            items.edit->setEnabled(false);
+            items.remove->setEnabled(false);
+         } else {
+            items.edit->setEnabled(true);
+            items.remove->setEnabled(true);
+         }
+      });
+   }
 }
 
 SceneFormVisualEditor::~SceneFormVisualEditor() {
@@ -625,6 +700,134 @@ void SceneFormVisualEditor::removeActor(uint32_t id) {
       return this->_cached.size;
    }
 
+   /*virtual*/ void SceneFormVisualEditor::contextMenuEvent(QContextMenuEvent* event) /*override*/ {
+      auto& menu  = this->_context_menu.menu;
+      auto& items = this->_context_menu;
+
+      struct {
+         Phase* pointer   = nullptr;
+         size_t index     = 0;
+         bool   on_header = false;
+      } clicked_phase;
+      Actor* clicked_actor = nullptr;
+
+      auto pos = event->pos();
+      for (size_t i = 0; i < this->_data.phases.size(); ++i) {
+         auto* item = this->_data.phases[i];
+         const auto& rect = item->geometry.rect;
+         if (pos.x() >= rect.left() && pos.x() <= rect.right()) {
+            clicked_phase.pointer = item;
+            clicked_phase.index   = i;
+            //
+            auto rect = item->geometry.rel.header;
+            rect.moveTo(item->geometry.rect.topLeft());
+            if (rect.contains(pos)) {
+               clicked_phase.on_header = true;
+            }
+            //
+            break;
+         }
+      }
+
+      if (!clicked_phase.on_header && clicked_phase.pointer) {
+         for (auto* item : this->_data.actors) {
+            if (!item->geometry.rect.contains(pos))
+               continue;
+            clicked_actor = item;
+         }
+      }
+
+      bool has_selection = !std::holds_alternative<std::monostate>(this->_selection);
+      items.edit->setEnabled(has_selection);
+      items.remove->setEnabled(has_selection);
+
+      items.new_phase_where.before_here->setEnabled(clicked_phase.pointer != nullptr);
+      items.new_phase_where.after_here->setEnabled(clicked_phase.pointer != nullptr);
+      if (clicked_actor) {
+         bool has_dialogue = false;
+         bool has_package  = false;
+         bool has_timer    = false;
+         for (const auto* action : clicked_actor->cached.actions) {
+            if (action->phase_indices.end < clicked_phase.index)
+               continue;
+            if (action->phase_indices.start > clicked_phase.index)
+               continue;
+
+            if (dynamic_cast<const DialogueAction*>(action)) {
+               has_dialogue = true;
+            } else if (dynamic_cast<const PackageAction*>(action)) {
+               has_package = true;
+            } else if (dynamic_cast<const TimerAction*>(action)) {
+               has_timer = true;
+            }
+         }
+         items.new_action.setEnabled(has_dialogue || has_package || has_timer);
+         items.new_action_type.dialogue->setEnabled(!has_dialogue);
+         items.new_action_type.package->setEnabled(!has_package);
+         items.new_action_type.timer->setEnabled(!has_timer);
+      } else {
+         items.new_action.setEnabled(false);
+         items.new_action_type.dialogue->setEnabled(false);
+         items.new_action_type.package->setEnabled(false);
+         items.new_action_type.timer->setEnabled(false);
+      }
+
+      auto* action = menu.exec(event->globalPos());
+      if (!action)
+         return;
+
+      //
+      // TODO: Execute the selected action.
+      //
+   }
+   /*virtual*/ void SceneFormVisualEditor::mouseDoubleClickEvent(QMouseEvent* event) /*override*/ {
+      //
+      // TODO: edit-properties dialog when on a selection
+      //
+   }
+   /*virtual*/ void SceneFormVisualEditor::mousePressEvent(QMouseEvent* event) /*override*/ {
+      if (event->button() != Qt::LeftButton && event->button() != Qt::RightButton)
+         return;
+      event->setAccepted(true);
+
+      struct {
+         Action* action = nullptr;
+         Actor*  actor  = nullptr;
+         Phase*  phase  = nullptr;
+      } targets;
+
+      auto pos = event->localPos().toPoint();
+      for (auto* item : this->_data.actions) {
+         if (item->geometry.rect.contains(pos)) {
+            targets.action = item;
+            break;
+         }
+      }
+      /*for (auto* item : this->_data.actors) {
+         if (item->geometry.rect.contains(pos)) {
+            targets.actor = item;
+            break;
+         }
+      }*/
+      for (auto* item : this->_data.phases) {
+         auto rect = item->geometry.rel.header;
+         rect.moveTo(item->geometry.rect.topLeft());
+         if (rect.contains(pos)) {
+            targets.phase = item;
+            break;
+         }
+      }
+
+      if (targets.action) {
+         this->_select(targets.action);
+         return;
+      }
+      if (targets.phase) {
+         this->_select(targets.phase);
+         return;
+      }
+      this->_deselect_all();
+   }
    /*virtual*/ void SceneFormVisualEditor::paintEvent(QPaintEvent* event) /*override*/ {
       const auto& ds = this->_data;
 
@@ -665,28 +868,60 @@ void SceneFormVisualEditor::removeActor(uint32_t id) {
 
          painter.restore();
       }
+      
+      StyleOption option;
+      option.active = this->hasFocus();
       //
       // Draw phase grid.
       //
-      for (size_t i = 0; i < ds.phases.size(); ++i) {
-         auto* phase  = ds.phases[i];
-         int   height = graph_bottom - phase->geometry.rect.y();
-         phase->paint(painter, this->_style, i + 1, height);
+      {
+         auto* sel = this->_selected_phase();
+         for (size_t i = 0; i < ds.phases.size(); ++i) {
+            auto* phase  = ds.phases[i];
+            int   height = graph_bottom - phase->geometry.rect.y();
+
+            option.selected = phase == sel;
+            phase->paint(painter, this->_style, option, i + 1, height);
+         }
       }
       //
       // Draw actors.
       //
+      option.selected = false;
       for (auto* actor : ds.actors) {
          actor->paint(painter, this->_style);
       }
       //
       // Draw actions.
       //
-      for (auto* action : ds.actions) {
-         action->paint(painter, this->_style);
+      {
+         auto* sel = this->_selected_action();
+         for (auto* action : ds.actions) {
+            option.selected = action == sel;
+            action->paint(painter, this->_style, option);
+         }
       }
    }
 #pragma endregion
+
+void SceneFormVisualEditor::_deselect_all() {
+   if (std::holds_alternative<std::monostate>(this->_selection))
+      return;
+   this->_selection = {};
+   this->repaint();
+}
+void SceneFormVisualEditor::_select(Action* item) {
+   if (this->_selected_action() == item)
+      return;
+   this->_selection = item;
+   this->repaint();
+}
+void SceneFormVisualEditor::_select(Phase* item) {
+   if (this->_selected_phase() == item)
+      return;
+   this->_selection = item;
+   this->repaint();
+}
 
 ui::types::conditions::context SceneFormVisualEditor::_make_condition_context() const {
    ui::types::conditions::context ctx;
@@ -789,6 +1024,14 @@ void SceneFormVisualEditor::_update_geometry() {
          rect.setRight(ds.phases.back()->geometry.rect.right() + this->_style.actor_outset);
       } else {
          rect.setWidth(200);
+      }
+      {
+         int l = this->_style.actor_outset;
+         int r = rect.width() - this->_style.actor_outset;
+
+         auto& bnd_act = actor->geometry.rel.actions;
+         bnd_act.setLeft(l);
+         bnd_act.setRight(r);
       }
       if (i == 0) {
          rect.setY(graph_top_y + graph_top_height);

@@ -9,6 +9,7 @@
 
 namespace SceneFormVisualEditor_impl {
    struct Style;
+   struct StyleOption;
 }
 
 namespace SceneFormVisualEditor_impl {
@@ -16,7 +17,7 @@ namespace SceneFormVisualEditor_impl {
       public:
          virtual ~Action() = default;
 
-         virtual void paint(QPainter&, const Style&) = 0;
+         virtual void paint(QPainter&, const Style&, const StyleOption&) = 0;
          virtual void recalcSize(int width, const Style&, const QFontMetrics&) = 0;
 
       protected:

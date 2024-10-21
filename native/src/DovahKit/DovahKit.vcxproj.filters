@@ -7229,6 +7229,9 @@
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\TimerAction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\StyleOption.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

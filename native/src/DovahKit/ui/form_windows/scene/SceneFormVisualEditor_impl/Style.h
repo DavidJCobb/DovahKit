@@ -5,8 +5,16 @@ namespace SceneFormVisualEditor_impl {
    struct Style {
       bool show_all_text = true;
 
-      int    view_padding = 30;
-      int    actor_outset = 20;
+      int view_padding = 30;
+      int actor_outset = 20;
+      struct {
+         QColor background;
+         QColor text;
+         struct {
+            QColor background;
+            QColor text;
+         } inactive;
+      } selection;
       struct {
          QColor color     = { 170, 170, 170 };
          int    thickness = 3;

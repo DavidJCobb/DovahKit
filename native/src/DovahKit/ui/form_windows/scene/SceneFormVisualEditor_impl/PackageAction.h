@@ -9,7 +9,7 @@ namespace dovah {
 namespace SceneFormVisualEditor_impl {
    class PackageAction : public Action {
       public:
-         virtual void paint(QPainter&, const Style&) override;
+         virtual void paint(QPainter&, const Style&, const StyleOption&) override;
          virtual void recalcSize(int width, const Style&, const QFontMetrics&) override;
 
       public:

@@ -10,12 +10,13 @@
 
 namespace SceneFormVisualEditor_impl {
    struct Style;
+   struct StyleOption;
 }
 
 namespace SceneFormVisualEditor_impl {
    class Phase {
       public:
-         void paint(QPainter&, const Style&, int index, int height);
+         void paint(QPainter&, const Style&, const StyleOption&, int index, int height);
          void recacheConditionStrings(const ui::types::conditions::context&);
          void recalcSize(int width, const Style&, const QFontMetrics&);
 

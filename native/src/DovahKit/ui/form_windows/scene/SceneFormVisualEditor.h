@@ -1,5 +1,8 @@
 #pragma once
 #include <cstdint>
+#include <variant>
+#include <vector>
+#include <QMenu>
 #include <QWidget>
 #include "dovah/form_stub.h"
 #include "./SceneFormVisualEditor_impl/ActorBehaviorFlag.h"
@@ -67,7 +70,10 @@ class SceneFormVisualEditor : public QWidget {
          virtual QSize minimumSizeHint() const override;
          virtual QSize sizeHint() const override;
 
-         virtual void paintEvent(QPaintEvent* event) override;
+         virtual void contextMenuEvent(QContextMenuEvent* event) override;
+         virtual void mouseDoubleClickEvent(QMouseEvent*) override;
+         virtual void mousePressEvent(QMouseEvent*) override;
+         virtual void paintEvent(QPaintEvent*) override;
       #pragma endregion
 
    protected:
@@ -76,11 +82,50 @@ class SceneFormVisualEditor : public QWidget {
       } _cached;
       SceneContext _context;
       struct {
+         QMenu menu;
+
+         QAction* new_actor  = nullptr;
+         QMenu new_action;
+         struct {
+            QAction* dialogue = nullptr;
+            QAction* package  = nullptr;
+            QAction* timer    = nullptr;
+         } new_action_type;
+         QMenu new_phase;
+         struct {
+            QAction* before_here = nullptr;
+            QAction* after_here = nullptr;
+            QAction* at_end = nullptr;
+         } new_phase_where;
+         QAction* edit   = nullptr;
+         QAction* remove = nullptr;
+      } _context_menu;
+      struct {
          std::vector<Actor*>  actors;
          std::vector<Phase*>  phases;
          std::vector<Action*> actions;
       } _data;
+      std::variant<
+         std::monostate,
+         Phase*,
+         Action*
+      > _selection;
       Style _style;
+      
+      void _deselect_all();
+      void _select(Action*);
+      void _select(Phase*);
+
+      constexpr Action* _selected_action() const {
+         if (std::holds_alternative<Action*>(this->_selection))
+            return std::get<Action*>(this->_selection);
+         return nullptr;
+      }
+      constexpr Phase* _selected_phase() const {
+         if (std::holds_alternative<Phase*>(this->_selection))
+            return std::get<Phase*>(this->_selection);
+         return nullptr;
+      }
 
       ui::types::conditions::context _make_condition_context() const;
       void _update_phase_conditions(bool trigger_geometry_update = true);

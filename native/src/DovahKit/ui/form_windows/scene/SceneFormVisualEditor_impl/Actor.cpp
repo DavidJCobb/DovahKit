@@ -15,7 +15,6 @@ namespace SceneFormVisualEditor_impl {
       auto& geo = this->geometry;
 
       auto& bnd_act = geo.rel.actions;
-      bnd_act = {};
       bnd_act.setY(font.lineSpacing() + style.actor.padding * 2);
 
       auto& max_action_heights = geo.action_type_heights;

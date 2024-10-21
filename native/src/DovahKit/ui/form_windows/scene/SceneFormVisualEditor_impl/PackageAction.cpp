@@ -2,12 +2,28 @@
 #include "dovah/form_stub.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "./Style.h"
+#include "./StyleOption.h"
 #include "../SceneFormVisualEditor.h" // for QObject::tr
 
 namespace SceneFormVisualEditor_impl {
-   /*virtual*/ void PackageAction::paint(QPainter& painter, const Style& style) /*override*/ {
+   /*virtual*/ void PackageAction::paint(QPainter& painter, const Style& style, const StyleOption& option) /*override*/ {
       painter.save();
       painter.translate(this->geometry.rect.topLeft());
+      if (option.selected) {
+         //
+         // Draw selection border.
+         //
+         auto rect = this->geometry.rect;
+         rect.moveTo(0, 0);
+         rect.adjust(-2, -2, 2, 2);
+         if (option.active) {
+            painter.setBrush(QBrush(style.selection.background));
+         } else {
+            painter.setBrush(QBrush(style.selection.inactive.background));
+         }
+         painter.setPen(QPen(Qt::PenStyle::NoPen));
+         painter.drawRect(rect);
+      }
 
       QString text;
       if (!this->name.isEmpty()) {
@@ -16,10 +32,17 @@ namespace SceneFormVisualEditor_impl {
          text = SceneFormVisualEditor::tr("Action %1").arg(this->action_id);
       }
 
-      painter.setBrush(QBrush(style.action.package_header.background));
+      if (option.selected) {
+         painter.setBrush(QBrush(style.selection.background));
+      } else {
+         painter.setBrush(QBrush(style.action.package_header.background));
+      }
       painter.setPen(QPen(style.action.package_header.text));
       painter.drawRect(QRect{ QPoint{ 0, 0 }, this->geometry.rect.size()});
       painter.drawRect(this->geometry.rel.header);
+      if (option.selected) {
+         painter.setPen(QPen(style.selection.text));
+      }
       painter.drawText(this->geometry.rel.header, Qt::AlignTop | Qt::AlignHCenter, text);
 
       size_t size = this->packages.size();

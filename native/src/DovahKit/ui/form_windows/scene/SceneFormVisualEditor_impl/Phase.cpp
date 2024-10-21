@@ -1,11 +1,12 @@
 #include "./Phase.h"
 #include "./Style.h"
+#include "./StyleOption.h"
 #include "../SceneFormVisualEditor.h" // for QObject::tr
 
 #include "editor/helpers/stringify_conditions.h"
 
 namespace SceneFormVisualEditor_impl {
-   void Phase::paint(QPainter& painter, const Style& style, int index, int height) {
+   void Phase::paint(QPainter& painter, const Style& style, const StyleOption& option, int index, int height) {
       painter.setBrush(QBrush(style.phase.background));
       painter.setPen(QPen(style.phase.text));
 
@@ -16,6 +17,24 @@ namespace SceneFormVisualEditor_impl {
       rect.setWidth(this->geometry.rect.width());
       rect.setHeight(height);
       painter.drawRect(rect);
+      if (option.selected) {
+         //
+         // Draw selection border.
+         //
+         if (option.active) {
+            painter.setBrush(QBrush(style.selection.background));
+         } else {
+            painter.setBrush(QBrush(style.selection.inactive.background));
+         }
+         painter.setPen(QPen(Qt::PenStyle::NoPen));
+         rect.adjust(-2, -2, 2, 2);
+         painter.drawRect(rect);
+         //
+         // Reset.
+         //
+         painter.setBrush(QBrush(style.selection.background));
+         painter.setPen(QPen(style.selection.text));
+      }
 
       {  // Header
          QString text;
@@ -25,8 +44,16 @@ namespace SceneFormVisualEditor_impl {
             text = SceneFormVisualEditor::tr("Action %1").arg(index);
          }
          const QRect& rect = this->geometry.rel.header;
+         if (option.selected && option.active) {
+            painter.setBrush(QBrush(style.selection.background));
+            painter.setPen(QPen(style.selection.text));
+         }
          painter.drawRect(rect);
          painter.drawText(rect, Qt::AlignTop | Qt::AlignHCenter, text);
+         if (option.selected && option.active) {
+            painter.setBrush(QBrush(style.phase.background));
+            painter.setPen(QPen(style.phase.text));
+         }
       }
       if (auto src = this->cached.conditions.start; !src.isEmpty()) {
          QString text = SceneFormVisualEditor::tr("Start conditions:\n") + src;
