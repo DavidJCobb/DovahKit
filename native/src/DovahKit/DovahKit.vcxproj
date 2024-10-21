@@ -2828,8 +2828,11 @@
     <QtUic Include="ui\form_windows\race.ui" />
     <QtUic Include="ui\form_windows\reference.ui" />
     <QtUic Include="ui\form_windows\relationship.ui" />
+    <QtUic Include="ui\form_windows\scene\FormSubdialogSceneDialogueAction.ui" />
+    <QtUic Include="ui\form_windows\scene\FormSubdialogScenePackageAction.ui" />
     <QtUic Include="ui\form_windows\scene\FormSubdialogScenePhase.ui" />
     <QtUic Include="ui\form_windows\scene\FormSubdialogSceneProperties.ui" />
+    <QtUic Include="ui\form_windows\scene\FormSubdialogSceneTimerAction.ui" />
     <QtUic Include="ui\form_windows\shader_particle_geometry_data.ui" />
     <QtUic Include="ui\form_windows\shout.ui" />
     <QtUic Include="ui\form_windows\soul_gem.ui" />

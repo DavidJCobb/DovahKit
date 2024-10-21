@@ -63,6 +63,9 @@ class SceneFormVisualEditor : public QWidget {
       using Phase  = SceneFormVisualEditor_impl::Phase;
       using Action = SceneFormVisualEditor_impl::Action;
 
+      void addActor();
+      void insertAction(Action&, Actor&, Phase&);
+      void insertPhaseAt(size_t);
       void removeActor(uint32_t alias_id);
 
    public:

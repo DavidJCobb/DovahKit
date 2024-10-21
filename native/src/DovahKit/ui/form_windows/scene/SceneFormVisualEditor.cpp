@@ -18,7 +18,9 @@
 #include <QBoxLayout>
 #include <QDialog>
 #include <QGridLayout>
+#include <QHeaderView>
 #include <QPushButton>
+#include <QStandardItemModel>
 #include <QTableView>
 #include "./SceneActorBehaviorModel.h"
 #include "./SceneActorParticipationModel.h"
@@ -99,17 +101,6 @@ SceneFormVisualEditor::SceneFormVisualEditor(QWidget* parent) : QWidget(parent) 
          auto* item = items.remove = new QAction(tr("Delete"), this);
          menu.addAction(item);
       }
-
-      QObject::connect(&menu, &QMenu::aboutToShow, this, [this]() {
-         auto& items = this->_context_menu;
-         if (!this->_selected_action() && !this->_selected_phase()) {
-            items.edit->setEnabled(false);
-            items.remove->setEnabled(false);
-         } else {
-            items.edit->setEnabled(true);
-            items.remove->setEnabled(true);
-         }
-      });
    }
 }
 
@@ -663,6 +654,129 @@ void SceneFormVisualEditor::spawnRenderTest() {
    this->updateGeometry();
 }
 
+void SceneFormVisualEditor::addActor() {
+   auto* dialog = new QDialog(this);
+   auto* layout = new QVBoxLayout(dialog);
+   auto* model  = new QStandardItemModel;
+   auto* view   = new QTableView(dialog);
+   view->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+   view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+   view->setModel(model);
+   view->verticalHeader()->setVisible(false);
+   view->verticalHeader()->setSizeAdjustPolicy(QAbstractScrollArea::SizeAdjustPolicy::AdjustToContents);
+   {
+      dialog->setWindowTitle(tr("Add Scene Actor"));
+      layout->addWidget(view);
+
+      auto* nested = new QHBoxLayout(dialog);
+      layout->addLayout(nested);
+      nested->addStretch(1);
+      {
+         auto* button = new QPushButton(tr("OK"), dialog);
+         nested->addWidget(button);
+         QObject::connect(button, &QPushButton::clicked, dialog, &QDialog::accept);
+      }
+      {
+         auto* button = new QPushButton(tr("Cancel"), dialog);
+         nested->addWidget(button);
+         QObject::connect(button, &QPushButton::clicked, dialog, &QDialog::reject);
+      }
+      nested->addStretch(1);
+   }
+   {  // populate dialog
+      model->setColumnCount(1);
+      model->setHeaderData(0, Qt::Horizontal, tr("Reference Alias"), Qt::DisplayRole);
+
+      auto* stub = this->_context.quest;
+      if (stub) {
+         auto* form = (dovah::loaded_forms::Quest*) stub->get_working_copy();
+         if (form) {
+            for (auto* alias : form->aliases) {
+               if (alias->type != dovah::loaded_forms::Alias::alias_type::reference)
+                  continue;
+
+               bool present = false;
+               for (auto* actor : this->_data.actors) {
+                  if (actor->alias_id == alias->id) {
+                     present = true;
+                     break;
+                  }
+               }
+               if (!present) {
+                  auto  name = QString::fromStdString(alias->name);
+                  auto* item = new QStandardItem(name);
+                  item->setData(name,      Qt::ToolTipRole);
+                  item->setData(alias->id, Qt::UserRole);
+                  item->setFlags(Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable);
+                  model->appendRow(item);
+               }
+            }
+         }
+      }
+   }
+   if (dialog->exec() == QDialog::Accepted) {
+      auto* sel  = view->selectionModel();
+      auto  rows = sel->selectedRows();
+      if (!rows.empty()) {
+         auto qmi = rows[0];
+         auto name     = model->data(qmi, Qt::DisplayRole).toString();
+         auto alias_id = model->data(qmi, Qt::UserRole).toInt();
+
+         auto* actor = new Actor;
+         this->_data.actors.push_back(actor);
+         actor->alias_id = alias_id;
+         actor->cached.alias_name = name;
+
+         this->_update_cached_internal_relationships();
+         this->_update_geometry();
+         this->update();
+      }
+   }
+   dialog->deleteLater();
+
+}
+void SceneFormVisualEditor::insertAction(Action& action, Actor& actor, Phase& phase) {
+   size_t phase_index = -1;
+   for (size_t i = 0; i < this->_data.phases.size(); ++i) {
+      if (this->_data.phases[i] == &phase) {
+         phase_index = i;
+         break;
+      }
+   }
+   assert(phase_index != -1);
+
+   action.phase_indices.start = action.phase_indices.end = phase_index;
+   action.alias_id = actor.alias_id;
+   {
+      uint32_t action_id = 0;
+      for (auto* action : this->_data.actions) {
+         action_id = std::max(action_id, action->action_id + 1);
+      }
+      action.action_id = action_id;
+   }
+   this->_data.actions.push_back(&action);
+
+   this->_update_cached_internal_relationships();
+   this->_update_geometry();
+   this->update();
+}
+void SceneFormVisualEditor::insertPhaseAt(size_t at) {
+   {
+      auto& list = this->_data.phases;
+      if (at > list.size())
+         at = list.size();
+      this->_data.phases.insert(list.begin() + at, new Phase);
+   }
+   for (auto* action : this->_data.actions) {
+      if (action->phase_indices.start >= at)
+         ++action->phase_indices.start;
+      if (action->phase_indices.end >= at)
+         ++action->phase_indices.end;
+   }
+   this->_update_cached_internal_relationships();
+   this->_update_geometry();
+   this->update();
+}
 void SceneFormVisualEditor::removeActor(uint32_t id) {
    bool needs_geo_update = false;
 
@@ -776,6 +890,45 @@ void SceneFormVisualEditor::removeActor(uint32_t id) {
       if (!action)
          return;
 
+      if (action == items.new_actor) {
+         this->addActor();
+         return;
+      }
+      if (action == items.new_action_type.dialogue) {
+         auto* action = new DialogueAction;
+         this->insertAction(*action, *clicked_actor, *clicked_phase.pointer);
+         return;
+      }
+      if (action == items.new_action_type.package) {
+         auto* action = new PackageAction;
+         this->insertAction(*action, *clicked_actor, *clicked_phase.pointer);
+         return;
+      }
+      if (action == items.new_action_type.timer) {
+         auto* action = new TimerAction;
+         this->insertAction(*action, *clicked_actor, *clicked_phase.pointer);
+         return;
+      }
+      if (action == items.new_phase_where.before_here) {
+         this->insertPhaseAt(clicked_phase.index);
+         return;
+      }
+      if (action == items.new_phase_where.after_here) {
+         this->insertPhaseAt(clicked_phase.index + 1);
+         return;
+      }
+      if (action == items.new_phase_where.at_end) {
+         this->insertPhaseAt(this->_data.phases.size());
+         return;
+      }
+      if (action == items.edit) {
+         static_assert(false, "TODO");
+         return;
+      }
+      if (action == items.remove) {
+         static_assert(false, "TODO");
+         return;
+      }
       //
       // TODO: Execute the selected action.
       //
