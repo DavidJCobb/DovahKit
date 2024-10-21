@@ -9,12 +9,12 @@
 #include <QString>
 #include "./ActorBehaviorFlag.h"
 
-namespace DKQuestSceneEditor_impl {
+namespace SceneFormVisualEditor_impl {
    class  Action;
    struct Style;
 }
 
-namespace DKQuestSceneEditor_impl {
+namespace SceneFormVisualEditor_impl {
    class Actor {
       public:
 
@@ -28,17 +28,17 @@ namespace DKQuestSceneEditor_impl {
       public:
          uint32_t alias_id = -1;
          struct {
-            ActorBehaviorFlag death = ActorBehaviorFlag::None;
-            ActorBehaviorFlag combat = ActorBehaviorFlag::None;
-            ActorBehaviorFlag dialogue = ActorBehaviorFlag::None;
-            ActorBehaviorFlag observe_corpse = ActorBehaviorFlag::None;
+            ActorBehaviorFlags death;
+            ActorBehaviorFlags combat;
+            ActorBehaviorFlags dialogue;
+            ActorBehaviorFlags observe_corpse;
          } behavior_flags;
          struct {
             bool no_player_activation = false;
             bool optional = false;
          } participation_flags;
          struct {
-            std::vector<Action*> actions; // updated by DKQuestSceneEditor::_update_cached_internal_relationships
+            std::vector<Action*> actions; // updated by SceneFormVisualEditor::_update_cached_internal_relationships
             QString alias_name;
          } cached;
          struct {

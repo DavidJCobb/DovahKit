@@ -2850,28 +2850,37 @@
     <ClCompile Include="dovah\forms\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKQuestSceneEditor.cpp">
+    <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\Phase.cpp">
+    <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Phase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\Actor.cpp">
+    <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Actor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\Action.cpp">
+    <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Action.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\DialogueAction.cpp">
+    <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\DialogueAction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\PackageAction.cpp">
+    <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\PackageAction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\TimerAction.cpp">
+    <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\TimerAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\QuestTabScenes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\scene\SceneActorBehaviorModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\scene\SceneActorParticipationModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -7196,28 +7205,28 @@
     <ClInclude Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Style.h">
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Style.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\ActorBehaviorFlag.h">
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\ActorBehaviorFlag.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Phase.h">
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Phase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Actor.h">
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Actor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Action.h">
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Action.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\DialogueAction.h">
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\DialogueAction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\PackageAction.h">
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\PackageAction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\TimerAction.h">
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\TimerAction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -7550,6 +7559,12 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\constructible_object.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\scene\FormSubdialogScenePhase.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\scene\FormSubdialogSceneProperties.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -8190,7 +8205,16 @@
     <QtMoc Include="ui\form_windows\weapon.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKQuestSceneEditor.h">
+    <QtMoc Include="ui\form_windows\scene\SceneFormVisualEditor.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\quest\QuestTabScenes.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\scene\SceneActorBehaviorModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\scene\SceneActorParticipationModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

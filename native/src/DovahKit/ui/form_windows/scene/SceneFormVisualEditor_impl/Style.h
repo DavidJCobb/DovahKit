@@ -1,7 +1,7 @@
 #pragma once
 #include <QColor>
 
-namespace DKQuestSceneEditor_impl {
+namespace SceneFormVisualEditor_impl {
    struct Style {
       bool show_all_text = true;
 

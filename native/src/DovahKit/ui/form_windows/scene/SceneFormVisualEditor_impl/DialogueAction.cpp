@@ -1,17 +1,17 @@
 #include "./DialogueAction.h"
 #include "./Style.h"
-#include "../../DKQuestSceneEditor.h" // for QObject::tr
+#include "../SceneFormVisualEditor.h" // for QObject::tr
 
-namespace DKQuestSceneEditor_impl {
+namespace SceneFormVisualEditor_impl {
    /*virtual*/ void DialogueAction::paint(QPainter& painter, const Style& style) /*override*/ {
       painter.save();
       painter.translate(this->geometry.rect.topLeft());
 
       QString text;
       if (!this->name.isEmpty()) {
-         text = DKQuestSceneEditor::tr("Action %1: %2").arg(this->action_id).arg(this->name);
+         text = SceneFormVisualEditor::tr("Action %1: %2").arg(this->action_id).arg(this->name);
       } else {
-         text = DKQuestSceneEditor::tr("Action %1").arg(this->action_id);
+         text = SceneFormVisualEditor::tr("Action %1").arg(this->action_id);
       }
 
       painter.setBrush(QBrush(style.action.dialogue_header.background));

@@ -63,7 +63,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>4</number>
+      <number>5</number>
      </property>
      <widget class="QWidget" name="tabBase">
       <attribute name="title">
@@ -362,6 +362,174 @@
       <attribute name="title">
        <string>Scenes</string>
       </attribute>
+      <layout class="QGridLayout" name="gridLayout_9" columnstretch="0,1">
+       <item row="0" column="1">
+        <layout class="QGridLayout" name="gridLayout_8">
+         <item row="0" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string>Scene Editor ID:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="sceneEditorID"/>
+           </item>
+           <item>
+            <widget class="QPushButton" name="buttonSceneProperties">
+             <property name="text">
+              <string>Properties</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="buttonSceneActorBehavior">
+             <property name="whatsThis">
+              <string>Control whether the scene pauses or ends in response to certain events happening to actors.</string>
+             </property>
+             <property name="text">
+              <string>Actor Events</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="buttonSceneActorParticipation">
+             <property name="text">
+              <string>Actor Properties</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QCheckBox" name="flagStartSceneWithQuest">
+             <property name="text">
+              <string>Begin on quest start</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="flagEndQuestWithScene">
+             <property name="text">
+              <string>Stop quest when scene ends</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="0">
+          <widget class="QScrollArea" name="sceneScrollbox">
+           <property name="widgetResizable">
+            <bool>true</bool>
+           </property>
+           <widget class="QWidget" name="scrollAreaWidgetContents">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>0</y>
+              <width>519</width>
+              <height>377</height>
+             </rect>
+            </property>
+           </widget>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="buttonSceneZoomIn">
+             <property name="text">
+              <string>+</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="buttonSceneZoomOut">
+             <property name="text">
+              <string>-</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="sceneShowAllText">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Show all text</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item row="0" column="0">
+        <widget class="DKFormListPane" name="scenePicker">
+         <property name="baseSize">
+          <size>
+           <width>175</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="showFormTypes">
+          <bool>false</bool>
+         </property>
+         <property name="showMoveButtons">
+          <bool>false</bool>
+         </property>
+         <property name="showRemoveButton">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="tabScripts">
       <attribute name="title">

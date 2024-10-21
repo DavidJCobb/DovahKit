@@ -1,8 +1,10 @@
 #include "./Phase.h"
 #include "./Style.h"
-#include "../../DKQuestSceneEditor.h" // for QObject::tr
+#include "../SceneFormVisualEditor.h" // for QObject::tr
 
-namespace DKQuestSceneEditor_impl {
+#include "editor/helpers/stringify_conditions.h"
+
+namespace SceneFormVisualEditor_impl {
    void Phase::paint(QPainter& painter, const Style& style, int index, int height) {
       painter.setBrush(QBrush(style.phase.background));
       painter.setPen(QPen(style.phase.text));
@@ -18,23 +20,23 @@ namespace DKQuestSceneEditor_impl {
       {  // Header
          QString text;
          if (this->name.isEmpty()) {
-            text = DKQuestSceneEditor::tr("Action %1: %2").arg(index).arg(this->name);
+            text = SceneFormVisualEditor::tr("Action %1: %2").arg(index).arg(this->name);
          } else {
-            text = DKQuestSceneEditor::tr("Action %1").arg(index);
+            text = SceneFormVisualEditor::tr("Action %1").arg(index);
          }
          const QRect& rect = this->geometry.rel.header;
          painter.drawRect(rect);
          painter.drawText(rect, Qt::AlignTop | Qt::AlignHCenter, text);
       }
       if (auto src = this->cached.conditions.start; !src.isEmpty()) {
-         QString text = DKQuestSceneEditor::tr("Start conditions:\n") + src;
+         QString text = SceneFormVisualEditor::tr("Start conditions:\n") + src;
 
          const QRect& rect = this->geometry.rel.conditions.start;
          painter.drawRect(rect);
          painter.drawText(rect, Qt::AlignTop | Qt::AlignLeft, text);
       }
       if (auto src = this->cached.conditions.completion; !src.isEmpty()) {
-         QString text = DKQuestSceneEditor::tr("Completion conditions:\n") + src;
+         QString text = SceneFormVisualEditor::tr("Completion conditions:\n") + src;
 
          const QRect& rect = this->geometry.rel.conditions.completion;
          painter.drawRect(rect);
@@ -42,6 +44,33 @@ namespace DKQuestSceneEditor_impl {
       }
 
       painter.restore();
+   }
+   void Phase::recacheConditionStrings(const ui::types::conditions::context& context) {
+      this->cached.conditions = {};
+      {
+         auto& src = this->conditions.start;
+         auto& dst = this->cached.conditions.start;
+         if (!src.empty()) {
+            for (size_t i = 0; i < src.size() - 1; ++i) {
+               auto& cnd = src.back();
+               dst += editor_helpers::stringify_condition(src[i], context);
+               dst += editor_helpers::stringify_condition_boolean_operator(src[i]);
+            }
+            dst += editor_helpers::stringify_condition(src.back(), context);
+         }
+      }
+      {
+         auto& src = this->conditions.completion;
+         auto& dst = this->cached.conditions.completion;
+         if (!src.empty()) {
+            for (size_t i = 0; i < src.size() - 1; ++i) {
+               auto& cnd = src.back();
+               dst += editor_helpers::stringify_condition(src[i], context);
+               dst += editor_helpers::stringify_condition_boolean_operator(src[i]);
+            }
+            dst += editor_helpers::stringify_condition(src.back(), context);
+         }
+      }
    }
    void Phase::recalcSize(int width, const Style& style, const QFontMetrics& font_metrics) {
       this->geometry.rect.setWidth(width);

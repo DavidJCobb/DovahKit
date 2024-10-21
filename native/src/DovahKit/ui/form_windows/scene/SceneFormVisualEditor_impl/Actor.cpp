@@ -1,12 +1,12 @@
 #include "./Actor.h"
 #include "./Style.h"
-#include "../../DKQuestSceneEditor.h" // for QObject::tr
+#include "../SceneFormVisualEditor.h" // for QObject::tr
 
 #include "./DialogueAction.h"
 #include "./PackageAction.h"
 #include "./TimerAction.h"
 
-namespace DKQuestSceneEditor_impl {
+namespace SceneFormVisualEditor_impl {
    void Actor::doVerticalLayout(const Style& style, const QFontMetrics& font) {
       //
       // Compute the inner height. This entails computing the max height for each 
@@ -77,20 +77,23 @@ namespace DKQuestSceneEditor_impl {
       painter.save();
       painter.translate(this->geometry.rect.topLeft());
          
-      QString text = DKQuestSceneEditor::tr("%1: D(%2), C(%3), PD(%4), OC(%5)");
+      QString text = SceneFormVisualEditor::tr("%1: D(%2), C(%3), PD(%4), OC(%5)");
       text = text.arg(this->cached.alias_name);
          
-      auto _flag_str = [](ActorBehaviorFlag flag) {
-         using enum ActorBehaviorFlag;
-         switch (flag) {
-            case ActorBehaviorFlag::Pause:
-               return DKQuestSceneEditor::tr("P", "actor behavior flag");
-            case ActorBehaviorFlag::End:
-               return DKQuestSceneEditor::tr("E", "actor behavior flag");
-            case ActorBehaviorFlag::None:
-               return DKQuestSceneEditor::tr("N", "actor behavior flag");
+      auto _flag_str = [](ActorBehaviorFlags& flags) {
+         QString out;
+         if (flags.pause) {
+            out = SceneFormVisualEditor::tr("P", "actor behavior flag");
+            if (flags.end) {
+               out += ", ";
+               out += SceneFormVisualEditor::tr("E", "actor behavior flag");
+            }
+         } else if (flags.end) {
+            out = SceneFormVisualEditor::tr("E", "actor behavior flag");
+         } else {
+            out = SceneFormVisualEditor::tr("N", "actor behavior flag");
          }
-         return DKQuestSceneEditor::tr("?", "actor behavior flag");
+         return out;
       };
       text = text.arg(_flag_str(this->behavior_flags.death));
       text = text.arg(_flag_str(this->behavior_flags.combat));

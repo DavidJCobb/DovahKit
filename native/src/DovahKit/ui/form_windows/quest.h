@@ -3,8 +3,11 @@
 #include "dovah/forms/Quest.h"
 #include "ui_quest.h"
 
+class DKQuestSceneEditor;
+
 class QuestTabStages;
 class QuestTabObjectives;
+class QuestTabScenes;
 
 class QuestAllDialogueDatastore;
 class QuestDialogueTabBody;
@@ -26,6 +29,7 @@ class FormDialogQuest :
       struct {
          QuestTabStages*     stages     = nullptr;
          QuestTabObjectives* objectives = nullptr;
+         QuestTabScenes*     scenes     = nullptr;
       } tabs;
       struct {
          struct {
@@ -37,6 +41,7 @@ class FormDialogQuest :
             QuestDialogueTabBody* services  = nullptr;
             QuestDialogueTabBody* misc      = nullptr;
          } dialogue_tab_bodies;
+         DKQuestSceneEditor* scene_editor = nullptr;
       } subwidgets;
       
       virtual void _load_impl() override;

@@ -828,6 +828,107 @@ namespace editor_helpers {
                   ).arg(subject).arg(phoneme).arg(casted->count).arg(casted->desired_count);
                }
             #pragma endregion
+            #pragma region scene
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::scene::invalid_scene_action_type*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Scene %1 contains an action with an invalid type (%2).",
+                     disambig
+                  ).arg(subject).arg(casted->action_type);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::scene::scene_action_base_layout_incorrect*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  auto    signature = cobb::qt::four_cc_to_string(casted->subrecord_signature);
+                  //
+                  if (casted->problem == decltype(casted->problem)::malformed_valid_subrecord) {
+                     return QObject::tr(
+                        "Scene %1 action ID %2 contained a malformed %3 subrecord. The scene action will "
+                        "not be loaded, and subrecords intended for the action may be consumed by the Scene "
+                        "itself instead of a scene action.",
+                        disambig
+                     ).arg(subject).arg(casted->action_id).arg(signature);
+                  } else if (casted->problem == decltype(casted->problem)::unrecognized_subrecord) {
+                     return QObject::tr(
+                        "Scene %1 action ID %2 contained an unrecognized subrecord (%3). The scene action "
+                        "will not be loaded, and subrecords intended for the action may be consumed by the "
+                        "Scene itself instead of a scene action.",
+                        disambig
+                     ).arg(subject).arg(casted->action_id).arg(signature);
+                  } else {
+                     return QObject::tr(
+                        "Scene %1 action ID %2 has its first few subrecords laid out incorrectly in some "
+                        "way. (Please ask DovahKit's developer to update this error message so that it "
+                        "properly offers specifics.) The scene action will not be loaded, and subrecords "
+                        "intended for the action may be consumed by the Scene itself instead of a scene "
+                        "action.",
+                        disambig
+                     ).arg(subject).arg(casted->action_id).arg(signature);
+                  }
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::scene::scene_action_necessary_subrecord_missing*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  auto    signature = cobb::qt::four_cc_to_string(casted->subrecord_signature);
+                  //
+                  return QObject::tr(
+                     "Scene %1 action ID %2 is missing a necessary subrecord (%3). The scene action will not "
+                     "be loaded, and subrecords intended for the action may be consumed by the Scene itself "
+                     "instead of a scene action.",
+                     disambig
+                  ).arg(subject).arg(casted->action_id).arg(signature);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::scene::scene_action_necessary_subrecord_unreadable*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  auto    signature = cobb::qt::four_cc_to_string(casted->subrecord_signature);
+                  //
+                  return QObject::tr(
+                     "Scene %1 action ID %2 contained a necessary subrecord (%3) with malformed or truncated "
+                     "data. The scene action will not be loaded, and subrecords intended for the action may "
+                     "be consumed by the Scene itself instead of a scene action.",
+                     disambig
+                  ).arg(subject).arg(casted->action_id).arg(signature);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::scene::scene_actor_subrecords_out_of_order*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  auto    signature = cobb::qt::four_cc_to_string(casted->subrecord_signature);
+                  //
+                  return QObject::tr(
+                     "Scene %1 contained an actor definition for which the subrecords were out of order. Data "
+                     "may be loaded into the wrong actor definition. The problem was detected upon reading a "
+                     "subrecord with signature %2.",
+                     disambig
+                  ).arg(subject).arg(signature);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::scene::unexpected_subrecord_in_scene_action*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  auto    signature = cobb::qt::four_cc_to_string(casted->signature);
+                  //
+                  return QObject::tr(
+                     "Scene %1 action ID %2 contained an unexpected subrecord (%3). The subrecord will be "
+                     "skipped.",
+                     disambig
+                  ).arg(subject).arg(casted->action_id).arg(signature);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::scene::unexpected_subrecord_in_scene_phase*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  auto    signature = cobb::qt::four_cc_to_string(casted->signature);
+                  //
+                  return QObject::tr(
+                     "Scene %1 Phase %2 contained an unexpected subrecord (%3). The subrecord will be "
+                     "skipped.",
+                     disambig
+                  ).arg(subject).arg(casted->which_phase + 1).arg(signature);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::scene::unterminated_scene_phase*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Scene %1 phase is missing its closing HNAM subrecord. The phase will not be loaded, "
+                     "and the scene itself may fail to load data as well.",
+                     disambig
+                  ).arg(subject).arg(casted->which_phase + 1);
+               }
+            #pragma endregion
             #pragma region shout
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::shout::wrong_word_count*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);

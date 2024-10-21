@@ -1,7 +1,7 @@
 #include "./Action.h"
 #include "./Style.h"
 
-namespace DKQuestSceneEditor_impl {
+namespace SceneFormVisualEditor_impl {
    void Action::drawCell(QPainter& painter, const Style& style, QRect rect, QString text, int align_flags) const {
       QPen border_pen;
       border_pen.setCosmetic(true);

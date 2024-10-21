@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormSubdialogScenePhase</class>
+ <widget class="QDialog" name="FormSubdialogScenePhase">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>608</width>
+    <height>433</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Phase</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Name:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="name">
+       <property name="whatsThis">
+        <string>&lt;p&gt;If you wish, you can give a name to this phase. The name is used solely for documentation, being displayed in the scene editor at the top of the phase's column.&lt;/p&gt;</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tabStart">
+      <attribute name="title">
+       <string>Start</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>If these conditions are met (or if you don't use any conditions), then the phase will start normally. If they're not met, then the phase will be skipped.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="DKConditionList" name="startConditions"/>
+       </item>
+       <item>
+        <widget class="DKPapyrusFragmentFunctionPicker" name="startFragment">
+         <property name="whatsThis">
+          <string>&lt;p&gt;A Papyrus script which will run when the phase starts.&lt;/p&gt;</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabCompletion">
+      <attribute name="title">
+       <string>Completion</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QRadioButton" name="flagEndOnActions">
+           <property name="text">
+            <string>End when all actions are complete</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="flagEndOnConditions">
+           <property name="text">
+            <string>End when the conditions below are met</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="DKConditionList" name="completionConditions">
+         <property name="whatsThis">
+          <string>&lt;p&gt;You can optionally set this phase to end only when certain conditions are met. Bethesda calls out &lt;code&gt;IsSceneActionComplete&lt;/code&gt; as a useful condition to use here.&lt;/p&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="DKPapyrusFragmentFunctionPicker" name="completionFragment">
+         <property name="whatsThis">
+          <string>&lt;p&gt;A Papyrus script which will run when the phase ends. The next phase will not begin until this script has finished running.&lt;/p&gt;&lt;!--  TODO: Verify that last bit. It's per the CK wiki, but it seems unusual since most fragments don't (seem to?) delay hardcoded behaviors. --&gt;</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_2">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKPapyrusFragmentFunctionPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKPapyrusFragmentFunctionPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKConditionList</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKConditionList.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>name</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>startConditions</tabstop>
+  <tabstop>startFragment</tabstop>
+  <tabstop>flagEndOnActions</tabstop>
+  <tabstop>flagEndOnConditions</tabstop>
+  <tabstop>completionConditions</tabstop>
+  <tabstop>completionFragment</tabstop>
+  <tabstop>pushButton</tabstop>
+  <tabstop>pushButton_2</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

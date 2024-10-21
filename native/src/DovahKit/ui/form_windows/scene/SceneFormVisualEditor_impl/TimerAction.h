@@ -5,7 +5,7 @@ namespace dovah {
    class form_stub;
 }
 
-namespace DKQuestSceneEditor_impl {
+namespace SceneFormVisualEditor_impl {
    class TimerAction : public Action {
       public:
          virtual void paint(QPainter&, const Style&) override;

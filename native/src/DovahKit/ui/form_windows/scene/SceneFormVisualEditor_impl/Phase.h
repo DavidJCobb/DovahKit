@@ -8,14 +8,15 @@
 #include <QString>
 #include "ui/types/conditions/condition.h"
 
-namespace DKQuestSceneEditor_impl {
+namespace SceneFormVisualEditor_impl {
    struct Style;
 }
 
-namespace DKQuestSceneEditor_impl {
+namespace SceneFormVisualEditor_impl {
    class Phase {
       public:
          void paint(QPainter&, const Style&, int index, int height);
+         void recacheConditionStrings(const ui::types::conditions::context&);
          void recalcSize(int width, const Style&, const QFontMetrics&);
 
       public:

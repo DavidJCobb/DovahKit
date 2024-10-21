@@ -7,11 +7,11 @@
 #include <QSize>
 #include <QString>
 
-namespace DKQuestSceneEditor_impl {
+namespace SceneFormVisualEditor_impl {
    struct Style;
 }
 
-namespace DKQuestSceneEditor_impl {
+namespace SceneFormVisualEditor_impl {
    class Action {
       public:
          virtual ~Action() = default;

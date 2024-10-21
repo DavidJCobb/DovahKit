@@ -4,6 +4,7 @@
 #include "dovah/form_stub_addenda.h"
 #include "./odds_and_ends/quest_tab_stages.h"
 #include "./odds_and_ends/quest_tab_objectives.h"
+#include "./quest/QuestTabScenes.h"
 
 #include "ui/utils/bind.h"
 
@@ -12,6 +13,8 @@ static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_
 
 #include "./quest/QuestAllDialogueDatastore.h"
 #include "./quest/QuestDialogueTabBody.h"
+
+#include "widgets/DKQuestSceneEditor.h" // TODO: move to another path
 
 FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    initialize(stub);
@@ -141,6 +144,34 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
       );
    }
    #pragma endregion
+
+   {  // Scene tab
+      auto* manager = this->tabs.scenes = new QuestTabScenes(*this->form, *this->data.dialogue_datastore, this);
+      manager->ui = {
+         .buttons = {
+            .zoom_in  = this->ui.buttonSceneZoomIn,
+            .zoom_out = this->ui.buttonSceneZoomOut,
+         },
+         .show_all_text = this->ui.sceneShowAllText,
+
+         .scene_picker = this->ui.scenePicker,
+
+         .current_scene = {
+            .buttons = {
+               .actor_behavior      = this->ui.buttonSceneActorBehavior,
+               .actor_participation = this->ui.buttonSceneActorParticipation,
+            },
+            .editor_id = this->ui.sceneEditorID,
+            .flags = {
+               .start_scene_with_quest = this->ui.flagStartSceneWithQuest,
+               .end_quest_with_scene   = this->ui.flagEndQuestWithScene,
+            },
+            .editor_scrollbox = this->ui.sceneScrollbox,
+            .editor = nullptr,
+         },
+      };
+      manager->setupUi();
+   }
 
    {  // "Help" button on dialogue tab
       auto* sub_tabbox = this->ui.dialogueTabbox;

@@ -805,6 +805,7 @@
     <ClCompile Include="ui\form_windows\quest\QuestDialogueBranchlessTopicsModel.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestDialogueTabBody.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestDialogueTopicInfosModel.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestTabScenes.cpp" />
     <ClCompile Include="ui\form_windows\race.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
     <ClCompile Include="ui\form_windows\global.cpp" />
@@ -831,6 +832,8 @@
     <ClCompile Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\race\RaceTintLayerModel.cpp" />
     <ClCompile Include="ui\form_windows\relationship.cpp" />
+    <ClCompile Include="ui\form_windows\scene\SceneActorBehaviorModel.cpp" />
+    <ClCompile Include="ui\form_windows\scene\SceneActorParticipationModel.cpp" />
     <ClCompile Include="ui\form_windows\shared\DKFormPickerExcludeSingleFormFilter.cpp" />
     <ClCompile Include="ui\form_windows\shared\FaceBaseHeadPartsModel.cpp" />
     <ClCompile Include="ui\form_windows\shared\FaceExtraHeadPartsModel.cpp" />
@@ -1059,7 +1062,7 @@
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
     <ClCompile Include="widgets\DKVulkanView.cpp" />
-    <ClCompile Include="widgets\DKQuestSceneEditor.cpp" />
+    <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor.cpp" />
     <ClCompile Include="widgets\widget-data\DKCustomFormFilter.cpp" />
     <ClCompile Include="widgets\widget-data\DKCustomFormFilterableModelMixin.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.cpp" />
@@ -1092,12 +1095,12 @@
     <ClCompile Include="widgets\widget-models\DKLeveledListPreviewModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKPapyrusFragmentFunctionModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
-    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\Action.cpp" />
-    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\Actor.cpp" />
-    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\DialogueAction.cpp" />
-    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\PackageAction.cpp" />
-    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\Phase.cpp" />
-    <ClCompile Include="widgets\widget-subtypes\DKQuestSceneEditor\TimerAction.cpp" />
+    <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Action.cpp" />
+    <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Actor.cpp" />
+    <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\DialogueAction.cpp" />
+    <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\PackageAction.cpp" />
+    <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Phase.cpp" />
+    <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\TimerAction.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\data\all_base_form_types.h" />
@@ -1345,14 +1348,17 @@
     <ClInclude Include="editor\helpers\face_fx_phoneme_name.h" />
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Action.h" />
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Actor.h" />
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\ActorBehaviorFlag.h" />
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\DialogueAction.h" />
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\PackageAction.h" />
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Phase.h" />
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\Style.h" />
-    <ClInclude Include="widgets\widget-subtypes\DKQuestSceneEditor\TimerAction.h" />
+    <QtMoc Include="ui\form_windows\quest\QuestTabScenes.h" />
+    <QtMoc Include="ui\form_windows\scene\SceneActorBehaviorModel.h" />
+    <QtMoc Include="ui\form_windows\scene\SceneActorParticipationModel.h" />
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Action.h" />
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Actor.h" />
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\ActorBehaviorFlag.h" />
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\DialogueAction.h" />
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\PackageAction.h" />
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Phase.h" />
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Style.h" />
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\TimerAction.h" />
     <QtMoc Include="widgets\widget-models\DKPapyrusFragmentFunctionModel.h" />
     <QtMoc Include="widgets\widget-models\DKLeveledListPreviewModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormInventoryModel.h" />
@@ -1524,7 +1530,7 @@
     <QtMoc Include="widgets\DKTabWidget.h" />
     <QtMoc Include="widgets\DKStatusBar.h" />
     <QtMoc Include="widgets\widget-data\DKCustomFormFilter.h" />
-    <QtMoc Include="widgets\DKQuestSceneEditor.h" />
+    <QtMoc Include="ui\form_windows\scene\SceneFormVisualEditor.h" />
     <ClInclude Include="widgets\widget-data\DKCustomFormFilterableModelMixin.h" />
     <ClInclude Include="widgets\widget-models\DKAttackDataModel.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
@@ -2821,6 +2827,8 @@
     <QtUic Include="ui\form_windows\race.ui" />
     <QtUic Include="ui\form_windows\reference.ui" />
     <QtUic Include="ui\form_windows\relationship.ui" />
+    <QtUic Include="ui\form_windows\scene\FormSubdialogScenePhase.ui" />
+    <QtUic Include="ui\form_windows\scene\FormSubdialogSceneProperties.ui" />
     <QtUic Include="ui\form_windows\shader_particle_geometry_data.ui" />
     <QtUic Include="ui\form_windows\shout.ui" />
     <QtUic Include="ui\form_windows\soul_gem.ui" />
