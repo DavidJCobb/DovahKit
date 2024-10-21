@@ -62,6 +62,9 @@ void QuestTabScenes::setupUi() {
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, &QuestTabScenes::_on_form_deleted);
 }
 
+void QuestTabScenes::focus_dialogue_forms(uint32_t action_id, dovah::form_stub* topic, dovah::form_stub* info) {
+   this->ui.current_scene.editor->focus_dialogue_forms(action_id, topic, info);
+}
 void QuestTabScenes::select_scene(dovah::form_stub* stub) {
    this->push_data_to_scene_form(); // commit data to scenes when we switch
 

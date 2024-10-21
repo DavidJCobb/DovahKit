@@ -14,6 +14,9 @@ static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_
 #include "./quest/QuestAllDialogueDatastore.h"
 #include "./quest/QuestDialogueTabBody.h"
 
+// focusing a scene's topic/infos
+#include "dovah/forms/Scene.h"
+
 FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    initialize(stub);
 
@@ -313,10 +316,45 @@ void FormDialogQuest::focus_dialogue_topic(dovah::form_stub& stub, dovah::form_s
          browser = this->subwidgets.dialogue_tab_bodies.player;
          break;
       case dovah::dialogue::category::scene:
-         //
-         // TODO: Implement this once we have scene editing done!
-         //
-         break;
+         this->ui.tabWidget->setCurrentWidget(this->ui.tabScenes);
+         {
+            dovah::form_stub* scene = nullptr;
+            dovah::form_stub* topic = &stub;
+            for (auto& use : this->formStub()->inbound) {
+               if (!(use.second.flags & dovah::use_info_entry::flag::dialogue_quest))
+                  continue;
+               auto* stub = use.second.other;
+               if (stub->form_type != dovah::form_type::scene)
+                  continue;
+
+               bool refers_to_topic = false;
+               for (auto& use : stub->outbound) {
+                  if (use.second.other == topic) {
+                     refers_to_topic = true;
+                     break;
+                  }
+               }
+               if (!refers_to_topic)
+                  continue;
+
+               auto loaded = stub->load().ptr_cast<dovah::loaded_forms::Scene>();
+               if (!loaded)
+                  continue;
+
+               for (const auto& action : loaded->actions) {
+                  auto* variant = std::get_if<dovah::loaded_forms::Scene::action::dialogue_data>(&action.data);
+                  if (!variant)
+                     continue;
+                  if (variant->topic != topic)
+                     continue;
+
+                  this->tabs.scenes->select_scene(stub);
+                  this->tabs.scenes->focus_dialogue_forms(action.action_id, topic, info);
+                  return;
+               }
+            }
+         }
+         return;
       case dovah::dialogue::category::favor_dialogue:
          tab     = this->ui.tabDialogueFavorOld;
          browser = this->subwidgets.dialogue_tab_bodies.favor_a;

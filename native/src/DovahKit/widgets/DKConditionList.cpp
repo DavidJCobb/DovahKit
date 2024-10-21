@@ -150,6 +150,10 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
       this->_owning_stub = &owner.stub;
       this->_model->importFrom(owner, target);
    }
+   void DKConditionList::importFrom(dovah::loaded_forms::Form& owner, const std::vector<ui::types::conditions::condition>& target) {
+      this->_owning_stub = &owner.stub;
+      this->_model->importFrom(owner, target);
+   }
    void DKConditionList::exportTo(dovah::loaded_forms::Form& owner, BackendConditionList& dst) {
       auto src = this->_model->conditions();
       dst.clear(owner);
@@ -157,6 +161,9 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
          auto& dst_item = dst.emplace_back();
          dst_item.commit(owner, src_item);
       }
+   }
+   void DKConditionList::exportTo(dovah::loaded_forms::Form& owner, std::vector<ui::types::conditions::condition>& dst) {
+      dst = this->_model->conditions();
    }
    void DKConditionList::clear() {
       this->_model->clear();

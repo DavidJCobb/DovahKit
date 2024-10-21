@@ -1,5 +1,7 @@
 #pragma once
 #include <cstdint>
+#include <string>
+#include <vector>
 #include <QFontMetrics>
 #include <QPainter>
 #include <QPoint>
@@ -16,6 +18,12 @@ namespace SceneFormVisualEditor_impl {
 namespace SceneFormVisualEditor_impl {
    class Phase {
       public:
+         struct Fragment {
+            std::string scriptname;
+            std::string function;
+         };
+
+      public:
          void paint(QPainter&, const Style&, const StyleOption&, int index, int height);
          void recacheConditionStrings(const ui::types::conditions::context&);
          void recalcSize(int width, const Style&, const QFontMetrics&);
@@ -26,6 +34,10 @@ namespace SceneFormVisualEditor_impl {
             std::vector<ui::types::conditions::condition> start;
             std::vector<ui::types::conditions::condition> completion;
          } conditions;
+         struct {
+            Fragment start;
+            Fragment completion;
+         } fragments;
          uint32_t editor_width = 200;
 
          struct {

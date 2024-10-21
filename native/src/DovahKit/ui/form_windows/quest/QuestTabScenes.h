@@ -54,6 +54,7 @@ class QuestTabScenes : public QObject {
          } current_scene;
       } ui;
 
+      void focus_dialogue_forms(uint32_t action_id, dovah::form_stub* topic, dovah::form_stub* info);
       void select_scene(dovah::form_stub*);
       void push_data_to_scene_form();
       

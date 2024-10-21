@@ -6,6 +6,7 @@
 #include <QWidget>
 #include "dovah/form_stub.h"
 #include "./SceneFormVisualEditor_impl/ActorBehaviorFlag.h"
+#include "./SceneFormVisualEditor_impl/SceneContext.h"
 #include "./SceneFormVisualEditor_impl/Style.h"
 #include "ui/types/conditions/condition.h"
 
@@ -30,11 +31,7 @@ class SceneFormVisualEditor : public QWidget {
       ~SceneFormVisualEditor();
 
    public:
-      struct SceneContext {
-         dovah::form_stub*           quest    = nullptr;
-         dovah::form_stub*           scene    = nullptr;
-         QuestAllDialogueDatastore*  dialogue = nullptr;
-      };
+      using SceneContext = SceneFormVisualEditor_impl::SceneContext;
 
    public:
       void setContext(const SceneContext&);
@@ -47,6 +44,8 @@ class SceneFormVisualEditor : public QWidget {
       // import/export backend data for the current context scene's working copy
       void importData();
       void exportData();
+
+      void focus_dialogue_forms(uint32_t action_id, dovah::form_stub* topic, dovah::form_stub* info);
 
    protected:
       void _clear_data();
@@ -64,9 +63,13 @@ class SceneFormVisualEditor : public QWidget {
       using Action = SceneFormVisualEditor_impl::Action;
 
       void addActor();
+      void editAction(Action&);
+      void editPhase(Phase&);
       void insertAction(Action&, Actor&, Phase&);
       void insertPhaseAt(size_t);
       void removeActor(uint32_t alias_id);
+      void removeAction(Action&);
+      void removePhase(Phase&);
 
    public:
       #pragma region Overrides

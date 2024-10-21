@@ -3,6 +3,7 @@
 #include <QPainter>
 #include "dovah/form_stubs/helpers/get_unique_outbound_use.h"
 #include "dovah/form_stub.h"
+#include "dovah/forms/components/papyrus/fragment_data/scene_fragment_data.h"
 #include "dovah/forms/Quest.h"
 #include "dovah/forms/Scene.h"
 #include "./SceneFormVisualEditor_impl/Actor.h"
@@ -24,6 +25,10 @@
 #include <QTableView>
 #include "./SceneActorBehaviorModel.h"
 #include "./SceneActorParticipationModel.h"
+#include "./FormSubdialogScenePhase.h"
+#include "./FormSubdialogSceneDialogueAction.h"
+#include "./FormSubdialogScenePackageAction.h"
+#include "./FormSubdialogSceneTimerAction.h"
 
 namespace {
    constexpr const bool only_import_actions_belonging_to_defined_actors = true;
@@ -31,6 +36,9 @@ namespace {
 
 namespace {
    using namespace SceneFormVisualEditor_impl;
+   namespace vmad {
+      using namespace dovah::loaded_forms::components::papyrus;
+   }
 
    using loaded_form_type = dovah::loaded_forms::Scene;
 
@@ -170,6 +178,13 @@ void SceneFormVisualEditor::importData() {
       return;
    const auto& form = *(loaded_form_type*)working;
 
+   const vmad::scene_fragment_data* fragment_data = nullptr;
+   if (const auto* src_frags = form.script_data.fragment_data) {
+      if (src_frags->type == vmad::fragment_type::scene) {
+         fragment_data = (const vmad::scene_fragment_data*) src_frags;
+      }
+   }
+
    {  // Actors
       using src_type = loaded_form_type::actor;
 
@@ -230,6 +245,27 @@ void SceneFormVisualEditor::importData() {
          }
          dst->editor_width = src.editor_display_width;
       }
+      if (fragment_data) {
+         using phase_fragment = vmad::scene_fragment_data::phase_fragment;
+
+         for (auto& f : fragment_data->fragments.on_phase) {
+            if (f.phase < this->_data.phases.size()) {
+               auto& dst = *this->_data.phases[f.phase];
+               if (f.flags & phase_fragment::flag::on_start) {
+                  dst.fragments.start = {
+                     .scriptname = f.filename,
+                     .function   = f.function,
+                  };
+               }
+               if (f.flags & phase_fragment::flag::on_completion) {
+                  dst.fragments.completion = {
+                     .scriptname = f.filename,
+                     .function   = f.function,
+                  };
+               }
+            }
+         }
+      }
    }
    {  // Actions
       using src_type = loaded_form_type::action;
@@ -286,6 +322,32 @@ void SceneFormVisualEditor::importData() {
          }
          dst->phase_indices.start = src.phase_indices.start;
          dst->phase_indices.end   = src.phase_indices.end;
+      }
+      if (fragment_data) {
+         using phase_fragment = vmad::scene_fragment_data::phase_fragment;
+
+         for (auto& f : fragment_data->fragments.on_phase) {
+            if (f.flags & phase_fragment::flag::on_start)
+               continue;
+            if (f.flags & phase_fragment::flag::on_completion)
+               continue;
+            //
+            // This is an action fragment.
+            //
+            TimerAction* action = nullptr;
+            for (auto* item : this->_data.actions) {
+               if (item->action_id != f.phase)
+                  continue;
+               action = dynamic_cast<TimerAction*>(item);
+               break;
+            }
+            if (action) {
+               action->fragment = {
+                  .scriptname = f.filename,
+                  .function   = f.function,
+               };
+            }
+         }
       }
    }
    this->_update_cached_internal_relationships();
@@ -380,6 +442,45 @@ void SceneFormVisualEditor::exportData() {
          _copy_conditions(src_item.conditions.completion, dst_item.conditions.completion);
          dst_item.editor_display_width = src_item.editor_width;
       }
+      {
+         auto* dst_frags_bare = form.script_data.fragment_data;
+         if (dst_frags_bare) {
+            if (dst_frags_bare->type != vmad::fragment_type::scene) {
+               dst_frags_bare->clear(form);
+               delete dst_frags_bare;
+               dst_frags_bare = nullptr;
+            }
+         }
+         if (!dst_frags_bare) {
+            dst_frags_bare = form.script_data.fragment_data = new vmad::scene_fragment_data;
+         }
+
+         auto& dst_frags = *(vmad::scene_fragment_data*)dst_frags_bare;
+         dst_frags.fragments.on_phase.clear();
+         for (size_t i = 0; i < size; ++i) {
+            const auto& phase = *src_list[i];
+            {
+               auto& src = phase.fragments.start;
+               if (!src.scriptname.empty() || !src.function.empty()) {
+                  auto& frag = dst_frags.fragments.on_phase.emplace_back();
+                  frag.phase    = i;
+                  frag.flags    = vmad::scene_fragment_data::phase_fragment::flag::on_start;
+                  frag.filename = src.scriptname;
+                  frag.function = src.function;
+               }
+            }
+            {
+               auto& src = phase.fragments.completion;
+               if (!src.scriptname.empty() || !src.function.empty()) {
+                  auto& frag = dst_frags.fragments.on_phase.emplace_back();
+                  frag.phase    = i;
+                  frag.flags    = vmad::scene_fragment_data::phase_fragment::flag::on_completion;
+                  frag.filename = src.scriptname;
+                  frag.function = src.function;
+               }
+            }
+         }
+      }
    }
    {  // Actions
       using dst_type = loaded_form_type::action;
@@ -439,6 +540,99 @@ void SceneFormVisualEditor::exportData() {
          }
       }
    }
+}
+
+void SceneFormVisualEditor::focus_dialogue_forms(uint32_t action_id, dovah::form_stub* topic, dovah::form_stub* info) {
+   if (!this->_context.dialogue)
+      return;
+
+   DialogueAction* casted = nullptr;
+   FormSubdialogSceneDialogueAction* dialog = nullptr;
+   for (auto* action : this->_data.actions) {
+      if (action->action_id != action_id)
+         continue;
+      casted = dynamic_cast<DialogueAction*>(action);
+      if (!casted)
+         continue;
+
+      dialog = new FormSubdialogSceneDialogueAction(*this->_context.dialogue, this);
+      break;
+   }
+   if (!dialog)
+      return;
+
+   for (size_t i = 0; i < this->_data.phases.size(); ++i) {
+      auto* phase = this->_data.phases[i];
+      auto  name = phase->name;
+      if (name.isEmpty()) {
+         name = tr("Phase %1").arg(i + 1);
+      }
+      dialog->scene_data.phases.push_back(name);
+   }
+   for (auto* actor : this->_data.actors) {
+      dialog->scene_data.actors.push_back({ actor->alias_id, actor->cached.alias_name });
+   }
+   
+   dialog->base_data = {
+      .name     = casted->name,
+      .alias_id = casted->alias_id,
+      .phase_indices = {
+         .start = casted->phase_indices.start,
+         .end   = casted->phase_indices.end,
+      }
+   };
+   dialog->data = {
+      .emotion = {
+         .type  = casted->emotion.type,
+         .value = casted->emotion.value,
+      },
+      .headtrack = {
+         .alias_id    = casted->headtrack_alias_id,
+         .at_player   = casted->flags.headtrack_player,
+         .face_target = casted->flags.face_target,
+      },
+      .looping = {
+         .enabled = casted->flags.looping,
+         .min     = casted->looping.min,
+         .max     = casted->looping.max,
+      },
+      .topic = casted->topic,
+   };
+   dialog->refresh();
+   dialog->show_info_on_open = info;
+   if (dialog->exec() == QDialog::Accepted) {
+      {
+         auto& src = dialog->base_data;
+         casted->name          = src.name;
+         casted->alias_id      = src.alias_id;
+         casted->phase_indices = {
+            .start = (uint32_t)src.phase_indices.start,
+            .end   = (uint32_t)src.phase_indices.end,
+         };
+      }
+      {
+         auto& src = dialog->data;
+         casted->flags = {
+            .face_target = src.headtrack.face_target,
+            .looping = src.looping.enabled,
+            .headtrack_player = src.headtrack.at_player,
+         };
+         casted->emotion = {
+            .type  = src.emotion.type,
+            .value = src.emotion.value,
+         };
+         casted->headtrack_alias_id = src.headtrack.alias_id;
+         casted->looping = {
+            .min = src.looping.min,
+            .max = src.looping.max,
+         };
+         casted->topic = src.topic;
+      }
+      this->_update_cached_internal_relationships();
+      this->_update_geometry();
+      this->update();
+   }
+   dialog->deleteLater();
 }
 
 void SceneFormVisualEditor::popBehaviorFlagDialog() {
@@ -735,6 +929,176 @@ void SceneFormVisualEditor::addActor() {
    dialog->deleteLater();
 
 }
+void SceneFormVisualEditor::editAction(Action& action) {
+   auto* action_d = dynamic_cast<DialogueAction*>(&action);
+   auto* action_p = dynamic_cast<PackageAction*>(&action);
+   auto* action_t = dynamic_cast<TimerAction*>(&action);
+
+   FormSubdialogSceneActionBase* untyped_dialog = nullptr;
+   if (action_d) {
+      if (!this->_context.dialogue)
+         return;
+      auto* dialog = new FormSubdialogSceneDialogueAction(*this->_context.dialogue, this);
+      untyped_dialog = dialog;
+
+      dialog->data = {
+         .emotion = {
+            .type  = action_d->emotion.type,
+            .value = action_d->emotion.value,
+         },
+         .headtrack = {
+            .alias_id    = action_d->headtrack_alias_id,
+            .at_player   = action_d->flags.headtrack_player,
+            .face_target = action_d->flags.face_target,
+         },
+         .looping = {
+            .enabled = action_d->flags.looping,
+            .min     = action_d->looping.min,
+            .max     = action_d->looping.max,
+         },
+         .topic = action_d->topic,
+      };
+   } else if (action_p) {
+      auto* dialog = new FormSubdialogScenePackageAction(this);
+      untyped_dialog = dialog;
+
+      auto& dst = dialog->data;
+      dst.packages = action_p->packages;
+   } else if (action_t) {
+      auto* form    = (loaded_form_type*)this->_context.scene->get_working_copy();
+      assert(form != nullptr);
+      auto& working = *form;
+
+      auto* dialog = new FormSubdialogSceneTimerAction(working, this);
+      untyped_dialog = dialog;
+
+      auto& dst = dialog->data;
+      dst.duration = action_t->duration;
+      dst.fragment = {
+         .scriptname = action_t->fragment.scriptname,
+         .function   = action_t->fragment.function,
+      };
+   } else {
+      return;
+   }
+   assert(untyped_dialog != nullptr);
+   
+   for (size_t i = 0; i < this->_data.phases.size(); ++i) {
+      auto* phase = this->_data.phases[i];
+      auto  name  = phase->name;
+      if (name.isEmpty()) {
+         name = tr("Phase %1").arg(i + 1);
+      }
+      untyped_dialog->scene_data.phases.push_back(name);
+   }
+   for (auto* actor : this->_data.actors) {
+      untyped_dialog->scene_data.actors.push_back({ actor->alias_id, actor->cached.alias_name });
+   }
+
+   untyped_dialog->base_data = {
+      .name     = action.name,
+      .alias_id = action.alias_id,
+      .phase_indices = {
+         .start = action.phase_indices.start,
+         .end   = action.phase_indices.end,
+      }
+   };
+   untyped_dialog->refresh();
+   if (untyped_dialog->exec() == QDialog::Accepted) {
+      {
+         auto& src = untyped_dialog->base_data;
+         action.name          = src.name;
+         action.alias_id      = src.alias_id;
+         action.phase_indices = {
+            .start = (uint32_t)src.phase_indices.start,
+            .end   = (uint32_t)src.phase_indices.end,
+         };
+      }
+      if (action_d) {
+         auto& src = ((FormSubdialogSceneDialogueAction*)untyped_dialog)->data;
+         action_d->flags = {
+            .face_target = src.headtrack.face_target,
+            .looping = src.looping.enabled,
+            .headtrack_player = src.headtrack.at_player,
+         };
+         action_d->emotion = {
+            .type  = src.emotion.type,
+            .value = src.emotion.value,
+         };
+         action_d->headtrack_alias_id = src.headtrack.alias_id;
+         action_d->looping = {
+            .min = src.looping.min,
+            .max = src.looping.max,
+         };
+         action_d->topic = src.topic;
+      } else if (action_p) {
+         auto& src = ((FormSubdialogScenePackageAction*)untyped_dialog)->data;
+         action_p->packages = src.packages;
+      } else if (action_t) {
+         auto& src = ((FormSubdialogSceneTimerAction*)untyped_dialog)->data;
+         action_t->duration = src.duration;
+         action_t->fragment = {
+            .scriptname = src.fragment.scriptname,
+            .function   = src.fragment.function,
+         };
+      }
+      this->_update_cached_internal_relationships();
+      this->_update_geometry();
+      this->update();
+   }
+   untyped_dialog->deleteLater();
+}
+void SceneFormVisualEditor::editPhase(Phase& phase) {
+   auto* form    = (loaded_form_type*)this->_context.scene->get_working_copy();
+   assert(form != nullptr);
+   auto& working = *form;
+   auto* dialog  = new FormSubdialogScenePhase(working, this);
+
+   dialog->data = {
+      .name = phase.name,
+      .conditions = {
+         .start      = phase.conditions.start,
+         .completion = phase.conditions.completion,
+      },
+      .fragments = {
+         .start = {
+            .scriptname = QString::fromStdString(phase.fragments.start.scriptname),
+            .function   = QString::fromStdString(phase.fragments.start.function),
+         },
+         .completion = {
+            .scriptname = QString::fromStdString(phase.fragments.completion.scriptname),
+            .function   = QString::fromStdString(phase.fragments.completion.function),
+         },
+      },
+   };
+   dialog->refresh();
+
+   if (dialog->exec() == QDialog::Accepted) {
+      const auto& src = dialog->data;
+      phase.name = src.name;
+      phase.conditions = {
+         .start      = src.conditions.start,
+         .completion = src.conditions.completion,
+      };
+      phase.fragments = {
+         .start = {
+            .scriptname = src.fragments.start.scriptname.toStdString(),
+            .function   = src.fragments.start.function.toStdString(),
+         },
+         .completion = {
+            .scriptname = src.fragments.completion.scriptname.toStdString(),
+            .function   = src.fragments.completion.function.toStdString(),
+         },
+      };
+      //
+      // Name or conditions may have changed; re-render.
+      //
+      this->_update_geometry();
+      this->updateGeometry();
+      this->update();
+   }
+   dialog->deleteLater();
+}
 void SceneFormVisualEditor::insertAction(Action& action, Actor& actor, Phase& phase) {
    size_t phase_index = -1;
    for (size_t i = 0; i < this->_data.phases.size(); ++i) {
@@ -805,6 +1169,42 @@ void SceneFormVisualEditor::removeActor(uint32_t id) {
       this->update();
    }
 }
+void SceneFormVisualEditor::removeAction(Action& action) {
+   std::erase(this->_data.actions, &action);
+   delete &action;
+
+   this->_update_cached_internal_relationships();
+   this->_update_geometry();
+   this->update();
+}
+void SceneFormVisualEditor::removePhase(Phase& phase) {
+   size_t i = 0;
+   for (; i < this->_data.phases.size(); ++i)
+      if (this->_data.phases[i] == &phase)
+         break;
+   assert(i < this->_data.phases.size());
+
+   auto&  list = this->_data.actions;
+   size_t size = list.size();
+   for (size_t j = 0; j < size; ++j) {
+      auto* action = list[j];
+      if (action->phase_indices.start == i && action->phase_indices.end == i) {
+         list.erase(list.begin() + j);
+         delete action;
+         --j;
+         --size;
+         continue;
+      }
+      if (action->phase_indices.start >= i)
+         --action->phase_indices.start;
+      if (action->phase_indices.end >= i)
+         --action->phase_indices.end;
+   }
+
+   this->_update_cached_internal_relationships();
+   this->_update_geometry();
+   this->update();
+}
 
 #pragma region Overrides
    /*virtual*/ QSize SceneFormVisualEditor::minimumSizeHint() const /*override*/ {
@@ -823,7 +1223,8 @@ void SceneFormVisualEditor::removeActor(uint32_t id) {
          size_t index     = 0;
          bool   on_header = false;
       } clicked_phase;
-      Actor* clicked_actor = nullptr;
+      Actor*  clicked_actor  = nullptr;
+      Action* clicked_action = nullptr;
 
       auto pos = event->pos();
       for (size_t i = 0; i < this->_data.phases.size(); ++i) {
@@ -848,6 +1249,14 @@ void SceneFormVisualEditor::removeActor(uint32_t id) {
             if (!item->geometry.rect.contains(pos))
                continue;
             clicked_actor = item;
+         }
+         if (clicked_actor) {
+            for (auto* item : clicked_actor->cached.actions) {
+               if (!item->geometry.rect.contains(pos))
+                  continue;
+               clicked_action = item;
+               break;
+            }
          }
       }
 
@@ -922,11 +1331,19 @@ void SceneFormVisualEditor::removeActor(uint32_t id) {
          return;
       }
       if (action == items.edit) {
-         static_assert(false, "TODO");
+         if (clicked_action) {
+            this->editAction(*clicked_action);
+         } else if (clicked_phase.on_header) {
+            this->editPhase(*clicked_phase.pointer);
+         }
          return;
       }
       if (action == items.remove) {
-         static_assert(false, "TODO");
+         if (clicked_action) {
+            this->removeAction(*clicked_action);
+         } else if (clicked_phase.on_header) {
+            this->removePhase(*clicked_phase.pointer);
+         }
          return;
       }
       //

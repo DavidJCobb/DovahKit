@@ -2883,6 +2883,21 @@
     <ClCompile Include="ui\form_windows\scene\SceneActorParticipationModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\scene\FormSubdialogScenePhase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\scene\FormSubdialogScenePackageAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\scene\FormSubdialogSceneActionBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\scene\FormSubdialogSceneTimerAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\scene\FormSubdialogSceneDialogueAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -7232,6 +7247,9 @@
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\StyleOption.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\SceneContext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -8227,6 +8245,21 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\scene\SceneActorParticipationModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\scene\FormSubdialogScenePhase.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\scene\FormSubdialogScenePackageAction.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneTimerAction.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneActionBase.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneDialogueAction.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

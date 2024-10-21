@@ -40,7 +40,7 @@ namespace dovah::loaded_forms::components::papyrus {
          if (!subrecord.is_in_bounds(6))
             break;
          auto& frag = this->fragments.on_phase.emplace_back();
-         subrecord.unchecked_read(frag.unknown00);
+         subrecord.unchecked_read(frag.flags);
          subrecord.unchecked_read(frag.phase);
          subrecord.unchecked_read(frag.unknown05);
          subrecord.read_length_prefixed_string<2>(frag.filename);
@@ -70,7 +70,7 @@ namespace dovah::loaded_forms::components::papyrus {
       }
       subrecord.write((phase_fragment_count_serialized_type)this->fragments.on_phase.size());
       for (auto& frag : this->fragments.on_phase) {
-         subrecord.write(frag.unknown00);
+         subrecord.write(frag.flags);
          subrecord.write(frag.phase);
          subrecord.write(frag.unknown05);
          subrecord.write_length_prefixed_string<2>(frag.filename);

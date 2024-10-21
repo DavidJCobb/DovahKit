@@ -26,8 +26,16 @@ namespace dovah::loaded_forms::components::papyrus {
          static constexpr const size_t max_phase_fragment_count = std::numeric_limits<phase_fragment_count_serialized_type>::max();
 
          struct phase_fragment {
-            uint8_t     unknown00;
-            uint32_t    phase; // zero-indexed internally; one-indexed in UI
+            struct flag {
+               flag() = delete;
+               enum {
+                  on_start      = 1,
+                  on_completion = 2,
+               };
+            };
+
+            uint8_t     flags = 0;
+            uint32_t    phase; // zero-indexed internally; one-indexed in UI. if no flags set, it's actually an action ID
             uint8_t     unknown05;
             std::string filename;
             std::string function;

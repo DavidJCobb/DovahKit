@@ -134,14 +134,14 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="buttonOK">
        <property name="text">
         <string>OK</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_2">
+      <widget class="QPushButton" name="buttonCancel">
        <property name="text">
         <string>Cancel</string>
        </property>
@@ -172,8 +172,8 @@
   <tabstop>flagEndOnConditions</tabstop>
   <tabstop>completionConditions</tabstop>
   <tabstop>completionFragment</tabstop>
-  <tabstop>pushButton</tabstop>
-  <tabstop>pushButton_2</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
  </tabstops>
  <resources/>
  <connections/>

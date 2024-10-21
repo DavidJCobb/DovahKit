@@ -13,5 +13,9 @@ namespace SceneFormVisualEditor_impl {
 
       public:
          float duration = 0.0F; // seconds
+         struct {
+            std::string scriptname;
+            std::string function;
+         } fragment;
    };
 }

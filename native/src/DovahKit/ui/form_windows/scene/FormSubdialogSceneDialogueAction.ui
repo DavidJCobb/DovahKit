@@ -76,9 +76,15 @@
     </layout>
    </item>
    <item row="1" column="0">
-    <widget class="QGroupBox" name="groupBox">
+    <widget class="QGroupBox" name="flagLooping">
      <property name="title">
       <string>Looping</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
       <item row="0" column="0">
@@ -246,7 +252,7 @@
      <property name="sizeHint" stdset="0">
       <size>
        <width>268</width>
-       <height>20</height>
+       <height>19</height>
       </size>
      </property>
     </spacer>

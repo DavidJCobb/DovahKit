@@ -79,6 +79,7 @@ class DKConditionListModel : public DKGenericListModel<DKConditionListModel, ui:
 
       // Returns number of invalid conditions discarded.
       size_t importFrom(dovah::loaded_forms::Form&, const BackendConditionList&);
+      size_t importFrom(dovah::loaded_forms::Form&, const std::vector<Condition>&);
 
       size_t importBifurcatedList(dovah::loaded_forms::Form&, const BackendConditionList& locked, const BackendConditionList& normal);
       void exportBifurcatedList(dovah::loaded_forms::Form&, BackendConditionList& locked, BackendConditionList& normal);

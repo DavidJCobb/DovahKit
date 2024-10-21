@@ -636,6 +636,26 @@ size_t DKConditionListModel::importFrom(dovah::loaded_forms::Form& src_form, con
    });
    return invalid;
 }
+size_t DKConditionListModel::importFrom(dovah::loaded_forms::Form& src_form, const std::vector<Condition>& src) {
+   size_t invalid = 0;
+   this->performReset([this, &src_form, &src, &invalid]() {
+      this->_allow_modifications_from = 0;
+
+      size_t size = src.size();
+      this->_nodes.reserve(size);
+      for (size_t i = 0; i < size; ++i) {
+         auto* node = new node_type{ src[i] };
+         if (!node->valid()) {
+            ++invalid;
+            delete node;
+            continue;
+         }
+         this->_nodes.push_back(node);
+      }
+      this->_context = ui::types::conditions::context(src_form.stub, src_form.is_working_copy);
+   });
+   return invalid;
+}
 
 size_t DKConditionListModel::importBifurcatedList(dovah::loaded_forms::Form& src_form, const BackendConditionList& locked, const BackendConditionList& normal) {
    size_t invalid = 0;
