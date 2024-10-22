@@ -56,6 +56,8 @@ class SceneFormVisualEditor : public QWidget {
 
       void popBehaviorFlagDialog();
       void popParticipationFlagDialog();
+
+      constexpr bool hasAnyChanges() const noexcept { return this->_data.any_changes_made; }
       
    protected:
       using Style  = SceneFormVisualEditor_impl::Style;
@@ -113,6 +115,7 @@ class SceneFormVisualEditor : public QWidget {
          std::vector<Actor*>  actors;
          std::vector<Phase*>  phases;
          std::vector<Action*> actions;
+         bool any_changes_made = false;
       } _data;
       std::variant<
          std::monostate,

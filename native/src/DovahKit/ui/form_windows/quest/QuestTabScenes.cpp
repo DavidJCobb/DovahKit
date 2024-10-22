@@ -109,6 +109,31 @@ void QuestTabScenes::push_data_to_scene_form() {
    auto& working = *this->_state.loaded_scene;
    auto& stub    = working.stub;
 
+   if (!this->ui.current_scene.editor->hasAnyChanges()) {
+      bool changed = false;
+      {
+         auto prior = working.scene_flags & scene_form_type::scene_flag::begin_on_quest_start;
+         auto after = this->ui.current_scene.flags.start_scene_with_quest->isChecked();
+         if (prior != after)
+            changed = true;
+      }
+      if (!changed) {
+         auto prior = working.scene_flags & scene_form_type::scene_flag::stop_quest_on_end;
+         auto after = this->ui.current_scene.flags.end_quest_with_scene->isChecked();
+         if (prior != after)
+            changed = true;
+      }
+      if (!changed) {
+         auto prior = stub.editorID;
+         auto after = this->ui.current_scene.editor_id->text().toStdString();
+         if (prior != after)
+            changed = true;
+      }
+      if (!changed) {
+         return;
+      }
+   }
+
    //
    // Same basic steps as FormEditDialogMixin::save.
    //
@@ -119,7 +144,7 @@ void QuestTabScenes::push_data_to_scene_form() {
    {  // actual changes
       stub.editorID = this->ui.current_scene.editor_id->text().toStdString();
       cobb::edit_bit(working.scene_flags, scene_form_type::scene_flag::begin_on_quest_start, this->ui.current_scene.flags.start_scene_with_quest->isChecked());
-      cobb::edit_bit(working.scene_flags, scene_form_type::scene_flag::stop_quest_on_end, this->ui.current_scene.flags.end_quest_with_scene->isChecked());
+      cobb::edit_bit(working.scene_flags, scene_form_type::scene_flag::stop_quest_on_end,    this->ui.current_scene.flags.end_quest_with_scene->isChecked());
       this->ui.current_scene.editor->exportData();
    }
    stub.commit_working_copy();

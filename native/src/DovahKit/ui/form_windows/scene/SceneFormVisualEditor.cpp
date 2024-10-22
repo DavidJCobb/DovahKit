@@ -550,6 +550,7 @@ void SceneFormVisualEditor::focus_dialogue_forms(uint32_t action_id, dovah::form
    dialog->refresh();
    dialog->show_info_on_open = info;
    if (dialog->exec() == QDialog::Accepted) {
+      this->_data.any_changes_made = true;
       casted->base_data = dialog->base_data;
       casted->data      = dialog->data;
       this->_update_cached_internal_relationships();
@@ -588,6 +589,7 @@ void SceneFormVisualEditor::popBehaviorFlagDialog() {
       model->addActor(*actor);
    }
    if (dialog->exec() == QDialog::Accepted) {
+      this->_data.any_changes_made = true;
       for (auto* actor : this->_data.actors) {
          model->commitActor(*actor);
       }
@@ -628,6 +630,7 @@ void SceneFormVisualEditor::popParticipationFlagDialog() {
       model->addActor(*actor);
    }
    if (dialog->exec() == QDialog::Accepted) {
+      this->_data.any_changes_made = true;
       for (auto* actor : this->_data.actors) {
          model->commitActor(*actor);
       }
@@ -654,6 +657,7 @@ void SceneFormVisualEditor::_clear_data() {
          delete item;
       list.clear();
    }
+   this->_data.any_changes_made = false;
 }
 void SceneFormVisualEditor::clear() {
    this->_context = {};
@@ -869,6 +873,7 @@ void SceneFormVisualEditor::addActor() {
       }
    }
    if (dialog->exec() == QDialog::Accepted) {
+      this->_data.any_changes_made = true;
       auto* sel  = view->selectionModel();
       auto  rows = sel->selectedRows();
       if (!rows.empty()) {
@@ -929,6 +934,7 @@ void SceneFormVisualEditor::editAction(Action& action) {
    untyped_dialog->base_data = action.base_data;
    untyped_dialog->refresh();
    if (untyped_dialog->exec() == QDialog::Accepted) {
+      this->_data.any_changes_made = true;
       action.base_data = untyped_dialog->base_data;
       if (action_d) {
          auto& src = ((FormSubdialogSceneDialogueAction*)untyped_dialog)->data;
@@ -956,6 +962,7 @@ void SceneFormVisualEditor::editPhase(Phase& phase) {
    dialog->refresh();
 
    if (dialog->exec() == QDialog::Accepted) {
+      this->_data.any_changes_made = true;
       phase.data = dialog->data;
       //
       // Name or conditions may have changed; re-render.
@@ -987,6 +994,7 @@ void SceneFormVisualEditor::insertAction(Action& action, Actor& actor, Phase& ph
    }
    this->_data.actions.push_back(&action);
 
+   this->_data.any_changes_made = true;
    this->_update_cached_internal_relationships();
    this->_update_geometry();
    this->update();
@@ -1005,6 +1013,7 @@ void SceneFormVisualEditor::insertPhaseAt(size_t at) {
       if (pi.end >= at)
          ++pi.end;
    }
+   this->_data.any_changes_made = true;
    this->_update_cached_internal_relationships();
    this->_update_geometry();
    this->update();
@@ -1032,6 +1041,7 @@ void SceneFormVisualEditor::removeActor(uint32_t id) {
       }
    }
 
+   this->_data.any_changes_made = true;
    if (needs_geo_update) {
       this->_update_geometry();
       this->update();
@@ -1041,6 +1051,7 @@ void SceneFormVisualEditor::removeAction(Action& action) {
    std::erase(this->_data.actions, &action);
    delete &action;
 
+   this->_data.any_changes_made = true;
    this->_update_cached_internal_relationships();
    this->_update_geometry();
    this->update();
@@ -1070,6 +1081,7 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
          --pi.end;
    }
 
+   this->_data.any_changes_made = true;
    this->_update_cached_internal_relationships();
    this->_update_geometry();
    this->update();
