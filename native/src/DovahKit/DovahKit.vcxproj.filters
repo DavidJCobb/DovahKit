@@ -2901,6 +2901,18 @@
     <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\ScriptFragment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\alias_subdialog_helpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\helpers\story_event_name.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -7256,6 +7268,12 @@
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\ScriptFragment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\form_windows\quest\alias_subdialog_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\helpers\story_event_name.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -7321,13 +7339,10 @@
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_objectives.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="ui\form_windows\odds_and_ends\quest_alias_location.ui">
+    <QtUic Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="ui\form_windows\odds_and_ends\quest_alias_reference.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-    <QtUic Include="ui\form_windows\odds_and_ends\inventory_data.ui">
+    <QtUic Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.ui">
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\main_window\script_window_single.ui">
@@ -8266,6 +8281,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneDialogueAction.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

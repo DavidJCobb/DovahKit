@@ -1,15 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>LocationAliasEditDialog</class>
- <widget class="QDialog" name="LocationAliasEditDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>642</width>
-    <height>393</height>
-   </rect>
-  </property>
+ <class>FormSubdialogQuestLocAlias</class>
+ <widget class="QDialog" name="FormSubdialogQuestLocAlias">
   <property name="windowTitle">
    <string>Location Alias</string>
   </property>
@@ -54,16 +46,6 @@
          </item>
          <item row="0" column="1" colspan="2">
           <widget class="QLineEdit" name="name"/>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLabel" name="label_3">
-           <property name="text">
-            <string>Force into alias when filled:</string>
-           </property>
-           <property name="buddy">
-            <cstring>forceInto</cstring>
-           </property>
-          </widget>
          </item>
          <item row="0" column="3" rowspan="2">
           <layout class="QGridLayout" name="layoutFlags">
@@ -123,6 +105,16 @@
            </item>
           </layout>
          </item>
+         <item row="1" column="0" colspan="2">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Force into alias when filled:</string>
+           </property>
+           <property name="buddy">
+            <cstring>forceInto</cstring>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
        <item row="3" column="0">
@@ -130,11 +122,65 @@
          <item row="1" column="1">
           <widget class="QComboBox" name="fillFromSiblingAlias"/>
          </item>
-         <item row="2" column="3">
-          <widget class="QComboBox" name="fillFromExtAliasName"/>
+         <item row="0" column="1">
+          <widget class="DKFormPicker" name="fillFromPredefined">
+           <property name="splitTypesWhenMany">
+            <bool>false</bool>
+           </property>
+          </widget>
          </item>
-         <item row="1" column="3">
-          <widget class="QComboBox" name="fillFromSiblingAliasParentKeyword"/>
+         <item row="3" column="0">
+          <widget class="QRadioButton" name="fillTypeMatching">
+           <property name="text">
+            <string>Find Matching Location...</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Alias:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="buddy">
+            <cstring>fillFromExtAliasName</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="3">
+          <widget class="QComboBox" name="findMatchingEventData"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QRadioButton" name="fillTypeSiblingAlias">
+           <property name="text">
+            <string>Reference Alias Location</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0" colspan="4">
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Maximum</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>30</width>
+               <height>10</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="DKConditionList" name="conditions"/>
+           </item>
+          </layout>
          </item>
          <item row="4" column="0">
           <layout class="QHBoxLayout" name="horizontalLayout">
@@ -163,13 +209,6 @@
            </item>
           </layout>
          </item>
-         <item row="1" column="0">
-          <widget class="QRadioButton" name="fillTypeSiblingAlias">
-           <property name="text">
-            <string>Reference Alias Location</string>
-           </property>
-          </widget>
-         </item>
          <item row="4" column="2">
           <widget class="QLabel" name="label_6">
            <property name="text">
@@ -183,12 +222,6 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QComboBox" name="fillFromExtAliasQuest"/>
-         </item>
-         <item row="4" column="1">
-          <widget class="QComboBox" name="findMatchingEventName"/>
-         </item>
          <item row="0" column="0">
           <widget class="QRadioButton" name="fillTypePredefined">
            <property name="text">
@@ -196,13 +229,20 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
-          <widget class="QComboBox" name="fillFromPredefined"/>
+         <item row="2" column="3">
+          <widget class="QComboBox" name="fillFromExtAliasName"/>
          </item>
-         <item row="3" column="0">
-          <widget class="QRadioButton" name="fillTypeMatching">
+         <item row="2" column="1">
+          <widget class="DKFormPicker" name="fillFromExtAliasQuest">
+           <property name="splitTypesWhenMany">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QRadioButton" name="fillTypeExternalAlias">
            <property name="text">
-            <string>Find Matching Location...</string>
+            <string>Location Alias on Other Quest</string>
            </property>
           </widget>
          </item>
@@ -222,58 +262,15 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="2">
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>Alias:</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="buddy">
-            <cstring>fillFromExtAliasName</cstring>
+         <item row="1" column="3">
+          <widget class="DKFormPicker" name="fillFromSiblingAliasParentKeyword">
+           <property name="splitTypesWhenMany">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
-         <item row="4" column="3">
-          <widget class="QComboBox" name="findMatchingEventData"/>
-         </item>
-         <item row="2" column="0">
-          <widget class="QRadioButton" name="fillTypeExternalAlias">
-           <property name="text">
-            <string>Location Alias on Other Quest</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="0" colspan="4">
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
-           <item>
-            <spacer name="horizontalSpacer_2">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Maximum</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>30</width>
-               <height>10</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QWidget" name="findMatchingConditions" native="true">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-            </widget>
-           </item>
-          </layout>
+         <item row="4" column="1">
+          <widget class="QComboBox" name="findMatchingEventName"/>
          </item>
         </layout>
        </item>
@@ -290,6 +287,15 @@
       <attribute name="title">
        <string>Scripts</string>
       </attribute>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <widget class="DKPapyrusBoundScriptListPane" name="scriptListPane">
+         <property name="usesGroupbox">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>
@@ -341,6 +347,23 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKPapyrusBoundScriptListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKPapyrusBoundScriptListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKConditionList</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKConditionList.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>tabWidget</tabstop>
   <tabstop>name</tabstop>
@@ -357,12 +380,15 @@
   <tabstop>fillFromSiblingAlias</tabstop>
   <tabstop>fillFromSiblingAliasParentKeyword</tabstop>
   <tabstop>fillTypeExternalAlias</tabstop>
-  <tabstop>fillFromExtAliasQuest</tabstop>
   <tabstop>fillFromExtAliasName</tabstop>
   <tabstop>fillTypeMatching</tabstop>
   <tabstop>findMatchingFlagEvent</tabstop>
   <tabstop>findMatchingEventName</tabstop>
   <tabstop>findMatchingEventData</tabstop>
+  <tabstop>scriptListPane</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+  <tabstop>conditions</tabstop>
  </tabstops>
  <resources/>
  <connections/>

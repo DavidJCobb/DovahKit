@@ -223,6 +223,7 @@
     <ClCompile Include="editor\helpers\backend_warning_to_string.cpp" />
     <ClCompile Include="editor\helpers\nif_is_valid_master_particle_system.cpp" />
     <ClCompile Include="editor\helpers\skill_name_to_string.cpp" />
+    <ClCompile Include="editor\helpers\story_event_name.cpp" />
     <ClCompile Include="editor\ini\main.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\faction.cpp" />
@@ -799,6 +800,9 @@
     <ClCompile Include="ui\form_windows\keyword.cpp" />
     <ClCompile Include="ui\form_windows\location_ref_type.cpp" />
     <ClCompile Include="ui\form_windows\movement_type.cpp" />
+    <ClCompile Include="ui\form_windows\quest\alias_subdialog_helpers.cpp" />
+    <ClCompile Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.cpp" />
+    <ClCompile Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestAllDialogueDatastore.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestDialogueBranchedTopicsModel.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestDialogueBranchesModel.cpp" />
@@ -1362,6 +1366,10 @@
     <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneTimerAction.h" />
     <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneActionBase.h" />
     <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneDialogueAction.h" />
+    <QtMoc Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.h" />
+    <QtMoc Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.h" />
+    <ClInclude Include="editor\helpers\story_event_name.h" />
+    <ClInclude Include="ui\form_windows\quest\alias_subdialog_helpers.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Action.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Actor.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\ActorBehaviorFlag.h" />
@@ -2828,9 +2836,8 @@
     <QtUic Include="ui\form_windows\misc_item.ui" />
     <QtUic Include="ui\form_windows\movement_type.ui" />
     <QtUic Include="ui\form_windows\note.ui" />
-    <QtUic Include="ui\form_windows\odds_and_ends\inventory_data.ui" />
-    <QtUic Include="ui\form_windows\odds_and_ends\quest_alias_location.ui" />
-    <QtUic Include="ui\form_windows\odds_and_ends\quest_alias_reference.ui" />
+    <QtUic Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.ui" />
+    <QtUic Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_objectives.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_stages.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\shout_word.ui" />
