@@ -3,39 +3,81 @@
 FormSubdialogSceneActionBase::FormSubdialogSceneActionBase(QWidget* parent) : QDialog(parent) {
 }
 
+void FormSubdialogSceneActionBase::_make_alias_picker(QComboBox& widget, uint32_t alias_id) {
+   widget.clear();
+      
+   int i = -1;
+   for (auto& item : this->scene_data.actors) {
+      if (item.first == alias_id)
+         i = widget.count();
+      widget.addItem(item.second, item.first);
+   }
+   widget.setCurrentIndex(i);
+}
+
 void FormSubdialogSceneActionBase::_refresh_base(
    QLineEdit* name,
    QComboBox* actor,
    QComboBox* phase_start,
    QComboBox* phase_end
 ) {
-   auto _make_phase_list = [this](QComboBox* widget, size_t value) {
-      widget->clear();
-
-      auto&  list = this->scene_data.phases;
-      size_t size = list.size();
-      for (size_t i = 0; i < size; ++i) {
-         widget->addItem(list[i], (int)i);
+   std::sort(
+      this->scene_data.phases.begin(),
+      this->scene_data.phases.end(),
+      [](const auto& a, const auto& b) {
+         return a.first < b.first;
       }
-      widget->setCurrentIndex(value);
-   };
+   );
 
    name->setText(this->base_data.name);
+   this->_make_alias_picker(*actor, this->base_data.alias_id);
    {
-      auto* widget = actor;
-      widget->clear();
-      
-      int i = -1;
-      for (auto& item : this->scene_data.actors) {
-         if (item.first == this->base_data.alias_id)
-            i = widget->count();
-         widget->addItem(item.second, item.first);
+      phase_start->clear();
+      for (auto& pair : this->scene_data.phases) {
+         phase_start->addItem(pair.second, (int)pair.first);
       }
-      widget->setCurrentIndex(i);
+      int i = phase_start->findData(this->base_data.phase_indices.start);
+      if (i >= 0)
+         phase_start->setCurrentIndex(i);
    }
-   _make_phase_list(phase_start, this->base_data.phase_indices.start);
-   _make_phase_list(phase_end,   this->base_data.phase_indices.end);
-   
+   if (!this->_set_up_signals) {
+      QObject::connect(phase_start, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, phase_start, phase_end]() {
+         uint32_t min = phase_start->currentData().toInt();
+         uint32_t max = min;
+         for (auto& pair : this->scene_data.phases) {
+            if (pair.first <= min)
+               continue;
+            if (pair.first > max + 1)
+               break;
+            max = pair.first;
+         }
+
+         auto current_end = phase_end->currentData();
+         phase_end->clear();
+         for (auto& pair : this->scene_data.phases) {
+            if (pair.first < min || pair.first > max)
+               continue;
+            phase_end->addItem(pair.second, (int)pair.first);
+         }
+         if (current_end.isValid()) {
+            int i = phase_end->findData(current_end);
+            if (i < 0)
+               i = phase_end->findData(min);
+            if (i >= 0)
+               phase_end->setCurrentIndex(i);
+         }
+      });
+   }
+   {
+      emit phase_start->currentIndexChanged(phase_start->currentIndex());
+      //
+      int i = phase_end->findData(this->base_data.phase_indices.end);
+      if (i < 0)
+         i = phase_end->findData(this->base_data.phase_indices.start);
+      if (i >= 0)
+         phase_end->setCurrentIndex(i);
+   }
+
    if (!this->_set_up_signals) {
       this->_set_up_signals = true;
       QObject::connect(this, &QDialog::accepted, this, [=]() {

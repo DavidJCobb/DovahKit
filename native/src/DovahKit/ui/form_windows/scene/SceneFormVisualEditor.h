@@ -22,6 +22,7 @@ namespace SceneFormVisualEditor_impl {
    class Actor;
    class Phase;
 }
+class FormSubdialogSceneActionBase;
 class QuestAllDialogueDatastore;
 
 class SceneFormVisualEditor : public QWidget {
@@ -61,6 +62,8 @@ class SceneFormVisualEditor : public QWidget {
       using Actor  = SceneFormVisualEditor_impl::Actor;
       using Phase  = SceneFormVisualEditor_impl::Phase;
       using Action = SceneFormVisualEditor_impl::Action;
+
+      void _set_up_action_dialog_phases(const Action&, FormSubdialogSceneActionBase&);
 
       void addActor();
       void editAction(Action&);

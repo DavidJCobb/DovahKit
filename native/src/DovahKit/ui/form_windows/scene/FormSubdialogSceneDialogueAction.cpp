@@ -164,7 +164,7 @@ void FormSubdialogSceneDialogueAction::refresh() {
    this->ui.loopMin->setValue(this->data.looping.min);
    this->ui.loopMax->setValue(this->data.looping.max);
 
-   this->ui.headtrackAlias->setCurrentIndex(this->ui.headtrackAlias->findData(this->data.headtrack.alias_id));
+   this->_make_alias_picker(*this->ui.headtrackAlias, this->data.headtrack.alias_id);
    this->ui.headtrackTurn->setChecked(this->data.headtrack.face_target);
    if (this->data.headtrack.at_player) {
       this->ui.headtrackUsePlayer->setChecked(true);

@@ -15,12 +15,14 @@ class FormSubdialogSceneActionBase : public QDialog {
       SceneFormVisualEditor_impl::BaseActionData base_data;
       struct {
          std::vector<std::pair<uint32_t, QString>> actors;
-         std::vector<QString> phases;
+         std::vector<std::pair<uint32_t, QString>> phases;
       } scene_data;
 
       virtual void refresh() = 0;
 
    protected:
+      void _make_alias_picker(QComboBox&, uint32_t alias_id = -1);
+
       // After you write to `data`, call this to push state to the UI.
       void _refresh_base(
          QLineEdit* name,

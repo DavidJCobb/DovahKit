@@ -540,14 +540,7 @@ void SceneFormVisualEditor::focus_dialogue_forms(uint32_t action_id, dovah::form
    if (!dialog)
       return;
 
-   for (size_t i = 0; i < this->_data.phases.size(); ++i) {
-      auto* phase = this->_data.phases[i];
-      auto  name = phase->data.name;
-      if (name.isEmpty()) {
-         name = tr("Phase %1").arg(i + 1);
-      }
-      dialog->scene_data.phases.push_back(name);
-   }
+   this->_set_up_action_dialog_phases(*casted, *dialog);
    for (auto* actor : this->_data.actors) {
       dialog->scene_data.actors.push_back({ actor->alias_id, actor->cached.alias_name });
    }
@@ -779,6 +772,42 @@ void SceneFormVisualEditor::spawnRenderTest() {
    this->updateGeometry();
 }
 
+void SceneFormVisualEditor::_set_up_action_dialog_phases(const Action& action, FormSubdialogSceneActionBase& dialog) {
+   Actor* actor = nullptr;
+   for (auto* item : this->_data.actors) {
+      if (item->alias_id == action.base_data.alias_id) {
+         actor = item;
+         break;
+      }
+   }
+
+   auto _phase_is_taken = [actor, &action](size_t i) -> bool {
+      if (!actor)
+         return false;
+      for (auto* item : actor->cached.actions) {
+         if (item == &action)
+            continue;
+         if (typeid(*item) != typeid(action))
+            continue;
+         auto& pi = item->base_data.phase_indices;
+         if (pi.start <= i && pi.end >= i)
+            return true;
+      }
+      return false;
+   };
+
+   for (size_t i = 0; i < this->_data.phases.size(); ++i) {
+      if (_phase_is_taken(i))
+         continue;
+      auto* phase = this->_data.phases[i];
+      auto  name  = phase->data.name;
+      if (name.isEmpty()) {
+         name = tr("Phase %1").arg(i + 1);
+      }
+      dialog.scene_data.phases.push_back({ i, name });
+   }
+}
+
 void SceneFormVisualEditor::addActor() {
    auto* dialog = new QDialog(this);
    auto* layout = new QVBoxLayout(dialog);
@@ -892,14 +921,7 @@ void SceneFormVisualEditor::editAction(Action& action) {
    }
    assert(untyped_dialog != nullptr);
    
-   for (size_t i = 0; i < this->_data.phases.size(); ++i) {
-      auto* phase = this->_data.phases[i];
-      auto  name  = phase->data.name;
-      if (name.isEmpty()) {
-         name = tr("Phase %1").arg(i + 1);
-      }
-      untyped_dialog->scene_data.phases.push_back(name);
-   }
+   this->_set_up_action_dialog_phases(action, *untyped_dialog);
    for (auto* actor : this->_data.actors) {
       untyped_dialog->scene_data.actors.push_back({ actor->alias_id, actor->cached.alias_name });
    }
