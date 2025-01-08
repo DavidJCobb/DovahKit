@@ -1,0 +1,145 @@
+
+# To-Do
+
+Stopped working on DovahKit for a few months, to tackle other projects (in part motivated by IRL stuff), so here's the short(ish)-term to-do list that I had at the time so I can find it when I return.
+
+## Table of contents
+
+* Quest editing
+* Immediate next steps
+* General form work
+* Backend
+* 
+
+## Quest editing
+
+I was in the middle of working on scene editing at the time I switched to other projects. There were some low-prio things left to do for dialogue (e.g. transplanting forms across different pseudo-parents and parents) but scenes were the main focus.
+
+* Dialogue editing
+  * Info tableview: flags: consider a custom item delegate to draw them as multiple icons.
+  * Info tableview: flags: consider an expanded tooltip that lists the flags out in full, with line breaks and rich text.
+  * Transplantation
+    * ℹ️ QuestAllDialogueDatastore has partial code to handle transplantation. The code for transplanted DIALs is janky and not well-thought-out, and probably doesn't work. We'd need to get this working before we can think about adding any UI for this.
+    * Moving DLBRs across quests
+    * Moving top-level DIALs across quests
+    * Moving branched DIALs across DLBRs
+    * Moving INFOs across DIALs
+      * When implementing dialogue transplantation, do not allow an INFO to be transplanted out of an IDAT topic if it's actively being used as a SharedInfo by another INFO.
+      * ℹ️ When transplanting an INFO, we may need to manually flag the destination DIAL as edited, to ensure it gets saved to the file -- and the moved INFO with it.
+* Scene editing
+  * DKQuestSceneEditor
+    * Implement zooming in and out
+    * Implement clicking and dragging an action to reposition it.
+      * ℹ️ Requires being able to track what "action grid cell" the mouse is over, and draw a drop-indicator border over one cell or a contiguous range of cells.
+  * SCEN/VNAM
+  * Test adding and deleting phases, actors, and actions.
+  * Test editing phases' and actions' properties.
+  * We need a better way to delete actors.
+* Quest aliases
+  * The backend is vulnerable to data integrity issues. We only write subrecords related to an alias's current fill type, but we retain data for all fill types in memory and thus in use info. If the frontend doesn't clear data for one fill type before switching the alias to another fill type, then on save, we'll have "phantom uses."
+
+  We should be using `std::variant` for the alias's fill type and parameters. This is somewhat complicated by the need for subclassing, but since the fill type can vary by subclass (reference aliases versus location aliases), it would arguably be more appropriate to define it exclusively on the subclasses anyway.
+  * The dialog for editing reference aliases isn't fully wired together yet.
+  * Do we have a UI for editing location aliases yet?
+
+### Dialogue/alias edge-case
+
+So it turns out, I thought ahead when implementing the editing of conditions: the QUST UI already communicates with `DovahKitCore` regarding changes to its quest stages or aliases, and the condition-editing UI and supporting backend structures are both designed to prefer working-copy data by default. This leaves safeguards for editing INFOs, though, because this means it's possible to:
+
+1. Begin editing a QUST.
+1. Add a new alias Foo to that QUST.
+1. Edit an INFO which is parented to the quest, and add conditions which refer to Foo.
+1. Commit changes to the INFO.
+1. Cancel changes to the QUST, such that Foo disappears and the INFO now has a dangling reference to an invalid alias ID.
+
+The solution to this is relatively simple yet still strangely convoluted. When the INFO dialog commits changes to its form, we'd want to check if it has an ancestor QUST dialog and if so, we'd want to relay to that dialog a list of all referenced quest alias IDs. Then, when a QUST dialog cancels, we'd want to check if any descendant INFO forms refer to alias IDs whose creation we're about to cancel. If so, we'd want to halt closing the QUST dialog and pop a confirmation prompt to the user, telling them about the impending problem and letting them choose what to do (close the QUST dialog, and delete all conditions referring to aliases whose creation is being canceled; or close the QUST dialog, but leave the INFOs unaltered; or don't close the QUST dialog).
+
+I don't consider this a high-prio option because I'd be surprised if the Creation Kit handled this edge-case at all, but at some point I should probably at least check if they do (because if they do, then it's higher-prio for us to as well).
+
+## Immediate next steps
+
+* Rename the `shader_particle_geometry_data` form type to `shader_particle_geometry`. It's a noun: it's a geometry (a 3D cube) filled with particles drawn via a special shader.
+* Modify the DKFormInventoryWidget: Add the ability to hide ExtraData-related widgets (ownership, health). Add the ability to disallow leveled items, and hide the "Preview Calculated Result" widgets when leveled items are disallowed. We need these features for Constructible Object forms, which use TESContainer for their crafting ingredients but shouldn't allow leveled items.
+
+## Forms in general
+
+* Reportedly, ActorBases with no name can't be interacted with to initiate dialogue. Verify this, also test whether such actors become interactable if an alias renames them, test whether a Short Name but no Full Name is interactable, and update the What's This? text for the ActorBase name field accordingly.
+* Bulk editing and re-save tests:
+  * AMMO
+  * ANIO
+  * COLL
+  * EXPL
+  * HAZD
+  * WEAP
+* UI designs lacking an implementation:
+  * ARMO
+  * BOOK
+  * CAMS
+  * CSTY
+  * COBJ
+  * LSCR
+  * MATO
+  * MATT
+  * PROJ
+  * REFR
+  * SPGD
+  * SOUN
+  * SPEL
+  * TACT
+* Form types with incomplete/placeholder backends:
+  * LCTN
+  * MGEF
+  * PACK
+
+### Planned next steps
+
+* QUST form UI
+  * Alias UI
+  * SCEN
+* PACK
+  * Once we can load Package forms and package data, we'll need to go back and update the condition system. We currently handle all "package data" parameters as a single type, but the game actually defines multiple types: package data (possibly null); package data (numeric); and just "package data." We can check the condition/console command table to get parameter types for any functions that take a package data, in order to refine things further.
+* LCTN
+* MGEF
+* SPEL
+* WRLD form UI
+* REFR form UI
+* PROJ
+
+## Backend
+
+* Does TES4/ONAM need to list injected records? Our last fix to `file_load_order::for_each_active_file_override_of_type` will prevent injected records from showing up in TES4/ONAM.
+
+* Test converting files from SSE to LE -- both a file that has forms in the hardcoded range, and a file that doesn't.
+
+### Character encodings
+
+Some (all?) game languages were reportedly switched to UTF-8 for SE, and the CK64 doesn't convert text properly. We use LE encodings for both LE and SE. We need to figure out what encodings to use for SE, *and* make sure we perform encoding conversions properly when going from LE to SE or from SE to LE.
+
+CKPE fixes LE-to-SE encoding conversions for CK64, so we can trust it as a reference for what encodings have changed. Apparently Cyrillic is a known case.
+
+### BEES-range form IDs
+
+SSE: Files with header versions below 1.71 need to warn on records with form IDs in the range xx000001 to xx0007FF whenever xx is non-zero. SSE made it so that new files can define new forms in that range, but it also applies the behavior retroactively rather than checking the HEDR version, so older files with hardcoded overrides that relied on this quirk will be loaded improperly by the game (defining new forms instead).
+
+AFAIK, the CK never should've produced records overrides with that quirk, but who knows what community tools (e.g. clumsily performed mod merges, maybe?) might've done. Records of that variety shouldn't exist so if they do exist, in pre-1.71 files, then they almost certainly rely on pre-1.71 behavior and we should warn that they'll use post-1.71 behavior in-game. (I believe we do the HEDR check that the game doesn't, so we should apply pre-1.71 behavior to pre-1.71 files.)
+
+## Long-term
+
+### General UI
+
+* Turns out, QAbstractSpinBox implements 90% of widget rendering, and can handle any value type that is representable in a QVariant. We should see if we have any spinboxes hooked up to a `uint32_t` and if so, we should create a DKSpinBoxU32 designable widget that mirrors the QSpinBox interface but uses a `uint32_t` for its value type. (QSpinBox uses `int` i.e. `int32_t`, so it can't represent the upper half of a `uint32_t`'s range.)
+
+* DKHeaderView: Bug: If the total width of all columns is wider than the containing view, then you can resize a colum and enlarge it properly. However, attempting to shrink a column causes glitchy behavior: the column size shrinks by an unpredictable amount, and the table and header become visually desynched until you force the table rows to re-render (e.g. by changing your selection).
+
+### QTabBar
+
+QTabBar in Qt 5 is *riddled* with bugs that are triggered by hiding tabs, and it's impossible to fix all of these without building complete replacements for both QTabBar and QTabWidget. Some of these bugs are critical (i.e. extremely visually disruptive to the user experience), so we should look into building those replacements that at some point. I have WIP replacement files in DKTabBarEx.h and DKTabWidgetEx.h but I've excluded them from the project until such time as they're complete.
+
+**BUG:** If tabs are hidden, then scrolling the tabbar with the mouse wheel can cause it to jump to a massively negative position, the result of a mistake at [this line](https://codebrowser.dev/qt5/qtbase/src/widgets/widgets/qtabbar.cpp.html#723).
+
+Basically, in `QTabBarPrivate::makeVisible`, they want to check if a given tab (e.g. the tab you've focused) is partially or completely scrolled out of view, and if so, scroll the minimum distance needed to bring the tab fully into view. The problem, however, is that they compute `lastTabEnd` as the last tab's right edge *even if that tab is hidden and therefore has an all-zeroes rect*, and then they compute `scrolledTabBarEnd` as the lowest of `lastTabEnd - 1` or `scrollRect.right() + scrollOffset`. They should've used the `lastVisible` index, which they already track and cache!
+
+The effect of this is that `scrolledTabBarEnd` becomes 0, and when `tabEnd` (the righthand edge of the tab we wish to make visible) is compared to it, we get `tabEnd > scrolledTabBarEnd` a.k.a. `tabEnd > -1`. We then set `scrollOffset = tabEnd - scrollRect.right()`, which ends up computing to a negative value (generally) and perfectly right-aligning the tab we wish to view. 
+
+In Qt 6, they *may* have fixed it by clamping the scroll offset to never be negative. Whether that stems from an actual understanding of the issue or just trial-and-error tweaking, I don't know. Qt 5 is LTS so no hope of a backport.
+
