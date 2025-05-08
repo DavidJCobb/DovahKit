@@ -42,20 +42,6 @@ I was in the middle of working on scene editing at the time I switched to other 
   * The dialog for editing reference aliases isn't fully wired together yet.
   * Do we have a UI for editing location aliases yet?
 
-### Dialogue/alias edge-case
-
-So it turns out, I thought ahead when implementing the editing of conditions: the QUST UI already communicates with `DovahKitCore` regarding changes to its quest stages or aliases, and the condition-editing UI and supporting backend structures are both designed to prefer working-copy data by default. This leaves safeguards for editing INFOs, though, because this means it's possible to:
-
-1. Begin editing a QUST.
-1. Add a new alias Foo to that QUST.
-1. Edit an INFO which is parented to the quest, and add conditions which refer to Foo.
-1. Commit changes to the INFO.
-1. Cancel changes to the QUST, such that Foo disappears and the INFO now has a dangling reference to an invalid alias ID.
-
-The solution to this is relatively simple yet still strangely convoluted. When the INFO dialog commits changes to its form, we'd want to check if it has an ancestor QUST dialog and if so, we'd want to relay to that dialog a list of all referenced quest alias IDs. Then, when a QUST dialog cancels, we'd want to check if any descendant INFO forms refer to alias IDs whose creation we're about to cancel. If so, we'd want to halt closing the QUST dialog and pop a confirmation prompt to the user, telling them about the impending problem and letting them choose what to do (close the QUST dialog, and delete all conditions referring to aliases whose creation is being canceled; or close the QUST dialog, but leave the INFOs unaltered; or don't close the QUST dialog).
-
-I don't consider this a high-prio option because I'd be surprised if the Creation Kit handled this edge-case at all, but at some point I should probably at least check if they do (because if they do, then it's higher-prio for us to as well).
-
 ## Immediate next steps
 
 * Rename the `shader_particle_geometry_data` form type to `shader_particle_geometry`. It's a noun: it's a geometry (a 3D cube) filled with particles drawn via a special shader.
@@ -131,9 +117,23 @@ AFAIK, the CK never should've produced records overrides with that quirk, but wh
 
 * DKHeaderView: Bug: If the total width of all columns is wider than the containing view, then you can resize a colum and enlarge it properly. However, attempting to shrink a column causes glitchy behavior: the column size shrinks by an unpredictable amount, and the table and header become visually desynched until you force the table rows to re-render (e.g. by changing your selection).
 
+### Dialogue/alias edge-case
+
+So it turns out, I thought ahead when implementing the editing of conditions: the QUST UI already communicates with `DovahKitCore` regarding changes to its quest stages or aliases, and the condition-editing UI and supporting backend structures are both designed to prefer working-copy data by default. This leaves safeguards for editing INFOs, though, because this means it's possible to:
+
+1. Begin editing a QUST.
+1. Add a new alias Foo to that QUST.
+1. Edit an INFO which is parented to the quest, and add conditions which refer to Foo.
+1. Commit changes to the INFO.
+1. Cancel changes to the QUST, such that Foo disappears and the INFO now has a dangling reference to an invalid alias ID.
+
+This generalizes to any forms that have an owning quest, as well as to conditions in *any* form that take quest stages or quest alias IDs as parameters. A half-remedy -- something to cover the case of dangling references to not-yet-committed quest edits -- would be to have all form-editing dialogs [for forms that have conditions] inform DovahKitCore on save, as to what quest stages and aliases their conditions refer to; and then when canceling changes to a quest, DovahKitCore can silently sever references to any to-be-cancelled stages and aliases. However, there are all sorts of ways to have dangling references to individual parts of forms, so it may perhaps be better to instead make long-term (i.e. post-launch) plans for a system akin to use info that handles references to individual pieces of data within a given form, be those quest aliases, quest stages, or perhaps other things like package data.
+
+I don't consider this a high-prio option because I'd be surprised if the Creation Kit handled this edge-case at all, but at some point I should probably at least check if they do (because if they do, then it's higher-prio for us to as well).
+
 ### QTabBar
 
-QTabBar in Qt 5 is *riddled* with bugs that are triggered by hiding tabs, and it's impossible to fix all of these without building complete replacements for both QTabBar and QTabWidget. Some of these bugs are critical (i.e. extremely visually disruptive to the user experience), so we should look into building those replacements that at some point. I have WIP replacement files in DKTabBarEx.h and DKTabWidgetEx.h but I've excluded them from the project until such time as they're complete.
+QTabBar in Qt 5 has some nasty bugs that are triggered by hiding tabs, and it's impossible to fix all of these without building complete replacements for both QTabBar and QTabWidget. Some of these bugs are critical (i.e. extremely visually disruptive to the user experience), so we should look into building those replacements that at some point. I have WIP replacement files in DKTabBarEx.h and DKTabWidgetEx.h but I've excluded them from the project until such time as they're complete. For now, we just disable tabs instead of hiding them (which is arguably the better UX anyway, but I hate not having the option to hide them).
 
 **BUG:** If tabs are hidden, then scrolling the tabbar with the mouse wheel can cause it to jump to a massively negative position, the result of a mistake at [this line](https://codebrowser.dev/qt5/qtbase/src/widgets/widgets/qtabbar.cpp.html#723).
 
