@@ -32,11 +32,15 @@ FormSubdialogQuestRefAlias::FormSubdialogQuestRefAlias(loaded_form_type& quest, 
    this->ui.packageOverrideListObserveCorpse->setAllowedFormType(dovah::form_type::formlist);
 
    static_assert(false, "TODO: Fill From: Specific Reference");
-   static_assert(false, "TODO: Fill From: Unique Actor");
-   static_assert(false, "TODO: Fill From: Location Alias");
-   static_assert(false, "TODO: Fill From: Location Alias: LocRefType");
+   static_assert(false, "TODO: Fill From: Create Reference: Difficulty");
+   static_assert(false, "TODO: Fill From: Create Reference: Verb");
+   make_reference_alias_combobox(quest, *this->ui.createAtSiblingReferenceAlias);
+   this->ui.fillFromUniqueActorBase->setAllowedFormType(dovah::form_type::actor_base);
+   make_location_alias_combobox(quest, *this->ui.fillFromLocationAlias);
+   this->ui.fillFromLocationRefType->setAllowedFormType(dovah::form_type::location_ref_type);
    this->ui.fillFromExtAliasQuest->setAllowedFormType(dovah::form_type::quest);
    static_assert(false, "TODO: Fill From: Create Reference");
+   static_assert(false, "TODO: Fill From: Create Reference: Difficulty");
    make_event_data_comboboxes(quest, *this->ui.findMatchingEventName, *this->ui.findMatchingEventData);
    make_reference_alias_combobox(quest, *this->ui.findMatchingNearAliasID);
    static_assert(false, "TODO: Fill From: Matching Reference: Near Alias: Near Type"); // always "Linked Ref Child"?
@@ -58,11 +62,20 @@ void FormSubdialogQuestRefAlias::load() {
       const auto flags = this->_data.alias.flags;
       this->ui.flagReserve->setChecked(flags & loaded_alias_type::flag::reserves_target);
       this->ui.flagOptional->setChecked(flags & loaded_alias_type::flag::optional);
-      this->ui.flagDisplaysText->setChecked(flags & loaded_alias_type::flag::uses_stored_text);
+      this->ui.flagEssential->setChecked(flags & loaded_alias_type::flag::make_essential);
+      this->ui.flagProtected->setChecked(flags & loaded_alias_type::flag::make_protected);
+      this->ui.flagQuestObject->setChecked(flags & loaded_alias_type::flag::quest_object);
+      //
       this->ui.flagAllowReuse->setChecked(flags & loaded_alias_type::flag::allow_reuse_in_quest);
+      this->ui.flagAllowDead->setChecked(flags & loaded_alias_type::flag::allow_dead);
+      this->ui.flagAllowDisabled->setChecked(flags & loaded_alias_type::flag::allow_disabled);
       this->ui.flagAllowReserved->setChecked(flags & loaded_alias_type::flag::allow_reserved);
-      this->ui.flagAllowCleared->setChecked(flags & loaded_alias_type::flag::allow_cleared);
-      static_assert(false, "TODO: Flags");
+      this->ui.flagAllowDestroyed->setChecked(flags & loaded_alias_type::flag::allow_destroyed);
+      //
+      this->ui.flagUseStoredText->setChecked(flags & loaded_alias_type::flag::uses_stored_text);
+      this->ui.flagStoreText->setChecked(flags & loaded_alias_type::flag::stores_text);
+      this->ui.flagInitiallyDisabled->setChecked(flags & loaded_alias_type::flag::initially_disabled);
+      this->ui.flagClearNameWhenRemoved->setChecked(flags & loaded_alias_type::flag::clear_name_when_removed);
    }
    this->ui.factions->pullStubs(this->_data.alias.factions);
    this->ui.keywords->pullStubs(this->_data.alias.keywords.forms);
@@ -82,21 +95,37 @@ void FormSubdialogQuestRefAlias::load() {
    {  // Fill type
       switch (this->_data.alias.fill_type) {
          using fill_type = decltype(this->_data.alias.fill_type);
-         static_assert(false, "TODO: Fill From: Specific Reference");
+
+         default:
+         case fill_type::preset_placed_reference:
+            this->ui.fillTypePredefined->setChecked(true);
+            this->ui.fillFromPredefined->setRef(this->_data.alias.fill_from_reference.get_form_stub());
+            break;
+
          static_assert(false, "TODO: Fill From: Unique Actor");
-         static_assert(false, "TODO: Fill From: Location Alias");
-         static_assert(false, "TODO: Fill From: Location Alias: LocRefType");
-         static_assert(false, "TODO: Fill From: Create Reference");
-         static_assert(false, "TODO: Fill From: Matching Reference: Near Alias: Near Type"); // always "Linked Ref Child"?
 
          case fill_type::other_alias_in_same_quest:
-            this->ui.fillTypeSiblingAlias->setChecked(true);
+            this->ui.fillTypeLocRefType->setChecked(true);
             set_combobox_to_alias(
-               *this->ui.fillFromSiblingAlias,
+               *this->ui.fillFromLocationAlias,
                this->_data.alias.fill_from_alias.alias
             );
-            this->ui.fillFromSiblingAliasParentKeyword->setFormStub(this->_data.alias.fill_from_location_keyword.get_form_stub());
+            static_assert(false, "TODO: Make fillFromLocationRefType a DKFormPicker, not a QComboBox");
+            this->ui.fillFromLocationRefType->setFormStub(this->_data.alias.fill_loc_ref_type.get_form_stub());
             break;
+
+         case fill_type::other_alias_in_other_quest:
+            this->ui.fillTypeExternalAlias->setChecked(true);
+            this->ui.fillFromExtAliasQuest->setFormStub(this->_data.alias.fill_from_alias.quest.get_form_stub());
+            this->_update_ext_alias_combobox();
+            set_combobox_to_alias(*this->ui.fillFromExtAliasID, this->_data.alias.fill_from_alias.alias);
+            break;
+
+         static_assert(false, "TODO: Fill From: Create Reference");
+         static_assert(false, "TODO: Fill From: Create Reference: Difficulty");
+         static_assert(false, "TODO: Fill From: Create Reference: Verb");
+         static_assert(false, "TODO: Fill From: Create Reference: At Sibling Ref Alias");
+
          case fill_type::from_event:
             this->ui.fillTypeMatching->setChecked(true);
             this->ui.findMatchingModeEvent->setChecked(true);
@@ -112,20 +141,14 @@ void FormSubdialogQuestRefAlias::load() {
                }
             }
             break;
-         case fill_type::other_alias_in_other_quest:
-            this->ui.fillTypeExternalAlias->setChecked(true);
-            this->ui.fillFromExtAliasQuest->setFormStub(this->_data.alias.fill_from_alias.quest.get_form_stub());
-            this->_update_ext_alias_combobox();
-            set_combobox_to_alias(*this->ui.fillFromExtAliasName, this->_data.alias.fill_from_alias.alias);
-            break;
-         default:
-         case fill_type::preset_placed_reference:
-            this->ui.fillTypePredefined->setChecked(true);
-            this->ui.fillFromPredefined->setFormStub(this->_data.alias.fill_from_reference.get_form_stub());
-            break;
+
          case fill_type::find_matching_reference:
             this->ui.fillTypeMatching->setChecked(true);
             this->ui.findMatchingModeEvent->setChecked(false);
+            static_assert(false, "TODO: Fill From: Matching Reference: In Loaded Area");
+            static_assert(false, "TODO: Fill From: Matching Reference: In Loaded Area: Closest");
+            static_assert(false, "TODO: Fill From: Matching Reference: Near Alias");
+            static_assert(false, "TODO: Fill From: Matching Reference: Near Alias: Near Type"); // always "Linked Ref Child"?
             break;
       }
    }
@@ -140,16 +163,26 @@ void FormSubdialogQuestRefAlias::save() {
       auto& flags = this->_data.alias.flags;
       cobb::edit_bit(flags, loaded_alias_type::flag::reserves_target, this->ui.flagReserve->isChecked());
       cobb::edit_bit(flags, loaded_alias_type::flag::optional, this->ui.flagOptional->isChecked());
-      cobb::edit_bit(flags, loaded_alias_type::flag::uses_stored_text, this->ui.flagDisplaysText->isChecked());
+      cobb::edit_bit(flags, loaded_alias_type::flag::make_essential, this->ui.flagEssential->isChecked());
+      cobb::edit_bit(flags, loaded_alias_type::flag::make_protected, this->ui.flagProtected->isChecked());
+      cobb::edit_bit(flags, loaded_alias_type::flag::quest_object, this->ui.flagQuestObject->isChecked());
+      //
       cobb::edit_bit(flags, loaded_alias_type::flag::allow_reuse_in_quest, this->ui.flagAllowReuse->isChecked());
+      cobb::edit_bit(flags, loaded_alias_type::flag::allow_dead, this->ui.flagAllowDead->isChecked());
+      cobb::edit_bit(flags, loaded_alias_type::flag::allow_disabled, this->ui.flagAllowDisabled->isChecked());
       cobb::edit_bit(flags, loaded_alias_type::flag::allow_reserved, this->ui.flagAllowReserved->isChecked());
-      cobb::edit_bit(flags, loaded_alias_type::flag::allow_cleared, this->ui.flagAllowCleared->isChecked());
+      cobb::edit_bit(flags, loaded_alias_type::flag::allow_destroyed, this->ui.flagAllowDestroyed->isChecked());
+      //
+      cobb::edit_bit(flags, loaded_alias_type::flag::uses_stored_text, this->ui.flagUseStoredText->isChecked());
+      cobb::edit_bit(flags, loaded_alias_type::flag::stores_text, this->ui.flagStoreText->isChecked());
+      cobb::edit_bit(flags, loaded_alias_type::flag::initially_disabled, this->ui.flagInitiallyDisabled->isChecked());
+      cobb::edit_bit(flags, loaded_alias_type::flag::clear_name_when_removed, this->ui.flagClearNameWhenRemoved->isChecked());
    }
    this->_data.alias.force_into_alias_id = this->ui.forceInto->currentData().toInt();
-   this->ui.factions->commitStubs(this->_data.alias.factions);
-   this->ui.keywords->commitStubs(this->_data.alias.keywords.forms);
-   this->ui.spells->commitStubs(this->_data.alias.spells);
-   this->ui.packages->commitStubs(this->_data.alias.packages);
+   this->ui.factions->commitStubs(this->_data.alias.factions, this->_data.quest);
+   this->ui.keywords->commitStubs(this->_data.alias.keywords.forms, this->_data.quest);
+   this->ui.spells->commitStubs(this->_data.alias.spells, this->_data.quest);
+   this->ui.packages->commitStubs(this->_data.alias.packages, this->_data.quest);
    this->_data.alias.package_override_lists.combat.set(form, this->ui.packageOverrideListCombat->formStub());
    this->_data.alias.package_override_lists.guard_warn.set(form, this->ui.packageOverrideListGuardWarn->formStub());
    this->_data.alias.package_override_lists.spectator.set(form, this->ui.packageOverrideListSpectator->formStub());
@@ -159,26 +192,37 @@ void FormSubdialogQuestRefAlias::save() {
    using fill_type = decltype(this->_data.alias.fill_type);
 
    auto& form = this->_data.quest;
-   if (this->ui.fillTypeExternalAlias->isChecked()) {
+   if (this->ui.fillTypePredefined->isChecked()) {
+      this->_data.alias.fill_type = fill_type::preset_placed_reference;
+      this->_data.alias.fill_from_reference.set(form, this->ui.fillFromPredefined->ref());
+   } else if (this->ui.fillTypeUniqueActor->isChecked()) {
+      static_assert(false, "TODO: Fill From: Unique Actor");
+   } else if (this->ui.fillTypeLocRefType->isChecked()) {
+      this->_data.alias.fill_type = fill_type::other_alias_in_same_quest;
+      this->_data.alias.fill_from_alias.alias = this->ui.fillFromLocationAlias->currentData().toInt();
+      this->_data.alias.fill_loc_ref_type.set(form, this->ui.fillFromLocationRefType->formStub());
+   } else if (this->ui.fillTypeExternalAlias->isChecked()) {
       this->_data.alias.fill_type = fill_type::other_alias_in_other_quest;
       this->_data.alias.fill_from_alias.quest.set(form, this->ui.fillFromExtAliasQuest->formStub());
-      this->_data.alias.fill_from_alias.alias = this->ui.fillFromExtAliasName->currentData().toInt();
+      this->_data.alias.fill_from_alias.alias = this->ui.fillFromExtAliasID->currentData().toInt();
+   } else if (this->ui.fillTypeCreate->isChecked()) {
+      static_assert(false, "TODO: Fill From: Create Reference");
+      static_assert(false, "TODO: Fill From: Create Reference: Difficulty");
+      static_assert(false, "TODO: Fill From: Create Reference: Verb");
+      static_assert(false, "TODO: Fill From: Create Reference: At Sibling Ref Alias");
    } else if (this->ui.fillTypeMatching->isChecked()) {
-      if (this->ui.findMatchingFlagEvent->isChecked()) {
+      if (this->ui.findMatchingModeEvent->isChecked()) {
          this->_data.alias.fill_type = fill_type::from_event;
          this->_data.alias.fill_from_event.code   = form.event;
          this->_data.alias.fill_from_event.member = this->ui.findMatchingEventData->currentData().toInt();
       } else {
          this->_data.alias.fill_type = fill_type::find_matching_reference;
          this->_data.alias.fill_from_event = {};
+         static_assert(false, "TODO: Fill From: Matching Reference: In Loaded Area");
+         static_assert(false, "TODO: Fill From: Matching Reference: In Loaded Area: Closest");
+         static_assert(false, "TODO: Fill From: Matching Reference: Near Alias");
+         static_assert(false, "TODO: Fill From: Matching Reference: Near Alias: Near Type");
       }
-   } else if (this->ui.fillTypePredefined->isChecked()) {
-      this->_data.alias.fill_type = fill_type::preset_location;
-      this->_data.alias.fill_from_location.set(form, this->ui.fillFromPredefined->formStub());
-   } else if (this->ui.fillTypeSiblingAlias->isChecked()) {
-      this->_data.alias.fill_type = fill_type::other_alias_in_same_quest;
-      this->_data.alias.fill_from_alias.alias = this->ui.fillFromSiblingAlias->currentData().toInt();
-      this->_data.alias.fill_from_location_keyword.set(form, this->ui.fillFromSiblingAliasParentKeyword->formStub());
    }
    this->ui.findMatchingConditions->exportTo(this->_data.quest, this->_data.alias.conditions);
    this->ui.scriptListPane->commit();
