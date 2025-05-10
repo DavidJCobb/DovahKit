@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormSubdialogQuestRefAlias</class>
  <widget class="QDialog" name="FormSubdialogQuestRefAlias">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>981</width>
+    <height>941</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Reference Alias</string>
   </property>
@@ -552,9 +560,6 @@
          </item>
         </layout>
        </item>
-       <item row="2" column="4">
-        <widget class="QComboBox" name="fillFromLocationRefType"/>
-       </item>
        <item row="6" column="4">
         <widget class="QComboBox" name="createAtSiblingReferenceAlias">
          <property name="whatsThis">
@@ -740,6 +745,9 @@
        </item>
        <item row="5" column="1" colspan="2">
         <widget class="DKFormPicker" name="fillFromExtAliasQuest"/>
+       </item>
+       <item row="2" column="4">
+        <widget class="DKFormPicker" name="fillFromLocationRefType"/>
        </item>
       </layout>
      </widget>

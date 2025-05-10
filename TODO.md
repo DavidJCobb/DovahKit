@@ -39,8 +39,7 @@ I was in the middle of working on scene editing at the time I switched to other 
   * The backend is vulnerable to data integrity issues. We only write subrecords related to an alias's current fill type, but we retain data for all fill types in memory and thus in use info. If the frontend doesn't clear data for one fill type before switching the alias to another fill type, then on save, we'll have "phantom uses."
 
   We should be using `std::variant` for the alias's fill type and parameters. This is somewhat complicated by the need for subclassing, but since the fill type can vary by subclass (reference aliases versus location aliases), it would arguably be more appropriate to define it exclusively on the subclasses anyway.
-  * The dialog for editing reference aliases isn't fully wired together yet.
-  * Do we have a UI for editing location aliases yet?
+  * Similarly: when a reference alias is set to create a reference, it must be given a target alias to create the new ref near; and it must be told whether to create the new ref *at* the target alias or (if the base form is carryable) *in* the target alias. The game stores the "at/in" flag as the most-significant bit of the target alias ID. Currently, our UI code handles this matter, but we really should handle that within the backend if possible (i.e. by separating this into its own bool in memory and doing the conversion on record load/save).
 
 ## Immediate next steps
 
