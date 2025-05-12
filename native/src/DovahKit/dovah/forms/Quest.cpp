@@ -38,13 +38,11 @@ namespace dovah::loaded_forms {
       uint32_t required  = _signature_for_alias_type(this->type);
       assert(required && "Alias::load doesn't know what subrecord to check for. Did someone try to implement a new alias type without updating _signature_for_alias_type?");
       assert(subrecord.signature() == required && "Alias::load was asked to handle the wrong subrecord. How did this happen?");
-      //
+
       subrecord.read(this->id);
       if (!record.next_subrecord())
          return;
-      //
-      alias_id_t external_alias = none_id; // ALEA
-      alias_id_t internal_alias = none_id; // ALFA
+
       for (; subrecord.exists() && subrecord.signature() != 'ALED'; record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'ALID':
@@ -62,37 +60,11 @@ namespace dovah::loaded_forms {
             case 'ALFI':
                subrecord.read(this->force_into_alias_id);
                break;
-               //
-            case 'ALEA':
-               subrecord.read(external_alias);
-               break;
-            case 'ALFA':
-               subrecord.read(internal_alias);
-               break;
-            case 'ALEQ':
-               subrecord.read(this->fill_from_alias.quest);
-               intfc.warn_if_ref_is_wrong_type(this->fill_from_alias.quest, form_type::quest, subrecord.signature());
-               this->fill_type = fill_type_t::other_alias_in_other_quest;
-               break;
-            case 'ALFE':
-               subrecord.read_signature(this->fill_from_event.code);
-               this->fill_type = fill_type_t::from_event;
-               break;
-            case 'ALFD':
-               subrecord.read_signature(this->fill_from_event.member);
-               if (this->fill_from_event.code == story_event_code::undefined)
-                  this->fill_from_event.member = -1;
-               else {
-                  //
-                  // TODO: The value undergoes further checks? See Skyrim Classic code from 0x0054E291.
-                  //
-               }
-               break;
-               //
+
             case 'CTDA':
                this->conditions.read_next(subrecord.get_containing_record(), intfc);
                break;
-               //
+
             default:
                if (!this->_load_impl(subrecord, intfc)) {
                   //
@@ -102,63 +74,175 @@ namespace dovah::loaded_forms {
                break;
          }
       }
-      if (this->fill_type == fill_type_t::other_alias_in_other_quest)
-         this->fill_from_alias.alias = external_alias;
-      else if (this->fill_type == fill_type_t::other_alias_in_same_quest)
-         this->fill_from_alias.alias = internal_alias;
    }
    bool LocationAlias::_load_impl(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       switch (subrecord.signature()) {
-         case 'ALFL':
-            if (subrecord.read(this->fill_from_location))
-               this->fill_type = fill_type_t::preset_location;
-            return true;
-         case 'KNAM': // ALFA+KNAM
-            subrecord.read(this->fill_from_location_keyword);
-            return true;
+         #pragma region Fill params
+            #pragma region Specific Location
+               case 'ALFL':
+                  {
+                     auto& data = this->fill_params.emplace<structs::alias_fill_params::loc::preassigned>();
+                     subrecord.read(data.location);
+                     intfc.warn_if_ref_is_wrong_type(data.location, form_type::location, subrecord.signature());
+                  }
+                  break;
+            #pragma endregion
+            #pragma region Reference Alias Location
+               case 'ALFA':
+                  {
+                     auto& data = this->fill_params.emplace<structs::alias_fill_params::loc::at_reference_alias>();
+                     subrecord.read(data.alias);
+                  }
+                  break;
+               case 'KNAM':
+                  if (auto* data = std::get_if<structs::alias_fill_params::loc::at_reference_alias>(&this->fill_params)) {
+                     subrecord.read(data->keyword);
+                     intfc.warn_if_ref_is_wrong_type(data->keyword, form_type::keyword, subrecord.signature());
+                  }
+                  break;
+            #pragma endregion
+            #pragma region External Alias Reference
+               case 'ALEQ':
+                  {
+                     auto& data = this->fill_params.emplace<structs::alias_fill_params::copy_external_alias>();
+                     subrecord.read(data.quest);
+                     intfc.warn_if_ref_is_wrong_type(data.quest, form_type::quest, subrecord.signature());
+                  }
+                  break;
+               case 'ALEA':
+                  if (auto* data = std::get_if<structs::alias_fill_params::copy_external_alias>(&this->fill_params)) {
+                     subrecord.read(data->alias);
+                  }
+                  break;
+            #pragma endregion
+            #pragma region Find Matching Location: From Event
+               case 'ALFE':
+                  {
+                     auto& data = this->fill_params.emplace<structs::alias_fill_params::loc::find>();
+                     auto& ev   = data.from_event.emplace();
+                     subrecord.read(ev.code);
+                  }
+                  break;
+               case 'ALFD':
+                  if (auto* data = std::get_if<structs::alias_fill_params::loc::find>(&this->fill_params)) {
+                     auto& ev = data->from_event;
+                     if (ev.has_value()) {
+                        subrecord.read((*ev).member);
+                     }
+                  }
+                  break;
+            #pragma endregion
+         #pragma endregion
       }
       return false;
    }
    bool ReferenceAlias::_load_impl(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       form_reference_t formID;
       switch (subrecord.signature()) {
-         case 'ALRT': // ALFA+ALRT
-            subrecord.read(this->fill_loc_ref_type);
-            intfc.warn_if_ref_is_wrong_type(this->fill_loc_ref_type, form_type::location_ref_type, subrecord.signature());
-            break;
-         case 'ALFR':
-            if (subrecord.read(this->fill_from_reference))
-               this->fill_type = fill_type_t::preset_placed_reference;
-            break;
+         #pragma region Fill params
+            #pragma region Specific Reference
+               case 'ALFR':
+                  {
+                     auto& data = this->fill_params.emplace<structs::alias_fill_params::ref::preassigned>();
+                     subrecord.read(data.ref);
+                     //intfc.warn_if_ref_is_wrong_type(data.actor_base, form_type::actor_base, subrecord.signature());
+                  }
+                  break;
+            #pragma endregion
+            #pragma region Unique Actor
+               case 'ALUA':
+                  {
+                     auto& data = this->fill_params.emplace<structs::alias_fill_params::ref::unique_actor>();
+                     subrecord.read(data.actor_base);
+                     intfc.warn_if_ref_is_wrong_type(data.actor_base, form_type::actor_base, subrecord.signature());
+                  }
+                  break;
+            #pragma endregion
+            #pragma region Location Alias Reference
+               case 'ALFA':
+                  {
+                     auto& data = this->fill_params.emplace<structs::alias_fill_params::ref::at_location_alias>();
+                     subrecord.read(data.alias);
+                  }
+                  break;
+               case 'ALRT':
+                  if (auto* data = std::get_if<structs::alias_fill_params::ref::at_location_alias>(&this->fill_params)) {
+                     subrecord.read(data->loc_ref_type);
+                     intfc.warn_if_ref_is_wrong_type(data->loc_ref_type, form_type::location_ref_type, subrecord.signature());
+                  }
+                  break;
+            #pragma endregion
+            #pragma region External Alias Reference
+               case 'ALEQ':
+                  {
+                     auto& data = this->fill_params.emplace<structs::alias_fill_params::copy_external_alias>();
+                     subrecord.read(data.quest);
+                     intfc.warn_if_ref_is_wrong_type(data.quest, form_type::quest, subrecord.signature());
+                  }
+                  break;
+               case 'ALEA':
+                  if (auto* data = std::get_if<structs::alias_fill_params::copy_external_alias>(&this->fill_params)) {
+                     subrecord.read(data->alias);
+                  }
+                  break;
+            #pragma endregion
+            #pragma region Create Reference to Object
+               case 'ALCO':
+                  {
+                     auto& data = this->fill_params.emplace<structs::alias_fill_params::ref::create>();
+                     subrecord.read(data.base_form);
+                     //intfc.warn_if_ref_is_wrong_type(data.base_form, form_type::actor_base, subrecord.signature());
+                  }
+                  break;
+               case 'ALCA':
+                  if (auto* data = std::get_if<structs::alias_fill_params::ref::create>(&this->fill_params)) {
+                     alias_id_t coalesced;
+                     if (subrecord.read(coalesced) && coalesced != -1) {
+                        data->at_reference.alias = coalesced & 0x7FFFFFFF;
+                        data->at_reference.place_in_inventory = (coalesced >> 31) != 0;
+                     } else {
+                        data->at_reference.alias = -1;
+                        data->at_reference.place_in_inventory = false;
+                     }
+                  }
+                  break;
+               case 'ALCL':
+                  if (auto* data = std::get_if<structs::alias_fill_params::ref::create>(&this->fill_params)) {
+                     subrecord.read(data->difficulty);
+                  }
+                  break;
+            #pragma endregion
+            #pragma region Find Matching Reference: Near Alias
+               case 'ALNA':
+                  {
+                     auto& data = this->fill_params.emplace<structs::alias_fill_params::ref::find_near_alias>();
+                     subrecord.read(data.alias);
+                  }
+                  break;
+               case 'ALNT':
+                  if (auto* data = std::get_if<structs::alias_fill_params::ref::find_near_alias>(&this->fill_params)) {
+                     subrecord.read(data->near_type);
+                  }
+                  break;
+            #pragma endregion
+            #pragma region Find Matching Reference: From Event
+               case 'ALFE':
+                  {
+                     auto& data = this->fill_params.emplace<structs::alias_fill_params::ref::find_from_event>();
+                     subrecord.read(data.code);
+                  }
+                  break;
+               case 'ALFD':
+                  if (auto* data = std::get_if<structs::alias_fill_params::ref::find_from_event>(&this->fill_params)) {
+                     subrecord.read(data->member);
+                  }
+                  break;
+            #pragma endregion
+         #pragma endregion
+
          case 'QNAM':
             this->hidden_flags |= 4;
             break;
-            //
-         case 'ALCO':
-            this->fill_type = fill_type_t::create_object;
-            subrecord.read(this->create_object_of_type);
-            break;
-         case 'ALCA':
-            if (this->fill_type == fill_type_t::create_object)
-               subrecord.read(this->create_object_at_alias);
-            break;
-         case 'ALCL':
-            if (this->fill_type == fill_type_t::create_object)
-               subrecord.read(this->create_object_of_level);
-            break;
-         case 'ALNA':
-            this->fill_type = fill_type_t::find_matching_reference;
-            subrecord.read(this->fill_near_alias);
-            break;
-         case 'ALNT':
-            if (this->fill_type == fill_type_t::find_matching_reference)
-               subrecord.read(this->fill_near_alias_type);
-            break;
-         case 'ALUA':
-            this->fill_type = fill_type_t::preset_unique_actor;
-            subrecord.read(this->fill_from_unique_actor_base);
-            break;
-            //
          case 'ALPC':
             if (subrecord.read(formID)) {
                this->packages.push_back(formID);
@@ -270,48 +354,138 @@ namespace dovah::loaded_forms {
       }
       uib.add_outbound_reference(fill_from_alias_quest_id);
       if (type == alias_type::reference) {
+         switch (state_reference.fill_params.which) {
+            case 0:
+               uib.add_outbound_reference(state_reference.fill_params.preassigned);
+               break;
+            case 1:
+               uib.add_outbound_reference(state_reference.fill_params.unique_actor);
+               break;
+            case 2:
+               uib.add_outbound_reference(state_reference.fill_params.loc_ref_type);
+               break;
+            case 3:
+               uib.add_outbound_reference(state_reference.fill_params.external_quest);
+               break;
+            case 4:
+               uib.add_outbound_reference(state_reference.fill_params.create_base_form);
+               break;
+         }
          uib.add_outbound_reference(state_reference.package_override_lists.spectator);
          uib.add_outbound_reference(state_reference.package_override_lists.observe_corpse);
          uib.add_outbound_reference(state_reference.package_override_lists.guard_warn);
          uib.add_outbound_reference(state_reference.package_override_lists.combat);
          uib.add_outbound_reference(state_reference.display_name);
          uib.add_outbound_reference(state_reference.additional_voicetype);
-         uib.add_outbound_reference(state_reference.fill_loc_ref_type);
-         uib.add_outbound_reference(state_reference.fill_from_reference);
          uib.add_outbound_reference(state_reference.create_object_of_type);
-         uib.add_outbound_reference(state_reference.fill_from_unique_actor_base);
       } else if (type == alias_type::location) {
-         uib.add_outbound_reference(state_location.fill_from_location);
-         uib.add_outbound_reference(state_location.fill_from_location_keyword);
+         switch (state_location.fill_params.which) {
+            case 0:
+               uib.add_outbound_reference(state_location.fill_params.preassigned);
+               break;
+            case 1:
+               uib.add_outbound_reference(state_location.fill_params.keyword);
+               break;
+            case 2:
+               uib.add_outbound_reference(state_location.fill_params.external_quest);
+               break;
+         }
       }
       //
       return id;
    }
    /*static*/ void LocationAlias::generate_use_info_for_subrecord(_use_info_field_state& state, tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
       switch (subrecord.signature()) {
-         case 'ALFL':
-            subrecord.read(state.fill_from_location);
-            return;
-         case 'KNAM': // ALFA+KNAM
-            subrecord.read(state.fill_from_location_keyword);
-            return;
+         #pragma region Fill params
+            #pragma region Specific Location
+               case 'ALFL':
+                  state.fill_params.which = 0;
+                  subrecord.read(state.fill_params.preassigned);
+                  break;
+            #pragma endregion
+            #pragma region Reference Alias Location
+               case 'ALFA':
+                  state.fill_params.which = 1;
+                  break;
+               case 'KNAM':
+                  subrecord.read(state.fill_params.keyword);
+                  break;
+            #pragma endregion
+            #pragma region External Alias Reference
+               case 'ALEQ':
+                  state.fill_params.which = 2;
+                  subrecord.read(state.fill_params.external_quest);
+                  break;
+               case 'ALEA':
+                  break;
+            #pragma endregion
+            #pragma region Find Matching Location: From Event
+               case 'ALFE':
+                  state.fill_params.which = 3;
+                  break;
+               case 'ALFD':
+                  break;
+            #pragma endregion
+         #pragma endregion
       }
    }
    /*static*/ void ReferenceAlias::generate_use_info_for_subrecord(_use_info_field_state& state, tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
       form_id_t formID;
       switch (subrecord.signature()) {
-         case 'ALRT': // ALFA+ALRT
-            subrecord.read(state.fill_loc_ref_type);
-            return;
-         case 'ALFR':
-            subrecord.read(state.fill_from_reference);
-            return;
-         case 'ALCO':
-            subrecord.read(state.create_object_of_type);
-            break;
-         case 'ALUA':
-            subrecord.read(state.fill_from_unique_actor_base);
-            break;
+         #pragma region Fill params
+            #pragma region Specific Reference
+               case 'ALFR':
+                  state.fill_params.which = 0;
+                  subrecord.read(state.fill_params.preassigned);
+                  break;
+            #pragma endregion
+            #pragma region Unique Actor
+               case 'ALUA':
+                  state.fill_params.which = 1;
+                  subrecord.read(state.fill_params.unique_actor);
+                  break;
+            #pragma endregion
+            #pragma region Location Alias Reference
+               case 'ALFA':
+                  state.fill_params.which = 2;
+                  break;
+               case 'ALRT':
+                  subrecord.read(state.fill_params.loc_ref_type);
+                  break;
+            #pragma endregion
+            #pragma region External Alias Reference
+               case 'ALEQ':
+                  state.fill_params.which = 3;
+                  subrecord.read(state.fill_params.external_quest);
+                  break;
+               case 'ALEA':
+                  break;
+            #pragma endregion
+            #pragma region Create Reference to Object
+               case 'ALCO':
+                  state.fill_params.which = 4;
+                  subrecord.read(state.fill_params.create_base_form);
+                  break;
+               case 'ALCA':
+                  break;
+               case 'ALCL':
+                  break;
+            #pragma endregion
+            #pragma region Find Matching Reference: Near Alias
+               case 'ALNA':
+                  state.fill_params.which = 5;
+                  break;
+               case 'ALNT':
+            #pragma endregion
+            #pragma region Find Matching Reference: From Event
+               case 'ALFE':
+                  state.fill_params.which = 6;
+                  break;
+               case 'ALFD':
+                  break;
+            #pragma endregion
+         #pragma endregion
+
          case 'ALPC':
          case 'ALFC':
          case 'ALSP':
@@ -355,9 +529,14 @@ namespace dovah::loaded_forms {
       auto& ALID = record.open_next_subrecord('ALID');
       ALID.write(this->name);
       ALID.close();
-      auto& FNAM = record.open_next_subrecord('FNAM');
-      FNAM.write(this->flags);
-      FNAM.close();
+      {
+         uint32_t flags = this->flags;
+         this->_adjust_flags_for_save(flags);
+
+         auto& FNAM = record.open_next_subrecord('FNAM');
+         FNAM.write(flags);
+         FNAM.close();
+      }
       if (this->hidden_flags) {
          if (this->hidden_flags & 1)
             record.open_next_subrecord('BNAM').close();
@@ -369,41 +548,7 @@ namespace dovah::loaded_forms {
          ALFI.write(this->force_into_alias_id);
          ALFI.close();
       }
-      bool fully_handled = true;
-      switch (this->fill_type) {
-         case fill_type_t::none:
-            break;
-         case fill_type_t::other_alias_in_same_quest:
-            {
-               auto& ALFA = record.open_next_subrecord('ALFA');
-               ALFA.write(this->fill_from_alias.alias);
-               ALFA.close();
-               fully_handled = false; // next subrecord is written by the specific alias type
-            }
-            break;
-         case fill_type_t::from_event:
-            {
-               auto& ALFE = record.open_next_subrecord('ALFE');
-               ALFE.write_signature(this->fill_from_event.code);
-               ALFE.close();
-               auto& ALFD = record.open_next_subrecord('ALFD');
-               ALFD.write_signature(this->fill_from_event.member);
-               ALFD.close();
-            }
-            break;
-         case fill_type_t::other_alias_in_other_quest:
-            {
-               record.write_formID_subrecord('ALEQ', this->fill_from_alias.quest);
-               auto& ALEA = record.open_next_subrecord('ALEA');
-               ALEA.write(this->fill_from_alias.alias);
-               ALEA.close();
-            }
-            break;
-         default:
-            fully_handled = false;
-            break;
-      }
-      if (!this->_save_fill_impl(record, intfc) && !fully_handled) {
+      if (!this->_save_fill_impl(record, intfc)) {
          //
          // Unrecognized type.
          //
@@ -416,62 +561,119 @@ namespace dovah::loaded_forms {
       record.open_next_subrecord('ALED').close(); // Alias end marker.
    }
    //
+   void LocationAlias::_adjust_flags_for_save(uint32_t& flags) {
+   }
    bool LocationAlias::_save_fill_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
-      switch (this->fill_type) {
-         case fill_type_t::preset_location:
-            record.write_formID_subrecord('ALFL', this->fill_from_location);
-            return true;
+      if (const auto* data = std::get_if<structs::alias_fill_params::loc::preassigned>(&this->fill_params)) {
+         record.write_formID_subrecord('ALFL', data->location);
+      } else if (const auto* data = std::get_if<structs::alias_fill_params::loc::at_reference_alias>(&this->fill_params)) {
+         {
+            auto& ALFA = record.open_next_subrecord('ALFA');
+            ALFA.write(data->alias);
+            ALFA.close();
+         }
+         record.write_formID_subrecord('KNAM', data->keyword);
+      } else if (const auto* data = std::get_if<structs::alias_fill_params::copy_external_alias>(&this->fill_params)) {
+         record.write_formID_subrecord('ALEQ', data->quest);
+         {
+            auto& ALFA = record.open_next_subrecord('ALEA');
+            ALFA.write(data->alias);
+            ALFA.close();
+         }
+      } else if (const auto* data = std::get_if<structs::alias_fill_params::loc::find>(&this->fill_params)) {
+         if (data->from_event.has_value()) {
+            auto& ev = *data->from_event;
+            auto& ALFE = record.open_next_subrecord('ALFE');
+            ALFE.write_signature(ev.code);
+            ALFE.close();
+            auto& ALFD = record.open_next_subrecord('ALFD');
+            ALFD.write_signature(ev.member);
+            ALFD.close();
+         } else {
             //
-         case fill_type_t::other_alias_in_same_quest:
+            // The CK doesn't write anything in this case.
             //
-            // This is a special case: the base Alias class saved ALFA, but we need to also save KNAM.
-            //
-            record.write_formID_subrecord('KNAM', this->fill_from_location_keyword, true);
-            return true;
+         }
+      } else {
+         return false;
       }
-      return false;
+      return true;
    }
    void LocationAlias::_save_body_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
    }
    //
-   bool ReferenceAlias::_save_fill_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
-      switch (this->fill_type) {
-         case fill_type_t::create_object:
-            {
-               record.write_formID_subrecord('ALCO', this->create_object_of_type);
-               auto& ALCA = record.open_next_subrecord('ALCA');
-               ALCA.write(this->create_object_at_alias);
-               ALCA.close();
-               auto& ALCL = record.open_next_subrecord('ALCL');
-               ALCL.write(this->create_object_of_level);
-               ALCL.close();
-            }
-            return true;
-         case fill_type_t::preset_placed_reference:
-            record.write_formID_subrecord('ALFR', this->fill_from_reference);
-            return true;
-         case fill_type_t::find_matching_reference:
-            {
-               auto& ALNA = record.open_next_subrecord('ALNA');
-               ALNA.write(this->fill_near_alias);
-               ALNA.close();
-               auto& ALNT = record.open_next_subrecord('ALNT');
-               ALNT.write(this->fill_near_alias_type);
-               ALNT.close();
-            }
-            return true;
-         case fill_type_t::preset_unique_actor:
-            record.write_formID_subrecord('ALUA', this->fill_from_unique_actor_base);
-            return true;
-            //
-         case fill_type_t::other_alias_in_same_quest:
-            //
-            // This is a special case: the base Alias class saved ALFA, but we need to also save ALRT.
-            //
-            record.write_formID_subrecord('ALRT', this->fill_loc_ref_type);
-            return true;
+   void ReferenceAlias::_adjust_flags_for_save(uint32_t& flags) {
+      if (const auto* data = std::get_if<structs::alias_fill_params::ref::find_in_loaded_area>(&this->fill_params)) {
+         flags |= flag::limit_to_loaded_area;
+         if (data->closest) {
+            flags |= flag::use_closest;
+         } else {
+            flags &= ~flag::use_closest;
+         }
+      } else {
+         flags &= ~flag::limit_to_loaded_area;
+         flags &= ~flag::use_closest;
       }
-      return false;
+   }
+   bool ReferenceAlias::_save_fill_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
+      if (const auto* data = std::get_if<structs::alias_fill_params::ref::preassigned>(&this->fill_params)) {
+         record.write_formID_subrecord('ALFR', data->ref);
+      } else if (const auto* data = std::get_if<structs::alias_fill_params::ref::unique_actor>(&this->fill_params)) {
+         record.write_formID_subrecord('ALUA', data->actor_base);
+      } else if (const auto* data = std::get_if<structs::alias_fill_params::ref::at_location_alias>(&this->fill_params)) {
+         {
+            auto& ALFA = record.open_next_subrecord('ALFA');
+            ALFA.write(data->alias);
+            ALFA.close();
+         }
+         record.write_formID_subrecord('ALRT', data->loc_ref_type);
+      } else if (const auto* data = std::get_if<structs::alias_fill_params::copy_external_alias>(&this->fill_params)) {
+         record.write_formID_subrecord('ALEQ', data->quest);
+         {
+            auto& ALFA = record.open_next_subrecord('ALEA');
+            ALFA.write(data->alias);
+            ALFA.close();
+         }
+      } else if (const auto* data = std::get_if<structs::alias_fill_params::ref::find_in_loaded_area>(&this->fill_params)) {
+         //
+         // Handled by adjusting flags on save.
+         //
+      } else if (const auto* data = std::get_if<structs::alias_fill_params::ref::create>(&this->fill_params)) {
+         record.write_formID_subrecord('ALCO', data->base_form);
+         {
+            uint32_t coalesced = data->at_reference.alias;
+            coalesced &= 0x7FFFFFFF;
+            if (data->at_reference.place_in_inventory)
+               coalesced |= (1 << 31);
+
+            auto& ALCA = record.open_next_subrecord('ALCA');
+            ALCA.write(coalesced);
+            ALCA.close();
+         }
+         {
+            auto& ALCL = record.open_next_subrecord('ALCL');
+            ALCL.write(data->difficulty);
+            ALCL.close();
+         }
+      } else if (const auto* data = std::get_if<structs::alias_fill_params::ref::find_from_event>(&this->fill_params)) {
+         auto& ev = *data;
+         auto& ALFE = record.open_next_subrecord('ALFE');
+         ALFE.write_signature(ev.code);
+         ALFE.close();
+         auto& ALFD = record.open_next_subrecord('ALFD');
+         ALFD.write_signature(ev.member);
+         ALFD.close();
+      } else if (const auto* data = std::get_if<structs::alias_fill_params::ref::find_near_alias>(&this->fill_params)) {
+         auto& ALNA = record.open_next_subrecord('ALNA');
+         ALNA.write_signature(data->alias);
+         ALNA.close();
+         auto& ALNT = record.open_next_subrecord('ALNT');
+         ALNT.write_signature(data->near_type);
+         ALNT.close();
+      } else {
+         return false;
+      }
+      return true;
    }
    void ReferenceAlias::_save_body_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->keywords.save(record, intfc);
@@ -494,7 +696,6 @@ namespace dovah::loaded_forms {
    }
 
    void Alias::sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept {
-      this->fill_from_alias.quest.clear_if(my_owner, target);
       for (auto& cnd : this->conditions)
          cnd.sever_outbound_references_to(target, my_owner);
       this->script_data.sever_outbound_references_to(target, my_owner);
@@ -502,13 +703,49 @@ namespace dovah::loaded_forms {
       this->_sever_outbound_references_impl(target, my_owner);
    }
    void LocationAlias::_sever_outbound_references_impl(form_stub& target, loaded_forms::Form& my_owner) noexcept {
-      this->fill_from_location.clear_if(my_owner, target);
-      this->fill_from_location_keyword.clear_if(my_owner, target);
+      if (auto* data = std::get_if<structs::alias_fill_params::loc::preassigned>(&this->fill_params)) {
+         data->location.clear_if(my_owner, target);
+      } else if (auto* data = std::get_if<structs::alias_fill_params::loc::at_reference_alias>(&this->fill_params)) {
+         data->keyword.clear_if(my_owner, target);
+      } else if (auto* data = std::get_if<structs::alias_fill_params::copy_external_alias>(&this->fill_params)) {
+         data->quest.clear_if(my_owner, target);
+         if (!data->quest) {
+            data->alias = -1;
+         }
+      } else if (const auto* data = std::get_if<structs::alias_fill_params::loc::find>(&this->fill_params)) {
+         ;
+      }
    }
    void ReferenceAlias::_sever_outbound_references_impl(form_stub& target, loaded_forms::Form& my_owner) noexcept {
-      this->create_object_of_type.clear_if(my_owner, target);
-      this->fill_from_reference.clear_if(my_owner, target);
-      this->fill_from_unique_actor_base.clear_if(my_owner, target);
+      //
+      // Fill params:
+      //
+      if (auto* data = std::get_if<structs::alias_fill_params::ref::preassigned>(&this->fill_params)) {
+         data->ref.clear_if(my_owner, target);
+      } else if (auto* data = std::get_if<structs::alias_fill_params::ref::unique_actor>(&this->fill_params)) {
+         data->actor_base.clear_if(my_owner, target);
+      } else if (auto* data = std::get_if<structs::alias_fill_params::ref::at_location_alias>(&this->fill_params)) {
+         data->loc_ref_type.clear_if(my_owner, target);
+         if (!data->loc_ref_type) {
+            data->alias = -1;
+         }
+      } else if (auto* data = std::get_if<structs::alias_fill_params::copy_external_alias>(&this->fill_params)) {
+         data->quest.clear_if(my_owner, target);
+         if (!data->quest) {
+            data->alias = -1;
+         }
+      } else if (auto* data = std::get_if<structs::alias_fill_params::ref::find_in_loaded_area>(&this->fill_params)) {
+         ;
+      } else if (auto* data = std::get_if<structs::alias_fill_params::ref::create>(&this->fill_params)) {
+         data->base_form.clear_if(my_owner, target);
+      } else if (auto* data = std::get_if<structs::alias_fill_params::ref::find_from_event>(&this->fill_params)) {
+         ;
+      } else if (auto* data = std::get_if<structs::alias_fill_params::ref::find_near_alias>(&this->fill_params)) {
+         ;
+      }
+      //
+      // Other data:
+      //
       this->keywords.sever_outbound_references_to(target, my_owner);
       this->inventory.sever_outbound_references_to(target, my_owner);
       this->package_override_lists.spectator.clear_if(my_owner, target);
@@ -531,36 +768,92 @@ namespace dovah::loaded_forms {
       copy->flags = this->flags;
       copy->hidden_flags = this->hidden_flags;
       copy->force_into_alias_id = this->force_into_alias_id;
-      copy->fill_from_alias.alias = this->fill_from_alias.alias;
-      copy->fill_from_alias.quest.set(clone_owner, this->fill_from_alias.quest);
-      copy->fill_from_event.code   = this->fill_from_event.code;
-      copy->fill_from_event.member = this->fill_from_event.member;
-      copy->fill_type = this->fill_type;
       //
       copy->conditions.append_all_of(clone_owner, this->conditions);
       copy->script_data.clone_from(this->script_data, clone_owner);
-      //
-      copy->_clone_impl(clone_owner);
       //
       return copy;
    }
    Alias* LocationAlias::_clone_impl(loaded_forms::Form& clone_owner) {
       auto* copy = new LocationAlias(this->owner);
       //
-      copy->fill_from_location.set(clone_owner, this->fill_from_location);
-      copy->fill_from_location_keyword.set(clone_owner, this->fill_from_location_keyword);
+      // Fill params:
+      //
+      if (const auto* src = std::get_if<structs::alias_fill_params::loc::preassigned>(&this->fill_params)) {
+         auto& src_data = *src;
+         auto& dst_data = copy->fill_params.emplace<std::decay_t<decltype(src_data)>>();
+         dst_data.location.set(clone_owner, src_data.location);
+      } else if (const auto* src = std::get_if<structs::alias_fill_params::loc::at_reference_alias>(&this->fill_params)) {
+         auto& src_data = *src;
+         auto& dst_data = copy->fill_params.emplace<std::decay_t<decltype(src_data)>>();
+         dst_data.alias = src_data.alias;
+         dst_data.keyword.set(clone_owner, src_data.keyword);
+      } else if (const auto* src = std::get_if<structs::alias_fill_params::copy_external_alias>(&this->fill_params)) {
+         auto& src_data = *src;
+         auto& dst_data = copy->fill_params.emplace<std::decay_t<decltype(src_data)>>();
+         dst_data.quest.set(clone_owner, src_data.quest);
+         dst_data.alias = src_data.alias;
+      } else if (const auto* src = std::get_if<structs::alias_fill_params::loc::find>(&this->fill_params)) {
+         auto& src_data = *src;
+         auto& dst_data = copy->fill_params.emplace<std::decay_t<decltype(src_data)>>();
+         dst_data.from_event = src_data.from_event;
+      }
+      //
+      // Done.
       //
       return copy;
    }
    Alias* ReferenceAlias::_clone_impl(loaded_forms::Form& clone_owner) {
       auto* copy = new ReferenceAlias(this->owner);
       //
+      // Fill params:
+      //
+      if (const auto* src = std::get_if<structs::alias_fill_params::ref::preassigned>(&this->fill_params)) {
+         auto& src_data = *src;
+         auto& dst_data = copy->fill_params.emplace<std::decay_t<decltype(src_data)>>();
+         dst_data.ref.set(clone_owner, src_data.ref);
+      } else if (const auto* src = std::get_if<structs::alias_fill_params::ref::unique_actor>(&this->fill_params)) {
+         auto& src_data = *src;
+         auto& dst_data = copy->fill_params.emplace<std::decay_t<decltype(src_data)>>();
+         dst_data.actor_base.set(clone_owner, src_data.actor_base);
+      } else if (const auto* src = std::get_if<structs::alias_fill_params::ref::at_location_alias>(&this->fill_params)) {
+         auto& src_data = *src;
+         auto& dst_data = copy->fill_params.emplace<std::decay_t<decltype(src_data)>>();
+         dst_data.alias = src_data.alias;
+         dst_data.loc_ref_type.set(clone_owner, src_data.loc_ref_type);
+      } else if (const auto* src = std::get_if<structs::alias_fill_params::copy_external_alias>(&this->fill_params)) {
+         auto& src_data = *src;
+         auto& dst_data = copy->fill_params.emplace<std::decay_t<decltype(src_data)>>();
+         dst_data.quest.set(clone_owner, src_data.quest);
+         dst_data.alias = src_data.alias;
+      } else if (const auto* src = std::get_if<structs::alias_fill_params::ref::find_in_loaded_area>(&this->fill_params)) {
+         auto& src_data = *src;
+         auto& dst_data = copy->fill_params.emplace<std::decay_t<decltype(src_data)>>();
+         ;
+      } else if (const auto* src = std::get_if<structs::alias_fill_params::ref::create>(&this->fill_params)) {
+         auto& src_data = *src;
+         auto& dst_data = copy->fill_params.emplace<std::decay_t<decltype(src_data)>>();
+         dst_data.base_form.set(clone_owner, src_data.base_form);
+         dst_data.at_reference = src_data.at_reference;
+         dst_data.difficulty   = src_data.difficulty;
+      } else if (const auto* src = std::get_if<structs::alias_fill_params::ref::find_from_event>(&this->fill_params)) {
+         auto& src_data = *src;
+         auto& dst_data = copy->fill_params.emplace<std::decay_t<decltype(src_data)>>();
+         auto& src_data = *src;
+         auto& dst_data = copy->fill_params.emplace<std::decay_t<decltype(src_data)>>();
+         dst_data = src_data;
+      } else if (const auto* src = std::get_if<structs::alias_fill_params::ref::find_near_alias>(&this->fill_params)) {
+         auto& src_data = *src;
+         auto& dst_data = copy->fill_params.emplace<std::decay_t<decltype(src_data)>>();
+         dst_data.alias     = src_data.alias;
+         dst_data.near_type = src_data.near_type;
+      }
+      //
+      // Other data:
+      //
       copy->keywords.clone_from(this->keywords, clone_owner);
       copy->inventory.clone_from(this->inventory, clone_owner);
       copy->additional_voicetype.set(clone_owner, this->additional_voicetype);
-      copy->create_object_at_alias = this->create_object_at_alias;
-      copy->create_object_of_level = this->create_object_of_level;
-      copy->create_object_of_type.set(clone_owner, this->create_object_of_type);
       copy->display_name.set(clone_owner, this->display_name);
       copy_form_reference_list(clone_owner, copy->packages, this->packages);
       copy_form_reference_list(clone_owner, copy->factions, this->factions);
@@ -569,11 +862,8 @@ namespace dovah::loaded_forms {
       copy->package_override_lists.guard_warn.set(clone_owner, this->package_override_lists.guard_warn);
       copy->package_override_lists.observe_corpse.set(clone_owner, this->package_override_lists.observe_corpse);
       copy->package_override_lists.spectator.set(clone_owner, this->package_override_lists.spectator);
-      copy->fill_from_reference.set(clone_owner, this->fill_from_reference);
-      copy->fill_from_unique_actor_base.set(clone_owner, this->fill_from_unique_actor_base);
-      copy->fill_loc_ref_type.set(clone_owner, this->fill_loc_ref_type);
-      copy->fill_near_alias = this->fill_near_alias;
-      copy->fill_near_alias_type = this->fill_near_alias_type;
+      //
+      // Done.
       //
       return copy;
    }
@@ -584,26 +874,42 @@ namespace dovah::loaded_forms {
       this->flags = 0;
       this->hidden_flags = 0;
       this->force_into_alias_id = -1;
-      this->fill_from_alias.alias = none_id;
-      this->fill_from_alias.quest.set(my_owner, nullptr);
-      this->fill_from_event.code   = story_event_code::undefined;
-      this->fill_from_event.member = -1;
       this->conditions.clear(my_owner);
       this->script_data.clear(my_owner);
       //
       this->_clear_impl(my_owner);
    }
+   void Alias::clear_fill_params(loaded_forms::Form& my_owner) {
+      this->_clear_fill_params_impl(my_owner);
+      this->_adjust_flags_for_save(this->flags);
+   }
+
    void LocationAlias::_clear_impl(loaded_forms::Form& my_owner) {
-      this->fill_from_location.set(my_owner, nullptr);
-      this->fill_from_location_keyword.set(my_owner, nullptr);
+      this->_clear_fill_params_impl(my_owner);
+   }
+   void LocationAlias::_clear_fill_params_impl(loaded_forms::Form& my_owner) {
+      if (auto* data = std::get_if<structs::alias_fill_params::loc::preassigned>(&this->fill_params)) {
+         data->location.set(my_owner, nullptr);
+      } else if (auto* data = std::get_if<structs::alias_fill_params::loc::at_reference_alias>(&this->fill_params)) {
+         data->keyword.set(my_owner, nullptr);
+      } else if (auto* data = std::get_if<structs::alias_fill_params::copy_external_alias>(&this->fill_params)) {
+         data->quest.set(my_owner, nullptr);
+      } else if (const auto* data = std::get_if<structs::alias_fill_params::loc::find>(&this->fill_params)) {
+         ;
+      }
+      this->fill_params.emplace<structs::alias_fill_params::loc::preassigned>();
    }
    void ReferenceAlias::_clear_impl(loaded_forms::Form& my_owner) {
+      //
+      // Fill params:
+      //
+      this->_clear_fill_params_impl(my_owner);
+      //
+      // Other data:
+      //
       this->keywords.clear(my_owner);
       this->inventory.clear(my_owner);
       this->additional_voicetype.set(my_owner, nullptr);
-      this->create_object_at_alias = this->create_object_at_alias;
-      this->create_object_of_level = this->create_object_of_level;
-      this->create_object_of_type.set(my_owner, this->create_object_of_type);
       this->display_name.set(my_owner, nullptr);
       clear_form_reference_list(this->packages, my_owner);
       clear_form_reference_list(this->factions, my_owner);
@@ -612,11 +918,26 @@ namespace dovah::loaded_forms {
       this->package_override_lists.guard_warn.set(my_owner, nullptr);
       this->package_override_lists.observe_corpse.set(my_owner, nullptr);
       this->package_override_lists.spectator.set(my_owner, nullptr);
-      this->fill_from_reference.set(my_owner, nullptr);
-      this->fill_from_unique_actor_base.set(my_owner, nullptr);
-      this->fill_loc_ref_type.set(my_owner, nullptr);
-      this->fill_near_alias = -1;
-      this->fill_near_alias_type = near_alias_type::linked_ref_child;
+   }
+   void ReferenceAlias::_clear_fill_params_impl(loaded_forms::Form& my_owner) {
+      if (auto* data = std::get_if<structs::alias_fill_params::ref::preassigned>(&this->fill_params)) {
+         data->ref.set(my_owner, nullptr);
+      } else if (auto* data = std::get_if<structs::alias_fill_params::ref::unique_actor>(&this->fill_params)) {
+         data->actor_base.set(my_owner, nullptr);
+      } else if (auto* data = std::get_if<structs::alias_fill_params::ref::at_location_alias>(&this->fill_params)) {
+         data->loc_ref_type.set(my_owner, nullptr);
+      } else if (auto* data = std::get_if<structs::alias_fill_params::copy_external_alias>(&this->fill_params)) {
+         data->quest.set(my_owner, nullptr);
+      } else if (auto* data = std::get_if<structs::alias_fill_params::ref::find_in_loaded_area>(&this->fill_params)) {
+         ;
+      } else if (auto* data = std::get_if<structs::alias_fill_params::ref::create>(&this->fill_params)) {
+         data->base_form.set(my_owner, nullptr);
+      } else if (auto* data = std::get_if<structs::alias_fill_params::ref::find_from_event>(&this->fill_params)) {
+         ;
+      } else if (auto* data = std::get_if<structs::alias_fill_params::ref::find_near_alias>(&this->fill_params)) {
+         ;
+      }
+      this->fill_params.emplace<structs::alias_fill_params::ref::preassigned>();
    }
    #pragma endregion
 

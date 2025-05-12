@@ -9,6 +9,7 @@
 #include "components/container.h"
 #include "components/keyword_list.h"
 #include "components/papyrus.h"
+#include "structs/alias_fill_params.h"
 #include "../data/story_manager.h"
 
 namespace dovah::loaded_forms {
@@ -49,47 +50,18 @@ namespace dovah::loaded_forms {
             reference,
             location,
          };
-         
-         enum class fill_type_t {
-            none = 0,
-            //
-            other_alias_in_same_quest,  // ALFA (typically followed by a type-specific field)
-            from_event,                 // ALFE + ALFD
-            other_alias_in_other_quest, // ALEQ
-            //
-            // Types unique to location aliases:
-            //
-            preset_location, // ALFL
-            //
-            // Types unique to reference aliases:
-            //
-            preset_placed_reference,    // ALFR: a preset Actor or ObjectReference is "forced" into this alias
-            create_object,              // ALCO
-            preset_unique_actor,        // ALUA
-            find_matching_reference,    // ALNA
-         };
 
-         static constexpr int none_id = -1;
+         static constexpr const alias_id_t none_id = -1;
 
          Alias(Quest& owner, alias_type at) : owner(owner), type(at) {}
          
          Quest& owner;
          const alias_type type = alias_type::undifferentiated;
-         uint32_t    id = 0;
+         alias_id_t  id = 0;
          std::string name;
          flags_t     flags = 0;
          uint32_t    hidden_flags = 0; // BNAM sets flag 0x01, ONAM sets flag 0x02
          alias_id_t  force_into_alias_id  = none_id;
-         //
-         fill_type_t fill_type = fill_type_t::none;
-         struct {
-            form_reference_t quest;           // ALEQ // if nullptr, then the specified alias is inside of this alias's containing quest
-            alias_id_t       alias = none_id; // ALEA, ALFA
-         } fill_from_alias;
-         struct {
-            story_event_code_t code   = story_event_code::undefined; // ALFE
-            uint32_t           member = 0; // ALFD
-         } fill_from_event;
          //
          components::condition_list          conditions; // for "Find Matching Reference" or "Find Matching Location"
          components::papyrus_attachment_data script_data;
@@ -99,37 +71,40 @@ namespace dovah::loaded_forms {
          void sever_outbound_references(form_stub& target, loaded_forms::Form& my_owner) noexcept;
          Alias* clone(loaded_forms::Form& clone_owner);
          void clear(loaded_forms::Form& my_owner);
-         //
+         void clear_fill_params(loaded_forms::Form& my_owner);
+         
          static alias_id_t generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
-         //
+         
       protected:
          virtual bool _load_impl(tes_subrecord_reader&, load_order_interfaces::form_load&) = 0;
+         virtual void _adjust_flags_for_save(uint32_t&) = 0;
          virtual bool _save_fill_impl(tes_record_writer&, load_order_interfaces::form_save&) = 0; // handle the fill-type, if it is (or has any data) specific to the alias type. return true if type handled; false if not
          virtual void _save_body_impl(tes_record_writer&, load_order_interfaces::form_save&) = 0;
          virtual void _sever_outbound_references_impl(form_stub& target, loaded_forms::Form& my_owner) noexcept = 0;
          virtual Alias* _clone_impl(loaded_forms::Form& clone_owner) = 0;
          virtual void _clear_impl(loaded_forms::Form& my_owner) = 0;
+         virtual void _clear_fill_params_impl(loaded_forms::Form& my_owner) = 0;
    };
    class LocationAlias : public Alias {
       friend class Alias;
       friend class Quest;
       public:
-         form_reference_t fill_from_location;
-         form_reference_t fill_from_location_keyword;
-         //
          LocationAlias(Quest& o) : Alias(o, alias_type::location) {}
-         //
+
+         structs::location_alias_fill_params fill_params;
+
       protected:
          virtual bool _load_impl(tes_subrecord_reader&, load_order_interfaces::form_load&) override;
+         virtual void _adjust_flags_for_save(uint32_t&) override;
          virtual bool _save_fill_impl(tes_record_writer&, load_order_interfaces::form_save&) override;
          virtual void _save_body_impl(tes_record_writer&, load_order_interfaces::form_save&) override;
          virtual void _sever_outbound_references_impl(form_stub& target, loaded_forms::Form& my_owner) noexcept override;
          virtual Alias* _clone_impl(loaded_forms::Form& clone_owner) override;
          virtual void _clear_impl(loaded_forms::Form& my_owner) override;
+         virtual void _clear_fill_params_impl(loaded_forms::Form& my_owner) override;
          //
          struct _use_info_field_state {
-            form_id_t fill_from_location;
-            form_id_t fill_from_location_keyword;
+            structs::location_alias_fill_params_use_info_state fill_params;
          };
          static void generate_use_info_for_subrecord(_use_info_field_state&, tes_subrecord_reader&, form_stub_use_info_builder&);
    };
@@ -141,6 +116,10 @@ namespace dovah::loaded_forms {
             linked_ref_child = 0,
          };
       public:
+         ReferenceAlias(Quest& o) : Alias(o, alias_type::reference) {}
+
+         structs::reference_alias_fill_params fill_params;
+
          components::keyword_list      keywords; // KSIZ, KWDA
          components::container_data    inventory;
          std::vector<form_reference_t> packages; // ALPC
@@ -154,27 +133,19 @@ namespace dovah::loaded_forms {
          } package_override_lists; // same structure as on NPC_
          form_reference_t display_name; // ALDN; should be the form ID of a MESG
          form_reference_t additional_voicetype; // VTCK; value is an NPC_ or FLST
-         //
-         form_reference_t fill_loc_ref_type; // ALRT; should be the form ID of an LCRT
-         alias_id_t       fill_near_alias      = none_id; // ALNA
-         near_alias_type  fill_near_alias_type = near_alias_type::linked_ref_child; // ALNT
-         form_reference_t fill_from_reference;
-         form_reference_t create_object_of_type; // ALCO
-         alias_id_t       create_object_at_alias = 0; // ALCA; sign bit is a flag (create inside of / create at); the rest is the alias ID
-         uint32_t         create_object_of_level = 0; // ALCL
-         form_reference_t fill_from_unique_actor_base; // ALUA; should be the form ID of an NPC_ with the Unique flag set
-         //
-         ReferenceAlias(Quest& o) : Alias(o, alias_type::reference) {}
-         //
+
       protected:
          virtual bool _load_impl(tes_subrecord_reader&, load_order_interfaces::form_load&) override;
+         virtual void _adjust_flags_for_save(uint32_t&) override;
          virtual bool _save_fill_impl(tes_record_writer&, load_order_interfaces::form_save&) override;
          virtual void _save_body_impl(tes_record_writer&, load_order_interfaces::form_save&) override;
          virtual void _sever_outbound_references_impl(form_stub& target, loaded_forms::Form& my_owner) noexcept override;
          virtual Alias* _clone_impl(loaded_forms::Form& clone_owner) override;
          virtual void _clear_impl(loaded_forms::Form& my_owner) override;
+         virtual void _clear_fill_params_impl(loaded_forms::Form& my_owner) override;
          //
          struct _use_info_field_state {
+            structs::reference_alias_fill_params_use_info_state fill_params;
             struct {
                form_id_t spectator; // SPOR
                form_id_t observe_corpse; // OCOR
@@ -183,10 +154,7 @@ namespace dovah::loaded_forms {
             } package_override_lists;
             form_id_t display_name;
             form_id_t additional_voicetype;
-            form_id_t fill_loc_ref_type;
-            form_id_t fill_from_reference;
             form_id_t create_object_of_type;
-            form_id_t fill_from_unique_actor_base;
          };
          static void generate_use_info_for_subrecord(_use_info_field_state&, tes_subrecord_reader&, form_stub_use_info_builder&);
    };

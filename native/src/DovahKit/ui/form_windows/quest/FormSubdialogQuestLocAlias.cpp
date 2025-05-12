@@ -6,6 +6,9 @@
 
 namespace {
    constexpr const auto no_alias = FormSubdialogQuestLocAlias::loaded_alias_type::none_id;
+   namespace alias_fill_params {
+      using namespace dovah::loaded_forms::structs::alias_fill_params;
+   }
    namespace vmad {
       using namespace dovah::loaded_forms::components::papyrus;
    }
@@ -52,23 +55,28 @@ void FormSubdialogQuestLocAlias::load() {
       set_combobox_to_alias(*widget, alias_id);
    }
    {  // Fill type
-      switch (this->_data.alias.fill_type) {
-         using fill_type = decltype(this->_data.alias.fill_type);
-         case fill_type::other_alias_in_same_quest:
-            this->ui.fillTypeSiblingAlias->setChecked(true);
-            set_combobox_to_alias(
-               *this->ui.fillFromSiblingAlias,
-               this->_data.alias.fill_from_alias.alias
-            );
-            this->ui.fillFromSiblingAliasParentKeyword->setFormStub(this->_data.alias.fill_from_location_keyword.get_form_stub());
-            break;
-         case fill_type::from_event:
-            this->ui.fillTypeMatching->setChecked(true);
+      auto& fill = this->_data.alias.fill_params;
+      if (auto* data = std::get_if<alias_fill_params::loc::preassigned>(&fill)) {
+         this->ui.fillTypePredefined->setChecked(true);
+         this->ui.fillFromPredefined->setFormStub(data->location.get_form_stub());
+      } else if (auto* data = std::get_if<alias_fill_params::loc::at_reference_alias>(&fill)) {
+         this->ui.fillTypeSiblingAlias->setChecked(true);
+         set_combobox_to_alias(*this->ui.fillFromSiblingAlias, data->alias);
+         this->ui.fillFromSiblingAliasParentKeyword->setFormStub(data->keyword.get_form_stub());
+      } else if (auto* data = std::get_if<alias_fill_params::copy_external_alias>(&fill)) {
+         this->ui.fillTypeExternalAlias->setChecked(true);
+         this->ui.fillFromExtAliasQuest->setFormStub(data->quest.get_form_stub());
+         this->_update_ext_alias_combobox();
+         set_combobox_to_alias(*this->ui.fillFromExtAliasName, data->alias);
+      } else if (const auto* data = std::get_if<alias_fill_params::loc::find>(&fill)) {
+         this->ui.fillTypeMatching->setChecked(true);
+         if (data->from_event.has_value()) {
             this->ui.findMatchingFlagEvent->setChecked(true);
             {
+               auto& ev     = *data->from_event;
                auto* widget = this->ui.findMatchingEventData;
-               if (this->_data.alias.fill_from_event.code == this->_data.quest.event) {
-                  int i = widget->findData(this->_data.alias.fill_from_event.member);
+               if (ev.code == this->_data.quest.event) {
+                  int i = widget->findData(ev.member);
                   if (i < 0)
                      i = 0;
                   widget->setCurrentIndex(i);
@@ -76,22 +84,9 @@ void FormSubdialogQuestLocAlias::load() {
                   widget->setCurrentIndex(0); // "NONE"
                }
             }
-            break;
-         case fill_type::other_alias_in_other_quest:
-            this->ui.fillTypeExternalAlias->setChecked(true);
-            this->ui.fillFromExtAliasQuest->setFormStub(this->_data.alias.fill_from_alias.quest.get_form_stub());
-            this->_update_ext_alias_combobox();
-            set_combobox_to_alias(*this->ui.fillFromExtAliasName, this->_data.alias.fill_from_alias.alias);
-            break;
-         default:
-         case fill_type::preset_location:
-            this->ui.fillTypePredefined->setChecked(true);
-            this->ui.fillFromPredefined->setFormStub(this->_data.alias.fill_from_location.get_form_stub());
-            break;
-         case fill_type::find_matching_reference:
-            this->ui.fillTypeMatching->setChecked(true);
+         } else {
             this->ui.findMatchingFlagEvent->setChecked(false);
-            break;
+         }
       }
    }
    this->ui.conditions->importFrom(this->_data.quest, this->_data.alias.conditions);
@@ -110,29 +105,28 @@ void FormSubdialogQuestLocAlias::save() {
    }
    this->_data.alias.force_into_alias_id = this->ui.forceInto->currentData().toInt();
 
-   using fill_type = decltype(this->_data.alias.fill_type);
-
    auto& form = this->_data.quest;
+   this->_data.alias.clear_fill_params(form);
    if (this->ui.fillTypeExternalAlias->isChecked()) {
-      this->_data.alias.fill_type = fill_type::other_alias_in_other_quest;
-      this->_data.alias.fill_from_alias.quest.set(form, this->ui.fillFromExtAliasQuest->formStub());
-      this->_data.alias.fill_from_alias.alias = this->ui.fillFromExtAliasName->currentData().toInt();
+      auto& dst = this->_data.alias.fill_params.emplace<alias_fill_params::copy_external_alias>();
+      dst.quest.set(form, this->ui.fillFromExtAliasQuest->formStub());
+      dst.alias = this->ui.fillFromExtAliasName->currentData().toInt();
    } else if (this->ui.fillTypeMatching->isChecked()) {
+      auto& dst = this->_data.alias.fill_params.emplace<alias_fill_params::loc::find>();
       if (this->ui.findMatchingFlagEvent->isChecked()) {
-         this->_data.alias.fill_type = fill_type::from_event;
-         this->_data.alias.fill_from_event.code   = form.event;
-         this->_data.alias.fill_from_event.member = this->ui.findMatchingEventData->currentData().toInt();
+         auto& ev = dst.from_event.emplace();
+         ev.code   = form.event;
+         ev.member = this->ui.findMatchingEventData->currentData().toInt();
       } else {
-         this->_data.alias.fill_type = fill_type::find_matching_reference;
-         this->_data.alias.fill_from_event = {};
+         dst.from_event = {};
       }
    } else if (this->ui.fillTypePredefined->isChecked()) {
-      this->_data.alias.fill_type = fill_type::preset_location;
-      this->_data.alias.fill_from_location.set(form, this->ui.fillFromPredefined->formStub());
+      auto& dst = this->_data.alias.fill_params.emplace<alias_fill_params::loc::preassigned>();
+      dst.location.set(form, this->ui.fillFromPredefined->formStub());
    } else if (this->ui.fillTypeSiblingAlias->isChecked()) {
-      this->_data.alias.fill_type = fill_type::other_alias_in_same_quest;
-      this->_data.alias.fill_from_alias.alias = this->ui.fillFromSiblingAlias->currentData().toInt();
-      this->_data.alias.fill_from_location_keyword.set(form, this->ui.fillFromSiblingAliasParentKeyword->formStub());
+      auto& dst = this->_data.alias.fill_params.emplace<alias_fill_params::loc::at_reference_alias>();
+      dst.alias = this->ui.fillFromSiblingAlias->currentData().toInt();
+      dst.keyword.set(form, this->ui.fillFromSiblingAliasParentKeyword->formStub());
    }
    this->ui.conditions->exportTo(this->_data.quest, this->_data.alias.conditions);
    this->ui.scriptListPane->commit();
