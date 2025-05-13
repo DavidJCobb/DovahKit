@@ -11,6 +11,10 @@ Stopped working on DovahKit for a few months, to tackle other projects (in part 
 * Backend
 * 
 
+## Right away
+* We're getting tons of warnings about supposedly not-hardcoded AVIFs in Skyrim.esm, on load. Pretty sure all of the AVIFs in question are hardcoded. Need to look into how we're handling AVIFs.
+* SCEN/VNAM is unrecognized and so triggers warnings. Looks like only the CK loads or saves it; it's four dwords, each with integer `3` as their default value. Can't tell if the CK ever allows these values to change, or what they're even used for.
+
 ## Quest editing
 
 I was in the middle of working on scene editing at the time I switched to other projects. There were some low-prio things left to do for dialogue (e.g. transplanting forms across different pseudo-parents and parents) but scenes were the main focus.
@@ -35,11 +39,6 @@ I was in the middle of working on scene editing at the time I switched to other 
   * Test adding and deleting phases, actors, and actions.
   * Test editing phases' and actions' properties.
   * We need a better way to delete actors.
-* Quest aliases
-  * The backend is vulnerable to data integrity issues. We only write subrecords related to an alias's current fill type, but we retain data for all fill types in memory and thus in use info. If the frontend doesn't clear data for one fill type before switching the alias to another fill type, then on save, we'll have "phantom uses."
-
-  We should be using `std::variant` for the alias's fill type and parameters. This is somewhat complicated by the need for subclassing, but since the fill type can vary by subclass (reference aliases versus location aliases), it would arguably be more appropriate to define it exclusively on the subclasses anyway.
-  * Similarly: when a reference alias is set to create a reference, it must be given a target alias to create the new ref near; and it must be told whether to create the new ref *at* the target alias or (if the base form is carryable) *in* the target alias. The game stores the "at/in" flag as the most-significant bit of the target alias ID. Currently, our UI code handles this matter, but we really should handle that within the backend if possible (i.e. by separating this into its own bool in memory and doing the conversion on record load/save).
 
 ## Immediate next steps
 
@@ -126,7 +125,7 @@ So it turns out, I thought ahead when implementing the editing of conditions: th
 1. Commit changes to the INFO.
 1. Cancel changes to the QUST, such that Foo disappears and the INFO now has a dangling reference to an invalid alias ID.
 
-This generalizes to any forms that have an owning quest, as well as to conditions in *any* form that take quest stages or quest alias IDs as parameters. A half-remedy -- something to cover the case of dangling references to not-yet-committed quest edits -- would be to have all form-editing dialogs [for forms that have conditions] inform DovahKitCore on save, as to what quest stages and aliases their conditions refer to; and then when canceling changes to a quest, DovahKitCore can silently sever references to any to-be-cancelled stages and aliases. However, there are all sorts of ways to have dangling references to individual parts of forms, so it may perhaps be better to instead make long-term (i.e. post-launch) plans for a system akin to use info that handles references to individual pieces of data within a given form, be those quest aliases, quest stages, or perhaps other things like package data.
+This generalizes to any forms that have an owning quest (since "Alias #123 on whatever my owning quest is" can be the run-on target for a condition), as well as to conditions in *any* form that take quest stages or quest alias IDs as parameters. A half-remedy -- something to cover the case of dangling references to not-yet-committed quest edits -- would be to have all form-editing dialogs [for forms that have conditions] inform DovahKitCore on save, as to what quest stages and aliases their conditions refer to; and then when canceling changes to a quest, DovahKitCore can silently sever references to any to-be-cancelled stages and aliases. However, there are all sorts of ways to have dangling references to individual parts of forms, so it may perhaps be better to instead make long-term (i.e. post-launch) plans for a system akin to use info that handles references to individual pieces of data within a given form, be those quest aliases, quest stages, or perhaps other things like package data.
 
 I don't consider this a high-prio option because I'd be surprised if the Creation Kit handled this edge-case at all, but at some point I should probably at least check if they do (because if they do, then it's higher-prio for us to as well).
 
