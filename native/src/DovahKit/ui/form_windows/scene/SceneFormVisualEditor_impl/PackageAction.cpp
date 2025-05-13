@@ -67,7 +67,7 @@ namespace SceneFormVisualEditor_impl {
          {
             QRect cell = row;
             cell.setWidth(this->body_geometry.form_id_width);
-            this->drawCell(painter, style, cell, form_id, Qt::AlignTop | Qt::AlignLeft);
+            this->drawCell(painter, style, cell, form_id, Qt::AlignTop | Qt::AlignHCenter);
          }
          if (row.width() > this->body_geometry.form_id_width) {
             QRect cell = row;
@@ -95,6 +95,13 @@ namespace SceneFormVisualEditor_impl {
       this->geometry.rel.body = QRect(QPoint{ 0, header_height }, QSize{ width, height - header_height });
 
       this->body_geometry.form_id_width = font_metrics.horizontalAdvance("00000000");
+      {
+         for (char c = 'A'; c <= 'F'; ++c) {
+            auto width = font_metrics.horizontalAdvance(QString(8, QChar(c)));
+            if (width > this->body_geometry.form_id_width)
+               this->body_geometry.form_id_width = width;
+         }
+      }
       this->body_geometry.form_id_width += style.action.cell.padding * 2;
       this->body_geometry.form_id_width += cell_border_width * 2;
 

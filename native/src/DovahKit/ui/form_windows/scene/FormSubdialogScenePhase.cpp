@@ -13,6 +13,7 @@ FormSubdialogScenePhase::FormSubdialogScenePhase(loaded_form_type& scene, QWidge
    // can read from.
    //
    this->_hidden_widgets.script_list_pane = new DKPapyrusBoundScriptListPane(this);
+   this->_hidden_widgets.script_list_pane->setVisible(false);
    this->_hidden_widgets.script_list_pane->setFormWorkingCopy(&scene);
    this->ui.startFragment->setSourceWidget(this->_hidden_widgets.script_list_pane);
    this->ui.completionFragment->setSourceWidget(this->_hidden_widgets.script_list_pane);

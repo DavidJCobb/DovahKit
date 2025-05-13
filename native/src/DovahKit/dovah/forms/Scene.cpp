@@ -723,6 +723,11 @@ namespace dovah::loaded_forms {
                   }
                   break;
             #pragma endregion
+            case 'VNAM':
+               for (auto& item : this->vnam)
+                  if (!subrecord.read(item))
+                     break;
+               break;
             default:
                intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
@@ -809,6 +814,7 @@ namespace dovah::loaded_forms {
          assert(copy->loop_conditions.empty());
          copy->loop_conditions.append_all_of(*copy, this->loop_conditions);
       }
+      copy->vnam = this->vnam;
    }
    void Scene::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
@@ -851,9 +857,12 @@ namespace dovah::loaded_forms {
          subrecord.write(this->last_action_id);
          subrecord.close();
       }
-      //
-      // TODO: VNAM (CK-only?)
-      //
+      {
+         auto& subrecord = record.open_next_subrecord('VNAM');
+         for (auto& item : this->vnam)
+            subrecord.write(item);
+         subrecord.close();
+      }
       for (auto& cnd : this->loop_conditions)
          cnd.save(record, intfc);
    }
@@ -879,6 +888,7 @@ namespace dovah::loaded_forms {
       }
       this->owning_quest.set(*this, nullptr);
       this->last_action_id = 0;
+      this->vnam = { 3, 3, 3, 3 };
       this->loop_conditions.clear(*this);
    }
    void Scene::_sever_outbound_references_impl(form_stub& other) noexcept {

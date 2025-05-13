@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -159,6 +160,7 @@ namespace dovah::loaded_forms {
          dialogue_quest_reference_t owning_quest;       // PNAM
          uint32_t                   last_action_id = 0; // INAM
          components::condition_list loop_conditions;
+         std::array<uint32_t, 4>    vnam = { 3, 3, 3, 3 }; // VNAM
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);

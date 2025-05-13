@@ -11,9 +11,6 @@ Stopped working on DovahKit for a few months, to tackle other projects (in part 
 * Backend
 * 
 
-## Right away
-* SCEN/VNAM is unrecognized and so triggers warnings. Looks like only the CK loads or saves it; it's four dwords, each with integer `3` as their default value. Can't tell if the CK ever allows these values to change, or what they're even used for.
-
 ## Quest editing
 
 I was in the middle of working on scene editing at the time I switched to other projects. There were some low-prio things left to do for dialogue (e.g. transplanting forms across different pseudo-parents and parents) but scenes were the main focus.
