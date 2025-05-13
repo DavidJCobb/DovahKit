@@ -12,7 +12,6 @@ Stopped working on DovahKit for a few months, to tackle other projects (in part 
 * 
 
 ## Right away
-* We're getting tons of warnings about supposedly not-hardcoded AVIFs in Skyrim.esm, on load. Pretty sure all of the AVIFs in question are hardcoded. Need to look into how we're handling AVIFs.
 * SCEN/VNAM is unrecognized and so triggers warnings. Looks like only the CK loads or saves it; it's four dwords, each with integer `3` as their default value. Can't tell if the CK ever allows these values to change, or what they're even used for.
 
 ## Quest editing
