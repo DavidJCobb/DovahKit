@@ -112,13 +112,13 @@ void QuestTabScenes::push_data_to_scene_form() {
    if (!this->ui.current_scene.editor->hasAnyChanges()) {
       bool changed = false;
       {
-         auto prior = working.scene_flags & scene_form_type::scene_flag::begin_on_quest_start;
+         auto prior = (working.scene_flags & scene_form_type::scene_flag::begin_on_quest_start) != 0;
          auto after = this->ui.current_scene.flags.start_scene_with_quest->isChecked();
          if (prior != after)
             changed = true;
       }
       if (!changed) {
-         auto prior = working.scene_flags & scene_form_type::scene_flag::stop_quest_on_end;
+         auto prior = (working.scene_flags & scene_form_type::scene_flag::stop_quest_on_end) != 0;
          auto after = this->ui.current_scene.flags.end_quest_with_scene->isChecked();
          if (prior != after)
             changed = true;
@@ -130,6 +130,14 @@ void QuestTabScenes::push_data_to_scene_form() {
             changed = true;
       }
       if (!changed) {
+         auto& editor = DovahKitCore::get();
+         //
+         // Same basic steps as FormEditDialogMixin's "rejected" handler.
+         //
+         emit editor.formWorkingCopyDeleteImminent(&stub);
+         stub.delete_working_copy();
+         emit editor.formWorkingCopyDeleteComplete(&stub);
+         this->_state.loaded_scene = nullptr;
          return;
       }
    }
@@ -150,6 +158,7 @@ void QuestTabScenes::push_data_to_scene_form() {
    stub.commit_working_copy();
    emit editor.formWorkingCopyCommitComplete(&stub);
    emit editor.formModified(&stub);
+   this->_state.loaded_scene = nullptr;
 }
 
 void QuestTabScenes::_on_form_created(dovah::form_stub* stub) {

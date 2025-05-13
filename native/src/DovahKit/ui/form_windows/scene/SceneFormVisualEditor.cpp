@@ -1,4 +1,6 @@
 #include "./SceneFormVisualEditor.h"
+#include <QDrag>
+#include <QMimeData>
 #include <QPaintEvent>
 #include <QPainter>
 #include "dovah/form_stubs/helpers/get_unique_outbound_use.h"
@@ -32,6 +34,8 @@
 
 namespace {
    constexpr const bool only_import_actions_belonging_to_defined_actors = true;
+
+   constexpr const char* const drag_mime_type_for_scene_actions = "application/dovah-kit.scene-editor.action";
 }
 
 namespace {
@@ -48,6 +52,8 @@ namespace {
 SceneFormVisualEditor::SceneFormVisualEditor(QWidget* parent) : QWidget(parent) {
    this->setFocusPolicy(Qt::FocusPolicy::StrongFocus);
    this->setSizePolicy({ QSizePolicy::Fixed, QSizePolicy::Fixed });
+
+   this->setAcceptDrops(true);
 
    auto palette = this->palette();
    this->_style.selection = {
@@ -776,6 +782,76 @@ void SceneFormVisualEditor::spawnRenderTest() {
    this->updateGeometry();
 }
 
+SceneFormVisualEditor::MouseTargets SceneFormVisualEditor::_find_mouse_targets(const QPoint& local_pos) {
+   MouseTargets targets;
+
+   const unsigned int EDGE_DRAG_MARGINS = 4;
+
+   const auto px = local_pos.x();
+   const auto py = local_pos.y();
+
+   auto _test_rect = [px, py](const QRect& rect, MouseTargetAreaDetails& target) {
+      const auto rx   = rect.x();
+      const auto ry   = rect.y();
+      const auto rr   = rect.right(); // rx + rw
+      const auto rb   = rect.bottom(); // ry + rh
+
+      if (px + EDGE_DRAG_MARGINS < rx)
+         return false;
+      if (py + EDGE_DRAG_MARGINS < ry)
+         return false;
+      if (px > rr + EDGE_DRAG_MARGINS)
+         return false;
+      if (py > rb + EDGE_DRAG_MARGINS)
+         return false;
+
+      int edges = 2;
+
+      if (px < rx + EDGE_DRAG_MARGINS)
+         target.edge_l = true;
+      else if (px > rr - EDGE_DRAG_MARGINS)
+         target.edge_r = true;
+      else
+         --edges;
+
+      if (py < ry + EDGE_DRAG_MARGINS)
+         target.edge_t = true;
+      else if (py > rb - EDGE_DRAG_MARGINS)
+         target.edge_b = true;
+      else
+         --edges;
+
+      if (edges == 0) {
+         target.exact = true;
+      }
+
+      return true;
+   };
+
+   for (auto* item : this->_data.actions) {
+      if (_test_rect(item->geometry.rect, targets.action)) {
+         targets.action.pointer = item;
+         break;
+      }
+   }
+   for (auto* item : this->_data.actors) {
+      if (_test_rect(item->geometry.rect, targets.actor)) {
+         targets.actor.pointer = item;
+         break;
+      }
+   }
+   for (auto* item : this->_data.phases) {
+      auto rect = item->geometry.rel.header;
+      rect.moveTo(item->geometry.rect.topLeft());
+      if (_test_rect(rect, targets.phase)) {
+         targets.phase.pointer = item;
+         break;
+      }
+   }
+
+   return targets;
+}
+
 void SceneFormVisualEditor::_set_up_action_dialog_phases(const Action& action, FormSubdialogSceneActionBase& dialog) {
    Actor* actor = nullptr;
    for (auto* item : this->_data.actors) {
@@ -808,7 +884,7 @@ void SceneFormVisualEditor::_set_up_action_dialog_phases(const Action& action, F
       if (name.isEmpty()) {
          name = tr("Phase %1").arg(i + 1);
       }
-      dialog.scene_data.phases.push_back({ i, name });
+      dialog.scene_data.phases.push_back({ (uint32_t)i, name });
    }
 }
 
@@ -1241,6 +1317,7 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
       // TODO: Execute the selected action.
       //
    }
+
    /*virtual*/ void SceneFormVisualEditor::mouseDoubleClickEvent(QMouseEvent* event) /*override*/ {
       struct {
          Action* action = nullptr;
@@ -1284,44 +1361,193 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
          return;
       event->setAccepted(true);
 
-      struct {
-         Action* action = nullptr;
-         Actor*  actor  = nullptr;
-         Phase*  phase  = nullptr;
-      } targets;
-
-      auto pos = event->localPos().toPoint();
-      for (auto* item : this->_data.actions) {
-         if (item->geometry.rect.contains(pos)) {
-            targets.action = item;
-            break;
-         }
-      }
-      /*for (auto* item : this->_data.actors) {
-         if (item->geometry.rect.contains(pos)) {
-            targets.actor = item;
-            break;
-         }
-      }*/
-      for (auto* item : this->_data.phases) {
-         auto rect = item->geometry.rel.header;
-         rect.moveTo(item->geometry.rect.topLeft());
-         if (rect.contains(pos)) {
-            targets.phase = item;
-            break;
-         }
-      }
-
-      if (targets.action) {
-         this->_select(targets.action);
+      this->_mouse.mousedown_at = event->localPos().toPoint();
+      this->_mouse.mousedown_on = nullptr;
+      auto targets = this->_find_mouse_targets(this->_mouse.mousedown_at);
+      if (targets.action.pointer) {
+         this->_mouse.mousedown_on = targets.action.pointer;
+         this->_select(targets.action.pointer);
          return;
       }
-      if (targets.phase) {
-         this->_select(targets.phase);
+      if (targets.phase.pointer) {
+         this->_select(targets.phase.pointer);
          return;
       }
       this->_deselect_all();
    }
+   /*virtual*/ void SceneFormVisualEditor::mouseMoveEvent(QMouseEvent* event) /*override*/ {
+      if (!(event->buttons() & Qt::LeftButton))
+         return;
+      if (!this->_mouse.mousedown_on)
+         return;
+      if ((event->pos() - this->_mouse.mousedown_at).manhattanLength() < QApplication::startDragDistance())
+         return;
+
+      QDrag*     drag = new QDrag(this);
+      QMimeData* mimeData = new QMimeData;
+      {
+         QByteArray  data;
+         QDataStream stream(&data, QIODevice::WriteOnly);
+         const uint32_t   src  = this->_mouse.mousedown_on->base_data.action_id;
+         const ActionType type = this->_mouse.mousedown_on->type();
+         stream.writeRawData((const char*)&src,  sizeof(src));
+         stream.writeRawData((const char*)&type, sizeof(type));
+
+         mimeData->setData(drag_mime_type_for_scene_actions, data);
+      }
+      drag->setMimeData(mimeData);
+
+      Qt::DropAction dropAction = drag->exec(Qt::MoveAction);
+   }
+
+   #pragma region Drag and drop
+      static void _extract_dragged_action_data(const QMimeData& mime_data, uint32_t& dst_action_id, ActionType& dst_action_type) {
+         if (!mime_data.hasFormat(drag_mime_type_for_scene_actions))
+            return;
+         QByteArray  bytes = mime_data.data(drag_mime_type_for_scene_actions);
+         QDataStream stream(&bytes, QIODevice::ReadOnly);
+         stream.readRawData((char*)&dst_action_id,   sizeof(dst_action_id));
+         stream.readRawData((char*)&dst_action_type, sizeof(dst_action_type));
+      }
+
+      SceneFormVisualEditor::DragDropTarget SceneFormVisualEditor::_find_drag_drop_target(const QRect& dragged_rect, ActionType action_type, uint32_t action_id) {
+         DragDropTarget target;
+         for (auto* actor : this->_data.actors) {
+            const auto rect_actor = actor->geometry.rect;
+            if (rect_actor.intersects(dragged_rect)) {
+               target.actor = actor;
+               break;
+            }
+         }
+         if (!target.actor)
+            return target;
+
+         for (size_t i = 0; i < this->_data.phases.size(); ++i) {
+            auto* phase = this->_data.phases[i];
+            auto& pr = phase->geometry.rect;
+            if (dragged_rect.right() < pr.x())
+               continue;
+            if (dragged_rect.left() > pr.right())
+               continue;
+            target.phase       = phase;
+            target.phase_index = i;
+            break;
+         }
+         if (!target.phase)
+            return target;
+
+         bool available = true;
+         //
+         // If the mouse is over a given phase, but the target actor already 
+         // has an action of the same type (as the one being dragged) on that 
+         // phase, then disallow dropping the dragged action into that phase.
+         //
+         for (const auto* action : target.actor->cached.actions) {
+            if (action->type() != action_type) {
+               continue;
+            }
+            auto& pi = action->base_data.phase_indices;
+            if (pi.start <= target.phase_index && pi.end >= target.phase_index) {
+               if (action->base_data.action_id == action_id) {
+                  //
+                  // The mouse is over the spot we're dragging the action *from*. 
+                  // Allow dropping it back into where it already is.
+                  //
+                  break;
+               }
+               available = false;
+               break;
+            }
+         }
+         if (!available)
+            return {};
+         return target;
+      }
+      SceneFormVisualEditor::DragDropTarget SceneFormVisualEditor::_find_drag_drop_target(const QPoint& local_pos, ActionType action_type, uint32_t action_id) {
+         QRect r(local_pos, QSize{ 1, 1 });
+         return this->_find_drag_drop_target(r, action_type, action_id);
+      }
+
+      void SceneFormVisualEditor::dragEnterEvent(QDragEnterEvent* event) {
+         if (event->source() != this)
+            return;
+         if (!event->mimeData()->hasFormat(drag_mime_type_for_scene_actions))
+            return;
+
+         // We'll do further filtering in real-time as the mouse moves, via dragMoveEvent.
+         event->acceptProposedAction();
+      }
+      void SceneFormVisualEditor::dragMoveEvent(QDragMoveEvent* event) {
+         uint32_t   action_id;
+         ActionType action_type;
+         _extract_dragged_action_data(*event->mimeData(), action_id, action_type);
+
+         auto target = this->_find_drag_drop_target(event->answerRect(), action_type, action_id);
+         if (target.actor && target.phase) {
+            event->acceptProposedAction();
+         } else {
+            event->setDropAction(Qt::IgnoreAction);
+            event->accept();
+         }
+      }
+      void SceneFormVisualEditor::dropEvent(QDropEvent* event) {
+         if (event->source() != this && !(event->possibleActions() & Qt::MoveAction))
+            return;
+         if (event->proposedAction() == Qt::MoveAction) {
+            uint32_t   action_id;
+            ActionType action_type;
+            _extract_dragged_action_data(*event->mimeData(), action_id, action_type);
+
+            auto target = this->_find_drag_drop_target(event->pos(), action_type, action_id);
+            if (target.actor && target.phase) {
+               Action* action = nullptr;
+               for (auto* a : this->_data.actions) {
+                  if (a->base_data.action_id == action_id) {
+                     action = a;
+                     break;
+                  }
+               }
+               if (!action) {
+                  return;
+               }
+               if (action->base_data.alias_id == target.actor->alias_id) {
+                  auto& pd = action->base_data.phase_indices;
+                  if (pd.start == target.phase_index) {
+                     //
+                     // We're not actually making a change.
+                     //
+                     return;
+                  }
+               }
+               //
+               // Perform the move.
+               //
+               size_t phase_count = action->base_data.phase_indices.end - action->base_data.phase_indices.start + 1;
+               action->base_data.alias_id = target.actor->alias_id;
+               action->base_data.phase_indices.start = target.phase_index;
+               action->base_data.phase_indices.end   = target.phase_index + phase_count - 1;
+               for (auto* a : target.actor->cached.actions) {
+                  if (a == action)
+                     continue;
+                  if (a->type() != action_type)
+                     continue;
+                  auto& pd = a->base_data.phase_indices;
+                  if (pd.start <= action->base_data.phase_indices.end && pd.end >= action->base_data.phase_indices.end) {
+                     action->base_data.phase_indices.end = pd.start - 1;
+                  }
+               }
+               //
+               // Update widget state and UI.
+               //
+               this->_data.any_changes_made = true;
+               this->_update_cached_internal_relationships();
+               this->_update_geometry();
+               this->update();
+            }
+         }
+      }
+   #pragma endregion
+
    /*virtual*/ void SceneFormVisualEditor::paintEvent(QPaintEvent* event) /*override*/ {
       const auto& ds = this->_data;
 
@@ -1561,4 +1787,5 @@ void SceneFormVisualEditor::_update_geometry() {
       this->_cached.size.setWidth(a_geo.rect.right() + this->_style.view_padding);
    }
    this->_cached.size.setHeight(graph_bottom);
+   this->updateGeometry();
 }

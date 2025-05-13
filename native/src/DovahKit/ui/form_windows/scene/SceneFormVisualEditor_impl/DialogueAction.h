@@ -28,6 +28,7 @@ namespace SceneFormVisualEditor_impl {
 
    class DialogueAction : public Action {
       public:
+         virtual ActionType type() const noexcept override { return ActionType::Dialogue; };
          virtual void paint(QPainter&, const Style&, const StyleOption&) override;
          virtual void recalcSize(int width, const Style&, const QFontMetrics&) override;
 

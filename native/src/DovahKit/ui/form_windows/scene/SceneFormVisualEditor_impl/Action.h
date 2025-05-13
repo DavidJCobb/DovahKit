@@ -6,6 +6,7 @@
 #include <QRect>
 #include <QSize>
 #include <QString>
+#include "./ActionType.h"
 
 namespace SceneFormVisualEditor_impl {
    struct Style;
@@ -27,6 +28,7 @@ namespace SceneFormVisualEditor_impl {
       public:
          virtual ~Action() = default;
 
+         virtual ActionType type() const noexcept = 0;
          virtual void paint(QPainter&, const Style&, const StyleOption&) = 0;
          virtual void recalcSize(int width, const Style&, const QFontMetrics&) = 0;
 

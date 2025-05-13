@@ -29,9 +29,8 @@ I was in the middle of working on scene editing at the time I switched to other 
 * Scene editing
   * DKQuestSceneEditor
     * Implement zooming in and out
-    * Implement clicking and dragging an action to reposition it.
-      * ℹ️ Requires being able to track what "action grid cell" the mouse is over, and draw a drop-indicator border over one cell or a contiguous range of cells.
-  * SCEN/VNAM
+    * Consider updating the drag-and-drop code to draw a visual indicator over the potential drop target during the drag operation.
+    * Implement resizing actions by dragging on their left and right edges.
   * Test adding and deleting phases, actors, and actions.
   * Test editing phases' and actions' properties.
   * We need a better way to delete actors.

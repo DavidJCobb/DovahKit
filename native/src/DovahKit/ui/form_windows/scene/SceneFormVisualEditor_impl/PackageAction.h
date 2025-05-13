@@ -13,6 +13,7 @@ namespace SceneFormVisualEditor_impl {
 
    class PackageAction : public Action {
       public:
+         virtual ActionType type() const noexcept override { return ActionType::Package; };
          virtual void paint(QPainter&, const Style&, const StyleOption&) override;
          virtual void recalcSize(int width, const Style&, const QFontMetrics&) override;
 

@@ -6,6 +6,7 @@
 #include <QWidget>
 #include "dovah/form_stub.h"
 #include "./SceneFormVisualEditor_impl/ActorBehaviorFlag.h"
+#include "./SceneFormVisualEditor_impl/ActionType.h"
 #include "./SceneFormVisualEditor_impl/SceneContext.h"
 #include "./SceneFormVisualEditor_impl/Style.h"
 #include "ui/types/conditions/condition.h"
@@ -65,6 +66,37 @@ class SceneFormVisualEditor : public QWidget {
       using Phase  = SceneFormVisualEditor_impl::Phase;
       using Action = SceneFormVisualEditor_impl::Action;
 
+      using ActionType = SceneFormVisualEditor_impl::ActionType;
+
+      struct MouseTargetAreaDetails {
+         bool exact  : 1 = false;
+         bool edge_l : 1 = false;
+         bool edge_r : 1 = false;
+         bool edge_t : 1 = false;
+         bool edge_b : 1 = false;
+      };
+      //
+      template<typename T>
+      struct MouseTargetArea : MouseTargetAreaDetails {
+         T* pointer = nullptr;
+      };
+      //
+      struct MouseTargets {
+         MouseTargetArea<Action> action;
+         MouseTargetArea<Actor>  actor;
+         MouseTargetArea<Phase>  phase;
+      };
+      //
+      MouseTargets _find_mouse_targets(const QPoint& local_pos);
+
+      struct DragDropTarget {
+         Actor* actor = nullptr;
+         Phase* phase = nullptr;
+         size_t phase_index = 0;
+      };
+      DragDropTarget _find_drag_drop_target(const QRect& dragged_rect, ActionType dragged_action_type, uint32_t dragged_action_id); // rect is local
+      DragDropTarget _find_drag_drop_target(const QPoint& local_pos, ActionType dragged_action_type, uint32_t dragged_action_id);
+
       void _set_up_action_dialog_phases(const Action&, FormSubdialogSceneActionBase&);
 
       void addActor();
@@ -84,6 +116,12 @@ class SceneFormVisualEditor : public QWidget {
          virtual void contextMenuEvent(QContextMenuEvent* event) override;
          virtual void mouseDoubleClickEvent(QMouseEvent*) override;
          virtual void mousePressEvent(QMouseEvent*) override;
+         virtual void mouseMoveEvent(QMouseEvent*) override;
+         #pragma region Drag and drop
+            virtual void dragEnterEvent(QDragEnterEvent*) override;
+            virtual void dragMoveEvent(QDragMoveEvent*) override;
+            virtual void dropEvent(QDropEvent*) override;
+         #pragma endregion
          virtual void paintEvent(QPaintEvent*) override;
       #pragma endregion
 
@@ -117,6 +155,10 @@ class SceneFormVisualEditor : public QWidget {
          std::vector<Action*> actions;
          bool any_changes_made = false;
       } _data;
+      struct {
+         QPoint  mousedown_at;
+         Action* mousedown_on = nullptr;
+      } _mouse;
       std::variant<
          std::monostate,
          Phase*,

@@ -19,6 +19,7 @@ namespace SceneFormVisualEditor_impl {
 
       auto& max_action_heights = geo.action_type_heights;
       auto& action_y_offsets   = geo.action_type_y_offsets;
+      max_action_heights = {}; // reset
       for (auto* action : this->cached.actions) {
          int* dst = nullptr;
          if (dynamic_cast<DialogueAction*>(action)) {
