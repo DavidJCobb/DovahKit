@@ -33,6 +33,6 @@ namespace {
       {  0,  5 }, // AI values
       { 39, 45 }, // damage resistances
       { 46, 52 }, // limb condition
-      { 53, 159 }, // all other actor values
+      { 53, 163 }, // all other actor values
    };
 }

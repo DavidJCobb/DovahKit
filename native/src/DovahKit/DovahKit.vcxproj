@@ -1201,6 +1201,7 @@
     <ClInclude Include="dovah\forms\SoulGem.h" />
     <ClInclude Include="dovah\forms\structs\actor_creature_sounds.h" />
     <ClInclude Include="dovah\forms\structs\actor_facegen_morphs.h" />
+    <ClInclude Include="dovah\forms\structs\alias_fill_params.h" />
     <ClInclude Include="dovah\forms\structs\container_object_extra_data.h" />
     <ClInclude Include="dovah\forms\structs\world_large_ref_data.h" />
     <ClInclude Include="dovah\forms\structs\movement_type_speeds.h" />

@@ -52,6 +52,42 @@ namespace dovah {
    };
    using story_event_code_t = std::underlying_type_t<story_event_code::type>;
 
+   inline constexpr const auto all_story_event_codes = std::array{
+      story_event_code::none,
+      story_event_code::undefined,
+      story_event_code::crime_gold,
+      story_event_code::actor_dialogue,
+      story_event_code::player_activate_actor,
+      story_event_code::actor_hello,
+      story_event_code::player_add_item,
+      story_event_code::arrest,
+      story_event_code::assault,
+      story_event_code::bribe,
+      story_event_code::cast_magic,
+      story_event_code::change_relationship_rank,
+      story_event_code::change_location,
+      story_event_code::craft_item,
+      story_event_code::player_cured,
+      story_event_code::dead_body,
+      story_event_code::escaped_jail,
+      story_event_code::flatter,
+      story_event_code::player_infected,
+      story_event_code::intimidate,
+      story_event_code::jail,
+      story_event_code::kill,
+      story_event_code::level_up,
+      story_event_code::lockpick,
+      story_event_code::new_voice_power,
+      story_event_code::pay_fine,
+      story_event_code::player_receives_favor,
+      story_event_code::player_remove_item,
+      story_event_code::quest_start,
+      story_event_code::script,
+      story_event_code::skill_increase,
+      story_event_code::served_time_in_jail,
+      story_event_code::trespass,
+   };
+
    struct story_event_definition {
       struct member {
          uint16_t    signature;

@@ -7274,6 +7274,9 @@
     <ClInclude Include="editor\helpers\story_event_name.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\forms\structs\alias_fill_params.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

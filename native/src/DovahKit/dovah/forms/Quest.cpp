@@ -839,8 +839,6 @@ namespace dovah::loaded_forms {
       } else if (const auto* src = std::get_if<structs::alias_fill_params::ref::find_from_event>(&this->fill_params)) {
          auto& src_data = *src;
          auto& dst_data = copy->fill_params.emplace<std::decay_t<decltype(src_data)>>();
-         auto& src_data = *src;
-         auto& dst_data = copy->fill_params.emplace<std::decay_t<decltype(src_data)>>();
          dst_data = src_data;
       } else if (const auto* src = std::get_if<structs::alias_fill_params::ref::find_near_alias>(&this->fill_params)) {
          auto& src_data = *src;

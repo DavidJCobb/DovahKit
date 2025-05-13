@@ -234,7 +234,6 @@ void FormSubdialogQuestRefAlias::save() {
 
    using alias_flag = std::decay_t<decltype(this->_data.alias)>::flag::type;
 
-   auto& form = this->_data.quest;
    this->_data.alias.clear_fill_params(form);
    if (this->ui.fillTypePredefined->isChecked()) {
       auto& dst = this->_data.alias.fill_params.emplace<alias_fill_params::ref::preassigned>();

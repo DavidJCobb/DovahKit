@@ -58,12 +58,12 @@ namespace dovah {
          using namespace dovah::loaded_forms;
          if (item->type != Alias::alias_type::reference)
             continue;
-         if (item->fill_type != Alias::fill_type_t::preset_unique_actor)
-            continue;
 
-         const auto* casted = (const ReferenceAlias*)item;
-         if (casted->fill_from_unique_actor_base == &unique_actor_base_stub)
-            return true;
+         const auto* casted = (const ReferenceAlias*) item;
+         if (auto* data = std::get_if<structs::alias_fill_params::ref::unique_actor>(&casted->fill_params)) {
+            if (data->actor_base == &unique_actor_base_stub)
+               return true;
+         }
       }
 
       return false;
