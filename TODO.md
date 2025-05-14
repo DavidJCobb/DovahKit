@@ -20,6 +20,9 @@ I was in the middle of working on scene editing at the time I switched to other 
   * Info tableview: flags: consider an expanded tooltip that lists the flags out in full, with line breaks and rich text.
   * Transplantation
     * ℹ️ QuestAllDialogueDatastore has partial code to handle transplantation. The code for transplanted DIALs is janky and not well-thought-out, and probably doesn't work. We'd need to get this working before we can think about adding any UI for this.
+    * ℹ️ An INFO whose conditions run on aliases of the owning quest cannot be safely transplanted across quests; thus also to its containing DIAL. We must check for such conditions, show a list of any INFOs which have them, and allow the user to either clear the relevant conditions en masse, reset those conditions' run-on target to Subject en masse, or cancel the transplantation.
+    * ℹ️ A SharedInfo cannot be safely transplanted out of its containing "shared info"-category DIAL nor its containing quest unless no other INFOs reference it.
+      * ℹ️ The latter implies that its containing DIAL cannot be safely transplanted (or have its category changed) either.
     * Moving DLBRs across quests
     * Moving top-level DIALs across quests
     * Moving branched DIALs across DLBRs
@@ -35,6 +38,7 @@ I was in the middle of working on scene editing at the time I switched to other 
 
 * Rename the `shader_particle_geometry_data` form type to `shader_particle_geometry`. It's a noun: it's a geometry (a 3D cube) filled with particles drawn via a special shader.
 * Modify the DKFormInventoryWidget: Add the ability to hide ExtraData-related widgets (ownership, health). Add the ability to disallow leveled items, and hide the "Preview Calculated Result" widgets when leveled items are disallowed. We need these features for Constructible Object forms, which use TESContainer for their crafting ingredients but shouldn't allow leveled items.
+* Investigate adding a backend component, and a reusable UI widget and/or dialog, for editing the list of magic effects attached to a Spell/Potion/Enchantment/Ingredient. (The common base class used by the game engine for these forms is `MagicItem`. We'll... probably want a better name. Maybe it can literally just be `magic_effect_list` for the backend and `DKMagicEffectListWidget`/`DKMagicEffectEditDialog` for the UI.)
 
 ## Forms in general
 
