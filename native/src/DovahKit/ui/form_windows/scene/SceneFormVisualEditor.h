@@ -102,6 +102,8 @@ class SceneFormVisualEditor : public QWidget {
       DragDropTarget _find_drag_drop_target(const QRect& dragged_rect, ActionType dragged_action_type, uint32_t dragged_action_id); // rect is local
       DragDropTarget _find_drag_drop_target(const QPoint& local_pos, ActionType dragged_action_type, uint32_t dragged_action_id);
 
+      void _on_resize_ended();
+
       void _set_up_action_dialog_phases(const Action&, FormSubdialogSceneActionBase&);
 
       void _update_cursor(const QMouseEvent*);
@@ -164,10 +166,11 @@ class SceneFormVisualEditor : public QWidget {
          bool any_changes_made = false;
       } _data;
       struct {
-         QPoint  mousedown_at; // widget-relative
-         Action* mousedown_on = nullptr;
-         QPoint  mouse_prev_pos; // screen-relative
-         bool    is_panning   = false;
+         QPoint                  mousedown_at; // widget-relative
+         MouseTargetArea<Action> mousedown_on;
+         QPoint                  mouse_prev_pos; // screen-relative
+         bool                    is_panning   = false;
+         bool                    is_resizing  = false;
       } _mouse;
       QPointer<QScrollArea> _scroll_area;
       std::variant<

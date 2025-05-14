@@ -2,6 +2,12 @@
 #include "./Style.h"
 
 namespace SceneFormVisualEditor_impl {
+   /*virtual*/ void Action::forceOverwriteWidth(int width) {
+      this->geometry.rect.setWidth(width);
+      this->geometry.rel.header.setWidth(width);
+      this->geometry.rel.body.setWidth(width);
+   }
+
    void Action::drawCell(QPainter& painter, const Style& style, QRect rect, QString text, int align_flags) const {
       QPen border_pen;
       border_pen.setCosmetic(true);

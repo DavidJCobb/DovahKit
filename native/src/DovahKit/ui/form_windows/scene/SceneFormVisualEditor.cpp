@@ -858,6 +858,100 @@ SceneFormVisualEditor::MouseTargets SceneFormVisualEditor::_find_mouse_targets(c
    return targets;
 }
 
+void SceneFormVisualEditor::_on_resize_ended() {
+   auto* target_action = this->_mouse.mousedown_on.pointer;
+   if (!target_action)
+      return;
+
+   Actor* target_actor = nullptr;
+   for (auto* actor : this->_data.actors) {
+      if (actor->alias_id == target_action->base_data.alias_id) {
+         target_actor = actor;
+         break;
+      }
+   }
+   if (!target_actor)
+      return;
+
+   bool leftward = this->_mouse.mousedown_on.edge_l;
+   //
+   // Figure out what phase the user has dragged into.
+   //
+   auto   target_x     = this->mapFromGlobal(this->_mouse.mouse_prev_pos).x();
+   size_t target_phase = leftward ? 0xFFFFFFFF : 0;
+   for (size_t i = 0; i < this->_data.phases.size(); ++i) {
+      auto* phase = this->_data.phases[i];
+      auto& rect  = phase->geometry.rect;
+      if (leftward) {
+         if (i == 0) {
+            if (target_x <= rect.right())
+               target_phase = i;
+            continue;
+         }
+         if (i > target_action->base_data.phase_indices.end)
+            break;
+      } else {
+         if (i == this->_data.phases.size() - 1) {
+            if (target_x >= rect.left())
+               target_phase = i;
+            continue;
+         }
+         if (i < target_action->base_data.phase_indices.start)
+            continue;
+      }
+      if (target_x >= rect.left() && target_x <= rect.right()) {
+         target_phase = i;
+      }
+   }
+
+   auto target_type = target_action->type();
+   if (leftward) {
+      auto from = target_action->base_data.phase_indices.start;
+      //
+      // Don't allow dragging far enough to overlap another action.
+      //
+      for (auto* action : target_actor->cached.actions) {
+         if (action == target_action)
+            continue;
+         if (action->type() != target_type)
+            continue;
+         auto& pd = action->base_data.phase_indices;
+         if (pd.end < from) {
+            if (pd.end >= target_phase) {
+               target_phase = pd.end + 1;
+            }
+         }
+      }
+      //
+      // Apply changes.
+      //
+      target_action->base_data.phase_indices.start = target_phase;
+   } else {
+      auto from = target_action->base_data.phase_indices.end;
+      //
+      // Don't allow dragging far enough to overlap another action.
+      //
+      for (auto* action : target_actor->cached.actions) {
+         if (action == target_action)
+            continue;
+         if (action->type() != target_type)
+            continue;
+         auto& pd = action->base_data.phase_indices;
+         if (pd.start > from) {
+            if (pd.start <= target_phase) {
+               target_phase = pd.start - 1;
+            }
+         }
+      }
+      //
+      // Apply changes.
+      //
+      target_action->base_data.phase_indices.end = target_phase;
+   }
+   this->_update_geometry();
+   this->update();
+}
+
 void SceneFormVisualEditor::_set_up_action_dialog_phases(const Action& action, FormSubdialogSceneActionBase& dialog) {
    Actor* actor = nullptr;
    for (auto* item : this->_data.actors) {
@@ -1393,14 +1487,14 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
       event->setAccepted(true);
 
       this->_mouse.mousedown_at   = event->localPos().toPoint();
-      this->_mouse.mousedown_on   = nullptr;
       this->_mouse.mouse_prev_pos = event->screenPos().toPoint();
       auto targets = this->_find_mouse_targets(this->_mouse.mousedown_at);
       if (targets.action.pointer) {
-         this->_mouse.mousedown_on = targets.action.pointer;
+         this->_mouse.mousedown_on = targets.action;
          this->_select(targets.action.pointer);
          return;
       }
+      this->_mouse.mousedown_on = {};
       if (targets.phase.pointer) {
          this->_select(targets.phase.pointer);
          return;
@@ -1428,13 +1522,24 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
 
          return;
       }
+      if (this->_mouse.is_resizing) {
+         auto pos   = event->screenPos().toPoint();
+         auto delta = pos - this->_mouse.mouse_prev_pos;
+         this->_mouse.mouse_prev_pos = pos;
+         //
+         // We'll perform actual changes when the mouse is released. For now, 
+         // just force a repaint of the action being resized.
+         //
+         this->repaint();
+         return;
+      }
       if (lmb || mmb) {
          this->_mouse.mouse_prev_pos = event->screenPos().toPoint();
          if ((event->pos() - this->_mouse.mousedown_at).manhattanLength() < QApplication::startDragDistance()) {
             this->_update_cursor(event);
             return;
          }
-         if (!this->_mouse.mousedown_on) {
+         if (!this->_mouse.mousedown_on.pointer) {
             this->_mouse.is_panning = true;
             this->_update_cursor(event);
             return;
@@ -1443,13 +1548,18 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
          return;
       }
 
+      if (this->_mouse.mousedown_on.edge_l || this->_mouse.mousedown_on.edge_r) {
+         this->_mouse.is_resizing = true;
+         return;
+      }
+
       QDrag*     drag = new QDrag(this);
       QMimeData* mimeData = new QMimeData;
       {
          QByteArray  data;
          QDataStream stream(&data, QIODevice::WriteOnly);
-         const uint32_t   src  = this->_mouse.mousedown_on->base_data.action_id;
-         const ActionType type = this->_mouse.mousedown_on->type();
+         const uint32_t   src  = this->_mouse.mousedown_on.pointer->base_data.action_id;
+         const ActionType type = this->_mouse.mousedown_on.pointer->type();
          stream.writeRawData((const char*)&src,  sizeof(src));
          stream.writeRawData((const char*)&type, sizeof(type));
 
@@ -1460,10 +1570,14 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
       Qt::DropAction dropAction = drag->exec(Qt::MoveAction);
    }
    /*virtual*/ void SceneFormVisualEditor::mouseReleaseEvent(QMouseEvent* event) /*override*/ {
+      if (this->_mouse.is_resizing) {
+         this->_on_resize_ended();
+      }
       bool was_panning = this->_mouse.is_panning;
       this->_mouse.is_panning   = false;
+      this->_mouse.is_resizing  = false;
       this->_mouse.mousedown_at = {};
-      this->_mouse.mousedown_on = nullptr;
+      this->_mouse.mousedown_on = {};
       if (was_panning) {
          this->_update_cursor(event);
       }
@@ -1595,6 +1709,9 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
                action->base_data.alias_id = target.actor->alias_id;
                action->base_data.phase_indices.start = target.phase_index;
                action->base_data.phase_indices.end   = target.phase_index + phase_count - 1;
+               if (action->base_data.phase_indices.end >= this->_data.phases.size()) {
+                  action->base_data.phase_indices.end = this->_data.phases.size() - 1;
+               }
                for (auto* a : target.actor->cached.actions) {
                   if (a == action)
                      continue;
@@ -1686,6 +1803,29 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
       {
          auto* sel = this->_selected_action();
          for (auto* action : ds.actions) {
+            if (this->_mouse.is_resizing && action == this->_mouse.mousedown_on.pointer) {
+               //
+               // HACK: Draw resize changes to the current action.
+               // 
+               // TODO: Enforce a minimum width, i.e. don't allow the action to be displayed as 
+               // smaller than one phase wide.
+               //
+               auto prior_geo = action->geometry;
+               auto mouse_x   = this->mapFromGlobal(this->_mouse.mouse_prev_pos).x();
+               if (this->_mouse.mousedown_on.edge_l) {
+                  action->geometry.rect.setLeft(mouse_x);
+               } else if (this->_mouse.mousedown_on.edge_r) {
+                  action->geometry.rect.setRight(mouse_x);
+               }
+               action->forceOverwriteWidth(action->geometry.rect.width());
+               //
+               option.selected = action == sel;
+               action->paint(painter, this->_style, option);
+               //
+               action->geometry = prior_geo;
+               action->forceOverwriteWidth(action->geometry.rect.width());
+               continue;
+            }
             option.selected = action == sel;
             action->paint(painter, this->_style, option);
          }

@@ -39,7 +39,7 @@ namespace SceneFormVisualEditor_impl {
             std::vector<QString> infos;
          } cached;
          struct {
-            std::vector<int> infos;
+            std::vector<int> infos; // heights
          } body_geometry;
    };
 }

@@ -31,6 +31,7 @@ namespace SceneFormVisualEditor_impl {
          virtual ActionType type() const noexcept = 0;
          virtual void paint(QPainter&, const Style&, const StyleOption&) = 0;
          virtual void recalcSize(int width, const Style&, const QFontMetrics&) = 0;
+         virtual void forceOverwriteWidth(int width); // used for visual updates while actions are being resized.
 
       protected:
          static constexpr const int cell_border_width = 2;
