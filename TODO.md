@@ -27,8 +27,6 @@ I was in the middle of working on scene editing at the time I switched to other 
       * When implementing dialogue transplantation, do not allow an INFO to be transplanted out of an IDAT topic if it's actively being used as a SharedInfo by another INFO.
       * ℹ️ When transplanting an INFO, we may need to manually flag the destination DIAL as edited, to ensure it gets saved to the file -- and the moved INFO with it.
 * Scene editing
-  * DKQuestSceneEditor
-    * Implement zooming in and out
   * Test adding and deleting phases, actors, and actions.
   * Test editing phases' and actions' properties.
   * We need a better way to delete actors.

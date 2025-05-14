@@ -64,6 +64,9 @@ class SceneFormVisualEditor : public QWidget {
       void setContainingScrollArea(QScrollArea*);
 
       constexpr bool hasAnyChanges() const noexcept { return this->_data.any_changes_made; }
+
+      constexpr float zoom() const noexcept { return this->_zoom; }
+      void setZoom(float);
       
    protected:
       using Style  = SceneFormVisualEditor_impl::Style;
@@ -72,6 +75,9 @@ class SceneFormVisualEditor : public QWidget {
       using Action = SceneFormVisualEditor_impl::Action;
 
       using ActionType = SceneFormVisualEditor_impl::ActionType;
+
+      // Map a point from global to chart-relative, i.e. accounting for the current zoom.
+      QPoint _map_from_global(const QPoint&);
 
       struct MouseTargetAreaDetails {
          bool exact  : 1 = false;
@@ -99,8 +105,8 @@ class SceneFormVisualEditor : public QWidget {
          Phase* phase = nullptr;
          size_t phase_index = 0;
       };
-      DragDropTarget _find_drag_drop_target(const QRect& dragged_rect, ActionType dragged_action_type, uint32_t dragged_action_id); // rect is local
-      DragDropTarget _find_drag_drop_target(const QPoint& local_pos, ActionType dragged_action_type, uint32_t dragged_action_id);
+      DragDropTarget _find_drag_drop_target(QRect dragged_rect, ActionType dragged_action_type, uint32_t dragged_action_id); // rect is widget-relative
+      DragDropTarget _find_drag_drop_target(const QPoint& widget_relative_pos, ActionType dragged_action_type, uint32_t dragged_action_id);
 
       void _on_resize_ended();
 
@@ -179,6 +185,7 @@ class SceneFormVisualEditor : public QWidget {
          Action*
       > _selection;
       Style _style;
+      float _zoom = 1.0F;
       
       void _deselect_all();
       void _select(Action*);

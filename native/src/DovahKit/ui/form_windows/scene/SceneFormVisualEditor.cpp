@@ -650,6 +650,18 @@ void SceneFormVisualEditor::setContainingScrollArea(QScrollArea* w) {
    this->_scroll_area = w;
 }
 
+void SceneFormVisualEditor::setZoom(float z) {
+   if (fabs(z - this->_zoom) < 0.00001F)
+      return;
+   this->_zoom = z;
+   this->_update_geometry();
+   this->update();
+}
+
+QPoint SceneFormVisualEditor::_map_from_global(const QPoint& src) {
+   return this->mapFromGlobal(src) / this->_zoom;
+}
+
 void SceneFormVisualEditor::_clear_data() {
    {
       auto& list = this->_data.phases;
@@ -877,7 +889,7 @@ void SceneFormVisualEditor::_on_resize_ended() {
    //
    // Figure out what phase the user has dragged into.
    //
-   auto   target_x     = this->mapFromGlobal(this->_mouse.mouse_prev_pos).x();
+   auto   target_x     = this->_map_from_global(this->_mouse.mouse_prev_pos).x();
    size_t target_phase = leftward ? 0xFFFFFFFF : 0;
    for (size_t i = 0; i < this->_data.phases.size(); ++i) {
       auto* phase = this->_data.phases[i];
@@ -993,8 +1005,12 @@ void SceneFormVisualEditor::_update_cursor(const QMouseEvent* event) {
       this->setCursor(Qt::CursorShape::ClosedHandCursor);
       return;
    }
+   if (this->_mouse.is_resizing) {
+      this->setCursor(Qt::CursorShape::SizeHorCursor);
+      return;
+   }
 
-   auto targets = this->_find_mouse_targets(event->localPos().toPoint());
+   auto targets = this->_find_mouse_targets(this->_map_from_global(event->globalPos()));
    if (targets.action.pointer) {
       if (targets.action.edge_l || targets.action.edge_r) {
          this->setCursor(Qt::CursorShape::SizeHorCursor);
@@ -1450,7 +1466,7 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
          Phase*  phase  = nullptr;
       } targets;
 
-      auto pos = event->localPos().toPoint();
+      auto pos = this->_map_from_global(event->globalPos());
       for (auto* item : this->_data.actions) {
          if (item->geometry.rect.contains(pos)) {
             targets.action = item;
@@ -1488,7 +1504,7 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
 
       this->_mouse.mousedown_at   = event->localPos().toPoint();
       this->_mouse.mouse_prev_pos = event->screenPos().toPoint();
-      auto targets = this->_find_mouse_targets(this->_mouse.mousedown_at);
+      auto targets = this->_find_mouse_targets(this->_map_from_global(event->globalPos()));
       if (targets.action.pointer) {
          this->_mouse.mousedown_on = targets.action;
          this->_select(targets.action.pointer);
@@ -1593,7 +1609,18 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
          stream.readRawData((char*)&dst_action_type, sizeof(dst_action_type));
       }
 
-      SceneFormVisualEditor::DragDropTarget SceneFormVisualEditor::_find_drag_drop_target(const QRect& dragged_rect, ActionType action_type, uint32_t action_id) {
+      SceneFormVisualEditor::DragDropTarget SceneFormVisualEditor::_find_drag_drop_target(QRect dragged_rect, ActionType action_type, uint32_t action_id) {
+         dragged_rect = QRect(
+            dragged_rect.x()      / this->_zoom,
+            dragged_rect.y()      / this->_zoom,
+            dragged_rect.width()  / this->_zoom,
+            dragged_rect.height() / this->_zoom
+         );
+         if (dragged_rect.width() <= 0)
+            dragged_rect.setWidth(1);
+         if (dragged_rect.height() <= 0)
+            dragged_rect.setHeight(1);
+
          DragDropTarget target;
          for (auto* actor : this->_data.actors) {
             const auto rect_actor = actor->geometry.rect;
@@ -1748,6 +1775,7 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
       }
 
       QPainter painter(this);
+      painter.scale(this->_zoom, this->_zoom);
       //
       // Draw shadows.
       //
@@ -1808,7 +1836,7 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
                // HACK: Draw resize changes to the current action.
                // 
                auto prior_geo = action->geometry;
-               auto mouse_x   = this->mapFromGlobal(this->_mouse.mouse_prev_pos).x();
+               auto mouse_x   = this->_map_from_global(this->_mouse.mouse_prev_pos).x();
                if (this->_mouse.mousedown_on.edge_l) {
                   const auto*  clamp_to_phase  = this->_data.phases[action->base_data.phase_indices.end];
                   const size_t clamp_to_extent = clamp_to_phase->geometry.rect.left() + this->_style.action.inset;
@@ -2003,5 +2031,6 @@ void SceneFormVisualEditor::_update_geometry() {
       this->_cached.size.setWidth(a_geo.rect.right() + this->_style.view_padding);
    }
    this->_cached.size.setHeight(graph_bottom);
+   this->_cached.size *= this->_zoom;
    this->updateGeometry();
 }

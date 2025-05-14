@@ -70,7 +70,11 @@ namespace SceneFormVisualEditor_impl {
    }
    void Actor::paint(QPainter& painter, const Style& style) {
       painter.setBrush(QBrush(style.actor.background));
-      painter.setPen(QPen(style.actor.text));
+      {
+         auto pen = QPen(style.actor.text);
+         pen.setCosmetic(true);
+         painter.setPen(pen);
+      }
 
       painter.drawRect(this->geometry.rect);
 

@@ -37,7 +37,11 @@ namespace SceneFormVisualEditor_impl {
       } else {
          painter.setBrush(QBrush(style.action.timer.background));
       }
-      painter.setPen(QPen(style.action.timer.text));
+      {
+         auto pen = QPen(style.action.timer.text);
+         pen.setCosmetic(true);
+         painter.setPen(pen);
+      }
       painter.drawRect(rect);
       rect.adjust(0, style.action.header_padding, 0, 0);
       if (option.selected) {

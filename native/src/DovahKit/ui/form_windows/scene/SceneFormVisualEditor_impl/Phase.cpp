@@ -49,7 +49,11 @@ namespace SceneFormVisualEditor_impl {
 
    void Phase::paint(QPainter& painter, const Style& style, const StyleOption& option, int index, int height) {
       painter.setBrush(QBrush(style.phase.background));
-      painter.setPen(QPen(style.phase.text));
+      {
+         auto pen = QPen(style.phase.text);
+         pen.setCosmetic(true);
+         painter.setPen(pen);
+      }
 
       painter.save();
       painter.translate(this->geometry.rect.topLeft());
@@ -74,7 +78,11 @@ namespace SceneFormVisualEditor_impl {
          // Reset.
          //
          painter.setBrush(QBrush(style.selection.background));
-         painter.setPen(QPen(style.selection.text));
+         {
+            auto pen = QPen(style.selection.text);
+            pen.setCosmetic(true);
+            painter.setPen(pen);
+         }
       }
 
       {  // Header
@@ -87,13 +95,21 @@ namespace SceneFormVisualEditor_impl {
          const QRect& rect = this->geometry.rel.header;
          if (option.selected && option.active) {
             painter.setBrush(QBrush(style.selection.background));
-            painter.setPen(QPen(style.selection.text));
+            {
+               auto pen = QPen(style.selection.text);
+               pen.setCosmetic(true);
+               painter.setPen(pen);
+            }
          }
          painter.drawRect(rect);
          painter.drawText(rect, Qt::AlignTop | Qt::AlignHCenter, text);
          if (option.selected && option.active) {
             painter.setBrush(QBrush(style.phase.background));
-            painter.setPen(QPen(style.phase.text));
+            {
+               auto pen = QPen(style.phase.text);
+               pen.setCosmetic(true);
+               painter.setPen(pen);
+            }
          }
       }
       if (auto src = this->cached.conditions.start; !src.isEmpty()) {
