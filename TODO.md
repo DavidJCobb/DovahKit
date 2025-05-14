@@ -29,8 +29,6 @@ I was in the middle of working on scene editing at the time I switched to other 
 * Scene editing
   * DKQuestSceneEditor
     * Implement zooming in and out
-    * Consider updating the drag-and-drop code to draw a visual indicator over the potential drop target during the drag operation.
-    * Drag-resizing actions: when we repaint the action being resized, we should ensure that it's drawn with a minimum width (i.e. it shouldn't be possible to render it as smaller than one phase wide, and certainly not with a *negative* width).
   * Test adding and deleting phases, actors, and actions.
   * Test editing phases' and actions' properties.
   * We need a better way to delete actors.

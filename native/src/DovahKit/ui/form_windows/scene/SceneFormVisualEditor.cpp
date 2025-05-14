@@ -1807,14 +1807,21 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
                //
                // HACK: Draw resize changes to the current action.
                // 
-               // TODO: Enforce a minimum width, i.e. don't allow the action to be displayed as 
-               // smaller than one phase wide.
-               //
                auto prior_geo = action->geometry;
                auto mouse_x   = this->mapFromGlobal(this->_mouse.mouse_prev_pos).x();
                if (this->_mouse.mousedown_on.edge_l) {
+                  const auto*  clamp_to_phase  = this->_data.phases[action->base_data.phase_indices.end];
+                  const size_t clamp_to_extent = clamp_to_phase->geometry.rect.left() + this->_style.action.inset;
+                  if (mouse_x > clamp_to_extent) {
+                     mouse_x = clamp_to_extent;
+                  }
                   action->geometry.rect.setLeft(mouse_x);
                } else if (this->_mouse.mousedown_on.edge_r) {
+                  const auto*  clamp_to_phase  = this->_data.phases[action->base_data.phase_indices.start];
+                  const size_t clamp_to_extent = clamp_to_phase->geometry.rect.right() - this->_style.action.inset;
+                  if (mouse_x < clamp_to_extent) {
+                     mouse_x = clamp_to_extent;
+                  }
                   action->geometry.rect.setRight(mouse_x);
                }
                action->forceOverwriteWidth(action->geometry.rect.width());
