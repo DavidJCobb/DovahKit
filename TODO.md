@@ -72,6 +72,7 @@ I was in the middle of working on scene editing at the time I switched to other 
   * SOPM (Sound Output Model)
   * SPEL (Spell)
   * TACT (Talking Activator)
+  * TREE (Tree)
 * Form types with incomplete/placeholder backends:
   * LCTN (Location)
   * MGEF (Magic Effect)
@@ -131,7 +132,7 @@ Backend refers to the existence of a form data class within the `dovah` folder. 
 | Magic | DUAL | Dual Cast Data | ✅ | ✅ | ⬛ |
 | Magic | ENCH | Enchantment    | ⬛ | ⬛ | ⬛ |
 | Magic | LVSP | LeveledSpell   | ✅ | ✅ | ⬛ |
-| Magic | MGEF | Magic Effect   | ⬛ | ⬛ | ⬛ |
+| Magic | MGEF | Magic Effect   | ⬛ | 🟨 | ⬛ |
 | Magic | ALCH | Potion         | ⬛ | ⬛ | ⬛ |
 | Magic | SCRL | Scroll         | ⬛ | ⬛ | ⬛ |
 | Magic | SHOU | Shout          | ✅ | ✅ | ✅ |
@@ -181,10 +182,10 @@ Backend refers to the existence of a form data class within the `dovah` folder. 
 | WorldObjects | FURN | Furniture     | ⬛ | 🟨 | ⬛ |
 | WorldObjects | GRAS | Grass         | ✅ | ✅ | ⬛ |
 | WorldObjects | LIGH | Light         | ✅ | ✅ | ⬛ |
-| WorldObjects | MSTT | MovableStatic | ⬛ | ⬛ | ⬛ |
+| WorldObjects | MSTT | MovableStatic | ⬛ | 🟨 | ⬛ |
 | WorldObjects | STAT | Static        | ✅ | ✅ | 🟨 |
 | WorldObjects | ???? | Static Collection | ⬛ | ⬛ | ⬛ |
-| WorldObjects | TREE | Tree          | ⬛ | ⬛ | ⬛ |
+| WorldObjects | TREE | Tree          | ⬛ | 🟨 | ⬛ |
 | Menu: Gameplay | CPTH | Camera Path | ⬛ | ⬛ | ⬛ |
 | Dialogue | DLBR | Dialogue Branch | ✅ | ✅ | ⬛ |
 | Dialogue | DIAL | Dialogue Topic  | ✅ | ✅ | 🟨 |

@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogMovableStatic</class>
+ <widget class="QDialog" name="FormDialogMovableStatic">
+  <property name="windowTitle">
+   <string>MovableStatic</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Model:</string>
+       </property>
+       <property name="buddy">
+        <cstring>model</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="name"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Name:</string>
+       </property>
+       <property name="buddy">
+        <cstring>name</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="DKFormNIFPicker" name="model"/>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <widget class="DKFormDestructionDataButton" name="destructionData"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Navmesh generation:</string>
+       </property>
+       <property name="buddy">
+        <cstring>navmeshGeneration</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="DKNavmeshGenerationImportOptionPicker" name="navmeshGeneration"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Looping sound:</string>
+       </property>
+       <property name="buddy">
+        <cstring>loopSound</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="DKFormPicker" name="loopSound"/>
+     </item>
+     <item row="1" column="0" colspan="2">
+      <layout class="QGridLayout" name="flagsLayout">
+       <item row="0" column="1">
+        <widget class="QCheckBox" name="flagObstacle">
+         <property name="text">
+          <string>Obstacle</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCheckBox" name="flagRandomAnimStart">
+         <property name="text">
+          <string>Random Anim Start</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="flagHasCurrents">
+         <property name="text">
+          <string>Has currents</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QCheckBox" name="flagMustUpdateAnims">
+         <property name="text">
+          <string>Must Update Anims</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="flagOnLocalMap">
+         <property name="text">
+          <string>On Local Map</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormDestructionDataButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormDestructionDataButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKNavmeshGenerationImportOptionPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKNavmeshGenerationImportOptionPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>model</tabstop>
+  <tabstop>destructionData</tabstop>
+  <tabstop>loopSound</tabstop>
+  <tabstop>flagHasCurrents</tabstop>
+  <tabstop>flagObstacle</tabstop>
+  <tabstop>flagRandomAnimStart</tabstop>
+  <tabstop>flagMustUpdateAnims</tabstop>
+  <tabstop>flagOnLocalMap</tabstop>
+  <tabstop>navmeshGeneration</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

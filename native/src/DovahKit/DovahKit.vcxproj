@@ -1372,6 +1372,7 @@
     <ClInclude Include="editor\helpers\story_event_name.h" />
     <ClInclude Include="ui\form_windows\quest\alias_subdialog_helpers.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Action.h" />
+    <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\ActionType.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Actor.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\ActorBehaviorFlag.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\DialogueAction.h" />

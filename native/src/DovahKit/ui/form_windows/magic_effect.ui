@@ -1,0 +1,1093 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogMagicEffect</class>
+ <widget class="QDialog" name="FormDialogMagicEffect">
+  <property name="windowTitle">
+   <string>Magic Effect</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_6">
+   <item row="2" column="0">
+    <layout class="QGridLayout" name="metricsLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_13">
+       <property name="text">
+        <string>Taper Duration:</string>
+       </property>
+       <property name="buddy">
+        <cstring>taperDuration</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QDoubleSpinBox" name="taperWeight">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_15">
+       <property name="text">
+        <string>Taper Curve</string>
+       </property>
+       <property name="buddy">
+        <cstring>taperCurve</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="label_16">
+       <property name="text">
+        <string>Base Cost:</string>
+       </property>
+       <property name="buddy">
+        <cstring>baseCost</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QDoubleSpinBox" name="taperDuration">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_14">
+       <property name="text">
+        <string>Taper Weight:</string>
+       </property>
+       <property name="buddy">
+        <cstring>taperWeight</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLabel" name="label_17">
+       <property name="text">
+        <string>Skill Usage Mult:</string>
+       </property>
+       <property name="buddy">
+        <cstring>skillUsageMult</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QDoubleSpinBox" name="taperCurve">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="QDoubleSpinBox" name="baseCost">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QDoubleSpinBox" name="skillUsageMult">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="0" rowspan="2">
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Name:</string>
+       </property>
+       <property name="buddy">
+        <cstring>name</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Casting Type:</string>
+       </property>
+       <property name="buddy">
+        <cstring>castingType</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="0">
+      <widget class="QLabel" name="label_11">
+       <property name="text">
+        <string>Resist Value:</string>
+       </property>
+       <property name="buddy">
+        <cstring>resistAV</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Minimum Skill Level:</string>
+       </property>
+       <property name="buddy">
+        <cstring>minSkill</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="label_10">
+       <property name="text">
+        <string>Second AV Weight:</string>
+       </property>
+       <property name="buddy">
+        <cstring>doubleSpinBox</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Magic Skill:</string>
+       </property>
+       <property name="buddy">
+        <cstring>skill</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>Associated Item 1:</string>
+       </property>
+       <property name="buddy">
+        <cstring>assocItem1</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="0">
+      <widget class="QLabel" name="label_12">
+       <property name="text">
+        <string>Perk to Apply:</string>
+       </property>
+       <property name="buddy">
+        <cstring>perkToApply</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Delivery:</string>
+       </property>
+       <property name="buddy">
+        <cstring>delivery</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>Associated Item 2:</string>
+       </property>
+       <property name="buddy">
+        <cstring>assocItem2</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Archetype:</string>
+       </property>
+       <property name="buddy">
+        <cstring>archetype</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="name"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="archetype"/>
+     </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="castingType"/>
+     </item>
+     <item row="4" column="1">
+      <widget class="QComboBox" name="delivery"/>
+     </item>
+     <item row="6" column="1" alignment="Qt::AlignLeft">
+      <widget class="QSpinBox" name="minSkill">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="maximum">
+        <number>100</number>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="DKFormPicker" name="assocItem1"/>
+     </item>
+     <item row="8" column="1">
+      <widget class="DKFormPicker" name="assocItem2"/>
+     </item>
+     <item row="9" column="1" alignment="Qt::AlignLeft">
+      <widget class="QDoubleSpinBox" name="doubleSpinBox">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="1">
+      <widget class="DKFormPicker" name="resistAV">
+       <property name="whatsThis">
+        <string>An Actor Value: the type of resistance (e.g. damage resistance, fire resistance, poison resistance) that applies to this effect. This is only used if this effect is flagged as Hostile.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="1">
+      <widget class="DKFormPicker" name="perkToApply">
+       <property name="whatsThis">
+        <string>When this effect is applied to the player, a Perk can be temporarily added to the player, to be removed when the effect ceases to apply. This does not work on NPCs, as NPCs cannot have perks added or removed dynamically during play.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="DKFormPicker" name="skill"/>
+     </item>
+    </layout>
+   </item>
+   <item row="4" column="0">
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Keywords</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QCheckBox" name="dispelOthersWithKeyword">
+        <property name="whatsThis">
+         <string>If this is checked, then when this Magic Effect applies to a target, any Spells that are currently active on the target will be dispelled if any of their own effects have any of these keywords.</string>
+        </property>
+        <property name="text">
+         <string>Dispel other effects with these keywords</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="DKFormListPane" name="keywords">
+        <property name="showFormTypes">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox_4">
+        <property name="title">
+         <string>Counter Effects</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_12">
+         <item row="0" column="0">
+          <widget class="DKFormListPane" name="counterEffects">
+           <property name="showFormTypes">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="2" rowspan="4">
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <item>
+      <widget class="QGroupBox" name="groupBox_8">
+       <property name="title">
+        <string>Sounds</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_11">
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_41">
+          <property name="text">
+           <string>Release:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundRelease</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_40">
+          <property name="text">
+           <string>Ready:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundReady</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_39">
+          <property name="text">
+           <string>Charge:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundCharge</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="DKFormPicker" name="soundDrawSheathe"/>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="label_43">
+          <property name="text">
+           <string>On Hit:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundOnHit</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_38">
+          <property name="text">
+           <string>Draw/Sheathe:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundDrawSheathe</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_42">
+          <property name="text">
+           <string>Cast Loop (Conc.):</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundCastLoop</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="0">
+         <widget class="QLabel" name="label_44">
+          <property name="text">
+           <string>Detection Sound Level:</string>
+          </property>
+          <property name="buddy">
+           <cstring>detectionSoundLevel</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="DKFormPicker" name="soundCharge"/>
+        </item>
+        <item row="2" column="1">
+         <widget class="DKFormPicker" name="soundReady"/>
+        </item>
+        <item row="3" column="1">
+         <widget class="DKFormPicker" name="soundRelease"/>
+        </item>
+        <item row="4" column="1">
+         <widget class="DKFormPicker" name="soundCastLoop"/>
+        </item>
+        <item row="5" column="1">
+         <widget class="DKFormPicker" name="soundOnHit"/>
+        </item>
+        <item row="6" column="1">
+         <widget class="QComboBox" name="detectionSoundLevel"/>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QLabel" name="label_20">
+         <property name="text">
+          <string>Description:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="description"/>
+       </item>
+       <item>
+        <widget class="DKPapyrusBoundScriptListPane" name="scriptListPane"/>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="1" colspan="2">
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Target Conditions</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="DKConditionList" name="conditions"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Flags</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="3" column="1">
+       <widget class="QCheckBox" name="flagNoDuration">
+        <property name="whatsThis">
+         <string>If checked, this effect applies instantaneously, and its duration can't be configured when attaching it to spells, potions, and so on.</string>
+        </property>
+        <property name="text">
+         <string>No Duration</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="flagNoDeathDispel">
+        <property name="whatsThis">
+         <string>By default, magic effects are dispelled when their target dies. This option allows you to make the effect persist on the target even after death.</string>
+        </property>
+        <property name="text">
+         <string>No Death Dispel</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="flagHostile">
+        <property name="whatsThis">
+         <string>This effect is treated as an attack, and is subject to being resisted by the target's Resist Value.</string>
+        </property>
+        <property name="text">
+         <string>Hostile</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="flagDetrimental">
+        <property name="whatsThis">
+         <string>&lt;p&gt;If checked, this effect will damage the Actor Value that it targets. If unchecked, this effect will buff the Actor Value.&lt;/p&gt;
+&lt;p&gt;The word &quot;damage&quot; here means &quot;worsen,&quot; not &quot;reduce.&quot; A small number of Actor Values, such as MovementNoiseMult, are inverted such that &quot;damaging&quot; them &lt;em&gt;increases&lt;/em&gt; their value (i.e. you make more noise) and &quot;buffing&quot; them &lt;em&gt;decreases&lt;/em&gt; their value (i.e. you make less noise).&lt;/p&gt;</string>
+        </property>
+        <property name="text">
+         <string>Detrimental</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QCheckBox" name="flagSnapToNavmesh">
+        <property name="whatsThis">
+         <string>If checked, the Aimed or Target Location point will be snapped to the nearest point on the Navmesh. This is primarily useful for summoned creatures, to ensure that they spawn somewhere they can actually move around in.</string>
+        </property>
+        <property name="text">
+         <string>Snap to Navmesh</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="flagNoRecast">
+        <property name="whatsThis">
+         <string>If checked, this effect can't be applied to a target if it's already active on that target; the effect must wear off or be dispelled before it can be applied to that target again.</string>
+        </property>
+        <property name="text">
+         <string>No Recast</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QCheckBox" name="flagNoHitEvent">
+        <property name="whatsThis">
+         <string>If checked, this effect is stealthy: the target doesn't register a hit event when struck.</string>
+        </property>
+        <property name="text">
+         <string>No Hit Event</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="flagRecover">
+        <property name="whatsThis">
+         <string>&lt;p&gt;If this is checked, then the effect acts as a buff or debuff: the target Actor Value's current and maximum values will be altered once when the effect begins, and those alterations will be undone when the effect expires.&lt;/p&gt;
+&lt;p&gt;If this is unchecekd, then the effect acts as damage or restoration over time: the target Actor Value's current value will be altered once per second until the effect expires, and the alterations will not be undone when the effect expires.&lt;/p&gt;</string>
+        </property>
+        <property name="text">
+         <string>Recover</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QCheckBox" name="flagNoHitEffect">
+        <property name="whatsThis">
+         <string>Disable visual effects that would otherwise play on the target of this effect.</string>
+        </property>
+        <property name="text">
+         <string>No Hit Effect</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QCheckBox" name="flagFXPersist">
+        <property name="whatsThis">
+         <string>If checked, the visual effects applied to the target persist for the duration of the effect. If unchecked, they play only once, when the effect is first applied.</string>
+        </property>
+        <property name="text">
+         <string>FX Persist</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QCheckBox" name="flagNoMagnitude">
+        <property name="whatsThis">
+         <string>If checked, this effect will not have a configurable magnitude, when attaching it to spells, potions, and so on.</string>
+        </property>
+        <property name="text">
+         <string>No Magnitude</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QCheckBox" name="flagNoArea">
+        <property name="whatsThis">
+         <string>If checked, this effect will not have a configurable area (radius), when attaching it to spells, potions, and so on.</string>
+        </property>
+        <property name="text">
+         <string>No Area</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QCheckBox" name="flagPainless">
+        <property name="whatsThis">
+         <string>If checked, the target of this effect won't cry out in pain even if the effect is hostile. If the target is the player, this checkbox also prevents the screen blur effect that appears when taking damage.</string>
+        </property>
+        <property name="text">
+         <string>Painless</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QCheckBox" name="flagGory">
+        <property name="whatsThis">
+         <string>Unused.</string>
+        </property>
+        <property name="text">
+         <string>Gory Visuals</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QCheckBox" name="flagHideInUI">
+        <property name="whatsThis">
+         <string>&lt;p&gt;If checked, this effect is not displayed to the player in the Active Effects menu, and its description will be omitted from spells' auto-generated descriptions.&lt;/p&gt;
+&lt;p&gt;If all Magic Effects attached to an Enchantment have this flag checked, then the enchanted equipment will appear unenchanted and, in the case of weapons, not display a charge bar on-screen. This is purely visual, however; the enchantment will still function as intended.&lt;/p&gt;</string>
+        </property>
+        <property name="text">
+         <string>Hide in UI</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="1" rowspan="4">
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_18">
+         <property name="text">
+          <string>Menu Display Object:</string>
+         </property>
+         <property name="buddy">
+          <cstring>menuDisplayObject</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="DKFormPicker" name="menuDisplayObject"/>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="vfxGroupbox">
+       <property name="title">
+        <string>Visual Effects</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_7">
+        <item row="2" column="1">
+         <widget class="DKFormPicker" name="hitEffectArt"/>
+        </item>
+        <item row="6" column="0">
+         <widget class="QLabel" name="label_34">
+          <property name="text">
+           <string>Projectile:</string>
+          </property>
+          <property name="buddy">
+           <cstring>projectile</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="0">
+         <widget class="QLabel" name="label_35">
+          <property name="text">
+           <string>Impact Data Set:</string>
+          </property>
+          <property name="buddy">
+           <cstring>impactDataSet</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_21">
+          <property name="text">
+           <string>Casting Art:</string>
+          </property>
+          <property name="buddy">
+           <cstring>castingArt</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_23">
+          <property name="text">
+           <string>Hit Effect Art:</string>
+          </property>
+          <property name="buddy">
+           <cstring>hitEffectArt</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_22">
+          <property name="text">
+           <string>Casting Light:</string>
+          </property>
+          <property name="buddy">
+           <cstring>castingLight</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_32">
+          <property name="text">
+           <string>Enchant Art:</string>
+          </property>
+          <property name="buddy">
+           <cstring>enchantArt</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="DKFormPicker" name="castingLight"/>
+        </item>
+        <item row="0" column="1">
+         <widget class="DKFormPicker" name="castingArt"/>
+        </item>
+        <item row="8" column="0">
+         <widget class="QLabel" name="label_36">
+          <property name="text">
+           <string>Explosion:</string>
+          </property>
+          <property name="buddy">
+           <cstring>explosion</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_24">
+          <property name="text">
+           <string>Hit Shader:</string>
+          </property>
+          <property name="buddy">
+           <cstring>hitShader</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="DKFormPicker" name="hitShader"/>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="label_33">
+          <property name="text">
+           <string>Enchant Shader:</string>
+          </property>
+          <property name="buddy">
+           <cstring>enchantShader</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="0">
+         <widget class="QLabel" name="label_37">
+          <property name="text">
+           <string>Imagespace Mod:</string>
+          </property>
+          <property name="buddy">
+           <cstring>imagespaceModifier</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="DKFormPicker" name="enchantArt"/>
+        </item>
+        <item row="5" column="1">
+         <widget class="DKFormPicker" name="enchantShader"/>
+        </item>
+        <item row="6" column="1">
+         <widget class="DKFormPicker" name="projectile"/>
+        </item>
+        <item row="7" column="1">
+         <widget class="DKFormPicker" name="impactDataSet"/>
+        </item>
+        <item row="8" column="1">
+         <widget class="DKFormPicker" name="explosion"/>
+        </item>
+        <item row="9" column="1">
+         <widget class="DKFormPicker" name="imagespaceModifier"/>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="dualCastGroupbox">
+       <property name="title">
+        <string>Dual Casting</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_8">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_25">
+          <property name="text">
+           <string>Art:</string>
+          </property>
+          <property name="buddy">
+           <cstring>dualCastData</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="DKFormPicker" name="dualCastData"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_26">
+          <property name="text">
+           <string>Scale:</string>
+          </property>
+          <property name="buddy">
+           <cstring>dualCastScale</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1" alignment="Qt::AlignLeft">
+         <widget class="QDoubleSpinBox" name="dualCastScale">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox_6">
+       <property name="title">
+        <string>Spellmaking</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_9">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_27">
+          <property name="text">
+           <string>Power Affects:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_28">
+          <property name="text">
+           <string>Area:</string>
+          </property>
+          <property name="buddy">
+           <cstring>spellmakingArea</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QLabel" name="label_29">
+          <property name="text">
+           <string>Casting Time:</string>
+          </property>
+          <property name="buddy">
+           <cstring>spellmakingCastingTime</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QDoubleSpinBox" name="spellmakingArea">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="3">
+         <widget class="QDoubleSpinBox" name="spellmakingCastingTime">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1" colspan="3">
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QCheckBox" name="flagPowerAffectsMagnitude">
+            <property name="text">
+             <string>Magnitude</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="flagPowerAffectsDuration">
+            <property name="text">
+             <string>Duration</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox_7">
+       <property name="title">
+        <string>Script Effect AI Data</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_10">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_30">
+          <property name="text">
+           <string>Score:</string>
+          </property>
+          <property name="buddy">
+           <cstring>aiScore</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QDoubleSpinBox" name="aiScore">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="4">
+         <widget class="QDoubleSpinBox" name="aiDelayTime">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3">
+         <widget class="QLabel" name="label_31">
+          <property name="text">
+           <string>Delay Time:</string>
+          </property>
+          <property name="buddy">
+           <cstring>aiDelayTime</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <layout class="QGridLayout" name="gridLayout_5">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_19">
+         <property name="text">
+          <string>Equip Ability:</string>
+         </property>
+         <property name="buddy">
+          <cstring>equipAbility</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="DKFormPicker" name="equipAbility"/>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="5" column="0" colspan="3">
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKPapyrusBoundScriptListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKPapyrusBoundScriptListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKConditionList</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKConditionList.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>archetype</tabstop>
+  <tabstop>castingType</tabstop>
+  <tabstop>delivery</tabstop>
+  <tabstop>skill</tabstop>
+  <tabstop>minSkill</tabstop>
+  <tabstop>assocItem1</tabstop>
+  <tabstop>assocItem2</tabstop>
+  <tabstop>doubleSpinBox</tabstop>
+  <tabstop>resistAV</tabstop>
+  <tabstop>perkToApply</tabstop>
+  <tabstop>taperDuration</tabstop>
+  <tabstop>taperWeight</tabstop>
+  <tabstop>taperCurve</tabstop>
+  <tabstop>baseCost</tabstop>
+  <tabstop>skillUsageMult</tabstop>
+  <tabstop>flagHostile</tabstop>
+  <tabstop>flagDetrimental</tabstop>
+  <tabstop>flagRecover</tabstop>
+  <tabstop>flagFXPersist</tabstop>
+  <tabstop>flagSnapToNavmesh</tabstop>
+  <tabstop>flagNoRecast</tabstop>
+  <tabstop>flagNoHitEffect</tabstop>
+  <tabstop>flagNoDeathDispel</tabstop>
+  <tabstop>flagNoDuration</tabstop>
+  <tabstop>flagNoHitEvent</tabstop>
+  <tabstop>flagNoMagnitude</tabstop>
+  <tabstop>flagNoArea</tabstop>
+  <tabstop>flagPainless</tabstop>
+  <tabstop>flagGory</tabstop>
+  <tabstop>flagHideInUI</tabstop>
+  <tabstop>dispelOthersWithKeyword</tabstop>
+  <tabstop>keywords</tabstop>
+  <tabstop>counterEffects</tabstop>
+  <tabstop>conditions</tabstop>
+  <tabstop>menuDisplayObject</tabstop>
+  <tabstop>castingArt</tabstop>
+  <tabstop>castingLight</tabstop>
+  <tabstop>hitEffectArt</tabstop>
+  <tabstop>hitShader</tabstop>
+  <tabstop>enchantArt</tabstop>
+  <tabstop>enchantShader</tabstop>
+  <tabstop>projectile</tabstop>
+  <tabstop>impactDataSet</tabstop>
+  <tabstop>explosion</tabstop>
+  <tabstop>imagespaceModifier</tabstop>
+  <tabstop>dualCastData</tabstop>
+  <tabstop>dualCastScale</tabstop>
+  <tabstop>flagPowerAffectsMagnitude</tabstop>
+  <tabstop>flagPowerAffectsDuration</tabstop>
+  <tabstop>spellmakingArea</tabstop>
+  <tabstop>spellmakingCastingTime</tabstop>
+  <tabstop>aiScore</tabstop>
+  <tabstop>aiDelayTime</tabstop>
+  <tabstop>equipAbility</tabstop>
+  <tabstop>soundDrawSheathe</tabstop>
+  <tabstop>soundCharge</tabstop>
+  <tabstop>soundReady</tabstop>
+  <tabstop>soundRelease</tabstop>
+  <tabstop>soundCastLoop</tabstop>
+  <tabstop>soundOnHit</tabstop>
+  <tabstop>detectionSoundLevel</tabstop>
+  <tabstop>description</tabstop>
+  <tabstop>scriptListPane</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
