@@ -185,16 +185,17 @@ Backend refers to the existence of a form data class within the `dovah` folder. 
 | WorldObjects | STAT | Static        | ✅ | ✅ | 🟨 |
 | WorldObjects | ???? | Static Collection | ⬛ | ⬛ | ⬛ |
 | WorldObjects | TREE | Tree          | ⬛ | ⬛ | ⬛ |
+| Menu: Gameplay | CPTH | Camera Path | ⬛ | ⬛ | ⬛ |
 | Dialogue | DLBR | Dialogue Branch | ✅ | ✅ | ⬛ |
 | Dialogue | DIAL | Dialogue Topic  | ✅ | ✅ | 🟨 |
 | Dialogue | DLVW | Dialogue View   |
 | Dialogue | INFO | TopicInfo       | ✅ | ✅ | 🟨 |
-| Cell Children | ACHR | Actor | ✅ |   | ⬛ |
 | Cell Children | LAND | Landscape | ✅ | ⬛ | 🟨 |
 | Cell Children | NAVM | Navmesh | ⬛ | ⬛ | ⬛ |
 | Cell Children | REFR | Reference | ✅ | 🟨 | 🟨 |
 | Singletons | DOBJ | Default Object Manager | ✅ | ✅ | ⬛ |
 | Singletons | NAVI | Navmesh Info Map | ⬛ | ⬛ | ⬛ |
+| | AVIF | Actor Value | ✅ | ⬛ | ⬛ |
 | | CELL | Cell | ✅ | ✅ | 🟨 |
 | | IDLE | Idle Animation | ⬛ | ⬛ | ⬛ |
 | | REGN | Region | ⬛ | ⬛ | ⬛ |
@@ -202,7 +203,17 @@ Backend refers to the existence of a form data class within the `dovah` folder. 
 | | SMBN | Story Manager Branch Node | ⬛ | ⬛ | ⬛ |
 | | SMQN | Story Manager Quest Node | ⬛ | ⬛ | ⬛ |
 | | WRLD | Worldspace | ✅ | ⬛ | 🟨 |
+| Unverified | APPA | BGSApparatus | ⬛ | ⬛ | ⬛ |
+| Unverified | MICO | BGSMenuIcon | ⬛ | ⬛ | ⬛ |
+| Unverified | RGDL | BGSRagdoll | ⬛ | ⬛ | ⬛ |
+| Skyrim Special | LENS | Lens Flare | ⬛ | ⬛ | ⬛ |
+| Skyrim Special | VOLI | Volumetric Lighting | ⬛ | ⬛ | ⬛ |
 
+Subclasses of `REFR`, such as `ACHR`, are not listed in the table above, as they should be loaded identically and have identical data. There are 9 such form types.
+
+Static Collections are `BGSStaticCollection`. Not sure that they exist in-game, but maybe they exist in the CK?
+
+The "unverified" form types are deprecated, and the game and CK may not even have code to load them anymore. But then, `NOTE` still exists, so these, at least, I should double-check. Ones I *know* are gone, like `EYES` (`TESEyes`), aren't even listed in the table above.
 
 ### Planned next steps
 
