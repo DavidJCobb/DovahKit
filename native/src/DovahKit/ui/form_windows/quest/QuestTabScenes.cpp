@@ -49,6 +49,29 @@ void QuestTabScenes::setupUi() {
    QObject::connect(this->ui.current_scene.buttons.actor_behavior,      &QPushButton::clicked, scene_edit_widget, &SceneFormVisualEditor::popBehaviorFlagDialog);
    QObject::connect(this->ui.current_scene.buttons.actor_participation, &QPushButton::clicked, scene_edit_widget, &SceneFormVisualEditor::popParticipationFlagDialog);
 
+   QObject::connect(this->ui.buttons.zoom_in, &QPushButton::clicked, this, [this]() {
+      auto* widget = this->ui.current_scene.editor;
+      auto  zoom   = widget->zoom();
+      if (zoom >= 10.0F) {
+         return;
+      }
+      zoom += 0.10F;
+      widget->setZoom(zoom);
+      this->ui.buttons.zoom_in->setEnabled(zoom < 10.0F);
+      this->ui.buttons.zoom_out->setEnabled(zoom > 0.1F);
+   });
+   QObject::connect(this->ui.buttons.zoom_out, &QPushButton::clicked, this, [this]() {
+      auto* widget = this->ui.current_scene.editor;
+      auto  zoom   = widget->zoom();
+      if (zoom <= 0.1F) {
+         return;
+      }
+      zoom -= 0.1F;
+      widget->setZoom(zoom);
+      this->ui.buttons.zoom_in->setEnabled(zoom < 10.0F);
+      this->ui.buttons.zoom_out->setEnabled(zoom > 0.1F);
+   });
+
    for (auto& use : this->working_quest.stub.inbound) {
       if (use.second.flags & dovah::use_info_entry::flag::dialogue_quest) {
          auto* stub = use.second.other;

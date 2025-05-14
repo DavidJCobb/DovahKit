@@ -40,31 +40,165 @@ I was in the middle of working on scene editing at the time I switched to other 
 
 * Reportedly, ActorBases with no name can't be interacted with to initiate dialogue. Verify this, also test whether such actors become interactable if an alias renames them, test whether a Short Name but no Full Name is interactable, and update the What's This? text for the ActorBase name field accordingly.
 * Bulk editing and re-save tests:
-  * AMMO
-  * ANIO
-  * COLL
-  * EXPL
-  * HAZD
-  * WEAP
+  * AMMO (Ammo)
+  * ANIO (Animation Object)
+  * COLL (Collision Layer)
+  * EXPL (Explosion)
+  * HAZD (Hazard)
+  * WEAP (Weapon)
 * UI designs lacking an implementation:
-  * ARMO
-  * BOOK
-  * CAMS
-  * CSTY
-  * COBJ
-  * LSCR
-  * MATO
-  * MATT
-  * PROJ
-  * REFR
-  * SPGD
-  * SOUN
-  * SPEL
-  * TACT
+  * ARMO (Armor)
+  * BOOK (Book)
+  * CAMS (CameraShot)
+  * CSTY (CombatStyle)
+  * COBJ (ConstructibleObject)
+  * FURN (Furniture)
+  * LSCR (Loading Screen)
+  * MATO (Material Object)
+  * MATT (Material Type)
+  * MUST (Music Track)
+  * MUSC (Music Type)
+  * PROJ (Projectile)
+  * REFR (Reference)
+  * REVB (Reverb Parameters)
+  * SPGD (Shader Particle Geometry Definition)
+  * SOUN (Sound Marker)
+  * SNCT (Sound Category)
+  * SNDR (Sound Descriptor)
+  * SOPM (Sound Output Model)
+  * SPEL (Spell)
+  * TACT (Talking Activator)
 * Form types with incomplete/placeholder backends:
-  * LCTN
-  * MGEF
-  * PACK
+  * LCTN (Location)
+  * MGEF (Magic Effect)
+  * PACK (Package)
+
+### Table
+
+* **⬜:** Not implemented
+* **🟨:** In progress (implementation incomplete)
+  * e.g. for UI, this means it's been built in Qt Designer but there's no C++ implementation backing it
+* **🟩:** In progress (core tasks done)
+* **✅:** Fully implemented (AFAIK; does not include testing)
+
+Backend refers to the existence of a form data class within the `dovah` folder. UI refers to the UI code -- not just the Qt Designer UI file, but the C++ code to make it work. Dovahscript refers to the Lua script bindings, though those aren't going to be a major focus anymore until post-launch.
+
+| CK Category | FourCC | Form type | Backend | UI | Dovahscript |
+| :- | :- | :- | :-: | :-: | :-: |
+| Actors | NPC_ | ActorBase        | ✅ | ✅ | ⬜ |
+| Actors | AACT | Action           | ✅ | ✅ | ⬜ |
+| Actors | BPDT | BodyPartData     | ✅ | ✅ | ⬜ |
+| Actors | LVLN | LeveledCharacter | ✅ | ✅ | ⬜ |
+| Actors | PERK | Perk             | ⬜ | ⬜ | ⬜ |
+| Actors | TACT | TalkingActivator | ⬜ | 🟨 | ⬜ |
+| Audio | ACSP | Acoustic Space     | ✅ | ✅ | ⬜ |
+| Audio | MUST | Music Track        | ⬜ | 🟨 | ⬜ |
+| Audio | MUSC | Music Type         | ⬜ | 🟨 | ⬜ |
+| Audio | REVB | Reverb Parameters  | ⬜ | 🟨 | ⬜ |
+| Audio | SNCT | Sound Category     | ⬜ | 🟨 | ⬜ |
+| Audio | SNDR | Sound Descriptor   | ⬜ | 🟨 | ⬜ |
+| Audio | SOUN | Sound Marker       | ⬜ | 🟨 | ⬜ |
+| Audio | SOPM | Sound Output Model | ⬜ | 🟨 | ⬜ |
+| Character | ASTP | Association Type | ✅ | ✅ | ⬜ |
+| Character | CLAS | Class            | ✅ | ✅ | ⬜ |
+| Character | EQUP | Equip Slot       | ✅ | ✅ | ⬜ |
+| Character | FACT | Faction          | ✅ | ✅ | ⬜ |
+| Character | HDPT | HeadPart         | ✅ | ✅ | ⬜ |
+| Character | MOVT | Movement Type    | ✅ | ✅ | ⬜ |
+| Character | PACK | Package          | ⬜ | ⬜ | ⬜ |
+| Character | QUST | Quest            | ✅ | 🟩 | 🟨 |
+| Character | RACE | Race             | ✅ | ✅ | ⬜ |
+| Character | RELA | Relationship     | ✅ | ✅ | ⬜ |
+| Character | SMEN | SM Event Node    | ⬜ | ⬜ | ⬜ |
+| Character | VTYP | Voicetype        | ✅ | ✅ | ✅ |
+| Items | AMMO | Ammo           | ✅ | ✅ | ⬜ |
+| Items | ARMO | Armor          | ⬜ | 🟨 | ⬜ |
+| Items | ARMA | ArmorAddon     | ⬜ | ⬜ | ⬜ |
+| Items | BOOK | Book           | ⬜ | 🟨 | ⬜ |
+| Items | COBJ | Constructible Object | ⬜ | 🟨 | ⬜ |
+| Items | INGR | Ingredient     | ⬜ | ⬜ | ⬜ |
+| Items | KEYM | Key            | ✅ | ✅ | ⬜ |
+| Items | LVLI | LeveledItem    | ✅ | ✅ | ⬜ |
+| Items | MISC | MiscItem       | ✅ | ✅ | ⬜ |
+| ~~Items~~ | NOTE | Note       | ✅ | ✅ | ⬜ |
+| Items | OTFT | Outfit         | ✅ | ✅ | ⬜ |
+| Items | SLGM | Soul Gem       | ✅ | ✅ | ⬜ |
+| Items | WEAP | Weapon         | ✅ | ✅ | ⬜ |
+| Magic | DUAL | Dual Cast Data | ✅ | ✅ | ⬜ |
+| Magic | ENCH | Enchantment    | ⬜ | ⬜ | ⬜ |
+| Magic | LVSP | LeveledSpell   | ✅ | ✅ | ⬜ |
+| Magic | MGEF | Magic Effect   | ⬜ | ⬜ | ⬜ |
+| Magic | ALCH | Potion         | ⬜ | ⬜ | ⬜ |
+| Magic | SCRL | Scroll         | ⬜ | ⬜ | ⬜ |
+| Magic | SHOU | Shout          | ✅ | ✅ | ✅ |
+| Magic | SPEL | Spell          | ⬜ | 🟨 | ⬜ |
+| Magic | WOOP | Word of Power  | ✅ | ✅ | ✅ |
+| Miscellaneous | ANIO | AnimObject      | ✅ | ✅ | ⬜ |
+| Miscellaneous | ARTO | ArtObject       | ✅ | ✅ | ⬜ |
+| Miscellaneous | COLL | Collision Layer | ✅ | ✅ | ⬜ |
+| Miscellaneous | CLFM | ColorForm       | ✅ | ✅ | ⬜ |
+| Miscellaneous | CSTY | CombatStyle     | ⬜ | 🟨 | ⬜ |
+| Miscellaneous | FLST | FormList        | ✅ | ✅ | ✅ |
+| Miscellaneous | GLOB | Global          | ✅ | ✅ | ⬜ |
+| Miscellaneous | IDLM | IdleMarker      | ⬜ | ⬜ | ⬜ |
+| Miscellaneous | KYWD | Keyword         | ✅ | ✅ | ⬜ |
+| Miscellaneous | LTEX | LandTexture     | ✅ | ✅ | 🟨 |
+| Miscellaneous | LSCR | LoadScreen      | ⬜ | 🟨 | ⬜ |
+| Miscellaneous | MATO | Material Object | ⬜ | 🟨 | ⬜ |
+| Miscellaneous | MESG | Message         | ⬜ | ⬜ | ⬜ |
+| Miscellaneous | TXST | TextureSet      | ✅ | ✅ | ✅ |
+| SpecialEffect | ADDN | AddOnNode       | ✅ | ✅ | ⬜ |
+| SpecialEffect | CAMS | CameraShot      | ⬜ | 🟨 | ⬜ |
+| SpecialEffect | DEBR | Debris          | ⬜ | ⬜ | ⬜ |
+| SpecialEffect | EFSH | EffectShader    | ⬜ | ⬜ | ⬜ |
+| SpecialEffect | EXPL | Explosion       | ✅ | ✅ | ⬜ |
+| SpecialEffect | FSTP | Footstep        | ✅ | ✅ | ⬜ |
+| SpecialEffect | FSTS | Footstep Set    | ⬜ | ⬜ | ⬜ |
+| SpecialEffect | HAZD | Hazard          | ✅ | ✅ | ⬜ |
+| SpecialEffect | IMGS | Imagespace      | ⬜ | ⬜ | ⬜ |
+| SpecialEffect | IMAD | Imagespace Modifier | ⬜ |
+| SpecialEffect | IPCT | ImpactData      | ⬜ | ⬜ | ⬜ |
+| SpecialEffect | IPDS | ImpactDataSet   | ⬜ | ⬜ | ⬜ |
+| SpecialEffect | MATT | Material Type   | ⬜ | 🟨 | ⬜ |
+| SpecialEffect | PROJ | Projectile      | ⬜ | 🟨 | ⬜ |
+| WorldData | CLMT | Climate                  | ⬜ | ⬜ | ⬜ |
+| WorldData | ECZN | Encounter Zone           | ⬜ | ⬜ | ⬜ |
+| WorldData | LGTM | Lighting Template        | ⬜ | ⬜ | ⬜ |
+| WorldData | LCTN | Location                 | 🟨 | ⬜ | ⬜ |
+| WorldData | LCRT | Location Ref Type        | ✅ | ✅ | ⬜ |
+| WorldData | SPGD | Shader Particle Geometry | ⬜ | 🟨 | ⬜ |
+| WorldData | RFCT | Visual Effect            | ✅ | ✅ | ⬜ |
+| WorldData | WATR | WaterType                | ⬜ | ⬜ | ⬜ |
+| WorldData | WTHR | Weather                  | ⬜ | ⬜ | ⬜ |
+| WorldObjects | ACTI | Activator     | ✅ | ✅ | ⬜ |
+| WorldObjects | CONT | Container     | ✅ | ✅ | ⬜ |
+| WorldObjects | DOOR | Door          | ✅ | ✅ | ⬜ |
+| WorldObjects | FLOR | Flora         | ✅ | ✅ | ⬜ |
+| WorldObjects | FURN | Furniture     | ⬜ | 🟨 | ⬜ |
+| WorldObjects | GRAS | Grass         | ✅ | ✅ | ⬜ |
+| WorldObjects | LIGH | Light         | ✅ | ✅ | ⬜ |
+| WorldObjects | MSTT | MovableStatic | ⬜ | ⬜ | ⬜ |
+| WorldObjects | STAT | Static        | ✅ | ✅ | 🟨 |
+| WorldObjects | ???? | Static Collection | ⬜ | ⬜ | ⬜ |
+| WorldObjects | TREE | Tree          | ⬜ | ⬜ | ⬜ |
+| Dialogue | DLBR | Dialogue Branch | ✅ | ✅ | ⬜ |
+| Dialogue | DIAL | Dialogue Topic  | ✅ | ✅ | 🟨 |
+| Dialogue | DLVW | Dialogue View   |
+| Dialogue | INFO | TopicInfo       | ✅ | ✅ | 🟨 |
+| Cell Children | ACHR | Actor | ✅ |   | ⬜ |
+| Cell Children | LAND | Landscape | ✅ | ⬜ | 🟨 |
+| Cell Children | NAVM | Navmesh | ⬜ | ⬜ | ⬜ |
+| Cell Children | REFR | Reference | ✅ | 🟨 | 🟨 |
+| Singletons | DOBJ | Default Object Manager | ✅ | ✅ | ⬜ |
+| Singletons | NAVI | Navmesh Info Map | ⬜ | ⬜ | ⬜ |
+| | CELL | Cell | ✅ | ✅ | 🟨 |
+| | IDLE | Idle Animation | ⬜ | ⬜ | ⬜ |
+| | REGN | Region | ⬜ | ⬜ | ⬜ |
+| | SCEN | Scene | ✅ | ✅ | ⬜ |
+| | SMBN | Story Manager Branch Node | ⬜ | ⬜ | ⬜ |
+| | SMQN | Story Manager Quest Node | ⬜ | ⬜ | ⬜ |
+| | WRLD | Worldspace | ✅ | ⬜ | 🟨 |
+
 
 ### Planned next steps
 

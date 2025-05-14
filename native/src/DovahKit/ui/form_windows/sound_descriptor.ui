@@ -1,0 +1,598 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogSoundDescriptor</class>
+ <widget class="QDialog" name="FormDialogSoundDescriptor">
+  <property name="windowTitle">
+   <string>Sound Descriptor</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Descriptor Type:</string>
+       </property>
+       <property name="buddy">
+        <cstring>descriptorType</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="descriptorType">
+       <item>
+        <property name="text">
+         <string>Standard</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QCheckBox" name="flagHasConditions">
+       <property name="text">
+        <string>Has Conditions</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tabSound">
+      <attribute name="title">
+       <string>Sound</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_5">
+       <item row="0" column="0" colspan="2">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Files</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <widget class="QListView" name="fileList">
+            <property name="whatsThis">
+             <string>The list of sound files that may be played when the game elects to play this sound descriptor. A file will be chosen at random. Files must be stored in &lt;code&gt;Data\Sound\&lt;/code&gt;.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="DKGameFilePicker" name="filePicker"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="QPushButton" name="buttonAddFile">
+            <property name="text">
+             <string>Add</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <layout class="QVBoxLayout" name="verticalLayout">
+            <item>
+             <widget class="QPushButton" name="buttonRemoveFile">
+              <property name="text">
+               <string>Remove</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="0" column="1">
+          <widget class="DKFormPicker" name="category"/>
+         </item>
+         <item row="3" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QDoubleSpinBox" name="dbVariance">
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item row="6" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QSpinBox" name="spinBox">
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="suffix">
+              <string>%</string>
+             </property>
+             <property name="minimum">
+              <number>-100</number>
+             </property>
+             <property name="maximum">
+              <number>100</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>8</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item alignment="Qt::AlignRight">
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string>Variance:</string>
+             </property>
+             <property name="buddy">
+              <cstring>spinBox_2</cstring>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="spinBox_2">
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="suffix">
+              <string>%</string>
+             </property>
+             <property name="minimum">
+              <number>-100</number>
+             </property>
+             <property name="maximum">
+              <number>100</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>Alternate For:</string>
+           </property>
+           <property name="buddy">
+            <cstring>alternateFor</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Output Model:</string>
+           </property>
+           <property name="buddy">
+            <cstring>outputModel</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Category:</string>
+           </property>
+           <property name="buddy">
+            <cstring>category</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="DKFormPicker" name="outputModel">
+           <property name="allowNone">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="DKFloatSlider" name="staticAttenuationSlider">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="staticAttenuationSpinbox">
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="4" column="1">
+          <widget class="QComboBox" name="looping">
+           <property name="whatsThis">
+            <string>&lt;p&gt;Controls whether and how the sound loops.&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;None&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The sound doesn't loop.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;Loop&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The sound is a typical loop, playing from start to end. The filename must end with &lt;code&gt;_LP&lt;/code&gt;.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;Envelope Fast&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The sound is a metadata loop: the files (whose names end in &lt;code&gt;_LPM&lt;/code&gt;) contain metadata which divides them by two &quot;loop points&quot; into a leading &quot;attack&quot; portion, the loop, and the trailing &quot;release&quot; portion. The game will play the attack portion, loop indefinitely between the two loop points, and then jump immediately to the release portion when it's time to stop the sound.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;Envelope Slow&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The sound is a metadata loop: the files (whose names end in &lt;code&gt;_LPM&lt;/code&gt;) contain metadata which divides them by two &quot;loop points&quot; into a leading &quot;attack&quot; portion, the loop, and the trailing &quot;release&quot; portion. The game will play the attack portion, loop indefinitely between the two loop points, and then continue uninterrupted to the end of the file when it's time to stop the sound.&lt;/p&gt;&lt;/dd&gt;
+&lt;/dl&gt;</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>None</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Loop</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Envelope Fast</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Envelope Slow</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="DKFormPicker" name="alternateFor">
+           <property name="whatsThis">
+            <string>&lt;p&gt;If another sound can't be loaded into memory and played in time (e.g. with time-sensitive events like weapon impacts), then this sound can be made to serve as an alternate for that other sound. Note that alternate sounds are kept in memory at all times, so this should only be used sparingly.&lt;/p&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Static Attenuation (dB):</string>
+           </property>
+           <property name="buddy">
+            <cstring>staticAttenuationSlider</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Looping:</string>
+           </property>
+           <property name="buddy">
+            <cstring>looping</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>% Frequency Shift:</string>
+           </property>
+           <property name="buddy">
+            <cstring>spinBox</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>dB Variance:</string>
+           </property>
+           <property name="buddy">
+            <cstring>dbVariance</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="label_11">
+           <property name="text">
+            <string>Priority:</string>
+           </property>
+           <property name="buddy">
+            <cstring>prioritySlider</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QSlider" name="prioritySlider">
+             <property name="whatsThis">
+              <string>Define a sound's priority, as it relates to memory management and disk I/O. Sounds that can be ignored during periods of heavy system activity should be made low-priority, as should sounds that aren't time-sensitive.</string>
+             </property>
+             <property name="maximum">
+              <number>255</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="prioritySpinbox">
+             <property name="alignment">
+              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="maximum">
+              <number>255</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="whatsThis">
+          <string>Determine the percentage of the sound's level (amplitude) that influences the rumble of a typical game controller's two motors.</string>
+         </property>
+         <property name="title">
+          <string>Rumble Send:</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>Small:</string>
+            </property>
+            <property name="buddy">
+             <cstring>rumbleSmallSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSlider" name="rumbleSmallSlider">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QSpinBox" name="rumbleSmallSpinbox">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_13">
+            <property name="text">
+             <string>Big:</string>
+            </property>
+            <property name="buddy">
+             <cstring>rumbleLargeSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSlider" name="rumbleLargeSlider">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QSpinBox" name="rumbleLargeSpinbox">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <spacer name="horizontalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>166</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabConditions">
+      <attribute name="title">
+       <string>Conditions</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="DKConditionList" name="conditions"/>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>343</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <spacer name="horizontalSpacer_5">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_6">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFloatSlider</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFloatSlider.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKConditionList</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKConditionList.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKGameFilePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKGameFilePicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>descriptorType</tabstop>
+  <tabstop>flagHasConditions</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>fileList</tabstop>
+  <tabstop>buttonRemoveFile</tabstop>
+  <tabstop>filePicker</tabstop>
+  <tabstop>buttonAddFile</tabstop>
+  <tabstop>category</tabstop>
+  <tabstop>outputModel</tabstop>
+  <tabstop>staticAttenuationSlider</tabstop>
+  <tabstop>staticAttenuationSpinbox</tabstop>
+  <tabstop>dbVariance</tabstop>
+  <tabstop>looping</tabstop>
+  <tabstop>alternateFor</tabstop>
+  <tabstop>spinBox</tabstop>
+  <tabstop>spinBox_2</tabstop>
+  <tabstop>prioritySlider</tabstop>
+  <tabstop>prioritySpinbox</tabstop>
+  <tabstop>rumbleSmallSlider</tabstop>
+  <tabstop>rumbleSmallSpinbox</tabstop>
+  <tabstop>rumbleLargeSlider</tabstop>
+  <tabstop>rumbleLargeSpinbox</tabstop>
+  <tabstop>conditions</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
