@@ -3,6 +3,8 @@
 #include <variant>
 #include <vector>
 #include <QMenu>
+#include <QPointer>
+#include <QScrollArea>
 #include <QWidget>
 #include "dovah/form_stub.h"
 #include "./SceneFormVisualEditor_impl/ActorBehaviorFlag.h"
@@ -58,6 +60,9 @@ class SceneFormVisualEditor : public QWidget {
       void popBehaviorFlagDialog();
       void popParticipationFlagDialog();
 
+      // HACK. Ideally, the QScrollArea should be part of this widget itself.
+      void setContainingScrollArea(QScrollArea*);
+
       constexpr bool hasAnyChanges() const noexcept { return this->_data.any_changes_made; }
       
    protected:
@@ -99,6 +104,8 @@ class SceneFormVisualEditor : public QWidget {
 
       void _set_up_action_dialog_phases(const Action&, FormSubdialogSceneActionBase&);
 
+      void _update_cursor(const QMouseEvent*);
+
       void addActor();
       void editAction(Action&);
       void editPhase(Phase&);
@@ -117,6 +124,7 @@ class SceneFormVisualEditor : public QWidget {
          virtual void mouseDoubleClickEvent(QMouseEvent*) override;
          virtual void mousePressEvent(QMouseEvent*) override;
          virtual void mouseMoveEvent(QMouseEvent*) override;
+         virtual void mouseReleaseEvent(QMouseEvent*) override;
          #pragma region Drag and drop
             virtual void dragEnterEvent(QDragEnterEvent*) override;
             virtual void dragMoveEvent(QDragMoveEvent*) override;
@@ -156,9 +164,12 @@ class SceneFormVisualEditor : public QWidget {
          bool any_changes_made = false;
       } _data;
       struct {
-         QPoint  mousedown_at;
+         QPoint  mousedown_at; // widget-relative
          Action* mousedown_on = nullptr;
+         QPoint  mouse_prev_pos; // screen-relative
+         bool    is_panning   = false;
       } _mouse;
+      QPointer<QScrollArea> _scroll_area;
       std::variant<
          std::monostate,
          Phase*,

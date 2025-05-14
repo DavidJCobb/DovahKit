@@ -36,6 +36,7 @@ void QuestTabScenes::setupUi() {
       layout->addWidget(scene_edit_widget);
       layout->setContentsMargins(0, 0, 0, 0);
       this->ui.current_scene.editor_scrollbox->setWidget(wrapper);
+      scene_edit_widget->setContainingScrollArea(this->ui.current_scene.editor_scrollbox);
    }
 
    QObject::connect(this->ui.scene_picker, &DKFormListPane::selectedFormsChanged, this, [this](const std::vector<dovah::form_stub*>& forms) {

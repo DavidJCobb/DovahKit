@@ -3,6 +3,7 @@
 #include <QMimeData>
 #include <QPaintEvent>
 #include <QPainter>
+#include <QScrollBar>
 #include "dovah/form_stubs/helpers/get_unique_outbound_use.h"
 #include "dovah/form_stub.h"
 #include "dovah/forms/components/papyrus/fragment_data/scene_fragment_data.h"
@@ -54,6 +55,7 @@ SceneFormVisualEditor::SceneFormVisualEditor(QWidget* parent) : QWidget(parent) 
    this->setSizePolicy({ QSizePolicy::Fixed, QSizePolicy::Fixed });
 
    this->setAcceptDrops(true);
+   this->setMouseTracking(true); // to update the cursor depending on what drawn boxes it's over
 
    auto palette = this->palette();
    this->_style.selection = {
@@ -644,6 +646,10 @@ void SceneFormVisualEditor::popParticipationFlagDialog() {
    dialog->deleteLater();
 }
 
+void SceneFormVisualEditor::setContainingScrollArea(QScrollArea* w) {
+   this->_scroll_area = w;
+}
+
 void SceneFormVisualEditor::_clear_data() {
    {
       auto& list = this->_data.phases;
@@ -886,6 +892,31 @@ void SceneFormVisualEditor::_set_up_action_dialog_phases(const Action& action, F
       }
       dialog.scene_data.phases.push_back({ (uint32_t)i, name });
    }
+}
+
+void SceneFormVisualEditor::_update_cursor(const QMouseEvent* event) {
+   if (this->_mouse.is_panning) {
+      this->setCursor(Qt::CursorShape::ClosedHandCursor);
+      return;
+   }
+
+   auto targets = this->_find_mouse_targets(event->localPos().toPoint());
+   if (targets.action.pointer) {
+      if (targets.action.edge_l || targets.action.edge_r) {
+         this->setCursor(Qt::CursorShape::SizeHorCursor);
+      } else if (targets.action.exact) {
+         this->setCursor(Qt::CursorShape::ArrowCursor);
+      }
+      return;
+   }
+   if (targets.phase.pointer) {
+      this->setCursor(Qt::CursorShape::ArrowCursor);
+   }
+   if (targets.actor.pointer) {
+      ;
+   }
+
+   this->setCursor(Qt::CursorShape::OpenHandCursor);
 }
 
 void SceneFormVisualEditor::addActor() {
@@ -1361,8 +1392,9 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
          return;
       event->setAccepted(true);
 
-      this->_mouse.mousedown_at = event->localPos().toPoint();
-      this->_mouse.mousedown_on = nullptr;
+      this->_mouse.mousedown_at   = event->localPos().toPoint();
+      this->_mouse.mousedown_on   = nullptr;
+      this->_mouse.mouse_prev_pos = event->screenPos().toPoint();
       auto targets = this->_find_mouse_targets(this->_mouse.mousedown_at);
       if (targets.action.pointer) {
          this->_mouse.mousedown_on = targets.action.pointer;
@@ -1376,12 +1408,40 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
       this->_deselect_all();
    }
    /*virtual*/ void SceneFormVisualEditor::mouseMoveEvent(QMouseEvent* event) /*override*/ {
-      if (!(event->buttons() & Qt::LeftButton))
+      bool lmb = event->buttons() & Qt::LeftButton;
+      bool mmb = event->buttons() & Qt::MiddleButton;
+      if (!lmb && !mmb) {
+         this->_update_cursor(event);
          return;
-      if (!this->_mouse.mousedown_on)
+      }
+      if (this->_mouse.is_panning) {
+         if (!this->_scroll_area)
+            return;
+         auto pos   = event->screenPos().toPoint();
+         auto delta = this->_mouse.mouse_prev_pos - pos; // the order here is not a mistake; panning means that dragging left should scroll right, and vice versa
+         this->_mouse.mouse_prev_pos = pos;
+
+         auto* hs = this->_scroll_area->horizontalScrollBar();
+         auto* vs = this->_scroll_area->verticalScrollBar();
+         hs->setValue(hs->value() + delta.x());
+         vs->setValue(vs->value() + delta.y());
+
          return;
-      if ((event->pos() - this->_mouse.mousedown_at).manhattanLength() < QApplication::startDragDistance())
+      }
+      if (lmb || mmb) {
+         this->_mouse.mouse_prev_pos = event->screenPos().toPoint();
+         if ((event->pos() - this->_mouse.mousedown_at).manhattanLength() < QApplication::startDragDistance()) {
+            this->_update_cursor(event);
+            return;
+         }
+         if (!this->_mouse.mousedown_on) {
+            this->_mouse.is_panning = true;
+            this->_update_cursor(event);
+            return;
+         }
+      } else if (!lmb) {
          return;
+      }
 
       QDrag*     drag = new QDrag(this);
       QMimeData* mimeData = new QMimeData;
@@ -1398,6 +1458,15 @@ void SceneFormVisualEditor::removePhase(Phase& phase) {
       drag->setMimeData(mimeData);
 
       Qt::DropAction dropAction = drag->exec(Qt::MoveAction);
+   }
+   /*virtual*/ void SceneFormVisualEditor::mouseReleaseEvent(QMouseEvent* event) /*override*/ {
+      bool was_panning = this->_mouse.is_panning;
+      this->_mouse.is_panning   = false;
+      this->_mouse.mousedown_at = {};
+      this->_mouse.mousedown_on = nullptr;
+      if (was_panning) {
+         this->_update_cursor(event);
+      }
    }
 
    #pragma region Drag and drop
