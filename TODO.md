@@ -187,7 +187,7 @@ Package UI is currently blocked by the need for a tri-state checkbox that clearl
 | WorldObjects | LIGH | Light         | ✅ | ✅ | ⬛ |
 | WorldObjects | MSTT | MovableStatic | ⬛ | 🟨 | ⬛ |
 | WorldObjects | STAT | Static        | ✅ | ✅ | 🟨 |
-| WorldObjects | ???? | Static Collection | ⬛ | ⬛ | ⬛ |
+| WorldObjects | SCOL | Static Collection | ⬛ | ⬛ | ⬛ | CK32 has a loader for this |
 | WorldObjects | TREE | Tree          | ⬛ | 🟨 | ⬛ |
 | Menu: Gameplay | CPTH | Camera Path | ⬛ | ⬛ | ⬛ |
 | Dialogue | DLBR | Dialogue Branch | ✅ | ✅ | ⬛ |
@@ -207,17 +207,18 @@ Package UI is currently blocked by the need for a tri-state checkbox that clearl
 | | SMBN | Story Manager Branch Node | ⬛ | ⬛ | ⬛ |
 | | SMQN | Story Manager Quest Node | ⬛ | ⬛ | ⬛ |
 | | WRLD | Worldspace | ✅ | ⬛ | 🟨 |
-| Unverified | APPA | BGSApparatus | ⬛ | ⬛ | ⬛ |
-| Unverified | MICO | BGSMenuIcon | ⬛ | ⬛ | ⬛ |
-| Unverified | RGDL | BGSRagdoll | ⬛ | ⬛ | ⬛ |
+| Deprecated | APPA | BGSApparatus | ⬛ | ⬛ | ⬛ | CK32 has a loader for this; test in-game behavior |
+| Deprecated | EYES | TESEyes | ⬛ | ⬛ | ⬛ | CK32 has a loader for this |
+| Deprecated | MICO | BGSMenuIcon | ⬛ | ⬛ | ⬛ | CK32 has a loader for this |
+| Deprecated | RGDL | BGSRagdoll | ⬛ | ⬛ | ⬛ | CK32 has a loader for this |
 | Skyrim Special | LENS | Lens Flare | ⬛ | ⬛ | ⬛ |
 | Skyrim Special | VOLI | Volumetric Lighting | ⬛ | ⬛ | ⬛ |
 
 Subclasses of `REFR`, such as `ACHR`, are not listed in the table above, as they should be loaded identically and have identical data. There are 9 such form types.
 
-Static Collections are `BGSStaticCollection`. Not sure that they exist in-game, but maybe they exist in the CK?
+The "deprecated" form types don't appear to be loaded by the game at all, but are loaded by the CK.
 
-The "unverified" form types are deprecated, and the game and CK may not even have code to load them anymore. But then, `NOTE` still exists, so these, at least, I should double-check. Ones I *know* are gone, like `EYES` (`TESEyes`), aren't even listed in the table above.
+Static Collections are `BGSStaticCollection` with form type 0x23. The CK has a full loader for them, but never creates them other than via the form-loading factory AFAICT.
 
 ### Planned next steps
 
