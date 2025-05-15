@@ -81,6 +81,7 @@ I was in the middle of working on scene editing at the time I switched to other 
 ### Table
 
 * **⬛:** Not implemented
+* **🟥:** In progress, but blocked by a requirement
 * **🟨:** In progress (implementation incomplete)
   * e.g. for UI, this means it's been built in Qt Designer but there's no C++ implementation backing it
 * **🟩:** In progress (core tasks done)
@@ -88,13 +89,15 @@ I was in the middle of working on scene editing at the time I switched to other 
 
 Backend refers to the existence of a form data class within the `dovah` folder. UI refers to the UI code -- not just the Qt Designer UI file, but the C++ code to make it work. Dovahscript refers to the Lua script bindings, though those aren't going to be a major focus anymore until post-launch.
 
-| CK Category | FourCC | Form type | Backend | UI | Dovahscript |
-| :- | :- | :- | :-: | :-: | :-: |
+Package UI is currently blocked by the need for a tri-state checkbox that clearly indicates the following meanings: no override; override with false; override with true. This is needed for procedure flag overrides.
+
+| CK Category | FourCC | Form type | Backend | UI | Dovahscript | Details |
+| :- | :- | :- | :-: | :-: | :-: | :- |
 | Actors | NPC_ | ActorBase        | ✅ | ✅ | ⬛ |
 | Actors | AACT | Action           | ✅ | ✅ | ⬛ |
 | Actors | BPDT | BodyPartData     | ✅ | ✅ | ⬛ |
 | Actors | LVLN | LeveledCharacter | ✅ | ✅ | ⬛ |
-| Actors | PERK | Perk             | ⬛ | ⬛ | ⬛ |
+| Actors | PERK | Perk             | ⬛ | ⬛ | ⬛ | UI for entry points needs special care |
 | Actors | TACT | TalkingActivator | ⬛ | 🟨 | ⬛ |
 | Audio | ACSP | Acoustic Space     | ✅ | ✅ | ⬛ |
 | Audio | MUST | Music Track        | ⬛ | 🟨 | ⬛ |
@@ -110,18 +113,18 @@ Backend refers to the existence of a form data class within the `dovah` folder. 
 | Character | FACT | Faction          | ✅ | ✅ | ⬛ |
 | Character | HDPT | HeadPart         | ✅ | ✅ | ⬛ |
 | Character | MOVT | Movement Type    | ✅ | ✅ | ⬛ |
-| Character | PACK | Package          | ⬛ | ⬛ | ⬛ |
+| Character | PACK | Package          | ⬛ | 🟥 | ⬛ | Need a clearer tri-state checkbox for procedure flag overrides |
 | Character | QUST | Quest            | ✅ | 🟩 | 🟨 |
 | Character | RACE | Race             | ✅ | ✅ | ⬛ |
 | Character | RELA | Relationship     | ✅ | ✅ | ⬛ |
-| Character | SMEN | SM Event Node    | ⬛ | ⬛ | ⬛ |
+| Character | SMEN | SM Event Node    | ⬛ | ⬛ | ⬛ | How do the game and CK cope with multiple forms for a single event type? |
 | Character | VTYP | Voicetype        | ✅ | ✅ | ✅ |
 | Items | AMMO | Ammo           | ✅ | ✅ | ⬛ |
 | Items | ARMO | Armor          | ⬛ | 🟨 | ⬛ |
 | Items | ARMA | ArmorAddon     | ⬛ | ⬛ | ⬛ |
 | Items | BOOK | Book           | ⬛ | 🟨 | ⬛ |
 | Items | COBJ | Constructible Object | ⬛ | 🟨 | ⬛ |
-| Items | INGR | Ingredient     | ⬛ | ⬛ | ⬛ |
+| Items | INGR | Ingredient     | ⬛ | ⬛ | ⬛ | Reusable code for the effect list would be good |
 | Items | KEYM | Key            | ✅ | ✅ | ⬛ |
 | Items | LVLI | LeveledItem    | ✅ | ✅ | ⬛ |
 | Items | MISC | MiscItem       | ✅ | ✅ | ⬛ |
@@ -130,13 +133,13 @@ Backend refers to the existence of a form data class within the `dovah` folder. 
 | Items | SLGM | Soul Gem       | ✅ | ✅ | ⬛ |
 | Items | WEAP | Weapon         | ✅ | ✅ | ⬛ |
 | Magic | DUAL | Dual Cast Data | ✅ | ✅ | ⬛ |
-| Magic | ENCH | Enchantment    | ⬛ | ⬛ | ⬛ |
+| Magic | ENCH | Enchantment    | ⬛ | ⬛ | ⬛ | Reusable code for the effect list would be good |
 | Magic | LVSP | LeveledSpell   | ✅ | ✅ | ⬛ |
 | Magic | MGEF | Magic Effect   | ⬛ | 🟨 | ⬛ |
-| Magic | ALCH | Potion         | ⬛ | ⬛ | ⬛ |
-| Magic | SCRL | Scroll         | ⬛ | ⬛ | ⬛ |
+| Magic | ALCH | Potion         | ⬛ | ⬛ | ⬛ | Reusable code for the effect list would be good |
+| Magic | SCRL | Scroll         | ⬛ | ⬛ | ⬛ | Reusable code for the effect list would be good |
 | Magic | SHOU | Shout          | ✅ | ✅ | ✅ |
-| Magic | SPEL | Spell          | ⬛ | 🟨 | ⬛ |
+| Magic | SPEL | Spell          | ⬛ | 🟨 | ⬛ | Reusable code for the effect list would be good |
 | Magic | WOOP | Word of Power  | ✅ | ✅ | ✅ |
 | Miscellaneous | ANIO | AnimObject      | ✅ | ✅ | ⬛ |
 | Miscellaneous | ARTO | ArtObject       | ✅ | ✅ | ⬛ |
@@ -145,16 +148,16 @@ Backend refers to the existence of a form data class within the `dovah` folder. 
 | Miscellaneous | CSTY | CombatStyle     | ⬛ | 🟨 | ⬛ |
 | Miscellaneous | FLST | FormList        | ✅ | ✅ | ✅ |
 | Miscellaneous | GLOB | Global          | ✅ | ✅ | ⬛ |
-| Miscellaneous | IDLM | IdleMarker      | ⬛ | ⬛ | ⬛ |
+| Miscellaneous | IDLM | IdleMarker      | ⬛ | 🟨 | ⬛ |
 | Miscellaneous | KYWD | Keyword         | ✅ | ✅ | ⬛ |
 | Miscellaneous | LTEX | LandTexture     | ✅ | ✅ | 🟨 |
 | Miscellaneous | LSCR | LoadScreen      | ⬛ | 🟨 | ⬛ |
 | Miscellaneous | MATO | Material Object | ⬛ | 🟨 | ⬛ |
-| Miscellaneous | MESG | Message         | ⬛ | ⬛ | ⬛ |
+| Miscellaneous | MESG | Message         | ⬛ | 🟨 | ⬛ |
 | Miscellaneous | TXST | TextureSet      | ✅ | ✅ | ✅ |
 | SpecialEffect | ADDN | AddOnNode       | ✅ | ✅ | ⬛ |
 | SpecialEffect | CAMS | CameraShot      | ⬛ | 🟨 | ⬛ |
-| SpecialEffect | DEBR | Debris          | ⬛ | ⬛ | ⬛ |
+| SpecialEffect | DEBR | Debris          | ⬛ | 🟨 | ⬛ |
 | SpecialEffect | EFSH | EffectShader    | ⬛ | ⬛ | ⬛ |
 | SpecialEffect | EXPL | Explosion       | ✅ | ✅ | ⬛ |
 | SpecialEffect | FSTP | Footstep        | ✅ | ✅ | ⬛ |
@@ -162,8 +165,8 @@ Backend refers to the existence of a form data class within the `dovah` folder. 
 | SpecialEffect | HAZD | Hazard          | ✅ | ✅ | ⬛ |
 | SpecialEffect | IMGS | Imagespace      | ⬛ | ⬛ | ⬛ |
 | SpecialEffect | IMAD | Imagespace Modifier | ⬛ | ⬛ | ⬛ |
-| SpecialEffect | IPCT | ImpactData      | ⬛ | ⬛ | ⬛ |
-| SpecialEffect | IPDS | ImpactDataSet   | ⬛ | ⬛ | ⬛ |
+| SpecialEffect | IPCT | ImpactData      | ⬛ | 🟨 | ⬛ |
+| SpecialEffect | IPDS | ImpactDataSet   | ⬛ | 🟨 | ⬛ |
 | SpecialEffect | MATT | Material Type   | ⬛ | 🟨 | ⬛ |
 | SpecialEffect | PROJ | Projectile      | ⬛ | 🟨 | ⬛ |
 | WorldData | CLMT | Climate                  | ⬛ | ⬛ | ⬛ |
@@ -179,7 +182,7 @@ Backend refers to the existence of a form data class within the `dovah` folder. 
 | WorldObjects | CONT | Container     | ✅ | ✅ | ⬛ |
 | WorldObjects | DOOR | Door          | ✅ | ✅ | ⬛ |
 | WorldObjects | FLOR | Flora         | ✅ | ✅ | ⬛ |
-| WorldObjects | FURN | Furniture     | ⬛ | 🟨 | ⬛ |
+| WorldObjects | FURN | Furniture     | ⬛ | 🟨 | ⬛ | Will need to be able to extract `FRN` data from the NIF |
 | WorldObjects | GRAS | Grass         | ✅ | ✅ | ⬛ |
 | WorldObjects | LIGH | Light         | ✅ | ✅ | ⬛ |
 | WorldObjects | MSTT | MovableStatic | ⬛ | 🟨 | ⬛ |
@@ -195,7 +198,7 @@ Backend refers to the existence of a form data class within the `dovah` folder. 
 | Cell Children | NAVM | Navmesh | ⬛ | ⬛ | ⬛ |
 | Cell Children | REFR | Reference | ✅ | 🟨 | 🟨 |
 | Singletons | DOBJ | Default Object Manager | ✅ | ✅ | ⬛ |
-| Singletons | NAVI | Navmesh Info Map | ⬛ | ⬛ | ⬛ |
+| Singletons | NAVI | Navmesh Info Map | ⬛ |   | ⬛ |
 | | AVIF | Actor Value | ✅ | ⬛ | ⬛ |
 | | CELL | Cell | ✅ | ✅ | 🟨 |
 | | IDLE | Idle Animation | ⬛ | ⬛ | ⬛ |
@@ -218,9 +221,6 @@ The "unverified" form types are deprecated, and the game and CK may not even hav
 
 ### Planned next steps
 
-* QUST form UI
-  * Alias UI
-  * SCEN
 * PACK
   * Once we can load Package forms and package data, we'll need to go back and update the condition system. We currently handle all "package data" parameters as a single type, but the game actually defines multiple types: package data (possibly null); package data (numeric); and just "package data." We can check the condition/console command table to get parameter types for any functions that take a package data, in order to refine things further.
 * LCTN
@@ -253,6 +253,8 @@ AFAIK, the CK never should've produced records overrides with that quirk, but wh
 ### General UI
 
 * Turns out, QAbstractSpinBox implements 90% of widget rendering, and can handle any value type that is representable in a QVariant. We should see if we have any spinboxes hooked up to a `uint32_t` and if so, we should create a DKSpinBoxU32 designable widget that mirrors the QSpinBox interface but uses a `uint32_t` for its value type. (QSpinBox uses `int` i.e. `int32_t`, so it can't represent the upper half of a `uint32_t`'s range.)
+
+* The "detection sound level" combobox appears in enough places that we may as well make it a reusable widget. We did that for navmesh generation options, and those don't appear in nearly as many (or as diverse) places.
 
 * DKHeaderView: Bug: If the total width of all columns is wider than the containing view, then you can resize a colum and enlarge it properly. However, attempting to shrink a column causes glitchy behavior: the column size shrinks by an unpredictable amount, and the table and header become visually desynched until you force the table rows to re-render (e.g. by changing your selection).
 

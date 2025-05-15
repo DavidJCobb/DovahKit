@@ -1,0 +1,621 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogImpactData</class>
+ <widget class="QDialog" name="FormDialogImpactData">
+  <property name="windowTitle">
+   <string>ImpactData</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Placement Radius:</string>
+       </property>
+       <property name="buddy">
+        <cstring>radius</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QDoubleSpinBox" name="radius">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Alt. Texture Set:</string>
+       </property>
+       <property name="buddy">
+        <cstring>textureSetSecondary</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Angle Threshold:</string>
+       </property>
+       <property name="buddy">
+        <cstring>angleThreshold</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Main Texture Set:</string>
+       </property>
+       <property name="buddy">
+        <cstring>textureSetMain</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="3">
+      <widget class="QDoubleSpinBox" name="angleThreshold">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1" colspan="3">
+      <widget class="DKFormPicker" name="textureSetSecondary"/>
+     </item>
+     <item row="1" column="1" colspan="3">
+      <widget class="DKFormPicker" name="textureSetMain"/>
+     </item>
+     <item row="0" column="1" colspan="3">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Override Texture Set Decal Data</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="heightMin">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_16">
+        <property name="text">
+         <string>Shininess:</string>
+        </property>
+        <property name="buddy">
+         <cstring>shininess</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QLabel" name="label_15">
+        <property name="text">
+         <string>Depth:</string>
+        </property>
+        <property name="buddy">
+         <cstring>depth</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>8</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Min Width:</string>
+        </property>
+        <property name="buddy">
+         <cstring>widthMin</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_11">
+        <property name="text">
+         <string>Min Height:</string>
+        </property>
+        <property name="buddy">
+         <cstring>heightMin</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="5">
+       <widget class="QGroupBox" name="flagParallax">
+        <property name="title">
+         <string>Parallax</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_5">
+         <item row="0" column="1">
+          <widget class="QDoubleSpinBox" name="parallaxScale">
+           <property name="whatsThis">
+            <string>How deep the parallax depth will appear.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QSpinBox" name="parallaxPasses">
+           <property name="whatsThis">
+            <string>Number of samples used to create the fake depth. More passes produce a higher-quality result, but are slower to render.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QLabel" name="label_19">
+           <property name="text">
+            <string>Passes:</string>
+           </property>
+           <property name="buddy">
+            <cstring>parallaxPasses</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_18">
+           <property name="text">
+            <string>Scale:</string>
+           </property>
+           <property name="buddy">
+            <cstring>parallaxScale</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <spacer name="horizontalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>8</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_14">
+        <property name="text">
+         <string>Color:</string>
+        </property>
+        <property name="buddy">
+         <cstring>color</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="DKColorPickerButton" name="color">
+        <property name="whatsThis">
+         <string>A color tint to be applied to the selected texture, by multiplying the RGB channels.</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="4">
+       <widget class="QDoubleSpinBox" name="depth">
+        <property name="whatsThis">
+         <string>How far from the point of impact the decal will render.</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="4">
+       <widget class="QComboBox" name="alpha">
+        <item>
+         <property name="text">
+          <string>Blending</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Testing</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="widthMin">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>Max Width:</string>
+        </property>
+        <property name="buddy">
+         <cstring>widthMax</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QDoubleSpinBox" name="shininess">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QLabel" name="label_17">
+        <property name="text">
+         <string>Alpha:</string>
+        </property>
+        <property name="buddy">
+         <cstring>alpha</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4">
+       <widget class="QDoubleSpinBox" name="widthMax">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLabel" name="label_13">
+        <property name="text">
+         <string>Max Height:</string>
+        </property>
+        <property name="buddy">
+         <cstring>heightMax</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QDoubleSpinBox" name="heightMax">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0" colspan="5">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item alignment="Qt::AlignHCenter">
+         <widget class="QCheckBox" name="flag4Subtex">
+          <property name="text">
+           <string>4 Subtextures</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="whatsThis">
+      <string>These options allow you to spawn a 3D model at the impact site. This can be used for sparks, chunks, and so on.</string>
+     </property>
+     <property name="title">
+      <string>Effect</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3" columnstretch="0,1,0,0,1">
+      <item row="0" column="1" colspan="4">
+       <widget class="DKFormNIFPicker" name="effectModel"/>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Model:</string>
+        </property>
+        <property name="buddy">
+         <cstring>effectModel</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QComboBox" name="effectOrientation">
+        <item>
+         <property name="text">
+          <string>Projectile Reflection</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Projectile Vector</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Surface Normal</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_21">
+        <property name="text">
+         <string>Hazard:</string>
+        </property>
+        <property name="buddy">
+         <cstring>effectHazard</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_22">
+        <property name="text">
+         <string>Impact Result:</string>
+        </property>
+        <property name="buddy">
+         <cstring>effectImpactResult</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLabel" name="label_23">
+        <property name="text">
+         <string>Orientation:</string>
+        </property>
+        <property name="buddy">
+         <cstring>effectOrientation</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="effectDuration">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_20">
+        <property name="text">
+         <string>Duration:</string>
+        </property>
+        <property name="buddy">
+         <cstring>effectDuration</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" colspan="4">
+       <widget class="DKFormPicker" name="effectHazard"/>
+      </item>
+      <item row="1" column="2">
+       <spacer name="horizontalSpacer_5">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>8</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="3" column="1">
+       <widget class="QComboBox" name="effectImpactResult">
+        <item>
+         <property name="text">
+          <string>Bounce</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Default</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Destroy</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Impale</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Stick</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Impact Sounds</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Detection Sound Level:</string>
+        </property>
+        <property name="buddy">
+         <cstring>detectionSoundLevel</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Sound 1:</string>
+        </property>
+        <property name="buddy">
+         <cstring>sound1</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Sound 2:</string>
+        </property>
+        <property name="buddy">
+         <cstring>sound2</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="DKFormPicker" name="sound1"/>
+      </item>
+      <item row="1" column="1">
+       <widget class="DKFormPicker" name="sound2"/>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="detectionSoundLevel"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKColorPickerButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKColorPickerButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>textureSetMain</tabstop>
+  <tabstop>textureSetSecondary</tabstop>
+  <tabstop>radius</tabstop>
+  <tabstop>angleThreshold</tabstop>
+  <tabstop>groupBox</tabstop>
+  <tabstop>widthMin</tabstop>
+  <tabstop>widthMax</tabstop>
+  <tabstop>heightMin</tabstop>
+  <tabstop>heightMax</tabstop>
+  <tabstop>color</tabstop>
+  <tabstop>depth</tabstop>
+  <tabstop>shininess</tabstop>
+  <tabstop>alpha</tabstop>
+  <tabstop>flagParallax</tabstop>
+  <tabstop>parallaxScale</tabstop>
+  <tabstop>parallaxPasses</tabstop>
+  <tabstop>flag4Subtex</tabstop>
+  <tabstop>effectModel</tabstop>
+  <tabstop>effectDuration</tabstop>
+  <tabstop>effectOrientation</tabstop>
+  <tabstop>effectHazard</tabstop>
+  <tabstop>effectImpactResult</tabstop>
+  <tabstop>sound1</tabstop>
+  <tabstop>sound2</tabstop>
+  <tabstop>detectionSoundLevel</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

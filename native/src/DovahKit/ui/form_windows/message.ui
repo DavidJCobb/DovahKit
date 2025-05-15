@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogMessage</class>
+ <widget class="QDialog" name="FormDialogMessage">
+  <property name="windowTitle">
+   <string>Message</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_3">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="title">
+       <property name="whatsThis">
+        <string>The title of the message, or, if the message is being used to override names on objects like doors and Reference Aliases, the text of the override.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Owning Quest:</string>
+       </property>
+       <property name="buddy">
+        <cstring>owningQuest</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="DKFormPicker" name="owningQuest">
+       <property name="whatsThis">
+        <string>The message's owning quest, if any. This is used to process any quest text replacement tags in the message text.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Title:</string>
+       </property>
+       <property name="buddy">
+        <cstring>title</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Display Time:</string>
+       </property>
+       <property name="buddy">
+        <cstring>spinBox</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QSpinBox" name="spinBox">
+         <property name="whatsThis">
+          <string>The number of seconds that this message will display on the HUD, if the message is a notification. If the message is a dialog box, then this value is not used.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="maximum">
+          <number>9999</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="flagMessageBox">
+         <property name="whatsThis">
+          <string>If checked, this message will display as a dialog box, pausing gameplay until it's dismissed by the player, and it can be given multiple buttons (e.g. &quot;OK&quot; and &quot;Cancel&quot;) using the settings further below. If unchecked, this message will display as a notification in the upper-left corner of the HUD.</string>
+         </property>
+         <property name="text">
+          <string>Dialog box</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="flagAutoDisplay">
+         <property name="whatsThis">
+          <string>Unused.</string>
+         </property>
+         <property name="text">
+          <string>Auto-display</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Message text:</string>
+       </property>
+       <property name="buddy">
+        <cstring>text</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QPlainTextEdit" name="text">
+       <property name="baseSize">
+        <size>
+         <width>0</width>
+         <height>100</height>
+        </size>
+       </property>
+       <property name="whatsThis">
+        <string>&lt;p&gt;The text of the message. This can use numeric substitution codes (detailed below) and quest text replacement tags (if the message has an owning quest).&lt;/p&gt;
+&lt;hr/&gt;
+&lt;p&gt;Messages can be displayed using Papyrus's &lt;code&gt;Message.Show&lt;/code&gt; function. That function takes up to ten decimal numbers as optional parameters, and these numbers will replace &lt;dfn&gt;format tokens&lt;/dfn&gt; within the message text. The basic syntax of a format token is &lt;code&gt;%[flags][width][.precision]f&lt;/code&gt;, where...&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;flags&lt;/dt&gt;
+      &lt;dd&gt;
+         &lt;p&gt;Zero or more of the following symbols:&lt;/p&gt;
+         &lt;dl&gt;
+            &lt;dt&gt;&lt;code&gt;-&lt;/code&gt;&lt;/dt&gt;
+               &lt;dd&gt;&lt;p&gt;Left-aligns the number.&lt;/p&gt;&lt;/dd&gt;
+            &lt;dt&gt;&lt;code&gt;+&lt;/code&gt;&lt;/dt&gt;
+               &lt;dd&gt;&lt;p&gt;Always prefixes the number with a + or - sign. By default, only negative numbers are prefixed.&lt;/p&gt;&lt;/dd&gt;
+            &lt;dt&gt;&lt;code&gt;0&lt;/code&gt;&lt;/dt&gt;
+               &lt;dd&gt;&lt;p&gt;Pads the number with leading zeroes until it meets the desired width.&lt;/p&gt;&lt;/dd&gt;
+            &lt;dt&gt;&lt;code&gt; &lt;/code&gt; (space)&lt;/dt&gt;
+               &lt;dd&gt;&lt;p&gt;Pads the number with leading spaces until it meets the desired width.&lt;/p&gt;&lt;/dd&gt;
+            &lt;dt&gt;&lt;code&gt;#&lt;/code&gt;&lt;/dt&gt;
+               &lt;dd&gt;&lt;p&gt;Forces the number to display with a decimal point, even if it is an integer.&lt;/p&gt;&lt;/dd&gt;
+         &lt;/dl&gt;
+      &lt;/dd&gt;
+   &lt;dt&gt;width&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Optional: the minimum number of characters to output, including the sign character and decimal point, if any.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;precision&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;Optional: the number of digits after the decimal point. The default is precision is 6. You can specify 0 to print the number without a decimal point.&lt;/p&gt;&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;p&gt;A few examples: &lt;code&gt;%.0f&lt;/code&gt; will print the number as an integer without any decimal places, &lt;code&gt;%03.0f&lt;/code&gt; will print the number as an integer padded to three digits, and &lt;code&gt;% +7.2f&lt;/code&gt; will print the number with two decimal places and padded with spaces to a total of seven characters.&lt;/p&gt;
+&lt;hr/&gt;
+&lt;p&gt;This text has a 1023-character limit; longer text will cause Skyrim to crash. This limit applies to the text you type in here, including numerical formatting characters and quest text substitution tags; it does not apply to the text that gets substituted in when the message is actually display.&lt;/p&gt;</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Menu buttons</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="1" column="0" colspan="2">
+         <widget class="QLineEdit" name="currentButtonText"/>
+        </item>
+        <item row="0" column="0">
+         <widget class="QTableView" name="buttonsView">
+          <property name="baseSize">
+           <size>
+            <width>0</width>
+            <height>100</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <widget class="QPushButton" name="buttonNew">
+            <property name="text">
+             <string>New</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="buttonMoveUp">
+            <property name="text">
+             <string>Move Up</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="buttonMoveDown">
+            <property name="text">
+             <string>Move Down</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="buttonRemove">
+            <property name="text">
+             <string>Remove</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="groupBox_2">
+        <property name="title">
+         <string>Button conditions</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="0" column="0">
+          <widget class="DKConditionList" name="buttonConditions">
+           <property name="whatsThis">
+            <string>The currently selected menu button will only show if these conditions (if any) are met.</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKConditionList</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKConditionList.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>title</tabstop>
+  <tabstop>owningQuest</tabstop>
+  <tabstop>spinBox</tabstop>
+  <tabstop>flagMessageBox</tabstop>
+  <tabstop>flagAutoDisplay</tabstop>
+  <tabstop>text</tabstop>
+  <tabstop>buttonsView</tabstop>
+  <tabstop>buttonNew</tabstop>
+  <tabstop>buttonMoveUp</tabstop>
+  <tabstop>buttonMoveDown</tabstop>
+  <tabstop>buttonRemove</tabstop>
+  <tabstop>currentButtonText</tabstop>
+  <tabstop>buttonConditions</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,1229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogPackage</class>
+ <widget class="QDialog" name="FormDialogPackage">
+  <property name="windowTitle">
+   <string>Package</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="1" column="5">
+      <widget class="QComboBox" name="interruptOverride">
+       <property name="whatsThis">
+        <string>&lt;p&gt;NPC AI can be interrupted by four events:&lt;/p&gt;
+&lt;ul&gt;
+   &lt;li&gt;Entering combat&lt;/li&gt;
+   &lt;li&gt;Warning the player to leave an area that they're guarding (via a Guard package)&lt;/li&gt;
+   &lt;li&gt;Finding a dead body&lt;/li&gt;
+   &lt;li&gt;Spectating combat without being involved in it&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Typically, NPCs who experience these events will suspend execution of their current AI package and begin executing special hardcoded behaviors. However, it's possible to instead have them execute an alternate AI package. The way to do this is by flagging the alternate AI package as an Interrupt Override of the desired type, adding it to a FormList, and then setting that FormList as the &quot;override package list&quot; (of the appropriate type) for the actor.&lt;/p&gt;
+&lt;p&gt;This drop-down box, then, is where you flag an AI package as an Interrupt Override.&lt;/p&gt;
+&lt;p&gt;Note that if you take a package that &lt;em&gt;isn't&lt;/em&gt; set as an Interrupt Override here, and try to &lt;em&gt;use&lt;/em&gt; it as an Interrupt Override, the game may crash.&lt;/p&gt;</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>None</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Combat</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>GuardWarn</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>ObserveCombat</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Spectator</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="0" column="1" colspan="4">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Owning Quest:</string>
+       </property>
+       <property name="buddy">
+        <cstring>owningQuest</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="5">
+      <widget class="QCheckBox" name="flagIsTemplate">
+       <property name="whatsThis">
+        <string>&lt;p&gt;A &lt;dfn&gt;package template&lt;/dfn&gt; can define a procedure tree that can be reused by other packages, along with blanks that those packages can fill in to tweak the procedures. However, package templates can't define schedules, Papyrus data, or idle animation overrides.&lt;/p&gt;</string>
+       </property>
+       <property name="text">
+        <string>Is Template</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="4">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Interrupt Override:</string>
+       </property>
+       <property name="buddy">
+        <cstring>interruptOverride</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="DKFormPicker" name="owningQuest">
+       <property name="whatsThis">
+        <string>If a package has an owning quest, then that quest's aliases can be used as inputs for package data.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Combat Style:</string>
+       </property>
+       <property name="buddy">
+        <cstring>combatStyle</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="DKFormPicker" name="combatStyle"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tabPackage">
+      <attribute name="title">
+       <string>Package</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_16">
+       <item row="0" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="label_21">
+           <property name="text">
+            <string>Package Template:</string>
+           </property>
+           <property name="buddy">
+            <cstring>templateForm</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="DKFormPicker" name="templateForm"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonEditTemplate">
+           <property name="text">
+            <string>Edit...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="0" column="1">
+        <spacer name="horizontalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>386</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QGroupBox" name="groupBox_7">
+         <property name="whatsThis">
+          <string>&lt;p&gt;If this package uses a template, then that template can allow you to specify data inputs. The list of available inputs will be shown in the lefthand pane; select one and then use the controls to the right to change what data is fed into the input.&lt;/p&gt;
+&lt;p&gt;If this package &lt;em&gt;is&lt;/em&gt; a template, then this is where you can define the inputs that are exposed to any packages that use this template. You can also set those inputs' default values.&lt;/p&gt;</string>
+         </property>
+         <property name="title">
+          <string>Public Package Data</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <layout class="QGridLayout" name="gridLayout_7">
+            <item row="0" column="0">
+             <widget class="QTableView" name="packdata"/>
+            </item>
+            <item row="0" column="1">
+             <layout class="QVBoxLayout" name="verticalLayout_3">
+              <item>
+               <widget class="QPushButton" name="buttonPackdataNew">
+                <property name="text">
+                 <string>New</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="buttonPackdataMoveUp">
+                <property name="text">
+                 <string>Move Up</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="buttonPackdataMoveDown">
+                <property name="text">
+                 <string>Move Down</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="buttonPackdataDelete">
+                <property name="text">
+                 <string>Delete</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_4">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBox_8">
+            <property name="title">
+             <string>Selected Package Data</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_14">
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_19">
+               <property name="text">
+                <string>Name:</string>
+               </property>
+               <property name="buddy">
+                <cstring>currentPackdataName</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_20">
+               <property name="text">
+                <string>Type:</string>
+               </property>
+               <property name="buddy">
+                <cstring>currentPackdataType</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="currentPackdataName"/>
+             </item>
+             <item row="3" column="0" colspan="2">
+              <widget class="QWidget" name="currentPackdataValueHolder" native="true">
+               <property name="focusPolicy">
+                <enum>Qt::TabFocus</enum>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_15">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+               </layout>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QComboBox" name="currentPackdataType"/>
+             </item>
+             <item row="4" column="0" colspan="2">
+              <widget class="QCheckBox" name="currentPackdataIsPublic">
+               <property name="whatsThis">
+                <string>&lt;p&gt;Packages can define package data: forms and basic values to be fed into their procedures. Using this checkbox, a package template can decide whether a piece of package data is meant for internal use only, or whether it can be overridden by packages based on the template.&lt;/p&gt;
+&lt;p&gt;This checkbox won't appear when editing a package that isn't a template.&lt;/p&gt;</string>
+               </property>
+               <property name="text">
+                <string>Allow packages based on this template to override this value</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QGroupBox" name="groupBox_9">
+         <property name="whatsThis">
+          <string>&lt;p&gt;If this package doesn't use a template, then you can edit its procedure tree.&lt;/p&gt;
+&lt;p&gt;The pane on the left is the procedure tree. Use the context menu to edit the way procedures are arranged, or click on a procedure and then use the controls to the right to edit its details.&lt;/p&gt;</string>
+         </property>
+         <property name="title">
+          <string>Procedure Tree</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_17">
+          <item row="0" column="0">
+           <widget class="QTreeView" name="procedures"/>
+          </item>
+          <item row="0" column="1">
+           <widget class="QGroupBox" name="groupBox_10">
+            <property name="title">
+             <string>Selected Procedure</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_19">
+             <item row="0" column="0">
+              <layout class="QGridLayout" name="gridLayout_18">
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_22">
+                 <property name="text">
+                  <string>Type:</string>
+                 </property>
+                 <property name="buddy">
+                  <cstring>currentProcedureType</cstring>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QComboBox" name="currentProcedureInputPackdata">
+                 <property name="whatsThis">
+                  <string>Use this drop-down box to change which package data is fed into the selected input for this procedure.</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QComboBox" name="currentProcedureType"/>
+               </item>
+               <item row="1" column="0" colspan="2">
+                <widget class="QTableView" name="currentProcedureInputs">
+                 <property name="whatsThis">
+                  <string>Different types of procedures take different inputs. You can use any of this package's Public Package Data (defined above) as inputs.</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_23">
+                 <property name="text">
+                  <string>Input Data:</string>
+                 </property>
+                 <property name="buddy">
+                  <cstring>currentProcedureInputPackdata</cstring>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0" colspan="2">
+                <widget class="Line" name="line">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0" colspan="2">
+                <widget class="QCheckBox" name="currentProcedureCompletesPackage">
+                 <property name="text">
+                  <string>Success Completes Package</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="0" column="1">
+              <widget class="QGroupBox" name="groupBox_11">
+               <property name="whatsThis">
+                <string>Each procedure can override any or all of the package's miscellaneous flags, enabling or disabling a flag.</string>
+               </property>
+               <property name="title">
+                <string>Flag Overrides</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_20">
+                <item row="0" column="1">
+                 <widget class="QComboBox" name="comboBox">
+                  <item>
+                   <property name="text">
+                    <string>Walk</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Fast Walk</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Jog</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Run</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QCheckBox" name="checkBox">
+                  <property name="text">
+                   <string>Preferred Speed:</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item row="1" column="0" colspan="2">
+              <widget class="DKConditionList" name="currentProcedureConditions">
+               <property name="whatsThis">
+                <string>These conditions determine whether the currently selected procedure can activate.</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabFlags">
+      <attribute name="title">
+       <string>Flags</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0" rowspan="2">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Miscellaneous flags</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="2" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagAlwaysSneak">
+            <property name="text">
+             <string>Always Sneak</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagIgnoreCombat">
+            <property name="text">
+             <string>Ignore Combat</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="1">
+           <widget class="QComboBox" name="preferredSpeed">
+            <item>
+             <property name="text">
+              <string>Walk</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Fast Walk</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Jog</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Run</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="8" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagWeaponsUnequipped">
+            <property name="text">
+             <string>Weapons Unequipped</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagOncePerDay">
+            <property name="text">
+             <string>Once Per Day</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="0">
+           <widget class="QCheckBox" name="flagPreferredSpeed">
+            <property name="text">
+             <string>Preferred Speed:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagWearSleepOutfit">
+            <property name="text">
+             <string>Wear Sleep Outfit</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagMaintainSpeedAtGoal">
+            <property name="text">
+             <string>Maintain Speed at Goal</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagAllowSwim">
+            <property name="text">
+             <string>Allow Swimming</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagWeaponDrawn">
+            <property name="text">
+             <string>Weapon Drawn</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagNoCombatAlert">
+            <property name="text">
+             <string>No Combat Alert</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagMustComplete">
+            <property name="text">
+             <string>Must Complete</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QCheckBox" name="flagAllowIdleChatter">
+            <property name="text">
+             <string>Allow Idle Chatter</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QPushButton" name="buttonSetAllInterruptFlags">
+            <property name="text">
+             <string>Set all interrupt flags</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QPushButton" name="buttonClearAllInterruptFlags">
+            <property name="text">
+             <string>Clear all interrupt flags</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QCheckBox" name="flagHellosToPlayer">
+            <property name="text">
+             <string>Hellos to player</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="2">
+           <widget class="QCheckBox" name="flagRandomConversations">
+            <property name="text">
+             <string>Random conversations</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="2">
+           <widget class="QCheckBox" name="flagObserveCombatBehavior">
+            <property name="text">
+             <string>Observe combat behavior</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="2">
+           <widget class="QCheckBox" name="flagObserveCorpseBehavior">
+            <property name="text">
+             <string>Observe corpse behavior</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="2">
+           <widget class="QCheckBox" name="flagReactionToPlayerActions">
+            <property name="text">
+             <string>Reaction to player actions</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="2">
+           <widget class="QCheckBox" name="flagFriendlyFireComments">
+            <property name="text">
+             <string>Friendly fire comments</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="2">
+           <widget class="QCheckBox" name="flagAggroRadius">
+            <property name="text">
+             <string>Aggro Radius behavior</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="2">
+           <widget class="QCheckBox" name="flagWorldInteractions">
+            <property name="text">
+             <string>World interactions</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
+          <string>Door flags</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="flagUnlockDoorsAtStart">
+            <property name="text">
+             <string>Unlock doors at package start</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="flagUnlockDoorsAtEnd">
+            <property name="text">
+             <string>Unlock doors at package end</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <spacer name="horizontalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>211</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="1">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>389</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="0">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>388</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabStartup">
+      <attribute name="title">
+       <string>Schedule and Conditions</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_5">
+       <item row="2" column="0">
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>343</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBox_6">
+         <property name="whatsThis">
+          <string>&lt;p&gt;Control when this package activates. You can have the package activate on specific weekdays, calendar dates, times of day, et cetera, or leave those options set to &quot;any.&quot; You can only have the package activate at a specific minute if you also have it activate at a specific hour (i.e. you can have a package run at 5:30 AM, but you can't have a package run at &quot;half-past every hour&quot;).&lt;/p&gt;
+&lt;p&gt;These options are not available for package templates.&lt;/p&gt;</string>
+         </property>
+         <property name="title">
+          <string>Schedule</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Weekday:</string>
+            </property>
+            <property name="buddy">
+             <cstring>scheduleWeekday</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Month:</string>
+            </property>
+            <property name="buddy">
+             <cstring>scheduleMonth</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>Date:</string>
+            </property>
+            <property name="buddy">
+             <cstring>scheduleDate</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>Hour:</string>
+            </property>
+            <property name="buddy">
+             <cstring>scheduleHour</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QComboBox" name="scheduleHour"/>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>Minute:</string>
+            </property>
+            <property name="buddy">
+             <cstring>scheduleMinute</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="3">
+           <widget class="QComboBox" name="scheduleMinute"/>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Duration:</string>
+            </property>
+            <property name="buddy">
+             <cstring>scheduleDuration</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1" colspan="3">
+           <widget class="QComboBox" name="scheduleDate"/>
+          </item>
+          <item row="4" column="1">
+           <widget class="QDoubleSpinBox" name="scheduleDuration">
+            <property name="suffix">
+             <string> hours</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" colspan="3">
+           <widget class="QComboBox" name="scheduleMonth"/>
+          </item>
+          <item row="0" column="1" colspan="3">
+           <widget class="QComboBox" name="scheduleWeekday"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <spacer name="horizontalSpacer_7">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="DKConditionList" name="conditions"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabBeginEndChange">
+      <attribute name="title">
+       <string>Begin/End/Change</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_11">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBox_3">
+         <property name="title">
+          <string>On Begin</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_8">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_11">
+            <property name="text">
+             <string>Idle:</string>
+            </property>
+            <property name="buddy">
+             <cstring>onBeginIdle</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="DKFormPicker" name="onBeginIdle"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>Topic:</string>
+            </property>
+            <property name="buddy">
+             <cstring>onBeginTopic</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="DKFormPicker" name="onBeginTopic"/>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="DKPapyrusFragmentFunctionPicker" name="onBeginFragment"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QGroupBox" name="groupBox_4">
+         <property name="title">
+          <string>On End</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_9">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_13">
+            <property name="text">
+             <string>Idle:</string>
+            </property>
+            <property name="buddy">
+             <cstring>onEndIdle</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="DKFormPicker" name="onEndIdle"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_14">
+            <property name="text">
+             <string>Topic:</string>
+            </property>
+            <property name="buddy">
+             <cstring>onEndTopic</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="DKFormPicker" name="onEndTopic"/>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="DKPapyrusFragmentFunctionPicker" name="onEndFragment"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QGroupBox" name="groupBox_5">
+         <property name="title">
+          <string>On Change</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_10">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_15">
+            <property name="text">
+             <string>Idle:</string>
+            </property>
+            <property name="buddy">
+             <cstring>onChangeIdle</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="DKFormPicker" name="onChangeIdle"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_16">
+            <property name="text">
+             <string>Topic:</string>
+            </property>
+            <property name="buddy">
+             <cstring>onChangeTopic</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="DKFormPicker" name="onChangeTopic"/>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="DKPapyrusFragmentFunctionPicker" name="onChangeFragment"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="3">
+        <widget class="DKPapyrusBoundScriptListPane" name="scriptListPane"/>
+       </item>
+       <item row="2" column="0" colspan="3">
+        <spacer name="verticalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabIdles">
+      <attribute name="title">
+       <string>Idles</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_13">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="flagUseSpecificIdles">
+         <property name="whatsThis">
+          <string>You can optionally have your package override an actor's idle animations. These options work the same way as the options in Idle Marker forms, and are only available for ordinary packages, not package templates.</string>
+         </property>
+         <property name="title">
+          <string>Use Specific Idles</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="DKFormListPane" name="idles"/>
+          </item>
+          <item>
+           <layout class="QGridLayout" name="gridLayout_12">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_17">
+              <property name="text">
+               <string>Order:</string>
+              </property>
+              <property name="buddy">
+               <cstring>idlesOrder</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QCheckBox" name="flagDoIdlesOnce">
+              <property name="whatsThis">
+               <string>If this is checked, then idles in this marker's animation list will each only be played once.</string>
+              </property>
+              <property name="text">
+               <string>Do Once</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="4">
+             <widget class="QLabel" name="label_18">
+              <property name="text">
+               <string>Idle Timer:</string>
+              </property>
+              <property name="buddy">
+               <cstring>idlesTimer</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="5">
+             <widget class="QDoubleSpinBox" name="idlesTimer">
+              <property name="whatsThis">
+               <string>If this marker plays animations in a random order, then this is the duration of each animation. If this marker plays all of its animations in sequence, then this is the delay between each time the sequence loops.</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="idlesOrder">
+              <item>
+               <property name="text">
+                <string>Random</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Run in Sequence</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="0" column="3">
+             <spacer name="horizontalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <spacer name="horizontalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>366</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="0">
+        <spacer name="verticalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>433</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKPapyrusBoundScriptListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKPapyrusBoundScriptListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKPapyrusFragmentFunctionPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKPapyrusFragmentFunctionPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKConditionList</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKConditionList.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>flagIsTemplate</tabstop>
+  <tabstop>owningQuest</tabstop>
+  <tabstop>combatStyle</tabstop>
+  <tabstop>interruptOverride</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>templateForm</tabstop>
+  <tabstop>buttonEditTemplate</tabstop>
+  <tabstop>packdata</tabstop>
+  <tabstop>buttonPackdataNew</tabstop>
+  <tabstop>buttonPackdataMoveUp</tabstop>
+  <tabstop>buttonPackdataMoveDown</tabstop>
+  <tabstop>buttonPackdataDelete</tabstop>
+  <tabstop>currentPackdataName</tabstop>
+  <tabstop>currentPackdataType</tabstop>
+  <tabstop>currentPackdataValueHolder</tabstop>
+  <tabstop>procedures</tabstop>
+  <tabstop>currentProcedureType</tabstop>
+  <tabstop>currentProcedureInputs</tabstop>
+  <tabstop>currentProcedureInputPackdata</tabstop>
+  <tabstop>currentProcedureCompletesPackage</tabstop>
+  <tabstop>currentProcedureConditions</tabstop>
+  <tabstop>checkBox</tabstop>
+  <tabstop>comboBox</tabstop>
+  <tabstop>flagMustComplete</tabstop>
+  <tabstop>flagOncePerDay</tabstop>
+  <tabstop>flagAlwaysSneak</tabstop>
+  <tabstop>flagAllowSwim</tabstop>
+  <tabstop>flagIgnoreCombat</tabstop>
+  <tabstop>flagNoCombatAlert</tabstop>
+  <tabstop>flagWeaponDrawn</tabstop>
+  <tabstop>flagWeaponsUnequipped</tabstop>
+  <tabstop>flagWearSleepOutfit</tabstop>
+  <tabstop>flagMaintainSpeedAtGoal</tabstop>
+  <tabstop>flagPreferredSpeed</tabstop>
+  <tabstop>preferredSpeed</tabstop>
+  <tabstop>buttonSetAllInterruptFlags</tabstop>
+  <tabstop>buttonClearAllInterruptFlags</tabstop>
+  <tabstop>flagAllowIdleChatter</tabstop>
+  <tabstop>flagHellosToPlayer</tabstop>
+  <tabstop>flagRandomConversations</tabstop>
+  <tabstop>flagObserveCombatBehavior</tabstop>
+  <tabstop>flagObserveCorpseBehavior</tabstop>
+  <tabstop>flagReactionToPlayerActions</tabstop>
+  <tabstop>flagFriendlyFireComments</tabstop>
+  <tabstop>flagAggroRadius</tabstop>
+  <tabstop>flagWorldInteractions</tabstop>
+  <tabstop>flagUnlockDoorsAtStart</tabstop>
+  <tabstop>flagUnlockDoorsAtEnd</tabstop>
+  <tabstop>scheduleWeekday</tabstop>
+  <tabstop>scheduleMonth</tabstop>
+  <tabstop>scheduleDate</tabstop>
+  <tabstop>scheduleHour</tabstop>
+  <tabstop>scheduleMinute</tabstop>
+  <tabstop>scheduleDuration</tabstop>
+  <tabstop>conditions</tabstop>
+  <tabstop>onBeginIdle</tabstop>
+  <tabstop>onBeginTopic</tabstop>
+  <tabstop>onBeginFragment</tabstop>
+  <tabstop>onEndIdle</tabstop>
+  <tabstop>onEndTopic</tabstop>
+  <tabstop>onEndFragment</tabstop>
+  <tabstop>onChangeIdle</tabstop>
+  <tabstop>onChangeTopic</tabstop>
+  <tabstop>onChangeFragment</tabstop>
+  <tabstop>scriptListPane</tabstop>
+  <tabstop>flagUseSpecificIdles</tabstop>
+  <tabstop>idles</tabstop>
+  <tabstop>idlesOrder</tabstop>
+  <tabstop>flagDoIdlesOnce</tabstop>
+  <tabstop>idlesTimer</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
