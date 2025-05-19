@@ -38,7 +38,7 @@ QString DKFormPickerInterface::group() const {
 }
 
 QIcon DKFormPickerInterface::icon() const {
-   return QIcon();
+   return QIcon(":/icons/dropdown.png");
 }
 
 QString DKFormPickerInterface::toolTip() const {

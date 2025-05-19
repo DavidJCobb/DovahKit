@@ -2,7 +2,7 @@
 #include <optional>
 #include <QGridLayout>
 #include <QLabel>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "dovah/forms/Quest.h"
    #include "dovah/form_stub.h"
    #include "editor/subsystems/papyrus/core.h"
@@ -10,7 +10,7 @@
 #endif
 
 namespace {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    bool _test_alias_type(DKQuestAliasPicker::AliasTypes allowed, dovah::loaded_forms::Alias::alias_type type) {
       switch (type) {
          using enum dovah::loaded_forms::Alias::alias_type;
@@ -66,7 +66,7 @@ DKQuestAliasPicker::DKQuestAliasPicker(QWidget* parent) : QWidget(parent) {
    }
    #pragma endregion
 
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    QObject::connect(this->_subwidgets.quest, &DKFormPicker::formChanged, this, [this](dovah::form_stub* quest) {
       this->_setQuestImpl(
          quest,
@@ -112,7 +112,7 @@ void DKQuestAliasPicker::setRequiredScriptname(std::string_view s) {
       return;
    this->_state.required_scriptname = s;
 
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    auto prior = this->questAlias();
    {
       const auto blocker = QSignalBlocker(this);
@@ -128,7 +128,7 @@ void DKQuestAliasPicker::setRequiredScriptname(std::string_view s) {
    #endif
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
 ui::types::quest_alias DKQuestAliasPicker::questAlias() const {
    ui::types::quest_alias out;
    out.quest = this->quest();
@@ -193,7 +193,7 @@ void DKQuestAliasPicker::setQuest(dovah::form_stub* quest) {
 #endif
 
 void DKQuestAliasPicker::_updateAliasList(bool allow_signals) {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    std::optional<uint16_t> last_alias_id;
 
    auto* widget = this->_subwidgets.alias;
@@ -248,7 +248,7 @@ void DKQuestAliasPicker::_updateAliasList(bool allow_signals) {
    #endif
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
 bool DKQuestAliasPicker::_wouldAllowQuest(const dovah::form_stub& quest) const {
    if (!this->_state.required_scriptname.empty()) {
       auto& papyrus = dovahkit::subsystems::papyrus::core::get();

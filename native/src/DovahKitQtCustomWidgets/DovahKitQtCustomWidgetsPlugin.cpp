@@ -21,10 +21,12 @@
 #include "interfaces/DKAttackDataWidgetInterface.h"
 #include "interfaces/DKTabWidgetInterface.h"
 #include "interfaces/DKFloatSliderInterface.h"
+#include "interfaces/DKYesNoUnsetWidgetInterface.h"
 
 DovahKitQtCustomWidgetsPlugin::DovahKitQtCustomWidgetsPlugin(QObject* parent) : QObject(parent) {
    widgets.append(new DKFloatSliderInterface(this));
    widgets.append(new DKTabWidgetInterface(this));
+   widgets.append(new DKYesNoUnsetWidgetInterface(this));
 
    widgets.append(new DKCollapsiblePaneInterface(this));
    widgets.append(new DKColorPickerButtonInterface(this));

@@ -14,7 +14,7 @@ class DKPapyrusFragmentFunctionPicker : public QWidget {
    public:
       DKPapyrusFragmentFunctionPicker(QWidget* parent = nullptr);
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          QString currentScriptname() const noexcept;
          QString currentFunction() const noexcept;
          void setCurrentScriptname(const QString&);
@@ -53,7 +53,7 @@ class DKPapyrusFragmentFunctionPicker : public QWidget {
          QComboBox* function   = nullptr;
       } _subwidgets;
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
       script* _getScriptData(const QString& name);
       script* _getOrCreateScriptData(const QString& name);
       #endif

@@ -136,7 +136,7 @@ it is loaded in Qt designer. The easiest way to do that is to condition said beh
 behind a check for the relevant macro:
 
 ```c++
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    // ... behaviors that shouldn't happen in Qt Designer ...
 #endif
 ```

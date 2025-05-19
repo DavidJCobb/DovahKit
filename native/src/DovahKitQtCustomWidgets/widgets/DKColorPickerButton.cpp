@@ -37,7 +37,7 @@ namespace {
    }
 }
 DKColorPickerButton::DKColorPickerButton(QWidget* parent) : QPushButton(parent) {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       QObject::connect(this, &QPushButton::clicked, [this]() {
          auto color = QColorDialog::getColor(this->_color, this->window(), QString(), (QColorDialog::ColorDialogOptions)(this->hasAlpha() ? QColorDialog::ShowAlphaChannel : 0));
          if (!color.isValid())

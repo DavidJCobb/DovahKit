@@ -2,14 +2,14 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QLineEdit>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include <QSortFilterProxyModel>
    #include <QStandardItemModel>
    #include "dovah/files/papyrus/compiled_script.h"
    #include "editor/papyrus_dictionary.h"
 #endif
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
 namespace {
    inline void _append_combobox_item(QComboBox* widget, QStandardItem* item) {
       auto* proxy = (QSortFilterProxyModel*) widget->model();
@@ -65,7 +65,7 @@ DKPapyrusFragmentFunctionPicker::DKPapyrusFragmentFunctionPicker(QWidget* parent
    this->setFocusProxy(this->_subwidgets.scriptname);
    this->setTabOrder(this->_subwidgets.scriptname, this->_subwidgets.function);
 
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    QObject::connect(this->_subwidgets.scriptname, &QComboBox::currentTextChanged, this, [this](const QString& name) {
       auto* widget = this->_subwidgets.function;
       widget->clear();
@@ -100,7 +100,7 @@ DKPapyrusFragmentFunctionPicker::DKPapyrusFragmentFunctionPicker(QWidget* parent
    });
    #endif
 
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    #pragma region sorting
    {
       auto* widget = this->_subwidgets.scriptname;
@@ -122,7 +122,7 @@ DKPapyrusFragmentFunctionPicker::DKPapyrusFragmentFunctionPicker(QWidget* parent
    #endif
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
 QString DKPapyrusFragmentFunctionPicker::currentScriptname() const noexcept {
    return this->_subwidgets.scriptname->currentText();
 }

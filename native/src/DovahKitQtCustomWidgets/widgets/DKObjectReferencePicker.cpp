@@ -2,7 +2,7 @@
 #include <cassert>
 #include <QGridLayout>
 #include <QLabel>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "dovah/forms/factories/hardcoded.h" // for PlayerRef form ID
    #include "dovah/form_stub.h"
    #include "editor/subsystems/papyrus/core.h"
@@ -32,7 +32,7 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
 
    {
       auto* widget = this->subwidgets.render_window_pick = new QPushButton(tr("Pick Reference in Render Window"), this);
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          QObject::connect(widget, &QPushButton::clicked, this, [this]() {
             static_assert(!require_render_window_pick_hook, "TODO: click handler: coordinate with Worldedit/Worldinput to pick the ref");
             static_assert(!require_render_window_pick_hook, "TODO: enforce required scriptname here too!");
@@ -44,7 +44,7 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
       widget->setOverrideTextForNone(tr("(any)"));
       widget->setAllowedFormType(dovah::form_type::cell);
       widget->setAllowNone(true);
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          QObject::connect(widget, &DKFormPicker::formChanged, this, [this](dovah::form_stub* cell) {
             emit this->cellChanged(cell);
             ((DKRefsInCellModel*)this->subwidgets.refr->model())->setParentCell(cell);
@@ -54,7 +54,7 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
    {
       auto* widget = this->subwidgets.ref_filter_string = new QLineEdit(this);
       widget->setPlaceholderText("editor ID");
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          QObject::connect(widget, &QLineEdit::textEdited, this, [this](const QString& text) {
             if (!this->state.show_ref_list_filter)
                return;
@@ -64,7 +64,7 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
    }
    {
       auto* widget = this->subwidgets.refr = new QComboBox(this);
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          auto* model = new DKRefsInCellModel(widget);
          widget->setModel(model);
          QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
@@ -74,7 +74,7 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
    }
    {
       auto* widget = this->subwidgets.render_window_focus = new QPushButton(tr("Show Reference in Render Window"), this);
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          QObject::connect(widget, &QPushButton::clicked, this, [this]() {
             auto* ref = this->ref();
             if (!ref)
@@ -98,7 +98,7 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
    }
    #pragma endregion
 
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    {
       auto& editor = DovahKitCore::get();
       QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, [this]() {
@@ -197,7 +197,7 @@ void DKObjectReferencePicker::_rebuildLayout() {
    this->setUpdatesEnabled(true);
 }
 void DKObjectReferencePicker::_updatePrependedRefs() {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       auto* model = ((DKRefsInCellModel*)this->subwidgets.refr->model());
 
       const auto& required_scriptname = model->requiredScriptname();
@@ -232,7 +232,7 @@ void DKObjectReferencePicker::_updatePrependedRefs() {
    #endif
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    dovah::form_stub* DKObjectReferencePicker::cell() const {
       return this->subwidgets.cell->formStub();
    }
@@ -268,12 +268,12 @@ void DKObjectReferencePicker::_updatePrependedRefs() {
 
 void DKObjectReferencePicker::setRefFilterString(QString filter) {
    this->state.ref_filter_string = filter;
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       ((DKRefsInCellModel*)this->subwidgets.refr->model())->setFilterString(filter);
    #endif
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    const std::string& DKObjectReferencePicker::requiredScriptname() const {
       return ((DKRefsInCellModel*)this->subwidgets.refr->model())->requiredScriptname();
    }
@@ -301,7 +301,7 @@ void DKObjectReferencePicker::setShowRefListFilter(bool v) {
    if (value == v)
       return;
    value = v;
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       if (!v) {
          //
          // Don't apply any filters if the user can't see the UI for them.

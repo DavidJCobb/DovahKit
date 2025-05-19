@@ -1,7 +1,7 @@
 #include "DKTextureAssetPane.h"
 #include <QPainter>
 #include <QTimerEvent>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "../editor/asset_manager/asset_manager.h"
    #include "../editor/asset_manager/data/form_textureset.h"
 #endif
@@ -24,7 +24,7 @@ DKTextureAssetPane::DKTextureAssetPane(QWidget* parent) : QFrame(parent) {
    this->setFrameShape(QFrame::Shape::WinPanel);
    this->setMinimumSize(minimum_length, minimum_length);
    //
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       QObject::connect(&this->_receptors.target, &DovahKitAssetReceptor::ready,    this, &DKTextureAssetPane::_onTargetAssetHandled);
       QObject::connect(&this->_receptors.target, &DovahKitAssetReceptor::failed,   this, &DKTextureAssetPane::_onTargetAssetHandled);
       QObject::connect(&this->_receptors.target, &DovahKitAssetReceptor::unloaded, this, &DKTextureAssetPane::_onAssetUnloaded);
@@ -52,7 +52,7 @@ DKTextureAssetPane::DKTextureAssetPane(QWidget* parent) : QFrame(parent) {
 }
 
 bool DKTextureAssetPane::hasAsset() const noexcept {
-   #if defined(QT_DESIGNER_LIB)
+   #if defined(QT_PLUGIN)
       return false;
    #else
       if (this->_throttle.enabled) {
@@ -67,14 +67,14 @@ bool DKTextureAssetPane::hasAsset() const noexcept {
 void DKTextureAssetPane::setAsset(const QString& path) {
    if (path.isEmpty()) {
       this->_render = Render::Null;
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          this->_receptors.render = nullptr;
          this->_receptors.target = nullptr;
       #endif
       this->update();
       return;
    }
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       if (this->_receptors.target != nullptr) {
          if (this->_receptors.target->samePathAs(path))
             //
@@ -97,7 +97,7 @@ void DKTextureAssetPane::setAsset(const QString& path) {
       }
    #endif
    this->_render = Render::Loading;
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       auto& am = DovahKitAssetManager::get();
       this->_receptors.render = nullptr;
       this->_receptors.target = std::move(am.requestAsset(path));
@@ -107,14 +107,14 @@ void DKTextureAssetPane::setAsset(const QString& path) {
 void DKTextureAssetPane::setAsset(dovah::form_stub* stub) {
    if (!stub) {
       this->_render = Render::Null;
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          this->_receptors.render = nullptr;
          this->_receptors.target = nullptr;
       #endif
       this->update();
       return;
    }
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       if (this->_receptors.target != nullptr) {
          if (this->_receptors.target->formStub() == stub)
             //
@@ -137,7 +137,7 @@ void DKTextureAssetPane::setAsset(dovah::form_stub* stub) {
       }
    #endif
    this->_render = Render::Loading;
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       auto& am = DovahKitAssetManager::get();
       this->_receptors.render = nullptr;
       this->_receptors.target = std::move(am.requestAsset(*stub));
@@ -145,7 +145,7 @@ void DKTextureAssetPane::setAsset(dovah::form_stub* stub) {
    #endif
 }
 void DKTextureAssetPane::setAsset(DovahKitAssetTransport&& asset) {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       this->_receptors.render = nullptr;
       this->_receptors.target = std::move(asset);
       if (this->_receptors.target == nullptr) {
@@ -157,7 +157,7 @@ void DKTextureAssetPane::setAsset(DovahKitAssetTransport&& asset) {
    #endif
 }
 void DKTextureAssetPane::setAsset(const DovahKitAssetReceptor& other) {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       this->_receptors.render = nullptr;
       this->_receptors.target = (DovahKitAsset*)other; // don't do direct assign, as that would bulldoze our receptor's flags
       if (this->_receptors.target == nullptr) {
@@ -211,7 +211,7 @@ void DKTextureAssetPane::setThrottleTime(uint ms) {
 }
 
 void DKTextureAssetPane::_onAssetUnloaded() {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       this->_receptors.render = nullptr;
       this->_receptors.target = nullptr;
    #endif
@@ -220,7 +220,7 @@ void DKTextureAssetPane::_onAssetUnloaded() {
    this->update();
 }
 void DKTextureAssetPane::_onTargetAssetHandled() {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       auto& target = this->_receptors.target;
       auto& render = this->_receptors.render;
       if (target == nullptr || target.isFailed()) {
@@ -251,7 +251,7 @@ void DKTextureAssetPane::_onTargetAssetHandled() {
    #endif
 }
 void DKTextureAssetPane::_onRenderAssetHandled() {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       auto& render = this->_receptors.render;
       if (render == nullptr || render.isFailed()) {
          this->_render = Render::Failed;
@@ -413,7 +413,7 @@ void DKTextureAssetPane::paintEvent(QPaintEvent* event) {
          _drawLoadingSpinner(painter, this->contentsRect());
          break;
       case Render::Asset:
-         #if !defined(QT_DESIGNER_LIB)
+         #if !defined(QT_PLUGIN)
          {
             auto image = this->_receptors.render->asQImage();
             if (image.isNull())

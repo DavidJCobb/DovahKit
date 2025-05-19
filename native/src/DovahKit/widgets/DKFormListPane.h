@@ -1,6 +1,6 @@
 #pragma once
 #include <optional>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include <functional>
    #include <variant>
 #endif
@@ -12,11 +12,11 @@
 #include <QTableView>
 
 class DKFormListPaneModel;
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "../dovah/core.h"
    #include "widget-models/DKFormListPaneModel.h"
 #endif
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    class DKCustomFormFilter;
 #endif
 
@@ -37,7 +37,7 @@ class DKFormListPane : public QWidget {
    Q_PROPERTY(bool showMoveButtons  READ showMoveButtons  WRITE setShowMoveButtons  DESIGNABLE true);
    Q_PROPERTY(bool showRemoveButton READ showRemoveButton WRITE setShowRemoveButton DESIGNABLE true);
    public:
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          //
          // You can add extra columns to the listview, with getters that take a form stub or 
          // a loaded form. Your getters will be invoked when forms are added to the listview 
@@ -58,7 +58,7 @@ class DKFormListPane : public QWidget {
    public:
       DKFormListPane(QWidget* parent);
       
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          QHeaderView* horizontalHeader() const noexcept { return this->subwidgets.view->horizontalHeader(); }
       #endif
       constexpr bool allowDuplicates() const noexcept { return this->state.allow_duplicates; }
@@ -70,7 +70,7 @@ class DKFormListPane : public QWidget {
       constexpr bool showMoveButtons() const noexcept { return this->state.show_move_buttons; }
       constexpr bool showRemoveButton() const noexcept { return this->state.show_remove_button; }
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          QVector<dovah::form_stub*> stubs() const noexcept;
 
          // Clear the widget's current contents, and then pull all stubs in the provided list. 
@@ -84,7 +84,7 @@ class DKFormListPane : public QWidget {
       #endif
 
    public slots:
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          void addStub(dovah::form_stub* stub);
          void clear();
          bool contains(const dovah::form_stub*) const;
@@ -96,7 +96,7 @@ class DKFormListPane : public QWidget {
       void setAllowDuplicates(bool);
       void setAllowMultiSelect(bool);
       void setReadOnly(bool);
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          void setAllowedFormTypes(QVector<dovah::form_type>);
       #endif
       void setShowFormTypes(bool);
@@ -106,17 +106,17 @@ class DKFormListPane : public QWidget {
       void setShowRemoveButton(bool);
       
    public: // Ensure these are not Qt slots; slots can't have moved&& parameters
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          void addExtraColumn(QString header, ExtraColumnHandler&&);
          void removeExtraColumn(size_t which); // the first-added extra column is index 0. indices shift as columns are removed.
       #endif
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          DKCustomFormFilter* customFilter() const;
          void setCustomFilter(DKCustomFormFilter* v);
       #endif
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          [[nodiscard]] std::vector<dovah::form_stub*> selectedForms() const;
          [[nodiscard]] std::vector<size_t> selectedRows() const;
       #endif
@@ -150,7 +150,7 @@ class DKFormListPane : public QWidget {
 
       DKFormListPaneModel* _model() const noexcept;
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          void _moveSelected(int down); // negative values move up
          void _removeSelected();
       #endif

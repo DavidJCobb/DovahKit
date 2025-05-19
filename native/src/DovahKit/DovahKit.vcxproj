@@ -250,7 +250,6 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_camera.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\options_union.cpp" />
-    <ClCompile Include="editor\subsystems\worldedit\tool_system\opaque_options_union.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_selection.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\move_selection_by_drag.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\orbit_camera.cpp" />
@@ -896,6 +895,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_status_bar_segment.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_yes_no_unset_widget.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_rebuild.cpp" />
@@ -1073,6 +1073,7 @@
     <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
     <ClCompile Include="widgets\DKVulkanView.cpp" />
     <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor.cpp" />
+    <ClCompile Include="widgets\DKYesNoUnsetWidget.cpp" />
     <ClCompile Include="widgets\widget-data\DKCustomFormFilter.cpp" />
     <ClCompile Include="widgets\widget-data\DKCustomFormFilterableModelMixin.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.cpp" />
@@ -1519,6 +1520,7 @@
     <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_list_pane_extra_col.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_status_bar_segment.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_yes_no_unset_widget.h" />
     <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
     <QtMoc Include="ui\models\forms\LeveledListModel.h" />
     <ClInclude Include="ui\types\conditions\condition.h" />
@@ -1555,6 +1557,7 @@
     <QtMoc Include="widgets\DKStatusBar.h" />
     <QtMoc Include="widgets\widget-data\DKCustomFormFilter.h" />
     <QtMoc Include="ui\form_windows\scene\SceneFormVisualEditor.h" />
+    <QtMoc Include="widgets\DKYesNoUnsetWidget.h" />
     <ClInclude Include="widgets\widget-data\DKCustomFormFilterableModelMixin.h" />
     <ClInclude Include="widgets\widget-models\DKAttackDataModel.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
@@ -1692,7 +1695,6 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\is_tool_options.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\concepts\tool_or_tool_options.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\id_of.h" />
-    <ClInclude Include="editor\subsystems\worldedit\tool_system\opaque_options_union.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\options_union.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tool_dispatch_table.h" />
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tool_id.h" />
@@ -2812,6 +2814,7 @@
     <QtUic Include="ui\form_windows\combat_style.ui" />
     <QtUic Include="ui\form_windows\constructible_object.ui" />
     <QtUic Include="ui\form_windows\container.ui" />
+    <QtUic Include="ui\form_windows\debris.ui" />
     <QtUic Include="ui\form_windows\dialogue_branch.ui" />
     <QtUic Include="ui\form_windows\door.ui" />
     <QtUic Include="ui\form_windows\dual_cast_data.ui" />
@@ -2822,10 +2825,14 @@
     <QtUic Include="ui\form_windows\flora.ui" />
     <QtUic Include="ui\form_windows\footstep.ui" />
     <QtUic Include="ui\form_windows\formlist.ui" />
+    <QtUic Include="ui\form_windows\furniture.ui" />
     <QtUic Include="ui\form_windows\global.ui" />
     <QtUic Include="ui\form_windows\grass.ui" />
     <QtUic Include="ui\form_windows\hazard.ui" />
     <QtUic Include="ui\form_windows\head_part.ui" />
+    <QtUic Include="ui\form_windows\idle_marker.ui" />
+    <QtUic Include="ui\form_windows\impact_data.ui" />
+    <QtUic Include="ui\form_windows\impact_data_set.ui" />
     <QtUic Include="ui\form_windows\keyword.ui" />
     <QtUic Include="ui\form_windows\landtexture.ui" />
     <QtUic Include="ui\form_windows\leveled_character.ui" />
@@ -2833,11 +2840,17 @@
     <QtUic Include="ui\form_windows\leveled_spell.ui" />
     <QtUic Include="ui\form_windows\light.ui" />
     <QtUic Include="ui\form_windows\loading_screen.ui" />
+    <QtUic Include="ui\form_windows\magic_effect.ui" />
     <QtUic Include="ui\form_windows\material_object.ui" />
     <QtUic Include="ui\form_windows\material_type.ui" />
+    <QtUic Include="ui\form_windows\message.ui" />
     <QtUic Include="ui\form_windows\misc_item.ui" />
+    <QtUic Include="ui\form_windows\movable_static.ui" />
     <QtUic Include="ui\form_windows\movement_type.ui" />
+    <QtUic Include="ui\form_windows\music_track.ui" />
+    <QtUic Include="ui\form_windows\music_type.ui" />
     <QtUic Include="ui\form_windows\note.ui" />
+    <QtUic Include="ui\form_windows\package.ui" />
     <QtUic Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.ui" />
     <QtUic Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_objectives.ui" />
@@ -2850,6 +2863,7 @@
     <QtUic Include="ui\form_windows\race.ui" />
     <QtUic Include="ui\form_windows\reference.ui" />
     <QtUic Include="ui\form_windows\relationship.ui" />
+    <QtUic Include="ui\form_windows\reverb_parameters.ui" />
     <QtUic Include="ui\form_windows\scene\FormSubdialogSceneDialogueAction.ui" />
     <QtUic Include="ui\form_windows\scene\FormSubdialogScenePackageAction.ui" />
     <QtUic Include="ui\form_windows\scene\FormSubdialogScenePhase.ui" />
@@ -2859,6 +2873,9 @@
     <QtUic Include="ui\form_windows\shout.ui" />
     <QtUic Include="ui\form_windows\soul_gem.ui" />
     <QtUic Include="ui\form_windows\sound.ui" />
+    <QtUic Include="ui\form_windows\sound_category.ui" />
+    <QtUic Include="ui\form_windows\sound_descriptor.ui" />
+    <QtUic Include="ui\form_windows\sound_output_model.ui" />
     <QtUic Include="ui\form_windows\spell.ui" />
     <QtUic Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.ui" />
     <QtUic Include="ui\form_windows\static.ui" />
@@ -2867,6 +2884,7 @@
     <QtUic Include="ui\form_windows\topic.ui" />
     <QtUic Include="ui\form_windows\topic_info.ui" />
     <QtUic Include="ui\form_windows\topic_info\topic_info_response.ui" />
+    <QtUic Include="ui\form_windows\tree.ui" />
     <QtUic Include="ui\form_windows\visual_effect.ui" />
     <QtUic Include="ui\form_windows\voicetype.ui" />
     <QtUic Include="ui\form_windows\weapon.ui" />
@@ -3266,8 +3284,6 @@
     <Natvis Include="dovah\form_stub.natvis" />
     <Natvis Include="dovah\utils\classed_stat_points.natvis" />
     <Natvis Include="editor\subsystems\papyrus\known_script.natvis" />
-    <Natvis Include="editor\subsystems\worldedit\tool_system\opaque_options_union.natvis" />
-    <Natvis Include="editor\subsystems\worldedit\tool_system\options_union.natvis" />
     <Natvis Include="editor\subsystems\worldinput\inputs\button.natvis" />
     <Natvis Include="editor\subsystems\worldinput\input_sequence.natvis" />
     <Natvis Include="helpers\bitfield_array.natvis" />

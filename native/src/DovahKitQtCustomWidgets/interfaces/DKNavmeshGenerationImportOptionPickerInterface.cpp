@@ -38,7 +38,7 @@ QString DKNavmeshGenerationImportOptionPickerInterface::group() const {
 }
 
 QIcon DKNavmeshGenerationImportOptionPickerInterface::icon() const {
-   return QIcon();
+   return QIcon(":/icons/dropdown.png");
 }
 
 QString DKNavmeshGenerationImportOptionPickerInterface::toolTip() const {

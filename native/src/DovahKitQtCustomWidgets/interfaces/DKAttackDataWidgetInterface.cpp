@@ -38,7 +38,7 @@ QString DKAttackDataWidgetInterface::group() const {
 }
 
 QIcon DKAttackDataWidgetInterface::icon() const {
-   return QIcon();
+   return QIcon(":/icons/DKAttackDataWidget.png");
 }
 
 QString DKAttackDataWidgetInterface::toolTip() const {

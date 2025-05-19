@@ -2,7 +2,7 @@
 #include <QBoxLayout>
 #include <QPushButton>
 #include <QTableView>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "./widget-dialogs/DKConditionEditDialog.h"
    #include "./widget-models/DKConditionListModel.h"
    #include "dovah/data/conditions/all_function_info.h"
@@ -12,7 +12,7 @@
 #endif
 
 namespace {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    constexpr const auto GetIsID = []() -> uint16_t {
       for (auto& func : dovah::conditions::all_vanilla_function_info) {
          if (cobb::strieq_ascii(func.name, "GetIsID"))
@@ -65,7 +65,7 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
       this->setTabOrder(this->_subwidgets.move_down, this->_subwidgets.add_item);
    #pragma endregion
 
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    {
       auto* widget = this->_subwidgets.view;
       this->_model = new DKConditionListModel(this);
@@ -74,7 +74,7 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
    #endif
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    void DKConditionList::importFrom(dovah::loaded_forms::Form& owner, const BackendConditionList& target) {
       this->_owning_stub = &owner.stub;
       this->_model->importFrom(owner, target);
@@ -94,7 +94,7 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
 #endif
 
 void DKConditionList::openCreateConditionModal() {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    auto* model = this->_model;
    auto* sm    = this->_subwidgets.view->selectionModel();
    if (!this->_owning_stub || !model || !sm)
@@ -131,7 +131,7 @@ void DKConditionList::openCreateConditionModal() {
    #endif
 }
 void DKConditionList::openEditConditionModal() {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    auto* model = this->_model;
    auto* sm    = this->_subwidgets.view->selectionModel();
    if (!this->_owning_stub || !model || !sm)

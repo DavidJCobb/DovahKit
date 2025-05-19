@@ -6,7 +6,7 @@
 #include <QTableView>
 
 class DKFormListPaneModel;
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "../dovah/core.h"
    #include "widget-models/DKFormListPaneModel.h"
 #endif
@@ -32,7 +32,7 @@ class DKFormListPane : public QWidget {
       static constexpr int ColumnName   = 1;
       static constexpr int ColumnFormID = 2;
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          QHeaderView* horizontalHeader() const noexcept { return this->subwidgets.view->horizontalHeader(); }
       #endif
       inline Qt::Orientation orientation() const noexcept { return this->state.orientation; }
@@ -41,7 +41,7 @@ class DKFormListPane : public QWidget {
       inline bool showMoveButtons() const noexcept { return this->state.show_move_buttons; }
       inline bool showRemoveButton() const noexcept { return this->state.show_remove_button; }
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          QVector<dovah::form_stub*> stubs() const noexcept;
 
          // Clear the widget's current contents, and then pull all stubs in the provided list. 
@@ -55,13 +55,13 @@ class DKFormListPane : public QWidget {
       #endif
 
    public slots:
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          void addStub(dovah::form_stub* stub);
          void clear();
          void reserve(size_t);
       #endif
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          void setAllowedFormTypes(QVector<dovah::form_type>);
       #endif
       void setShowFormTypes(bool);
@@ -92,7 +92,7 @@ class DKFormListPane : public QWidget {
 
       DKFormListPaneModel* _model() const noexcept;
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
       void _moveSelected(int down); // negative values move up
       void _removeSelected();
       #endif

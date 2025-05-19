@@ -4,7 +4,7 @@
 #include <QTableView>
 
 class DKBoundScriptListModel;
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "dovah/core.h"
    #include "dovah/form_stub.h"
    #include "dovah/forms/components/papyrus.h"
@@ -32,7 +32,7 @@ class DKPapyrusBoundScriptListPane : public QWidget {
       DKPapyrusBoundScriptListPane(QWidget* parent);
 
    public slots:
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          void setFormWorkingCopy(working_copy_type* working_copy);
          void setQuestWorkingCopyAndAliasVMAD(working_copy_type* quest_working_copy, vmad_type& target);
 
@@ -61,7 +61,7 @@ class DKPapyrusBoundScriptListPane : public QWidget {
          QGroupBox* groupbox = nullptr;
          QWidget*   wrapper  = nullptr;
       } subwidgets;
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
       struct {
          working_copy_type* form = nullptr;
          dovah::loaded_form_ptr<dovah::loaded_forms::Form> base_form; // if `form` is a ref
@@ -74,7 +74,7 @@ class DKPapyrusBoundScriptListPane : public QWidget {
       DKBoundScriptListModel* model = nullptr;
 
       void _updateGroupbox();
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
       void _editSelected();
       void _updateButtons();
       #endif

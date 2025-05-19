@@ -6,7 +6,7 @@
 #include <QHeaderView>
 #include <QRadioButton>
 #include "./DKHeaderView.h"
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "dovah/data/all_carryable_form_types.h"
    #include "dovah/forms/components/leveled_list.h"
    #include "dovah/forms/LeveledItem.h"
@@ -15,7 +15,7 @@
    #include "./widget-models/DKFormInventoryModel.h"
 #endif
 
-#if defined(QT_DESIGNER_LIB)
+#if defined(QT_PLUGIN)
    #include <QAbstractItemModel>
 
    // Dummy model, so that the widget displays the right tableview column 
@@ -219,11 +219,11 @@ DKFormInventoryWidget::DKFormInventoryWidget(QWidget* parent) : QWidget(parent) 
    //
    // Create model and configure widgets:
    //
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       this->_model = new DKFormInventoryModel(this);
    #endif
    //
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       for (auto ft : dovah::all_carryable_form_types)
          ui.current_item->addAllowedFormType(ft);
    #endif
@@ -266,7 +266,7 @@ DKFormInventoryWidget::DKFormInventoryWidget(QWidget* parent) : QWidget(parent) 
    //
    {
       auto* view = ui.view;
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          view->setModel(this->_model);
       #else
          view->setModel(new _DummyModel(view));
@@ -304,13 +304,13 @@ DKFormInventoryWidget::DKFormInventoryWidget(QWidget* parent) : QWidget(parent) 
          header->setStretchLastSection(false);
       }
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          QObject::connect(ui.current_owner_type_actor,   &QRadioButton::toggled, this, &DKFormInventoryWidget::_writeEntryToModel);
          QObject::connect(ui.current_owner_type_faction, &QRadioButton::toggled, this, &DKFormInventoryWidget::_writeEntryToModel);
       #endif
    }
 
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    QObject::connect(this->_subwidgets.preview_button, &QPushButton::clicked, this, &DKFormInventoryWidget::_preview);
    //
    QObject::connect(this->_subwidgets.view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &DKFormInventoryWidget::_pullEntryFromModel);
@@ -325,7 +325,7 @@ DKFormInventoryWidget::DKFormInventoryWidget(QWidget* parent) : QWidget(parent) 
    #endif
 
    this->_rebuildLayout();
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       this->_pullEntryFromModel(); // set initial control enable states
    #endif
 }
@@ -337,7 +337,7 @@ void DKFormInventoryWidget::setOrientation(Qt::Orientation v) {
    this->_rebuildLayout();
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
 void DKFormInventoryWidget::initializeFrom(const dovah::loaded_forms::components::container_data& component) {
    this->_model->importFrom(component);
 }
@@ -346,7 +346,7 @@ void DKFormInventoryWidget::commitTo(dovah::loaded_forms::components::container_
 }
 #endif
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
 void DKFormInventoryWidget::_preview() {
    std::vector<dovah::leveled_list_preview::entry> results;
    {

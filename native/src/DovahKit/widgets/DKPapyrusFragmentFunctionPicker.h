@@ -6,7 +6,7 @@
 #include <QPointer>
 #include <QWidget>
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    class DKPapyrusBoundScriptListPane;
    class DKPapyrusFragmentFunctionModel;
 #endif
@@ -20,7 +20,7 @@ class DKPapyrusFragmentFunctionPicker : public QWidget {
       static constexpr const size_t maxScriptnameLength   = std::numeric_limits<uint16_t>::max();
       static constexpr const size_t maxFunctionNameLength = std::numeric_limits<uint16_t>::max();
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          QString currentScriptname() const noexcept;
          QString currentFunction() const noexcept;
          void setCurrentScriptname(const QString&);
@@ -39,7 +39,7 @@ class DKPapyrusFragmentFunctionPicker : public QWidget {
       void currentFunctionChanged(const QString&);
       
    protected:
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          DKPapyrusFragmentFunctionModel* _model = nullptr;
       #endif
       struct {

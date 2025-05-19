@@ -38,7 +38,7 @@ QString DKPapyrusBoundScriptListPaneInterface::group() const {
 }
 
 QIcon DKPapyrusBoundScriptListPaneInterface::icon() const {
-   return QIcon();
+   return QIcon(":/icons/listpane-with-buttons.png");
 }
 
 QString DKPapyrusBoundScriptListPaneInterface::toolTip() const {

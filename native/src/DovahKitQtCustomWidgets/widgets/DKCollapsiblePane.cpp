@@ -61,7 +61,7 @@ DKCollapsiblePane::DKCollapsiblePane(QWidget* parent) : QFrame(parent), toolbar(
       layout->setStretch(1, 1);
    }
    //
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       QObject::connect(toggle, &QPushButton::clicked, this, &DKCollapsiblePane::toggleCollapsed);
    #endif
    this->setFocusProxy(toolbar);

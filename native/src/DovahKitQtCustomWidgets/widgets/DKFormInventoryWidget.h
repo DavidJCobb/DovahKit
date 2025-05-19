@@ -9,7 +9,7 @@
 #include <QWidget>
 #include "./DKFormPicker.h"
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
 namespace dovah {
    namespace loaded_forms {
       namespace components {
@@ -32,7 +32,7 @@ class DKFormInventoryWidget : public QWidget {
       constexpr Qt::Orientation orientation() const noexcept { return this->_state.orientation; }
       void setOrientation(Qt::Orientation);
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
       void initializeFrom(const dovah::loaded_forms::components::container_data&);
       void commitTo(dovah::loaded_forms::components::container_data&, dovah::loaded_forms::Form& owner);
       #endif
@@ -62,11 +62,11 @@ class DKFormInventoryWidget : public QWidget {
       struct {
          Qt::Orientation orientation = Qt::Orientation::Vertical;
       } _state;
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
       DKFormInventoryModel* _model = nullptr;
       #endif
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
       void _preview();
       void _pullEntryFromModel();
       void _writeEntryToModel();

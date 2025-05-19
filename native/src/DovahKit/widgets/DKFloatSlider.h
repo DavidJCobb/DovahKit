@@ -6,7 +6,7 @@ class DKFloatSlider : public QWidget {
    Q_OBJECT;
    Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation);
    Q_PROPERTY(int decimals READ decimals WRITE setDecimals);
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       Q_PROPERTY(float value READ value WRITE setValue NOTIFY valueChanged USER true);
       Q_PROPERTY(float minimum READ minimum WRITE setMinimum);
       Q_PROPERTY(float maximum READ maximum WRITE setMaximum);

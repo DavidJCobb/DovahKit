@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/DKYesNoUnsetWidget.png</file>
+        <file>icons/dropdown.png</file>
+        <file>icons/listpane-with-buttons.png</file>
+        <file>icons/DKAttackDataWidget.png</file>
+        <file>icons/slider.png</file>
+    </qresource>
+</RCC>

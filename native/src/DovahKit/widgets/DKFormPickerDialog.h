@@ -1,5 +1,5 @@
 #pragma once
-#if defined(QT_DESIGNER_LIB)
+#if defined(QT_PLUGIN)
    #error This widget is not meant to be usable in Qt Designer.
 #endif
 #include <QAbstractItemModel>
@@ -15,7 +15,7 @@ namespace dovah {
 namespace ui::impl::DKFormPicker {
    class DialogModel;
 }
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    class DKCustomFormFilter;
 #endif
 
@@ -36,18 +36,18 @@ class DKFormPickerDialog : public QDialog {
          return this->_properties.allowed_form_types.contains(ft);
       }
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          constexpr dovah::form_stub* formStub() const noexcept { return this->_value; }
          void setFormStub(dovah::form_stub*) noexcept;
       #endif
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          DKCustomFormFilter* customFilter() const;
          void setCustomFilter(DKCustomFormFilter* v);
       #endif
          
    protected:
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          dovah::form_stub* _value = nullptr;
       #endif
       ui::impl::DKFormPicker::DialogModel* _model = nullptr;

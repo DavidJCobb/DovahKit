@@ -5,14 +5,14 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QMessageBox>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "dovah/forms/Form.h"
    #include "dovah/forms/ObjectReference.h"
    #include "./widget-dialogs/DKAddPapyrusScriptDialog.h"
    #include "./widget-dialogs/DKBoundScriptDialog.h"
 #endif
 
-#if defined(QT_DESIGNER_LIB)
+#if defined(QT_PLUGIN)
 #include <QAbstractItemModel>
 class DKBoundScriptListModel : public QAbstractItemModel {
    public:
@@ -93,7 +93,7 @@ DKPapyrusBoundScriptListPane::DKPapyrusBoundScriptListPane(QWidget* parent) : QW
    this->model = new DKBoundScriptListModel(this);
    view->setIconSize(QSize(16, 16));
    view->setModel(this->model);
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       QObject::connect(view, &QTableView::doubleClicked, [this, view](const QModelIndex& index) {
          if (!index.isValid())
             return;
@@ -117,7 +117,7 @@ DKPapyrusBoundScriptListPane::DKPapyrusBoundScriptListPane(QWidget* parent) : QW
    //
    this->_updateGroupbox();
    //
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       QObject::connect(view->selectionModel(), &QItemSelectionModel::selectionChanged, this, [this](const QItemSelection& selected, const QItemSelection& deselected) {
          this->_updateButtons();
       });
@@ -212,7 +212,7 @@ void DKPapyrusBoundScriptListPane::_updateGroupbox() {
    this->setUpdatesEnabled(true);
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    void DKPapyrusBoundScriptListPane::_editSelected() {
       QModelIndex script_qmi;
       {
@@ -275,7 +275,7 @@ void DKPapyrusBoundScriptListPane::_updateGroupbox() {
       }
    }
 #endif
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    void DKPapyrusBoundScriptListPane::setFormWorkingCopy(working_copy_type* target_form) {
       if (!target_form) {
          this->vmad = {};

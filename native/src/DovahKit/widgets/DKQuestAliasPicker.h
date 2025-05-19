@@ -4,7 +4,7 @@
 #include <QComboBox>
 #include <QFlags>
 #include <QWidget>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "dovah/forms/Quest.h"
    #include "dovah/form_stub.h"
    #include "ui/types/quest_alias.h"
@@ -45,7 +45,7 @@ class DKQuestAliasPicker : public QWidget {
       void setRequiredScriptname(QString);
       void setRequiredScriptname(std::string_view);
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
       ui::types::quest_alias questAlias() const;
       void setQuestAlias(const ui::types::quest_alias&);
 
@@ -60,7 +60,7 @@ class DKQuestAliasPicker : public QWidget {
    protected:
       void _updateAliasList(bool allow_signals = true);
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
       bool _wouldAllowQuest(const dovah::form_stub&) const;
       bool _wouldAllowQuestAlias(const ui::types::quest_alias&) const;
       
@@ -79,7 +79,7 @@ class DKQuestAliasPicker : public QWidget {
          AliasTypes  allowed_types = AliasType::Any;
          std::string required_scriptname;
          //
-         #if !defined(QT_DESIGNER_LIB)
+         #if !defined(QT_PLUGIN)
             dovah::form_stub* quest = nullptr;
             dovah::loaded_form_ptr<dovah::loaded_forms::Quest> quest_data;
          #endif

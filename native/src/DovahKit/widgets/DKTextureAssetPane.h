@@ -2,7 +2,7 @@
 #include <QElapsedTimer>
 #include <QFrame>
 #include <QTimer>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "../editor/asset_manager/asset.h"
 #else
    class DovahKitAsset;
@@ -18,7 +18,7 @@ class DKTextureAssetPane : public QFrame {
    Q_PROPERTY(bool throttleEnabled READ isThrottleEnabled WRITE setThrottleEnabled DESIGNABLE true);
    Q_PROPERTY(uint throttleTime    READ throttleTime      WRITE setThrottleTime    DESIGNABLE true);
    private:
-      #if defined(QT_DESIGNER_LIB)
+      #if defined(QT_PLUGIN)
       struct DovahKitAssetReceptor {};
       struct DovahKitAssetTransport {};
       #endif

@@ -1,13 +1,13 @@
 #pragma once
 #include <vector>
 #include <QWidget>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "ui/types/conditions/condition.h"
 #endif
 
 class QPushButton;
 class QTableView;
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    namespace dovah {
       namespace loaded_forms {
          namespace components {
@@ -24,7 +24,7 @@ class QTableView;
 class DKConditionList : public QWidget {
    Q_OBJECT;
    public:
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
       using BackendCondition     = dovah::loaded_forms::components::condition;
       using BackendConditionList = dovah::loaded_forms::components::condition_list;
       #endif
@@ -32,7 +32,7 @@ class DKConditionList : public QWidget {
    public:
       DKConditionList(QWidget* parent = nullptr);
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          void importFrom(dovah::loaded_forms::Form& owner, const BackendConditionList& target);
          void importFrom(dovah::loaded_forms::Form& owner, const std::vector<ui::types::conditions::condition>& target);
          void exportTo(dovah::loaded_forms::Form& owner, BackendConditionList& target);
@@ -59,7 +59,7 @@ class DKConditionList : public QWidget {
          QPushButton* move_down = nullptr;
          QTableView*  view      = nullptr;
       } _subwidgets;
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          DKConditionListModel* _model = nullptr;
          dovah::form_stub* _owning_stub = nullptr;
       #endif

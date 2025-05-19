@@ -2,13 +2,13 @@
 #include <QBoxLayout>
 #include <QEvent>
 #include <QKeyEvent>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
 #else
 #endif
 
 DKKeyPickerWidget::DKKeyPickerWidget(QWidget* parent) : QWidget(parent) {
    auto* le = this->subwidgets.line = new QLineEdit(this);
-   #if defined(QT_DESIGNER_LIB)
+   #if defined(QT_PLUGIN)
       //
       // Setting the line-edit as read-only will prevent a text-editing cursor from 
       // being displayed, which leaves no obvious visual indicator of when it has 
@@ -36,7 +36,7 @@ QVector<cobb::qt::key> DKKeyPickerWidget::keys() const {
 QString DKKeyPickerWidget::toString() const {
    QString name;
    //
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       auto& list = this->state.keys;
       auto  size = list.size();
       for (size_t i = 0; i < size; ++i) {
@@ -95,7 +95,7 @@ void DKKeyPickerWidget::_redraw() {
    this->subwidgets.line->setText(this->toString());
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
 void DKKeyPickerWidget::_keyDown(QKeyEvent* event) {
    if (event->isAutoRepeat())
       return;
@@ -139,7 +139,7 @@ void DKKeyPickerWidget::_keyUp(QKeyEvent* event) {
 bool DKKeyPickerWidget::eventFilter(QObject* target, QEvent* event) {
    if (target != this->subwidgets.line)
       return false;
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       switch (event->type()) {
          case QEvent::Type::KeyPress:
             this->_keyDown((QKeyEvent*)event);

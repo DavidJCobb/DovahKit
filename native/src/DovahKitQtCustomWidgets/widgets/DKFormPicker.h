@@ -2,12 +2,12 @@
 #include <map>
 #include <QList>
 #include <QWidget>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include <functional>
    #include "dovah/core.h"
 #endif
 #include "dovah/form_types.h"
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "./widget-data/DKFormPickerCustomFilter.h"
 #endif
 
@@ -29,7 +29,7 @@ class DKFormPicker : public QWidget {
    Q_PROPERTY(QString requiredAliasScriptname READ requiredAliasScriptname WRITE setRequiredAliasScriptname DESIGNABLE true);
    Q_PROPERTY(bool    splitTypesWhenMany      READ splitTypesWhenMany      WRITE setSplitTypesWhenMany      DESIGNABLE true);
    public:
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          using ExtraFilterFunction = std::function<bool(const dovah::form_stub*)>;
       #endif
    public:
@@ -65,7 +65,7 @@ class DKFormPicker : public QWidget {
       constexpr bool splitTypesWhenMany() const noexcept { return this->_properties.split_types_when_many; }
       void setSplitTypesWhenMany(bool) noexcept;
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          constexpr dovah::form_stub* formStub() const noexcept { return this->_value; }
          void setFormStub(dovah::form_stub*) noexcept;
 
@@ -75,13 +75,13 @@ class DKFormPicker : public QWidget {
 
       constexpr bool isSplittingTypes() const noexcept { return this->_state.is_splitting_types; }
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          DKFormPickerCustomFilter* customFilter() const;
          void setCustomFilter(DKFormPickerCustomFilter* v);
       #endif
 
    protected:
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          dovah::form_stub* _value   = nullptr;
          dovah::form_stub* _default = nullptr;
       #endif
@@ -93,7 +93,7 @@ class DKFormPicker : public QWidget {
          QString scriptname_on_alias;
          QString scriptname_on_form;
 
-         #if defined(QT_DESIGNER_LIB)
+         #if defined(QT_PLUGIN)
             QString override_text_for_none;
          #endif
       } _properties;
@@ -111,7 +111,7 @@ class DKFormPicker : public QWidget {
          DKComboBox* form = nullptr;
          QComboBox*  type = nullptr;
       } _subwidgets;
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          //
          // When the widget is set to split by form type (i.e. a combobox for form type and 
          // a combobox for form), we want to remember the user's last selection for each 
@@ -121,7 +121,7 @@ class DKFormPicker : public QWidget {
          std::map<dovah::form_type, dovah::form_stub*> _prior_selections;
       #endif
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          ui::impl::DKFormPicker::Model* _rawModel() const noexcept;
 
          bool _wouldAllowFormStub(const dovah::form_stub&) const;

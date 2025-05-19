@@ -9,7 +9,7 @@ class DKStatusBar : public QStatusBar {
    Q_OBJECT;
    Q_PROPERTY(QColor flashColor READ flashColor WRITE setFlashColor DESIGNABLE true);
    Q_PROPERTY(size_t flashCount READ flashCount WRITE setFlashCount DESIGNABLE true);
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       Q_PROPERTY(float flashDuration READ flashDuration WRITE setFlashDuration DESIGNABLE true);
       Q_PROPERTY(float flashInterval READ flashInterval WRITE setFlashInterval DESIGNABLE true);
    #else

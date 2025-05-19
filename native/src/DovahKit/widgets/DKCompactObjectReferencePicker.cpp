@@ -2,7 +2,7 @@
 #include <cassert>
 #include <QGridLayout>
 #include <QLabel>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "dovah/forms/factories/hardcoded.h" // for PlayerRef form ID
    #include "dovah/form_stub.h"
    #include "editor/subsystems/papyrus/core.h"
@@ -29,7 +29,7 @@ DKCompactObjectReferencePicker::DKCompactObjectReferencePicker(QWidget* parent) 
    }
    #pragma endregion
 
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    QObject::connect(this->_button, &QPushButton::clicked, this, [this]() {
       auto* modal = new DKCompactObjectReferencePickerDialog(this);
       modal->setRequiredFormType(this->requiredFormType());
@@ -57,7 +57,7 @@ void DKCompactObjectReferencePicker::setPlaceholder(QString v) {
    this->_update_text();
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    void DKCompactObjectReferencePicker::setRef(dovah::form_stub* stub) {
       auto* prior = this->ref();
       if (stub == prior)
@@ -68,7 +68,7 @@ void DKCompactObjectReferencePicker::setPlaceholder(QString v) {
    }
 #endif
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    const std::string& DKCompactObjectReferencePicker::requiredScriptname() const {
       return this->state.required_scriptname;
    }
@@ -94,7 +94,7 @@ void DKCompactObjectReferencePicker::setRequiredFormType(dovah::form_type ft) {
       ft = dovah::form_type::reference;
    if (ft == this->requiredFormType())
       return;
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    #if _DEBUG
       if (!dovah::form_type_is_reference(ft)) {
          qWarning("DKCompactObjectReferencePicker is being told to require a form type that isn't REFR or a subclass; no forms will qualify");
@@ -102,7 +102,7 @@ void DKCompactObjectReferencePicker::setRequiredFormType(dovah::form_type ft) {
    #endif
    #endif
    this->state.required_form_type = ft;
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       if (ft != dovah::form_type::reference) {
          auto* ref = this->ref();
          if (ref && ref->form_type != ft)
@@ -112,7 +112,7 @@ void DKCompactObjectReferencePicker::setRequiredFormType(dovah::form_type ft) {
 }
 
 void DKCompactObjectReferencePicker::_update_text() {
-   #if defined(QT_DESIGNER_LIB)
+   #if defined(QT_PLUGIN)
       if (this->state.placeholder.isEmpty()) {
          this->_button->setText(tr("NONE"));
          return;

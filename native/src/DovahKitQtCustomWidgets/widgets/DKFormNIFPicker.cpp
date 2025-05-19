@@ -1,6 +1,6 @@
 #include "./DKFormNIFPicker.h"
 #include <QHBoxLayout>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "dovah/core.h"
    #include "dovah/forms/components/model.h"
    #include "./widget-dialogs/DKFormNIFPickerDialog.h"
@@ -23,7 +23,7 @@ DKFormNIFPicker::DKFormNIFPicker(QWidget* parent) : QWidget(parent) {
    this->setFocusProxy(this->_subwidgets.path);
    QWidget::setTabOrder(this->_subwidgets.path, this->_subwidgets.button);
 
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    QObject::connect(this->_subwidgets.button, &QPushButton::clicked, this, [this]() {
       auto* dialog = new DKFormNIFPickerDialog(this);
 
@@ -50,7 +50,7 @@ DKFormNIFPicker::DKFormNIFPicker(QWidget* parent) : QWidget(parent) {
    #endif
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    void DKFormNIFPicker::initializeFrom(const dovah::loaded_forms::components::model& src) {
       this->_state = {};
 

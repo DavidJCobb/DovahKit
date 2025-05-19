@@ -19,7 +19,7 @@ class DKCompactObjectReferencePicker : public QWidget {
 
       constexpr bool allowNone() const noexcept { return true; }
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          constexpr dovah::form_stub* ref() const noexcept {
             return this->state.value;
          }
@@ -29,7 +29,7 @@ class DKCompactObjectReferencePicker : public QWidget {
       inline QString placeholder() const { return this->state.placeholder; }
       void setPlaceholder(QString);
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          void setRef(dovah::form_stub*);
 
          const std::string& requiredScriptname() const;
@@ -51,7 +51,7 @@ class DKCompactObjectReferencePicker : public QWidget {
          dovah::form_type required_form_type = dovah::form_type::reference;
          std::string      required_scriptname;
 
-         #if !defined(QT_DESIGNER_LIB)
+         #if !defined(QT_PLUGIN)
             dovah::form_stub* value = nullptr;
          #endif
       } state;

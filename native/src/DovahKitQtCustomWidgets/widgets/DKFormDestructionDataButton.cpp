@@ -1,6 +1,6 @@
 #include "./DKFormDestructionDataButton.h"
 #include <QBoxLayout>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "./widget-dialogs/DKFormDestructionDataDialog.h"
 #endif
 
@@ -16,7 +16,7 @@ DKFormDestructionDataButton::DKFormDestructionDataButton(QWidget* parent) : QWid
    this->setFocusPolicy(Qt::FocusPolicy::TabFocus);
    this->setFocusProxy(button);
 
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       QObject::connect(button, &QPushButton::clicked, this, [this]() {
          auto* dialog = new DKFormDestructionDataDialog(this);
          dialog->setData(this->_value);
@@ -35,7 +35,7 @@ DKFormDestructionDataButton::DKFormDestructionDataButton(QWidget* parent) : QWid
    #endif
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
 void DKFormDestructionDataButton::initializeFrom(const std::optional<form_data_type>& src_opt) {
    if (src_opt.has_value()) {
       auto& src = src_opt.value();

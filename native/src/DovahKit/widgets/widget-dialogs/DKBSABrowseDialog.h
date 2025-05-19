@@ -1,5 +1,5 @@
 #pragma once
-#if defined(QT_DESIGNER_LIB)
+#if defined(QT_PLUGIN)
    #error This dialog relies on DovahKit to run (dependency in DKBSACollectionModelBackend). Do not include it when compiling the Qt Designer plug-in.
 #endif
 #include <QDialog>

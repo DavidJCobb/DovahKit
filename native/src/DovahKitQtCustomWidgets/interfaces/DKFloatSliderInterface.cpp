@@ -38,7 +38,7 @@ QString DKFloatSliderInterface::group() const {
 }
 
 QIcon DKFloatSliderInterface::icon() const {
-   return QIcon();
+   return QIcon(":/icons/slider.png");
 }
 
 QString DKFloatSliderInterface::toolTip() const {

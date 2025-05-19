@@ -2,7 +2,7 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QLineEdit>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "./widget-models/DKPapyrusFragmentFunctionModel.h"
 #endif
 
@@ -45,7 +45,7 @@ DKPapyrusFragmentFunctionPicker::DKPapyrusFragmentFunctionPicker(QWidget* parent
    this->setFocusProxy(this->_subwidgets.scriptname);
    this->setTabOrder(this->_subwidgets.scriptname, this->_subwidgets.function);
 
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       this->_model = new DKPapyrusFragmentFunctionModel(this);
       this->_subwidgets.scriptname->setInsertPolicy(QComboBox::InsertPolicy::NoInsert);
       this->_subwidgets.scriptname->setEditable(true);
@@ -105,7 +105,7 @@ DKPapyrusFragmentFunctionPicker::DKPapyrusFragmentFunctionPicker(QWidget* parent
    #endif
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
 QString DKPapyrusFragmentFunctionPicker::currentScriptname() const noexcept {
    return this->_subwidgets.scriptname->currentText();
 }

@@ -7,7 +7,7 @@
 #include <QWidget>
 #include "./DKFormPicker.h"
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
 namespace dovah {
    namespace loaded_forms {
       namespace components {
@@ -28,13 +28,13 @@ class DKAttackDataWidget : public QWidget {
       constexpr bool showsAttackRace() const noexcept { return this->_state.show_attack_race; }
       void setShowsAttackRace(bool);
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          void initializeFrom(const dovah::loaded_forms::components::attack_data&);
          void commitTo(dovah::loaded_forms::components::attack_data&, dovah::loaded_forms::Form& component_containing_form);
       #endif
 
    protected:
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          DKAttackDataModel* _model = nullptr;
       #endif
       struct {
@@ -79,7 +79,7 @@ class DKAttackDataWidget : public QWidget {
          bool show_attack_race = true;
       } _state;
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          void _pull_node_to_ui();
          void _push_node_from_ui();
       #endif

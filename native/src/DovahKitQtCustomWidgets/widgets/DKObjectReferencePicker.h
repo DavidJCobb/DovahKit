@@ -5,7 +5,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "../dovah/core.h"
    #include "./widget-models/DKRefsInCellModel.h"
 #endif
@@ -27,7 +27,7 @@ class DKObjectReferencePicker : public QWidget {
       inline bool showRefListFilter() const noexcept { return this->state.show_ref_list_filter; }
       inline bool showViewRefButton() const noexcept { return this->state.show_view_ref_button; }
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          dovah::form_stub* cell() const;
          dovah::form_stub* ref() const;
       #endif
@@ -35,14 +35,14 @@ class DKObjectReferencePicker : public QWidget {
       inline QString refFilterString() const noexcept { return this->state.ref_filter_string; }
 
    public slots:
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          void setCell(dovah::form_stub*);
          void setRef(dovah::form_stub*);
       #endif
 
       void setRefFilterString(QString);
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          // NOTE: This forces "allow none" when used. This is required in order to allow for the 
          //       edge-case of a cell having refs, but none with the desired scriptname.
          const std::string& requiredScriptname() const;

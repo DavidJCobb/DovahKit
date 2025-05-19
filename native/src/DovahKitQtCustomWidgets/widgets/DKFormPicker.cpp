@@ -6,7 +6,7 @@
 #include <QListView>
 #include <QMap>
 #include <QStandardItemModel>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "dovah/form_stub.h"
    #include "editor/subsystems/papyrus/core.h"
    #include "editor/core.h"
@@ -16,7 +16,7 @@
 #endif
 #include "./DKComboBox.h"
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    namespace {
       using model_type = ui::impl::DKFormPicker::Model;
    }
@@ -101,7 +101,7 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
    }
 
    // Handle our comboboxes changing.
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       QObject::connect(this->_subwidgets.type, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
          if (!this->isSplittingTypes())
             return;
@@ -120,7 +120,7 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
 
    {  // Set up form-combobox models
       auto* widget = this->_subwidgets.form;
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          auto* model  = new model_type(widget);
          widget->setModel(model);
          QObject::connect(model, &QAbstractItemModel::rowsInserted, this, [this]() {
@@ -163,7 +163,7 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
       #endif
    }
 
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       auto& editor = DovahKitCore::get();
       QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, [this]() {
          this->_updateTypePicker();
@@ -185,7 +185,7 @@ void DKFormPicker::addAllowedFormType(dovah::form_type ft) {
       return;
    this->_properties.allowed_form_types.push_back(ft);
    if (this->_properties.allowed_form_types.empty()) {
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          this->_prior_selections.clear();
 
          if (this->_value && this->_value->form_type != ft)
@@ -201,7 +201,7 @@ void DKFormPicker::addAllowedFormType(dovah::form_type ft) {
 }
 void DKFormPicker::setAllowedFormTypes(QList<dovah::form_type> t) noexcept {
    this->_properties.allowed_form_types = t;
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       this->_prior_selections.clear();
    #endif
    //
@@ -227,14 +227,14 @@ void DKFormPicker::setAllowNone(bool b) noexcept {
 }
 
 QString DKFormPicker::overrideTextForNone() const {
-   #if defined(QT_DESIGNER_LIB)
+   #if defined(QT_PLUGIN)
       return this->_properties.override_text_for_none;
    #else
       return this->_rawModel()->overrideTextForNone();
    #endif
 }
 void DKFormPicker::setOverrideTextForNone(QString s) {
-   #if defined(QT_DESIGNER_LIB)
+   #if defined(QT_PLUGIN)
       if (this->overrideTextForNone() == s)
          return;
       this->_properties.override_text_for_none = s;
@@ -270,7 +270,7 @@ void DKFormPicker::setRequiredAliasScriptname(std::string_view s) {
    this->setRequiredAliasScriptname(QString::fromUtf8(s.data(), s.size()));
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
 void DKFormPicker::setFormStub(dovah::form_stub* stub) noexcept {
    if (this->_value == stub) {
       this->_updateForceIncludedForm(stub);
@@ -389,7 +389,7 @@ void DKFormPicker::_updateForceIncludedForm(dovah::form_stub* stub) {
    if (prior == stub)
       return;
    
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       auto* model = this->_rawModel();
       if (prior) {
          model->setFormNeverDefaultExcluded(*prior, false);
@@ -403,7 +403,7 @@ void DKFormPicker::_updateForceIncludedForm(dovah::form_stub* stub) {
 void DKFormPicker::_updateForms() {
    this->_state.needs_initial_fill = false;
 
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       auto* c_form = this->_subwidgets.form;
       auto* stub   = this->formStub();
       auto* model  = this->_rawModel();
@@ -456,7 +456,7 @@ void DKFormPicker::_updateTypePicker() {
    //
    auto* c_type = this->_subwidgets.type;
    auto  prior  = c_type->currentData().toInt();
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       auto* stub = this->formStub();
    #endif
    //
@@ -477,7 +477,7 @@ void DKFormPicker::_updateTypePicker() {
    }
    c_type->model()->sort(0);
    //
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       int index;
       if (stub)
          index = c_type->findData((int)stub->form_type);
@@ -490,7 +490,7 @@ void DKFormPicker::_updateTypePicker() {
 }
 
 void DKFormPicker::clear() {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       dovah::form_stub* stub = nullptr;
       if (!this->allowNone()) {
          stub = this->defaultForm();
@@ -501,7 +501,7 @@ void DKFormPicker::clear() {
    #endif
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
 DKFormPickerCustomFilter* DKFormPicker::customFilter() const {
    return this->_rawModel()->customFilter();
 }

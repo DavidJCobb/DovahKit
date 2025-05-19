@@ -22,7 +22,7 @@ DKDelayedEnableButton::DKDelayedEnableButton(QWidget* parent) : QPushButton(pare
       this->setDisabled(true);
       this->_timers.enable.start();
    }
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       QObject::connect(&this->_timers.enable, &QTimer::timeout, this, [this]() {
          this->setEnabled(true);
       });
@@ -35,7 +35,7 @@ DKDelayedEnableButton::DKDelayedEnableButton(QWidget* parent) : QPushButton(pare
 }
 
 float DKDelayedEnableButton::progress() const noexcept {
-   #if defined(QT_DESIGNER_LIB)
+   #if defined(QT_PLUGIN)
       if (this->isEnabled())
          return 1.0F;
       return 0.5F;
@@ -50,7 +50,7 @@ float DKDelayedEnableButton::progress() const noexcept {
    #endif
 }
 unsigned int DKDelayedEnableButton::secondsRemaining() const noexcept {
-   #if defined(QT_DESIGNER_LIB)
+   #if defined(QT_PLUGIN)
       if (this->isEnabled())
          return 0;
 
@@ -105,7 +105,7 @@ void DKDelayedEnableButton::changeEvent(QEvent* event) {
 }
 void DKDelayedEnableButton::paintEvent(QPaintEvent* event) {
    bool is_counting_down = 
-      #if defined(QT_DESIGNER_LIB)
+      #if defined(QT_PLUGIN)
          !this->isEnabled()
       #else
          (!this->isEnabled() && this->_timers.enable.isActive())

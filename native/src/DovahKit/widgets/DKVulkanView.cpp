@@ -2,7 +2,7 @@
 #include <QEvent>
 #include <QMouseEvent>
 #include <QPainter>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "editor/subsystems/worldedit/core.h"
    #include "vulkan/data/DKVulkanCameraUpdate.h"
    #include "vulkan/DKVulkanInstance.h"
@@ -25,7 +25,7 @@ DKVulkanView::DKVulkanView(QWidget* parent) : QWidget(parent) {
    //
    // Get instance; set up surface:
    //
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       auto& dkvi = DKVulkanInstance::get();
       QObject::connect(&dkvi, &QObject::destroyed, this, []() {
          assert(false && "A DKVulkanView and surface_renderer should never outlive the DKVulkanInstance!");
@@ -34,7 +34,7 @@ DKVulkanView::DKVulkanView(QWidget* parent) : QWidget(parent) {
    #endif
 }
 DKVulkanView::~DKVulkanView() {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       if (auto* s = this->renderer) {
          delete s;
          this->renderer = nullptr;
@@ -64,7 +64,7 @@ void DKVulkanView::setRequireExactGPUMatch(bool em) {
 }
 
 void DKVulkanView::resetRenderer() {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    if (this->renderer) {
       delete this->renderer;
       this->renderer = nullptr;
@@ -76,7 +76,7 @@ void DKVulkanView::resetRenderer() {
    }
    this->renderer_killed_due_to_error = false;
    //
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    auto& dkvi = DKVulkanInstance::get();
    this->renderer = new vulkanDK::surface_renderer(dkvi, this);
    //
@@ -147,7 +147,7 @@ void DKVulkanView::setInputHandlingEnabled(bool e) {
       this->input_handling.focused = false;
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
 void DKVulkanView::_inputPoll() {
    if (!this->input_handling.enabled || !this->input_handling.focused)
       return;
@@ -171,7 +171,7 @@ void DKVulkanView::_killRendererDueToError() {
 #pragma region Events
 bool DKVulkanView::event(QEvent* event) {
    if (event->type() == QEvent::Type::WinIdChange) {
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
       if (auto* s = this->renderer) {
          s->update_widget_id();
       }
@@ -220,7 +220,7 @@ void DKVulkanView::paintEvent(QPaintEvent* event) {
       }
       return;
    }
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    try {
       this->renderer->_on_repaint();
    } catch (vulkanDK::exception& e) {
@@ -229,7 +229,7 @@ void DKVulkanView::paintEvent(QPaintEvent* event) {
    #endif
 }
 void DKVulkanView::resizeEvent(QResizeEvent* event) {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    if (auto* s = this->renderer) {
       s->_on_visibility_change(this->size(), this->isVisible());
    }
@@ -238,14 +238,14 @@ void DKVulkanView::resizeEvent(QResizeEvent* event) {
 void DKVulkanView::showEvent(QShowEvent* event) {
    this->timerID = this->startTimer(this->desiredFrameDelay(), Qt::PreciseTimer);
    //
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    if (auto* s = this->renderer) {
       s->_on_visibility_change(this->size(), this->isVisible());
    }
    #endif
 }
 void DKVulkanView::timerEvent(QTimerEvent* event) {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    this->_inputPoll();
    #endif
    this->repaint();

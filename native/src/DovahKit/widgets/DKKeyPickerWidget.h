@@ -1,7 +1,7 @@
 #pragma once
 #include <QWidget>
 #include <QLineEdit>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "helpers/qt/keycodes.h"
 #else
    namespace cobb::qt {
@@ -50,7 +50,7 @@ class DKKeyPickerWidget : public QWidget {
 
       void _redraw();
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
       void _keyDown(QKeyEvent*);
       void _keyUp(QKeyEvent*);
       #endif

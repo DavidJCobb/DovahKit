@@ -39,6 +39,8 @@
     <QtInstall>5.15.2 MSVC2019 x64</QtInstall>
     <QtModules>core;xml;gui;widgets;designer</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
+    <MocMacroNames>Q_OBJECT;Q_GADGET;Q_NAMESPACE;Q_NAMESPACE_EXPORT;Q_INTERFACES</MocMacroNames>
+    <QtPlugin>true</QtPlugin>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
     <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
@@ -61,8 +63,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Qt_INCLUDEPATH_);$(ProjectDir);</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(Qt_INCLUDEPATH_);$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
+    <QtMoc />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -126,6 +129,7 @@
     <ClCompile Include="interfaces\DKQuestAliasPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKTabWidgetInterface.cpp" />
     <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp" />
+    <ClCompile Include="interfaces\DKYesNoUnsetWidgetInterface.cpp" />
     <ClCompile Include="widgets\DKAttackDataWidget.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
@@ -149,6 +153,7 @@
     <ClCompile Include="widgets\DKTabBar.cpp" />
     <ClCompile Include="widgets\DKTabWidget.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
+    <ClCompile Include="widgets\DKYesNoUnsetWidget.cpp" />
     <None Include="cpp.hint" />
     <None Include="README.md" />
     <ClCompile Include="extensions\DKCollapsiblePaneTaskMenuExtension.cpp" />
@@ -194,11 +199,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\form_types.h" />
+    <QtMoc Include="interfaces\DKYesNoUnsetWidgetInterface.h" />
+    <QtMoc Include="widgets\DKYesNoUnsetWidget.h" />
+    <QtMoc Include="widgets\DKPapyrusBoundScriptListPane.h" />
+    <QtMoc Include="widgets\DKPapyrusFragmentFunctionPicker.h" />
     <QtMoc Include="widgets\DKTabBar.h" />
     <QtMoc Include="widgets\DKTabWidget.h" />
     <QtMoc Include="interfaces\DKNavmeshGenerationImportOptionPickerInterface.h" />
     <QtMoc Include="widgets\DKNavmeshGenerationImportOptionPicker.h" />
-    <QtMoc Include="widgets\DKPapyrusFragmentFunctionPicker.h" />
     <QtMoc Include="interfaces\DKFormNIFPickerInterface.h" />
     <QtMoc Include="widgets\DKFormNIFPicker.h" />
     <QtMoc Include="widgets\DKFormDestructionDataButton.h" />
@@ -222,7 +230,6 @@
     <QtMoc Include="widgets\DKObjectReferencePicker.h" />
     <QtMoc Include="widgets\DKQuestAliasPicker.h" />
     <QtMoc Include="widgets\DKTextureAssetPane.h" />
-    <QtMoc Include="widgets\DKPapyrusBoundScriptListPane.h" />
     <QtMoc Include="widgets\DKGameFilePicker.h" />
     <QtMoc Include="widgets\DKFormPicker.h" />
     <QtMoc Include="widgets\DKFormListPane.h" />
@@ -231,7 +238,15 @@
     <QtMoc Include="interfaces\DKPapyrusBoundScriptListPaneInterface.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtRcc Include="widgetbox-icons.qrc" />
     <QtRcc Include="widgets\widget-assets.qrc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icons\DKAttackDataWidget.png" />
+    <Image Include="icons\DKYesNoUnsetWidget.png" />
+    <Image Include="icons\dropdown.png" />
+    <Image Include="icons\listpane-with-buttons.png" />
+    <Image Include="icons\slider.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

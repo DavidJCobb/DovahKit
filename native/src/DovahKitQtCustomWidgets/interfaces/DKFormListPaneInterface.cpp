@@ -38,7 +38,7 @@ QString DKFormListPaneInterface::group() const {
 }
 
 QIcon DKFormListPaneInterface::icon() const {
-   return QIcon();
+   return QIcon(":/icons/listpane-with-buttons.png");
 }
 
 QString DKFormListPaneInterface::toolTip() const {

@@ -1,7 +1,7 @@
 #pragma once
 #include <chrono>
 #include <QWidget>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "vulkan/scene_entity_handle.h"
 #endif
 
@@ -42,7 +42,7 @@ class DKVulkanView : public QWidget {
       void rendererTeardownImminent();
       void rendererTeardownComplete();
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          void renderedMeshClicked(vulkanDK::rendered_mesh_handle);
       #endif
 
@@ -63,7 +63,7 @@ class DKVulkanView : public QWidget {
       } input_handling;
       bool renderer_killed_due_to_error = false;
 
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
       void _inputPoll();
       void _killRendererDueToError();
       #endif

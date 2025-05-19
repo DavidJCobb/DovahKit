@@ -109,7 +109,7 @@ void DKFormPickerDialog::setFormStub(dovah::form_stub* stub) noexcept {
    this->_value = stub;
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    DKCustomFormFilter* DKFormPickerDialog::customFilter() const {
       return this->_model->get_custom_filter();
    }

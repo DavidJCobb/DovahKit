@@ -79,9 +79,6 @@
     <QtMoc Include="widgets\DKGameFilePicker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKPapyrusBoundScriptListPane.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="widgets\DKTextureAssetPane.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -113,9 +110,6 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKCompactObjectReferencePicker.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="widgets\DKPapyrusFragmentFunctionPicker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="interfaces\DKPapyrusFragmentFunctionPickerInterface.h">
@@ -164,6 +158,18 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="interfaces\DKFloatSliderInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKPapyrusFragmentFunctionPicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKPapyrusBoundScriptListPane.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="interfaces\DKYesNoUnsetWidgetInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKYesNoUnsetWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -222,9 +228,6 @@
     <ClCompile Include="widgets\DKHeaderView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="widgets\DKTextureAssetPane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -256,9 +259,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="interfaces\DKCompactObjectReferencePickerInterface.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="widgets\DKPapyrusFragmentFunctionPicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="interfaces\DKPapyrusFragmentFunctionPickerInterface.cpp">
@@ -306,6 +306,18 @@
     <ClCompile Include="interfaces\DKFloatSliderInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKPapyrusFragmentFunctionPicker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKYesNoUnsetWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="interfaces\DKYesNoUnsetWidgetInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
@@ -326,5 +338,25 @@
     <QtRcc Include="widgets\widget-assets.qrc">
       <Filter>Resource Files</Filter>
     </QtRcc>
+    <QtRcc Include="widgetbox-icons.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icons\DKYesNoUnsetWidget.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\dropdown.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\listpane-with-buttons.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\slider.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\DKAttackDataWidget.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

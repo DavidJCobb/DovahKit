@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <optional>
 #include <QPushButton>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "dovah/forms/components/destruction.h"
    #include "ui/types/nif_for_form.h"
 #endif
@@ -14,7 +14,7 @@ namespace dovah {
 class DKFormDestructionDataButton : public QWidget {
    Q_OBJECT;
    public:
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          using form_data_type = dovah::loaded_forms::components::destruction_stage_data;
 
          enum class DestructionStageFlag {
@@ -48,18 +48,18 @@ class DKFormDestructionDataButton : public QWidget {
    public:
       DKFormDestructionDataButton(QWidget* parent = nullptr);
       
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          void initializeFrom(const std::optional<form_data_type>&);
          void commitTo(std::optional<form_data_type>&, dovah::loaded_forms::Form& owner);
       #endif
 
    protected:
       QPushButton* _button = nullptr;
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
          std::optional<DestructionData> _value;
       #endif
 };
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    Q_DECLARE_OPERATORS_FOR_FLAGS(DKFormDestructionDataButton::DestructionStageFlags);
 #endif

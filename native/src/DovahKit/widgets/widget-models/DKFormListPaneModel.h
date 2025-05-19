@@ -1,5 +1,5 @@
 #pragma once
-#if defined(QT_DESIGNER_LIB)
+#if defined(QT_PLUGIN)
    #error This model relies on DovahKit to run. Do not include it when compiling the Qt Designer plug-in.
 #endif
 #include <functional>

@@ -1986,9 +1986,6 @@
     <ClCompile Include="vulkan\helpers\nif\set_root_transform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor\subsystems\worldedit\tool_system\opaque_options_union.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="editor\subsystems\worldinput\util\tool_binding.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2911,6 +2908,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\helpers\story_event_name.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKYesNoUnsetWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\ui_yes_no_unset_widget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -5447,9 +5450,6 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\_all.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\worldedit\tool_system\opaque_options_union.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="editor\subsystems\worldedit\tool_system\options_union.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -7280,6 +7280,9 @@
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\ActionType.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\ui_yes_no_unset_widget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -7622,6 +7625,54 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\scene\FormSubdialogSceneDialogueAction.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\debris.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\furniture.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\idle_marker.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\impact_data.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\impact_data_set.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\magic_effect.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\message.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\movable_static.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\music_track.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\music_type.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\package.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\reverb_parameters.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\sound_category.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\sound_descriptor.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\sound_output_model.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\tree.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -8295,6 +8346,9 @@
     <QtMoc Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="widgets\DKYesNoUnsetWidget.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -8822,8 +8876,6 @@
     <Natvis Include="helpers\qt\keycodes.natvis" />
     <Natvis Include="editor\subsystems\worldinput\inputs\button.natvis" />
     <Natvis Include="helpers\keyboard\key.natvis" />
-    <Natvis Include="editor\subsystems\worldedit\tool_system\opaque_options_union.natvis" />
-    <Natvis Include="editor\subsystems\worldedit\tool_system\options_union.natvis" />
     <Natvis Include="ui\models\DKGenericTreeModel.natvis" />
     <Natvis Include="helpers\tree\node.natvis" />
     <Natvis Include="editor\subsystems\papyrus\known_script.natvis" />

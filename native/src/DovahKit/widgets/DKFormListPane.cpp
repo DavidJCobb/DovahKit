@@ -4,7 +4,7 @@
 #include <QHeaderView>
 #include <QKeyEvent>
 #include "DKHeaderView.h"
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "../editor/open_window_for_form.h"
    #include "./widget-data/DKCustomFormFilter.h"
 #endif
@@ -13,7 +13,7 @@ namespace {
    constexpr QSize no_maximum_size = { QWIDGETSIZE_MAX, QWIDGETSIZE_MAX };
 }
 
-#if defined(QT_DESIGNER_LIB)
+#if defined(QT_PLUGIN)
 #include <QAbstractItemModel>
 class DKFormListPaneModel : public QAbstractItemModel {
    public:
@@ -79,7 +79,7 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
    #pragma endregion
    //
    view->setModel(new DKFormListPaneModel(this));
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       QObject::connect(view, &QTableView::doubleClicked, [this, view](const QModelIndex& index) {
          if (!index.isValid())
             return;
@@ -113,7 +113,7 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
       //
       view->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
       view->verticalHeader()->setVisible(this->state.show_indices);
-      #if !defined(QT_DESIGNER_LIB)
+      #if !defined(QT_PLUGIN)
       {
          auto* model = this->_model();
          model->setAllowDuplicates(this->state.allow_duplicates);
@@ -129,12 +129,12 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
       #endif
    }
    //
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       QObject::connect(this->subwidgets.buttons.move_up,   &QPushButton::clicked, this, [this]() { this->_moveSelected(-1); });
       QObject::connect(this->subwidgets.buttons.move_down, &QPushButton::clicked, this, [this]() { this->_moveSelected(1); });
       QObject::connect(this->subwidgets.buttons.remove,    &QPushButton::clicked, this, [this]() { this->_removeSelected(); });
    #endif
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       {
          auto* sel_model = this->subwidgets.view->selectionModel();
          QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this](const QItemSelection& sel) {
@@ -168,7 +168,7 @@ DKFormListPaneModel* DKFormListPane::_model() const noexcept {
    return (DKFormListPaneModel*) this->subwidgets.view->model();
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    void DKFormListPane::_moveSelected(int down) {
       if (this->readOnly())
          return;
@@ -245,7 +245,7 @@ void DKFormListPane::_updateOrientation() {
    }
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    QVector<dovah::form_stub*> DKFormListPane::stubs() const noexcept {
       return this->_model()->stubs();
    }
@@ -277,7 +277,7 @@ void DKFormListPane::_updateOrientation() {
 
 void DKFormListPane::setAllowDuplicates(bool v) {
    this->state.allow_duplicates = v;
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       this->_model()->setAllowDuplicates(v);
    #endif
 }
@@ -298,7 +298,7 @@ void DKFormListPane::setReadOnly(bool v) {
    this->subwidgets.buttons.wrapper->setEnabled(!v);
    this->subwidgets.buttons.wrapper->setVisible(!v);
 }
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    void DKFormListPane::setAllowedFormTypes(QVector<dovah::form_type> list) {
       this->_model()->setAllowedFormTypes(list);
    }
@@ -314,7 +314,7 @@ void DKFormListPane::setShowIndices(bool v) {
       return;
    this->state.show_indices = v;
    this->subwidgets.view->verticalHeader()->setVisible(v);
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       this->_model()->setShowIndices(v);
    #endif
 }
@@ -337,7 +337,7 @@ void DKFormListPane::setShowRemoveButton(bool v) {
    this->_updateButtonVisibility();
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    void DKFormListPane::addExtraColumn(QString header, ExtraColumnHandler&& handler) {
       this->_model()->addExtraColumn(header, std::forward<ExtraColumnHandler>(handler));
    }
@@ -347,7 +347,7 @@ void DKFormListPane::setShowRemoveButton(bool v) {
 #endif
    
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    DKCustomFormFilter* DKFormListPane::customFilter() const {
       return this->_model()->get_custom_filter();
    }
@@ -357,7 +357,7 @@ void DKFormListPane::setShowRemoveButton(bool v) {
 #endif
    
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    [[nodiscard]] std::vector<dovah::form_stub*> DKFormListPane::selectedForms() const {
       std::vector<dovah::form_stub*> forms;
 
@@ -388,7 +388,7 @@ void DKFormListPane::setShowRemoveButton(bool v) {
    }
 #endif
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    void DKFormListPane::addStub(dovah::form_stub* stub) {
       this->_model()->addStub(stub);
    }
@@ -413,7 +413,7 @@ void DKFormListPane::setShowRemoveButton(bool v) {
 #endif
 
 void DKFormListPane::keyPressEvent(QKeyEvent* event) {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       if (!this->readOnly()) {
          if (event->matches(QKeySequence::Delete)) {
             this->_removeSelected();

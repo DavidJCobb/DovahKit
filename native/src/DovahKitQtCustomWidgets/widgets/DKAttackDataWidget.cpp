@@ -6,7 +6,7 @@
 #include <QHeaderView>
 #include <QLabel>
 #include "./DKHeaderView.h"
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "./widget-models/DKAttackDataModel.h"
    #include "dovah/forms/components/attack_data.h"
 #endif
@@ -18,7 +18,7 @@ namespace {
 DKAttackDataWidget::DKAttackDataWidget(QWidget* parent) : QWidget(parent) {
    auto& ui = this->_subwidgets;
 
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       this->_model = new DKAttackDataModel(this);
    #endif
 
@@ -53,7 +53,7 @@ DKAttackDataWidget::DKAttackDataWidget(QWidget* parent) : QWidget(parent) {
          layout->setContentsMargins(0, 0, 0, 0);
 
          auto* view = ui.view = new QTableView(this);
-         #if !defined(QT_DESIGNER_LIB)
+         #if !defined(QT_PLUGIN)
             view->setModel(this->_model);
          #endif
          layout->addWidget(view);
@@ -77,7 +77,7 @@ DKAttackDataWidget::DKAttackDataWidget(QWidget* parent) : QWidget(parent) {
             auto metrics = QFontMetrics(view->font());
             header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
             header->setMinimumSectionSize(2);
-            #if !defined(QT_DESIGNER_LIB)
+            #if !defined(QT_PLUGIN)
                header->setColumnFlex(DKAttackDataModel::Column::Name,    1, 0, metrics.boundingRect("Event Name Event Name").width() * 1.5F + 4);
                header->setColumnFlex(DKAttackDataModel::Column::Spell,   1, 0, metrics.boundingRect("ReallyCoolFireball01").width() * 1.5F + 4);
                header->setColumnFlex(DKAttackDataModel::Column::Keyword, 1, 0, metrics.boundingRect("CoolSpellKeyword").width() * 1.5F + 4);
@@ -329,7 +329,7 @@ DKAttackDataWidget::DKAttackDataWidget(QWidget* parent) : QWidget(parent) {
    #pragma endregion
 
    #pragma region Behavior
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
    {
       auto* view      = this->_subwidgets.event_listing.view;
       auto* sel_model = view->selectionModel();
@@ -372,7 +372,7 @@ void DKAttackDataWidget::setShowsAttackRace(bool v) {
    }
 }
 
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    void DKAttackDataWidget::initializeFrom(const dovah::loaded_forms::components::attack_data& src) {
       {
          auto* widget  = this->_subwidgets.race.picker;

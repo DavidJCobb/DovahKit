@@ -4,7 +4,7 @@
 #include <QEvent>
 #include <QHBoxLayout>
 #include <QStyleOptionButton>
-#if !defined(QT_DESIGNER_LIB)
+#if !defined(QT_PLUGIN)
    #include "widget-dialogs/DKBSABrowseDialog.h"
 #endif
 
@@ -15,7 +15,7 @@ DKGameFilePicker::DKGameFilePicker(QWidget* parent) : QWidget(parent) {
    layout->setContentsMargins({ 0, 0, 0, 0 });
    layout->addWidget(w_path, 1);
    layout->addWidget(w_browse, 0);
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       QObject::connect(w_browse, &QPushButton::clicked,  this, &DKGameFilePicker::browse);
       QObject::connect(w_path,   &QLineEdit::textEdited, this, [this](const QString& path) {
          this->_setPath(path, true, false);
@@ -96,7 +96,7 @@ QString DKGameFilePicker::rawPath() const noexcept {
 }
 
 void DKGameFilePicker::browse() {
-   #if !defined(QT_DESIGNER_LIB)
+   #if !defined(QT_PLUGIN)
       auto result = DKBSABrowseDialog::getOpenFileName(
          this,
          tr("Select file"),
