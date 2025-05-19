@@ -7,7 +7,67 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QGridLayout" name="gridLayout">
+    <layout class="QGridLayout" name="topLayout">
+     <item row="1" column="2">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Combat Style:</string>
+       </property>
+       <property name="buddy">
+        <cstring>combatStyle</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="5">
+      <widget class="QCheckBox" name="flagIsTemplate">
+       <property name="whatsThis">
+        <string>&lt;p&gt;A &lt;dfn&gt;package template&lt;/dfn&gt; can define a procedure tree that can be reused by other packages, along with blanks that those packages can fill in to tweak the procedures. However, package templates can't define schedules, Papyrus data, or idle animation overrides.&lt;/p&gt;</string>
+       </property>
+       <property name="text">
+        <string>Is Template</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="4">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Interrupt Override:</string>
+       </property>
+       <property name="buddy">
+        <cstring>interruptOverride</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Owning Quest:</string>
+       </property>
+       <property name="buddy">
+        <cstring>owningQuest</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="DKFormPicker" name="owningQuest">
+       <property name="whatsThis">
+        <string>If a package has an owning quest, then that quest's aliases can be used as inputs for package data.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="DKFormPicker" name="combatStyle"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="5">
       <widget class="QComboBox" name="interruptOverride">
        <property name="whatsThis">
@@ -51,66 +111,6 @@
      </item>
      <item row="0" column="1" colspan="4">
       <widget class="QLineEdit" name="editorID"/>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Owning Quest:</string>
-       </property>
-       <property name="buddy">
-        <cstring>owningQuest</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="5">
-      <widget class="QCheckBox" name="flagIsTemplate">
-       <property name="whatsThis">
-        <string>&lt;p&gt;A &lt;dfn&gt;package template&lt;/dfn&gt; can define a procedure tree that can be reused by other packages, along with blanks that those packages can fill in to tweak the procedures. However, package templates can't define schedules, Papyrus data, or idle animation overrides.&lt;/p&gt;</string>
-       </property>
-       <property name="text">
-        <string>Is Template</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="4">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Interrupt Override:</string>
-       </property>
-       <property name="buddy">
-        <cstring>interruptOverride</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Editor ID:</string>
-       </property>
-       <property name="buddy">
-        <cstring>editorID</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="DKFormPicker" name="owningQuest">
-       <property name="whatsThis">
-        <string>If a package has an owning quest, then that quest's aliases can be used as inputs for package data.</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="2">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Combat Style:</string>
-       </property>
-       <property name="buddy">
-        <cstring>combatStyle</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="3">
-      <widget class="DKFormPicker" name="combatStyle"/>
      </item>
     </layout>
    </item>
@@ -162,7 +162,7 @@
         </spacer>
        </item>
        <item row="1" column="0" colspan="2">
-        <widget class="QGroupBox" name="groupBox_7">
+        <widget class="QGroupBox" name="packdataGroupbox">
          <property name="whatsThis">
           <string>&lt;p&gt;If this package uses a template, then that template can allow you to specify data inputs. The list of available inputs will be shown in the lefthand pane; select one and then use the controls to the right to change what data is fed into the input.&lt;/p&gt;
 &lt;p&gt;If this package &lt;em&gt;is&lt;/em&gt; a template, then this is where you can define the inputs that are exposed to any packages that use this template. You can also set those inputs' default values.&lt;/p&gt;</string>
@@ -177,7 +177,7 @@
              <widget class="QTableView" name="packdata"/>
             </item>
             <item row="0" column="1">
-             <layout class="QVBoxLayout" name="verticalLayout_3">
+             <layout class="QVBoxLayout" name="packdataButtonsLayout">
               <item>
                <widget class="QPushButton" name="buttonPackdataNew">
                 <property name="text">
@@ -224,7 +224,7 @@
            </layout>
           </item>
           <item>
-           <widget class="QGroupBox" name="groupBox_8">
+           <widget class="QGroupBox" name="selectedPackdataGroupbox">
             <property name="title">
              <string>Selected Package Data</string>
             </property>
@@ -294,7 +294,7 @@
         </widget>
        </item>
        <item row="2" column="0" colspan="2">
-        <widget class="QGroupBox" name="groupBox_9">
+        <widget class="QGroupBox" name="procedureTreeGroupbox">
          <property name="whatsThis">
           <string>&lt;p&gt;If this package doesn't use a template, then you can edit its procedure tree.&lt;/p&gt;
 &lt;p&gt;The pane on the left is the procedure tree. Use the context menu to edit the way procedures are arranged, or click on a procedure and then use the controls to the right to edit its details.&lt;/p&gt;</string>
@@ -307,7 +307,7 @@
            <widget class="QTreeView" name="procedures"/>
           </item>
           <item row="0" column="1">
-           <widget class="QGroupBox" name="groupBox_10">
+           <widget class="QGroupBox" name="selectedProcedureGroupbox">
             <property name="title">
              <string>Selected Procedure</string>
             </property>
@@ -324,22 +324,8 @@
                  </property>
                 </widget>
                </item>
-               <item row="2" column="1">
-                <widget class="QComboBox" name="currentProcedureInputPackdata">
-                 <property name="whatsThis">
-                  <string>Use this drop-down box to change which package data is fed into the selected input for this procedure.</string>
-                 </property>
-                </widget>
-               </item>
                <item row="0" column="1">
                 <widget class="QComboBox" name="currentProcedureType"/>
-               </item>
-               <item row="1" column="0" colspan="2">
-                <widget class="QTableView" name="currentProcedureInputs">
-                 <property name="whatsThis">
-                  <string>Different types of procedures take different inputs. You can use any of this package's Public Package Data (defined above) as inputs.</string>
-                 </property>
-                </widget>
                </item>
                <item row="2" column="0">
                 <widget class="QLabel" name="label_23">
@@ -365,10 +351,31 @@
                  </property>
                 </widget>
                </item>
+               <item row="1" column="0" colspan="2">
+                <widget class="QTableView" name="currentProcedureInputs">
+                 <property name="whatsThis">
+                  <string>Different types of procedures take different inputs. You can use any of this package's Public Package Data (defined above) as inputs.</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QComboBox" name="currentProcedureInputPackdata">
+                 <property name="whatsThis">
+                  <string>Use this drop-down box to change which package data is fed into the selected input for this procedure.</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </item>
+             <item row="1" column="0" colspan="2">
+              <widget class="DKConditionList" name="currentProcedureConditions">
+               <property name="whatsThis">
+                <string>These conditions determine whether the currently selected procedure can activate.</string>
+               </property>
+              </widget>
+             </item>
              <item row="0" column="1">
-              <widget class="QGroupBox" name="groupBox_11">
+              <widget class="QGroupBox" name="procedureOverrideFlagsLayout">
                <property name="whatsThis">
                 <string>Each procedure can override any or all of the package's miscellaneous flags, enabling or disabling a flag.</string>
                </property>
@@ -376,8 +383,64 @@
                 <string>Flag Overrides</string>
                </property>
                <layout class="QGridLayout" name="gridLayout_20">
-                <item row="0" column="1">
-                 <widget class="QComboBox" name="comboBox">
+                <item row="3" column="0">
+                 <widget class="QCheckBox" name="procedureOverrideFlagPreferredSpeed">
+                  <property name="text">
+                   <string>Preferred Speed:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0" colspan="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagAlwaysSneak">
+                  <property name="text">
+                   <string>Always Sneak</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="10" column="0" colspan="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagWeaponsUnequipped">
+                  <property name="text">
+                   <string>Weapons Unequipped</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0" colspan="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagMustComplete">
+                  <property name="text">
+                   <string>Must Complete</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="8" column="0" colspan="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagNoCombatAlert">
+                  <property name="text">
+                   <string>No Combat Alert</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="0" colspan="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagAllowSwim">
+                  <property name="text">
+                   <string>Allow Swimming</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="0" colspan="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagIgnoreCombat">
+                  <property name="text">
+                   <string>Ignore Combat</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="9" column="0" colspan="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagWeaponDrawn">
+                  <property name="text">
+                   <string>Weapon Drawn</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="QComboBox" name="procedureOverridePreferredSpeed">
                   <item>
                    <property name="text">
                     <string>Walk</string>
@@ -400,21 +463,98 @@
                   </item>
                  </widget>
                 </item>
-                <item row="0" column="0">
-                 <widget class="QCheckBox" name="checkBox">
+                <item row="1" column="0" colspan="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagContinueIfPCNear">
                   <property name="text">
-                   <string>Preferred Speed:</string>
+                   <string>Continue if PC Near</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="12" column="0" colspan="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagMaintainSpeedAtGoal">
+                  <property name="text">
+                   <string>Maintain Speed at Goal</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="11" column="0" colspan="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagWearSleepOutfit">
+                  <property name="text">
+                   <string>Wear Sleep Outfit</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0" colspan="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagOncePerDay">
+                  <property name="text">
+                   <string>Once Per Day</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="0" colspan="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagOffersServices">
+                  <property name="text">
+                   <string>Offers Services</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagAllowIdleChatter">
+                  <property name="text">
+                   <string>Allow Idle Chatter</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagHellosToPlayer">
+                  <property name="text">
+                   <string>Hellos to Player</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagRandomConversations">
+                  <property name="text">
+                   <string>Random Conversations</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagObserveCombatBehavior">
+                  <property name="text">
+                   <string>Observe Combat Behavior</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagReactionToPlayerActions">
+                  <property name="text">
+                   <string>Reaction to Player Actions</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagFriendlyFireComments">
+                  <property name="text">
+                   <string>Friendly Fire Comments</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagAggroRadius">
+                  <property name="text">
+                   <string>Aggro Radius Behavior</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="7" column="2">
+                 <widget class="DKYesNoUnsetWidget" name="procedureOverrideFlagWorldInteractions">
+                  <property name="text">
+                   <string>World Interactions</string>
                   </property>
                  </widget>
                 </item>
                </layout>
-              </widget>
-             </item>
-             <item row="1" column="0" colspan="2">
-              <widget class="DKConditionList" name="currentProcedureConditions">
-               <property name="whatsThis">
-                <string>These conditions determine whether the currently selected procedure can activate.</string>
-               </property>
               </widget>
              </item>
             </layout>
@@ -429,9 +569,9 @@
       <attribute name="title">
        <string>Flags</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout_2">
+      <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,1" columnstretch="0,0,1">
        <item row="0" column="0" rowspan="2">
-        <widget class="QGroupBox" name="groupBox">
+        <widget class="QGroupBox" name="miscFlagsGroupbox">
          <property name="title">
           <string>Miscellaneous flags</string>
          </property>
@@ -618,7 +758,7 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QGroupBox" name="groupBox_2">
+        <widget class="QGroupBox" name="doorFlagsGroupbox">
          <property name="title">
           <string>Door flags</string>
          </property>
@@ -700,7 +840,7 @@
         </spacer>
        </item>
        <item row="0" column="0">
-        <widget class="QGroupBox" name="groupBox_6">
+        <widget class="QGroupBox" name="scheduleGroupbox">
          <property name="whatsThis">
           <string>&lt;p&gt;Control when this package activates. You can have the package activate on specific weekdays, calendar dates, times of day, et cetera, or leave those options set to &quot;any.&quot; You can only have the package activate at a specific minute if you also have it activate at a specific hour (i.e. you can have a package run at 5:30 AM, but you can't have a package run at &quot;half-past every hour&quot;).&lt;/p&gt;
 &lt;p&gt;These options are not available for package templates.&lt;/p&gt;</string>
@@ -818,7 +958,7 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_11">
        <item row="0" column="0">
-        <widget class="QGroupBox" name="groupBox_3">
+        <widget class="QGroupBox" name="onBeginFragmentGroupbox">
          <property name="title">
           <string>On Begin</string>
          </property>
@@ -856,7 +996,7 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QGroupBox" name="groupBox_4">
+        <widget class="QGroupBox" name="onEndFragmentGroupbox">
          <property name="title">
           <string>On End</string>
          </property>
@@ -894,7 +1034,7 @@
         </widget>
        </item>
        <item row="0" column="2">
-        <widget class="QGroupBox" name="groupBox_5">
+        <widget class="QGroupBox" name="onChangeFragmentGroupbox">
          <property name="title">
           <string>On Change</string>
          </property>
@@ -1077,7 +1217,7 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="buttonsLayout">
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
@@ -1124,6 +1264,11 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>DKYesNoUnsetWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKYesNoUnsetWidget.h</header>
+  </customwidget>
+  <customwidget>
    <class>DKFormPicker</class>
    <extends>QWidget</extends>
    <header>widgets/DKFormPicker.h</header>
@@ -1166,14 +1311,35 @@
   <tabstop>currentPackdataName</tabstop>
   <tabstop>currentPackdataType</tabstop>
   <tabstop>currentPackdataValueHolder</tabstop>
+  <tabstop>currentPackdataIsPublic</tabstop>
   <tabstop>procedures</tabstop>
   <tabstop>currentProcedureType</tabstop>
   <tabstop>currentProcedureInputs</tabstop>
   <tabstop>currentProcedureInputPackdata</tabstop>
   <tabstop>currentProcedureCompletesPackage</tabstop>
+  <tabstop>procedureOverrideFlagMustComplete</tabstop>
+  <tabstop>procedureOverrideFlagContinueIfPCNear</tabstop>
+  <tabstop>procedureOverrideFlagOncePerDay</tabstop>
+  <tabstop>procedureOverrideFlagPreferredSpeed</tabstop>
+  <tabstop>procedureOverridePreferredSpeed</tabstop>
+  <tabstop>procedureOverrideFlagAlwaysSneak</tabstop>
+  <tabstop>procedureOverrideFlagAllowSwim</tabstop>
+  <tabstop>procedureOverrideFlagOffersServices</tabstop>
+  <tabstop>procedureOverrideFlagIgnoreCombat</tabstop>
+  <tabstop>procedureOverrideFlagNoCombatAlert</tabstop>
+  <tabstop>procedureOverrideFlagWeaponDrawn</tabstop>
+  <tabstop>procedureOverrideFlagWeaponsUnequipped</tabstop>
+  <tabstop>procedureOverrideFlagWearSleepOutfit</tabstop>
+  <tabstop>procedureOverrideFlagMaintainSpeedAtGoal</tabstop>
+  <tabstop>procedureOverrideFlagAllowIdleChatter</tabstop>
+  <tabstop>procedureOverrideFlagHellosToPlayer</tabstop>
+  <tabstop>procedureOverrideFlagRandomConversations</tabstop>
+  <tabstop>procedureOverrideFlagObserveCombatBehavior</tabstop>
+  <tabstop>procedureOverrideFlagReactionToPlayerActions</tabstop>
+  <tabstop>procedureOverrideFlagFriendlyFireComments</tabstop>
+  <tabstop>procedureOverrideFlagAggroRadius</tabstop>
+  <tabstop>procedureOverrideFlagWorldInteractions</tabstop>
   <tabstop>currentProcedureConditions</tabstop>
-  <tabstop>checkBox</tabstop>
-  <tabstop>comboBox</tabstop>
   <tabstop>flagMustComplete</tabstop>
   <tabstop>flagOncePerDay</tabstop>
   <tabstop>flagAlwaysSneak</tabstop>

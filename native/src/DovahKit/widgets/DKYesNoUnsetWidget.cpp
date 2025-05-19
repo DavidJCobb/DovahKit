@@ -17,6 +17,10 @@ DKYesNoUnsetWidget::DKYesNoUnsetWidget(QWidget* parent) : QWidget(parent) {
    this->_subwidgets.pushbutton->setCheckable(true);
    this->_subwidgets.checkbox->setEnabled(false);
 
+   this->setFocusPolicy(Qt::FocusPolicy::TabFocus);
+   this->setFocusProxy(this->_subwidgets.pushbutton);
+   QWidget::setTabOrder(this->_subwidgets.pushbutton, this->_subwidgets.checkbox);
+
    this->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Fixed);
 
    QObject::connect(this->_subwidgets.pushbutton, &QPushButton::toggled, this, [this](bool checked) {
