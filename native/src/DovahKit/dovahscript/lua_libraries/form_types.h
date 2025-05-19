@@ -1,6 +1,6 @@
 #pragma once
-#include "../../../lua.h"
-#include "../../../dovah/core.h"
+#include "../../lua.h"
+#include "dovah/form_types.h"
 
 namespace dovahscript::lua_libraries {
    namespace form_types {

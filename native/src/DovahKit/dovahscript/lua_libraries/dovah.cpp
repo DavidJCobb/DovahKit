@@ -3,9 +3,9 @@
 #include <cassert>
 #include <QApplication>
 #include <QRegularExpression>
-#include "../../../helpers/lua/dump.h"
-#include "../../../helpers/lua/error.h"
-#include "../../../helpers/lua/setfuncs.h"
+#include "helpers/lua/dump.h"
+#include "helpers/lua/error.h"
+#include "helpers/lua/setfuncs.h"
 #include "../core/subsystems/permissions.h"
 #include "../core/subsystems/resources.h"
 #include "../core/subsystems/resources/DovahscriptResource.h"
@@ -20,13 +20,13 @@
 #include "../tasks/s2m/log_message.h"
 #include "../wrapper.h"
 #include "../wrappers/form/form.h"
-#include "../../../editor/core.h"
+#include "editor/core.h"
 
-#include "../../../dovah/data/ini_settings.h"
+#include "dovah/data/ini_settings.h"
 
 #include "../lua_classes/benchmark.h"
 
-#include "../../editor/subsystems/game_inis.h"
+#include "editor/subsystems/game_inis.h"
 #include "../wrappers/ini/setting.h"
 
 #include "../api_helpers/load_resource.h"

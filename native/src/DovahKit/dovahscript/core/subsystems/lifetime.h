@@ -3,10 +3,10 @@
 #include <QDialog>
 #include <mutex>
 #include <shared_mutex>
-#include "../../../helpers/passkey.h"
-#include "../../../helpers/singleton.h"
-#include "coordinator/client_thread_script_borrow_handle.h"
-#include "lifetime/lifetime_check_queue.h"
+#include "helpers/passkey.h"
+#include "helpers/singleton.h"
+#include "./coordinator/client_thread_script_borrow_handle.h"
+#include "./lifetime/lifetime_check_queue.h"
 
 class  CanvasWidgetEntity;
 class  CanvasWidgetLayerData;

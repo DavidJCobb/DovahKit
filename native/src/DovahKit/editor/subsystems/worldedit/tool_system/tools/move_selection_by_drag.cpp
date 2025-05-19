@@ -6,7 +6,7 @@
 #include "../../core.h"
 
 namespace dovahkit::subsystems::worldedit::tools {
-   /*static*/ void move_selection_by_drag::request(const tool_request_cause& input, const opaque_options_union& raw_options, tool_response_tuple& all_results) {
+   /*static*/ void move_selection_by_drag::request(const tool_request_cause& input, const options_union& raw_options, tool_response_tuple& all_results) {
       const options& o = raw_options.as<options>();
 
       if (!input.raycast.has_value())
@@ -190,7 +190,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       res.translate_by = world_delta;
       all_results.merge_member(input, res); // TODO: nothing; this will stop being an error once this tool is added to the usual class-arrays for tools
    }
-   /*static*/ void move_selection_by_drag::request_for_hold_release(const opaque_options_union&, tool_response_tuple&) {
+   /*static*/ void move_selection_by_drag::request_for_hold_release(const options_union&, tool_response_tuple&) {
       // No-op.
    }
 }

@@ -1,6 +1,6 @@
 #include "dropdown.h"
 #include <QVariant>
-#include "../../../helpers/qt/combobox.h"
+#include "helpers/qt/combobox.h"
 #include "../../events.h"
 
 namespace dovahscript::impl::event_registration {

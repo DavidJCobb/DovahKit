@@ -1,7 +1,7 @@
 #pragma once
 #include <condition_variable>
 #include <mutex>
-#include "../../../../helpers/passkey.h"
+#include "helpers/passkey.h"
 
 namespace dovahscript::core {
    namespace subsystems {

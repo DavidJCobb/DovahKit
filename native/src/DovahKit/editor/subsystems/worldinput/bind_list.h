@@ -4,7 +4,6 @@
 #include <QPointF>
 #include <QString>
 #include "editor/subsystems/worldedit/enums/editor_mode.h"
-#include "editor/subsystems/worldedit/tool_system/opaque_options_union.h"
 #include "editor/subsystems/worldedit/tool_system/tool_id.h"
 #include "./enums/button_press_type.h"
 #include "./enums/input_device_type.h"

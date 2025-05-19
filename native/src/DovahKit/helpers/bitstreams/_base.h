@@ -62,7 +62,7 @@ namespace cobb::bitstreams {
             if constexpr (_enable_parse_step_tracing) {
                out.index = this->_where_are_we.size();
                //
-               constexpr const auto& name = cobb::name_of_type<T>();
+               constexpr const auto name = cobb::name_of_type<T>();
                this->_where_are_we.push_back(psi);
                this->_where_are_we.back().type_name = std::string(name.data(), name.size());
             }

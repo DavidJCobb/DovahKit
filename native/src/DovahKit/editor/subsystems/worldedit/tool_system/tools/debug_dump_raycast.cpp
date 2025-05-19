@@ -42,7 +42,7 @@ namespace {
 }
 
 namespace dovahkit::subsystems::worldedit::tools {
-   /*static*/ void debug_dump_raycast::request(const tool_request_cause& input, const opaque_options_union& raw_options, tool_response_tuple& all_results) {
+   /*static*/ void debug_dump_raycast::request(const tool_request_cause& input, const options_union& raw_options, tool_response_tuple& all_results) {
       if (!input.button.down_state_changed_this_frame) {
          return;
       }
@@ -52,6 +52,6 @@ namespace dovahkit::subsystems::worldedit::tools {
 
       _print_raycast(input.raycast.value());
    }
-   /*static*/ void debug_dump_raycast::request_for_hold_release(const opaque_options_union& raw_options, tool_response_tuple& all_results) {
+   /*static*/ void debug_dump_raycast::request_for_hold_release(const options_union& raw_options, tool_response_tuple& all_results) {
    }
 }

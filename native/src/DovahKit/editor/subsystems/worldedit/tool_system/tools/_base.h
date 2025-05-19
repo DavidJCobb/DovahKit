@@ -13,7 +13,7 @@ namespace dovahkit::subsystems::worldedit {
    class tool_response_tuple;
 
    namespace tools {
-      class opaque_options_union;
+      class options_union;
 
       using editor_mode_set = cobb::enum_flags<editor_mode, 3>;
       inline constexpr editor_mode_set all_editor_modes = editor_mode_set::with_all_set();
@@ -48,7 +48,11 @@ namespace dovahkit::subsystems::worldedit::tools {
          };
    };
 
-   template<typename T> concept tool_with_options_member_type = requires { typename T::options; requires std::is_base_of_v<_base, T>; };
+   template<typename T> concept tool_with_options_member_type = requires {
+      typename T::options;
+      requires std::is_base_of_v<_base, T>;
+      requires !std::is_same_v<typename T::options, _base::options>;
+   };
    template<typename T> concept tool_sans_options_member_type = !tool_with_options_member_type<T> && std::is_base_of_v<_base, T>;
 
    template<typename T> concept tool_with_response_member_type = requires { typename T::response; requires std::is_base_of_v<_base, T>; };

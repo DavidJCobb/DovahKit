@@ -16,7 +16,7 @@ namespace dovahkit::subsystems::worldedit::tools {
          this->precision = from.precision;
    }
 
-   /*static*/ void modify_camera_speed_flags::request(const tool_request_cause& input, const opaque_options_union& raw_options, tool_response_tuple& all_results) {
+   /*static*/ void modify_camera_speed_flags::request(const tool_request_cause& input, const options_union& raw_options, tool_response_tuple& all_results) {
       const auto& o = raw_options.as<options>();
       //
       // TODO: Handle ReferenceFrames here, or provide an option for them in DKVulkanCameraUpdate. 
@@ -54,7 +54,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       }
       all_results.merge_member(input, res);
    }
-   /*static*/ void modify_camera_speed_flags::request_for_hold_release(const opaque_options_union& raw_options, tool_response_tuple& all_results) {
+   /*static*/ void modify_camera_speed_flags::request_for_hold_release(const options_union& raw_options, tool_response_tuple& all_results) {
       const options& o = raw_options.as<options>();
       //
       response res = {

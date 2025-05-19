@@ -1130,7 +1130,7 @@ namespace dovahkit::subsystems::worldedit {
                // The "invoke in tandem" base class will dispatch all relevant response objects to the 
                // subclass.
                //
-               Current::invoke<Current>(results);
+               Current::template invoke<Current>(results);
             } else if constexpr (tools::tool_response_or_tool_with_response<Current>) {
                if (results.has_member<Current>()) {
                   const auto& data = results.get_member<Current>();

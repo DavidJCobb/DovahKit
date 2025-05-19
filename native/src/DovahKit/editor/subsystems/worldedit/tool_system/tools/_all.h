@@ -22,7 +22,7 @@
 #include "./turn_camera.h"
 
 namespace dovahkit::subsystems::worldedit {
-   class opaque_options_union;
+   class options_union;
    class tool_response_tuple;
 }
 
@@ -34,10 +34,10 @@ namespace dovahkit::subsystems::worldedit::tools {
       requires Tool::function_name != _base::function_name;
 
       // Tool must be invocable.
-      requires requires(const worldinput::tool_request_cause& a, const opaque_options_union& b, tool_response_tuple& c) {
+      requires requires(const worldinput::tool_request_cause& a, const options_union& b, tool_response_tuple& c) {
          { Tool::request(a, b, c) } -> std::same_as<void>;
       };
-      requires requires(const opaque_options_union& b, tool_response_tuple& c) {
+      requires requires(const options_union& b, tool_response_tuple& c) {
          { Tool::request_for_hold_release(b, c) } -> std::same_as<void>;
       };
 

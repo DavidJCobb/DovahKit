@@ -1,7 +1,7 @@
 #include "collections.h"
 #include <cstdint>
 
-#include "../../../helpers/lua/dump.h"
+#include "helpers/lua/dump.h"
 
 namespace {
    using namespace dovahscript;

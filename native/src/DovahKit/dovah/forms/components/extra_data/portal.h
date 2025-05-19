@@ -1,6 +1,6 @@
 #pragma once
 #include "../extra_data.h"
-#include "../../../helpers/vector3.h"
+#include "helpers/vector3.h"
 
 namespace dovah::loaded_forms::components::extra {
    class portal : public basic_extra_data {

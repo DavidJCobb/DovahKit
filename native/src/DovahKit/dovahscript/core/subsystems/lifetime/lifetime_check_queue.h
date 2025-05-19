@@ -1,7 +1,7 @@
 #pragma once
 #include <mutex>
 #include <QObject>
-#include "../../../../helpers/passkey.h"
+#include "helpers/passkey.h"
 #include "../coordinator/client_thread_script_borrow_handle.h"
 
 struct ObservableStandardItemModelObserver;

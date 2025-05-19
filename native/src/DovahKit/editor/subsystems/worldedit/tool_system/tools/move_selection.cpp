@@ -5,7 +5,7 @@
 #include "../../core.h"
 
 namespace dovahkit::subsystems::worldedit::tools {
-   /*static*/ void move_selection::request(const tool_request_cause& input, const opaque_options_union& raw_options, tool_response_tuple& all_results) {
+   /*static*/ void move_selection::request(const tool_request_cause& input, const options_union& raw_options, tool_response_tuple& all_results) {
       const options& o = raw_options.as<options>();
 
       if (o.locked_axes.no_movement_allowed())
@@ -62,7 +62,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       }
       all_results.merge_member(input, res);
    }
-   /*static*/ void move_selection::request_for_hold_release(const opaque_options_union&, tool_response_tuple&) {
+   /*static*/ void move_selection::request_for_hold_release(const options_union&, tool_response_tuple&) {
       // No-op.
    }
 }

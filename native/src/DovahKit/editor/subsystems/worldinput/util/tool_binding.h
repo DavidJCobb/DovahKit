@@ -1,14 +1,14 @@
 #pragma once
 #include <memory>
-#include "editor/subsystems/worldedit/tool_system/opaque_options_union.h"
+#include "editor/subsystems/worldedit/tool_system/options_union.h"
 #include "editor/subsystems/worldedit/tool_system/tool_id.h"
 
 namespace dovahkit::subsystems::worldinput::util {
    class tool_binding {
       protected:
          using tool_id         = worldedit::tools::tool_id;
-         using options_type    = worldedit::tools::opaque_options_union;
-         using options_pointer = std::unique_ptr<options_type, options_type::deleter>;
+         using options_type    = worldedit::tools::options_union;
+         using options_pointer = std::unique_ptr<options_type>;
 
       public:
          tool_binding() {}

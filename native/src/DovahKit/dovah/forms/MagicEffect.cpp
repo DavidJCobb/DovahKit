@@ -1,7 +1,7 @@
 #include "MagicEffect.h"
 #include "_common_cpp.h"
 
-#include "../../../incomplete_code_warnings.h"
+#include "../../incomplete_code_warnings.h"
 static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_forms, "The backend for MagicEffect is incomplete (missing everything except the loader).");
 
 namespace dovah::loaded_forms {

@@ -1,7 +1,7 @@
 #include "dovah.h"
 #include <cassert>
-#include "../../../helpers/lua/error.h"
-#include "../../../helpers/lua/setfuncs.h"
+#include "helpers/lua/error.h"
+#include "helpers/lua/setfuncs.h"
 #include "../core/subsystems/coordinator.h"
 #include "../core/subsystems/permissions.h"
 #include "../push_native_object.h"

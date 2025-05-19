@@ -1,7 +1,7 @@
 #include "table_view.h"
 #include <QSortFilterProxyModel>
 #include <QVariant>
-#include "../../../../../ui/generic/ObservableStandardItemModel.h"
+#include "ui/generic/ObservableStandardItemModel.h"
 #include "../../events.h"
 
 #include "../../../../wrappers/ui/table_view/cell.h"

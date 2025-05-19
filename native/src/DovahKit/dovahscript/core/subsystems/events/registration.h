@@ -1,6 +1,6 @@
 #pragma once
 #include <initializer_list>
-#include "../../../helpers/singleton.h"
+#include "helpers/singleton.h"
 #include "../events.h"
 
 namespace dovahscript::impl::event_registration {

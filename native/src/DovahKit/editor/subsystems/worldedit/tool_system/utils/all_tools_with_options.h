@@ -3,5 +3,5 @@
 #include "../tools/_all.h"
 
 namespace dovahkit::subsystems::worldedit::tools {
-   using all_tools_with_options = all_tools::filter_types<[]<typename T>() { return tool_with_options<T>; }>;
+   using all_tools_with_options = all_tools::filter_types<[]<typename T>() { return tool_with_options_member_type<T>; }>;
 }

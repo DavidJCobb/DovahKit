@@ -1,15 +1,15 @@
 #include "lifetime_check_queue.h"
 #include <QVariant>
-#include "../../../helpers/unordered_map.h"
-#include "../../../helpers/qt/traversal.h"
-#include "../../../ui/generic/CanvasWidget.h"
+#include "helpers/unordered_map.h"
+#include "helpers/qt/traversal.h"
+#include "ui/generic/CanvasWidget.h"
 #include "../lifetime.h"
 #include "../userdata.h"
-#include "hierarchy_crawler.h"
-#include "task_reference_state_multi_checker.h"
+#include "./hierarchy_crawler.h"
+#include "./task_reference_state_multi_checker.h"
 
-#include "../../../qt/DovahscriptCanvasWidgetLayerData.h"
-#include "../../../qt/DovahscriptStandardItemModel.h"
+#include "dovahscript/qt/DovahscriptCanvasWidgetLayerData.h"
+#include "dovahscript/qt/DovahscriptStandardItemModel.h"
 
 namespace {
    using lifetime_passkey = cobb::passkey<dovahscript::core::subsystems::lifetime, dovahscript::impl::lifetime_check_queue>;

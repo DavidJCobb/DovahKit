@@ -1,9 +1,9 @@
 #pragma once
 #include <mutex>
 #include <QElapsedTimer>
-#include "../../../helpers/singleton.h"
+#include "helpers/singleton.h"
 #include "../../../lua.h"
-#include "resources/DovahscriptResource.h"
+#include "./resources/DovahscriptResource.h"
 
 namespace dovahscript::core::subsystems {
    class resources : cobb::singleton {

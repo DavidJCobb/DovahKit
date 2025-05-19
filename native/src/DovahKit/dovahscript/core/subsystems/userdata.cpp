@@ -1,16 +1,16 @@
-#include "userdata.h"
-#include "coordinator.h"
-#include "lifetime.h"
-#include "resources.h"
+#include "./userdata.h"
+#include "./coordinator.h"
+#include "./lifetime.h"
+#include "./resources.h"
 #include "../class_zombification.h"
 #include "../verify_threading.h"
 #include "../../wrapper.h"
 
-#include "../../../helpers/lua/dump.h"
-#include "../../../helpers/lua/isempty.h"
+#include "helpers/lua/dump.h"
+#include "helpers/lua/isempty.h"
 
-#include "../../../dovah/forms/Form.h" // needed for working with any loaded_form_ptr
-#include "../../../editor/form_stub_meta_type.h" // needed for QVariants of form stub pointers
+#include "dovah/forms/Form.h" // needed for working with any loaded_form_ptr
+#include "editor/form_stub_meta_type.h" // needed for QVariants of form stub pointers
 #include "../../qt/DovahscriptCanvasWidgetLayerData.h"
 
 #include "../../constants/debugging.h"

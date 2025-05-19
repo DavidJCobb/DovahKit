@@ -5,7 +5,7 @@
 #include <QSaveFile>
 #include <QStandardPaths>
 #include <QTextStream>
-#include "../../../../DirectXTex/DirectXTex.h"
+#include "../../../DirectXTex/DirectXTex.h"
 #include "helpers/arrays/make.h"
 #include "helpers/windows.h"
 

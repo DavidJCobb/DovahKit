@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../helpers/singleton.h"
+#include "helpers/singleton.h"
 #include "../../../lua.h"
 
 struct ObservableStandardItemModelObserver;

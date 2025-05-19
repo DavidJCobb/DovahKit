@@ -1,7 +1,7 @@
 #pragma once
-#include "../../../lua.h"
-#include "../../../helpers/rotation.h"
-#include "../../../helpers/lua/error.h"
+#include "../../lua.h"
+#include "helpers/rotation.h"
+#include "helpers/lua/error.h"
 #include "../core/classes.h"
 
 namespace dovahscript::lua_classes {

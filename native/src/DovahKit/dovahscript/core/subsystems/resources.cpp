@@ -1,7 +1,7 @@
 #include "resources.h"
 #include <QThread>
-#include "../../../helpers/qt/repaint.h"
-#include "coordinator.h"
+#include "helpers/qt/repaint.h"
+#include "./coordinator.h"
 #include "../verify_threading.h"
 #include "../../constants/debugging.h"
 #include "../../constants/qt_graphics.h"

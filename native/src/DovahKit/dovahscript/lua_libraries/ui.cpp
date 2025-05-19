@@ -1,8 +1,8 @@
 #include "dovah.h"
 #include <array>
 #include <cassert>
-#include "../../../helpers/lua/error.h"
-#include "../../../helpers/lua/setfuncs.h"
+#include "helpers/lua/error.h"
+#include "helpers/lua/setfuncs.h"
 #include "../core/subsystems/coordinator.h"
 #include "../send_script_task.h"
 

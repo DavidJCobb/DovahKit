@@ -11,7 +11,7 @@ namespace {
 }
 
 namespace dovahkit::subsystems::worldedit::tools {
-   /*static*/ void debug_print::request(const tool_request_cause& input, const opaque_options_union& raw_options, tool_response_tuple& all_results) {
+   /*static*/ void debug_print::request(const tool_request_cause& input, const options_union& raw_options, tool_response_tuple& all_results) {
       const options& o = raw_options.as<options>();
       //
       response res = { o.text };
@@ -33,7 +33,7 @@ namespace dovahkit::subsystems::worldedit::tools {
 
       all_results.merge_member(input, res);
    }
-   /*static*/ void debug_print::request_for_hold_release(const opaque_options_union& raw_options, tool_response_tuple& all_results) {
+   /*static*/ void debug_print::request_for_hold_release(const options_union& raw_options, tool_response_tuple& all_results) {
       const options& o = raw_options.as<options>();
       //
       response res;

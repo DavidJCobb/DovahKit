@@ -1,10 +1,10 @@
 #include "hierarchy_crawler.h"
 #include <QAbstractButton>
 #include <QButtonGroup>
-#include "../../../helpers/unordered_map.h"
-#include "../../../helpers/qt/get_model_of.h"
-#include "../../../helpers/qt/traversal.h"
-#include "../../../ui/generic/CanvasWidget.h"
+#include "helpers/unordered_map.h"
+#include "helpers/qt/get_model_of.h"
+#include "helpers/qt/traversal.h"
+#include "ui/generic/CanvasWidget.h"
 #include "../coordinator.h"
 #include "../lifetime.h"
 #include "../userdata.h"

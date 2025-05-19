@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "../../../lua.h"
+#include "../../lua.h"
 #include "../core/classes.h"
 
 namespace dovahscript::lua_classes {

@@ -13,8 +13,8 @@ namespace dovahkit::subsystems::worldinput {
 
 namespace dovahkit::subsystems::worldedit::tools {
    struct tool_dispatch_table_entry {
-      using invoke_handler_t         = void(const worldinput::tool_request_cause&, const opaque_options_union&, tool_response_tuple&);
-      using invoke_hold_up_handler_t = void(const opaque_options_union&, tool_response_tuple&);
+      using invoke_handler_t         = void(const worldinput::tool_request_cause&, const options_union&, tool_response_tuple&);
+      using invoke_hold_up_handler_t = void(const options_union&, tool_response_tuple&);
 
       const char* name = nullptr;
       cobb::function_pointer<invoke_handler_t>         request              = nullptr;

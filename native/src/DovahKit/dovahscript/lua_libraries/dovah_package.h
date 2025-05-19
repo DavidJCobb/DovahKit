@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../lua.h"
+#include "../../lua.h"
 
 namespace dovahscript::lua_libraries {
    namespace dovah_package {

@@ -3,7 +3,7 @@
 #include "../tool_response_tuple.h"
 
 namespace dovahkit::subsystems::worldedit::tools {
-   /*static*/ void attempt_on_screen_selection::request(const tool_request_cause& input, const opaque_options_union& raw_options, tool_response_tuple& all_responses) {
+   /*static*/ void attempt_on_screen_selection::request(const tool_request_cause& input, const options_union& raw_options, tool_response_tuple& all_responses) {
       const options& o = raw_options.as<options>();
       //
       response res = {
@@ -25,7 +25,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       }
       all_responses.merge_member(input, res);
    }
-   /*static*/ void attempt_on_screen_selection::request_for_hold_release(const opaque_options_union&, tool_response_tuple&) {
+   /*static*/ void attempt_on_screen_selection::request_for_hold_release(const options_union&, tool_response_tuple&) {
       // No-op.
    }
 }
