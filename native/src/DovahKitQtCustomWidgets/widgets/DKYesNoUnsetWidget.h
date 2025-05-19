@@ -1,11 +1,21 @@
 #pragma once
 #include <QCheckBox>
 #include <QPushButton>
+#if defined(QT_PLUGIN)
+   #include "tools/in_place_text_editor/InPlaceTextEditableWidget.h"
+#endif
 
-class DKYesNoUnsetWidget : public QWidget {
+class QStyleOptionButton;
+
+class DKYesNoUnsetWidget : public QWidget
+   #if defined(QT_PLUGIN)
+      ,
+      public InPlaceTextEditableWidget
+   #endif
+{
    Q_OBJECT;
    Q_PROPERTY(QString        text       READ text       WRITE setText       DESIGNABLE true USER true);
-   Q_PROPERTY(Qt::CheckState checkState READ checkState WRITE setCheckState DESIGNABLE true USER true);
+   Q_PROPERTY(Qt::CheckState checkState READ checkState WRITE setCheckState DESIGNABLE true);
    public:
       DKYesNoUnsetWidget(QWidget* parent = nullptr);
 
@@ -18,6 +28,13 @@ class DKYesNoUnsetWidget : public QWidget {
 
    public:
       #pragma region Overrides
+         #if defined(QT_PLUGIN)
+            virtual QRect inPlaceTextEditingBounds() const override; // InPlaceTextEditableWidget
+         #endif
+
+         virtual QSize sizeHint() const override;
+         virtual QSize minimumSizeHint() const override;
+
          virtual bool event(QEvent*) override;
       #pragma endregion
 
@@ -29,4 +46,6 @@ class DKYesNoUnsetWidget : public QWidget {
          QPushButton* pushbutton = nullptr;
          QCheckBox*   checkbox = nullptr;
       } _subwidgets;
+
+      void _initCheckboxStyleOption(QStyleOptionButton&) const;
 };

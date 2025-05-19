@@ -172,6 +172,15 @@
     <QtMoc Include="widgets\DKYesNoUnsetWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="tools\in_place_text_editor\InPlaceTextEditor.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="extension_factories\DKYesNoUnsetWidgetExtensionFactory.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="extensions\DKYesNoUnsetWidgetTaskMenuExtension.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="interfaces\DKCollapsiblePaneInterface.cpp">
@@ -318,6 +327,15 @@
     <ClCompile Include="interfaces\DKYesNoUnsetWidgetInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tools\in_place_text_editor\InPlaceTextEditor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="extension_factories\DKYesNoUnsetWidgetExtensionFactory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="extensions\DKYesNoUnsetWidgetTaskMenuExtension.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
@@ -331,6 +349,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="widgets\DKHeaderView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tools\in_place_text_editor\InPlaceTextEditableWidget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

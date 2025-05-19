@@ -110,6 +110,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="extensions\DKYesNoUnsetWidgetTaskMenuExtension.cpp" />
+    <ClCompile Include="extension_factories\DKYesNoUnsetWidgetExtensionFactory.cpp" />
     <ClCompile Include="interfaces\DKAttackDataWidgetInterface.cpp" />
     <ClCompile Include="interfaces\DKColorPickerButtonInterface.cpp" />
     <ClCompile Include="interfaces\DKCompactObjectReferencePickerInterface.cpp" />
@@ -130,6 +132,7 @@
     <ClCompile Include="interfaces\DKTabWidgetInterface.cpp" />
     <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp" />
     <ClCompile Include="interfaces\DKYesNoUnsetWidgetInterface.cpp" />
+    <ClCompile Include="tools\in_place_text_editor\InPlaceTextEditor.cpp" />
     <ClCompile Include="widgets\DKAttackDataWidget.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="widgets\DKColorPickerButton.cpp" />
@@ -226,6 +229,10 @@
     <QtMoc Include="interfaces\DKTabWidgetInterface.h" />
     <QtMoc Include="widgets\DKFloatSlider.h" />
     <QtMoc Include="interfaces\DKFloatSliderInterface.h" />
+    <QtMoc Include="tools\in_place_text_editor\InPlaceTextEditor.h" />
+    <QtMoc Include="extension_factories\DKYesNoUnsetWidgetExtensionFactory.h" />
+    <QtMoc Include="extensions\DKYesNoUnsetWidgetTaskMenuExtension.h" />
+    <ClInclude Include="tools\in_place_text_editor\InPlaceTextEditableWidget.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />
     <QtMoc Include="widgets\DKObjectReferencePicker.h" />
     <QtMoc Include="widgets\DKQuestAliasPicker.h" />

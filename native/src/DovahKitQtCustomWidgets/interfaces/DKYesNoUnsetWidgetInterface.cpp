@@ -6,6 +6,8 @@
 #include <QtDesigner/QDesignerFormWindowInterface>
 
 #include "DKYesNoUnsetWidgetInterface.h"
+#include "../extensions/DKYesNoUnsetWidgetTaskMenuExtension.h"
+#include "../extension_factories/DKYesNoUnsetWidgetExtensionFactory.h"
 
 DKYesNoUnsetWidgetInterface::DKYesNoUnsetWidgetInterface(QObject* parent) : QObject(parent) {
    this->initialized = false;
@@ -16,7 +18,9 @@ void DKYesNoUnsetWidgetInterface::initialize(QDesignerFormEditorInterface* intfc
       return;
    //
    QExtensionManager* manager = intfc->extensionManager();
+   QExtensionFactory* factory = new DKYesNoUnsetWidgetExtensionFactory(manager);
    assert(manager);
+   manager->registerExtensions(factory, Q_TYPEID(QDesignerTaskMenuExtension));
    //
    this->initialized = true;
 }
