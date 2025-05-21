@@ -139,8 +139,8 @@ void ObjectWindowTreeItem::sort() {
             .appendChild(item_type::make_form_type(tr("Music Type", disambig), dovah::form_type::music_type))
             .appendChild(item_type::make_form_type(tr("Reverb Parameters", disambig), dovah::form_type::reverb_parameters))
             .appendChild(item_type::make_form_type(tr("Sound Category", disambig), dovah::form_type::sound_category))
-            .appendChild(item_type::make_form_type(tr("Sound Description", disambig), dovah::form_type::sound_descriptor))
-            .appendChild(item_type::make_form_type(tr("Sound Emitter", disambig), dovah::form_type::sound))
+            .appendChild(item_type::make_form_type(tr("Sound Descriptor", disambig), dovah::form_type::sound_descriptor))
+            .appendChild(item_type::make_form_type(tr("Sound Marker", disambig), dovah::form_type::sound))
             .appendChild(item_type::make_form_type(tr("Sound Output Model", disambig), dovah::form_type::sound_output_model))
       );
       this->_nodes.root->appendChild(

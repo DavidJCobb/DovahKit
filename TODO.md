@@ -5,11 +5,17 @@ Stopped working on DovahKit for a few months, to tackle other projects (in part 
 
 ## Table of contents
 
+* Sound Descriptor and DKGameFilePicker
 * Quest editing
 * Immediate next steps
 * General form work
 * Backend
 * 
+
+## Sound Descriptor and DKGameFilePicker
+`DKGameFilePicker` is jankily designed, and that's causing us to mishandle file paths in our UI, when adding new ones to a Sound Descriptor. It also means we can't "trap" the user within specific folders (e.g. `Data/Sound/`).
+
+We should redesign `DKGameFilePicker` to work more sensibly.
 
 ## Quest editing
 
@@ -106,7 +112,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Audio | MUSC | Music Type         | ✅ | ✅ | ⬛ |
 | Audio | REVB | Reverb Parameters  | ✅ | ✅ | ⬛ |
 | Audio | SNCT | Sound Category     | ✅ | ✅ | ⬛ |
-| Audio | SNDR | Sound Descriptor   | ✅ | ✅ | ⬛ |
+| Audio | SNDR | Sound Descriptor   | ✅ | 🟩 | ⬛ | `DKGameFilePicker` needs fixing |
 | Audio | SOUN | Sound Marker       | ✅ | ✅ | ⬛ |
 | Audio | SOPM | Sound Output Model | ✅ | ✅ | ⬛ |
 | Character | ASTP | Association Type | ✅ | ✅ | ⬛ |

@@ -129,7 +129,7 @@ namespace {
       _name_base{ dovah::form_type::shout,             "Shout" },
       _name_base{ dovah::form_type::skill,             "Skill" },
       _name_base{ dovah::form_type::soul_gem,          "Soul Gem" },
-      _name_base{ dovah::form_type::sound,             "Sound" },
+      _name_base{ dovah::form_type::sound,             "Sound Marker" },
       _name_base{ dovah::form_type::sound_category,    "Sound Category" },
       _name_base{ dovah::form_type::sound_descriptor,  "Sound Descriptor" },
       _name_base{ dovah::form_type::sound_output_model, "Sound Output Model" },
