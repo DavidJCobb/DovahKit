@@ -8,7 +8,7 @@ In order to contribute to DovahKit, you'll need to set up your build environment
 
   [You'll need to set that up in the Qt VS Tools plug-in.](https://doc.qt.io/qtvstools/qtvstools-managing-projects.html#managing-qt-versions) When setting it up, you'll need to select names for the Qt versions; the names used for DovahKit are `5.15.2 MSVC2019 x64`.
   
-  Note that as of May 2025, running Qt Designer via Qt VS Tools has been [broken for the last five months](https://github.com/qt-labs/vstools/issues/41), and compiling DovahKit's Qt Designer plug-in has been [broken for the last six months](https://github.com/qt-labs/vstools/issues/42). Qt VS Tools version 3.3.0 is known to be functional. You can get it [from Qt](https://download.qt.io/official_releases/vsaddin/3.3.0/); just remember to disable updates.
+  Note that as of May 2025, running Qt Designer via Qt VS Tools is [broken in versions 3.3.1 up to (not including) 3.4.0](https://github.com/qt-labs/vstools/issues/41), and compiling DovahKit's Qt Designer plug-in has been [broken for the last six months](https://github.com/qt-labs/vstools/issues/42) with a fix having been implemented but it being unclear whether that fix has shipped yet. Qt VS Tools version 3.3.0 is known to be functional. You can get it [from Qt](https://download.qt.io/official_releases/vsaddin/3.3.0/); just remember to disable updates.
 * The [Vulkan SDK](https://vulkan.lunarg.com/sdk/home#windows).
   
   DovahKit's project files are configured to pull this from `C:\VulkanSDK\1.2.189.2`.
