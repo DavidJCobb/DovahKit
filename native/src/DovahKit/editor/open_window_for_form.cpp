@@ -14,6 +14,7 @@
 #include "../ui/form_windows/animation_prop.h"
 #include "../ui/form_windows/art_object.h"
 #include "../ui/form_windows/association_type.h"
+#include "../ui/form_windows/camera_shot.h"
 #include "../ui/form_windows/cell.h"
 #include "../ui/form_windows/class.h"
 #include "../ui/form_windows/collision_layer.h"
@@ -32,6 +33,7 @@
 #include "../ui/form_windows/grass.h"
 #include "../ui/form_windows/hazard.h"
 #include "../ui/form_windows/head_part.h"
+#include "../ui/form_windows/impact_data.h"
 #include "../ui/form_windows/key.h"
 #include "../ui/form_windows/keyword.h"
 #include "../ui/form_windows/landtexture.h"
@@ -42,13 +44,19 @@
 #include "../ui/form_windows/location_ref_type.h"
 #include "../ui/form_windows/misc_item.h"
 #include "../ui/form_windows/movement_type.h"
+#include "../ui/form_windows/music_type.h"
 #include "../ui/form_windows/note.h"
 #include "../ui/form_windows/outfit.h"
 #include "../ui/form_windows/quest.h"
 #include "../ui/form_windows/race.h"
 #include "../ui/form_windows/relationship.h"
+#include "../ui/form_windows/reverb_parameters.h"
 #include "../ui/form_windows/shout.h"
 #include "../ui/form_windows/soul_gem.h"
+#include "../ui/form_windows/sound.h"
+#include "../ui/form_windows/sound_category.h"
+#include "../ui/form_windows/sound_descriptor.h"
+#include "../ui/form_windows/sound_output_model.h"
 #include "../ui/form_windows/static.h"
 #include "../ui/form_windows/textureset.h"
 #include "../ui/form_windows/topic.h"
@@ -74,6 +82,7 @@ namespace {
       std::pair{ dovah::form_type::animation_prop,    _make<FormDialogAnimationProp> },
       std::pair{ dovah::form_type::art_object,        _make<FormDialogArtObject> },
       std::pair{ dovah::form_type::association_type,  _make<FormDialogAssociationType> },
+      std::pair{ dovah::form_type::camera_shot,       _make<FormDialogCameraShot> },
       std::pair{ dovah::form_type::cell,              _make<FormDialogCell> },
       std::pair{ dovah::form_type::combat_class,      _make<FormDialogClass> },
       std::pair{ dovah::form_type::collision_layer,   _make<FormDialogCollisionLayer> },
@@ -92,6 +101,7 @@ namespace {
       std::pair{ dovah::form_type::grass,             _make<FormDialogGrass> },
       std::pair{ dovah::form_type::hazard,            _make<FormDialogHazard> },
       std::pair{ dovah::form_type::head_part,         _make<FormDialogHeadPart> },
+      std::pair{ dovah::form_type::impact_data,       _make<FormDialogImpactData> },
       std::pair{ dovah::form_type::key,               _make<FormDialogKey> },
       std::pair{ dovah::form_type::keyword,           _make<FormDialogKeyword> },
       std::pair{ dovah::form_type::land_texture,      _make<FormDialogLandTexture> },
@@ -102,13 +112,19 @@ namespace {
       std::pair{ dovah::form_type::location_ref_type, _make<FormDialogLocationRefType> },
       std::pair{ dovah::form_type::misc_item,         _make<FormDialogMiscItem> },
       std::pair{ dovah::form_type::movement_type,     _make<FormDialogMovementType> },
+      std::pair{ dovah::form_type::music_type,        _make<FormDialogMusicType> },
       std::pair{ dovah::form_type::note,              _make<FormDialogNote> },
       std::pair{ dovah::form_type::outfit,            _make<FormDialogOutfit> },
       std::pair{ dovah::form_type::quest,             _make<FormDialogQuest> },
       std::pair{ dovah::form_type::race,              _make<FormDialogRace> },
       std::pair{ dovah::form_type::relationship,      _make<FormDialogRelationship> },
+      std::pair{ dovah::form_type::reverb_parameters, _make<FormDialogReverbParameters> },
       std::pair{ dovah::form_type::shout,             _make<FormDialogShout> },
       std::pair{ dovah::form_type::soul_gem,          _make<FormDialogSoulGem> },
+      std::pair{ dovah::form_type::sound,             _make<FormDialogSound> },
+      std::pair{ dovah::form_type::sound_category,    _make<FormDialogSoundCategory> },
+      std::pair{ dovah::form_type::sound_descriptor,  _make<FormDialogSoundDescriptor> },
+      std::pair{ dovah::form_type::sound_output_model, _make<FormDialogSoundOutputModel> },
       std::pair{ dovah::form_type::statik,            _make<FormDialogStatic> },
       std::pair{ dovah::form_type::texture_set,       _make<FormDialogTextureSet> },
       std::pair{ dovah::form_type::topic,             _make<FormDialogTopic> },

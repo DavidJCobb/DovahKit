@@ -110,8 +110,8 @@ namespace dovah::loaded_forms {
          DNAM.write(this->master_particle_system_cap);
          {
             uint8_t flags = 0;
-            flags |= (this->addon_flags.is_valid_master_particle_system);
-            flags |= (this->addon_flags.always_loaded) << 1;
+            flags |= (this->addon_flags.is_valid_master_particle_system ? 1 : 0);
+            flags |= (this->addon_flags.always_loaded ? 1 : 0) << 1;
             DNAM.write(flags);
          }
          DNAM.skip_bytes(1);

@@ -54,7 +54,6 @@ namespace dovah::loaded_forms {
             case 'FLTV':
                break;
             case 'OBND':
-               components::object_bounds::generate_use_info(subrecord, uib);
                break;
             case 'VMAD':
                components::papyrus_attachment_data::generate_use_info(subrecord, uib);

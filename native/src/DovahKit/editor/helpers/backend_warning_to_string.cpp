@@ -939,6 +939,39 @@ namespace editor_helpers {
                   ).arg(subject).arg(casted->word_count);
                }
             #pragma endregion
+            #pragma region sound category
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::sound_category::is_own_parent*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Sound category %1 is its own parent category.",
+                     disambig
+                  ).arg(subject);
+               }
+            #pragma endregion
+            #pragma region sound descriptor
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::sound_descriptor::sound_file_path_too_long*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Sound file path #%2 in Sound Descriptor %1 is too long: it's %3 bytes long, but the Creation Kit "
+                     "and the game will only load the first %4 bytes.",
+                     disambig
+                  ).arg(subject).arg(casted->which).arg(casted->size).arg(casted->max_serializable_size);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::sound_descriptor::unexpected_subrecord_after_cnam*>(&warning)) {
+                  auto subject   = form_identifiers_to_string(&casted->subject);
+                  auto signature = cobb::qt::four_cc_to_string(casted->unexpected_signature);
+                  
+                  return QObject::tr(
+                     "While loading sound descriptor %1, encountered an unexpected subrecord with "
+                     "with signature %2. This subrecord was placed after CNAM, where the game would "
+                     "expect GNAM; depending on when the game decides to load the sound data, it may "
+                     "mistake this unexpected subrecord for GNAM and misread its contents.",
+                     disambig
+                  ).arg(subject).arg(signature);
+               }
+            #pragma endregion
             #pragma region topic info
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::topic_info::response_addendum_subrecord_too_early*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);

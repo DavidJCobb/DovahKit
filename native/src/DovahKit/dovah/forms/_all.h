@@ -15,6 +15,7 @@
    #include "AnimationProp.h"
    #include "ArtObject.h"
    #include "AssociationType.h"
+   #include "CameraShot.h"
    #include "Cell.h"
    #include "Class.h"
    #include "CollisionLayer.h"
@@ -34,6 +35,7 @@
    #include "Grass.h"
    #include "Hazard.h"
    #include "HeadPart.h"
+   #include "ImpactData.h"
    #include "Key.h"
    #include "Keyword.h"
    #include "Landscape.h"
@@ -47,6 +49,7 @@
    #include "MagicEffect.h"
    #include "MiscItem.h"
    #include "MovementType.h"
+   #include "MusicType.h"
    #include "Note.h"
    #include "ObjectReference.h"
    #include "Outfit.h"
@@ -54,9 +57,14 @@
    #include "Quest.h"
    #include "Race.h"
    #include "Relationship.h"
+   #include "ReverbParameters.h"
    #include "Scene.h"
    #include "Shout.h"
    #include "SoulGem.h"
+   #include "Sound.h"
+   #include "SoundCategory.h"
+   #include "SoundDescriptor.h"
+   #include "SoundOutputModel.h"
    #include "Static.h"
    #include "TextureSet.h"
    #include "Topic.h"
@@ -82,6 +90,7 @@ namespace dovah {
       loaded_forms::AnimationProp,
       loaded_forms::ArtObject,
       loaded_forms::AssociationType,
+      loaded_forms::CameraShot,
       loaded_forms::Cell,
       loaded_forms::Class,
       loaded_forms::CollisionLayer,
@@ -101,6 +110,7 @@ namespace dovah {
       loaded_forms::Grass,
       loaded_forms::Hazard,
       loaded_forms::HeadPart,
+      loaded_forms::ImpactData,
       loaded_forms::Key,
       loaded_forms::Keyword,
       loaded_forms::Landscape,
@@ -113,6 +123,7 @@ namespace dovah {
       loaded_forms::LocationRefType,
       loaded_forms::MiscItem,
       loaded_forms::MovementType,
+      loaded_forms::MusicType,
       loaded_forms::Note,
       loaded_forms::ObjectReference,
       loaded_forms::Outfit,
@@ -120,9 +131,14 @@ namespace dovah {
       loaded_forms::Quest,
       loaded_forms::Race,
       loaded_forms::Relationship,
+      loaded_forms::ReverbParameters,
       loaded_forms::Scene,
       loaded_forms::Shout,
       loaded_forms::SoulGem,
+      loaded_forms::Sound,
+      loaded_forms::SoundCategory,
+      loaded_forms::SoundDescriptor,
+      loaded_forms::SoundOutputModel,
       loaded_forms::Static,
       loaded_forms::TextureSet,
       loaded_forms::Topic,

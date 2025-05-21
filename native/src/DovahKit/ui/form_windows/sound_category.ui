@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogSoundCategory</class>
  <widget class="QDialog" name="FormDialogSoundCategory">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>376</width>
+    <height>183</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Sound Category</string>
   </property>
@@ -25,7 +33,7 @@
       <widget class="QLineEdit" name="editorID"/>
      </item>
      <item row="0" column="3">
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="buttonCategorizeSounds">
        <property name="whatsThis">
         <string>Clicking this button will open a dialog listing all Sound Descriptor forms. You can select one or more forms and click &quot;OK&quot; to immediately place them into this Sound Category.</string>
        </property>
@@ -35,7 +43,7 @@
       </widget>
      </item>
      <item row="1" column="3">
-      <widget class="QPushButton" name="pushButton_2">
+      <widget class="QPushButton" name="buttonCategorizeCategories">
        <property name="whatsThis">
         <string>Clicking this button will open a dialog listing all Sound Category forms (besides this one). You can select one or more forms and click &quot;OK&quot; to immediately place them into this Sound Category.</string>
        </property>
@@ -119,6 +127,12 @@
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
+       <property name="decimals">
+        <number>4</number>
+       </property>
+       <property name="maximum">
+        <double>1.000000000000000</double>
+       </property>
       </widget>
      </item>
      <item row="1" column="2">
@@ -138,6 +152,12 @@
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="decimals">
+        <number>4</number>
+       </property>
+       <property name="maximum">
+        <double>1.000000000000000</double>
        </property>
       </widget>
      </item>
@@ -223,8 +243,8 @@
   <tabstop>editorID</tabstop>
   <tabstop>name</tabstop>
   <tabstop>parent</tabstop>
-  <tabstop>pushButton</tabstop>
-  <tabstop>pushButton_2</tabstop>
+  <tabstop>buttonCategorizeSounds</tabstop>
+  <tabstop>buttonCategorizeCategories</tabstop>
   <tabstop>flagMuteUnderwater</tabstop>
   <tabstop>flagShowInMenu</tabstop>
   <tabstop>staticVolumeMult</tabstop>

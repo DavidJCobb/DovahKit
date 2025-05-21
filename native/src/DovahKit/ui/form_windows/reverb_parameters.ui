@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogReverbParameters</class>
  <widget class="QDialog" name="FormDialogReverbParameters">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>376</width>
+    <height>430</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Reverb Parameters</string>
   </property>
@@ -76,7 +84,7 @@
         <string>Decay HF Ratio:</string>
        </property>
        <property name="buddy">
-        <cstring>slider</cstring>
+        <cstring>decayHFRatioSlider</cstring>
        </property>
       </widget>
      </item>
@@ -252,7 +260,7 @@
       </widget>
      </item>
      <item row="6" column="2">
-      <widget class="QDoubleSpinBox" name="doubleSpinBox">
+      <widget class="QDoubleSpinBox" name="decayHFRatioSpinbox">
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
@@ -469,7 +477,7 @@
       </widget>
      </item>
      <item row="6" column="1">
-      <widget class="DKFloatSlider" name="slider">
+      <widget class="DKFloatSlider" name="decayHFRatioSlider">
        <property name="whatsThis">
         <string>This option defines the falloff curve for the decay of high frequencies (where the &quot;HF Reference&quot; option determines precisely what frequences are considered &quot;high&quot;).</string>
        </property>
@@ -555,8 +563,8 @@
   <tabstop>roomHFFilterSpinbox</tabstop>
   <tabstop>hfReferenceSlider</tabstop>
   <tabstop>hfReferenceSpinbox</tabstop>
-  <tabstop>slider</tabstop>
-  <tabstop>doubleSpinBox</tabstop>
+  <tabstop>decayHFRatioSlider</tabstop>
+  <tabstop>decayHFRatioSpinbox</tabstop>
   <tabstop>reflectionsSlider</tabstop>
   <tabstop>reflectionsSpinbox</tabstop>
   <tabstop>reflectDelaySlider</tabstop>

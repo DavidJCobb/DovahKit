@@ -8,9 +8,6 @@
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="editorID"/>
-     </item>
      <item row="0" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
@@ -21,15 +18,8 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Descriptor Type:</string>
-       </property>
-       <property name="buddy">
-        <cstring>descriptorType</cstring>
-       </property>
-      </widget>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
      </item>
      <item row="1" column="1">
       <widget class="QComboBox" name="descriptorType">
@@ -40,10 +30,13 @@
        </item>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QCheckBox" name="flagHasConditions">
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Has Conditions</string>
+        <string>Descriptor Type:</string>
+       </property>
+       <property name="buddy">
+        <cstring>descriptorType</cstring>
        </property>
       </widget>
      </item>
@@ -70,10 +63,23 @@
             <property name="whatsThis">
              <string>The list of sound files that may be played when the game elects to play this sound descriptor. A file will be chosen at random. Files must be stored in &lt;code&gt;Data\Sound\&lt;/code&gt;.</string>
             </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
+            <property name="uniformItemSizes">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item row="1" column="0">
-           <widget class="DKGameFilePicker" name="filePicker"/>
+           <widget class="DKGameFilePicker" name="filePicker">
+            <property name="pathFormat">
+             <enum>DKGameFilePicker::ShowDataDirectory</enum>
+            </property>
+            <property name="pathStem">
+             <string>Data/Sound</string>
+            </property>
+           </widget>
           </item>
           <item row="1" column="1">
            <widget class="QPushButton" name="buttonAddFile">
@@ -117,9 +123,12 @@
          <item row="3" column="1">
           <layout class="QHBoxLayout" name="horizontalLayout_2">
            <item>
-            <widget class="QDoubleSpinBox" name="dbVariance">
+            <widget class="QSpinBox" name="dbVariance">
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             </property>
+             <property name="maximum">
+              <number>100</number>
              </property>
             </widget>
            </item>
@@ -141,7 +150,7 @@
          <item row="6" column="1">
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
-            <widget class="QSpinBox" name="spinBox">
+            <widget class="QSpinBox" name="freqShift">
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
@@ -178,12 +187,12 @@
               <string>Variance:</string>
              </property>
              <property name="buddy">
-              <cstring>spinBox_2</cstring>
+              <cstring>freqVariance</cstring>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QSpinBox" name="spinBox_2">
+            <widget class="QSpinBox" name="freqVariance">
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
@@ -338,7 +347,7 @@
             <string>% Frequency Shift:</string>
            </property>
            <property name="buddy">
-            <cstring>spinBox</cstring>
+            <cstring>freqShift</cstring>
            </property>
           </widget>
          </item>
@@ -568,7 +577,6 @@
  <tabstops>
   <tabstop>editorID</tabstop>
   <tabstop>descriptorType</tabstop>
-  <tabstop>flagHasConditions</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>fileList</tabstop>
   <tabstop>buttonRemoveFile</tabstop>
@@ -581,8 +589,8 @@
   <tabstop>dbVariance</tabstop>
   <tabstop>looping</tabstop>
   <tabstop>alternateFor</tabstop>
-  <tabstop>spinBox</tabstop>
-  <tabstop>spinBox_2</tabstop>
+  <tabstop>freqShift</tabstop>
+  <tabstop>freqVariance</tabstop>
   <tabstop>prioritySlider</tabstop>
   <tabstop>prioritySpinbox</tabstop>
   <tabstop>rumbleSmallSlider</tabstop>

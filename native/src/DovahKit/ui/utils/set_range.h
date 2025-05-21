@@ -3,6 +3,7 @@
 #include <concepts>
 #include <limits>
 #include <type_traits>
+#include <QAbstractSlider>
 #include <QDoubleSpinBox>
 #include <QSpinBox>
 
@@ -95,5 +96,14 @@ namespace ui {
          0,
          std::numeric_limits<Value>::max()
       );
+   }
+
+   template<typename Value>
+   extern void set_range(QAbstractSlider* slider) requires (std::is_arithmetic_v<Value> && std::is_integral_v<Value>) {
+      slider->setRange(std::numeric_limits<Value>::lowest(), std::numeric_limits<Value>::max());
+   }
+   template<typename Value>
+   extern void set_unsigned_range(QAbstractSlider* slider) requires (std::is_arithmetic_v<Value>&& std::is_integral_v<Value>) {
+      slider->setRange(0, std::numeric_limits<Value>::max());
    }
 }

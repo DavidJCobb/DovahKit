@@ -2,7 +2,6 @@
 #include <cstdint>
 #include "Form.h"
 #include "_common.h"
-#include "components/bounds.h"
 #include "components/papyrus.h"
 
 namespace dovah::loaded_forms {

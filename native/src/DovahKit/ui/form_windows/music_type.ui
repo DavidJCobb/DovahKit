@@ -15,7 +15,11 @@
   </property>
   <layout class="QGridLayout" name="gridLayout_3" columnstretch="2,0,2">
    <item row="3" column="0" colspan="3">
-    <widget class="DKFormListPane" name="musicTracks"/>
+    <widget class="DKFormListPane" name="musicTracks">
+     <property name="showFormTypes">
+      <bool>false</bool>
+     </property>
+    </widget>
    </item>
    <item row="0" column="0" colspan="3">
     <layout class="QGridLayout" name="gridLayout">
@@ -120,12 +124,18 @@
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
+       <property name="maximum">
+        <double>100000.000000000000000</double>
+       </property>
       </widget>
      </item>
      <item row="1" column="1">
       <widget class="QDoubleSpinBox" name="ducking">
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="maximum">
+        <double>100.000000000000000</double>
        </property>
       </widget>
      </item>
@@ -191,7 +201,7 @@
    <item row="1" column="2" rowspan="2">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QCheckBox" name="checkBox">
+      <widget class="QCheckBox" name="flagAbrupt">
        <property name="whatsThis">
         <string>If checked, this music type will begin playing immediately, rather than waiting to fade out any already-playing music.</string>
        </property>
@@ -201,7 +211,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="checkBox_2">
+      <widget class="QCheckBox" name="flagPlaysOne">
        <property name="whatsThis">
         <string>If checked, the game will play only one of this music type's tracks, when the music type is requested.</string>
        </property>
@@ -211,7 +221,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="checkBox_3">
+      <widget class="QCheckBox" name="flagCycle">
        <property name="whatsThis">
         <string>If checked, this music type will continue to play tracks after its entire track list has played.</string>
        </property>
@@ -221,7 +231,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="checkBox_4">
+      <widget class="QCheckBox" name="flagMaintainOrder">
        <property name="whatsThis">
         <string>By default, music types play their tracks in a random order. If this option is checked, this music type will always play its music tracks in the order they're listed in below.</string>
        </property>
@@ -231,12 +241,19 @@
       </widget>
      </item>
      <item>
-      <widget class="QCheckBox" name="checkBox_5">
+      <widget class="QCheckBox" name="flagDucks">
        <property name="whatsThis">
         <string>If this music type begins playing while another, lower-priority, music type is playing, then the already-playing track will be ducked.</string>
        </property>
        <property name="text">
         <string>Ducks current track</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="flagDoesntQueue">
+       <property name="text">
+        <string>Doesn't queue</string>
        </property>
       </widget>
      </item>
@@ -257,11 +274,12 @@
   <tabstop>prioritySpinbox</tabstop>
   <tabstop>fadeDuration</tabstop>
   <tabstop>ducking</tabstop>
-  <tabstop>checkBox</tabstop>
-  <tabstop>checkBox_2</tabstop>
-  <tabstop>checkBox_3</tabstop>
-  <tabstop>checkBox_4</tabstop>
-  <tabstop>checkBox_5</tabstop>
+  <tabstop>flagAbrupt</tabstop>
+  <tabstop>flagPlaysOne</tabstop>
+  <tabstop>flagCycle</tabstop>
+  <tabstop>flagMaintainOrder</tabstop>
+  <tabstop>flagDucks</tabstop>
+  <tabstop>flagDoesntQueue</tabstop>
   <tabstop>musicTracks</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>

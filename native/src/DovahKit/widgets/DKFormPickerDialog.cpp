@@ -117,6 +117,33 @@ void DKFormPickerDialog::setFormStub(dovah::form_stub* stub) noexcept {
       this->_model->set_custom_filter(v);
    }
 #endif
+   
+void DKFormPickerDialog::setAllowMultiSelect(bool v) {
+   if (v == this->_allow_multi_select)
+      return;
+   this->_allow_multi_select = v;
+   if (v) {
+      this->_subwidgets.table->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
+   } else {
+      this->_subwidgets.table->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+   }
+}
+#if !defined(QT_PLUGIN)
+   std::vector<dovah::form_stub*> DKFormPickerDialog::selectedFormStubs() const {
+      std::vector<dovah::form_stub*> out;
+
+      auto* model = this->_model;
+      auto* sm    = this->_subwidgets.table->selectionModel();
+      auto  sel   = sm->selectedRows();
+      for (auto& qmi : sel) {
+         auto* stub = model->data(qmi, ui::impl::DKFormPicker::DialogModel::FormStubRole).value<dovah::form_stub*>();
+         if (stub)
+            out.push_back(stub);
+      }
+
+      return out;
+   }
+#endif
 
 void DKFormPickerDialog::_updateColumnVisibility() {
    if (!this->isVisible())

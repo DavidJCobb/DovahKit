@@ -45,6 +45,12 @@ class DKFormPickerDialog : public QDialog {
          DKCustomFormFilter* customFilter() const;
          void setCustomFilter(DKCustomFormFilter* v);
       #endif
+
+      constexpr bool allowMultiSelect() const noexcept { return this->_allow_multi_select; }
+      void setAllowMultiSelect(bool);
+      #if !defined(QT_PLUGIN)
+         std::vector<dovah::form_stub*> selectedFormStubs() const;
+      #endif
          
    protected:
       #if !defined(QT_PLUGIN)
@@ -58,6 +64,7 @@ class DKFormPickerDialog : public QDialog {
          QLineEdit*  filter = nullptr;
          QTableView* table  = nullptr;
       } _subwidgets;
+      bool _allow_multi_select = false;
 
       void _updateColumnVisibility();
 

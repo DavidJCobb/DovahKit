@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogSoundOutputModel</class>
  <widget class="QDialog" name="FormDialogSoundOutputModel">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>358</width>
+    <height>641</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Sound Output Model</string>
   </property>
@@ -64,28 +72,8 @@
      <layout class="QVBoxLayout" name="verticalLayout_9">
       <item>
        <layout class="QGridLayout" name="gridLayout_2">
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>View and edit channel:</string>
-          </property>
-          <property name="buddy">
-           <cstring>dsoCurrentChannel</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_3">
-          <property name="text">
-           <string>Number of channels:</string>
-          </property>
-          <property name="buddy">
-           <cstring>dsoChannelCount</cstring>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="1">
-         <widget class="QComboBox" name="dsoChannelCount">
+         <widget class="QComboBox" name="dsoCurrentChannel">
           <item>
            <property name="text">
             <string>Mono</string>
@@ -93,23 +81,24 @@
           </item>
           <item>
            <property name="text">
-            <string>Stereo</string>
+            <string>Stereo Left</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Stereo Right</string>
            </property>
           </item>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QComboBox" name="dsoCurrentChannel">
-          <item>
-           <property name="text">
-            <string>Left</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Right</string>
-           </property>
-          </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>View and edit channel:</string>
+          </property>
+          <property name="buddy">
+           <cstring>dsoCurrentChannel</cstring>
+          </property>
          </widget>
         </item>
        </layout>
@@ -389,30 +378,7 @@
          <string>Min distance:</string>
         </property>
         <property name="buddy">
-         <cstring>horizontalSlider_6</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QSlider" name="horizontalSlider_6">
-        <property name="whatsThis">
-         <string>The inner radius of the sound: at and within this radius, the sound plays at its maximum volume (the static attenuation defined in the Sound Descriptor).</string>
-        </property>
-        <property name="maximum">
-         <number>1024</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QSpinBox" name="attenuateDistanceMin">
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-        <property name="maximum">
-         <number>1024</number>
+         <cstring>attenuateDistanceMinSlider</cstring>
         </property>
        </widget>
       </item>
@@ -422,30 +388,7 @@
          <string>Max distance:</string>
         </property>
         <property name="buddy">
-         <cstring>horizontalSlider_7</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QSlider" name="horizontalSlider_7">
-        <property name="whatsThis">
-         <string>The outer radius of the sound: at the outer radius, the sound's volume is fully attenuated per the bottommost of the curve sliders below.</string>
-        </property>
-        <property name="maximum">
-         <number>40960</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QSpinBox" name="attenuateDistanceMax">
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-        <property name="maximum">
-         <number>40960</number>
+         <cstring>attenuateDistanceMaxSlider</cstring>
         </property>
        </widget>
       </item>
@@ -561,6 +504,46 @@
         </layout>
        </widget>
       </item>
+      <item row="0" column="2">
+       <widget class="QDoubleSpinBox" name="attenuateDistanceMinSpinbox">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="maximum">
+         <double>1024.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QDoubleSpinBox" name="attenuateDistanceMaxSpinbox">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="maximum">
+         <double>40690.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="DKFloatSlider" name="attenuateDistanceMinSlider">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="maximum">
+         <double>1024.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="DKFloatSlider" name="attenuateDistanceMaxSlider">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="maximum">
+         <double>40690.000000000000000</double>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -664,10 +647,16 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFloatSlider</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFloatSlider.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>editorID</tabstop>
   <tabstop>directionalMode</tabstop>
-  <tabstop>dsoChannelCount</tabstop>
   <tabstop>dsoCurrentChannel</tabstop>
   <tabstop>dsoL</tabstop>
   <tabstop>dsoC</tabstop>
@@ -678,10 +667,10 @@
   <tabstop>dsoBR</tabstop>
   <tabstop>dsoLFE</tabstop>
   <tabstop>flagAttenuatesWithDistance</tabstop>
-  <tabstop>horizontalSlider_6</tabstop>
-  <tabstop>attenuateDistanceMin</tabstop>
-  <tabstop>horizontalSlider_7</tabstop>
-  <tabstop>attenuateDistanceMax</tabstop>
+  <tabstop>attenuateDistanceMinSlider</tabstop>
+  <tabstop>attenuateDistanceMinSpinbox</tabstop>
+  <tabstop>attenuateDistanceMaxSlider</tabstop>
+  <tabstop>attenuateDistanceMaxSpinbox</tabstop>
   <tabstop>attenuateCurve0Slider</tabstop>
   <tabstop>attenuateCurve0Spinbox</tabstop>
   <tabstop>attenuateCurve1Slider</tabstop>

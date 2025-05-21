@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogImpactData</class>
  <widget class="QDialog" name="FormDialogImpactData">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>383</width>
+    <height>680</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>ImpactData</string>
   </property>
@@ -32,6 +40,9 @@
       <widget class="QDoubleSpinBox" name="radius">
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="maximum">
+        <double>1000.000000000000000</double>
        </property>
       </widget>
      </item>
@@ -70,6 +81,9 @@
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
+       <property name="maximum">
+        <double>180.000000000000000</double>
+       </property>
       </widget>
      </item>
      <item row="2" column="1" colspan="3">
@@ -84,7 +98,7 @@
     </layout>
    </item>
    <item>
-    <widget class="QGroupBox" name="groupBox">
+    <widget class="QGroupBox" name="decalData">
      <property name="title">
       <string>Override Texture Set Decal Data</string>
      </property>
@@ -92,23 +106,6 @@
       <bool>true</bool>
      </property>
      <layout class="QGridLayout" name="gridLayout_4">
-      <item row="1" column="1">
-       <widget class="QDoubleSpinBox" name="heightMin">
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_16">
-        <property name="text">
-         <string>Shininess:</string>
-        </property>
-        <property name="buddy">
-         <cstring>shininess</cstring>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="3">
        <widget class="QLabel" name="label_15">
         <property name="text">
@@ -119,29 +116,13 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
-       <spacer name="horizontalSpacer_3">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+      <item row="3" column="1">
+       <widget class="QDoubleSpinBox" name="shininess">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Fixed</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>8</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_10">
-        <property name="text">
-         <string>Min Width:</string>
-        </property>
-        <property name="buddy">
-         <cstring>widthMin</cstring>
+        <property name="maximum">
+         <double>1000.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -155,7 +136,37 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0" colspan="5">
+      <item row="0" column="4">
+       <widget class="QDoubleSpinBox" name="widthMax">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Min Width:</string>
+        </property>
+        <property name="buddy">
+         <cstring>widthMin</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="widthMin">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0" colspan="5">
        <widget class="QGroupBox" name="flagParallax">
         <property name="title">
          <string>Parallax</string>
@@ -172,6 +183,15 @@
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
+           <property name="decimals">
+            <number>4</number>
+           </property>
+           <property name="minimum">
+            <double>0.100000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>10.000000000000000</double>
+           </property>
           </widget>
          </item>
          <item row="0" column="4">
@@ -181,6 +201,12 @@
            </property>
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>30</number>
            </property>
           </widget>
          </item>
@@ -223,13 +249,26 @@
         </layout>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_14">
+      <item row="2" column="4">
+       <widget class="QDoubleSpinBox" name="depth">
+        <property name="whatsThis">
+         <string>How far from the point of impact the decal will render.</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_16">
         <property name="text">
-         <string>Color:</string>
+         <string>Shininess:</string>
         </property>
         <property name="buddy">
-         <cstring>color</cstring>
+         <cstring>shininess</cstring>
         </property>
        </widget>
       </item>
@@ -240,68 +279,24 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="4">
-       <widget class="QDoubleSpinBox" name="depth">
-        <property name="whatsThis">
-         <string>How far from the point of impact the decal will render.</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="4">
-       <widget class="QComboBox" name="alpha">
-        <item>
-         <property name="text">
-          <string>Blending</string>
-         </property>
+      <item row="6" column="0" colspan="5">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item alignment="Qt::AlignHCenter">
+         <widget class="QCheckBox" name="flag4Subtex">
+          <property name="text">
+           <string>4 Subtextures</string>
+          </property>
+         </widget>
         </item>
-        <item>
-         <property name="text">
-          <string>Testing</string>
-         </property>
-        </item>
-       </widget>
+       </layout>
       </item>
-      <item row="0" column="1">
-       <widget class="QDoubleSpinBox" name="widthMin">
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3">
-       <widget class="QLabel" name="label_12">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_14">
         <property name="text">
-         <string>Max Width:</string>
+         <string>Color:</string>
         </property>
         <property name="buddy">
-         <cstring>widthMax</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QDoubleSpinBox" name="shininess">
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="3">
-       <widget class="QLabel" name="label_17">
-        <property name="text">
-         <string>Alpha:</string>
-        </property>
-        <property name="buddy">
-         <cstring>alpha</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="4">
-       <widget class="QDoubleSpinBox" name="widthMax">
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         <cstring>color</cstring>
         </property>
        </widget>
       </item>
@@ -315,23 +310,74 @@
         </property>
        </widget>
       </item>
+      <item row="0" column="2">
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>8</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
       <item row="1" column="4">
        <widget class="QDoubleSpinBox" name="heightMax">
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
        </widget>
       </item>
-      <item row="5" column="0" colspan="5">
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item alignment="Qt::AlignHCenter">
-         <widget class="QCheckBox" name="flag4Subtex">
-          <property name="text">
-           <string>4 Subtextures</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+      <item row="0" column="3">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>Max Width:</string>
+        </property>
+        <property name="buddy">
+         <cstring>widthMax</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="heightMin">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="5">
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Alpha</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_6">
+         <item row="0" column="0">
+          <widget class="QCheckBox" name="flagDecalAlphaBlend">
+           <property name="text">
+            <string>Blending</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QCheckBox" name="flagDecalAlphaTest">
+           <property name="text">
+            <string>Testing</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -411,6 +457,9 @@
        <widget class="QDoubleSpinBox" name="effectDuration">
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="maximum">
+         <double>120.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -592,7 +641,7 @@
   <tabstop>textureSetSecondary</tabstop>
   <tabstop>radius</tabstop>
   <tabstop>angleThreshold</tabstop>
-  <tabstop>groupBox</tabstop>
+  <tabstop>decalData</tabstop>
   <tabstop>widthMin</tabstop>
   <tabstop>widthMax</tabstop>
   <tabstop>heightMin</tabstop>
@@ -600,7 +649,6 @@
   <tabstop>color</tabstop>
   <tabstop>depth</tabstop>
   <tabstop>shininess</tabstop>
-  <tabstop>alpha</tabstop>
   <tabstop>flagParallax</tabstop>
   <tabstop>parallaxScale</tabstop>
   <tabstop>parallaxPasses</tabstop>

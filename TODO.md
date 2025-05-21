@@ -89,7 +89,9 @@ I was in the middle of working on scene editing at the time I switched to other 
 
 Backend refers to the existence of a form data class within the `dovah` folder. UI refers to the UI code -- not just the Qt Designer UI file, but the C++ code to make it work. Dovahscript refers to the Lua script bindings, though those aren't going to be a major focus anymore until post-launch.
 
-Package UI is currently blocked by the need for a tri-state checkbox that clearly indicates the following meanings: no override; override with false; override with true. This is needed for procedure flag overrides.
+Package UI would benefit from a system for the variable UIs that appear for different packdata value types.
+
+ImpactData and TextureSet both have an optional decal data component; I think we'd benefit from abstracting the UI for them into a reusable widget. Said widget should support both a vertical layout (ImpactData) and a horizontal one (TextureSet), and should be able to store and return a whole component verbatim (since this form component doesn't have any outbound uses and so doesn't need to go through the use info management boilerplate).
 
 | CK Category | FourCC | Form type | Backend | UI | Dovahscript | Details |
 | :- | :- | :- | :-: | :-: | :-: | :- |
@@ -101,19 +103,19 @@ Package UI is currently blocked by the need for a tri-state checkbox that clearl
 | Actors | TACT | TalkingActivator | ⬛ | 🟨 | ⬛ |
 | Audio | ACSP | Acoustic Space     | ✅ | ✅ | ⬛ |
 | Audio | MUST | Music Track        | ⬛ | 🟨 | ⬛ |
-| Audio | MUSC | Music Type         | ⬛ | 🟨 | ⬛ |
-| Audio | REVB | Reverb Parameters  | ⬛ | 🟨 | ⬛ |
-| Audio | SNCT | Sound Category     | ⬛ | 🟨 | ⬛ |
-| Audio | SNDR | Sound Descriptor   | ⬛ | 🟨 | ⬛ |
-| Audio | SOUN | Sound Marker       | ⬛ | 🟨 | ⬛ |
-| Audio | SOPM | Sound Output Model | ⬛ | 🟨 | ⬛ |
+| Audio | MUSC | Music Type         | ✅ | ✅ | ⬛ |
+| Audio | REVB | Reverb Parameters  | ✅ | ✅ | ⬛ |
+| Audio | SNCT | Sound Category     | ✅ | ✅ | ⬛ |
+| Audio | SNDR | Sound Descriptor   | ✅ | ✅ | ⬛ |
+| Audio | SOUN | Sound Marker       | ✅ | ✅ | ⬛ |
+| Audio | SOPM | Sound Output Model | ✅ | ✅ | ⬛ |
 | Character | ASTP | Association Type | ✅ | ✅ | ⬛ |
 | Character | CLAS | Class            | ✅ | ✅ | ⬛ |
 | Character | EQUP | Equip Slot       | ✅ | ✅ | ⬛ |
 | Character | FACT | Faction          | ✅ | ✅ | ⬛ |
 | Character | HDPT | HeadPart         | ✅ | ✅ | ⬛ |
 | Character | MOVT | Movement Type    | ✅ | ✅ | ⬛ |
-| Character | PACK | Package          | ⬛ | 🟥 | ⬛ | Need a clearer tri-state checkbox for procedure flag overrides |
+| Character | PACK | Package          | ⬛ | 🟨 | ⬛ | Need implementation for packdata/procedure values |
 | Character | QUST | Quest            | ✅ | 🟩 | 🟨 |
 | Character | RACE | Race             | ✅ | ✅ | ⬛ |
 | Character | RELA | Relationship     | ✅ | ✅ | ⬛ |
@@ -156,7 +158,7 @@ Package UI is currently blocked by the need for a tri-state checkbox that clearl
 | Miscellaneous | MESG | Message         | ⬛ | 🟨 | ⬛ |
 | Miscellaneous | TXST | TextureSet      | ✅ | ✅ | ✅ |
 | SpecialEffect | ADDN | AddOnNode       | ✅ | ✅ | ⬛ |
-| SpecialEffect | CAMS | CameraShot      | ⬛ | 🟨 | ⬛ |
+| SpecialEffect | CAMS | CameraShot      | ✅ | ✅ | ⬛ |
 | SpecialEffect | DEBR | Debris          | ⬛ | 🟨 | ⬛ |
 | SpecialEffect | EFSH | EffectShader    | ⬛ | ⬛ | ⬛ |
 | SpecialEffect | EXPL | Explosion       | ✅ | ✅ | ⬛ |
@@ -165,7 +167,7 @@ Package UI is currently blocked by the need for a tri-state checkbox that clearl
 | SpecialEffect | HAZD | Hazard          | ✅ | ✅ | ⬛ |
 | SpecialEffect | IMGS | Imagespace      | ⬛ | ⬛ | ⬛ |
 | SpecialEffect | IMAD | Imagespace Modifier | ⬛ | ⬛ | ⬛ |
-| SpecialEffect | IPCT | ImpactData      | ⬛ | 🟨 | ⬛ |
+| SpecialEffect | IPCT | ImpactData      | ✅ | ✅ | ⬛ |
 | SpecialEffect | IPDS | ImpactDataSet   | ⬛ | 🟨 | ⬛ |
 | SpecialEffect | MATT | Material Type   | ⬛ | 🟨 | ⬛ |
 | SpecialEffect | PROJ | Projectile      | ⬛ | 🟨 | ⬛ |
