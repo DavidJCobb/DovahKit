@@ -57,7 +57,9 @@ Some specific ideas, first written down on 4/28/2024:
     * Form flag `1 << 7` is not a standard record flag and can be used by different form types.
     * Form flag `1 << 8` is not a standard record flag and can be used by different form types.
     * Form flag `1 << 12` indicates an ignored record.
+      * "Ignored?" Like, in the CK's "load file" dialog, when you inspect a file and decline to load specific records?
       * **TODO:** The loader skips these. Do we?
+        * The game's loader, or just the CK's loader?
     * Form flag `1 << 14` indicates a partial record.
     * Form flag `1 << 18` indicates a compressed record.
   * TESV.exe sets record flag 1 (matching `tes_file_flag::master`) on a form if any of its records come from a master (even if it's overridden by a non-master).
