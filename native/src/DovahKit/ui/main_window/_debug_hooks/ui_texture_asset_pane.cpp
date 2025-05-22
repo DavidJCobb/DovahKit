@@ -25,15 +25,15 @@ namespace DovahKitDebug::features {
       layout->setRowStretch(0, 1);
       layout->setRowStretch(1, 0);
       layout->setRowStretch(2, 0);
-      picker->setStandardConfiguration(DKGameFilePicker::StandardConfiguration::Textures);
-      QObject::connect(picker, &DKGameFilePicker::pathChanged, widget, [widget, f_list](const QString& path) {
+      picker->setPresetConfiguration(DKGameFilePicker::PresetConfiguration::Textures);
+      QObject::connect(picker, &DKGameFilePicker::valueChanged, widget, [widget, f_list](const ui::types::game_file_path& path) {
          const auto blocker = QSignalBlocker(f_list);
-         widget->setAsset(path);
+         widget->setAsset(path.to_string());
          f_list->setFormStub(nullptr);
       });
       QObject::connect(f_list, &DKFormPicker::formChanged, widget, [widget, picker, f_list](dovah::form_stub* stub) {
          const auto blocker = QSignalBlocker(picker);
-         picker->setPath(QString());
+         picker->clear();
          widget->setAsset(stub);
       });
       //

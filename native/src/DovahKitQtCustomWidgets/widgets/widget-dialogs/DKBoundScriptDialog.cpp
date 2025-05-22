@@ -44,6 +44,17 @@ DKBoundScriptDialog::DKBoundScriptDialog(QWidget& parent, QModelIndex scriptMode
 
    this->script_qmi   = scriptModelIndex;
    this->script_model = ((DKBoundScriptListModel*)scriptModelIndex.model())->createScriptModelFor(scriptModelIndex);
+   if (this->script_model) {
+      /*// TODO: We can't "see" the form we're editing from here, and so can't display %2 as "EditorID (FormID)"
+      this->setWindowTitle(
+         tr("Properties for script %1 attached to %2")
+            .arg(this->script_model->scriptname())
+      );
+      //*/
+      this->setWindowTitle(
+         tr("Properties for script %1").arg(this->script_model->scriptname())
+      );
+   }
 
    this->ui.valueWidget_float->setMinimum(std::numeric_limits<float>::lowest());
    this->ui.valueWidget_float->setMaximum(std::numeric_limits<float>::max());
@@ -662,10 +673,22 @@ void DKBoundScriptDialog::_update_edit_widget_constraints(const DKBoundScriptMod
    this->ui.valueWidget_form->setRequiredScriptname(info.scriptname);
    this->ui.valueWidget_ref->setRequiredScriptname(info.scriptname);
 
-   if (info.native_type.has_value())
+   if (info.native_type.has_value()) {
       this->ui.valueWidget_form->setAllowedFormType(info.native_type.value());
-   else
+   } else {
       this->ui.valueWidget_form->allowAllFormTypes();
+   }
+   if (info.is_ref()) {
+      //
+      // Do this conditionally because DKObjectReferencePicker logs warnings for form 
+      // types that don't make sense for refs.
+      //
+      if (info.native_type.has_value()) {
+         this->ui.valueWidget_ref->setRequiredFormType(info.native_type.value());
+      } else {
+         this->ui.valueWidget_ref->setRequiredFormType(dovah::form_type::none);
+      }
+   }
 }
 
 void DKBoundScriptDialog::_populate_edit_widgets(const ui::bound_script_models::property_value& value) {

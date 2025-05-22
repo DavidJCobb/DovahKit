@@ -22,8 +22,8 @@
 #include "dovah/data/conditions/event_function.h"
 #include "dovah/data/conditions/parameter_typeinfo.h"
 #include "dovah/data/conditions/parameter_underlying_type.h"
+#include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/data/story_manager.h"
-#include "dovah/forms/factories/hardcoded.h"
 #include "dovah/forms/Package.h"
 #include "dovah/forms/Quest.h"
 
@@ -411,6 +411,38 @@ DKConditionEditDialog::DKConditionEditDialog(dovah::form_stub& containing_form, 
       this->_update_run_on_ui();
    });
    #pragma endregion
+
+   #pragma region "What's This?"
+   this->ui.runOn->setWhatsThis(tr(
+      "<p>Most condition functions are run in terms of a particular ObjectReference. These "
+      "functions are generally named in terms of what they run on. For example, <code>GetSex</code> "
+      "gets the sex of the actor it runs on; <code>GetInFaction</code> checks whether the actor "
+      "it runs on is the member of some faction; and so on.</p>"
+      "<p>But... What ObjectReference does the function run on? Well, you can choose.</p>"
+      "<dl>"
+         "<dt><b>Subject</b></dt>"
+            "<dd><p>The \"Subject\" depends on context. For dialogue conditions, it's the actor "
+            "who's going to say the line. For quest targets, it's the player. For Magic Effects "
+            "and similar, it's the actor being targeted by the effect, <em>unless</em> the Swap "
+            "Subject and Target box is checked, in which case it's the caster.</p></dd>"
+         "<dt><b>Target</b></dt>"
+            "<dd><p>The \"Target\" depends on context. For dialogue conditions, it's the actor "
+            "who is being spoken to. For package conditions, it's the ref that has been selected "
+            "as a target. For Magic Effects and similar, it's the actor being targeted by the "
+            "effect.</p></dd>"
+         "<dt><b>Reference</b></dt>"
+            "<dd><p>A specific ObjectReference pre-placed in the game world.</p></dd>"
+         "<dt><b>Combat Target</b></dt>"
+            "<dd><p>For magic conditions, this is the actor being targeted by the magic effect. "
+            "Otherwise, if the Subject is in combat, this is their target.</p></dd>"
+         "<dt><b>Linked Reference</b></dt>"
+            "<dd><p>The Subject's linked ref, if they have one.</p></dd>"
+      "</dl>"
+      "<p>For conditions that exist somewhere inside of a quest, you can also run the condition on "
+      "one of the quest's aliases; and for conditions that exist somewhere inside of a package, you "
+      "can run the condition on any package data that is an ObjectReference.</p>"
+   ));
+   #pragma endregion
 }
 
 void DKConditionEditDialog::forceUpdateParameters() {
@@ -628,9 +660,6 @@ void DKConditionEditDialog::_on_parameter_changed(size_t index, QVariant value) 
       case underlying_type::enumeration:
          this->_value.parameters[index] = (int32_t)value.value<int>();
          break;
-      case underlying_type::event:
-         this->_value.parameters[index] = (uint32_t)value.value<int>();
-         break;
       case underlying_type::float32:
          this->_value.parameters[index] = value.value<float>();
          break;
@@ -664,12 +693,18 @@ void DKConditionEditDialog::_renew_combobox_edit_handler(size_t index) {
    if (!param.combobox->isEditable())
       return;
 
-   QObject::connect(param.combobox->lineEdit(), &QLineEdit::editingFinished, this, [this, index, stack = param.stack, widget = param.combobox]() {
+   auto* line = param.combobox->lineEdit();
+   if (!line)
+      return;
+
+   QObject::disconnect(line, &QLineEdit::editingFinished, this, nullptr); // ensure signal never stacks
+   QObject::connect(line, &QLineEdit::editingFinished, this, [this, index, stack = param.stack, widget = param.combobox]() {
       if (stack->currentWidget() != widget || !widget->isEnabled())
          return;
       if (!widget->isEditable())
          return;
-      if (widget->lineEdit()->text().isEmpty()) {
+
+      auto _fallback_to_combobox = [this, index, widget]() {
          QVariant value;
          {
             auto data = widget->currentData();
@@ -680,12 +715,30 @@ void DKConditionEditDialog::_renew_combobox_edit_handler(size_t index) {
             }
          }
          this->_on_parameter_changed(index, value);
+      };
+
+      if (widget->lineEdit()->text().isEmpty()) {
+         _fallback_to_combobox();
          return;
       }
       QVariant value;
       {
          auto text         = widget->currentText();
          auto desired_type = QMetaType::Void;
+
+         {
+            //
+            // Handle exact matches for known values:
+            //
+            auto i = widget->currentIndex();
+            if (i >= 0) {
+               auto item_text = widget->itemText(i);
+               if (text == item_text) {
+                  _fallback_to_combobox();
+                  return;
+               }
+            }
+         }
 
          // Vile hack to know what data type to use:
          if (widget->count() > 0) {
@@ -702,11 +755,35 @@ void DKConditionEditDialog::_renew_combobox_edit_handler(size_t index) {
             case QMetaType::UInt:
             case QMetaType::ULong:
             case QMetaType::UShort:
+               text  = text.trimmed();
                value = text.toInt(&success);
+               if (!success) {
+                  //
+                  // Many known values are formatted like "0 (Torso)" and such. Convert them 
+                  // over in a "friendly" way, e.g. "0 (Trso)" -> 0.
+                  //
+                  auto i = text.indexOf(' ');
+                  if (i >= 0) {
+                     text  = text.left(i);
+                     value = text.toInt(&success);
+                  }
+               }
                break;
             case QMetaType::Double:
             case QMetaType::Float:
+               text  = text.trimmed();
                value = text.toFloat(&success);
+               if (!success) {
+                  //
+                  // Many known values are formatted like "0 (Torso)" and such. Convert them 
+                  // over in a "friendly" way, e.g. "0 (Trso)" -> 0.
+                  //
+                  auto i = text.indexOf(' ');
+                  if (i >= 0) {
+                     text  = text.left(i);
+                     value = text.toFloat(&success);
+                  }
+               }
                break;
             case QMetaType::QString:
                success = true;
@@ -716,7 +793,14 @@ void DKConditionEditDialog::_renew_combobox_edit_handler(size_t index) {
          if (!success) {
             if (!text.isEmpty()) {
                QApplication::beep();
+               //
+               // Windows' `MessageBeep` API can fail if called too rapidly. And I mean, like,
+               // until the system is restarted. If it gets called too rapidly due to a bug, 
+               // we may never know... unless we flood the console too.
+               //
+               qDebug("BEEP");
             }
+            this->_update_parameter_ui(index); // revert the value to a valid one
             return;
          }
       }
@@ -865,12 +949,12 @@ bool DKConditionEditDialog::_update_parameter_ui_for_special_case(size_t index) 
       auto* widget = param.combobox;
       widget->clear();
       widget->setEditable(true);
-      widget->addItem(tr("Torso",    "IsLimbGone value"), (int32_t)0);
-      widget->addItem(tr("Head",     "IsLimbGone value"), (int32_t)1);
-      widget->addItem(tr("Eye",      "IsLimbGone value"), (int32_t)2);
-      widget->addItem(tr("Look At",  "IsLimbGone value"), (int32_t)3);
-      widget->addItem(tr("Fly Grab", "IsLimbGone value"), (int32_t)4);
-      widget->addItem(tr("Saddle",   "IsLimbGone value"), (int32_t)5);
+      widget->addItem(tr("0 (Torso)",    "IsLimbGone value"), (int32_t)0);
+      widget->addItem(tr("1 (Head)",     "IsLimbGone value"), (int32_t)1);
+      widget->addItem(tr("2 (Eye)",      "IsLimbGone value"), (int32_t)2);
+      widget->addItem(tr("3 (Look At)",  "IsLimbGone value"), (int32_t)3);
+      widget->addItem(tr("4 (Fly Grab)", "IsLimbGone value"), (int32_t)4);
+      widget->addItem(tr("5 (Saddle)",   "IsLimbGone value"), (int32_t)5);
       if (std::holds_alternative<int32_t>(value)) {
          auto limb = std::get<int32_t>(value);
 
@@ -1224,10 +1308,9 @@ void DKConditionEditDialog::_update_parameter_ui(size_t index) {
             } else {
                widget->setEnabled(false);
             }
+
+            param.stack->setCurrentWidget(widget);
          }
-         break;
-      case underlying_type::event: // TODO: actually, is this even used anywhere? lol
-         param.stack->setCurrentWidget(param.blank);
          break;
       case underlying_type::float32:
          {

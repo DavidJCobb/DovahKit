@@ -16,7 +16,7 @@ DKFormDestructionStageDialog::DKFormDestructionStageDialog(QWidget* parent) : QD
 
 DKFormDestructionStageDialog::DestructionStage DKFormDestructionStageDialog::value() const {
    DestructionStage out = {
-      .health_percent   = (uint16_t)this->ui.healthPerc->value(),
+      .health_percent   = (uint8_t)this->ui.healthPerc->value(),
       .damage_stage     = (uint8_t)this->ui.damageStage->value(),
       .self_damage_rate = (uint32_t)this->ui.selfDamage->value(),
       .explosion        = this->ui.explosion->formStub(),

@@ -50,7 +50,7 @@ class DKFormNIFPickerDialogTextureSwapModel : public DKGenericListModel<DKFormNI
 
                case Qt::TextAlignmentRole:
                   if (column == Column::LeafIndex) {
-                     return (int)(Qt::AlignRight | Qt::AlignBaseline);
+                     return (int)(Qt::AlignRight | Qt::AlignVCenter);
                   }
                   return {};
 
@@ -165,9 +165,9 @@ DKFormNIFPickerDialog::DKFormNIFPickerDialog(QWidget* parent) : QDialog(parent) 
       });
    }
 
-   this->ui.filePicker->setStandardConfiguration(DKGameFilePicker::StandardConfiguration::Meshes);
-   this->ui.filePicker->setPathFormat(DKGameFilePicker::PathFormat::OmitPathStem);
-   QObject::connect(this->ui.filePicker, &DKGameFilePicker::pathChanged, this, [this]() {
+   this->ui.filePicker->setPresetConfiguration(DKGameFilePicker::PresetConfiguration::Meshes);
+   this->ui.filePicker->setDisplaysStem(false);
+   QObject::connect(this->ui.filePicker, &DKGameFilePicker::valueChanged, this, [this]() {
       this->_reload_all_nif_info();
       this->_refresh_texture_swaps();
    });
@@ -181,10 +181,10 @@ DKFormNIFPickerDialog::DKFormNIFPickerDialog(QWidget* parent) : QDialog(parent) 
 }
 
 QString DKFormNIFPickerDialog::modelPath() const {
-   return this->ui.filePicker->rawPath();
+   return this->ui.filePicker->value().to_string();
 }
 void DKFormNIFPickerDialog::setModelPath(QString path) {
-   this->ui.filePicker->setRawPath(path);
+   this->ui.filePicker->setValue(ui::types::game_file_path(path));
 }
 
 void DKFormNIFPickerDialog::setTextureSwaps(const std::vector<ui::types::nif_texture_swap>& swaps) {

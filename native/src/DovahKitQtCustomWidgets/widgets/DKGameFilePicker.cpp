@@ -145,6 +145,8 @@ void DKGameFilePicker::setPathStemString(QString v) {
                .use_backslashes        = false,
             }
          );
+         this->_updateDisplayedPath();
+         emit this->valueChanged(this->_properties.value);
       #endif
    }
    void DKGameFilePicker::clear() {

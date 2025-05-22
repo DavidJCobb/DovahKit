@@ -1621,7 +1621,7 @@ void FormDialogRace::_on_tint_layer_selection_changed(dovah::sex sex, const QIte
       QSignalBlocker(sw.layers.edit.type),
    };
 
-   sw.layers.edit.texture->setValue(ui::types::game_file_path(QString::fromStdString(layer.texture)));
+   sw.layers.edit.texture->setValue(ui::types::game_file_path("Data\\Textures\\").append(QString::fromStdString(layer.texture)));
    sw.layers.edit.type->setCurrentIndex(sw.layers.edit.type->findData((int)layer.type));
    preset_table->setRootIndex(preset_model->mapFromSource(qmi));
    preset_table->selectionModel()->clearSelection();
@@ -1689,7 +1689,7 @@ void FormDialogRace::_push_tint_layer_to_model(dovah::sex sex) {
    auto& data = data_opt.value();
 
    const auto& sw = this->_subwidgets.tints[sex].layers.edit;
-   data.texture       = sw.texture->value().to_string().toStdString();
+   data.texture       = sw.texture->value().lexically_relative("Data\\Textures\\").to_string().toStdString();
    data.type          = (dovah::face_tint_type)sw.type->currentData().toInt();
    data.default_color = sw.default_color->formStub();
 

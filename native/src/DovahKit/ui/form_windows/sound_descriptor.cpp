@@ -108,7 +108,7 @@ FormDialogSoundDescriptor::FormDialogSoundDescriptor(dovah::form_stub& stub, QWi
          auto qmi = model->create();
          if (qmi.isValid()) {
             SoundDescriptorSoundFilesModelNode data;
-            data.filepath = path.to_string();
+            data.filepath = path.lexically_relative("Data\\Sound\\").to_string();
             model->overwrite(qmi.row(), data);
 
             picker->clear();

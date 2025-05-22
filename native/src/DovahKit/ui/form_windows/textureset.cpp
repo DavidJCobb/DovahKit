@@ -54,7 +54,7 @@ FormDialogTextureSet::FormDialogTextureSet(dovah::form_stub& stub, QWidget* pare
             auto path = QString::fromStdString(*s);
             //
             widget->setEnabled(true);
-            widget->setValue(ui::types::game_file_path(path));
+            widget->setValue(ui::types::game_file_path("Data\\Textures\\").append(path));
             if (path.isEmpty())
                this->ui.preview->setAsset(nullptr);
             else
@@ -71,7 +71,7 @@ FormDialogTextureSet::FormDialogTextureSet(dovah::form_stub& stub, QWidget* pare
       auto* target = this->form->texture_by_index(row);
       if (!target)
          return;
-      auto str = path.to_string();
+      auto str = path.lexically_relative("Data\\Textures\\").to_string();
       *target = str.toStdString();
       //
       auto* item = this->ui.paths->item(row, 1);

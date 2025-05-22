@@ -1,5 +1,5 @@
 #pragma once
-#if defined(QT_DESIGNER_LIB)
+#if defined(QT_PLUGIN)
    #error This model relies on DovahKit to run. Do not include it when compiling the Qt Designer plug-in.
 #endif
 #include <array>
@@ -11,8 +11,8 @@
 #include "ui/types/conditions/condition.h"
 
 namespace dovah::conditions {
-   class function_info;
-   class parameter_typeinfo;
+   struct function_info;
+   struct parameter_typeinfo;
 }
 
 class DKConditionEditDialog : public QDialog {

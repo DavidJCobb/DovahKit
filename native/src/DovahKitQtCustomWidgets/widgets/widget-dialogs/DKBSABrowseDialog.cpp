@@ -48,7 +48,7 @@ namespace {
    constexpr bool padding_between_icon_columns = true;
 }
 
-/*static*/ DKBSABrowseDialog::PathWarnings DKBSABrowseDialog::checkPath(const QString& path, ValidationOptions options) {
+/*static*/ DKBSABrowseDialog::PathWarnings DKBSABrowseDialog::checkPath(const QString& path, SpecialValidation options) {
    using _  = DKBSABrowseDialog::PathWarning;
    using PW = DKBSABrowseDialog::PathWarnings;
    //
@@ -56,7 +56,7 @@ namespace {
    // comments describing issues in Bethesda's path handling will use examples which include the 
    // Data directory prefix, for clarity.
    //
-   PW out = 0;
+   PW out = {};
    //
    auto pathname       = QStringView(path);
    auto last_separator = std::max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
@@ -117,7 +117,7 @@ namespace {
             //
             out |= _::FileExtensionTooLong;
       }
-      if (options & ValidationOption::ArmorAddonModel) {
+      if (options == SpecialValidation::ArmorAddonModel) {
          auto underscore = filename.lastIndexOf('_');
          if (underscore < 0 || underscore != filename.size() - 2) {
             //
@@ -344,7 +344,9 @@ DKBSABrowseDialog::DKBSABrowseDialog(QWidget* parent) : QDialog(parent) {
    view->setLayoutMode(QListView::LayoutMode::Batched);
    view->setModel(model);
    view->installEventFilter(this);
-   this->state._delegate = new DKBSABrowseDialogItemDelegate(view);
+   this->item_delegates.icon = new DKBSABrowseDialogItemDelegate(view);
+   //this->item_delegates.list = view->itemDelegate();
+   this->item_delegates.list = new QStyledItemDelegate(view);
    QObject::connect(model, &QAbstractItemModel::modelReset, this, [this, view, model]() {
       if (this->state.pathStem.isEmpty())
          return;
@@ -404,10 +406,12 @@ QString DKBSABrowseDialog::directory() const noexcept {
    dialog->setPathStem(pathStem);
    if (extra.backend)
       dialog->setBackend(extra.backend);
-   if (extra.validationOptions)
-      dialog->setValidationOptions(extra.validationOptions);
+   if (extra.specialValidation)
+      dialog->setSpecialValidation(extra.specialValidation);
    if (!initial.isEmpty())
       dialog->setDirectoryAndFile(initial);
+   else if (!pathStem.isEmpty())
+      dialog->setDirectory(pathStem);
    dialog->setWindowModality(Qt::WindowModality::WindowModal);
    dialog->exec();
    auto result = dialog->state._finalResult;
@@ -416,7 +420,7 @@ QString DKBSABrowseDialog::directory() const noexcept {
 }
 
 void DKBSABrowseDialog::acceptWithFile(const QString& path) {
-   auto warnings = checkPath(path, this->state.validationOptions);
+   auto warnings = checkPath(path, this->state.specialValidation);
    if (warnings != 0) {
       using _ = PathWarning;
       //
@@ -610,11 +614,11 @@ void DKBSABrowseDialog::setViewMode(QListView::ViewMode vm) {
          view->setBatchSize(200);
          view->setResizeMode(QListView::ResizeMode::Fixed);
          view->setFlow(QListView::Flow::TopToBottom);
-         view->setGridSize({ 0, 0 }); // this actually applies to List Mode, and so must be cleared when switching back from Icon Mode
+         view->setGridSize({}); // this actually applies to List Mode, and so must be cleared when switching back from Icon Mode
          view->setSpacing(0);
          view->setVerticalScrollMode(QAbstractItemView::ScrollMode::ScrollPerItem);
          view->setWordWrap(false);
-         view->setItemDelegate(nullptr);
+         view->setItemDelegate(this->item_delegates.list);
          button->setIcon(style->standardIcon(QStyle::SP_FileDialogListView));
          break;
       case _::IconMode:
@@ -626,7 +630,7 @@ void DKBSABrowseDialog::setViewMode(QListView::ViewMode vm) {
          view->setSpacing(2);
          view->setVerticalScrollMode(QAbstractItemView::ScrollMode::ScrollPerPixel); // necessary to fix Qt-side scroll speed issues in icon view
          view->setWordWrap(true); // TODO: not enough, on its own, to allow variable-height rows
-         view->setItemDelegate(this->state._delegate);
+         view->setItemDelegate(this->item_delegates.icon);
          this->_updateIconColumnSpacing(QSize(), QSize());
          button->setIcon(style->standardIcon(QStyle::SP_FileDialogContentsView));
          break;
@@ -703,6 +707,11 @@ void DKBSABrowseDialog::setDirectoryAndFile(const QString& path) {
    //
    QString filename;
    auto i = ip.lastIndexOf('/');
+   {
+      auto h = ip.lastIndexOf('\\');
+      if (h > i)
+         i = h;
+   }
    auto j = ip.lastIndexOf('.');
    if (j > i) {
       if (i > 0) {
@@ -746,8 +755,8 @@ void DKBSABrowseDialog::setPathStem(const QString& stem) {
       this->state.pathStemIndex = QModelIndex();
    }
 }
-void DKBSABrowseDialog::setValidationOptions(ValidationOptions o) {
-   this->state.validationOptions = o;
+void DKBSABrowseDialog::setSpecialValidation(SpecialValidation o) {
+   this->state.specialValidation = o;
 }
 
 void DKBSABrowseDialog::_updateFilenameTextFromSelection() {
