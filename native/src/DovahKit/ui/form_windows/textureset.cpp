@@ -54,7 +54,7 @@ FormDialogTextureSet::FormDialogTextureSet(dovah::form_stub& stub, QWidget* pare
             auto path = QString::fromStdString(*s);
             //
             widget->setEnabled(true);
-            widget->setRawPath(path);
+            widget->setValue(ui::types::game_file_path(path));
             if (path.isEmpty())
                this->ui.preview->setAsset(nullptr);
             else
@@ -63,24 +63,25 @@ FormDialogTextureSet::FormDialogTextureSet(dovah::form_stub& stub, QWidget* pare
          }
       }
       widget->setEnabled(false);
-      widget->setPath(QString());
+      widget->clear();
       this->_resetTexturePreview();
    });
-   QObject::connect(this->ui.editPath, &DKGameFilePicker::rawPathChanged, this, [this](const QString& path) {
+   QObject::connect(this->ui.editPath, &DKGameFilePicker::valueChanged, this, [this](const ui::types::game_file_path& path) {
       auto  row    = this->ui.paths->currentRow();
       auto* target = this->form->texture_by_index(row);
       if (!target)
          return;
-      *target = path.toStdString();
+      auto str = path.to_string();
+      *target = str.toStdString();
       //
       auto* item = this->ui.paths->item(row, 1);
       if (item)
-         item->setText(path);
+         item->setText(str);
    });
-   QObject::connect(this->ui.editPath, &DKGameFilePicker::pathChanged, this, [this](const QString& path) {
+   QObject::connect(this->ui.editPath, &DKGameFilePicker::valueChanged, this, [this](const ui::types::game_file_path& path) {
       auto row = this->ui.paths->currentRow();
       if (row < this->loaded_textures.size())
-         this->loaded_textures[row] = DovahKitAssetManager::get().requestAsset(path); // TODO: this would result in a fetch with every keystroke if the user types a path; implement editingFinished or throttle it
+         this->loaded_textures[row] = DovahKitAssetManager::get().requestAsset(path.to_string()); // TODO: this would result in a fetch with every keystroke if the user types a path; implement editingFinished or throttle it
    });
    //
    this->load();
@@ -171,7 +172,7 @@ void FormDialogTextureSet::_load_impl() {
    auto& editor = DovahKitCore::get();
    //
    this->ui.editorID->setText(QString::fromStdString(this->stub->get_editor_id()));
-   this->ui.editPath->setPath(QString());
+   this->ui.editPath->clear();
    this->ui.flagModelSpaceNormals->setChecked(this->form->texture_flags & loaded_form_type::texture_set_flag::has_model_space_normals);
    this->ui.flagSkinTexture->setChecked(this->form->texture_flags & loaded_form_type::texture_set_flag::is_skin_textures);
    this->ui.flagSpecular->setChecked(!(this->form->texture_flags & loaded_form_type::texture_set_flag::no_specular_map));

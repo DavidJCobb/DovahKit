@@ -35,20 +35,19 @@ class DKBSABrowseDialog : public QDialog {
       Q_DECLARE_FLAGS(PathWarnings, PathWarning);
       Q_FLAG(PathWarnings);
 
-      using ValidationOption  = DKGameFilePicker::ValidationOption;
-      using ValidationOptions = DKGameFilePicker::ValidationOptions;
+      using SpecialValidation = DKGameFilePicker::SpecialValidation;
 
       // Options struct for passing BSA-specific dialog options to the static member functions.
       struct DialogOptions {
          DKBSACollectionModelBackend* backend = nullptr;
-         ValidationOptions validationOptions;
+         SpecialValidation specialValidation;
       };
 
    public:
       DKBSABrowseDialog(QWidget* parent = nullptr);
 
       // Path SHOULD NOT include the Data directory.
-      static PathWarnings checkPath(const QString&, ValidationOptions);
+      static PathWarnings checkPath(const QString&, SpecialValidation);
 
       QString directory() const noexcept;
 
@@ -75,7 +74,7 @@ class DKBSABrowseDialog : public QDialog {
       bool setDirectory(QString);
       void setDirectoryAndFile(const QString& filePath);
       void setPathStem(const QString&);
-      void setValidationOptions(ValidationOptions);
+      void setSpecialValidation(SpecialValidation);
 
    protected slots:
       void acceptWithFile(const QString&);
@@ -104,7 +103,7 @@ class DKBSABrowseDialog : public QDialog {
       struct {
          QString     pathStem;
          QModelIndex pathStemIndex;
-         ValidationOptions validationOptions = 0;
+         SpecialValidation specialValidation = SpecialValidation::NoSpecialValidation;
          QString     _looseFilePath;
          QString     _finalResult;
       } state;

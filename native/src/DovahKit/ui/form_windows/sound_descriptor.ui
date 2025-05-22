@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogSoundDescriptor</class>
  <widget class="QDialog" name="FormDialogSoundDescriptor">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>401</width>
+    <height>736</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Sound Descriptor</string>
   </property>
@@ -73,11 +81,8 @@
           </item>
           <item row="1" column="0">
            <widget class="DKGameFilePicker" name="filePicker">
-            <property name="pathFormat">
-             <enum>DKGameFilePicker::ShowDataDirectory</enum>
-            </property>
-            <property name="pathStem">
-             <string>Data/Sound</string>
+            <property name="presetConfiguration">
+             <enum>DKGameFilePicker::Sounds</enum>
             </property>
            </widget>
           </item>

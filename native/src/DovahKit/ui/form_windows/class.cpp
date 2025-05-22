@@ -106,8 +106,8 @@ void FormDialogClass::_load_impl() {
    });
 
    ui::bind(this->ui.menuImage, working.icon);
-   QObject::connect(this->ui.menuImage, &DKGameFilePicker::rawPathChanged, this, [this](QString path) {
-      this->ui.menuImagePreview->setAsset(path);
+   QObject::connect(this->ui.menuImage, &DKGameFilePicker::valueChanged, this, [this](ui::types::game_file_path path) {
+      this->ui.menuImagePreview->setAsset(path.to_string());
    });
    this->ui.menuImagePreview->setAsset(QString::fromStdString(working.icon));
 }

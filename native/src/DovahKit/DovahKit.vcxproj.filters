@@ -2967,6 +2967,9 @@
     <ClCompile Include="ui\form_windows\impact_data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\types\game_file_path.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -7355,9 +7358,6 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\unexpected_subrecord_after_cnam.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\form_windows\sound_descriptor\SoundDescriptorSoundFilesModel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\forms\Sound.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -7368,6 +7368,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\ImpactData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\sound_descriptor\SoundDescriptorSoundFilesModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\game_file_path.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

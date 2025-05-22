@@ -421,8 +421,6 @@ FormDialogFaction::FormDialogFaction(dovah::form_stub& stub, QWidget* parent) : 
       view->setCornerButtonEnabled(false);
    }
    {  // Ranks editor
-      this->ui.rankEditInsignia->setStandardConfiguration(DKGameFilePicker::StandardConfiguration::Textures);
-      this->ui.rankEditInsignia->setPathFormat(DKGameFilePicker::PathFormat::OmitPathStem);
       {
          auto* view = this->ui.ranksView;
          view->setModel(this->models.ranks);
@@ -494,10 +492,10 @@ FormDialogFaction::FormDialogFaction(dovah::form_stub& stub, QWidget* parent) : 
             }
 
             this->ui.rankEditID->setValue(data->id);
-            this->ui.rankEditInsignia->setPath(QString::fromStdString(data->insignia));
+            this->ui.rankEditInsignia->setValue(ui::types::game_file_path(QString::fromStdString(data->insignia)));
             this->ui.rankEditNameF->setText(editor.convert_localized_string(data->title_fem));
             this->ui.rankEditNameM->setText(editor.convert_localized_string(data->title_masc));
-            this->ui.rankEditInsigniaPreview->setAsset(this->ui.rankEditInsignia->rawPath()); // use rawPath to add any needed path prefixes
+            this->ui.rankEditInsigniaPreview->setAsset(this->ui.rankEditInsignia->value().to_string());
          });
          QObject::connect(this->ui.rankEditID, QOverload<int>::of(&QSpinBox::valueChanged), this, [this, model, sel_model](int value) {
             auto  index = sel_model->currentIndex();
@@ -526,15 +524,15 @@ FormDialogFaction::FormDialogFaction(dovah::form_stub& stub, QWidget* parent) : 
             editor.assign_localized_string(data.title_masc, this->ui.rankEditNameM->text());
             model->setRankData(index.row(), data);
          });
-         QObject::connect(this->ui.rankEditInsignia, &DKGameFilePicker::pathChanged, this, [this, model, sel_model](QString path) {
+         QObject::connect(this->ui.rankEditInsignia, &DKGameFilePicker::valueChanged, this, [this, model, sel_model](ui::types::game_file_path path) {
             auto  index = sel_model->currentIndex();
             auto* src   = model->node(index);
             if (!src)
                return;
             auto data = *src;
-            data.insignia = path.toStdString();
+            data.insignia = path.to_string().toStdString();
             model->setRankData(index.row(), data);
-            this->ui.rankEditInsigniaPreview->setAsset(this->ui.rankEditInsignia->rawPath()); // use rawPath to add any needed path prefixes
+            this->ui.rankEditInsigniaPreview->setAsset(this->ui.rankEditInsignia->value().to_string()); // use rawPath to add any needed path prefixes
          });
 
          // force UI enable state updates:

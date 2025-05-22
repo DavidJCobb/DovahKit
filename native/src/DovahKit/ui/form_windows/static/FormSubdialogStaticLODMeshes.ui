@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>660</width>
-    <height>155</height>
+    <height>161</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -84,13 +84,40 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="DKGameFilePicker" name="lv1File"/>
+      <widget class="DKGameFilePicker" name="lv1File">
+       <property name="allowedFileExtensions">
+        <stringlist>
+         <string>.nif</string>
+        </stringlist>
+       </property>
+       <property name="presetConfiguration">
+        <enum>DKGameFilePicker::Meshes</enum>
+       </property>
+      </widget>
      </item>
      <item row="0" column="1">
-      <widget class="DKGameFilePicker" name="lv0File"/>
+      <widget class="DKGameFilePicker" name="lv0File">
+       <property name="allowedFileExtensions">
+        <stringlist>
+         <string>.nif</string>
+        </stringlist>
+       </property>
+       <property name="presetConfiguration">
+        <enum>DKGameFilePicker::Meshes</enum>
+       </property>
+      </widget>
      </item>
      <item row="3" column="1">
-      <widget class="DKGameFilePicker" name="lv3File"/>
+      <widget class="DKGameFilePicker" name="lv3File">
+       <property name="allowedFileExtensions">
+        <stringlist>
+         <string>.nif</string>
+        </stringlist>
+       </property>
+       <property name="presetConfiguration">
+        <enum>DKGameFilePicker::Meshes</enum>
+       </property>
+      </widget>
      </item>
      <item row="0" column="2">
       <widget class="QPushButton" name="lv0Propagate">
@@ -117,7 +144,16 @@
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="DKGameFilePicker" name="lv2File"/>
+      <widget class="DKGameFilePicker" name="lv2File">
+       <property name="allowedFileExtensions">
+        <stringlist>
+         <string>.nif</string>
+        </stringlist>
+       </property>
+       <property name="presetConfiguration">
+        <enum>DKGameFilePicker::Meshes</enum>
+       </property>
+      </widget>
      </item>
      <item row="2" column="2">
       <widget class="QPushButton" name="lv2Propagate">

@@ -101,17 +101,17 @@ FormDialogSoundDescriptor::FormDialogSoundDescriptor(dovah::form_stub& stub, QWi
       });
       QObject::connect(this->ui.buttonAddFile, &QPushButton::clicked, this, [this, model]() {
          auto* picker = this->ui.filePicker;
-         auto  path   = picker->path();
-         if (path.isEmpty())
+         auto  path   = picker->value();
+         if (path.empty())
             return;
 
          auto qmi = model->create();
          if (qmi.isValid()) {
             SoundDescriptorSoundFilesModelNode data;
-            data.filepath = path;
+            data.filepath = path.to_string();
             model->overwrite(qmi.row(), data);
 
-            picker->setPath("");
+            picker->clear();
          }
       });
    }

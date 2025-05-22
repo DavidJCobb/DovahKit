@@ -151,9 +151,9 @@ namespace ui {
    }
 
    extern void bind(DKGameFilePicker* widget, std::string& dst) {
-      widget->setPath(QString::fromStdString(dst));
-      QObject::connect(widget, &DKGameFilePicker::pathChanged, widget, [&dst](const QString& path) {
-         dst = path.toStdString();
+      widget->setValue(ui::types::game_file_path(QString::fromStdString(dst)));
+      QObject::connect(widget, &DKGameFilePicker::valueChanged, widget, [&dst](const ui::types::game_file_path& path) {
+         dst = path.to_string().toStdString();
       });
    }
 

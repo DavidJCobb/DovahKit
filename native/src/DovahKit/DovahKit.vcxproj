@@ -948,6 +948,7 @@
     <ClCompile Include="ui\options_window\worldinput_scheme_editor.cpp" />
     <ClCompile Include="ui\types\face_tints\layer.cpp" />
     <ClCompile Include="ui\types\face_tints\preset.cpp" />
+    <ClCompile Include="ui\types\game_file_path.cpp" />
     <ClCompile Include="ui\types\logging\log_item.cpp" />
     <ClCompile Include="ui\types\nif_for_form.cpp" />
     <ClCompile Include="ui\types\papyrus\property_value.cpp" />
@@ -1563,6 +1564,7 @@
     <ClInclude Include="ui\types\conditions\condition.h" />
     <ClInclude Include="ui\types\face_tints\layer.h" />
     <ClInclude Include="ui\types\face_tints\preset.h" />
+    <ClInclude Include="ui\types\game_file_path.h" />
     <ClInclude Include="ui\types\logging\log_item.h" />
     <ClInclude Include="ui\types\logging\log_item_context.h" />
     <ClInclude Include="ui\types\logging\log_item_type.h" />

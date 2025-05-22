@@ -76,7 +76,392 @@
       <attribute name="title">
        <string>General</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout_9">
+      <layout class="QGridLayout" name="gridLayout_9" rowstretch="0,0,0,0,0,0,0,0,1">
+       <item row="2" column="0" colspan="2">
+        <widget class="QGroupBox" name="groupBox_9">
+         <property name="title">
+          <string>Inherit</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_12">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_17">
+            <property name="text">
+             <string>Morph Race:</string>
+            </property>
+            <property name="buddy">
+             <cstring>morphRace</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="DKFormPicker" name="morphRace">
+            <property name="whatsThis">
+             <string>If you select a Morph Race, then this race will inherit HeadParts and face morph data from that race.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_18">
+            <property name="text">
+             <string>Armor Race:</string>
+            </property>
+            <property name="buddy">
+             <cstring>armorRace</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="DKFormPicker" name="armorRace">
+            <property name="whatsThis">
+             <string>If you select an Armor Race, then this race will be able to wear all of the armor that that race can wear.</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="2" rowspan="2">
+        <widget class="QGroupBox" name="groupBox_10">
+         <property name="title">
+          <string>Miscellaneous</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_13">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>Flight Radius:</string>
+            </property>
+            <property name="buddy">
+             <cstring>flightRadius</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="flightRadius">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="creatureSize">
+            <property name="whatsThis">
+             <string>Set this race's approximate size. This influences detection, knockback, and similar calculations.</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_19">
+            <property name="text">
+             <string>Size (combat and detection):</string>
+            </property>
+            <property name="buddy">
+             <cstring>creatureSize</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_50">
+            <property name="text">
+             <string>Base Carry Capacity:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="baseCarryCapacity">
+            <property name="whatsThis">
+             <string>The carry capacity that Level 1 actors of this race will have.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QGroupBox" name="skillBonusGroupbox">
+         <property name="whatsThis">
+          <string>Each race can have a starting bonus in up to seven skills, applied to all actors of that race. Bonuses are a flat increase in each respective stat.</string>
+         </property>
+         <property name="title">
+          <string>Skill Bonuses</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <item row="0" column="0">
+           <widget class="QComboBox" name="skillBonus01Skill"/>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="skillBonus01Value">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QComboBox" name="skillBonus02Skill"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="skillBonus02Value">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QComboBox" name="skillBonus03Skill"/>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="skillBonus03Value">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QComboBox" name="skillBonus04Skill"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QSpinBox" name="skillBonus04Value">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QComboBox" name="skillBonus05Skill"/>
+          </item>
+          <item row="4" column="1">
+           <widget class="QSpinBox" name="skillBonus05Value">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QComboBox" name="skillBonus06Skill"/>
+          </item>
+          <item row="5" column="1">
+           <widget class="QSpinBox" name="skillBonus06Value">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QComboBox" name="skillBonus07Skill"/>
+          </item>
+          <item row="6" column="1">
+           <widget class="QSpinBox" name="skillBonus07Value">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <number>255</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="5" column="2" rowspan="2">
+        <widget class="QGroupBox" name="groupBox_6">
+         <property name="title">
+          <string>Spells</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <widget class="DKFormListPane" name="abilities">
+            <property name="whatsThis">
+             <string>Spells that all actors of this race have.</string>
+            </property>
+            <property name="showFormTypes">
+             <bool>false</bool>
+            </property>
+            <property name="showMoveButtons">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Attributes</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Starting Health:</string>
+            </property>
+            <property name="buddy">
+             <cstring>attrBaseH</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="attrBaseH">
+            <property name="whatsThis">
+             <string>The amount of health that Level 1 actors of this race will have.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Health Regen:</string>
+            </property>
+            <property name="buddy">
+             <cstring>attrRegenH</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Magicka Regen:</string>
+            </property>
+            <property name="buddy">
+             <cstring>attrRegenM</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Starting Magicka:</string>
+            </property>
+            <property name="buddy">
+             <cstring>attrBaseM</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="attrBaseS">
+            <property name="whatsThis">
+             <string>The amount of stamina that Level 1 actors of this race will have.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QDoubleSpinBox" name="attrRegenM">
+            <property name="whatsThis">
+             <string>The percentage of their max magicka that actors of this race regenerate every second.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QDoubleSpinBox" name="attrRegenS">
+            <property name="whatsThis">
+             <string>The percentage of their max stamina that actors of this race regenerate every second.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Starting Stamina:</string>
+            </property>
+            <property name="buddy">
+             <cstring>attrBaseS</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>Stamina Regen:</string>
+            </property>
+            <property name="buddy">
+             <cstring>attrRegenS</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="attrBaseM">
+            <property name="whatsThis">
+             <string>The amount of magicka that Level 1 actors of this race will have.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QDoubleSpinBox" name="attrRegenH">
+            <property name="whatsThis">
+             <string>The percentage of their max health that actors of this race regenerate every second.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagRegenInCombat">
+            <property name="whatsThis">
+             <string>Control whether actors of this race can regen health during combat. This is generally enabled for playable races.</string>
+            </property>
+            <property name="text">
+             <string>Regen Health in Combat</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
        <item row="4" column="0" colspan="3">
         <widget class="QGroupBox" name="groupBox_7">
          <property name="title">
@@ -317,6 +702,22 @@
          </layout>
         </widget>
        </item>
+       <item row="3" column="0" colspan="2">
+        <spacer name="verticalSpacer_14">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Expanding</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>8</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
        <item row="7" column="2">
         <widget class="QGroupBox" name="groupBox_2">
          <property name="title">
@@ -519,403 +920,15 @@
          </layout>
         </widget>
        </item>
-       <item row="5" column="0">
-        <widget class="QGroupBox" name="skillBonusGroupbox">
-         <property name="whatsThis">
-          <string>Each race can have a starting bonus in up to seven skills, applied to all actors of that race. Bonuses are a flat increase in each respective stat.</string>
-         </property>
-         <property name="title">
-          <string>Skill Bonuses</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_3">
-          <item row="0" column="0">
-           <widget class="QComboBox" name="skillBonus01Skill"/>
-          </item>
-          <item row="0" column="1">
-           <widget class="QSpinBox" name="skillBonus01Value">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="maximum">
-             <number>255</number>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QComboBox" name="skillBonus02Skill"/>
-          </item>
-          <item row="1" column="1">
-           <widget class="QSpinBox" name="skillBonus02Value">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="maximum">
-             <number>255</number>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QComboBox" name="skillBonus03Skill"/>
-          </item>
-          <item row="2" column="1">
-           <widget class="QSpinBox" name="skillBonus03Value">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="maximum">
-             <number>255</number>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QComboBox" name="skillBonus04Skill"/>
-          </item>
-          <item row="3" column="1">
-           <widget class="QSpinBox" name="skillBonus04Value">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="maximum">
-             <number>255</number>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QComboBox" name="skillBonus05Skill"/>
-          </item>
-          <item row="4" column="1">
-           <widget class="QSpinBox" name="skillBonus05Value">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="maximum">
-             <number>255</number>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QComboBox" name="skillBonus06Skill"/>
-          </item>
-          <item row="5" column="1">
-           <widget class="QSpinBox" name="skillBonus06Value">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="maximum">
-             <number>255</number>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0">
-           <widget class="QComboBox" name="skillBonus07Skill"/>
-          </item>
-          <item row="6" column="1">
-           <widget class="QSpinBox" name="skillBonus07Value">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="maximum">
-             <number>255</number>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="QGroupBox" name="groupBox_9">
-         <property name="title">
-          <string>Inherit</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_12">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_17">
-            <property name="text">
-             <string>Morph Race:</string>
-            </property>
-            <property name="buddy">
-             <cstring>morphRace</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="DKFormPicker" name="morphRace">
-            <property name="whatsThis">
-             <string>If you select a Morph Race, then this race will inherit HeadParts and face morph data from that race.</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_18">
-            <property name="text">
-             <string>Armor Race:</string>
-            </property>
-            <property name="buddy">
-             <cstring>armorRace</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="DKFormPicker" name="armorRace">
-            <property name="whatsThis">
-             <string>If you select an Armor Race, then this race will be able to wear all of the armor that that race can wear.</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="5" column="1">
-        <widget class="QGroupBox" name="groupBox">
-         <property name="title">
-          <string>Attributes</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_4">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>Starting Health:</string>
-            </property>
-            <property name="buddy">
-             <cstring>attrBaseH</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QDoubleSpinBox" name="attrBaseH">
-            <property name="whatsThis">
-             <string>The amount of health that Level 1 actors of this race will have.</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_5">
-            <property name="text">
-             <string>Health Regen:</string>
-            </property>
-            <property name="buddy">
-             <cstring>attrRegenH</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_6">
-            <property name="text">
-             <string>Magicka Regen:</string>
-            </property>
-            <property name="buddy">
-             <cstring>attrRegenM</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_3">
-            <property name="text">
-             <string>Starting Magicka:</string>
-            </property>
-            <property name="buddy">
-             <cstring>attrBaseM</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QDoubleSpinBox" name="attrBaseS">
-            <property name="whatsThis">
-             <string>The amount of stamina that Level 1 actors of this race will have.</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QDoubleSpinBox" name="attrRegenM">
-            <property name="whatsThis">
-             <string>The percentage of their max magicka that actors of this race regenerate every second.</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="suffix">
-             <string>%</string>
-            </property>
-            <property name="maximum">
-             <double>100.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QDoubleSpinBox" name="attrRegenS">
-            <property name="whatsThis">
-             <string>The percentage of their max stamina that actors of this race regenerate every second.</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="suffix">
-             <string>%</string>
-            </property>
-            <property name="maximum">
-             <double>100.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_4">
-            <property name="text">
-             <string>Starting Stamina:</string>
-            </property>
-            <property name="buddy">
-             <cstring>attrBaseS</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_7">
-            <property name="text">
-             <string>Stamina Regen:</string>
-            </property>
-            <property name="buddy">
-             <cstring>attrRegenS</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QDoubleSpinBox" name="attrBaseM">
-            <property name="whatsThis">
-             <string>The amount of magicka that Level 1 actors of this race will have.</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QDoubleSpinBox" name="attrRegenH">
-            <property name="whatsThis">
-             <string>The percentage of their max health that actors of this race regenerate every second.</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-            <property name="suffix">
-             <string>%</string>
-            </property>
-            <property name="maximum">
-             <double>100.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0" colspan="2">
-           <widget class="QCheckBox" name="flagRegenInCombat">
-            <property name="whatsThis">
-             <string>Control whether actors of this race can regen health during combat. This is generally enabled for playable races.</string>
-            </property>
-            <property name="text">
-             <string>Regen Health in Combat</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="5" column="2" rowspan="2">
-        <widget class="QGroupBox" name="groupBox_6">
-         <property name="title">
-          <string>Spells</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout">
-          <item>
-           <widget class="DKFormListPane" name="abilities">
-            <property name="whatsThis">
-             <string>Spells that all actors of this race have.</string>
-            </property>
-            <property name="showFormTypes">
-             <bool>false</bool>
-            </property>
-            <property name="showMoveButtons">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="2" column="2" rowspan="2">
-        <widget class="QGroupBox" name="groupBox_10">
-         <property name="title">
-          <string>Miscellaneous</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_13">
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_20">
-            <property name="text">
-             <string>Flight Radius:</string>
-            </property>
-            <property name="buddy">
-             <cstring>flightRadius</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QDoubleSpinBox" name="flightRadius">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="creatureSize">
-            <property name="whatsThis">
-             <string>Set this race's approximate size. This influences detection, knockback, and similar calculations.</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_19">
-            <property name="text">
-             <string>Size (combat and detection):</string>
-            </property>
-            <property name="buddy">
-             <cstring>creatureSize</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_50">
-            <property name="text">
-             <string>Base Carry Capacity:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QDoubleSpinBox" name="baseCarryCapacity">
-            <property name="whatsThis">
-             <string>The carry capacity that Level 1 actors of this race will have.</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="2">
-        <spacer name="verticalSpacer_14">
+       <item row="8" column="0">
+        <spacer name="verticalSpacer_20">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Expanding</enum>
-         </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>8</width>
-           <height>8</height>
+           <width>20</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
@@ -2263,7 +2276,7 @@
       <attribute name="title">
        <string>Lip Synching</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout_33" rowstretch="0,0,0,0" columnstretch="1,1,1,0">
+      <layout class="QGridLayout" name="gridLayout_33" rowstretch="0,0,0,0" columnstretch="1,1,1">
        <item row="0" column="0">
         <widget class="QLabel" name="label_72">
          <property name="text">
@@ -2800,7 +2813,11 @@
                   </widget>
                  </item>
                  <item row="0" column="1">
-                  <widget class="DKGameFilePicker" name="currentTintFTexture"/>
+                  <widget class="DKGameFilePicker" name="currentTintFTexture">
+                   <property name="presetConfiguration">
+                    <enum>DKGameFilePicker::Textures</enum>
+                   </property>
+                  </widget>
                  </item>
                  <item row="2" column="0" colspan="2">
                   <widget class="QGroupBox" name="groupBox_22">

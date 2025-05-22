@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>FormDialogFaction</class>
  <widget class="QDialog" name="FormDialogFaction">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>681</width>
-    <height>670</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Faction</string>
   </property>
@@ -87,7 +79,7 @@
    <item row="2" column="0" colspan="2">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tabGeneral">
       <attribute name="title">
@@ -343,6 +335,9 @@
            <widget class="DKGameFilePicker" name="rankEditInsignia">
             <property name="whatsThis">
              <string>In past Elder Scrolls games, ranks would be displayed alongside image files in some parts of the UI. This feature is not used in Skyrim.</string>
+            </property>
+            <property name="presetConfiguration">
+             <enum>DKGameFilePicker::Textures</enum>
             </property>
            </widget>
           </item>

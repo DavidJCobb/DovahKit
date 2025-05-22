@@ -53,10 +53,6 @@ FormDialogLight::FormDialogLight(dovah::form_stub& stub, QWidget* parent) : QDia
    QObject::connect(this->ui.timeIsUnlimited, &QCheckBox::toggled, this, [this](bool checked) {
       this->ui.time->setDisabled(checked);
    });
-   this->ui.messageIcon->setStandardConfiguration(DKGameFilePicker::StandardConfiguration::Textures);
-   this->ui.messageIcon->setPathFormat(DKGameFilePicker::PathFormat::OmitPathStem);
-   this->ui.inventoryIcon->setStandardConfiguration(DKGameFilePicker::StandardConfiguration::Textures);
-   this->ui.inventoryIcon->setPathFormat(DKGameFilePicker::PathFormat::OmitPathStem);
    this->ui.weight->setRange(0, std::numeric_limits<float>::max());
    this->ui.value->setRange(0, std::numeric_limits<int32_t>::max());
    this->ui.time->setRange(0, std::numeric_limits<int32_t>::max()); // -1 == infinity

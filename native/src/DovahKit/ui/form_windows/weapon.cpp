@@ -439,8 +439,8 @@ void FormDialogWeapon::_pull_templatable_data_to_ui() {
    #pragma region Art and Sound
       this->ui.model->initializeFrom(working.model);
       this->ui.firstPersonModel->setFormStub(working.first_person_model.get_form_stub());
-      this->ui.iconInventory->setPath(QString::fromStdString(working.item_data.icons.inventory));
-      this->ui.iconMessage->setPath(QString::fromStdString(working.item_data.icons.message));
+      this->ui.iconInventory->setValue(ui::types::game_file_path(QString::fromStdString(working.item_data.icons.inventory)));
+      this->ui.iconMessage->setValue(ui::types::game_file_path(QString::fromStdString(working.item_data.icons.message)));
       this->ui.destructionData->initializeFrom(working.destruction_data);
       this->ui.impactDataSet->setFormStub(working.impact_data_set.get_form_stub());
       this->ui.impactDataSetBlockBash->setFormStub(working.block_bash.impact_data_set.get_form_stub());

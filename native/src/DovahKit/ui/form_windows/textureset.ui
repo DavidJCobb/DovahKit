@@ -90,10 +90,7 @@
           <property name="enabled">
            <bool>false</bool>
           </property>
-          <property name="pathFormat">
-           <enum>DKGameFilePicker::OmitPathStem</enum>
-          </property>
-          <property name="standardConfiguration">
+          <property name="presetConfiguration">
            <enum>DKGameFilePicker::Textures</enum>
           </property>
          </widget>

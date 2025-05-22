@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogClass</class>
  <widget class="QDialog" name="FormDialogClass">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>631</width>
+    <height>547</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Class</string>
   </property>
@@ -678,10 +686,7 @@
        <property name="whatsThis">
         <string>This is unused in Skyrim. In previous Elder Scrolls games, the player chould choose their class, and this image was used in the class selection menu.</string>
        </property>
-       <property name="pathFormat">
-        <enum>DKGameFilePicker::OmitPathStem</enum>
-       </property>
-       <property name="standardConfiguration">
+       <property name="presetConfiguration">
         <enum>DKGameFilePicker::Textures</enum>
        </property>
       </widget>

@@ -290,7 +290,7 @@ void FormDialogCell::_load_impl() {
          this->ui.name->setText(editor.convert_localized_string(this->form->name));
          _load_extra_formID<extra::encounter_zone, extra_data_type::encounter_zone>(this->ui.encounterZone, extra);
          if (auto* data = extra.lookup<extra::water_environment_map>(extra_data_type::water_environment_map)) {
-            this->ui.waterEnvironmentMap->setPath(data->value.c_str());
+            this->ui.waterEnvironmentMap->setValue(data->value.c_str());
          }
          this->ui.ownerFactionRequiredRank->clear();
          if (auto* data = extra.lookup<extra::ownership>(extra_data_type::ownership)) {
@@ -407,7 +407,7 @@ void FormDialogCell::_save_impl() {
          editor.assign_localized_string(this->form->name, this->ui.name->text());
          this->write_extra_form_ref<extra_data_type::encounter_zone>(extra, this->ui.encounterZone->formStub());
          {
-            auto path = this->ui.waterEnvironmentMap->rawPath();
+            auto path = this->ui.waterEnvironmentMap->value().to_string();
             if (path.isEmpty()) {
                extra.remove_by_type(extra_data_type::water_environment_map);
             } else {

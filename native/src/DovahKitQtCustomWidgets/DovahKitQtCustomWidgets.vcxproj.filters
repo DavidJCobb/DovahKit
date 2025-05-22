@@ -336,10 +336,14 @@
     <ClCompile Include="extensions\DKYesNoUnsetWidgetTaskMenuExtension.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\types\game_file_path.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
     <None Include="cpp.hint" />
+    <None Include="EDITING.md" />
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="tools\action_editor\ActionEditorWindow.ui" />
@@ -352,6 +356,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="tools\in_place_text_editor\InPlaceTextEditableWidget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\game_file_path.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

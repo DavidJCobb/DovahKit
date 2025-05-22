@@ -1077,10 +1077,7 @@
        </item>
        <item row="2" column="1">
         <widget class="DKGameFilePicker" name="waterEnvironmentMap">
-         <property name="pathFormat">
-          <enum>DKGameFilePicker::ShowDataDirectory</enum>
-         </property>
-         <property name="standardConfiguration">
+         <property name="presetConfiguration">
           <enum>DKGameFilePicker::Textures</enum>
          </property>
         </widget>
@@ -1132,14 +1129,14 @@
    <header>widgets/DKColorPickerButton.h</header>
   </customwidget>
   <customwidget>
-   <class>DKGameFilePicker</class>
-   <extends>QWidget</extends>
-   <header>widgets/DKGameFilePicker.h</header>
-  </customwidget>
-  <customwidget>
    <class>DKFormPicker</class>
    <extends>QWidget</extends>
    <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKGameFilePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKGameFilePicker.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

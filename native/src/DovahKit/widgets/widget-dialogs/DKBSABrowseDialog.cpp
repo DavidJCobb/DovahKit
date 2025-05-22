@@ -48,7 +48,7 @@ namespace {
    constexpr bool padding_between_icon_columns = true;
 }
 
-/*static*/ DKBSABrowseDialog::PathWarnings DKBSABrowseDialog::checkPath(const QString& path, ValidationOptions options) {
+/*static*/ DKBSABrowseDialog::PathWarnings DKBSABrowseDialog::checkPath(const QString& path, SpecialValidation options) {
    using _  = DKBSABrowseDialog::PathWarning;
    using PW = DKBSABrowseDialog::PathWarnings;
    //
@@ -117,7 +117,7 @@ namespace {
             //
             out |= _::FileExtensionTooLong;
       }
-      if (options & ValidationOption::ArmorAddonModel) {
+      if (options == SpecialValidation::ArmorAddonModel) {
          auto underscore = filename.lastIndexOf('_');
          if (underscore < 0 || underscore != filename.size() - 2) {
             //
@@ -406,10 +406,12 @@ QString DKBSABrowseDialog::directory() const noexcept {
    dialog->setPathStem(pathStem);
    if (extra.backend)
       dialog->setBackend(extra.backend);
-   if (extra.validationOptions)
-      dialog->setValidationOptions(extra.validationOptions);
+   if (extra.specialValidation)
+      dialog->setSpecialValidation(extra.specialValidation);
    if (!initial.isEmpty())
       dialog->setDirectoryAndFile(initial);
+   else if (!pathStem.isEmpty())
+      dialog->setDirectory(pathStem);
    dialog->setWindowModality(Qt::WindowModality::WindowModal);
    dialog->exec();
    auto result = dialog->state._finalResult;
@@ -418,7 +420,7 @@ QString DKBSABrowseDialog::directory() const noexcept {
 }
 
 void DKBSABrowseDialog::acceptWithFile(const QString& path) {
-   auto warnings = checkPath(path, this->state.validationOptions);
+   auto warnings = checkPath(path, this->state.specialValidation);
    if (warnings != 0) {
       using _ = PathWarning;
       //
@@ -705,6 +707,11 @@ void DKBSABrowseDialog::setDirectoryAndFile(const QString& path) {
    //
    QString filename;
    auto i = ip.lastIndexOf('/');
+   {
+      auto h = ip.lastIndexOf('\\');
+      if (h > i)
+         i = h;
+   }
    auto j = ip.lastIndexOf('.');
    if (j > i) {
       if (i > 0) {
@@ -748,8 +755,8 @@ void DKBSABrowseDialog::setPathStem(const QString& stem) {
       this->state.pathStemIndex = QModelIndex();
    }
 }
-void DKBSABrowseDialog::setValidationOptions(ValidationOptions o) {
-   this->state.validationOptions = o;
+void DKBSABrowseDialog::setSpecialValidation(SpecialValidation o) {
+   this->state.specialValidation = o;
 }
 
 void DKBSABrowseDialog::_updateFilenameTextFromSelection() {
