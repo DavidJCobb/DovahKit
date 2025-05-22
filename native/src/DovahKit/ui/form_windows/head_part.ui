@@ -217,7 +217,16 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="DKGameFilePicker" name="tri"/>
+      <widget class="DKGameFilePicker" name="tri">
+       <property name="allowedFileExtensions">
+        <stringlist>
+         <string>.tri</string>
+        </stringlist>
+       </property>
+       <property name="presetConfiguration">
+        <enum>DKGameFilePicker::Meshes</enum>
+       </property>
+      </widget>
      </item>
      <item row="2" column="1">
       <widget class="DKGameFilePicker" name="raceMorph">
@@ -226,21 +235,25 @@
 
 An example of how to use this: in vanilla Skyrim, human and elf races all share the same head models: FemaleHead.nif and MaleHead.nif. Each race has its own HeadPart that shares that same model, using the FemaleHeadRaces.tri file to apply race-specific facial changes such as elves' gaunt cheeks and Dark Elves' brow ridge.</string>
        </property>
-       <property name="pathFormat">
-        <enum>DKGameFilePicker::OmitPathStem</enum>
+       <property name="allowedFileExtensions">
+        <stringlist>
+         <string>.tri</string>
+        </stringlist>
        </property>
-       <property name="pathStem">
-        <string notr="true">meshes</string>
+       <property name="presetConfiguration">
+        <enum>DKGameFilePicker::Meshes</enum>
        </property>
       </widget>
      </item>
      <item row="3" column="1">
       <widget class="DKGameFilePicker" name="charGenMorph">
-       <property name="pathFormat">
-        <enum>DKGameFilePicker::OmitPathStem</enum>
+       <property name="allowedFileExtensions">
+        <stringlist>
+         <string>.tri</string>
+        </stringlist>
        </property>
-       <property name="pathStem">
-        <string notr="true">meshes</string>
+       <property name="presetConfiguration">
+        <enum>DKGameFilePicker::Meshes</enum>
        </property>
       </widget>
      </item>

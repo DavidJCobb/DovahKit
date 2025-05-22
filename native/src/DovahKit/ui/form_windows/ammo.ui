@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogAmmo</class>
  <widget class="QDialog" name="FormDialogAmmo">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>665</width>
+    <height>472</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Ammo</string>
   </property>
@@ -209,7 +217,7 @@
          <property name="whatsThis">
           <string>Unused.</string>
          </property>
-         <property name="standardConfiguration">
+         <property name="presetConfiguration">
           <enum>DKGameFilePicker::Textures</enum>
          </property>
         </widget>
@@ -249,7 +257,7 @@
          <property name="whatsThis">
           <string>Unused.</string>
          </property>
-         <property name="standardConfiguration">
+         <property name="presetConfiguration">
           <enum>DKGameFilePicker::Textures</enum>
          </property>
         </widget>

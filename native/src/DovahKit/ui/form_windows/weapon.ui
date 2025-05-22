@@ -5,7 +5,7 @@
   <property name="windowTitle">
    <string>Weapon</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0">
+  <layout class="QGridLayout" name="gridLayout" rowstretch="0,1,0">
    <item row="2" column="0" colspan="2">
     <layout class="QHBoxLayout" name="buttonsLayout">
      <item>
@@ -925,7 +925,7 @@
              <property name="whatsThis">
               <string>Unused.</string>
              </property>
-             <property name="standardConfiguration">
+             <property name="presetConfiguration">
               <enum>DKGameFilePicker::Textures</enum>
              </property>
             </widget>
@@ -935,7 +935,7 @@
              <property name="whatsThis">
               <string>Unused.</string>
              </property>
-             <property name="standardConfiguration">
+             <property name="presetConfiguration">
               <enum>DKGameFilePicker::Textures</enum>
              </property>
             </widget>
