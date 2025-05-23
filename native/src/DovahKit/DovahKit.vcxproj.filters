@@ -2970,6 +2970,9 @@
     <ClCompile Include="ui\types\game_file_path.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\magic_effect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -7376,6 +7379,24 @@
     <ClInclude Include="ui\types\game_file_path.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\data\magic_effect_archetypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\magic_casting_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\magic_delivery_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\invalid_actor_value_index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\invalid_actor_value_index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\redundant_sound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -8464,6 +8485,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\impact_data.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\magic_effect.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

@@ -35,7 +35,13 @@ namespace dovah::loaded_forms {
                subrecord.read(this->reflections);
                subrecord.read(this->reverb_amp);
                subrecord.read(this->decay_hf_ratio);
-               subrecord.read(this->reflect_delay);
+               {
+                  uint8_t raw;
+                  subrecord.read(raw);
+                  if (raw > 250)
+                     raw = 250;
+                  this->reflect_delay = raw * 1.2F;
+               }
                subrecord.read(this->reverb_delay);
                subrecord.read(this->diffusion);
                subrecord.read(this->density);
@@ -78,7 +84,11 @@ namespace dovah::loaded_forms {
          subrecord.write(this->reflections);
          subrecord.write(this->reverb_amp);
          subrecord.write(this->decay_hf_ratio);
-         subrecord.write(this->reflect_delay);
+         {
+            uint8_t raw;
+            raw = this->reflect_delay / 1.2F;
+            subrecord.write(raw);
+         }
          subrecord.write(this->reverb_delay);
          subrecord.write(this->diffusion);
          subrecord.write(this->density);

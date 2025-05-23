@@ -149,6 +149,7 @@ namespace dovah::loaded_forms {
       copy->effect = this->effect;
       copy->decal.enabled = this->decal.enabled;
       copy->loudness = this->loudness;
+      copy->impact_result = this->impact_result;
 
       copy->hazard.set(*copy, this->hazard);
       copy->decal.texture_sets.primary.set(*copy, this->decal.texture_sets.primary);

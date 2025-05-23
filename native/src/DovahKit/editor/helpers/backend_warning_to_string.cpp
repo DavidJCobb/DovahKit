@@ -689,6 +689,60 @@ namespace editor_helpers {
                   ).arg(subject).arg(casted->morph_type);
                }
             #pragma endregion
+            #pragma region magic_effect
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::magic_effect::invalid_actor_value_index*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString which = QObject::tr("?");
+                  switch (casted->which) {
+                     using enum form_load_warnings::by_type::magic_effect::invalid_actor_value_index::which_type;
+                     case resist:
+                        which = QObject::tr("Resistance");
+                        break;
+                     case assoc_item_1:
+                        which = QObject::tr("Associated Item 1");
+                        break;
+                     case assoc_item_2:
+                        which = QObject::tr("Associated Item 2");
+                        break;
+                  }
+
+                  return QObject::tr(
+                     "Magic Effect %1 specified an invalid actor value index for its %2. The index has been corrected to None.",
+                     disambig
+                  ).arg(subject).arg(which);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::magic_effect::redundant_sound*>(&warning)) {
+                  QString subject    = form_identifiers_to_string(&casted->subject);
+                  QString type       = QObject::tr("?");
+                  QString descriptor = form_identifiers_to_string(casted->descriptor);
+                  switch (casted->type) {
+                     using enum form_load_warnings::by_type::magic_effect::redundant_sound::effect_sound_type;
+                     case draw_sheathe:
+                        type = QObject::tr("Draw/Sheathe", "MagicEffect sound type for form load warnings");
+                        break;
+                     case charge:
+                        type = QObject::tr("Charge", "MagicEffect sound type for form load warnings");
+                        break;
+                     case ready:
+                        type = QObject::tr("Ready", "MagicEffect sound type for form load warnings");
+                        break;
+                     case release:
+                        type = QObject::tr("Release", "MagicEffect sound type for form load warnings");
+                        break;
+                     case concentration_cast_loop:
+                        type = QObject::tr("Cast Loop (Conc.)", "MagicEffect sound type for form load warnings");
+                        break;
+                     case on_hit:
+                        type = QObject::tr("On Hit", "MagicEffect sound type for form load warnings");
+                        break;
+                  }
+
+                  return QObject::tr(
+                     "Magic Effect %1 specifies more than one \"%2\" sound. The game will only use the first loaded sound for each type, so sound %3 will not be used.",
+                     disambig
+                  ).arg(subject).arg(type).arg(descriptor);
+               }
+            #pragma endregion
             #pragma region note
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::note::non_texture_note_includes_texture_path*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);

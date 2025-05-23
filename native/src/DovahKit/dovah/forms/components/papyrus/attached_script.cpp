@@ -14,14 +14,16 @@ namespace dovah::loaded_forms::components::papyrus {
    bool attached_script::load(const attachment_header& header, tes_subrecord_reader& subrecord) {
       subrecord.read_length_prefixed_string<2>(this->name);
       uint16_t count;
-      if (!subrecord.is_in_bounds(sizeof(this->status) + sizeof(count)))
-         return false;
       if (header.version >= 4) {
+         if (!subrecord.is_in_bounds(sizeof(uint8_t) + sizeof(count)))
+            return false;
          uint8_t v;
          subrecord.unchecked_read(v);
          v &= 0b111; // the game only uses 3 bits to retain the value in memory
          this->status = (script_status)v;
       } else {
+         if (!subrecord.is_in_bounds(sizeof(count)))
+            return false;
          this->status = script_status::defined_locally;
       }
       subrecord.unchecked_read(count);

@@ -112,7 +112,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Audio | MUSC | Music Type         | ✅ | ✅ | ⬛ |
 | Audio | REVB | Reverb Parameters  | ✅ | ✅ | ⬛ |
 | Audio | SNCT | Sound Category     | ✅ | ✅ | ⬛ |
-| Audio | SNDR | Sound Descriptor   | ✅ | 🟩 | ⬛ | `DKGameFilePicker` needs fixing |
+| Audio | SNDR | Sound Descriptor   | ✅ | ✅ | ⬛ |
 | Audio | SOUN | Sound Marker       | ✅ | ✅ | ⬛ |
 | Audio | SOPM | Sound Output Model | ✅ | ✅ | ⬛ |
 | Character | ASTP | Association Type | ✅ | ✅ | ⬛ |

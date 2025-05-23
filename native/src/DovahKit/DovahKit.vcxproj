@@ -808,6 +808,7 @@
     <ClCompile Include="ui\form_windows\key.cpp" />
     <ClCompile Include="ui\form_windows\keyword.cpp" />
     <ClCompile Include="ui\form_windows\location_ref_type.cpp" />
+    <ClCompile Include="ui\form_windows\magic_effect.cpp" />
     <ClCompile Include="ui\form_windows\movement_type.cpp" />
     <ClCompile Include="ui\form_windows\music_type.cpp" />
     <ClCompile Include="ui\form_windows\quest\alias_subdialog_helpers.cpp" />
@@ -1155,6 +1156,9 @@
     <ClInclude Include="dovah\data\game\hardcoded_form_ids_ignore_record_id_prefix.h" />
     <ClInclude Include="dovah\data\hardcoded_form_ids.h" />
     <ClInclude Include="dovah\data\headparts.h" />
+    <ClInclude Include="dovah\data\magic_casting_type.h" />
+    <ClInclude Include="dovah\data\magic_delivery_type.h" />
+    <ClInclude Include="dovah\data\magic_effect_archetypes.h" />
     <ClInclude Include="dovah\data\sex.h" />
     <ClInclude Include="dovah\data\skills.h" />
     <ClInclude Include="dovah\data\soul_size.h" />
@@ -1319,6 +1323,8 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\head_part\invalid_morph_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\excess_layers_per_quad.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\invalid_quad_for_land_texture.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\invalid_actor_value_index.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\redundant_sound.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\note\non_texture_note_includes_texture_path.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\alias_papyrus_data_belongs_to_missing_alias.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\alias_papyrus_data_specifies_wrong_quest.h" />
@@ -1352,6 +1358,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\weapon\invalid_skill.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\worldspace\is_own_parent.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\form_reference_type_mismatch.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\invalid_actor_value_index.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\unrecognized_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\_all.h" />
     <ClInclude Include="dovah\notices\form_save_errors\base_list_size_too_large_to_serialize_error.h" />
@@ -1403,6 +1410,7 @@
     <QtMoc Include="ui\form_windows\music_type.h" />
     <QtMoc Include="ui\form_windows\camera_shot.h" />
     <QtMoc Include="ui\form_windows\impact_data.h" />
+    <QtMoc Include="ui\form_windows\magic_effect.h" />
     <ClInclude Include="ui\form_windows\quest\alias_subdialog_helpers.h" />
     <QtMoc Include="ui\form_windows\reverb_parameters.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Action.h" />

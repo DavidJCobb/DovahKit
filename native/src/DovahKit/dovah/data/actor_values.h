@@ -1434,4 +1434,12 @@ namespace dovah {
             return false;
       return true;
    }(), "The actor value info list must be contiguous.");
+
+   constexpr const actor_value_info& actor_value_info_by_name(const std::string_view name) noexcept {
+      for (const auto& item : all_actor_value_info)
+         if (name == item.name)
+            return item;
+      #pragma warning(suppress:4297, justification:"Using throw in a constexpr noexcept function is the closest we can get to constexpr assertions.")
+      throw;
+   }
 }

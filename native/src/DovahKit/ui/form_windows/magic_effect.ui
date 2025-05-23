@@ -5,248 +5,144 @@
   <property name="windowTitle">
    <string>Magic Effect</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_6">
-   <item row="2" column="0">
-    <layout class="QGridLayout" name="metricsLayout">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_13">
-       <property name="text">
-        <string>Taper Duration:</string>
-       </property>
-       <property name="buddy">
-        <cstring>taperDuration</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QDoubleSpinBox" name="taperWeight">
-       <property name="whatsThis">
-        <string>A multiplier applied to the effect's strength at the beginning of its taper duration. For example, a value of 0.5 will make the effect's strength drop by half the instant its duration elapses.</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_15">
-       <property name="text">
-        <string>Taper Curve</string>
-       </property>
-       <property name="buddy">
-        <cstring>taperCurve</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="2">
-      <widget class="QLabel" name="label_16">
-       <property name="text">
-        <string>Base Cost:</string>
-       </property>
-       <property name="buddy">
-        <cstring>baseCost</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QDoubleSpinBox" name="taperDuration">
-       <property name="whatsThis">
-        <string>The length of time, in seconds, for which the effect continues to affect the target after its duration has elapsed. This can be used in combination with the other &quot;Taper&quot; settings to have the effect wear off gradually rather than instantly.</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_14">
-       <property name="text">
-        <string>Taper Weight:</string>
-       </property>
-       <property name="buddy">
-        <cstring>taperWeight</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="2">
-      <widget class="QLabel" name="label_17">
-       <property name="text">
-        <string>Skill Usage Mult:</string>
-       </property>
-       <property name="buddy">
-        <cstring>skillUsageMult</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QDoubleSpinBox" name="taperCurve">
-       <property name="whatsThis">
-        <string>&lt;p&gt;This controls how quickly the effect magnitude decreases during the taper duration. (Negative values cause the effect magnitude to increase.)&lt;/p&gt;
-&lt;p&gt;This is applied as an exponent. Let &lt;var&gt;M&lt;/var&gt; be the base magnitude, &lt;var&gt;W&lt;/var&gt; the Taper Weight, &lt;var&gt;D&lt;/var&gt; the Taper Duration, and &lt;var&gt;C&lt;/var&gt; the Taper Curve. At some time &lt;var&gt;t&lt;/var&gt;, the effect's magnitude is &lt;var&gt;M&lt;/var&gt;&lt;var&gt;W&lt;/var&gt; × (1 - (&lt;var&gt;t&lt;/var&gt; ÷ &lt;var&gt;D&lt;/var&gt;))&lt;sup&gt;&lt;var&gt;C&lt;/var&gt;&lt;/sup&gt;, and for damage spells, the total damage done during the taper duration is &lt;var&gt;M&lt;/var&gt;&lt;var&gt;W&lt;/var&gt;&lt;var&gt;D&lt;/var&gt; ÷ (&lt;var&gt;C&lt;/var&gt; + 1).&lt;/p&gt;</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="3">
-      <widget class="QDoubleSpinBox" name="baseCost">
-       <property name="whatsThis">
-        <string>&lt;p&gt;The effect's base cost (to the caster's magicka, or to the enchanted item's charge). This is used as an input to a formula that calculates the final cost based on the caster's skill level, perks, and any other applicable factors.&lt;/p&gt;
-&lt;p&gt;Note that changing this value may not necessarily affect a spell's magicka cost, if the spell auto-calculates that cost. This is because spells recompute their cost at load time; if a mod changes the base cost of a spell's effects, without changing the spell itself, then nothing will force the spell to re-check the base costs and recalculate the overall magicka cost.&lt;/p&gt;</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="3">
-      <widget class="QDoubleSpinBox" name="skillUsageMult">
-       <property name="whatsThis">
-        <string>A multiplier applied to the skill experience that the player gains when casting this effect.</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
+  <layout class="QGridLayout" name="gridLayout_6" rowstretch="0,1,0" columnstretch="1,1,1">
    <item row="0" column="0" rowspan="2">
-    <layout class="QGridLayout" name="gridLayout">
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Name:</string>
-       </property>
-       <property name="buddy">
-        <cstring>name</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Editor ID:</string>
-       </property>
-       <property name="buddy">
-        <cstring>editorID</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Casting Type:</string>
-       </property>
-       <property name="buddy">
-        <cstring>castingType</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="10" column="0">
-      <widget class="QLabel" name="label_11">
-       <property name="text">
-        <string>Resist Value:</string>
-       </property>
-       <property name="buddy">
-        <cstring>resistAV</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="label_7">
-       <property name="text">
-        <string>Minimum Skill Level:</string>
-       </property>
-       <property name="buddy">
-        <cstring>minSkill</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="9" column="0">
-      <widget class="QLabel" name="label_10">
-       <property name="text">
-        <string>Second AV Weight:</string>
-       </property>
-       <property name="buddy">
-        <cstring>doubleSpinBox</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="0">
-      <widget class="QLabel" name="label_6">
-       <property name="text">
-        <string>Magic Skill:</string>
-       </property>
-       <property name="buddy">
-        <cstring>skill</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="0">
-      <widget class="QLabel" name="label_8">
-       <property name="text">
-        <string>Associated Item 1:</string>
-       </property>
-       <property name="buddy">
-        <cstring>assocItem1</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="11" column="0">
-      <widget class="QLabel" name="label_12">
-       <property name="text">
-        <string>Perk to Apply:</string>
-       </property>
-       <property name="buddy">
-        <cstring>perkToApply</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>Delivery:</string>
-       </property>
-       <property name="buddy">
-        <cstring>delivery</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="0">
-      <widget class="QLabel" name="label_9">
-       <property name="text">
-        <string>Associated Item 2:</string>
-       </property>
-       <property name="buddy">
-        <cstring>assocItem2</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Archetype:</string>
-       </property>
-       <property name="buddy">
-        <cstring>archetype</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="editorID"/>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="name"/>
-     </item>
-     <item row="2" column="1">
-      <widget class="QComboBox" name="archetype"/>
-     </item>
-     <item row="3" column="1">
-      <widget class="QComboBox" name="castingType">
-       <property name="whatsThis">
-        <string>&lt;p&gt;The casting type controls how the caster triggers the effect. All of the effects on a Spell or Enchantment must have the same casting type.&lt;/p&gt;
+    <layout class="QVBoxLayout" name="leftCol">
+     <item>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Name:</string>
+         </property>
+         <property name="buddy">
+          <cstring>name</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Editor ID:</string>
+         </property>
+         <property name="buddy">
+          <cstring>editorID</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Casting Type:</string>
+         </property>
+         <property name="buddy">
+          <cstring>castingType</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="0">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Resist Value:</string>
+         </property>
+         <property name="buddy">
+          <cstring>resistAV</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Minimum Skill Level:</string>
+         </property>
+         <property name="buddy">
+          <cstring>minSkill</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="0">
+        <widget class="QLabel" name="label_10">
+         <property name="text">
+          <string>Second AV Weight:</string>
+         </property>
+         <property name="buddy">
+          <cstring>secondAVWeight</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Magic Skill:</string>
+         </property>
+         <property name="buddy">
+          <cstring>skill</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Associated Item 1:</string>
+         </property>
+         <property name="buddy">
+          <cstring>assocItem1</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="11" column="0">
+        <widget class="QLabel" name="label_12">
+         <property name="text">
+          <string>Perk to Apply:</string>
+         </property>
+         <property name="buddy">
+          <cstring>perkToApply</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Delivery:</string>
+         </property>
+         <property name="buddy">
+          <cstring>delivery</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>Associated Item 2:</string>
+         </property>
+         <property name="buddy">
+          <cstring>assocItem2</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Archetype:</string>
+         </property>
+         <property name="buddy">
+          <cstring>archetype</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="editorID"/>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="name"/>
+       </item>
+       <item row="2" column="1">
+        <widget class="QComboBox" name="archetype"/>
+       </item>
+       <item row="3" column="1">
+        <widget class="QComboBox" name="castingType">
+         <property name="whatsThis">
+          <string>&lt;p&gt;The casting type controls how the caster triggers the effect. All of the effects on a Spell or Enchantment must have the same casting type.&lt;/p&gt;
 &lt;dl&gt;
    &lt;dt&gt;Concentration&lt;/dt&gt;
       &lt;dd&gt;&lt;p&gt;The effect is cast continuously (i.e. for as long as the player holds the &quot;cast&quot; button), draining magicka while active.&lt;/p&gt;&lt;/dd&gt;
@@ -255,13 +151,13 @@
    &lt;dt&gt;Constant Effect&lt;/dt&gt;
       &lt;dd&gt;&lt;p&gt;The effect behaves like an ability and is always active. This only works for effects that are attached to Armor Enchantments or Ability Spells.&lt;/p&gt;&lt;/dd&gt;
 &lt;/dl&gt;</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="1">
-      <widget class="QComboBox" name="delivery">
-       <property name="whatsThis">
-        <string>&lt;p&gt;The delivery type controls how the effect is delivered to the target. All effects attached to a Spell or Enchantment must have the same delivery type.&lt;/p&gt;
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QComboBox" name="delivery">
+         <property name="whatsThis">
+          <string>&lt;p&gt;The delivery type controls how the effect is delivered to the target. All effects attached to a Spell or Enchantment must have the same delivery type.&lt;/p&gt;
 &lt;dl&gt;
    &lt;dt&gt;Self&lt;/dt&gt;
       &lt;dd&gt;&lt;p&gt;The effect is applied to the caster.&lt;/p&gt;&lt;/dd&gt;
@@ -274,238 +170,334 @@
    &lt;dt&gt;Target Location&lt;/dt&gt;
       &lt;dd&gt;&lt;p&gt;The effect is applied to to the object or landscape that the caster is aiming at, without any projectile being fired. (You could think of this as being &quot;hitscan.&quot;)&lt;/p&gt;&lt;/dd&gt;
 &lt;/dl&gt;</string>
-       </property>
-      </widget>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="1">
+        <widget class="DKFormPicker" name="assocItem1">
+         <property name="whatsThis">
+          <string>One of the parameters associated with the effect and its archetype.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="1">
+        <widget class="DKFormPicker" name="assocItem2">
+         <property name="whatsThis">
+          <string>One of the parameters associated with the effect and its archetype.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="1" alignment="Qt::AlignLeft">
+        <widget class="QDoubleSpinBox" name="secondAVWeight">
+         <property name="whatsThis">
+          <string>A multiplier applied to the effect's magnitude, influencing how the effect affects Associated Item 2. This is used with the Dual Value Multiplier archetype.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="decimals">
+          <number>4</number>
+         </property>
+        </widget>
+       </item>
+       <item row="11" column="1">
+        <widget class="DKFormPicker" name="perkToApply">
+         <property name="whatsThis">
+          <string>When this effect is applied to the player, a Perk can be temporarily added to the player, to be removed when the effect ceases to apply. This does not work on NPCs, as NPCs cannot have perks added or removed dynamically during play.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1" alignment="Qt::AlignLeft">
+        <widget class="QSpinBox" name="minSkill">
+         <property name="whatsThis">
+          <string>NPCs can only use spells which contain this effect if their skill level (for the effect's magic skill) is greater than or equal to this value. This value also influences the level displayed for the effect in the Magic menu (e.g. a skill level of 25 displays as an &quot;Apprentice&quot;-level effect, but doesn't prevent lower-level players from using the effect anyway).</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="maximum">
+          <number>100</number>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QComboBox" name="skill">
+         <property name="whatsThis">
+          <string>The skill associated with the effect. The caster's skill level can influence the power, duration, or cost of the effect, and the player will gain experience in that skill when successfully casting this effect.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="1">
+        <widget class="QComboBox" name="resistAV">
+         <property name="whatsThis">
+          <string>An Actor Value: the type of resistance (e.g. damage resistance, fire resistance, poison resistance) that applies to this effect. This is only used if this effect is flagged as Hostile.</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
-     <item row="7" column="1">
-      <widget class="DKFormPicker" name="assocItem1">
-       <property name="whatsThis">
-        <string>One of the parameters associated with the effect and its archetype.</string>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="1">
-      <widget class="DKFormPicker" name="assocItem2">
-       <property name="whatsThis">
-        <string>One of the parameters associated with the effect and its archetype.</string>
-       </property>
-      </widget>
-     </item>
-     <item row="9" column="1" alignment="Qt::AlignLeft">
-      <widget class="QDoubleSpinBox" name="doubleSpinBox">
-       <property name="whatsThis">
-        <string>A multiplier applied to the effect's magnitude, influencing how the effect affects Associated Item 2. This is used with the Dual Value Multiplier archetype.</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="10" column="1">
-      <widget class="DKFormPicker" name="resistAV">
-       <property name="whatsThis">
-        <string>An Actor Value: the type of resistance (e.g. damage resistance, fire resistance, poison resistance) that applies to this effect. This is only used if this effect is flagged as Hostile.</string>
-       </property>
-      </widget>
-     </item>
-     <item row="11" column="1">
-      <widget class="DKFormPicker" name="perkToApply">
-       <property name="whatsThis">
-        <string>When this effect is applied to the player, a Perk can be temporarily added to the player, to be removed when the effect ceases to apply. This does not work on NPCs, as NPCs cannot have perks added or removed dynamically during play.</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="1">
-      <widget class="DKFormPicker" name="skill">
-       <property name="whatsThis">
-        <string>The skill associated with the effect. The caster's skill level can influence the power, duration, or cost of the effect, and the player will gain experience in that skill when successfully casting this effect.</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="1" alignment="Qt::AlignLeft">
-      <widget class="QSpinBox" name="minSkill">
-       <property name="whatsThis">
-        <string>NPCs can only use spells which contain this effect if their skill level (for the effect's magic skill) is greater than or equal to this value. This value also influences the level displayed for the effect in the Magic menu (e.g. a skill level of 25 displays as an &quot;Apprentice&quot;-level effect, but doesn't prevent lower-level players from using the effect anyway).</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-       <property name="maximum">
-        <number>100</number>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="4" column="0">
-    <widget class="QGroupBox" name="groupBox_2">
-     <property name="title">
-      <string>Keywords</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QCheckBox" name="dispelOthersWithKeyword">
-        <property name="whatsThis">
-         <string>If this is checked, then when this Magic Effect applies to a target, any Spells that are currently active on the target will be dispelled if any of their own effects have any of these keywords.</string>
-        </property>
-        <property name="text">
-         <string>Dispel other effects with these keywords</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="DKFormListPane" name="keywords">
-        <property name="showFormTypes">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QGroupBox" name="groupBox_4">
-        <property name="title">
-         <string>Counter Effects</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_12">
-         <item row="0" column="0">
-          <widget class="DKFormListPane" name="counterEffects">
-           <property name="whatsThis">
-            <string>Unused.</string>
-           </property>
-           <property name="showFormTypes">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="1" column="2" rowspan="4">
-    <layout class="QVBoxLayout" name="verticalLayout_3">
      <item>
-      <widget class="QGroupBox" name="groupBox_8">
+      <layout class="QGridLayout" name="metricsLayout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_13">
+         <property name="text">
+          <string>Taper Duration:</string>
+         </property>
+         <property name="buddy">
+          <cstring>taperDuration</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QDoubleSpinBox" name="taperWeight">
+         <property name="whatsThis">
+          <string>A multiplier applied to the effect's strength at the beginning of its taper duration. For example, a value of 0.5 will make the effect's strength drop by half the instant its duration elapses.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_15">
+         <property name="text">
+          <string>Taper Curve</string>
+         </property>
+         <property name="buddy">
+          <cstring>taperCurve</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QLabel" name="label_16">
+         <property name="text">
+          <string>Base Cost:</string>
+         </property>
+         <property name="buddy">
+          <cstring>baseCost</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QDoubleSpinBox" name="taperDuration">
+         <property name="whatsThis">
+          <string>The length of time, in seconds, for which the effect continues to affect the target after its duration has elapsed. This can be used in combination with the other &quot;Taper&quot; settings to have the effect wear off gradually rather than instantly.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>Taper Weight:</string>
+         </property>
+         <property name="buddy">
+          <cstring>taperWeight</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QLabel" name="label_17">
+         <property name="text">
+          <string>Skill Usage Mult:</string>
+         </property>
+         <property name="buddy">
+          <cstring>skillUsageMult</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QDoubleSpinBox" name="taperCurve">
+         <property name="whatsThis">
+          <string>&lt;p&gt;This controls how quickly the effect magnitude decreases during the taper duration. (Negative values cause the effect magnitude to increase.)&lt;/p&gt;
+&lt;p&gt;This is applied as an exponent. Let &lt;var&gt;M&lt;/var&gt; be the base magnitude, &lt;var&gt;W&lt;/var&gt; the Taper Weight, &lt;var&gt;D&lt;/var&gt; the Taper Duration, and &lt;var&gt;C&lt;/var&gt; the Taper Curve. At some time &lt;var&gt;t&lt;/var&gt;, the effect's magnitude is &lt;var&gt;M&lt;/var&gt;&lt;var&gt;W&lt;/var&gt; × (1 - (&lt;var&gt;t&lt;/var&gt; ÷ &lt;var&gt;D&lt;/var&gt;))&lt;sup&gt;&lt;var&gt;C&lt;/var&gt;&lt;/sup&gt;, and for damage spells, the total damage done during the taper duration is &lt;var&gt;M&lt;/var&gt;&lt;var&gt;W&lt;/var&gt;&lt;var&gt;D&lt;/var&gt; ÷ (&lt;var&gt;C&lt;/var&gt; + 1).&lt;/p&gt;</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QDoubleSpinBox" name="baseCost">
+         <property name="whatsThis">
+          <string>&lt;p&gt;The effect's base cost (to the caster's magicka, or to the enchanted item's charge). This is used as an input to a formula that calculates the final cost based on the caster's skill level, perks, and any other applicable factors.&lt;/p&gt;
+&lt;p&gt;Note that changing this value may not necessarily affect a spell's magicka cost, if the spell auto-calculates that cost. This is because spells recompute their cost at load time; if a mod changes the base cost of a spell's effects, without changing the spell itself, then nothing will force the spell to re-check the base costs and recalculate the overall magicka cost.&lt;/p&gt;</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QDoubleSpinBox" name="skillUsageMult">
+         <property name="whatsThis">
+          <string>A multiplier applied to the skill experience that the player gains when casting this effect.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox">
        <property name="title">
-        <string>Sounds</string>
+        <string>Flags</string>
        </property>
-       <layout class="QGridLayout" name="gridLayout_11">
-        <item row="3" column="0">
-         <widget class="QLabel" name="label_41">
-          <property name="text">
-           <string>Release:</string>
-          </property>
-          <property name="buddy">
-           <cstring>soundRelease</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_40">
-          <property name="text">
-           <string>Ready:</string>
-          </property>
-          <property name="buddy">
-           <cstring>soundReady</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_39">
-          <property name="text">
-           <string>Charge:</string>
-          </property>
-          <property name="buddy">
-           <cstring>soundCharge</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="DKFormPicker" name="soundDrawSheathe">
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="3" column="1">
+         <widget class="QCheckBox" name="flagNoDuration">
           <property name="whatsThis">
-           <string>The sound that plays when the player draws or sheathes their weapons with this spell in either hand.</string>
+           <string>If checked, this effect applies instantaneously, and its duration can't be configured when attaching it to spells, potions, and so on.</string>
           </property>
-         </widget>
-        </item>
-        <item row="5" column="0">
-         <widget class="QLabel" name="label_43">
           <property name="text">
-           <string>On Hit:</string>
-          </property>
-          <property name="buddy">
-           <cstring>soundOnHit</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_38">
-          <property name="text">
-           <string>Draw/Sheathe:</string>
-          </property>
-          <property name="buddy">
-           <cstring>soundDrawSheathe</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <widget class="QLabel" name="label_42">
-          <property name="text">
-           <string>Cast Loop (Conc.):</string>
-          </property>
-          <property name="buddy">
-           <cstring>soundCastLoop</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="0">
-         <widget class="QLabel" name="label_44">
-          <property name="text">
-           <string>Detection Sound Level:</string>
-          </property>
-          <property name="buddy">
-           <cstring>detectionSoundLevel</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="DKFormPicker" name="soundCharge">
-          <property name="whatsThis">
-           <string>For Fire and Forget spells, this sound plays when the player first presses the cast button down.</string>
+           <string>No Duration</string>
           </property>
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="DKFormPicker" name="soundReady">
+         <widget class="QCheckBox" name="flagNoDeathDispel">
           <property name="whatsThis">
-           <string>For Fire and Forget spells, this sound plays when the spell reaches its &quot;ready&quot; state, such that releasing the button will cast the spell.</string>
+           <string>By default, magic effects are dispelled when their target dies. This option allows you to make the effect persist on the target even after death.</string>
+          </property>
+          <property name="text">
+           <string>No Death Dispel</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
-         <widget class="DKFormPicker" name="soundRelease">
+        <item row="0" column="0">
+         <widget class="QCheckBox" name="flagHostile">
           <property name="whatsThis">
-           <string>For Fire and Forget spells, this sound plays when the player releases the cast button and casts the spell (provided the spell is ready).</string>
+           <string>This effect is treated as an attack, and is subject to being resisted by the target's Resist Value.</string>
+          </property>
+          <property name="text">
+           <string>Hostile</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QCheckBox" name="flagDetrimental">
+          <property name="whatsThis">
+           <string>&lt;p&gt;If checked, this effect will damage the Actor Value that it targets. If unchecked, this effect will buff the Actor Value.&lt;/p&gt;
+&lt;p&gt;The word &quot;damage&quot; here means &quot;worsen,&quot; not &quot;reduce.&quot; A small number of Actor Values, such as MovementNoiseMult, are inverted such that &quot;damaging&quot; them &lt;em&gt;increases&lt;/em&gt; their value (i.e. you make more noise) and &quot;buffing&quot; them &lt;em&gt;decreases&lt;/em&gt; their value (i.e. you make less noise).&lt;/p&gt;</string>
+          </property>
+          <property name="text">
+           <string>Detrimental</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QCheckBox" name="flagSnapToNavmesh">
+          <property name="whatsThis">
+           <string>If checked, the Aimed or Target Location point will be snapped to the nearest point on the Navmesh. This is primarily useful for summoned creatures, to ensure that they spawn somewhere they can actually move around in.</string>
+          </property>
+          <property name="text">
+           <string>Snap to Navmesh</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QCheckBox" name="flagNoRecast">
+          <property name="whatsThis">
+           <string>If checked, this effect can't be applied to a target if it's already active on that target; the effect must wear off or be dispelled before it can be applied to that target again.</string>
+          </property>
+          <property name="text">
+           <string>No Recast</string>
           </property>
          </widget>
         </item>
         <item row="4" column="1">
-         <widget class="DKFormPicker" name="soundCastLoop">
+         <widget class="QCheckBox" name="flagNoHitEvent">
           <property name="whatsThis">
-           <string>For Concentration spells, this sound loops while the effect is being cast.</string>
+           <string>If checked, this effect is stealthy: the target doesn't register a hit event when struck.</string>
+          </property>
+          <property name="text">
+           <string>No Hit Event</string>
           </property>
          </widget>
         </item>
-        <item row="5" column="1">
-         <widget class="DKFormPicker" name="soundOnHit">
+        <item row="2" column="0">
+         <widget class="QCheckBox" name="flagRecover">
           <property name="whatsThis">
-           <string>The sound that plays when this effect is applied to its target.</string>
+           <string>&lt;p&gt;If this is checked, then the effect acts as a buff or debuff: the target Actor Value's current and maximum values will be altered once when the effect begins, and those alterations will be undone when the effect expires.&lt;/p&gt;
+&lt;p&gt;If this is unchecekd, then the effect acts as damage or restoration over time: the target Actor Value's current value will be altered once per second until the effect expires, and the alterations will not be undone when the effect expires.&lt;/p&gt;</string>
+          </property>
+          <property name="text">
+           <string>Recover</string>
           </property>
          </widget>
         </item>
-        <item row="6" column="1">
-         <widget class="QComboBox" name="detectionSoundLevel">
+        <item row="1" column="1">
+         <widget class="QCheckBox" name="flagNoHitEffect">
           <property name="whatsThis">
-           <string>The effect's loudness as perceived by NPC AI (with respect to stealth and detection).</string>
+           <string>Disable visual effects that would otherwise play on the target of this effect.</string>
+          </property>
+          <property name="text">
+           <string>No Hit Effect</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QCheckBox" name="flagFXPersist">
+          <property name="whatsThis">
+           <string>If checked, the visual effects applied to the target persist for the duration of the effect. If unchecked, they play only once, when the effect is first applied.</string>
+          </property>
+          <property name="text">
+           <string>FX Persist</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QCheckBox" name="flagNoMagnitude">
+          <property name="whatsThis">
+           <string>If checked, this effect will not have a configurable magnitude, when attaching it to spells, potions, and so on.</string>
+          </property>
+          <property name="text">
+           <string>No Magnitude</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QCheckBox" name="flagNoArea">
+          <property name="whatsThis">
+           <string>If checked, this effect will not have a configurable area (radius), when attaching it to spells, potions, and so on.</string>
+          </property>
+          <property name="text">
+           <string>No Area</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QCheckBox" name="flagPainless">
+          <property name="whatsThis">
+           <string>If checked, the target of this effect won't cry out in pain even if the effect is hostile. If the target is the player, this checkbox also prevents the screen blur effect that appears when taking damage.</string>
+          </property>
+          <property name="text">
+           <string>Painless</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QCheckBox" name="flagGory">
+          <property name="whatsThis">
+           <string>Unused.</string>
+          </property>
+          <property name="text">
+           <string>Gory Visuals</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2">
+         <widget class="QCheckBox" name="flagHideInUI">
+          <property name="whatsThis">
+           <string>&lt;p&gt;If checked, this effect is not displayed to the player in the Active Effects menu, and its description will be omitted from spells' auto-generated descriptions.&lt;/p&gt;
+&lt;p&gt;If all Magic Effects attached to an Enchantment have this flag checked, then the enchanted equipment will appear unenchanted and, in the case of weapons, not display a charge bar on-screen. This is purely visual, however; the enchantment will still function as intended.&lt;/p&gt;</string>
+          </property>
+          <property name="text">
+           <string>Hide in UI</string>
           </property>
          </widget>
         </item>
@@ -513,37 +505,55 @@
       </widget>
      </item>
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
-       <item>
-        <widget class="QLabel" name="label_20">
-         <property name="text">
-          <string>Description:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPlainTextEdit" name="description">
-         <property name="whatsThis">
-          <string>&lt;p&gt;A description of this magic effect. This description will appear in the Active Effects menu, when the player is affected by this magic effect, and in the description of any Spell, Enchantment, Potion, or Scroll that has this effect and lacks a description of its own.&lt;/p&gt;
-&lt;p&gt;This text field supports text replacement tags similar to those found in quest text. The text that gets substituted in will be displayed in bold. The available substitutions are:&lt;/p&gt;
-&lt;dl&gt;
-   &lt;dt&gt;&lt;code&gt;&amp;lt;mag&amp;gt;&lt;/code&gt;&lt;/dt&gt;
-      &lt;dd&gt;The effect's magnitude. If the effect is flagged as having no magnitude, then nothing is displayed.&lt;/dd&gt;
-   &lt;dt&gt;&lt;code&gt;&amp;lt;dur&amp;gt;&lt;/code&gt;&lt;/dt&gt;
-      &lt;dd&gt;The effect's duration in seconds. If the effect is flagged as having no duration, then nothing is displayed.&lt;/dd&gt;
-   &lt;dt&gt;&lt;code&gt;&amp;lt;area&amp;gt;&lt;/code&gt;&lt;/dt&gt;
-      &lt;dd&gt;The effect's area (radius). If the effect is flagged as having no area, then nothing is displayed.&lt;/dd&gt;
-   &lt;dt&gt;&lt;code&gt;&amp;lt;global=EditorID&amp;gt;&lt;/code&gt;&lt;/dt&gt;
-      &lt;dd&gt;The current value of the Global with the given &lt;code&gt;EditorID&lt;/code&gt;. If no such global exists, then nothing is displayed. (Writing &lt;code&gt;&amp;lt;global&amp;gt;&lt;/code&gt; has the same effect as failing to specify a valid global: nothing is displayed.)&lt;/dd&gt;
-&lt;/dl&gt;
-&lt;p&gt;It's possible to abuse text replacement to make arbitrary text bold: any text between angle brackets will be made bold, &lt;em&gt;but&lt;/em&gt; if that text contains &lt;code&gt;=&lt;/code&gt; or &lt;code&gt;.&lt;/code&gt;, it will be cut off at the first such symbol. This is because text replacement uses the same syntax as in quests: &lt;code&gt;&amp;lt;Tag.Subtag=Parameter&amp;gt;&lt;/code&gt;: unrecognized tags are printed verbatim and in bold, but their subtags and parameters are discarded.&lt;/p&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="DKPapyrusBoundScriptListPane" name="scriptListPane"/>
-       </item>
-      </layout>
+      <widget class="QGroupBox" name="groupBox_2">
+       <property name="title">
+        <string>Keywords</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QCheckBox" name="dispelOthersWithKeyword">
+          <property name="whatsThis">
+           <string>If this is checked, then when this Magic Effect applies to a target, any Spells that are currently active on the target will be dispelled if any of their own effects have any of these keywords.</string>
+          </property>
+          <property name="text">
+           <string>Dispel other effects with these keywords</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="DKFormListPane" name="keywords">
+          <property name="showFormTypes">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupBox_4">
+       <property name="title">
+        <string>Counter Effects</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_12">
+        <item row="0" column="0">
+         <widget class="DKFormListPane" name="counterEffects">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>120</height>
+           </size>
+          </property>
+          <property name="whatsThis">
+           <string>Unused.</string>
+          </property>
+          <property name="showFormTypes">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </item>
     </layout>
    </item>
@@ -564,170 +574,8 @@
      </layout>
     </widget>
    </item>
-   <item row="3" column="0">
-    <widget class="QGroupBox" name="groupBox">
-     <property name="title">
-      <string>Flags</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_2">
-      <item row="3" column="1">
-       <widget class="QCheckBox" name="flagNoDuration">
-        <property name="whatsThis">
-         <string>If checked, this effect applies instantaneously, and its duration can't be configured when attaching it to spells, potions, and so on.</string>
-        </property>
-        <property name="text">
-         <string>No Duration</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QCheckBox" name="flagNoDeathDispel">
-        <property name="whatsThis">
-         <string>By default, magic effects are dispelled when their target dies. This option allows you to make the effect persist on the target even after death.</string>
-        </property>
-        <property name="text">
-         <string>No Death Dispel</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QCheckBox" name="flagHostile">
-        <property name="whatsThis">
-         <string>This effect is treated as an attack, and is subject to being resisted by the target's Resist Value.</string>
-        </property>
-        <property name="text">
-         <string>Hostile</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="flagDetrimental">
-        <property name="whatsThis">
-         <string>&lt;p&gt;If checked, this effect will damage the Actor Value that it targets. If unchecked, this effect will buff the Actor Value.&lt;/p&gt;
-&lt;p&gt;The word &quot;damage&quot; here means &quot;worsen,&quot; not &quot;reduce.&quot; A small number of Actor Values, such as MovementNoiseMult, are inverted such that &quot;damaging&quot; them &lt;em&gt;increases&lt;/em&gt; their value (i.e. you make more noise) and &quot;buffing&quot; them &lt;em&gt;decreases&lt;/em&gt; their value (i.e. you make less noise).&lt;/p&gt;</string>
-        </property>
-        <property name="text">
-         <string>Detrimental</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QCheckBox" name="flagSnapToNavmesh">
-        <property name="whatsThis">
-         <string>If checked, the Aimed or Target Location point will be snapped to the nearest point on the Navmesh. This is primarily useful for summoned creatures, to ensure that they spawn somewhere they can actually move around in.</string>
-        </property>
-        <property name="text">
-         <string>Snap to Navmesh</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QCheckBox" name="flagNoRecast">
-        <property name="whatsThis">
-         <string>If checked, this effect can't be applied to a target if it's already active on that target; the effect must wear off or be dispelled before it can be applied to that target again.</string>
-        </property>
-        <property name="text">
-         <string>No Recast</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QCheckBox" name="flagNoHitEvent">
-        <property name="whatsThis">
-         <string>If checked, this effect is stealthy: the target doesn't register a hit event when struck.</string>
-        </property>
-        <property name="text">
-         <string>No Hit Event</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QCheckBox" name="flagRecover">
-        <property name="whatsThis">
-         <string>&lt;p&gt;If this is checked, then the effect acts as a buff or debuff: the target Actor Value's current and maximum values will be altered once when the effect begins, and those alterations will be undone when the effect expires.&lt;/p&gt;
-&lt;p&gt;If this is unchecekd, then the effect acts as damage or restoration over time: the target Actor Value's current value will be altered once per second until the effect expires, and the alterations will not be undone when the effect expires.&lt;/p&gt;</string>
-        </property>
-        <property name="text">
-         <string>Recover</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QCheckBox" name="flagNoHitEffect">
-        <property name="whatsThis">
-         <string>Disable visual effects that would otherwise play on the target of this effect.</string>
-        </property>
-        <property name="text">
-         <string>No Hit Effect</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QCheckBox" name="flagFXPersist">
-        <property name="whatsThis">
-         <string>If checked, the visual effects applied to the target persist for the duration of the effect. If unchecked, they play only once, when the effect is first applied.</string>
-        </property>
-        <property name="text">
-         <string>FX Persist</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QCheckBox" name="flagNoMagnitude">
-        <property name="whatsThis">
-         <string>If checked, this effect will not have a configurable magnitude, when attaching it to spells, potions, and so on.</string>
-        </property>
-        <property name="text">
-         <string>No Magnitude</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QCheckBox" name="flagNoArea">
-        <property name="whatsThis">
-         <string>If checked, this effect will not have a configurable area (radius), when attaching it to spells, potions, and so on.</string>
-        </property>
-        <property name="text">
-         <string>No Area</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="QCheckBox" name="flagPainless">
-        <property name="whatsThis">
-         <string>If checked, the target of this effect won't cry out in pain even if the effect is hostile. If the target is the player, this checkbox also prevents the screen blur effect that appears when taking damage.</string>
-        </property>
-        <property name="text">
-         <string>Painless</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="2">
-       <widget class="QCheckBox" name="flagGory">
-        <property name="whatsThis">
-         <string>Unused.</string>
-        </property>
-        <property name="text">
-         <string>Gory Visuals</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <widget class="QCheckBox" name="flagHideInUI">
-        <property name="whatsThis">
-         <string>&lt;p&gt;If checked, this effect is not displayed to the player in the Active Effects menu, and its description will be omitted from spells' auto-generated descriptions.&lt;/p&gt;
-&lt;p&gt;If all Magic Effects attached to an Enchantment have this flag checked, then the enchanted equipment will appear unenchanted and, in the case of weapons, not display a charge bar on-screen. This is purely visual, however; the enchantment will still function as intended.&lt;/p&gt;</string>
-        </property>
-        <property name="text">
-         <string>Hide in UI</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="1" column="1" rowspan="4">
-    <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item row="1" column="1">
+    <layout class="QVBoxLayout" name="midCol">
      <item>
       <layout class="QGridLayout" name="gridLayout_4">
        <item row="0" column="0">
@@ -1001,16 +849,6 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="1">
-         <widget class="QDoubleSpinBox" name="spellmakingArea">
-          <property name="whatsThis">
-           <string>The effect's radius. Unusually, this is measured in feet, not world units. One foot is 21⅓ world units.</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="3">
          <widget class="QDoubleSpinBox" name="spellmakingCastingTime">
           <property name="whatsThis">
@@ -1045,6 +883,19 @@
            </widget>
           </item>
          </layout>
+        </item>
+        <item row="1" column="1">
+         <widget class="QSpinBox" name="spellmakingArea">
+          <property name="whatsThis">
+           <string>The effect's radius. Unusually, this is measured in feet, not world units. One foot is 21⅓ world units.</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="maximum">
+           <number>4096</number>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -1134,7 +985,172 @@
      </item>
     </layout>
    </item>
-   <item row="5" column="0" colspan="3">
+   <item row="1" column="2">
+    <layout class="QVBoxLayout" name="rightCol">
+     <item>
+      <widget class="QGroupBox" name="groupBox_8">
+       <property name="title">
+        <string>Sounds</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_11">
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_41">
+          <property name="text">
+           <string>Release:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundRelease</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_40">
+          <property name="text">
+           <string>Ready:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundReady</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_39">
+          <property name="text">
+           <string>Charge:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundCharge</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="DKFormPicker" name="soundDrawSheathe">
+          <property name="whatsThis">
+           <string>The sound that plays when the player draws or sheathes their weapons with this spell in either hand.</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="label_43">
+          <property name="text">
+           <string>On Hit:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundOnHit</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_38">
+          <property name="text">
+           <string>Draw/Sheathe:</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundDrawSheathe</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_42">
+          <property name="text">
+           <string>Cast Loop (Conc.):</string>
+          </property>
+          <property name="buddy">
+           <cstring>soundCastLoop</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="0">
+         <widget class="QLabel" name="label_44">
+          <property name="text">
+           <string>Detection Sound Level:</string>
+          </property>
+          <property name="buddy">
+           <cstring>detectionSoundLevel</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="DKFormPicker" name="soundCharge">
+          <property name="whatsThis">
+           <string>For Fire and Forget spells, this sound plays when the player first presses the cast button down.</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="DKFormPicker" name="soundReady">
+          <property name="whatsThis">
+           <string>For Fire and Forget spells, this sound plays when the spell reaches its &quot;ready&quot; state, such that releasing the button will cast the spell.</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="DKFormPicker" name="soundRelease">
+          <property name="whatsThis">
+           <string>For Fire and Forget spells, this sound plays when the player releases the cast button and casts the spell (provided the spell is ready).</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="DKFormPicker" name="soundCastLoop">
+          <property name="whatsThis">
+           <string>For Concentration spells, this sound loops while the effect is being cast.</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="DKFormPicker" name="soundOnHit">
+          <property name="whatsThis">
+           <string>The sound that plays when this effect is applied to its target.</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QComboBox" name="detectionSoundLevel">
+          <property name="whatsThis">
+           <string>The effect's loudness as perceived by NPC AI (with respect to stealth and detection).</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QLabel" name="label_20">
+         <property name="text">
+          <string>Description:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="description">
+         <property name="whatsThis">
+          <string>&lt;p&gt;A description of this magic effect. This description will appear in the Active Effects menu, when the player is affected by this magic effect, and in the description of any Spell, Enchantment, Potion, or Scroll that has this effect and lacks a description of its own.&lt;/p&gt;
+&lt;p&gt;This text field supports text replacement tags similar to those found in quest text. The text that gets substituted in will be displayed in bold. The available substitutions are:&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;&lt;code&gt;&amp;lt;mag&amp;gt;&lt;/code&gt;&lt;/dt&gt;
+      &lt;dd&gt;The effect's magnitude. If the effect is flagged as having no magnitude, then nothing is displayed.&lt;/dd&gt;
+   &lt;dt&gt;&lt;code&gt;&amp;lt;dur&amp;gt;&lt;/code&gt;&lt;/dt&gt;
+      &lt;dd&gt;The effect's duration in seconds. If the effect is flagged as having no duration, then nothing is displayed.&lt;/dd&gt;
+   &lt;dt&gt;&lt;code&gt;&amp;lt;area&amp;gt;&lt;/code&gt;&lt;/dt&gt;
+      &lt;dd&gt;The effect's area (radius). If the effect is flagged as having no area, then nothing is displayed.&lt;/dd&gt;
+   &lt;dt&gt;&lt;code&gt;&amp;lt;global=EditorID&amp;gt;&lt;/code&gt;&lt;/dt&gt;
+      &lt;dd&gt;The current value of the Global with the given &lt;code&gt;EditorID&lt;/code&gt;. If no such global exists, then nothing is displayed. (Writing &lt;code&gt;&amp;lt;global&amp;gt;&lt;/code&gt; has the same effect as failing to specify a valid global: nothing is displayed.)&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;p&gt;It's possible to abuse text replacement to make arbitrary text bold: any text between angle brackets will be made bold, &lt;em&gt;but&lt;/em&gt; if that text contains &lt;code&gt;=&lt;/code&gt; or &lt;code&gt;.&lt;/code&gt;, it will be cut off at the first such symbol. This is because text replacement uses the same syntax as in quests: &lt;code&gt;&amp;lt;Tag.Subtag=Parameter&amp;gt;&lt;/code&gt;: unrecognized tags are printed verbatim and in bold, but their subtags and parameters are discarded.&lt;/p&gt;</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="DKPapyrusBoundScriptListPane" name="scriptListPane"/>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0" colspan="3">
     <layout class="QHBoxLayout" name="buttonsLayout">
      <item>
       <spacer name="horizontalSpacer">
@@ -1209,9 +1225,10 @@
   <tabstop>castingType</tabstop>
   <tabstop>delivery</tabstop>
   <tabstop>skill</tabstop>
+  <tabstop>minSkill</tabstop>
   <tabstop>assocItem1</tabstop>
   <tabstop>assocItem2</tabstop>
-  <tabstop>doubleSpinBox</tabstop>
+  <tabstop>secondAVWeight</tabstop>
   <tabstop>resistAV</tabstop>
   <tabstop>perkToApply</tabstop>
   <tabstop>taperDuration</tabstop>
@@ -1266,7 +1283,6 @@
   <tabstop>soundOnHit</tabstop>
   <tabstop>detectionSoundLevel</tabstop>
   <tabstop>description</tabstop>
-  <tabstop>scriptListPane</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
  </tabstops>

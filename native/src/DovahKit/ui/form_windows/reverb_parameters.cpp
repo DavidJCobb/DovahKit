@@ -493,13 +493,7 @@ void FormDialogReverbParameters::_load_impl() {
       });
    }
    MAKE_EDIT(reflections, reflections);
-   {
-      auto* widget = this->ui.reflectDelaySpinbox;
-      widget->setValue(working.reflect_delay * 300 / 255);
-      QObject::connect(widget, qOverload<int>(&QSpinBox::valueChanged), this, [this](int v) {
-         this->form->reflect_delay = v * 255 / 300;
-      });
-   }
+   MAKE_EDIT(reflect_delay, reflectDelay);
    //MAKE_EDIT(reflect_delay, reflectDelay);
    MAKE_EDIT(diffusion, diffusion);
    MAKE_EDIT(density, density);

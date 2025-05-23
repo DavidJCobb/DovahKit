@@ -19,7 +19,7 @@ namespace dovah::loaded_forms {
          int8_t   reflections    = 0; // DATA+0x06
          int8_t   reverb_amp     = 0; // DATA+0x07
          uint8_t  decay_hf_ratio = 0; // DATA+0x08 // v*100
-         uint8_t  reflect_delay  = 0; // DATA+0x09
+         float    reflect_delay  = 0; // range [0, 300]. // stored as a byte at DATA+0x09, with values ranging [0, 250]. multiply by 1.2 when loading to get the true value.
          uint8_t  reverb_delay   = 0; // DATA+0x0A
          uint8_t  diffusion      = 0; // DATA+0x0B
          uint8_t  density        = 0; // DATA+0x0C

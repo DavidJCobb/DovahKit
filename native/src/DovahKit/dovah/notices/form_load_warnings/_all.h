@@ -1,5 +1,6 @@
 #pragma once
 #include "./form_reference_type_mismatch.h"
+#include "./invalid_actor_value_index.h"
 #include "./unrecognized_subrecord.h"
 #pragma region by form component
    #include "./by_form_component/attack_data/expected_event_subrecord.h"
@@ -17,6 +18,8 @@
    #include "./by_form_type/head_part/invalid_morph_type.h"
    #include "./by_form_type/landscape/excess_layers_per_quad.h"
    #include "./by_form_type/landscape/invalid_quad_for_land_texture.h"
+   #include "./by_form_type/magic_effect/invalid_actor_value_index.h"
+   #include "./by_form_type/magic_effect/redundant_sound.h"
    #include "./by_form_type/note/non_texture_note_includes_texture_path.h"
    #include "./by_form_type/quest/alias_papyrus_data_belongs_to_missing_alias.h"
    #include "./by_form_type/quest/alias_papyrus_data_specifies_wrong_quest.h"

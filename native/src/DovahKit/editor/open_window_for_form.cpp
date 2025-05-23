@@ -42,6 +42,7 @@
 #include "../ui/form_windows/leveled_spell.h"
 #include "../ui/form_windows/light.h"
 #include "../ui/form_windows/location_ref_type.h"
+#include "../ui/form_windows/magic_effect.h"
 #include "../ui/form_windows/misc_item.h"
 #include "../ui/form_windows/movement_type.h"
 #include "../ui/form_windows/music_type.h"
@@ -110,6 +111,7 @@ namespace {
       std::pair{ dovah::form_type::leveled_spell,     _make<FormDialogLeveledSpell> },
       std::pair{ dovah::form_type::light,             _make<FormDialogLight> },
       std::pair{ dovah::form_type::location_ref_type, _make<FormDialogLocationRefType> },
+      std::pair{ dovah::form_type::magic_effect,      _make<FormDialogMagicEffect> },
       std::pair{ dovah::form_type::misc_item,         _make<FormDialogMiscItem> },
       std::pair{ dovah::form_type::movement_type,     _make<FormDialogMovementType> },
       std::pair{ dovah::form_type::music_type,        _make<FormDialogMusicType> },

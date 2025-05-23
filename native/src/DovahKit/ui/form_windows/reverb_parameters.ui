@@ -311,16 +311,6 @@
        </property>
       </widget>
      </item>
-     <item row="8" column="2">
-      <widget class="QSpinBox" name="reflectDelaySpinbox">
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-       <property name="maximum">
-        <number>300</number>
-       </property>
-      </widget>
-     </item>
      <item row="9" column="2">
       <widget class="QSpinBox" name="diffusionSpinbox">
        <property name="alignment">
@@ -377,19 +367,6 @@
        </property>
        <property name="maximum">
         <number>100</number>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="1">
-      <widget class="QSlider" name="reflectDelaySlider">
-       <property name="whatsThis">
-        <string>Pre-delay of early reflections.</string>
-       </property>
-       <property name="maximum">
-        <number>300</number>
        </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -489,6 +466,29 @@
        </property>
        <property name="maximum">
         <double>2.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="2">
+      <widget class="QDoubleSpinBox" name="reflectDelaySpinbox">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="decimals">
+        <number>0</number>
+       </property>
+       <property name="maximum">
+        <double>300.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="DKFloatSlider" name="reflectDelaySlider">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="maximum">
+        <double>300.000000000000000</double>
        </property>
       </widget>
      </item>
