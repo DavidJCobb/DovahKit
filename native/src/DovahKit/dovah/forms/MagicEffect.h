@@ -67,8 +67,8 @@ namespace dovah::loaded_forms {
          components::papyrus_attachment_data script_data; // VMAD
          components::keyword_list keywords; // KSIZ, KWDA
          //
-         localized_string name        = localized_string(localized_string_type::common);      // FULL
-         localized_string description = localized_string(localized_string_type::description); // DNAM
+         localized_string name        = localized_string(localized_string_type::common); // FULL
+         localized_string description = localized_string(localized_string_type::common); // DNAM
          //
          effect_flags_t         flags = 0; // DATA+0x00
          magic_effect_archetype archetype        = magic_effect_archetype::value_modifier; // DATA+0x44

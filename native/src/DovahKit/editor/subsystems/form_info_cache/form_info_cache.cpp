@@ -16,6 +16,7 @@
 
 #include "dovah/load_order_interfaces/form_load.h"
 #include "./cacheable_traits/attached_scripts.h"
+#include "./cacheable_traits/actor_base_info.h"
 #include "./cacheable_traits/faction_info.h"
 #include "./cacheable_traits/head_part_info.h"
 #include "./cacheable_traits/model_path.h"
@@ -45,6 +46,9 @@ namespace {
       // For now, handwritten branches work just fine.
       //
       if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::attached_scripts::form_class_is_of_interest<Current>) {
+         return true;
+      }
+      if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::actor_base_info::form_class_is_of_interest<Current>) {
          return true;
       }
       if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::faction_info::form_class_is_of_interest<Current>) {
@@ -168,7 +172,16 @@ namespace {
                continue;
             }
          }
-         if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(FormType)) {
+         if constexpr (cacheable_traits::actor_base_info::form_type_is_of_interest(FormType)) {
+            //
+            // Factions: For now, we only care about the DATA subrecord.
+            //
+            if (signature == 'ACBS') {
+               cached_data::by_form::actor_base info;
+               info.skim_subrecord(subrecord);
+               cache.by_form_type.actor_bases.threaded_insert(stub, info);
+            }
+         } else if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(FormType)) {
             //
             // Factions: For now, we only care about the DATA subrecord.
             //
@@ -259,6 +272,20 @@ namespace {
          }
          if (changed)
             emit core.cachedQuestFilterChanged(stub, prior, value);
+      }
+      
+      if constexpr (cacheable_traits::actor_base_info::form_type_is_of_interest(LoadedForm::form_type)) {
+         auto& dst = cache.by_form_type.actor_bases;
+         if (auto* item = dst.get(stub)) {
+            if (item->update(loaded)) {
+               emit core.cachedActorBaseChanged(stub);
+            }
+         } else {
+            cached_data::by_form::actor_base info;
+            info.update(loaded);
+            dst.insert(stub, std::move(info));
+            emit core.cachedActorBaseChanged(stub);
+         }
       }
       
       if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(LoadedForm::form_type)) {
@@ -426,10 +453,12 @@ namespace dovahkit::subsystems::form_info_cache {
                }
             }
 
+            if constexpr (cacheable_traits::actor_base_info::form_type_is_of_interest(Current::form_type)) {
+               cache.by_form_type.actor_bases.take(*stub);
+            }
             if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(Current::form_type)) {
                cache.by_form_type.factions.take(*stub);
             }
-
             if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(Current::form_type)) {
                cache.by_form_type.head_parts.take(*stub);
                //
@@ -556,6 +585,11 @@ namespace dovahkit::subsystems::form_info_cache {
       if (auto* item = this->_cache->quest_filters.get(stub))
          return *item;
       return {};
+   }
+   const cached_data::by_form::actor_base* core::get_actor_base_info(const dovah::form_stub& stub) const {
+      if (stub.form_type != dovah::form_type::actor_base)
+         return nullptr;
+      return this->_cache->by_form_type.actor_bases.get(stub);
    }
    const cached_data::by_form::faction* core::get_faction_info(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::faction)

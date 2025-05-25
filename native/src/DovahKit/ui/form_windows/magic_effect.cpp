@@ -3,9 +3,15 @@
 #include "dovah/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
+#include "./magic_effect/MagicEffectSummonableActorPickerFilter.h"
+#include "./shared/DKFormPickerExcludeSingleFormFilter.h"
 
 FormDialogMagicEffect::FormDialogMagicEffect(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
+
+   this->_filters.exclude_self = new DKFormPickerExcludeSingleFormFilter(this);
+
+   this->_filters.summonable_actors = new MagicEffectSummonableActorPickerFilter(this);
 
    {
       auto* widget = this->ui.archetype;
@@ -75,11 +81,17 @@ FormDialogMagicEffect::FormDialogMagicEffect(dovah::form_stub& stub, QWidget* pa
       widget->addItem(tr("Target Actor"), (int)dovah::magic_delivery_type::target_actor);
       widget->addItem(tr("Target Location"), (int)dovah::magic_delivery_type::target_location);
       widget->addItem(tr("Touch"), (int)dovah::magic_delivery_type::touch);
+
+      this->ui.flagSnapToNavmesh->setEnabled(false);
+      QObject::connect(widget, qOverload<int>(&QComboBox::currentIndexChanged), this, [this, widget]() {
+         auto delivery = (dovah::magic_delivery_type) widget->currentData().toInt();
+         this->ui.flagSnapToNavmesh->setEnabled(delivery == dovah::magic_delivery_type::target_location);
+      });
    }
    {
       auto* widget = this->ui.skill;
       widget->clear();
-      widget->addItem(tr("None"), -1);
+      widget->addItem(tr("NONE"), -1);
       widget->addItem(tr("Alteration"), (int)dovah::skill::alteration);
       widget->addItem(tr("Conjuration"), (int)dovah::skill::conjuration);
       widget->addItem(tr("Destruction"), (int)dovah::skill::destruction);
@@ -93,7 +105,7 @@ FormDialogMagicEffect::FormDialogMagicEffect(dovah::form_stub& stub, QWidget* pa
    {
       auto* widget = this->ui.resistAV;
       widget->clear();
-      widget->addItem(tr("None"), -1);
+      widget->addItem(tr("NONE"), -1);
       for (auto& av_info : dovah::all_actor_value_info) {
          if (av_info.type != dovah::actor_value_type::resistance)
             continue;
@@ -108,6 +120,7 @@ FormDialogMagicEffect::FormDialogMagicEffect(dovah::form_stub& stub, QWidget* pa
    ui::set_unsigned_range<float>(this->ui.skillUsageMult);
    this->ui.keywords->setAllowedFormTypes({ dovah::form_type::keyword });
    this->ui.counterEffects->setAllowedFormTypes({ dovah::form_type::magic_effect });
+   this->ui.counterEffects->setCustomFilter(this->_filters.exclude_self);
 
    this->ui.menuDisplayObject->setAllowedFormType(dovah::form_type::statik);
    this->ui.castingArt->setAllowedFormType(dovah::form_type::art_object);
@@ -149,6 +162,8 @@ FormDialogMagicEffect::FormDialogMagicEffect(dovah::form_stub& stub, QWidget* pa
 void FormDialogMagicEffect::_load_impl() {
    auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
+
+   this->_filters.exclude_self->set_exclusion(this->formStub());
    
    #pragma region Left column
       ui::bind(this->ui.editorID, this->editor_id());
@@ -160,6 +175,11 @@ void FormDialogMagicEffect::_load_impl() {
       {
          auto* widget = this->ui.skill;
          auto& target = working.magic_skill;
+         {
+            auto i = widget->findData((int)target);
+            if (i >= 0)
+               widget->setCurrentIndex(i);
+         }
          QObject::connect(widget, qOverload<int>(&QComboBox::currentIndexChanged), this, [widget, &target](int i) {
             if (i < 0) {
                target = -1;
@@ -176,6 +196,11 @@ void FormDialogMagicEffect::_load_impl() {
       {
          auto* widget = this->ui.resistAV;
          auto& target = working.resist_av;
+         {
+            auto i = widget->findData((int)target);
+            if (i >= 0)
+               widget->setCurrentIndex(i);
+         }
          QObject::connect(widget, qOverload<int>(&QComboBox::currentIndexChanged), this, [widget, &target](int i) {
             if (i < 0) {
                target = -1;
@@ -336,6 +361,11 @@ std::array<FormDialogMagicEffect::associated_item_constraint, 2> FormDialogMagic
       auto& dst = out[i];
       if (std::holds_alternative<dovah::form_type>(src)) {
          dst.form_type = std::get<dovah::form_type>(src);
+         if (dst.form_type == dovah::form_type::actor_base) {
+            if (archetype_info.flags.actor_base_must_be_summonable) {
+               dst.actors_must_be_summonable = true;
+            }
+         }
       } else if (std::holds_alternative<const dovah::actor_value_info*>(src)) {
          auto* av_info = std::get<const dovah::actor_value_info*>(src);
          if (av_info) {
@@ -351,6 +381,9 @@ std::array<FormDialogMagicEffect::associated_item_constraint, 2> FormDialogMagic
 }
 void FormDialogMagicEffect::on_archetype_changed(bool initial_load) {
    auto& working = *this->form;
+
+   this->ui.assocItem1->setCustomFilter(nullptr);
+   this->ui.assocItem2->setCustomFilter(nullptr);
 
    int archetype_index = this->ui.archetype->currentData().toInt();
    if (archetype_index < 0 || archetype_index >= dovah::all_magic_effect_archetypes.size()) {
@@ -415,6 +448,9 @@ void FormDialogMagicEffect::on_archetype_changed(bool initial_load) {
          }
       } else {
          widget->setEnabled(true);
+         if (ic.actors_must_be_summonable) {
+            widget->setCustomFilter(this->_filters.summonable_actors);
+         }
          if (initial_load) {
             widget->setFormStub(working.associated_items.form.get_form_stub());
          }

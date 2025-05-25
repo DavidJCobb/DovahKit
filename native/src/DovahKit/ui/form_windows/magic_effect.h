@@ -4,6 +4,9 @@
 #include "dovah/forms/MagicEffect.h"
 #include "ui_magic_effect.h" // generated
 
+class DKFormPickerExcludeSingleFormFilter;
+class MagicEffectSummonableActorPickerFilter;
+
 class FormDialogMagicEffect :
    public QDialog,
    public FormEditDialogMixin<dovah::loaded_forms::MagicEffect, true>
@@ -15,6 +18,10 @@ class FormDialogMagicEffect :
       
    protected:
       Ui::FormDialogMagicEffect ui;
+      struct {
+         DKFormPickerExcludeSingleFormFilter*    exclude_self      = nullptr;
+         MagicEffectSummonableActorPickerFilter* summonable_actors = nullptr;
+      } _filters;
       struct {
          struct {
             dovah::form_stub* draw_sheathe = nullptr;
@@ -32,6 +39,7 @@ class FormDialogMagicEffect :
       struct associated_item_constraint {
          dovah::form_type  form_type = dovah::form_type::none;
          dovah::form_stub* forced_av = nullptr;
+         bool actors_must_be_summonable = false;
       };
       std::array<associated_item_constraint, 2> constraints_for_archetype() const;
 

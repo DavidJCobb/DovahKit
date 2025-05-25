@@ -18,6 +18,7 @@ namespace dovah {
 namespace dovahkit::subsystems::form_info_cache {
    namespace cached_data {
       namespace by_form {
+         struct actor_base;
          struct faction;
          struct head_part;
          struct voicetype;
@@ -63,6 +64,7 @@ namespace dovahkit::subsystems::form_info_cache {
          void cachedDataBuilt(); // emitted when all data is built
          void cachedDataCleared(); // emitted when all data is cleared
 
+         void cachedActorBaseChanged(dovah::form_stub&);
          void cachedFactionChanged(dovah::form_stub&);
          void cachedHeadPartChanged(dovah::form_stub&);
          void cachedModelPathChanged(dovah::form_stub&, QString old_value, QString new_value);
@@ -74,9 +76,10 @@ namespace dovahkit::subsystems::form_info_cache {
       public:
          QString get_form_model_path(const dovah::form_stub&) const;
          QString get_quest_filter(const dovah::form_stub&) const;
-         const cached_data::by_form::faction*   get_faction_info(const dovah::form_stub&) const;
-         const cached_data::by_form::head_part* get_head_part_info(const dovah::form_stub&) const;
-         const cached_data::by_form::voicetype* get_voicetype_info(const dovah::form_stub&) const;
+         const cached_data::by_form::actor_base* get_actor_base_info(const dovah::form_stub&) const;
+         const cached_data::by_form::faction*    get_faction_info(const dovah::form_stub&) const;
+         const cached_data::by_form::head_part*  get_head_part_info(const dovah::form_stub&) const;
+         const cached_data::by_form::voicetype*  get_voicetype_info(const dovah::form_stub&) const;
 
          script_attach_state form_script_attachment(const dovah::form_stub&, std::string_view scriptname) const;
          bool quest_has_alias_with_script(const dovah::form_stub&, std::string_view scriptname) const;

@@ -2973,6 +2973,12 @@
     <ClCompile Include="ui\form_windows\magic_effect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -7395,6 +7401,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\redundant_sound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\actor_base_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

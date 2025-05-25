@@ -234,6 +234,7 @@
     <ClCompile Include="editor\helpers\story_event_name.cpp" />
     <ClCompile Include="editor\ini\main.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.cpp" />
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\faction.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\head_part.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\voicetype.cpp" />
@@ -809,6 +810,7 @@
     <ClCompile Include="ui\form_windows\keyword.cpp" />
     <ClCompile Include="ui\form_windows\location_ref_type.cpp" />
     <ClCompile Include="ui\form_windows\magic_effect.cpp" />
+    <ClCompile Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\movement_type.cpp" />
     <ClCompile Include="ui\form_windows\music_type.cpp" />
     <ClCompile Include="ui\form_windows\quest\alias_subdialog_helpers.cpp" />
@@ -1411,6 +1413,9 @@
     <QtMoc Include="ui\form_windows\camera_shot.h" />
     <QtMoc Include="ui\form_windows\impact_data.h" />
     <QtMoc Include="ui\form_windows\magic_effect.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\actor_base_info.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.h" />
+    <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h" />
     <ClInclude Include="ui\form_windows\quest\alias_subdialog_helpers.h" />
     <QtMoc Include="ui\form_windows\reverb_parameters.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Action.h" />
