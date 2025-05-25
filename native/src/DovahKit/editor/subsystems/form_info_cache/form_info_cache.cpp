@@ -35,6 +35,7 @@ namespace {
       dovahkit::subsystems::form_info_cache::cached_data::by_form::actor_base,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::faction,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::head_part,
+      dovahkit::subsystems::form_info_cache::cached_data::by_form::magic_effect,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::voicetype
    >;
 }
@@ -191,6 +192,15 @@ namespace {
                info.skim_subrecord(subrecord);
                cache.by_form_type.factions.threaded_insert(stub, info);
             }
+         } else if constexpr (cached_data::by_form::magic_effect::form_type_is_of_interest(FormType)) {
+            //
+            // Voicetypes: We only care about the DNAM subrecord.
+            //
+            if (signature == 'DNAM') {
+               cached_data::by_form::magic_effect info;
+               info.skim_subrecord(subrecord);
+               cache.by_form_type.magic_effects.threaded_insert(stub, info);
+            }
          } else if constexpr (cached_data::by_form::voicetype::form_type_is_of_interest(FormType)) {
             //
             // Voicetypes: We only care about the DNAM subrecord.
@@ -296,10 +306,11 @@ namespace {
             }
          };
 
-         _update_if_form(cache.by_form_type.actor_bases, &core::cachedActorBaseChanged);
-         _update_if_form(cache.by_form_type.factions,    &core::cachedFactionChanged);
-         _update_if_form(cache.by_form_type.head_parts,  &core::cachedHeadPartChanged);
-         _update_if_form(cache.by_form_type.voicetypes,  &core::cachedVoicetypeChanged);
+         _update_if_form(cache.by_form_type.actor_bases,   &core::cachedActorBaseChanged);
+         _update_if_form(cache.by_form_type.factions,      &core::cachedFactionChanged);
+         _update_if_form(cache.by_form_type.head_parts,    &core::cachedHeadPartChanged);
+         _update_if_form(cache.by_form_type.magic_effects, &core::cachedMagicEffectChanged);
+         _update_if_form(cache.by_form_type.voicetypes,    &core::cachedVoicetypeChanged);
       }
 
       if constexpr (cacheable_traits::model_path::form_type_is_of_interest(LoadedForm::form_type)) {
@@ -446,6 +457,7 @@ namespace dovahkit::subsystems::form_info_cache {
                _update_if_form(cache.by_form_type.actor_bases, &core::cachedActorBaseChanged);
                _update_if_form(cache.by_form_type.factions);
                _update_if_form(cache.by_form_type.head_parts,  &core::cachedHeadPartChanged);
+               _update_if_form(cache.by_form_type.magic_effects);
                _update_if_form(cache.by_form_type.voicetypes);
             }
 
@@ -573,6 +585,11 @@ namespace dovahkit::subsystems::form_info_cache {
       if (stub.form_type != dovah::form_type::head_part)
          return nullptr;
       return this->_cache->by_form_type.head_parts.get(stub);
+   }
+   const cached_data::by_form::magic_effect* core::get_magic_effect_info(const dovah::form_stub& stub) const {
+      if (stub.form_type != dovah::form_type::magic_effect)
+         return nullptr;
+      return this->_cache->by_form_type.magic_effects.get(stub);
    }
    const cached_data::by_form::voicetype* core::get_voicetype_info(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::voicetype)
