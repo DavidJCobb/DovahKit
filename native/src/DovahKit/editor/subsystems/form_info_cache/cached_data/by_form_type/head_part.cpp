@@ -42,14 +42,7 @@ namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {
             }
             break;
          case 'RNAM':
-            {
-               dovah::form_reference_t ref;
-               if (subrecord.read(ref)) {
-                  auto* stub = this->race_list = ref.get_form_stub();
-                  if (stub && stub->form_type != dovah::form_type::formlist)
-                     this->race_list = nullptr;
-               }
-            }
+            this->_read_form_stub_from_subrecord(this->race_list, subrecord, dovah::form_type::formlist);
             break;
       }
    }
@@ -81,11 +74,7 @@ namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {
 
       this->type = (std::decay_t<decltype(this->type)>)src.type; // uh, okay, MSVC. sure.
 
-      if (auto* stub = src.valid_races.get_form_stub(); stub && stub->form_type == dovah::form_type::formlist) {
-         this->race_list = stub;
-      } else {
-         this->race_list = nullptr;
-      }
+      this->_update_form_stub_from_loaded(this->race_list, src.valid_races, dovah::form_type::formlist);
 
       return prior == *this;
    }

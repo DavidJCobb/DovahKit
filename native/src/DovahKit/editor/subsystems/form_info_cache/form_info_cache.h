@@ -18,10 +18,10 @@ namespace dovah {
 namespace dovahkit::subsystems::form_info_cache {
    namespace cached_data {
       namespace by_form {
-         struct actor_base;
-         struct faction;
-         struct head_part;
-         struct voicetype;
+         class actor_base;
+         class faction;
+         class head_part;
+         class voicetype;
       }
    }
    struct entire_cache;

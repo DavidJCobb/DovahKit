@@ -2,6 +2,7 @@
 #include <bitset>
 #include <cassert>
 #include <type_traits>
+#include "helpers/class_array.h"
 #include "helpers/enum_flags.h"
 #include "dovah/form_stub.h"
 #include "editor/core.h" // DovahKitCore
@@ -16,12 +17,8 @@
 
 #include "dovah/load_order_interfaces/form_load.h"
 #include "./cacheable_traits/attached_scripts.h"
-#include "./cacheable_traits/actor_base_info.h"
-#include "./cacheable_traits/faction_info.h"
-#include "./cacheable_traits/head_part_info.h"
 #include "./cacheable_traits/model_path.h"
 #include "./cacheable_traits/quest_filter.h"
-#include "./cacheable_traits/voicetype_info.h"
 #include "./quest_vmad_skimmer.h"
 
 #include "./threaded_builder.h"
@@ -33,37 +30,35 @@ namespace {
    using known_script_ptr = dovahkit::subsystems::papyrus::known_script_ptr;
 
    constexpr const auto& sharedinfo_topic_subtype = *dovah::dialogue::topic_subtype_by_signature('IDAT');
+
+   using all_cacheable_form_data = cobb::class_array<
+      dovahkit::subsystems::form_info_cache::cached_data::by_form::actor_base,
+      dovahkit::subsystems::form_info_cache::cached_data::by_form::faction,
+      dovahkit::subsystems::form_info_cache::cached_data::by_form::head_part,
+      dovahkit::subsystems::form_info_cache::cached_data::by_form::voicetype
+   >;
 }
 
 namespace {
    using all_form_classes_of_interest = dovah::all_loaded_form_types::filter_types<[]<typename Current>() -> bool {
-      //
-      // TODO: We could look into ways to go harder into metaprogramming here. For example, I 
-      // chose to use structs for each trait rather than namespaces so that they could be put 
-      // in a cobb::class_array and iterated over. Would still have to figure out what approach 
-      // to take for the actual "skim," "update," etc., functions, as well as for accessors.
-      // 
-      // For now, handwritten branches work just fine.
-      //
+      {
+         bool is_of_interest = all_cacheable_form_data::for_each_until_true([]<typename CurrentDataType>() -> bool {
+            if constexpr (CurrentDataType::template form_class_is_of_interest<Current>) {
+               return true;
+            } else {
+               return false;
+            }
+         });
+         if (is_of_interest)
+            return true;
+      }
       if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::attached_scripts::form_class_is_of_interest<Current>) {
-         return true;
-      }
-      if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::actor_base_info::form_class_is_of_interest<Current>) {
-         return true;
-      }
-      if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::faction_info::form_class_is_of_interest<Current>) {
-         return true;
-      }
-      if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::head_part_info::form_class_is_of_interest<Current>) {
          return true;
       }
       if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::model_path::form_class_is_of_interest<Current>) {
          return true;
       }
       if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::quest_filter::form_class_is_of_interest<Current>) {
-         return true;
-      }
-      if constexpr (dovahkit::subsystems::form_info_cache::cacheable_traits::voicetype_info::form_class_is_of_interest<Current>) {
          return true;
       }
       if constexpr (Current::form_type == dovah::form_type::topic) { // for the sharedinfo list
@@ -74,6 +69,17 @@ namespace {
 }
 
 namespace {
+   using data_with_multiple_subrecords = all_cacheable_form_data::filter_types<[]<typename Data>() -> bool {
+      return Data::subrecords_of_interest.size() > 1;
+   }>;
+
+   template<dovah::form_type FormType>
+   constexpr bool data_with_multiple_subrecords_includes() {
+      return data_with_multiple_subrecords::for_each_until_true<[]<typename T>() {
+         return T::form_type_is_of_interest(FormType);
+      }>();
+   }
+
    template<dovah::form_type FormType>
    void _skim_record(
       dovahkit::subsystems::form_info_cache::entire_cache& cache,
@@ -105,18 +111,14 @@ namespace {
       // after the subrecord-reading loop.
       // 
 
+      data_with_multiple_subrecords::as_tuple infos;
+
       // Quests require special handling, for their aliases' attached scripts.
       std::conditional_t<
          (FormType == dovah::form_type::quest),
          quest_vmad_skimmer,
          uint8_t // dummy type
       > quest_skimmer;
-
-      std::conditional_t<
-         (FormType == dovah::form_type::head_part),
-         cached_data::by_form::head_part,
-         uint8_t // dummy type
-      > head_part_info = {};
 
       std::conditional_t<
          (FormType == dovah::form_type::topic),
@@ -126,6 +128,14 @@ namespace {
 
       while (auto& subrecord = record.next_subrecord()) {
          const auto signature = subrecord.signature();
+
+         if constexpr (data_with_multiple_subrecords_includes<FormType>()) {
+            data_with_multiple_subrecords::for_each([&infos, &subrecord]<typename T>() {
+               if constexpr (T::form_type_is_of_interest(FormType)) {
+                  std::get<T>(infos).skim_subrecord(subrecord);
+               }
+            });
+         }
 
          if constexpr (cacheable_traits::attached_scripts::form_type_is_of_interest(FormType)) {
             //
@@ -172,16 +182,7 @@ namespace {
                continue;
             }
          }
-         if constexpr (cacheable_traits::actor_base_info::form_type_is_of_interest(FormType)) {
-            //
-            // Factions: For now, we only care about the DATA subrecord.
-            //
-            if (signature == 'ACBS') {
-               cached_data::by_form::actor_base info;
-               info.skim_subrecord(subrecord);
-               cache.by_form_type.actor_bases.threaded_insert(stub, info);
-            }
-         } else if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(FormType)) {
+         if constexpr (cached_data::by_form::faction::form_type_is_of_interest(FormType)) {
             //
             // Factions: For now, we only care about the DATA subrecord.
             //
@@ -190,12 +191,7 @@ namespace {
                info.skim_subrecord(subrecord);
                cache.by_form_type.factions.threaded_insert(stub, info);
             }
-         } else if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(FormType)) {
-            //
-            // HeadParts: We need to read multiple subrecords.
-            //
-            head_part_info.skim_subrecord(subrecord);
-         } else if constexpr (cacheable_traits::voicetype_info::form_type_is_of_interest(FormType)) {
+         } else if constexpr (cached_data::by_form::voicetype::form_type_is_of_interest(FormType)) {
             //
             // Voicetypes: We only care about the DNAM subrecord.
             //
@@ -235,8 +231,14 @@ namespace {
       if constexpr (FormType == dovah::form_type::quest) {
          if (!quest_skimmer.empty())
             cache.attached_scripts.threaded_insert(stub, quest_skimmer.bake());
+      } else if constexpr (FormType == dovah::form_type::actor_base) {
+         auto& dst        = cache.by_form_type.actor_bases;
+         using value_type = std::decay_t<decltype(dst)>::value_type;
+         dst.threaded_insert(stub, std::move(std::get<value_type>(infos)));
       } else if constexpr (FormType == dovah::form_type::head_part) {
-         cache.by_form_type.head_parts.threaded_insert(stub, std::move(head_part_info));
+         auto& dst        = cache.by_form_type.head_parts;
+         using value_type = std::decay_t<decltype(dst)>::value_type;
+         dst.threaded_insert(stub, std::move(std::get<value_type>(infos)));
       } else if constexpr (FormType == dovah::form_type::topic) {
          if (topic_is_sharedinfo_topic)
             cache.sharedinfo_topics.threaded_insert(stub);
@@ -251,7 +253,7 @@ namespace {
    ) {
       using namespace dovahkit::subsystems::form_info_cache;
 
-      auto& stub = loaded.stub;
+      dovah::form_stub& stub = loaded.stub;
 
       if constexpr (cacheable_traits::quest_filter::form_type_is_of_interest(LoadedForm::form_type)) {
          auto& dst = cache.quest_filters;
@@ -273,61 +275,31 @@ namespace {
          if (changed)
             emit core.cachedQuestFilterChanged(stub, prior, value);
       }
-      
-      if constexpr (cacheable_traits::actor_base_info::form_type_is_of_interest(LoadedForm::form_type)) {
-         auto& dst = cache.by_form_type.actor_bases;
-         if (auto* item = dst.get(stub)) {
-            if (item->update(loaded)) {
-               emit core.cachedActorBaseChanged(stub);
-            }
-         } else {
-            cached_data::by_form::actor_base info;
-            info.update(loaded);
-            dst.insert(stub, std::move(info));
-            emit core.cachedActorBaseChanged(stub);
-         }
-      }
-      
-      if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(LoadedForm::form_type)) {
-         auto& dst = cache.by_form_type.factions;
-         if (auto* item = dst.get(stub)) {
-            if (item->update(loaded)) {
-               emit core.cachedFactionChanged(stub);
-            }
-         } else {
-            cached_data::by_form::faction info;
-            info.update(loaded);
-            dst.insert(stub, std::move(info));
-            emit core.cachedFactionChanged(stub);
-         }
-      }
 
-      if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(LoadedForm::form_type)) {
-         auto& dst = cache.by_form_type.head_parts;
-         if (auto* item = dst.get(stub)) {
-            if (item->update(loaded)) {
-               emit core.cachedHeadPartChanged(stub);
+      {
+         using signal_type = decltype(&dovahkit::subsystems::form_info_cache::core::cachedActorBaseChanged);
+         auto _update_if_form = [&loaded, &core, &stub]<typename T>(
+            data_cache<T>& dst,
+            signal_type    signal
+         ) {
+            if constexpr (T::form_type_is_of_interest(LoadedForm::form_type)) {
+               if (auto* item = dst.get(stub)) {
+                  if (item->update(loaded)) {
+                     emit (core.*signal)(stub);
+                  }
+               } else {
+                  T info;
+                  info.update(loaded);
+                  dst.insert(stub, std::move(info));
+                  emit(core.*signal)(stub);
+               }
             }
-         } else {
-            cached_data::by_form::head_part info;
-            info.update(loaded);
-            dst.insert(stub, std::move(info));
-            emit core.cachedHeadPartChanged(stub);
-         }
-      }
+         };
 
-      if constexpr (cacheable_traits::voicetype_info::form_type_is_of_interest(LoadedForm::form_type)) {
-         auto& dst = cache.by_form_type.voicetypes;
-         if (auto* item = dst.get(stub)) {
-            if (item->update(loaded)) {
-               emit core.cachedVoicetypeChanged(stub);
-            }
-         } else {
-            cached_data::by_form::voicetype info;
-            info.update(loaded);
-            dst.insert(stub, std::move(info));
-            emit core.cachedVoicetypeChanged(stub);
-         }
+         _update_if_form(cache.by_form_type.actor_bases, &core::cachedActorBaseChanged);
+         _update_if_form(cache.by_form_type.factions,    &core::cachedFactionChanged);
+         _update_if_form(cache.by_form_type.head_parts,  &core::cachedHeadPartChanged);
+         _update_if_form(cache.by_form_type.voicetypes,  &core::cachedVoicetypeChanged);
       }
 
       if constexpr (cacheable_traits::model_path::form_type_is_of_interest(LoadedForm::form_type)) {
@@ -452,28 +424,29 @@ namespace dovahkit::subsystems::form_info_cache {
                   emit this->cachedQuestFilterChanged(*stub, result.value(), {});
                }
             }
-
-            if constexpr (cacheable_traits::actor_base_info::form_type_is_of_interest(Current::form_type)) {
-               cache.by_form_type.actor_bases.take(*stub);
-            }
-            if constexpr (cacheable_traits::faction_info::form_type_is_of_interest(Current::form_type)) {
-               cache.by_form_type.factions.take(*stub);
-            }
-            if constexpr (cacheable_traits::head_part_info::form_type_is_of_interest(Current::form_type)) {
-               cache.by_form_type.head_parts.take(*stub);
-               //
-               // Don't emit a "head part changed" signal for this. HeadParts with blank info 
-               // would be mistaken for HeadParts that have no restrictions and are available 
-               // on all actors. Instead, clients should also hook formDeletionImminent and 
-               // handle loss of the HeadPart on their own.
-               //
-            }
-            if constexpr (cacheable_traits::head_part_info::form_type_is_referred_to(Current::form_type)) {
-               cache.by_form_type.head_parts.for_each([this](const dovah::form_stub& stub, cached_data::by_form::head_part& info) {
-                  if (info.sever_outbound_references_to(&stub)) {
-                     emit this->cachedHeadPartChanged(*(dovah::form_stub*)&stub);
+            
+            {
+               using change_signal_type = decltype(&dovahkit::subsystems::form_info_cache::core::cachedActorBaseChanged);
+               auto _update_if_form = [this, stub]<typename T>(
+                  data_cache<T>&     dst,
+                  change_signal_type signal = nullptr
+               ) {
+                  if constexpr (T::form_type_is_of_interest(Current::form_type)) {
+                     dst.take(*stub);
                   }
-               });
+                  if constexpr (T::form_type_is_referred_to(Current::form_type)) {
+                     dst.for_each([this, signal](const dovah::form_stub& stub, T& info) {
+                        if (info.sever_outbound_references_to(&stub)) {
+                           emit (this->*signal)(*const_cast<dovah::form_stub*>(&stub));
+                        }
+                     });
+                     dst.take(*stub);
+                  }
+               };
+               _update_if_form(cache.by_form_type.actor_bases, &core::cachedActorBaseChanged);
+               _update_if_form(cache.by_form_type.factions);
+               _update_if_form(cache.by_form_type.head_parts,  &core::cachedHeadPartChanged);
+               _update_if_form(cache.by_form_type.voicetypes);
             }
 
             if constexpr (cacheable_traits::model_path::form_type_is_of_interest(Current::form_type)) {

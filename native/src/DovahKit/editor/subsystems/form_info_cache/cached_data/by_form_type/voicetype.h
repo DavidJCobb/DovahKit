@@ -1,24 +1,30 @@
 #pragma once
+#include "./_base.h"
+#include "../_base_macros.define.h"
 
-namespace dovah {
-   namespace loaded_forms {
-      class Voicetype;
-   }
-   namespace tes_file_reading {
-      class subrecord;
-   }
+namespace dovah::loaded_forms {
+   class Voicetype;
 }
 
 namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {
-   struct voicetype {
-      constexpr voicetype() {}
+   class voicetype : public _base {
+      public:
+         static constexpr const auto form_types_of_interest = std::array{ dovah::form_type::voicetype };
+         static constexpr const auto subrecords_of_interest = std::array{ 'DNAM' };
+         MAKE_FORM_INFO_CACHE_DATA_TEMPLATES;
 
-      bool allow_default_dialogue = false;
-      bool female = false;
+      public:
+         constexpr voicetype() {}
 
-      void skim_subrecord(dovah::tes_file_reading::subrecord&);
+         bool allow_default_dialogue = false;
+         bool female = false;
 
-      // Returns true if anything has changed.
-      bool update(const dovah::loaded_forms::Voicetype&);
+      public:
+         void skim_subrecord(dovah::tes_file_reading::subrecord&);
+
+         // Returns true if anything has changed.
+         bool update(const dovah::loaded_forms::Voicetype&);
    };
 }
+
+#include "../_base_macros.undef.h"

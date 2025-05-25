@@ -10,8 +10,6 @@ namespace dovahkit::subsystems::form_info_cache::cacheable_traits {
       };
    }
 
-   // This is a struct definition solely because it's impossible to build a list of 
-   // namespaces for use in compile-time computation.
    struct attached_scripts {
       attached_scripts() = delete;
 

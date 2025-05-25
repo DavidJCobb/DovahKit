@@ -1,20 +1,22 @@
 #pragma once
 #include <optional>
+#include "./_base.h"
+#include "../_base_macros.define.h"
 #include "dovah/data/headparts.h"
 #include "dovah/data/sex.h"
 
-namespace dovah {
-   namespace loaded_forms {
-      class HeadPart;
-   }
-   namespace tes_file_reading {
-      class subrecord;
-   }
-   class form_stub;
+namespace dovah::loaded_forms {
+   class HeadPart;
 }
 
 namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {
-   struct head_part {
+   class head_part : public _base {
+      public:
+         static constexpr const auto form_types_of_interest = std::array{ dovah::form_type::head_part };
+         static constexpr const auto form_types_we_refer_to = std::array{ dovah::form_type::formlist };
+         static constexpr const auto subrecords_of_interest = std::array{ 'DATA', 'PNAM', 'RNAM' };
+         MAKE_FORM_INFO_CACHE_DATA_TEMPLATES;
+
       public:
          using head_part_type = dovah::head_part_type;
 
@@ -41,3 +43,6 @@ namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {
          constexpr bool operator==(const head_part&) const noexcept = default;
    };
 }
+
+
+#include "../_base_macros.undef.h"
