@@ -2979,6 +2979,12 @@
     <ClCompile Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\_base.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -6767,9 +6773,6 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\head_part\invalid_morph_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\head_part_info.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\forms\Outfit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -6777,9 +6780,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\AssociationType.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\voicetype_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\data\skills.h">
@@ -6837,9 +6837,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\form_windows\actor_base\ActorBaseFactionsModel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\faction_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\utils\item_indices_to_data.h">
@@ -7406,10 +7403,22 @@
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\actor_base_info.h">
+    <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h">
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\_base_macros.define.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\_base_macros.undef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\counters_itself.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

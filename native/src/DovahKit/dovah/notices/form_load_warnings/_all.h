@@ -18,6 +18,7 @@
    #include "./by_form_type/head_part/invalid_morph_type.h"
    #include "./by_form_type/landscape/excess_layers_per_quad.h"
    #include "./by_form_type/landscape/invalid_quad_for_land_texture.h"
+   #include "./by_form_type/magic_effect/counters_itself.h"
    #include "./by_form_type/magic_effect/invalid_actor_value_index.h"
    #include "./by_form_type/magic_effect/redundant_sound.h"
    #include "./by_form_type/note/non_texture_note_includes_texture_path.h"

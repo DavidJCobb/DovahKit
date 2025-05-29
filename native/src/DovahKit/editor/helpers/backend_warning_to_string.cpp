@@ -690,11 +690,23 @@ namespace editor_helpers {
                }
             #pragma endregion
             #pragma region magic_effect
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::magic_effect::counters_itself*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+
+                  return QObject::tr(
+                     "Magic Effect %1 lists itself in its Counter Effects list. This is not the intended way to make a Magic "
+                     "Effect only apply once to a given target; prefer the No Recast flag.",
+                     disambig
+                  ).arg(subject);
+               }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::magic_effect::invalid_actor_value_index*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   QString which = QObject::tr("?");
                   switch (casted->which) {
                      using enum form_load_warnings::by_type::magic_effect::invalid_actor_value_index::which_type;
+                     case magic_skill:
+                        which = QObject::tr("Magic Skill");
+                        break;
                      case resist:
                         which = QObject::tr("Resistance");
                         break;

@@ -237,7 +237,9 @@
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\faction.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\head_part.cpp" />
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\voicetype.cpp" />
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\_base.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cache_containers\presence_cache.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\form_info_cache.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\quest_vmad_skimmer.cpp" />
@@ -1325,6 +1327,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\head_part\invalid_morph_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\excess_layers_per_quad.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\invalid_quad_for_land_texture.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\counters_itself.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\invalid_actor_value_index.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\redundant_sound.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\note\non_texture_note_includes_texture_path.h" />
@@ -1413,8 +1416,11 @@
     <QtMoc Include="ui\form_windows\camera_shot.h" />
     <QtMoc Include="ui\form_windows\impact_data.h" />
     <QtMoc Include="ui\form_windows\magic_effect.h" />
-    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\actor_base_info.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\_base.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\_base_macros.define.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\_base_macros.undef.h" />
     <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h" />
     <ClInclude Include="ui\form_windows\quest\alias_subdialog_helpers.h" />
     <QtMoc Include="ui\form_windows\reverb_parameters.h" />
@@ -1436,9 +1442,6 @@
     <QtMoc Include="editor\subsystems\message_log\dovahkit_message_log.h" />
     <ClInclude Include="editor\helpers\nif_is_valid_master_particle_system.h" />
     <ClInclude Include="editor\helpers\skill_name_to_string.h" />
-    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\faction_info.h" />
-    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\head_part_info.h" />
-    <ClInclude Include="editor\subsystems\form_info_cache\cacheable_traits\voicetype_info.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\faction.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\head_part.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\voicetype.h" />

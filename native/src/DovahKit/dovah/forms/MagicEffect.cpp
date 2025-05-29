@@ -1,6 +1,7 @@
 #include "./MagicEffect.h"
 #include "./_common_cpp.h"
 
+#include "../notices/form_load_warnings/by_form_type/magic_effect/counters_itself.h"
 #include "../notices/form_load_warnings/by_form_type/magic_effect/invalid_actor_value_index.h"
 #include "../notices/form_load_warnings/by_form_type/magic_effect/redundant_sound.h"
 
@@ -16,10 +17,26 @@ namespace dovah::loaded_forms {
       //
       if (!intfc.is_winning_record)
          return;
-      
+
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
+         
+         auto _read_actor_value_index = [this, &intfc, &subrecord](int32_t& av, specific_load_warnings::invalid_actor_value_index::which_type wt) {
+            if (!subrecord.read(av))
+               return;
+            if (av < -2 && av >= all_actor_value_info.size()) {
+               specific_load_warnings::invalid_actor_value_index notice(
+                  this->stub,
+                  av,
+                  wt
+               );
+               intfc.log_load_warning(notice);
+               //
+               av = -1;
+            }
+         };
+
          switch (subrecord.signature()) {
             case 'EDID': // already read by the FormStub
                break;
@@ -56,22 +73,8 @@ namespace dovah::loaded_forms {
                subrecord.read(this->flags);
                subrecord.read(this->base_cost);
                subrecord.read(this->associated_items.form);
-               subrecord.read(this->magic_skill);
-               {
-                  auto& av = this->resist_av;
-                  if (subrecord.read(av)) {
-                     if (av < -2 && av >= all_actor_value_info.size()) {
-                        specific_load_warnings::invalid_actor_value_index notice(
-                           this->stub,
-                           av,
-                           specific_load_warnings::invalid_actor_value_index::which_type::resist
-                        );
-                        intfc.log_load_warning(notice);
-                        //
-                        av = -1;
-                     }
-                  }
-               }
+               _read_actor_value_index(this->magic_skill, specific_load_warnings::invalid_actor_value_index::which_type::magic_skill);
+               _read_actor_value_index(this->resist_av,   specific_load_warnings::invalid_actor_value_index::which_type::resist);
                subrecord.skip_bytes(2); // Counter Effect count
                subrecord.skip_bytes(2); // padding
                if (auto& form = this->vfx.casting.light; subrecord.read(form)) {
@@ -91,21 +94,7 @@ namespace dovah::loaded_forms {
                subrecord.read(this->taper.duration);
                subrecord.read(this->associated_items.second_av_weight);
                subrecord.read(this->archetype);
-               {
-                  auto& av = this->associated_items.actor_value_indices[0];
-                  if (subrecord.read(av)) {
-                     if (av < -2 && av >= all_actor_value_info.size()) {
-                        specific_load_warnings::invalid_actor_value_index notice(
-                           this->stub,
-                           av,
-                           specific_load_warnings::invalid_actor_value_index::which_type::assoc_item_1
-                        );
-                        intfc.log_load_warning(notice);
-                        //
-                        av = -1;
-                     }
-                  }
-               }
+               _read_actor_value_index(this->associated_items.actor_value_indices[0], specific_load_warnings::invalid_actor_value_index::which_type::assoc_item_1);
                if (auto& form = this->vfx.projectile; subrecord.read(form)) {
                   intfc.warn_if_ref_is_wrong_type(form, form_type::projectile, subrecord.signature());
                }
@@ -114,21 +103,7 @@ namespace dovah::loaded_forms {
                }
                subrecord.read(this->casting_type);
                subrecord.read(this->delivery_type);
-               {
-                  auto& av = this->associated_items.actor_value_indices[1];
-                  if (subrecord.read(av)) {
-                     if (av < -2 && av >= all_actor_value_info.size()) {
-                        specific_load_warnings::invalid_actor_value_index notice(
-                           this->stub,
-                           av,
-                           specific_load_warnings::invalid_actor_value_index::which_type::assoc_item_2
-                        );
-                        intfc.log_load_warning(notice);
-                        //
-                        av = -1;
-                     }
-                  }
-               }
+               _read_actor_value_index(this->associated_items.actor_value_indices[1], specific_load_warnings::invalid_actor_value_index::which_type::assoc_item_2);
                if (auto& form = this->vfx.casting.art; subrecord.read(form)) {
                   intfc.warn_if_ref_is_wrong_type(form, form_type::art_object, subrecord.signature());
                }
@@ -218,6 +193,11 @@ namespace dovah::loaded_forms {
                   form_reference_t form;
                   if (subrecord.read(form)) {
                      this->counter_effects.push_back(form);
+                     intfc.warn_if_ref_is_wrong_type(form, form_type::magic_effect, subrecord.signature());
+                     if (form.get_form_stub() == &this->stub) {
+                        specific_load_warnings::counters_itself notice(this->stub);
+                        intfc.log_load_warning(notice);
+                     }
                   }
                }
                break;

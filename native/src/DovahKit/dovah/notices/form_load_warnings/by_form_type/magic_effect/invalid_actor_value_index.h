@@ -10,6 +10,7 @@ namespace dovah::notices::form_load_warnings::by_type::magic_effect {
          MAKE_CLONE_OVERLOAD;
       public:
          enum class which_type {
+            magic_skill,
             resist,
             assoc_item_1,
             assoc_item_2,
