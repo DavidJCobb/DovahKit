@@ -65,6 +65,7 @@
    #include "SoundCategory.h"
    #include "SoundDescriptor.h"
    #include "SoundOutputModel.h"
+   #include "Spell.h"
    #include "Static.h"
    #include "TextureSet.h"
    #include "Topic.h"
@@ -140,6 +141,7 @@ namespace dovah {
       loaded_forms::SoundCategory,
       loaded_forms::SoundDescriptor,
       loaded_forms::SoundOutputModel,
+      loaded_forms::Spell,
       loaded_forms::Static,
       loaded_forms::TextureSet,
       loaded_forms::Topic,

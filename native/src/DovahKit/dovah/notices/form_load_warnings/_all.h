@@ -7,6 +7,8 @@
    #include "./by_form_component/container/item_has_bad_owner_form_type.h"
    #include "./by_form_component/destruction/stage_serialized_index_out_of_bounds.h"
    #include "./by_form_component/leveled_list/leading_coed_bleedthrough.h"
+   #include "./by_form_component/magic_effect_list/expected_effect_item_subrecord.h"
+   #include "./by_form_component/magic_effect_list/misplaced_effect_item_subrecord.h"
    #include "./by_form_component/extra_data/room_ref_data_insufficient_rooms.h"
    #include "./by_form_component/extra_data/room_ref_data_swallowed_subrecord.h"
    #include "./by_form_component/package_event_dialogue/unrecognized_subrecord.h"
