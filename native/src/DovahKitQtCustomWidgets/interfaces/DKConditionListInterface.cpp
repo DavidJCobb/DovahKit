@@ -38,7 +38,7 @@ QString DKConditionListInterface::group() const {
 }
 
 QIcon DKConditionListInterface::icon() const {
-   return QIcon();
+   return QIcon(":/icons/listpane.png");
 }
 
 QString DKConditionListInterface::toolTip() const {

@@ -181,6 +181,12 @@
     <QtMoc Include="extensions\DKYesNoUnsetWidgetTaskMenuExtension.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="interfaces\DKMagicEffectListWidgetInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKMagicEffectListWidget.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="interfaces\DKCollapsiblePaneInterface.cpp">
@@ -339,6 +345,12 @@
     <ClCompile Include="ui\types\game_file_path.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\DKMagicEffectListWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="interfaces\DKMagicEffectListWidgetInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
@@ -384,6 +396,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="icons\DKAttackDataWidget.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="icons\listpane.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

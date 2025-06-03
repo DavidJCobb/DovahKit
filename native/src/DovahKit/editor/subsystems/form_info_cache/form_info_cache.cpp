@@ -187,16 +187,16 @@ namespace {
             //
             // Factions: For now, we only care about the DATA subrecord.
             //
-            if (signature == 'DATA') {
+            if (signature == cached_data::by_form::faction::subrecords_of_interest[0]) {
                cached_data::by_form::faction info;
                info.skim_subrecord(subrecord);
                cache.by_form_type.factions.threaded_insert(stub, info);
             }
          } else if constexpr (cached_data::by_form::magic_effect::form_type_is_of_interest(FormType)) {
             //
-            // Voicetypes: We only care about the DNAM subrecord.
+            // Magic Effects: We only care about the DATA subrecord.
             //
-            if (signature == 'DNAM') {
+            if (signature == cached_data::by_form::magic_effect::subrecords_of_interest[0]) {
                cached_data::by_form::magic_effect info;
                info.skim_subrecord(subrecord);
                cache.by_form_type.magic_effects.threaded_insert(stub, info);
@@ -205,7 +205,7 @@ namespace {
             //
             // Voicetypes: We only care about the DNAM subrecord.
             //
-            if (signature == 'DNAM') {
+            if (signature == cached_data::by_form::voicetype::subrecords_of_interest[0]) {
                cached_data::by_form::voicetype info;
                info.skim_subrecord(subrecord);
                cache.by_form_type.voicetypes.threaded_insert(stub, info);

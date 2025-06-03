@@ -9,6 +9,7 @@
    #include "./by_form_component/leveled_list/leading_coed_bleedthrough.h"
    #include "./by_form_component/magic_effect_list/expected_effect_item_subrecord.h"
    #include "./by_form_component/magic_effect_list/misplaced_effect_item_subrecord.h"
+   #include "./by_form_component/magic_effect_list/too_many_effects.h"
    #include "./by_form_component/extra_data/room_ref_data_insufficient_rooms.h"
    #include "./by_form_component/extra_data/room_ref_data_swallowed_subrecord.h"
    #include "./by_form_component/package_event_dialogue/unrecognized_subrecord.h"

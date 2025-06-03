@@ -181,10 +181,10 @@ DKFormNIFPickerDialog::DKFormNIFPickerDialog(QWidget* parent) : QDialog(parent) 
 }
 
 QString DKFormNIFPickerDialog::modelPath() const {
-   return this->ui.filePicker->value().to_string();
+   return this->ui.filePicker->value().lexically_relative(ui::types::game_file_path("Data\\Meshes\\")).to_string();
 }
 void DKFormNIFPickerDialog::setModelPath(QString path) {
-   this->ui.filePicker->setValue(ui::types::game_file_path(path));
+   this->ui.filePicker->setValue(ui::types::game_file_path("Data\\Meshes\\").append(path));
 }
 
 void DKFormNIFPickerDialog::setTextureSwaps(const std::vector<ui::types::nif_texture_swap>& swaps) {

@@ -56,6 +56,7 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+      this->effects.do_post_load_correctness_checks(intfc);
    }
    /*static*/ void Spell::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       if (!uib.is_final_file())

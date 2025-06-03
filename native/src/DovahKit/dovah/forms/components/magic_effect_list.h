@@ -8,6 +8,11 @@ namespace dovah::loaded_forms::components {
          static constexpr const uint32_t subrecord_signature_effect  = 'EFID'; // Effect ID
          static constexpr const uint32_t subrecord_signature_details = 'EFIT'; // Effect Item
 
+         // Individual form types can limit how many effects they're allowed to contain (e.g. 
+         // Ingredients only allowing four effects), but even if a form type applies no such 
+         // limit, the loader for EFID and friends refuses to load more than 255 effects.
+         static constexpr const size_t hard_maximum_count = 0xFF;
+
          struct item {
             form_reference_t effect;           // EFID // MGEF
             float            magnitude = 0.0F; // EFIT+0x00
@@ -17,7 +22,12 @@ namespace dovah::loaded_forms::components {
          };
 
       public:
+         magic_effect_list() : max_effect_count(hard_maximum_count) {}
+         magic_effect_list(size_t max_effect_count) : max_effect_count(max_effect_count) {} // for INGR, which caps to 4 effects
+
+      public:
          std::vector<item> items;
+         const size_t max_effect_count = 0; // zero = no maximum
       
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          void save(tes_record_writer&, load_order_interfaces::form_save& intfc);
@@ -31,5 +41,7 @@ namespace dovah::loaded_forms::components {
             void read(tes_record_reader&);
             void commit(form_stub_use_info_builder&);
          };
+
+         void do_post_load_correctness_checks(load_order_interfaces::form_load& intfc);
    };
 }

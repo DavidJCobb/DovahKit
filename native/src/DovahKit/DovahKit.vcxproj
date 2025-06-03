@@ -148,11 +148,13 @@
     <ClCompile Include="dovah\forms\Class.cpp" />
     <ClCompile Include="dovah\forms\CollisionLayer.cpp" />
     <ClCompile Include="dovah\forms\components\biped_object.cpp" />
+    <ClCompile Include="dovah\forms\components\common_spell_data.cpp" />
     <ClCompile Include="dovah\forms\components\conditions\context.cpp" />
     <ClCompile Include="dovah\forms\components\conditions\working_condition.cpp" />
     <ClCompile Include="dovah\forms\components\enchantable.cpp" />
     <ClCompile Include="dovah\forms\components\harvestable.cpp" />
     <ClCompile Include="dovah\forms\components\leveled_list.cpp" />
+    <ClCompile Include="dovah\forms\components\magic_effect_list.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attached_script.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attachment_data.cpp" />
     <ClCompile Include="dovah\forms\components\papyrus\attachment_header.cpp" />
@@ -191,6 +193,7 @@
     <ClCompile Include="dovah\forms\SoundCategory.cpp" />
     <ClCompile Include="dovah\forms\SoundDescriptor.cpp" />
     <ClCompile Include="dovah\forms\SoundOutputModel.cpp" />
+    <ClCompile Include="dovah\forms\Spell.cpp" />
     <ClCompile Include="dovah\forms\structs\actor_creature_sounds.cpp" />
     <ClCompile Include="dovah\forms\structs\container_object_extra_data.cpp" />
     <ClCompile Include="dovah\forms\structs\world_large_ref_data.cpp" />
@@ -224,11 +227,15 @@
     <ClCompile Include="dovah\utils\form_list_contains.cpp" />
     <ClCompile Include="dovah\utils\get_all_relevant_template_actors.cpp" />
     <ClCompile Include="dovah\utils\leveled_list_preview.cpp" />
+    <ClCompile Include="dovah\utils\magic_effect_list_item_cost_calculator.cpp" />
     <ClCompile Include="dovah\utils\refs_need_persistence_checker.cpp" />
+    <ClCompile Include="dovah\utils\text_replacers\effect_item_handler.cpp" />
     <ClCompile Include="editor\helpers\backend_error_to_string.cpp" />
     <ClCompile Include="editor\helpers\face_fx_phoneme_name.cpp" />
     <ClCompile Include="editor\helpers\form_stub_drag_drop.cpp" />
     <ClCompile Include="editor\helpers\backend_warning_to_string.cpp" />
+    <ClCompile Include="editor\localize\magic_casting_type.cpp" />
+    <ClCompile Include="editor\localize\magic_delivery_type.cpp" />
     <ClCompile Include="editor\helpers\nif_is_valid_master_particle_system.cpp" />
     <ClCompile Include="editor\helpers\skill_name_to_string.cpp" />
     <ClCompile Include="editor\helpers\story_event_name.cpp" />
@@ -872,6 +879,7 @@
     <ClCompile Include="ui\form_windows\sound_descriptor.cpp" />
     <ClCompile Include="ui\form_windows\sound_descriptor\SoundDescriptorSoundFilesModel.cpp" />
     <ClCompile Include="ui\form_windows\sound_output_model.cpp" />
+    <ClCompile Include="ui\form_windows\spell.cpp" />
     <ClCompile Include="ui\form_windows\static.cpp" />
     <ClCompile Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.cpp" />
     <ClCompile Include="ui\form_windows\textureset.cpp" />
@@ -1083,6 +1091,7 @@
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
     <ClCompile Include="widgets\DKKeyPickerWidget.cpp" />
+    <ClCompile Include="widgets\DKMagicEffectListWidget.cpp" />
     <ClCompile Include="widgets\DKNavmeshGenerationImportOptionPicker.cpp" />
     <ClCompile Include="widgets\DKObjectReferencePicker.cpp" />
     <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp" />
@@ -1113,6 +1122,7 @@
     <ClCompile Include="widgets\widget-dialogs\DKFormDestructionStageDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKLeveledListPreviewDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKFormNIFPickerDialog.cpp" />
+    <ClCompile Include="widgets\widget-dialogs\DKMagicEffectListItemDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.cpp" />
     <ClCompile Include="widgets\widget-models\bound-scripts\property.cpp" />
     <ClCompile Include="widgets\widget-models\bound-scripts\property_value.cpp" />
@@ -1127,6 +1137,7 @@
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKFormPicker\DKFormPickerModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKLeveledListPreviewModel.cpp" />
+    <ClCompile Include="widgets\widget-models\DKMagicEffectListModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKPapyrusFragmentFunctionModel.cpp" />
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp" />
     <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Action.cpp" />
@@ -1197,6 +1208,7 @@
     <ClInclude Include="dovah\forms\Class.h" />
     <ClInclude Include="dovah\forms\CollisionLayer.h" />
     <ClInclude Include="dovah\forms\components\biped_object.h" />
+    <ClInclude Include="dovah\forms\components\common_spell_data.h" />
     <ClInclude Include="dovah\forms\components\conditions\working_comparison.h" />
     <ClInclude Include="dovah\forms\components\conditions\context.h" />
     <ClInclude Include="dovah\forms\components\conditions\event_parameters.h" />
@@ -1206,6 +1218,7 @@
     <ClInclude Include="dovah\forms\components\enchantable.h" />
     <ClInclude Include="dovah\forms\components\harvestable.h" />
     <ClInclude Include="dovah\forms\components\leveled_list.h" />
+    <ClInclude Include="dovah\forms\components\magic_effect_list.h" />
     <ClInclude Include="dovah\forms\components\spell_list.h" />
     <ClInclude Include="dovah\forms\DualCastData.h" />
     <ClInclude Include="dovah\forms\EquipSlot.h" />
@@ -1234,6 +1247,7 @@
     <ClInclude Include="dovah\forms\SoundCategory.h" />
     <ClInclude Include="dovah\forms\SoundDescriptor.h" />
     <ClInclude Include="dovah\forms\SoundOutputModel.h" />
+    <ClInclude Include="dovah\forms\Spell.h" />
     <ClInclude Include="dovah\forms\structs\actor_creature_sounds.h" />
     <ClInclude Include="dovah\forms\structs\actor_facegen_morphs.h" />
     <ClInclude Include="dovah\forms\structs\alias_fill_params.h" />
@@ -1320,6 +1334,9 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data_insufficient_rooms.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data_swallowed_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\leveled_list\leading_coed_bleedthrough.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\magic_effect_list\expected_effect_item_subrecord.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\magic_effect_list\misplaced_effect_item_subrecord.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\magic_effect_list\too_many_effects.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\package_event_dialogue\unrecognized_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\cell_type_not_yet_known.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\data_for_wrong_cell_type.h" />
@@ -1388,6 +1405,7 @@
     <ClInclude Include="dovah\notices\_util.define.h" />
     <ClInclude Include="dovah\notices\_util.undef.h" />
     <ClInclude Include="dovah\use_info_entry.h" />
+    <ClInclude Include="dovah\utils\magic_effect_list_item_cost_calculator.h" />
     <ClInclude Include="dovah\utils\cell_grid_position.h" />
     <ClInclude Include="dovah\utils\compute_classed_stat_points.h" />
     <ClInclude Include="dovah\utils\compute_voice_file_location.h" />
@@ -1397,10 +1415,13 @@
     <ClInclude Include="dovah\utils\form_list_contains.h" />
     <ClInclude Include="dovah\utils\get_all_relevant_template_actors.h" />
     <ClInclude Include="dovah\utils\leveled_list_preview.h" />
+    <ClInclude Include="dovah\utils\text_replacers\do_text_replacement.h" />
+    <ClInclude Include="dovah\utils\text_replacers\effect_item_handler.h" />
     <ClInclude Include="editor\helpers\backend_error_to_string.h" />
     <ClInclude Include="editor\helpers\face_fx_phoneme_name.h" />
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
+    <QtMoc Include="widgets\widget-models\DKMagicEffectListModel.h" />
     <QtMoc Include="ui\form_windows\quest\QuestTabScenes.h" />
     <QtMoc Include="ui\form_windows\scene\SceneActorBehaviorModel.h" />
     <QtMoc Include="ui\form_windows\scene\SceneActorParticipationModel.h" />
@@ -1411,11 +1432,13 @@
     <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneDialogueAction.h" />
     <QtMoc Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.h" />
     <QtMoc Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.h" />
+    <ClInclude Include="editor\localize\magic_delivery_type.h" />
     <ClInclude Include="editor\helpers\story_event_name.h" />
     <QtMoc Include="ui\form_windows\music_type.h" />
     <QtMoc Include="ui\form_windows\camera_shot.h" />
     <QtMoc Include="ui\form_windows\impact_data.h" />
     <QtMoc Include="ui\form_windows\magic_effect.h" />
+    <ClInclude Include="editor\localize\magic_casting_type.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\_base.h" />
@@ -1560,6 +1583,7 @@
     <QtMoc Include="ui\form_windows\sound.h" />
     <ClInclude Include="ui\form_windows\sound_descriptor\SoundDescriptorSoundFilesModel.h" />
     <QtMoc Include="ui\form_windows\sound_output_model.h" />
+    <QtMoc Include="ui\form_windows\spell.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsFormFilter.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsModel.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoResponseTableviewModel.h" />
@@ -1613,7 +1637,9 @@
     <QtMoc Include="widgets\widget-data\DKCustomFormFilter.h" />
     <QtMoc Include="ui\form_windows\scene\SceneFormVisualEditor.h" />
     <QtMoc Include="widgets\DKYesNoUnsetWidget.h" />
+    <QtMoc Include="widgets\DKMagicEffectListWidget.h" />
     <ClInclude Include="widgets\widget-data\DKCustomFormFilterableModelMixin.h" />
+    <QtMoc Include="widgets\widget-dialogs\DKMagicEffectListItemDialog.h" />
     <ClInclude Include="widgets\widget-models\DKAttackDataModel.h" />
     <ClInclude Include="widgets\widget-models\DKFormDestructionStageListModel.h" />
     <QtMoc Include="widgets\widget-models\DKFormPicker\DKFormPickerDialogModel.h" />
@@ -2979,6 +3005,7 @@
     <QtUic Include="widgets\widget-dialogs\DKFormDestructionDataDialog.ui" />
     <QtUic Include="widgets\widget-dialogs\DKFormDestructionStageDialog.ui" />
     <QtUic Include="widgets\widget-dialogs\DKFormNIFPickerDialog.ui" />
+    <QtUic Include="widgets\widget-dialogs\DKMagicEffectListItemDialog.ui" />
     <QtUic Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.ui" />
   </ItemGroup>
   <ItemGroup>

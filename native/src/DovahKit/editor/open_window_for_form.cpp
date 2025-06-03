@@ -58,6 +58,7 @@
 #include "../ui/form_windows/sound_category.h"
 #include "../ui/form_windows/sound_descriptor.h"
 #include "../ui/form_windows/sound_output_model.h"
+#include "../ui/form_windows/spell.h"
 #include "../ui/form_windows/static.h"
 #include "../ui/form_windows/textureset.h"
 #include "../ui/form_windows/topic.h"
@@ -127,6 +128,7 @@ namespace {
       std::pair{ dovah::form_type::sound_category,    _make<FormDialogSoundCategory> },
       std::pair{ dovah::form_type::sound_descriptor,  _make<FormDialogSoundDescriptor> },
       std::pair{ dovah::form_type::sound_output_model, _make<FormDialogSoundOutputModel> },
+      std::pair{ dovah::form_type::spell,             _make<FormDialogSpell> },
       std::pair{ dovah::form_type::statik,            _make<FormDialogStatic> },
       std::pair{ dovah::form_type::texture_set,       _make<FormDialogTextureSet> },
       std::pair{ dovah::form_type::topic,             _make<FormDialogTopic> },

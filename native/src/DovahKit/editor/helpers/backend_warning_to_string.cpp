@@ -586,6 +586,52 @@ namespace editor_helpers {
                   ).arg(subject);
                }
             #pragma endregion
+            #pragma region magic effect list
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::magic_effect_list::expected_effect_item_subrecord*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  QString subrecord = cobb::qt::four_cc_to_string(casted->subrecord_signature);
+                  //
+                  return QObject::tr(
+                     "Form %1 contains an EFID subrecord followed by a %2 subrecord. The game only expects to see EFIT or "
+                     "CTDA here, and will misread the %2 subrecord as if it were EFIT.",
+                     disambig
+                  ).arg(subject).arg(subrecord);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::magic_effect_list::misplaced_effect_item_subrecord*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Form %1 contains an EFIT subrecord that isn't placed immediately after an EFID subrecord. The game "
+                     "may fail to load this subrecord properly.",
+                     disambig
+                  ).arg(subject);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::magic_effect_list::too_many_effects*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+
+                  QString format;
+                  if (casted->effects_allowed == casted->hard_maximum) {
+                     format = QObject::tr(
+                        "Form %1 has too many magic effects. It contains %2 effects, but the game will only load up to %4 "
+                        "effects.",
+                        disambig
+                     );
+                  } else if (casted->effects_contained > casted->hard_maximum) {
+                     format = QObject::tr(
+                        "Form %1 has too many magic effects. It contains %2 effects, but this form type only allows %3 "
+                        "effects, and the game itself won't load more than %4 effects regardless of form type.",
+                        disambig
+                     );
+                  } else {
+                     format = QObject::tr(
+                        "Form %1 has too many magic effects. It contains %2 effects, but this form type only allows %3 "
+                        "effects.",
+                        disambig
+                     );
+                  }
+                  return format.arg(subject).arg(casted->effects_contained).arg(casted->effects_allowed).arg(casted->hard_maximum);
+               }
+            #pragma endregion
             #pragma region package event dialogue
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::package_event_dialogue::unrecognized_subrecord*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);

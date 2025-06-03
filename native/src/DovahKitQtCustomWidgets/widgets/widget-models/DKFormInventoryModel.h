@@ -6,7 +6,7 @@
 namespace dovah {
    namespace loaded_forms {
       namespace components {
-         class container_data;
+         struct container_data;
       }
       class Form;
    }

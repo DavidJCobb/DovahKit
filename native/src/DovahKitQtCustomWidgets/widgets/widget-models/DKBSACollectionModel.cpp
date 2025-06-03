@@ -1,4 +1,5 @@
 #include "DKBSACollectionModel.h"
+#include <algorithm>
 #include <QApplication>
 #include <QIcon>
 #include <QMimeDatabase>
@@ -277,15 +278,15 @@ void Folder::absorb(Folder& other) {
    }
 }
 void Folder::recursiveSort() {
-   qSort(this->subfolders.begin(), this->subfolders.end(), [](const Folder* a, const Folder* b) { return a->name < b->name; });
-   qSort(this->files.begin(), this->files.end(), [](const File* a, const File* b) { return a->name < b->name; });
+   std::sort(this->subfolders.begin(), this->subfolders.end(), [](const Folder* a, const Folder* b) { return a->name < b->name; });
+   std::sort(this->files.begin(), this->files.end(), [](const File* a, const File* b) { return a->name < b->name; });
    //
    for (auto* sf : this->subfolders)
       sf->recursiveSort();
 }
 void Folder::sort() {
-   qSort(this->subfolders.begin(), this->subfolders.end(), [](const Folder* a, const Folder* b) { return a->name < b->name; });
-   qSort(this->files.begin(), this->files.end(), [](const File* a, const File* b) { return a->name < b->name; });
+   std::sort(this->subfolders.begin(), this->subfolders.end(), [](const Folder* a, const Folder* b) { return a->name < b->name; });
+   std::sort(this->files.begin(), this->files.end(), [](const File* a, const File* b) { return a->name < b->name; });
 }
 #pragma endregion
 

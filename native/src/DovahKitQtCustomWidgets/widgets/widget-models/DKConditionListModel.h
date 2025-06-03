@@ -1,5 +1,5 @@
 #pragma once
-#if defined(QT_DESIGNER_LIB)
+#if defined(QT_PLUGIN)
    #error This model relies on DovahKit to run. Do not include it when compiling the Qt Designer plug-in.
 #endif
 #include <QAbstractTableModel>
@@ -28,19 +28,21 @@ class DKConditionListModel : public DKGenericListModel<DKConditionListModel, ui:
             _COUNT
          };
       };
-      static constexpr const size_t ColumnCount = Column::_COUNT;
+      static constexpr const size_t column_count = Column::_COUNT;
 
       using BackendCondition     = dovah::loaded_forms::components::condition;
       using BackendConditionList = dovah::loaded_forms::components::condition_list;
 
       using Condition = node_type;
-
-   public:
-      using DKGenericListModel::moveItem;
-      using DKGenericListModel::moveItems;
       
    protected:
       ui::types::conditions::context _context;
+
+      // For bifurcated condition lists -- that is, edge-cases where a form ends up accidentally 
+      // coalescing conditions across multiple records/overrides, such that the first N conditions 
+      // come from a master and the conditions after that come from the latest file (potentially 
+      // the active file).
+      size_t _allow_modifications_from = 0;
       
    public:
       DKConditionListModel(QObject* parent = nullptr);
@@ -58,6 +60,9 @@ class DKConditionListModel : public DKGenericListModel<DKConditionListModel, ui:
       
    public slots:
       void clear();
+
+   public:
+      virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
       
    public:
       [[nodiscard]] const std::vector<Condition> conditions() const noexcept;
@@ -74,4 +79,8 @@ class DKConditionListModel : public DKGenericListModel<DKConditionListModel, ui:
 
       // Returns number of invalid conditions discarded.
       size_t importFrom(dovah::loaded_forms::Form&, const BackendConditionList&);
+      size_t importFrom(dovah::loaded_forms::Form&, const std::vector<Condition>&);
+
+      size_t importBifurcatedList(dovah::loaded_forms::Form&, const BackendConditionList& locked, const BackendConditionList& normal);
+      void exportBifurcatedList(dovah::loaded_forms::Form&, BackendConditionList& locked, BackendConditionList& normal);
 };

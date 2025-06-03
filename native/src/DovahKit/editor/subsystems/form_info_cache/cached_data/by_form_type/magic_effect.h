@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <optional>
 #include "./_base.h"
 #include "../_base_macros.define.h"
@@ -19,6 +20,7 @@ namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {
       public:
          dovah::magic_casting_type  casting_type  = dovah::magic_casting_type::concentration;
          dovah::magic_delivery_type delivery_type = dovah::magic_delivery_type::self;
+         int32_t magic_school = -1;
 
       public:
          constexpr magic_effect() {}

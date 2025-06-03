@@ -54,7 +54,7 @@
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,0">
         <item>
-         <widget class="QTableView" name="effects"/>
+         <widget class="DKMagicEffectListWidget" name="effects"/>
         </item>
         <item>
          <widget class="QStackedWidget" name="conditionExplanationStack">
@@ -186,7 +186,11 @@
         </widget>
        </item>
        <item>
-        <widget class="QDoubleSpinBox" name="castDuration"/>
+        <widget class="QDoubleSpinBox" name="castDuration">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -386,6 +390,9 @@
            <property name="whatsThis">
             <string>The maximum range of a ranged spell.</string>
            </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
           </widget>
          </item>
          <item>
@@ -513,6 +520,11 @@
    <class>DKFormPicker</class>
    <extends>QWidget</extends>
    <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKMagicEffectListWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKMagicEffectListWidget.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

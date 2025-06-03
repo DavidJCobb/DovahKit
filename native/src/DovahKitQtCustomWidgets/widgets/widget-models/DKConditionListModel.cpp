@@ -5,13 +5,33 @@
 #include "dovah/data/conditions/all_function_info.h"
 #include "dovah/data/conditions/all_parameter_types.h"
 #include "dovah/data/conditions/event_function.h"
+#include "dovah/data/hardcoded_form_ids.h"
+#include "dovah/forms/components/conditions.h"
 #include "editor/helpers/actor_value_index_to_name.h"
 #include "editor/helpers/form_type_name_to_string.h"
 #include "editor/core.h"
 
-#include "dovah/forms/factories/hardcoded.h"
 #include "dovah/forms/Package.h"
 #include "dovah/forms/Quest.h"
+
+
+namespace {
+   namespace special_case_functions {
+      constexpr const auto _lookup_function_id_by_name(std::string_view name) {
+         for (const auto& info : dovah::conditions::all_vanilla_function_info)
+            if (info.name == name)
+               return info.id;
+         throw;
+      }
+
+      constexpr const auto GetVMQuestVariable    = _lookup_function_id_by_name("GetVMQuestVariable");
+      constexpr const auto GetVMScriptVariable   = _lookup_function_id_by_name("GetVMScriptVariable");
+      constexpr const auto IsInCombat            = _lookup_function_id_by_name("IsInCombat");
+      constexpr const auto IsLimbGone            = _lookup_function_id_by_name("IsLimbGone");
+      constexpr const auto IsPlayerActionActive  = _lookup_function_id_by_name("IsPlayerActionActive");
+      constexpr const auto IsSceneActionComplete = _lookup_function_id_by_name("IsSceneActionComplete");
+   }
+}
 
 DKConditionListModel::DKConditionListModel(QObject* parent) : DKGenericListModel(parent) {
    auto& editor = DovahKitCore::get();
@@ -102,8 +122,56 @@ QString DKConditionListModel::_stringify_condition_parameter(const Condition& co
    }
 
    auto& parameter = condition.parameters[i];
+
+   #pragma region Special-case functions
+   if (condition.function == special_case_functions::IsSceneActionComplete) {
+      //
+      // TODO: First parameter is a Scene form; second parameter is the index of an action in that 
+      //       scene. When we can load Scenes, show a drop-down of the actions instead of a spinbox.
+      // 
+      // TODO: Should we handle GetStageDone's quest stage parameter the same way, and remove the 
+      //       "quest stage" type that's built into the condition internals?
+      //
+   }
+   if (auto* casted = std::get_if<int32_t>(&parameter)) {
+      auto value = *casted;
+      if (condition.function == special_case_functions::IsLimbGone) {
+         static constexpr const auto names = std::array{
+            "Torso",
+            "Head",
+            "Eye",
+            "Look At",
+            "Fly Grab",
+            "Saddle",
+         };
+         if (value < names.size()) {
+            return tr("%1 (%2)", "IsLimbGone special-case names").arg(value).arg(names[value]);
+         }
+      } else if (condition.function == special_case_functions::IsPlayerActionActive) {
+         static const auto names = std::array{
+            tr("Swing Melee Weapon",    "PLAYER_ACTION"),
+            tr("Cast Spell",            "PLAYER_ACTION"),
+            tr("Shooting Bow",          "PLAYER_ACTION"),
+            tr("Grabbing (Z-Key) Ref",  "PLAYER_ACTION"),
+            tr("Knocking Over Objects", "PLAYER_ACTION"),
+            tr("Standing on Furniture", "PLAYER_ACTION"),
+            tr("Zoomed-In Aim",         "PLAYER_ACTION"),
+            tr("Destroy Object",        "PLAYER_ACTION"),
+            tr("Locked Object",         "PLAYER_ACTION"),
+            tr("Pickpocket Crosshair",  "PLAYER_ACTION"),
+            tr("Cast Self Spell",       "PLAYER_ACTION"),
+            tr("Shout",                 "PLAYER_ACTION"),
+            tr("Actor Collision",       "PLAYER_ACTION"),
+         };
+         if (value < names.size()) {
+            return names[value];
+         }
+      }
+   }
+   #pragma endregion
+
    if (condition.get_argument_typeinfo(i) == &dovah::conditions::parameter_types::ActorValue) {
-      if (auto* casted = std::get_if<uint32_t>(&parameter)) {
+      if (auto* casted = std::get_if<int32_t>(&parameter)) {
          QString out = editor_helpers::actor_value_index_to_name(*casted);
          if (!out.isEmpty())
             return out;
@@ -288,7 +356,7 @@ QVariant DKConditionListModel::data_of(const node_type& node, Qt::ItemDataRole r
                if (function->argument_types[0] != &dovah::conditions::parameter_types::None) {
                   bool dummy;
                   auto value_a = _stringify_condition_parameter(node, 0);
-                  if (function->argument_types[1] != &dovah::conditions::parameter_types::None) {
+                  if (function->argument_types[1] && function->argument_types[1] != &dovah::conditions::parameter_types::None) {
                      auto value_b = _stringify_condition_parameter(node, 1);
                      return tr("%1, %2").arg(value_a).arg(value_b);
                   }
@@ -353,12 +421,48 @@ QVariant DKConditionListModel::data_of(const node_type& node, Qt::ItemDataRole r
    return {};
 }
 Qt::ItemFlags DKConditionListModel::flags_of(const node_type& node, size_t column) const {
-   return Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable;
+   Qt::ItemFlags flags = Qt::ItemFlag::ItemIsSelectable;
+   if (this->_allow_modifications_from == 0) {
+      flags |= Qt::ItemFlag::ItemIsEnabled;
+   } else {
+      bool enabled = true;
+
+      assert(this->_allow_modifications_from < this->_nodes.size());
+      for (size_t i = 0; i < this->_allow_modifications_from; ++i) {
+         if (this->_nodes[i] == &node) {
+            enabled = false;
+            break;
+         }
+      }
+      if (enabled)
+         flags |= Qt::ItemFlag::ItemIsEnabled;
+   }
+   return flags;
 }
       
 void DKConditionListModel::clear() {
    DKGenericListModel::clear();
    this->_context = {};
+   this->_allow_modifications_from = 0;
+}
+
+/*virtual*/ QVariant DKConditionListModel::headerData(int section, Qt::Orientation orientation, int role) const /*override*/ {
+   if (orientation != Qt::Orientation::Horizontal)
+      return {};
+   if (role != Qt::DisplayRole && role != Qt::ToolTipRole)
+      return {};
+
+   constexpr const char* disambig = "column header";
+   switch (section) {
+      case Column::Target:   return tr("Target", disambig);
+      case Column::Function: return tr("Function", disambig);
+      case Column::Args:     return tr("Arguments", disambig);
+      case Column::Operator: return tr("Operator", disambig);
+      case Column::Operand:  return tr("Operand", disambig);
+      case Column::UsesOr:   return tr("", "column header (and/or linkage)");
+   }
+
+   return {};
 }
 
 [[nodiscard]] const std::vector<DKConditionListModel::Condition> DKConditionListModel::conditions() const noexcept {
@@ -377,11 +481,19 @@ void DKConditionListModel::duplicate(const QItemSelection& indices) {
    for (const QItemSelectionRange& range : indices) {
       int top    = range.top();
       int bottom = range.bottom();
+      int at     = bottom;
       int diff   = bottom - top;
-      this->beginInsertRows(dummy, bottom, bottom + diff);
+      if (at < this->_allow_modifications_from) {
+         //
+         // If some of the conditions we're duplicating are in the locked range, 
+         // ensure that we duplicate them below that range.
+         //
+         at = this->_allow_modifications_from;
+      }
+      this->beginInsertRows(dummy, at, at + diff);
       for (int i = bottom; i >= top; --i) {
          auto* clone = new node_type{ *this->_nodes[i] };
-         this->_nodes.insert(this->_nodes.begin() + bottom + 1, clone);
+         this->_nodes.insert(this->_nodes.begin() + at + 1, clone);
       }
       this->endInsertRows();
    }
@@ -389,6 +501,11 @@ void DKConditionListModel::duplicate(const QItemSelection& indices) {
 QModelIndex DKConditionListModel::insertAt(const Condition& data, size_t at) {
    if (at >= this->_nodes.size())
       at = this->_nodes.size();
+   if (at < this->_allow_modifications_from)
+      //
+      // Do not allow insertions into the locked range.
+      //
+      at = this->_allow_modifications_from;
 
    this->beginInsertRows({}, at, at);
    auto* clone = new node_type{ data };
@@ -407,10 +524,35 @@ void DKConditionListModel::move(const QItemSelection& indices, int down) {
       int to;
       int top    = range.top();
       int bottom = range.bottom();
+      if (top < this->_allow_modifications_from) {
+         //
+         // Some of the conditions we wish to move are locked. Omit them from 
+         // the move operation.
+         //
+         if (bottom < this->_allow_modifications_from)
+            //
+            // Actually, all of the conditions we wish to move are locked. 
+            // Skip this move operation.
+            //
+            continue;
+      }
       if (down < 0) {
          if (top < -down)
             continue;
          to = top + down;
+
+         if (to < this->_allow_modifications_from) {
+            //
+            // We're trying to move the conditions into the locked range. Stop 
+            // just short of it.
+            //
+            to = this->_allow_modifications_from;
+            if (top == to)
+               //
+               // We can't move them any further.
+               //
+               continue;
+         }
       } else if (down > 0) {
          if (bottom + down >= size)
             continue;
@@ -434,6 +576,19 @@ void DKConditionListModel::remove(const QItemSelection& indices) {
    for (const QItemSelectionRange& range : indices) {
       int top    = range.top();
       int bottom = range.bottom();
+      if (top < this->_allow_modifications_from) {
+         //
+         // Some of the conditions we're trying to edit are locked. Omit them from 
+         // the removal operation.
+         //
+         if (bottom < this->_allow_modifications_from)
+            //
+            // Actually, all of the conditions we wish to remove are locked. Skip 
+            // this removal operation.
+            //
+            continue;
+         top = this->_allow_modifications_from;
+      }
       this->beginRemoveRows(dummy, top, bottom);
       list.erase(list.begin() + top, list.begin() + bottom + 1);
       this->endRemoveRows();
@@ -448,10 +603,15 @@ const DKConditionListModel::Condition* DKConditionListModel::getCondition(size_t
 void DKConditionListModel::setCondition(size_t row, const Condition& src) {
    if (row >= this->_nodes.size())
       return;
+   if (row < this->_allow_modifications_from)
+      //
+      // Do not allow overwriting conditions in the locked range.
+      //
+      return;
    *this->_nodes[row] = src;
 
    auto tl = this->index(row, 0, {});
-   auto br = this->index(row, ColumnCount - 1, {});
+   auto br = this->index(row, column_count - 1, {});
    emit dataChanged(tl, br);
 }
 
@@ -459,6 +619,8 @@ void DKConditionListModel::setCondition(size_t row, const Condition& src) {
 size_t DKConditionListModel::importFrom(dovah::loaded_forms::Form& src_form, const BackendConditionList& src) {
    size_t invalid = 0;
    this->performReset([this, &src_form, &src, &invalid]() {
+      this->_allow_modifications_from = 0;
+
       size_t size = src.size();
       this->_nodes.reserve(size);
       for (size_t i = 0; i < size; ++i) {
@@ -473,4 +635,60 @@ size_t DKConditionListModel::importFrom(dovah::loaded_forms::Form& src_form, con
       this->_context = ui::types::conditions::context(src_form.stub, src_form.is_working_copy);
    });
    return invalid;
+}
+size_t DKConditionListModel::importFrom(dovah::loaded_forms::Form& src_form, const std::vector<Condition>& src) {
+   size_t invalid = 0;
+   this->performReset([this, &src_form, &src, &invalid]() {
+      this->_allow_modifications_from = 0;
+
+      size_t size = src.size();
+      this->_nodes.reserve(size);
+      for (size_t i = 0; i < size; ++i) {
+         auto* node = new node_type{ src[i] };
+         if (!node->valid()) {
+            ++invalid;
+            delete node;
+            continue;
+         }
+         this->_nodes.push_back(node);
+      }
+      this->_context = ui::types::conditions::context(src_form.stub, src_form.is_working_copy);
+   });
+   return invalid;
+}
+
+size_t DKConditionListModel::importBifurcatedList(dovah::loaded_forms::Form& src_form, const BackendConditionList& locked, const BackendConditionList& normal) {
+   size_t invalid = 0;
+   this->performReset([this, &src_form, &invalid, &locked, &normal]() {
+      this->_allow_modifications_from = 0;
+
+      auto _handle = [this, &invalid](const BackendConditionList& src, bool is_locked) {
+         size_t size = src.size();
+         this->_nodes.reserve(size);
+         for (size_t i = 0; i < size; ++i) {
+            auto* node = new node_type{ src[i] };
+            if (!is_locked) {
+               if (!node->valid()) {
+                  ++invalid;
+                  delete node;
+                  continue;
+               }
+            }
+            this->_nodes.push_back(node);
+         }
+      };
+      _handle(locked, true);
+      _handle(normal, false);
+
+      this->_context = ui::types::conditions::context(src_form.stub, src_form.is_working_copy);
+   });
+   return invalid;
+}
+void DKConditionListModel::exportBifurcatedList(dovah::loaded_forms::Form& dst_form, BackendConditionList& locked, BackendConditionList& normal) {
+   normal.clear(dst_form);
+   for (size_t i = this->_allow_modifications_from; i < this->_nodes.size(); ++i) {
+      auto& src_item = *this->_nodes[i];
+      auto& dst_item = normal.emplace_back();
+      dst_item.commit(dst_form, src_item);
+   }
 }

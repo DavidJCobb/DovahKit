@@ -54,6 +54,7 @@ namespace dovah::loaded_forms {
                //
                power_affects_magnitude = 0x00200000,
                power_affects_duration  = 0x00400000,
+               unknown_24              = 0x01000000, // CK: if set, the effect doesn't contribute to total spell cost
                //
                painless = 0x04000000,
                no_hit_effect = 0x08000000,

@@ -1,10 +1,11 @@
 #pragma once
-#if defined(QT_DESIGNER_LIB)
+#if defined(QT_PLUGIN)
    #error This model relies on DovahKit to run. Do not include it when compiling the Qt Designer plug-in.
 #endif
 #include <QAbstractItemModel>
 #include <QString>
 #include <QVector>
+#include "dovah/form_types.h"
 
 namespace dovah {
    class form_stub;
@@ -39,6 +40,7 @@ class DKRefsInCellModel : public QAbstractListModel {
       QVector<Item*> children;     // always kept sorted
       QVector<Item*> filtered_out; // not kept sorted
       dovah::form_stub* parent_cell = nullptr;
+      dovah::form_type  filter_form_type = dovah::form_type::none;
       QString filter_string;
       std::string required_scriptname;
 
@@ -76,6 +78,9 @@ class DKRefsInCellModel : public QAbstractListModel {
       constexpr const std::string& requiredScriptname() const { return this->required_scriptname; }
       void setRequiredScriptname(QString);
       void setRequiredScriptname(std::string_view);
+
+      constexpr dovah::form_type requiredFormType() const { return this->filter_form_type; }
+      void setRequiredFormType(dovah::form_type);
 
       dovah::form_stub* ref(QModelIndex) const;
       

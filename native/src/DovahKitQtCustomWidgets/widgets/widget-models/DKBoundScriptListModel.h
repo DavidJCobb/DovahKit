@@ -1,5 +1,5 @@
 #pragma once
-#if defined(QT_DESIGNER_LIB)
+#if defined(QT_PLUGIN)
    #error This model relies on DovahKit to run. Do not include it when compiling the Qt Designer plug-in.
 #endif
 #include <string>
@@ -99,5 +99,7 @@ class DKBoundScriptListModel : public QAbstractItemModel {
       // If an inherited script has been locally removed, this un-removes it.
       bool undeleteScript(const QModelIndex&);
 
-      std::vector<std::string> getAllBoundScriptNames() const;
+      std::vector<std::string> getAllBoundScriptNames(bool include_inherited_and_removed = true) const;
+      QString boundScriptName(const QModelIndex&) const;
+      QString boundScriptName(size_t row) const;
 };

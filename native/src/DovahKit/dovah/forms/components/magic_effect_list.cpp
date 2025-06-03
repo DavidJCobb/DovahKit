@@ -3,6 +3,7 @@
 
 #include "../../notices/form_load_warnings/by_form_component/magic_effect_list/expected_effect_item_subrecord.h"
 #include "../../notices/form_load_warnings/by_form_component/magic_effect_list/misplaced_effect_item_subrecord.h"
+#include "../../notices/form_load_warnings/by_form_component/magic_effect_list/too_many_effects.h"
 
 namespace {
    namespace specific_load_warnings {
@@ -148,5 +149,17 @@ namespace dovah::loaded_forms::components {
    void magic_effect_list::use_info_state::commit(form_stub_use_info_builder& uib) {
       for (auto id : this->effect_forms)
          uib.add_outbound_reference(id);
+   }
+
+   void magic_effect_list::do_post_load_correctness_checks(load_order_interfaces::form_load& intfc) {
+      size_t count = this->items.size();
+      if (this->items.size() > this->max_effect_count) {
+         specific_load_warnings::too_many_effects notice(
+            const_cast<form_stub&>(intfc.target_stub),
+            count,
+            this->max_effect_count
+         );
+         intfc.log_load_warning(notice);
+      }
    }
 }

@@ -124,6 +124,7 @@
     <ClCompile Include="interfaces\DKFormNIFPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKFormPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKGameFilePickerInterface.cpp" />
+    <ClCompile Include="interfaces\DKMagicEffectListWidgetInterface.cpp" />
     <ClCompile Include="interfaces\DKNavmeshGenerationImportOptionPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKObjectReferencePickerInterface.cpp" />
     <ClCompile Include="interfaces\DKPapyrusBoundScriptListPaneInterface.cpp" />
@@ -149,6 +150,7 @@
     <ClCompile Include="widgets\DKFormPicker.cpp" />
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
+    <ClCompile Include="widgets\DKMagicEffectListWidget.cpp" />
     <ClCompile Include="widgets\DKNavmeshGenerationImportOptionPicker.cpp" />
     <ClCompile Include="widgets\DKObjectReferencePicker.cpp" />
     <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp" />
@@ -207,6 +209,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\form_types.h" />
+    <QtMoc Include="interfaces\DKMagicEffectListWidgetInterface.h" />
+    <QtMoc Include="widgets\DKMagicEffectListWidget.h" />
     <QtMoc Include="interfaces\DKYesNoUnsetWidgetInterface.h" />
     <QtMoc Include="widgets\DKYesNoUnsetWidget.h" />
     <QtMoc Include="widgets\DKPapyrusBoundScriptListPane.h" />
@@ -259,6 +263,7 @@
     <Image Include="icons\DKYesNoUnsetWidget.png" />
     <Image Include="icons\dropdown.png" />
     <Image Include="icons\listpane-with-buttons.png" />
+    <Image Include="icons\listpane.png" />
     <Image Include="icons\slider.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

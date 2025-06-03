@@ -2,7 +2,8 @@
 #include <cassert>
 #include <vector>
 #include "dovah/form_stub.h"
-#include "dovah/form_stub_helpers.h"
+#include "dovah/form_stubs/helpers/for_each_child_form.h"
+#include "dovah/form_stubs/helpers/get_base_form.h"
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/subsystems/papyrus/core.h"
@@ -72,6 +73,10 @@ DKRefsInCellModel::~DKRefsInCellModel() {
 bool DKRefsInCellModel::_item_matches_filter(const Item& item) const {
    if (item.is_prepended) // never filter force-prepended items out
       return true;
+   if (this->filter_form_type != dovah::form_type::none && this->filter_form_type != dovah::form_type::reference) {
+      if (item.stub->form_type != this->filter_form_type)
+         return false;
+   }
    if (!this->filter_string.isEmpty())
       if (!item.cached_text.contains(this->filter_string, Qt::CaseInsensitive))
          return false;
@@ -478,13 +483,16 @@ void DKRefsInCellModel::_sort() {
    QModelIndexList map_to;
    for (auto& pqmi : map_from) {
       int row_prior = pqmi.row();
-      int row_after;
-      if (row_prior > size) {
-         row_after = -1;
-      } else {
-         row_after = mapping[row_prior];
+      int row_after = -1;
+      if (row_prior >= 0 && row_prior < size) {
+         for (size_t i = 0; i < size; ++i) {
+            if (mapping[i] == row_prior) {
+               row_after = i;
+               break;
+            }
+         }
       }
-      map_to.push_back(this->index(row_after, 0, {}));
+      map_to.push_back(this->index(row_after, pqmi.column(), {}));
    }
 
    //
@@ -670,6 +678,15 @@ void DKRefsInCellModel::setRequiredScriptname(std::string_view desired) {
    if (dovah::papyrus::helpers::name_equals(desired, this->required_scriptname))
       return;
    this->required_scriptname = desired;
+   this->_filter();
+}
+
+void DKRefsInCellModel::setRequiredFormType(dovah::form_type ft) {
+   if (ft == dovah::form_type::reference)
+      ft = dovah::form_type::none;
+   if (ft == this->requiredFormType())
+      return;
+   this->filter_form_type = ft;
    this->_filter();
 }
 

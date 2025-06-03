@@ -1,5 +1,5 @@
 #pragma once
-#if defined(QT_DESIGNER_LIB)
+#if defined(QT_PLUGIN)
    #error This model relies on DovahKit to run. Do not include it when compiling the Qt Designer plug-in.
 #endif
 #include <QAbstractItemModel>
@@ -162,6 +162,8 @@ class DKBoundScriptModel : public QAbstractItemModel {
          virtual QVariant data(const QModelIndex& index, int role) const override;
          virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
       #pragma endregion
+
+      inline QString scriptname() const { return this->_scriptname; }
 
       constexpr bool anyPropertiesEditedLocally() const;
       constexpr bool anyPropertiesDiscardedOnLoad() const;
