@@ -21,12 +21,13 @@ namespace dovah::loaded_forms::components {
 
          struct flag {
             enum type : uint32_t {
-               manual_cost_calc  = 0x00000001,
-               pc_start_spell    = 0x00020000,
-               aoe_ignores_los   = 0x00080000,
-               ignore_resistance = 0x00100000,
-               no_absorb_reflect = 0x00200000,
-               no_dual_cast_mod  = 0x00800000,
+               manual_cost_calc             = 0x00000001,
+               script_effect_always_applies = 0x00004000, // legacy. used in SCRL UI
+               pc_start_spell               = 0x00020000,
+               aoe_ignores_los              = 0x00080000,
+               ignore_resistance            = 0x00100000,
+               no_absorb_reflect            = 0x00200000,
+               no_dual_cast_mod             = 0x00800000,
             };
          };
          using flags_t = std::underlying_type_t<flag::type>;

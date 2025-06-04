@@ -141,13 +141,13 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Items | SLGM | Soul Gem       | ✅ | ✅ | ⬛ |
 | Items | WEAP | Weapon         | ✅ | ✅ | ⬛ |
 | Magic | DUAL | Dual Cast Data | ✅ | ✅ | ⬛ |
-| Magic | ENCH | Enchantment    | ⬛ | ⬛ | ⬛ | Reusable code for the effect list would be good |
+| Magic | ENCH | Enchantment    | ⬛ | 🟨 | ⬛ |
 | Magic | LVSP | LeveledSpell   | ✅ | ✅ | ⬛ |
 | Magic | MGEF | Magic Effect   | ⬛ | 🟨 | ⬛ |
-| Magic | ALCH | Potion         | ⬛ | ⬛ | ⬛ | Reusable code for the effect list would be good |
-| Magic | SCRL | Scroll         | ⬛ | ⬛ | ⬛ | Reusable code for the effect list would be good |
+| Magic | ALCH | Potion         | ⬛ | 🟨 | ⬛ |
+| Magic | SCRL | Scroll         | ⬛ | 🟨 | ⬛ |
 | Magic | SHOU | Shout          | ✅ | ✅ | ✅ |
-| Magic | SPEL | Spell          | ⬛ | 🟨 | ⬛ | Reusable code for the effect list would be good |
+| Magic | SPEL | Spell          | ✅ | ✅ | ⬛ |
 | Magic | WOOP | Word of Power  | ✅ | ✅ | ✅ |
 | Miscellaneous | ANIO | AnimObject      | ✅ | ✅ | ⬛ |
 | Miscellaneous | ARTO | ArtObject       | ✅ | ✅ | ⬛ |
@@ -207,9 +207,9 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Cell Children | REFR | Reference | ✅ | 🟨 | 🟨 |
 | Singletons | DOBJ | Default Object Manager | ✅ | ✅ | ⬛ |
 | Singletons | NAVI | Navmesh Info Map | ⬛ |   | ⬛ |
-| | AVIF | Actor Value | ✅ | ⬛ | ⬛ |
+| | AVIF | Actor Value | ⬛ | 🟨 | ⬛ | We'll also need a custom widget and dialog for Perk Trees. |
 | | CELL | Cell | ✅ | ✅ | 🟨 |
-| | IDLE | Idle Animation | ⬛ | ⬛ | ⬛ |
+| | IDLE | Idle Animation | ✅ | 🟨 | ⬛ | Not a per-form dialog, but a shared dialog for all forms of this type. |
 | | REGN | Region | ⬛ | ⬛ | ⬛ |
 | | SCEN | Scene | ✅ | ✅ | ⬛ |
 | | SMBN | Story Manager Branch Node | ⬛ | ⬛ | ⬛ |

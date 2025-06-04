@@ -100,8 +100,8 @@ class DKGenericTreeModel : public QAbstractItemModel {
       Qt::ItemFlags flags_of(const node_type&, size_t column) const;
    #pragma endregion
 
-   private:
-   void _clear_silent();
+   protected:
+      void _clear_silent();
 
    public:
       #pragma region QAbstractItemModel overrides

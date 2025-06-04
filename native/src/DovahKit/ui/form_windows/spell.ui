@@ -186,11 +186,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QDoubleSpinBox" name="castDuration">
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
+        <widget class="QDoubleSpinBox" name="castDuration"/>
        </item>
       </layout>
      </item>

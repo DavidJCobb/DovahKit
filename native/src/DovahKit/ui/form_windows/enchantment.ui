@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogEnchantment</class>
+ <widget class="QDialog" name="FormDialogEnchantment">
+  <property name="windowTitle">
+   <string>Enchantment</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_3">
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Delivery:</string>
+       </property>
+       <property name="buddy">
+        <cstring>delivery</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Casting:</string>
+       </property>
+       <property name="buddy">
+        <cstring>casting</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Type:</string>
+       </property>
+       <property name="buddy">
+        <cstring>type</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Name:</string>
+       </property>
+       <property name="buddy">
+        <cstring>name</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="name"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="type"/>
+     </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="casting">
+       <property name="whatsThis">
+        <string>&lt;p&gt;The casting type controls how the spell's caster triggers the effect. All of the effects on a spell must have the same casting type.&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;&lt;b&gt;Concentration (Weapons only)&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The enchantment casts a Concentration spell. This is appropriate for Staff Enchantments.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Fire and Forget (Weapons only)&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The enchantment casts once per use of the enchanted weapon.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Constant Effect (Armor only)&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The enchantment is constantly active while the armor to which it is applied is being worn.&lt;/p&gt;&lt;/dt&gt;
+&lt;/dl&gt;</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QComboBox" name="delivery">
+       <property name="whatsThis">
+        <string>&lt;p&gt;This specifies how the enchantment's effects are delivered to the target. Armor Enchantments can only use Self; Weapon Enchantments can use Contact; and Staff Enchantments can use Aimed or Target Location.&lt;/p&gt;
+&lt;dl&gt;
+   &lt;dt&gt;&lt;b&gt;Self&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The effect is applied to the caster.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Contact&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The effect is applied to the target by contact with a melee attack. This can be used for enchantments applied to melee weapons, or for spells specified in a Race or Actor's Attack Data overrides (i.e. spells attached to the animation event for a melee attack).&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Aimed&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The effect is applied to the target by contact with a projectile.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Target Actor&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The effect is applied immediately to whatever Actor the caster is aiming at. No projectile is fired.&lt;/p&gt;&lt;/dd&gt;
+   &lt;dt&gt;&lt;b&gt;Target Location&lt;/b&gt;&lt;/dt&gt;
+      &lt;dd&gt;&lt;p&gt;The effect is applied to the object or landscape that the caster is aiming at. No projectile is fired.&lt;/p&gt;&lt;/dd&gt;
+&lt;/dl&gt;</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0">
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Worn Restrictions:</string>
+       </property>
+       <property name="buddy">
+        <cstring>wornRestrictions</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Base Enchantment:</string>
+       </property>
+       <property name="buddy">
+        <cstring>base</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="DKFormPicker" name="base">
+       <property name="whatsThis">
+        <string>&lt;p&gt;If the player disenchants an item that has this enchantment, then they'll learn the Base Enchantment, if there is one, or this enchantment otherwise.&lt;/p&gt;
+&lt;p&gt;To disable disenchanting, apply the &lt;code&gt;MagicDisallowEnchanting&lt;/code&gt; keyword to all items that use this enchantment.&lt;/p&gt;</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="DKFormPicker" name="wornRestrictions">
+       <property name="whatsThis">
+        <string>A FormList of Keywords. The player will only be allowed to apply this enchantment to weapons or armor that have one of the keywords in this list.</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="1" rowspan="2">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="DKMagicEffectListWidget" name="effects"/>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKMagicEffectListWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKMagicEffectListWidget.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>name</tabstop>
+  <tabstop>type</tabstop>
+  <tabstop>casting</tabstop>
+  <tabstop>delivery</tabstop>
+  <tabstop>base</tabstop>
+  <tabstop>wornRestrictions</tabstop>
+  <tabstop>effects</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

@@ -35,6 +35,7 @@
    #include "Grass.h"
    #include "Hazard.h"
    #include "HeadPart.h"
+   #include "IdleAnimation.h"
    #include "ImpactData.h"
    #include "Key.h"
    #include "Keyword.h"
@@ -111,6 +112,7 @@ namespace dovah {
       loaded_forms::Grass,
       loaded_forms::Hazard,
       loaded_forms::HeadPart,
+      loaded_forms::IdleAnimation,
       loaded_forms::ImpactData,
       loaded_forms::Key,
       loaded_forms::Keyword,
