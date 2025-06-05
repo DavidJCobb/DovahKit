@@ -129,10 +129,10 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Character | VTYP | Voicetype        | ✅ | ✅ | ✅ |
 | Items | AMMO | Ammo           | ✅ | ✅ | ⬛ |
 | Items | ARMO | Armor          | ⬛ | 🟨 | ⬛ |
-| Items | ARMA | ArmorAddon     | ⬛ | ⬛ | ⬛ |
+| Items | ARMA | ArmorAddon     | ⬛ | ⬛ | ⬛ | Race has a checkbox list for equip types. Probably should make that a reusable widget, and use it here for Additional Races. |
 | Items | BOOK | Book           | ⬛ | 🟨 | ⬛ |
 | Items | COBJ | Constructible Object | ⬛ | 🟨 | ⬛ |
-| Items | INGR | Ingredient     | ⬛ | ⬛ | ⬛ | Reusable code for the effect list would be good |
+| Items | INGR | Ingredient     | ⬛ | 🟨 | ⬛ | Reusable code for the effect list would be good |
 | Items | KEYM | Key            | ✅ | ✅ | ⬛ |
 | Items | LVLI | LeveledItem    | ✅ | ✅ | ⬛ |
 | Items | MISC | MiscItem       | ✅ | ✅ | ⬛ |
