@@ -15,8 +15,11 @@ namespace dovah::loaded_forms::components {
             lesser_power,
             ability,
             poison    =  5,
+            // 6 = "enchantment," according to CommonLib, and this matches the "Enchantment" enchantment type on ENCH forms
+            // 7 = "potion," according to CommonLib
             addiction = 10,
             voice     = 11,
+            // 12 would match the "Staff Enchantment" enchantment type on ENCH forms
          };
 
          struct flag {

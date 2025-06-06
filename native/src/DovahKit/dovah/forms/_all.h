@@ -25,6 +25,7 @@
    #include "DialogueBranch.h"
    #include "Door.h"
    #include "DualCastData.h"
+   #include "Enchantment.h"
    #include "EquipSlot.h"
    #include "Explosion.h"
    #include "Faction.h"
@@ -55,6 +56,7 @@
    #include "ObjectReference.h"
    #include "Outfit.h"
    #include "Package.h"
+   #include "Potion.h"
    #include "Quest.h"
    #include "Race.h"
    #include "Relationship.h"
@@ -102,6 +104,7 @@ namespace dovah {
       loaded_forms::DialogueBranch,
       loaded_forms::Door,
       loaded_forms::DualCastData,
+      loaded_forms::Enchantment,
       loaded_forms::EquipSlot,
       loaded_forms::Explosion,
       loaded_forms::Faction,
@@ -132,6 +135,7 @@ namespace dovah {
       loaded_forms::ObjectReference,
       loaded_forms::Outfit,
       loaded_forms::Package,
+      loaded_forms::Potion,
       loaded_forms::Quest,
       loaded_forms::Race,
       loaded_forms::Relationship,
