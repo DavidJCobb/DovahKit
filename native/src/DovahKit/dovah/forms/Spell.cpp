@@ -12,13 +12,24 @@ namespace dovah::loaded_forms {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
          switch (subrecord.signature()) {
+            //
+            // The general pattern that the game and Creation Kit use for MagicItem forms 
+            // (ALCH, ENCH, INGR, SPEL) is as follows: none of them override the virtual 
+            // "Load" function on MagicItem. Instead, they all define a handful of other 
+            // virtual functions which the MagicItem loader calls:
+            // 
+            //  - A virtual function to load any form components that are unique to the 
+            //    subclass, e.g. BGSMenuDisplayObject on SpellItem.
+            // 
+            //  - Virtual functions which allow a subclass to define a single subrecord 
+            //    signature, and to load that one subrecord.
+            // 
+            // Below are the subrecords common to MagicItem.
+            //
             case 'EDID': // already read by the FormStub
                break;
             case 'OBND':
                this->bounds.load(subrecord, intfc);
-               break;
-            case components::common_spell_data::subrecord_signature:
-               this->common_data.load(subrecord, intfc);
                break;
             case components::magic_effect_list::subrecord_signature_effect:
             case components::magic_effect_list::subrecord_signature_details:
@@ -32,14 +43,15 @@ namespace dovah::loaded_forms {
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
                break;
-
             case 'FULL':
                subrecord.read(this->name);
                break;
+               //
+               // Below are the components on SpellItem.
+               //
             case 'DESC':
                subrecord.read(this->description);
                break;
-
             case 'ETYP':
                if (auto& form = this->equip_type; subrecord.read(form)) {
                   intfc.warn_if_ref_is_wrong_type(form, form_type::equip_slot, subrecord.signature());
@@ -49,6 +61,12 @@ namespace dovah::loaded_forms {
                if (auto& form = this->menu_display_object; subrecord.read(form)) {
                   intfc.warn_if_ref_is_wrong_type(form, form_type::statik, subrecord.signature());
                }
+               break;
+               //
+               // Unique subrecord below.
+               //
+            case components::common_spell_data::subrecord_signature:
+               this->common_data.load(subrecord, intfc);
                break;
 
             default:

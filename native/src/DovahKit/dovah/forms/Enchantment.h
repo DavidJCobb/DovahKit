@@ -39,7 +39,7 @@ namespace dovah::loaded_forms {
          uint32_t cost  = 0;
          flags_t  flags = 0;
          magic_casting_type  casting_type     = magic_casting_type::constant_effect;
-         int32_t  charge_amount = 0;
+         int32_t  charge_amount = 0; // unused
          magic_delivery_type delivery_type    = magic_delivery_type::self;
          enchantment_type    enchantment_type = enchantment_type::general;
          float charge_time = 0;

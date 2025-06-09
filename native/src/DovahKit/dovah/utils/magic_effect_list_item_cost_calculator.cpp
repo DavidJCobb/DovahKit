@@ -48,6 +48,7 @@ namespace dovah {
       if (!loaded)
          return;
       this->effect.form_info.base_cost     = loaded->base_cost;
+      this->effect.form_info.charge_time   = loaded->spellmaking.casting_time;
       this->effect.form_info.casting_type  = loaded->casting_type;
       this->effect.form_info.delivery_type = loaded->delivery_type;
       if (loaded->flags & loaded_forms::MagicEffect::effect_flag::no_area)

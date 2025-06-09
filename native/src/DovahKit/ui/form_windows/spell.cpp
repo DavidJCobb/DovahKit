@@ -98,16 +98,14 @@ FormDialogSpell::FormDialogSpell(dovah::form_stub& stub, QWidget* parent) : QDia
       }
       this->ui.school->setText(text);
 
+      this->_update_auto_calc();
       this->_update_effect_parameters_enable_states();
    });
 
    this->ui.chargeTime->setRange(0, 600);
    this->ui.cost->setRange(0, 5000);
    this->ui.castDuration->setRange(0, 600);
-   QObject::connect(this->ui.flagAutoCalc, &QCheckBox::toggled, this, [this](bool checked) {
-      this->ui.chargeTime->setDisabled(checked);
-      this->ui.cost->setDisabled(checked);
-   });
+   QObject::connect(this->ui.flagAutoCalc, &QCheckBox::toggled, this, &FormDialogSpell::_update_auto_calc);
 
    QObject::connect(this->ui.buttonTestAutoDesc, &QPushButton::clicked, this, [this]() {
       QString desc = this->_make_concatenated_description();
@@ -149,6 +147,7 @@ void FormDialogSpell::_load_impl() {
    ui::bind(this->ui.cost, working.common_data.base_cost);
    ui::bind(this->ui.castDuration, working.common_data.casting_duration);
 
+   this->_update_auto_calc();
    this->_update_effect_parameters_enable_states();
 }
 void FormDialogSpell::_save_impl() {
@@ -195,6 +194,19 @@ QString FormDialogSpell::_make_concatenated_description() const {
       }
    }
    return QString::fromStdString(text);
+}
+void FormDialogSpell::_update_auto_calc() {
+   bool auto_calc = this->ui.flagAutoCalc->isChecked();
+   this->ui.cost->setDisabled(auto_calc);
+   this->ui.chargeTime->setDisabled(auto_calc);
+   if (!auto_calc)
+      return;
+
+   DKMagicEffectListWidget::AutoCalcData data;
+   this->ui.effects->autoCalc(data);
+
+   this->ui.cost->setValue(data.cost);
+   this->ui.chargeTime->setValue(data.charge_time);
 }
 void FormDialogSpell::_update_condition_explanation() {
    auto v = (dovah::magic_casting_type)this->ui.casting->currentData().toInt();

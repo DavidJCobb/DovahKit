@@ -20,6 +20,7 @@ namespace dovah {
                bool  no_magnitude = false;
                bool  flag_24      = false;
                float base_cost    = 0.0F;
+               float charge_time  = 0.0F;
                magic_casting_type  casting_type  = magic_casting_type::fire_and_forget;
                magic_delivery_type delivery_type = magic_delivery_type::self;
             } form_info;

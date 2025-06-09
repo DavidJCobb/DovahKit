@@ -19,6 +19,7 @@ class FormDialogSpell :
       virtual void _save_impl() override;
 
       QString _make_concatenated_description() const;
+      void _update_auto_calc();
       void _update_condition_explanation();
       void _update_effect_parameters_enable_states();
 };

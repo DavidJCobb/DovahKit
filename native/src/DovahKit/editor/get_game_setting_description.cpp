@@ -100,6 +100,35 @@ namespace {
             )
          ),
       #pragma endregion
+      #pragma region fEnchantingRuleOf*
+         _association(
+            "fEnchantingRuleOfTwo",
+            QObject::tr(
+               "When the player is applying an enchantment to an item, they can use a slider to "
+               "control the magnitude versus number of uses for the enchantment. If an enchantment's "
+               "maximum magnitude is greater than this value, then the slider's step size will be 2.",
+               disambig
+            )
+         ),
+         _association(
+            "fEnchantingRuleOfFive",
+            QObject::tr(
+               "When the player is applying an enchantment to an item, they can use a slider to "
+               "control the magnitude versus number of uses for the enchantment. If an enchantment's "
+               "maximum magnitude is greater than this value, then the slider's step size will be 5.",
+               disambig
+            )
+         ),
+         _association(
+            "fEnchantingRuleOfTen",
+            QObject::tr(
+               "When the player is applying an enchantment to an item, they can use a slider to "
+               "control the magnitude versus number of uses for the enchantment. If an enchantment's "
+               "maximum magnitude is greater than this value, then the slider's step size will be 10.",
+               disambig
+            )
+         ),
+      #pragma endregion
       _association("fEssentialDeathTime",            QObject::tr("The number of seconds that an essential actor stays in bleedout once their health is drained.", disambig)),
       _association("fGameplayVoiceFilePadding",      QObject::tr("The number of seconds of silence that Skyrim inserts between consecutive voice lines. This is the setting that makes every bard song sound awkward and disjointed.", disambig)),
       _association("fMagicAbsorbVisualTimer",        QObject::tr("The duration in seconds of a visual effect played on actors when they absorb a spell. The visual effect itself is defined as a Default Object.", disambig)),

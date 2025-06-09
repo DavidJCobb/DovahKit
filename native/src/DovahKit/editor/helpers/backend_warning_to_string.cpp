@@ -735,6 +735,26 @@ namespace editor_helpers {
                   ).arg(subject).arg(casted->morph_type);
                }
             #pragma endregion
+            #pragma region idle
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::idle::event_name_too_long*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "The event name for Idle Animation %1 is too long: it's %2 bytes long, but the Creation Kit "
+                     "and the game will only load the first %3 bytes.",
+                     disambig
+                  ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::idle::filename_too_long*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "The filename for Idle Animation %1 is too long: it's %2 bytes long, but the Creation Kit "
+                     "and the game will only load the first %3 bytes.",
+                     disambig
+                  ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
+               }
+            #pragma endregion
             #pragma region magic_effect
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::magic_effect::counters_itself*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);

@@ -115,6 +115,13 @@
        </property>
       </widget>
      </item>
+     <item row="1" column="1">
+      <widget class="DKFormPicker" name="wornRestrictions">
+       <property name="whatsThis">
+        <string>A FormList of Keywords. The player will only be allowed to apply this enchantment to weapons or armor that have one of the keywords in this list.</string>
+       </property>
+      </widget>
+     </item>
      <item row="0" column="0">
       <widget class="QLabel" name="label_6">
        <property name="text">
@@ -133,10 +140,10 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="DKFormPicker" name="wornRestrictions">
-       <property name="whatsThis">
-        <string>A FormList of Keywords. The player will only be allowed to apply this enchantment to weapons or armor that have one of the keywords in this list.</string>
+     <item row="2" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagExtendOnRecast">
+       <property name="text">
+        <string>Extend Duration on Recast</string>
        </property>
       </widget>
      </item>
@@ -145,7 +152,118 @@
    <item row="0" column="1" rowspan="2">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="DKMagicEffectListWidget" name="effects"/>
+      <widget class="DKMagicEffectListWidget" name="effects">
+       <property name="whatsThis">
+        <string extracomment="Source for the information on condition oddities is KernalsEgg's documentation for Scrambled Bugs.">&lt;p&gt;These are the Magic Effects associated with this Enchantment. Effects' magnitudes, durations, and areas of effect can be configured individually from here, such that a handful of Magic Effects can be shared across several different spells and enchantments with different settings in each. Additionally, conditions can be defined here, in order to temporarily enable and disable Magic Effects in real time during play.&lt;/p&gt;
+&lt;p&gt;Note that when the player learns an enchantment and then applies that enchantment to other items, the Enchantment's per-effect conditions (intentionally) will not be applied to the newly-enchanted items. Additionally, the presence of any per-effect conditions on the Enchantment can aggravate other bugs that affect calculation of a player-enchanted item's monetary value and (if it's a weapon) charge drain per attack. It's safe to define the conditions within the Magic Effect; it's Enchantment-side conditions that lead to odd behavior under the hood.&lt;/p&gt;</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QCheckBox" name="flagAutoCalc">
+         <property name="whatsThis">
+          <string>&lt;p&gt;If this box is checked, then the game will auto-calculate the enchantment's charge and cost based on its effects. The enchantment's total cost (determining both the amount of charge that is drained when using the enchantment, and the monetary value added to an enchantment item) is the sum of the effects' magicka costs.&lt;/p&gt;</string>
+         </property>
+         <property name="text">
+          <string>Auto-Calc</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Charge-Up Time:</string>
+         </property>
+         <property name="buddy">
+          <cstring>chargeTime</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="chargeTime">
+         <property name="whatsThis">
+          <string>This is the amount of time that the player must hold the Weapon Swing button in order to charge up a staff's enchantment. Once the button has been down for that long, the enchantment will fire when the button is released.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="maximum">
+          <double>99999.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>Charge (Unused):</string>
+         </property>
+         <property name="buddy">
+          <cstring>chargeAmount</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="chargeAmount">
+         <property name="whatsThis">
+          <string>&lt;p&gt;This is a development leftover from Daggerfall, Morrowind, and possibly Oblivion, and is not used in Skyrim. If you want to configure the maximum charge (as in, &quot;battery life&quot;) for an Armor or Weapon with a predefined enchantment, you can do that when editing the Armor or Weapon. You cannot influence the charge available on items the player applies this enchantment to; that's computed based on the enchantment's magicka cost (not including any adjustments the player makes to the enchantment's power).&lt;/p&gt;
+&lt;hr/&gt;
+&lt;p&gt;In order to understand what this field is (or rather, used to be), it's important to understand a major difference in how player-made enchantments work pre- and post-Skyrim. &lt;strong&gt;The text below is historical information and is not needed for Skyrim modding, except to convey that this field isn't used anymore and does nothing.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;In Skyrim, you must acquire items that have predefined enchantments, and then &quot;disenchant&quot; them, destroying the items in order to &quot;learn&quot; the enchantments. Once you've learned an enchantment, you can apply that enchantment to new items, adjusting the enchantment's strength as desired in order to strike your preferred balance between power and charge (i.e. your item's &quot;battery life&quot;). Under the hood, the game creates a copy of the predefined Enchantment form that your character has learned, strips off all the Enchantment-side effect conditions, scales the effect magnitudes, and writes the new Enchantment form directly into your save file before then applying it to your item.&lt;/p&gt;
+&lt;p&gt;Prior to Skyrim, disenchantment didn't exist, and you couldn't &quot;learn&quot; enchantments as such. Rather, you learned Magic Effects (which were basically hardcoded into the game engine) by learning any spells which contained them; and then you could combine arbitrary Magic Effects to create brand-new enchantments. Under the hood, custom enchantments worked quite similarly to Skyrim: the game would create a new Enchantment form, assign your desired settings to it, and store that form in your save file.&lt;/p&gt;
+&lt;p&gt;Where this now-unused Charge field comes into the picture is how enchantments worked from a game design perspective.&lt;/p&gt;
+&lt;p&gt;In Daggerfall, the game's hardcoded base items could define a maximum magicka charge capacity, and this limited what enchantments the player could create and apply to the items: if a desired magic effect (or combination thereof) had too high a magicka cost, and a desired item had too low a charge capacity, then the player couldn't apply that enchantment to that item. Separately from this, there existed predefined enchantment items (imagine if Enchantment and Weapon were smushed into one form type) which could define their available magicka charge.&lt;/p&gt;
+&lt;p&gt;The basic rules of this system continued into Morrowind. Enchantable items still define a maximum charge capacity, which limits what effects you can enchant them with. However, predefined enchantments exist as their own forms, which can be used on (potentially multiple) weapon and armor forms, and those enchantments also define a charge amount. Once an item has been given an enchantment (whether predefined or player-made), the enchantment's charge value determines the item's maximum charge. If you take an item that initially has 80 charge capacity, and give it an enchantment with 20 charge, then its capacity drops to 20: you can't use Soul Gems to recharge it to 80 and have &quot;400% battery life.&quot;&lt;/p&gt;
+&lt;p&gt;In Skyrim, however, an item's charge is computed directly from the enchantment's Magicka cost (prior to any adjustments the player has made to the enchantment's strength). The charge value on Enchantment forms is unused. The charge value on Armor and Weapon forms determines the maximum charge of an item with a predefined enchantment. When the player creates a new enchanted item, the current and maximum charge are both stored within the data for that individual item.&lt;/p&gt;</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="maximum">
+          <number>99999</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_10">
+         <property name="text">
+          <string>Cost:</string>
+         </property>
+         <property name="buddy">
+          <cstring>cost</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="cost">
+         <property name="whatsThis">
+          <string extracomment="Source for the information on engine bugs is KernalsEgg's documentation for Scrambled Bugs.">&lt;p&gt;This determines both the amount of charge that is depleted when casting a weapon enchantment, and the monetary value that is added to an item which has this enchantment.&lt;/p&gt;
+&lt;p&gt;Note that when the player applies enchantments to new items, the enchantments' cost is modified according to the player's Enchanting skill level (at the time the enchantment is applied) and a handful of Game Settings. The calculation is presented below, and is designed to reduce the enchantment's cost as the player levels up. The default Game Setting values are configured such that this cost modification slows the growth of enchanted items' monetary value, and it also means that custom enchanted weapons' charge will drain more slowly when the weapons are enchanted by skilled players. However, the game engine has multiple bugs which cause it to straight-up forget that a weapon's enchantment was player-created, such that (absent the use of SKSE plug-in DLLs) after the player saves and reloads, the item's default cost is used verbatim instead of the formula below.&lt;/p&gt;
+&lt;p&gt;(1 - (&lt;var&gt;skill&lt;/var&gt; × &lt;code&gt;fEnchantingSkillCostBase&lt;/code&gt;) ^ &lt;code&gt;fEnchantingSkillCostScale&lt;/code&gt;) × (&lt;code&gt;fEnchantingSkillCostMult&lt;/code&gt; × (&lt;var&gt;cost&lt;/var&gt; ^ &lt;code&gt;fEnchantingCostExponent&lt;/code&gt;))&lt;/p&gt;</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="maximum">
+          <number>99999</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </item>
@@ -215,7 +333,12 @@
   <tabstop>delivery</tabstop>
   <tabstop>base</tabstop>
   <tabstop>wornRestrictions</tabstop>
+  <tabstop>flagExtendOnRecast</tabstop>
   <tabstop>effects</tabstop>
+  <tabstop>flagAutoCalc</tabstop>
+  <tabstop>chargeTime</tabstop>
+  <tabstop>chargeAmount</tabstop>
+  <tabstop>cost</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
  </tabstops>

@@ -167,6 +167,7 @@
     <ClCompile Include="dovah\forms\components\papyrus\property_value.cpp" />
     <ClCompile Include="dovah\forms\components\spell_list.cpp" />
     <ClCompile Include="dovah\forms\DualCastData.cpp" />
+    <ClCompile Include="dovah\forms\Enchantment.cpp" />
     <ClCompile Include="dovah\forms\EquipSlot.cpp" />
     <ClCompile Include="dovah\forms\Explosion.cpp" />
     <ClCompile Include="dovah\forms\Footstep.cpp" />
@@ -174,6 +175,7 @@
     <ClCompile Include="dovah\forms\Grass.cpp" />
     <ClCompile Include="dovah\forms\Hazard.cpp" />
     <ClCompile Include="dovah\forms\HeadPart.cpp" />
+    <ClCompile Include="dovah\forms\IdleAnimation.cpp" />
     <ClCompile Include="dovah\forms\ImpactData.cpp" />
     <ClCompile Include="dovah\forms\Key.cpp" />
     <ClCompile Include="dovah\forms\Keyword.cpp" />
@@ -184,6 +186,7 @@
     <ClCompile Include="dovah\forms\MovementType.cpp" />
     <ClCompile Include="dovah\forms\MusicType.cpp" />
     <ClCompile Include="dovah\forms\Outfit.cpp" />
+    <ClCompile Include="dovah\forms\Potion.cpp" />
     <ClCompile Include="dovah\forms\Race.cpp" />
     <ClCompile Include="dovah\forms\Relationship.cpp" />
     <ClCompile Include="dovah\forms\ReverbParameters.cpp" />
@@ -806,6 +809,7 @@
     <ClCompile Include="ui\form_windows\dialogue_branch\DialogueBranchStartingTopicFormFilter.cpp" />
     <ClCompile Include="ui\form_windows\door.cpp" />
     <ClCompile Include="ui\form_windows\dual_cast_data.cpp" />
+    <ClCompile Include="ui\form_windows\enchantment.cpp" />
     <ClCompile Include="ui\form_windows\equip_slot.cpp" />
     <ClCompile Include="ui\form_windows\explosion.cpp" />
     <ClCompile Include="ui\form_windows\faction.cpp" />
@@ -970,6 +974,7 @@
     <ClCompile Include="ui\utils\enable_inbound_drag_and_drop_insertions.cpp" />
     <ClCompile Include="ui\utils\item_indices_to_data.cpp" />
     <ClCompile Include="ui\utils\set_custom_context_menu.cpp" />
+    <ClCompile Include="ui\utils\shrink_dialog_on_show.cpp" />
     <ClCompile Include="ui\utils\typical_tableview_config.cpp" />
     <ClCompile Include="vulkan\abstract_renderer.cpp" />
     <ClCompile Include="vulkan\asset_loading\reserve_meshes_for_nif.cpp" />
@@ -1221,6 +1226,7 @@
     <ClInclude Include="dovah\forms\components\magic_effect_list.h" />
     <ClInclude Include="dovah\forms\components\spell_list.h" />
     <ClInclude Include="dovah\forms\DualCastData.h" />
+    <ClInclude Include="dovah\forms\Enchantment.h" />
     <ClInclude Include="dovah\forms\EquipSlot.h" />
     <ClInclude Include="dovah\forms\Explosion.h" />
     <ClInclude Include="dovah\forms\Footstep.h" />
@@ -1228,6 +1234,7 @@
     <ClInclude Include="dovah\forms\Grass.h" />
     <ClInclude Include="dovah\forms\Hazard.h" />
     <ClInclude Include="dovah\forms\HeadPart.h" />
+    <ClInclude Include="dovah\forms\IdleAnimation.h" />
     <ClInclude Include="dovah\forms\ImpactData.h" />
     <ClInclude Include="dovah\forms\Key.h" />
     <ClInclude Include="dovah\forms\Keyword.h" />
@@ -1238,6 +1245,7 @@
     <ClInclude Include="dovah\forms\MovementType.h" />
     <ClInclude Include="dovah\forms\MusicType.h" />
     <ClInclude Include="dovah\forms\Outfit.h" />
+    <ClInclude Include="dovah\forms\Potion.h" />
     <ClInclude Include="dovah\forms\Race.h" />
     <ClInclude Include="dovah\forms\Relationship.h" />
     <ClInclude Include="dovah\forms\ReverbParameters.h" />
@@ -1342,6 +1350,8 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\data_for_wrong_cell_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\head_part\invalid_morph_type.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\idle\event_name_too_long.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\idle\filename_too_long.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\excess_layers_per_quad.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\invalid_quad_for_land_texture.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\counters_itself.h" />
@@ -1444,6 +1454,7 @@
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\_base.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\_base_macros.define.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\_base_macros.undef.h" />
+    <QtMoc Include="ui\form_windows\enchantment.h" />
     <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h" />
     <ClInclude Include="ui\form_windows\quest\alias_subdialog_helpers.h" />
     <QtMoc Include="ui\form_windows\reverb_parameters.h" />
@@ -1630,6 +1641,7 @@
     <QtMoc Include="widgets\DKFloatSlider.h" />
     <ClInclude Include="ui\utils\set_tableview_column_flex.h" />
     <ClInclude Include="ui\utils\set_tableview_column_widths.h" />
+    <ClInclude Include="ui\utils\shrink_dialog_on_show.h" />
     <ClInclude Include="ui\utils\typical_tableview_config.h" />
     <QtMoc Include="widgets\DKTabBar.h" />
     <QtMoc Include="widgets\DKTabWidget.h" />
@@ -2876,10 +2888,12 @@
     <QtMoc Include="ui\main_window.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="ui\form_group_windows\idle\idle.ui" />
     <QtUic Include="ui\form_windows\acoustic_space.ui" />
     <QtUic Include="ui\form_windows\activator.ui" />
     <QtUic Include="ui\form_windows\actor_action.ui" />
     <QtUic Include="ui\form_windows\actor_base.ui" />
+    <QtUic Include="ui\form_windows\actor_value_info.ui" />
     <QtUic Include="ui\form_windows\addon_node.ui" />
     <QtUic Include="ui\form_windows\ammo.ui" />
     <QtUic Include="ui\form_windows\animation_prop.ui" />
@@ -2899,6 +2913,8 @@
     <QtUic Include="ui\form_windows\dialogue_branch.ui" />
     <QtUic Include="ui\form_windows\door.ui" />
     <QtUic Include="ui\form_windows\dual_cast_data.ui" />
+    <QtUic Include="ui\form_windows\effectshader.ui" />
+    <QtUic Include="ui\form_windows\enchantment.ui" />
     <QtUic Include="ui\form_windows\equip_slot.ui" />
     <QtUic Include="ui\form_windows\explosion.ui" />
     <QtUic Include="ui\form_windows\faction.ui" />
@@ -2914,6 +2930,7 @@
     <QtUic Include="ui\form_windows\idle_marker.ui" />
     <QtUic Include="ui\form_windows\impact_data.ui" />
     <QtUic Include="ui\form_windows\impact_data_set.ui" />
+    <QtUic Include="ui\form_windows\ingredient.ui" />
     <QtUic Include="ui\form_windows\keyword.ui" />
     <QtUic Include="ui\form_windows\landtexture.ui" />
     <QtUic Include="ui\form_windows\leveled_character.ui" />
@@ -2932,6 +2949,7 @@
     <QtUic Include="ui\form_windows\music_type.ui" />
     <QtUic Include="ui\form_windows\note.ui" />
     <QtUic Include="ui\form_windows\package.ui" />
+    <QtUic Include="ui\form_windows\potion.ui" />
     <QtUic Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.ui" />
     <QtUic Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.ui" />
     <QtUic Include="ui\form_windows\odds_and_ends\quest_tab_objectives.ui" />
@@ -2950,6 +2968,7 @@
     <QtUic Include="ui\form_windows\scene\FormSubdialogScenePhase.ui" />
     <QtUic Include="ui\form_windows\scene\FormSubdialogSceneProperties.ui" />
     <QtUic Include="ui\form_windows\scene\FormSubdialogSceneTimerAction.ui" />
+    <QtUic Include="ui\form_windows\scroll.ui" />
     <QtUic Include="ui\form_windows\shader_particle_geometry_data.ui" />
     <QtUic Include="ui\form_windows\shout.ui" />
     <QtUic Include="ui\form_windows\soul_gem.ui" />
@@ -3139,6 +3158,14 @@
     <None Include="dovah\utils\file_prefix.inl" />
     <None Include="dovah\_docs\common form flags.md" />
     <None Include="dovah\_docs\compiled script files.md" />
+    <None Include="dovah\_docs\enchanting.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\magic effect archetypes.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovah\_docs\papyrus script bindings.md" />
     <None Include="dovah\_docs\rewrites I want to do someday post-launch.md" />
     <None Include="dovah\_docs\TO-DO LIST.md" />

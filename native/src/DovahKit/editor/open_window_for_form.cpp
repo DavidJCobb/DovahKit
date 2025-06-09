@@ -23,6 +23,7 @@
 #include "../ui/form_windows/dialogue_branch.h"
 #include "../ui/form_windows/door.h"
 #include "../ui/form_windows/dual_cast_data.h"
+#include "../ui/form_windows/enchantment.h"
 #include "../ui/form_windows/equip_slot.h"
 #include "../ui/form_windows/explosion.h"
 #include "../ui/form_windows/faction.h"
@@ -93,6 +94,7 @@ namespace {
       std::pair{ dovah::form_type::dialogue_branch,   _make<FormDialogDialogueBranch> },
       std::pair{ dovah::form_type::door,              _make<FormDialogDoor> },
       std::pair{ dovah::form_type::dual_cast_data,    _make<FormDialogDualCastData> },
+      std::pair{ dovah::form_type::enchantment,       _make<FormDialogEnchantment> },
       std::pair{ dovah::form_type::equip_slot,        _make<FormDialogEquipSlot> },
       std::pair{ dovah::form_type::explosion,         _make<FormDialogExplosion> },
       std::pair{ dovah::form_type::faction,           _make<FormDialogFaction> },
