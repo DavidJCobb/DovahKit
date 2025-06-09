@@ -192,5 +192,5 @@ void DKMagicEffectListItemDialog::_update_displayed_duration() {
    if (this->_size_corrected_on_show)
       return;
    this->_size_corrected_on_show = true;
-   this->resize(this->minimumSize());
+   //this->resize(this->minimumSize());
 };

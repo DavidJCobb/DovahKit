@@ -275,6 +275,35 @@ DKMagicEffectListWidget::DKMagicEffectListWidget(QWidget* parent) : QWidget(pare
    size_t DKMagicEffectListWidget::effectCount() const {
       return this->_model->rowCount();
    }
+
+   void DKMagicEffectListWidget::autoCalc(AutoCalcData& dst) const {
+      dst = {};
+      if (!this->_state.form)
+         return;
+
+      dovah::magic_effect_list_item_cost_calculator calculator;
+      calculator.prepare_game_settings(this->_state.form->stub.get_owning_load_order());
+
+      auto count = this->_model->rowCount();
+      for (size_t i = 0; i < count; ++i) {
+         auto* src = this->_model->data(i);
+         if (!src)
+            continue;
+         auto& calc_info = calculator.effect;
+         calc_info.area      = src->area;
+         calc_info.duration  = src->duration;
+         calc_info.magnitude = src->magnitude;
+         calculator.prepare_effect_form(src->magic_effect);
+         if (calc_info.form_info.flag_24)
+            continue;
+
+         auto cost = (int32_t) calculator.calculate(); // the CK sums as integers; so too must we
+         dst.cost += cost;
+
+         if (dst.charge_time < calc_info.form_info.charge_time)
+            dst.charge_time = calc_info.form_info.charge_time;
+      }
+   }
 #endif
 
 #if !defined(QT_PLUGIN)

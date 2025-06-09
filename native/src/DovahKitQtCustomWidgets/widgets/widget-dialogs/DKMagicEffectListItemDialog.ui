@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>DKMagicEffectListItemDialog</class>
  <widget class="QDialog" name="DKMagicEffectListItemDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>870</width>
+    <height>272</height>
+   </rect>
+  </property>
   <property name="sizePolicy">
    <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
     <horstretch>0</horstretch>
@@ -11,106 +19,9 @@
   <property name="windowTitle">
    <string>Effect Item</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_2">
+  <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0,0,1">
    <item row="0" column="0">
-    <layout class="QGridLayout" name="gridLayout">
-     <item row="1" column="1" colspan="4">
-      <widget class="DKFormPicker" name="form">
-       <property name="allowNone">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="0" colspan="2">
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>0</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="2" column="4">
-      <widget class="QSpinBox" name="area">
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-       <property name="suffix">
-        <string> ft</string>
-       </property>
-       <property name="maximum">
-        <number>1000000</number>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QSpinBox" name="durationEdit">
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="maximum">
-          <number>1000000</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="durationUnit">
-         <item>
-          <property name="text">
-           <string>sec</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>min</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>hr</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>day</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="2" column="2">
-      <spacer name="horizontalSpacer_3">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>8</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="2" column="3">
-      <widget class="QLabel" name="label_6">
-       <property name="text">
-        <string>Area:</string>
-       </property>
-       <property name="buddy">
-        <cstring>area</cstring>
-       </property>
-      </widget>
-     </item>
+    <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0,0,1">
      <item row="0" column="0" colspan="5">
       <layout class="QHBoxLayout" name="castingDeliveryTypesLayout">
        <item>
@@ -171,13 +82,26 @@
        </item>
       </layout>
      </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
+     <item row="5" column="0" colspan="2">
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="2" column="3">
+      <widget class="QLabel" name="label_6">
        <property name="text">
-        <string>Effect:</string>
+        <string>Area:</string>
        </property>
        <property name="buddy">
-        <cstring>form</cstring>
+        <cstring>area</cstring>
        </property>
       </widget>
      </item>
@@ -188,16 +112,6 @@
        </property>
        <property name="maximum">
         <double>1000000.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Duration:</string>
-       </property>
-       <property name="buddy">
-        <cstring>durationEdit</cstring>
        </property>
       </widget>
      </item>
@@ -261,15 +175,82 @@
        </layout>
       </widget>
      </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Magnitude:</string>
+     <item row="2" column="4">
+      <widget class="QSpinBox" name="area">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
-       <property name="buddy">
-        <cstring>magnitude</cstring>
+       <property name="suffix">
+        <string> ft</string>
+       </property>
+       <property name="maximum">
+        <number>1000000</number>
        </property>
       </widget>
+     </item>
+     <item row="2" column="2">
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>8</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Duration:</string>
+       </property>
+       <property name="buddy">
+        <cstring>durationEdit</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QSpinBox" name="durationEdit">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="maximum">
+          <number>1000000</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="durationUnit">
+         <item>
+          <property name="text">
+           <string>sec</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>min</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>hr</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>day</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item row="4" column="0" colspan="2">
       <layout class="QGridLayout" name="gridLayout_3">
@@ -321,6 +302,46 @@
        </item>
       </layout>
      </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Magnitude:</string>
+       </property>
+       <property name="buddy">
+        <cstring>magnitude</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" colspan="4">
+      <widget class="DKFormPicker" name="form">
+       <property name="allowNone">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Effect:</string>
+       </property>
+       <property name="buddy">
+        <cstring>form</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="3" colspan="2">
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
     </layout>
    </item>
    <item row="0" column="2" colspan="2">
@@ -347,6 +368,22 @@
       </item>
      </layout>
     </widget>
+   </item>
+   <item row="0" column="1">
+    <spacer name="horizontalSpacer_4">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>8</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
    </item>
    <item row="1" column="0" colspan="4">
     <layout class="QHBoxLayout" name="buttonsLayout">
@@ -391,22 +428,6 @@
       </spacer>
      </item>
     </layout>
-   </item>
-   <item row="0" column="1">
-    <spacer name="horizontalSpacer_4">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Fixed</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>8</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
    </item>
   </layout>
  </widget>

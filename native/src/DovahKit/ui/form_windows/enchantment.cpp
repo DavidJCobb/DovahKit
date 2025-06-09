@@ -102,6 +102,8 @@ void FormDialogEnchantment::_load_impl() {
    auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
 
+   this->_filters.exclude_self->set_exclusion(&working.stub);
+
    ui::bind(this->ui.editorID, this->editor_id());
    this->ui.name->setText(editor.convert_localized_string(working.name));
    ui::bind(this->ui.type, working.enchantment_type);

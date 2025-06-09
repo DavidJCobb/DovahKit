@@ -46,6 +46,12 @@ class DKMagicEffectListWidget : public QWidget {
 
          const DKMagicEffectListModelItem* effect(size_t) const;
          size_t effectCount() const;
+
+         struct AutoCalcData {
+            float charge_time = 0; // calculated as the largest charge time amongst all relevant effects
+            float cost        = 0; // calculated as the sum of all relevant effects' costs
+         };
+         void autoCalc(AutoCalcData&) const;
       #endif
 
    signals:
