@@ -28,6 +28,7 @@ class DKFormPicker;
 class DKGameFilePicker;
 class DKNavmeshGenerationImportOptionPicker;
 class DKObjectReferencePicker;
+class DKTextureAssetPane;
 
 namespace ui {
    extern void bind(QCheckBox*, bool&);
@@ -217,4 +218,7 @@ namespace ui {
    extern void bind(DKGameFilePicker*, std::string&);
 
    extern void bind(DKNavmeshGenerationImportOptionPicker*, uint32_t& record_flags);
+
+   // Bind a texture picker to a texture preview pane.
+   extern void bind(DKGameFilePicker*, DKTextureAssetPane*);
 }

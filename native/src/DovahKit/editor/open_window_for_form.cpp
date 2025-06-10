@@ -23,6 +23,7 @@
 #include "../ui/form_windows/dialogue_branch.h"
 #include "../ui/form_windows/door.h"
 #include "../ui/form_windows/dual_cast_data.h"
+#include "../ui/form_windows/effectshader.h"
 #include "../ui/form_windows/enchantment.h"
 #include "../ui/form_windows/equip_slot.h"
 #include "../ui/form_windows/explosion.h"
@@ -35,6 +36,7 @@
 #include "../ui/form_windows/hazard.h"
 #include "../ui/form_windows/head_part.h"
 #include "../ui/form_windows/impact_data.h"
+#include "../ui/form_windows/ingredient.h"
 #include "../ui/form_windows/key.h"
 #include "../ui/form_windows/keyword.h"
 #include "../ui/form_windows/landtexture.h"
@@ -49,10 +51,12 @@
 #include "../ui/form_windows/music_type.h"
 #include "../ui/form_windows/note.h"
 #include "../ui/form_windows/outfit.h"
+#include "../ui/form_windows/potion.h"
 #include "../ui/form_windows/quest.h"
 #include "../ui/form_windows/race.h"
 #include "../ui/form_windows/relationship.h"
 #include "../ui/form_windows/reverb_parameters.h"
+#include "../ui/form_windows/scroll.h"
 #include "../ui/form_windows/shout.h"
 #include "../ui/form_windows/soul_gem.h"
 #include "../ui/form_windows/sound.h"
@@ -94,6 +98,7 @@ namespace {
       std::pair{ dovah::form_type::dialogue_branch,   _make<FormDialogDialogueBranch> },
       std::pair{ dovah::form_type::door,              _make<FormDialogDoor> },
       std::pair{ dovah::form_type::dual_cast_data,    _make<FormDialogDualCastData> },
+      std::pair{ dovah::form_type::effect_shader,     _make<FormDialogEffectShader> },
       std::pair{ dovah::form_type::enchantment,       _make<FormDialogEnchantment> },
       std::pair{ dovah::form_type::equip_slot,        _make<FormDialogEquipSlot> },
       std::pair{ dovah::form_type::explosion,         _make<FormDialogExplosion> },
@@ -106,6 +111,7 @@ namespace {
       std::pair{ dovah::form_type::hazard,            _make<FormDialogHazard> },
       std::pair{ dovah::form_type::head_part,         _make<FormDialogHeadPart> },
       std::pair{ dovah::form_type::impact_data,       _make<FormDialogImpactData> },
+      std::pair{ dovah::form_type::ingredient,        _make<FormDialogIngredient> },
       std::pair{ dovah::form_type::key,               _make<FormDialogKey> },
       std::pair{ dovah::form_type::keyword,           _make<FormDialogKeyword> },
       std::pair{ dovah::form_type::land_texture,      _make<FormDialogLandTexture> },
@@ -120,10 +126,12 @@ namespace {
       std::pair{ dovah::form_type::music_type,        _make<FormDialogMusicType> },
       std::pair{ dovah::form_type::note,              _make<FormDialogNote> },
       std::pair{ dovah::form_type::outfit,            _make<FormDialogOutfit> },
+      std::pair{ dovah::form_type::potion,            _make<FormDialogPotion> },
       std::pair{ dovah::form_type::quest,             _make<FormDialogQuest> },
       std::pair{ dovah::form_type::race,              _make<FormDialogRace> },
       std::pair{ dovah::form_type::relationship,      _make<FormDialogRelationship> },
       std::pair{ dovah::form_type::reverb_parameters, _make<FormDialogReverbParameters> },
+      std::pair{ dovah::form_type::scroll,            _make<FormDialogScroll> },
       std::pair{ dovah::form_type::shout,             _make<FormDialogShout> },
       std::pair{ dovah::form_type::soul_gem,          _make<FormDialogSoulGem> },
       std::pair{ dovah::form_type::sound,             _make<FormDialogSound> },

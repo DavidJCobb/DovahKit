@@ -5,6 +5,8 @@
 #include "dovah/forms/structs/color_dword.h"
 #include "dovah/forms/Form.h" // for working copies
 #include "dovah/core.h" // form_reference_t
+#include "editor/asset_manager/asset_manager.h" // for DKTextureAssetPane and whatnot
+#include "ui/types/game_file_path.h"
 #include "widgets/DKColorPickerButton.h"
 #include "widgets/DKCompactObjectReferencePicker.h"
 #include "widgets/DKFloatSlider.h"
@@ -14,6 +16,7 @@
 #include "widgets/DKGameFilePicker.h"
 #include "widgets/DKNavmeshGenerationImportOptionPicker.h"
 #include "widgets/DKObjectReferencePicker.h"
+#include "widgets/DKTextureAssetPane.h"
 
 namespace ui {
    extern void bind(QCheckBox* widget, bool& target) {
@@ -161,6 +164,17 @@ namespace ui {
       widget->setValueByMask(record_flags);
       QObject::connect(widget, &DKNavmeshGenerationImportOptionPicker::valueChanged, widget, [widget, &record_flags](auto value) {
          widget->writeValueToMask(record_flags);
+      });
+   }
+
+   extern void bind(DKGameFilePicker* picker, DKTextureAssetPane* preview) {
+      QObject::connect(picker, &DKGameFilePicker::valueChanged, preview, [picker, preview](const ui::types::game_file_path& path) {
+         if (path.empty()) {
+            preview->setAsset(nullptr);
+            return;
+         }
+         auto str = path.lexically_relative("Data\\Textures\\").to_string();
+         preview->setAsset(DovahKitAssetManager::get().requestAsset(str));
       });
    }
 }

@@ -25,6 +25,7 @@
    #include "DialogueBranch.h"
    #include "Door.h"
    #include "DualCastData.h"
+   #include "EffectShader.h"
    #include "Enchantment.h"
    #include "EquipSlot.h"
    #include "Explosion.h"
@@ -38,6 +39,7 @@
    #include "HeadPart.h"
    #include "IdleAnimation.h"
    #include "ImpactData.h"
+   #include "Ingredient.h"
    #include "Key.h"
    #include "Keyword.h"
    #include "Landscape.h"
@@ -62,6 +64,7 @@
    #include "Relationship.h"
    #include "ReverbParameters.h"
    #include "Scene.h"
+   #include "Scroll.h"
    #include "Shout.h"
    #include "SoulGem.h"
    #include "Sound.h"
@@ -104,6 +107,7 @@ namespace dovah {
       loaded_forms::DialogueBranch,
       loaded_forms::Door,
       loaded_forms::DualCastData,
+      loaded_forms::EffectShader,
       loaded_forms::Enchantment,
       loaded_forms::EquipSlot,
       loaded_forms::Explosion,
@@ -117,6 +121,7 @@ namespace dovah {
       loaded_forms::HeadPart,
       loaded_forms::IdleAnimation,
       loaded_forms::ImpactData,
+      loaded_forms::Ingredient,
       loaded_forms::Key,
       loaded_forms::Keyword,
       loaded_forms::Landscape,
@@ -141,6 +146,7 @@ namespace dovah {
       loaded_forms::Relationship,
       loaded_forms::ReverbParameters,
       loaded_forms::Scene,
+      loaded_forms::Scroll,
       loaded_forms::Shout,
       loaded_forms::SoulGem,
       loaded_forms::Sound,

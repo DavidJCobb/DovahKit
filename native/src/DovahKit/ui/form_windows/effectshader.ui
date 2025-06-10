@@ -6,2325 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1160</width>
-    <height>765</height>
+    <width>609</width>
+    <height>856</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>EffectShader</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_23">
-   <item row="1" column="0">
-    <widget class="QGroupBox" name="flagMembrane">
-     <property name="title">
-      <string>Membrane Shader</string>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_7">
-      <item row="0" column="0">
-       <layout class="QGridLayout" name="membraneLayoutBlending">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Source Blend Mode:</string>
-          </property>
-          <property name="buddy">
-           <cstring>membraneBlendModeSrc</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QComboBox" name="membraneBlendModeSrc"/>
-        </item>
-        <item row="1" column="4">
-         <widget class="QComboBox" name="membraneBlendZTest"/>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_3">
-          <property name="text">
-           <string>Destination Blend Mode:</string>
-          </property>
-          <property name="buddy">
-           <cstring>membraneBlendModeDst</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QComboBox" name="membraneBlendModeDst"/>
-        </item>
-        <item row="0" column="3">
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>Blend Operation:</string>
-          </property>
-          <property name="buddy">
-           <cstring>membraneBlendOp</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QLabel" name="label_5">
-          <property name="text">
-           <string>Z-Test Function:</string>
-          </property>
-          <property name="buddy">
-           <cstring>membraneBlendZTest</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="4">
-         <widget class="QComboBox" name="membraneBlendOp"/>
-        </item>
-        <item row="0" column="2">
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>8</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-      <item row="1" column="0">
-       <layout class="QGridLayout" name="gridLayout_13">
-        <item row="0" column="0">
-         <widget class="QCheckBox" name="flagMembraneIgnoreBaseAlpha">
-          <property name="text">
-           <string>Ignore Base Geometry Texture Alpha</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QCheckBox" name="flagMembraneSkinOnly">
-          <property name="text">
-           <string>Affect Skin Only</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="2" column="0">
-       <widget class="QTabWidget" name="tabWidget">
-        <property name="currentIndex">
-         <number>0</number>
-        </property>
-        <widget class="QWidget" name="membraneTabFill">
-         <attribute name="title">
-          <string>Fill/Texture Effect</string>
-         </attribute>
-         <layout class="QGridLayout" name="gridLayout_8" rowstretch="0,0,0,0">
-          <item row="2" column="0">
-           <widget class="QGroupBox" name="groupBox_5">
-            <property name="title">
-             <string>Fill Texture</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_3">
-             <item>
-              <widget class="DKTextureAssetPane" name="membraneFillTexturePreview"/>
-             </item>
-             <item>
-              <widget class="DKGameFilePicker" name="membraneFillTexture">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="presetConfiguration">
-                <enum>DKGameFilePicker::Textures</enum>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="1" column="0" colspan="2">
-           <layout class="QGridLayout" name="membraneFillColorKeysLayout">
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_77">
-              <property name="text">
-               <string>Color Key 2:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneColorKey2Color</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="3">
-             <widget class="QDoubleSpinBox" name="membraneColorKey1Time">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>120.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="2">
-             <widget class="QDoubleSpinBox" name="membraneColorKey1Scale">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="minimum">
-               <double>0.000100000000000</double>
-              </property>
-              <property name="maximum">
-               <double>20.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_76">
-              <property name="text">
-               <string>Color Key 1:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneColorKey1Color</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="DKColorPickerButton" name="membraneColorKey1Color"/>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_78">
-              <property name="text">
-               <string>Color Key 3:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneColorKey3Color</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
-             <widget class="QLabel" name="label_79">
-              <property name="text">
-               <string>Scale</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="3">
-             <widget class="QLabel" name="label_80">
-              <property name="text">
-               <string>Time</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="DKColorPickerButton" name="membraneColorKey2Color"/>
-            </item>
-            <item row="2" column="2">
-             <widget class="QDoubleSpinBox" name="membraneColorKey2Scale">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="minimum">
-               <double>0.000100000000000</double>
-              </property>
-              <property name="maximum">
-               <double>20.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="3">
-             <widget class="QDoubleSpinBox" name="membraneColorKey2Time">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>120.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="DKColorPickerButton" name="membraneColorKey3Color"/>
-            </item>
-            <item row="3" column="2">
-             <widget class="QDoubleSpinBox" name="membraneColorKey3Scale">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="minimum">
-               <double>0.000100000000000</double>
-              </property>
-              <property name="maximum">
-               <double>20.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="3">
-             <widget class="QDoubleSpinBox" name="membraneColorKey3Time">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>120.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item row="3" column="0" colspan="2">
-           <layout class="QGridLayout" name="membraneFillFlagsLayout">
-            <item row="1" column="1">
-             <widget class="QCheckBox" name="membraneFillFlagNoWeapons">
-              <property name="text">
-               <string>No Weapons</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="membraneFillFlagIgnoreAlpha">
-              <property name="text">
-               <string>Ignore Alpha</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QCheckBox" name="membraneFillFlagProjectedUVs">
-              <property name="text">
-               <string>Projected UVs</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QCheckBox" name="membraneFillFlagLighting">
-              <property name="text">
-               <string>Lighting</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
-             <widget class="QCheckBox" name="membraneFillFlagGreyscaleToPaletteColor">
-              <property name="text">
-               <string>Greyscale Color to Palette</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="2">
-             <widget class="QCheckBox" name="membraneFillFlagGreyscaleToPaletteAlpha">
-              <property name="text">
-               <string>Greyscale Alpha to Palette</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item row="2" column="1">
-           <widget class="QGroupBox" name="groupBox_6">
-            <property name="title">
-             <string>Palette Texture</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_4">
-             <item>
-              <widget class="DKTextureAssetPane" name="membranePaletteTexturePreview"/>
-             </item>
-             <item>
-              <widget class="DKGameFilePicker" name="membranePaletteTexture">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="presetConfiguration">
-                <enum>DKGameFilePicker::Textures</enum>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="0" column="0" colspan="2">
-           <layout class="QGridLayout" name="gridLayout_2">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_6">
-              <property name="text">
-               <string>Alpha Fade-In Time:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneFillAlphaTimeFadeIn</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QDoubleSpinBox" name="membraneFillAlphaTimeFadeIn">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>120.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="8" column="0">
-             <widget class="QLabel" name="label_14">
-              <property name="text">
-               <string>Texture Scale (U, V):</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneFillTextureScaleU</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_8">
-              <property name="text">
-               <string>Alpha Fade-Out Time:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneFillAlphaTimeFadeOut</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_9">
-              <property name="text">
-               <string>Full Alpha Ratio [0-1]:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneFillAlphaRatioFull</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="1">
-             <widget class="QDoubleSpinBox" name="membraneFillAlphaRatioPersist">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>1.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="1">
-             <widget class="QDoubleSpinBox" name="membraneFillAlphaPulseAmplitude">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>1.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="1">
-             <widget class="QDoubleSpinBox" name="membraneFillTextureSpeedU">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>120.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_7">
-              <property name="text">
-               <string>Full Alpha Time:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneFillAlphaTimeFull</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="0">
-             <widget class="QLabel" name="label_13">
-              <property name="text">
-               <string>Texture Animation Speed (U, V):</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneFillTextureSpeedU</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="0">
-             <widget class="QLabel" name="label_11">
-              <property name="text">
-               <string>Alpha Pulse Amplitude:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneFillAlphaPulseAmplitude</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QDoubleSpinBox" name="membraneFillAlphaRatioFull">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>1.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QDoubleSpinBox" name="membraneFillAlphaTimeFull">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>120.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="1">
-             <widget class="QDoubleSpinBox" name="membraneFillAlphaPulseFrequency">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>120.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="label_10">
-              <property name="text">
-               <string>Persistent Alpha Ratio [0-1]:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneFillAlphaRatioPersist</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="0">
-             <widget class="QLabel" name="label_12">
-              <property name="text">
-               <string>Alpha Pulse Frequency:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneFillAlphaPulseFrequency</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QDoubleSpinBox" name="membraneFillAlphaTimeFadeOut">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>120.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="2">
-             <widget class="QDoubleSpinBox" name="membraneFillTextureSpeedV">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>120.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="8" column="1">
-             <widget class="QDoubleSpinBox" name="membraneFillTextureScaleU">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="minimum">
-               <double>0.000100000000000</double>
-              </property>
-              <property name="maximum">
-               <double>20.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="8" column="2">
-             <widget class="QDoubleSpinBox" name="membraneFillTextureScaleV">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="minimum">
-               <double>0.000100000000000</double>
-              </property>
-              <property name="maximum">
-               <double>20.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="membraneTabEdge">
-         <attribute name="title">
-          <string>Edge Effect</string>
-         </attribute>
-         <layout class="QGridLayout" name="gridLayout_9">
-          <item row="0" column="0">
-           <layout class="QGridLayout" name="gridLayout_6">
-            <item row="5" column="0">
-             <widget class="QLabel" name="label_31">
-              <property name="text">
-               <string>Persistent Alpha Ratio [0-1]:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneEdgeAlphaRatioPersist</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="1">
-             <widget class="QDoubleSpinBox" name="membraneEdgeAlphaPulseAmplitude">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>1.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="1">
-             <widget class="QDoubleSpinBox" name="membraneEdgeAlphaPulseFrequency">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>120.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_28">
-              <property name="text">
-               <string>Full Alpha Time:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneEdgeAlphaTimeFull</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="8" column="0">
-             <widget class="QLabel" name="label_29">
-              <property name="text">
-               <string>Falloff:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneEdgeFalloff</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="0">
-             <widget class="QLabel" name="label_30">
-              <property name="text">
-               <string>Alpha Pulse Amplitude:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneEdgeAlphaPulseAmplitude</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="1">
-             <widget class="QDoubleSpinBox" name="membraneEdgeAlphaRatioFull">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>1.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_26">
-              <property name="text">
-               <string>Alpha Fade-Out Time:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneEdgeAlphaTimeFadeOut</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="8" column="1">
-             <widget class="QDoubleSpinBox" name="membraneEdgeFalloff">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>120.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QDoubleSpinBox" name="membraneEdgeAlphaTimeFadeIn">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>120.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_24">
-              <property name="text">
-               <string>Alpha Fade-In Time:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneEdgeAlphaTimeFadeIn</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="label_27">
-              <property name="text">
-               <string>Full Alpha Ratio [0-1]:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneEdgeAlphaRatioFull</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="1">
-             <widget class="QDoubleSpinBox" name="membraneEdgeAlphaRatioPersist">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>1.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QDoubleSpinBox" name="membraneEdgeAlphaTimeFull">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>120.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="0">
-             <widget class="QLabel" name="label_32">
-              <property name="text">
-               <string>Alpha Pulse Frequency:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneEdgeAlphaPulseFrequency</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QDoubleSpinBox" name="membraneEdgeAlphaTimeFadeOut">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="decimals">
-               <number>4</number>
-              </property>
-              <property name="maximum">
-               <double>120.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="9" column="0" colspan="2">
-             <widget class="QCheckBox" name="membraneFlagEdgeInverse">
-              <property name="text">
-               <string>Inverse</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_25">
-              <property name="text">
-               <string>Color:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneEdgeColor</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="DKColorPickerButton" name="membraneEdgeColor"/>
-            </item>
-           </layout>
-          </item>
-          <item row="0" column="1">
-           <spacer name="horizontalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>116</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="1" column="0">
-           <spacer name="verticalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>265</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="membraneTabHoles">
-         <attribute name="title">
-          <string>Holes</string>
-         </attribute>
-         <layout class="QGridLayout" name="gridLayout_12" rowstretch="0,1,0" columnstretch="0,0,0">
-          <item row="2" column="0" colspan="2">
-           <widget class="QGroupBox" name="groupBox">
-            <property name="title">
-             <string>Alpha Test Animation</string>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_11">
-             <item row="0" column="1">
-              <widget class="QLabel" name="label_36">
-               <property name="text">
-                <string>Start</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="2">
-              <widget class="QLabel" name="label_37">
-               <property name="text">
-                <string>End</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_34">
-               <property name="text">
-                <string>Time:</string>
-               </property>
-               <property name="buddy">
-                <cstring>membraneHoleTimeStart</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QDoubleSpinBox" name="membraneHoleTimeStart">
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="decimals">
-                <number>4</number>
-               </property>
-               <property name="maximum">
-                <double>360.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="2">
-              <widget class="QDoubleSpinBox" name="membraneHoleTimeEnd">
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="decimals">
-                <number>4</number>
-               </property>
-               <property name="maximum">
-                <double>360.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_35">
-               <property name="text">
-                <string>Value:</string>
-               </property>
-               <property name="buddy">
-                <cstring>membraneHoleAlphaStart</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QDoubleSpinBox" name="membraneHoleAlphaStart">
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="decimals">
-                <number>4</number>
-               </property>
-               <property name="maximum">
-                <double>255.000000000000000</double>
-               </property>
-               <property name="value">
-                <double>255.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="2">
-              <widget class="QDoubleSpinBox" name="membraneHoleAlphaEnd">
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="decimals">
-                <number>4</number>
-               </property>
-               <property name="maximum">
-                <double>255.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="2" column="2">
-           <spacer name="horizontalSpacer_6">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="1" column="0" colspan="3">
-           <widget class="DKTextureAssetPane" name="membraneHoleTexturePreview"/>
-          </item>
-          <item row="0" column="0" colspan="3">
-           <layout class="QGridLayout" name="gridLayout_10">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_33">
-              <property name="text">
-               <string>Texture:</string>
-              </property>
-              <property name="buddy">
-               <cstring>membraneHoleTexture</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="DKGameFilePicker" name="membraneHoleTexture">
-              <property name="presetConfiguration">
-               <enum>DKGameFilePicker::Textures</enum>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="0" column="0" colspan="2">
-    <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="editorID"/>
-     </item>
-     <item row="0" column="4">
-      <spacer name="horizontalSpacer_5">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="0" column="2">
-      <spacer name="horizontalSpacer_4">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="0" column="3">
-      <widget class="QCheckBox" name="flagBloodGeom">
-       <property name="text">
-        <string>Use Blood Geometry (Weapons Only)</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Editor ID:</string>
-       </property>
-       <property name="buddy">
-        <cstring>editorID</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="5">
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLabel" name="label_70">
-         <property name="text">
-          <string>Ambient Sound:</string>
-         </property>
-         <property name="buddy">
-          <cstring>soundAmbient</cstring>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="DKFormPicker" name="soundAmbient"/>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </item>
-   <item row="1" column="1">
-    <widget class="QGroupBox" name="flagParticle">
-     <property name="title">
-      <string>Particle Shader</string>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_22">
-      <item row="3" column="0">
-       <widget class="QGroupBox" name="particleBirthCoordsGroupbox">
-        <property name="title">
-         <string>Particle Birth Positioning</string>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayout_2">
-         <item>
-          <layout class="QGridLayout" name="gridLayout_16" columnstretch="1,1,0,1">
-           <item row="0" column="1">
-            <widget class="QDoubleSpinBox" name="particlePositionOffset">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QLabel" name="label_53">
-             <property name="text">
-              <string>±</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleSpawnOffsetVariance</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_52">
-             <property name="text">
-              <string>Initial Speed Along Normal:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleInitialSpeed</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_51">
-             <property name="text">
-              <string>Position Offset:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particlePositionOffset</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
-            <widget class="QDoubleSpinBox" name="particleSpawnOffsetVariance">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QDoubleSpinBox" name="particleInitialSpeed">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QDoubleSpinBox" name="particleInitialSpeedVariance">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QLabel" name="label_54">
-             <property name="text">
-              <string>±</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleInitialSpeedVariance</cstring>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QGridLayout" name="gridLayout_17">
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_56">
-             <property name="text">
-              <string>Acceleration:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleAccelX</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_55">
-             <property name="text">
-              <string>Initial Velocity:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleInitialVelocityX</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QDoubleSpinBox" name="particleInitialVelocityX">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QDoubleSpinBox" name="particleInitialVelocityY">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
-            <widget class="QDoubleSpinBox" name="particleInitialVelocityZ">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QDoubleSpinBox" name="particleAccelX">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QDoubleSpinBox" name="particleAccelY">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QDoubleSpinBox" name="particleAccelZ">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QGridLayout" name="gridLayout_18" columnstretch="1,1,0,1">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_57">
-             <property name="text">
-              <string>Initial Rotation:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleInitialRotation</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_58">
-             <property name="text">
-              <string>Rotation Speed (deg/sec):</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleRotationSpeed</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QDoubleSpinBox" name="particleRotationSpeed">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="minimum">
-              <double>-1080.000000000000000</double>
-             </property>
-             <property name="maximum">
-              <double>1080.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="3">
-            <widget class="QDoubleSpinBox" name="particleInitialRotationVariance">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="minimum">
-              <double>-360.000000000000000</double>
-             </property>
-             <property name="maximum">
-              <double>360.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QDoubleSpinBox" name="particleInitialRotation">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="minimum">
-              <double>-360.000000000000000</double>
-             </property>
-             <property name="maximum">
-              <double>360.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="2">
-            <widget class="QLabel" name="label_59">
-             <property name="text">
-              <string>±</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleInitialRotationVariance</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QLabel" name="label_60">
-             <property name="text">
-              <string>±</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleRotationSpeedVariance</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QDoubleSpinBox" name="particleRotationSpeedVariance">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="minimum">
-              <double>-1080.000000000000000</double>
-             </property>
-             <property name="maximum">
-              <double>1080.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QGroupBox" name="particleBirthTimeGroupbox">
-        <property name="title">
-         <string>Particle Birth Timing</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_14">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_42">
-           <property name="text">
-            <string>Ramp-Up Time:</string>
-           </property>
-           <property name="buddy">
-            <cstring>particleBirthTimeRampUp</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_43">
-           <property name="text">
-            <string>Full Rate Time:</string>
-           </property>
-           <property name="buddy">
-            <cstring>particleBirthTimeFull</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_44">
-           <property name="text">
-            <string>Ramp-Down Time:</string>
-           </property>
-           <property name="buddy">
-            <cstring>particleBirthTimeRampDown</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QDoubleSpinBox" name="particleBirthTimeRampUp">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="decimals">
-            <number>4</number>
-           </property>
-           <property name="maximum">
-            <double>120.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QDoubleSpinBox" name="particleBirthTimeFull">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="decimals">
-            <number>4</number>
-           </property>
-           <property name="maximum">
-            <double>120.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QDoubleSpinBox" name="particleBirthTimeRampDown">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-           <property name="decimals">
-            <number>4</number>
-           </property>
-           <property name="maximum">
-            <double>120.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="0" column="0" colspan="2">
-       <layout class="QGridLayout" name="particleLayoutBlending">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_38">
-          <property name="text">
-           <string>Source Blend Mode:</string>
-          </property>
-          <property name="buddy">
-           <cstring>particleBlendModeSrc</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QComboBox" name="particleBlendModeSrc"/>
-        </item>
-        <item row="1" column="4">
-         <widget class="QComboBox" name="particleBlendZTest"/>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_39">
-          <property name="text">
-           <string>Destination Blend Mode:</string>
-          </property>
-          <property name="buddy">
-           <cstring>particleBlendModeDst</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QComboBox" name="particleBlendModeDst"/>
-        </item>
-        <item row="0" column="3">
-         <widget class="QLabel" name="label_40">
-          <property name="text">
-           <string>Blend Operation:</string>
-          </property>
-          <property name="buddy">
-           <cstring>particleBlendOp</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QLabel" name="label_41">
-          <property name="text">
-           <string>Z-Test Function:</string>
-          </property>
-          <property name="buddy">
-           <cstring>particleBlendZTest</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="4">
-         <widget class="QComboBox" name="particleBlendOp"/>
-        </item>
-        <item row="0" column="2">
-         <spacer name="horizontalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Fixed</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>8</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-      <item row="4" column="0">
-       <widget class="QGroupBox" name="particleTransformsOverTimeGroupbox">
-        <property name="whatsThis">
-         <string>All particles are spawned with a scale of 0. The scale keys indicate what size the particles will scale to at what times (in seconds).</string>
-        </property>
-        <property name="title">
-         <string>Transforms over Time</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_24">
-         <item row="0" column="1">
-          <widget class="QDoubleSpinBox" name="particleScaleKey1">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2" alignment="Qt::AlignRight">
-          <widget class="QLabel" name="label_72">
-           <property name="text">
-            <string>Time:</string>
-           </property>
-           <property name="buddy">
-            <cstring>particleScaleKey1Time</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_71">
-           <property name="text">
-            <string>Scale Key 1:</string>
-           </property>
-           <property name="buddy">
-            <cstring>particleScaleKey1</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="3">
-          <widget class="QDoubleSpinBox" name="particleScaleKey2Time">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="3">
-          <widget class="QDoubleSpinBox" name="particleScaleKey1Time">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QDoubleSpinBox" name="particleScaleKey2">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="3">
-          <widget class="QDoubleSpinBox" name="particleExplosionWindSpeed">
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_73">
-           <property name="text">
-            <string>Scale Key 2:</string>
-           </property>
-           <property name="buddy">
-            <cstring>particleScaleKey2</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2" alignment="Qt::AlignRight">
-          <widget class="QLabel" name="label_74">
-           <property name="text">
-            <string>Time:</string>
-           </property>
-           <property name="buddy">
-            <cstring>particleScaleKey2Time</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0" colspan="3" alignment="Qt::AlignRight">
-          <widget class="QLabel" name="label_75">
-           <property name="text">
-            <string>Explosion Wind Speed:</string>
-           </property>
-           <property name="buddy">
-            <cstring>particleExplosionWindSpeed</cstring>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QGroupBox" name="particleCountGroupbox">
-        <property name="title">
-         <string>Particle Counts</string>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayout">
-         <item>
-          <widget class="QLabel" name="particleCountExplanation">
-           <property name="text">
-            <string>These values are measured in &quot;passes.&quot; One pass is 79 particles.</string>
-           </property>
-           <property name="wordWrap">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <layout class="QGridLayout" name="gridLayout_15" columnstretch="1,1,0,1">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_46">
-             <property name="text">
-              <string>Full Count:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleCountFull</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2">
-            <widget class="QLabel" name="label_50">
-             <property name="text">
-              <string>±</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleLifetimeVariance</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QDoubleSpinBox" name="particleCountPersist">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QDoubleSpinBox" name="particleLifetime">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>120.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_49">
-             <property name="text">
-              <string>Particle Lifetime:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleLifetime</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QDoubleSpinBox" name="particleCountFull">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_47">
-             <property name="text">
-              <string>Persistent Count:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleCountPersist</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="3">
-            <widget class="QDoubleSpinBox" name="particleLifetimeVariance">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>120.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="3">
-            <widget class="QDoubleSpinBox" name="particleEmitDepthLimit">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>400.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0" colspan="3">
-            <widget class="QLabel" name="label_48">
-             <property name="text">
-              <string>Scene Graph Emit Depth Limit:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleEmitDepthLimit</cstring>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>0</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="0" column="2" rowspan="6">
-       <layout class="QGridLayout" name="gridLayout_4">
-        <item row="0" column="0">
-         <widget class="QGroupBox" name="particleTextureMainGroupbox">
-          <property name="title">
-           <string>Particle Texture</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_5">
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_22">
-             <property name="text">
-              <string>Count (V):</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleTextureCountV</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_21">
-             <property name="text">
-              <string>Count (U):</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleTextureCountU</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QDoubleSpinBox" name="particleTextureCountU"/>
-           </item>
-           <item row="3" column="1">
-            <widget class="QDoubleSpinBox" name="particleTextureCountV"/>
-           </item>
-           <item row="1" column="0" colspan="2">
-            <widget class="DKGameFilePicker" name="particleTexture">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="presetConfiguration">
-              <enum>DKGameFilePicker::Textures</enum>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0" colspan="2">
-            <widget class="DKTextureAssetPane" name="particleTexturePreview"/>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QGroupBox" name="particleTexturePaletteGroupbox">
-          <property name="title">
-           <string>Palette Texture</string>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout_5" stretch="1,0,0,0,0">
-           <item>
-            <widget class="DKTextureAssetPane" name="particlePaletteTexturePreview"/>
-           </item>
-           <item>
-            <widget class="DKGameFilePicker" name="particlePaletteTexture">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_23">
-             <property name="text">
-              <string>Greyscale to Palette:</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="particleFlagGreyscaleToPaletteColor">
-             <property name="text">
-              <string>Color</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="particleFlagGreyscaleToPaletteAlpha">
-             <property name="text">
-              <string>Alpha</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QGroupBox" name="particleFlagAnimated">
-          <property name="title">
-           <string>Animated</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_26" columnstretch="1,1,0,1">
-           <item row="2" column="1">
-            <widget class="QDoubleSpinBox" name="particleAnimEnd"/>
-           </item>
-           <item row="0" column="2">
-            <widget class="QLabel" name="label_85">
-             <property name="text">
-              <string>±</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleAnimStartVariance</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_81">
-             <property name="text">
-              <string>Start Frame:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleAnimStart</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QDoubleSpinBox" name="particleAnimStart"/>
-           </item>
-           <item row="1" column="2">
-            <widget class="QLabel" name="label_86">
-             <property name="text">
-              <string>±</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleAnimLoopStartVariance</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_83">
-             <property name="text">
-              <string>End Frame:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleAnimEnd</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2">
-            <widget class="QLabel" name="label_87">
-             <property name="text">
-              <string>±</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleAnimFrameCountVariance</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_82">
-             <property name="text">
-              <string>Loop Start Frame:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleAnimLoopStart</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_84">
-             <property name="text">
-              <string>Frame Count:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleAnimFrameCount</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QDoubleSpinBox" name="particleAnimLoopStart"/>
-           </item>
-           <item row="3" column="1">
-            <widget class="QDoubleSpinBox" name="particleAnimFrameCount"/>
-           </item>
-           <item row="0" column="3">
-            <widget class="QDoubleSpinBox" name="particleAnimStartVariance"/>
-           </item>
-           <item row="1" column="3">
-            <widget class="QDoubleSpinBox" name="particleAnimLoopStartVariance"/>
-           </item>
-           <item row="3" column="3">
-            <widget class="QDoubleSpinBox" name="particleAnimFrameCountVariance"/>
-           </item>
-          </layout>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="1" column="1" rowspan="5">
-       <layout class="QVBoxLayout" name="particleColorKeyCol">
-        <item>
-         <widget class="QGroupBox" name="groupBox_11">
-          <property name="title">
-           <string>Color Key 1</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_19">
-           <item row="2" column="1">
-            <widget class="QDoubleSpinBox" name="particleColorKey1Time">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>120.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="DKColorPickerButton" name="particleColorKey1Color"/>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_61">
-             <property name="text">
-              <string>Time:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleColorKey1Time</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QDoubleSpinBox" name="particleColorKey1Scale">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="minimum">
-              <double>0.000100000000000</double>
-             </property>
-             <property name="maximum">
-              <double>20.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_62">
-             <property name="text">
-              <string>Color:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleColorKey1Color</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_63">
-             <property name="text">
-              <string>Scale:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleColorKey1Scale</cstring>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QGroupBox" name="groupBox_12">
-          <property name="title">
-           <string>Color Key 2</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_20">
-           <item row="2" column="1">
-            <widget class="QDoubleSpinBox" name="particleColorKey2Time">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>120.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="DKColorPickerButton" name="particleColorKey2Color"/>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_64">
-             <property name="text">
-              <string>Time:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleColorKey2Time</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QDoubleSpinBox" name="particleColorKey2Scale">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="minimum">
-              <double>0.000100000000000</double>
-             </property>
-             <property name="maximum">
-              <double>20.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_65">
-             <property name="text">
-              <string>Color:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleColorKey2Color</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_66">
-             <property name="text">
-              <string>Scale:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleColorKey2Scale</cstring>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QGroupBox" name="groupBox_13">
-          <property name="title">
-           <string>Color Key 3</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_21">
-           <item row="2" column="1">
-            <widget class="QDoubleSpinBox" name="particleColorKey3Time">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="maximum">
-              <double>120.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="DKColorPickerButton" name="particleColorKey3Color"/>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_67">
-             <property name="text">
-              <string>Time:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleColorKey3Time</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QDoubleSpinBox" name="particleColorKey3Scale">
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-             <property name="decimals">
-              <number>4</number>
-             </property>
-             <property name="minimum">
-              <double>0.000100000000000</double>
-             </property>
-             <property name="maximum">
-              <double>20.000000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_68">
-             <property name="text">
-              <string>Color:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleColorKey3Color</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_69">
-             <property name="text">
-              <string>Scale:</string>
-             </property>
-             <property name="buddy">
-              <cstring>particleColorKey3Scale</cstring>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QGroupBox" name="groupBox_2">
-          <property name="whatsThis">
-           <string>You can optionally have this EffectShader spawn Debris objects at the target Actor's joints. Both the opacity and the size of the debris model can be animated, and on different time intervals.</string>
-          </property>
-          <property name="title">
-           <string>Debris</string>
-          </property>
-          <layout class="QGridLayout" name="gridLayout_3">
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_16">
-             <property name="text">
-              <string>Fade-Out Time:</string>
-             </property>
-             <property name="buddy">
-              <cstring>debrisTimeFadeOut</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="label_18">
-             <property name="text">
-              <string>Maximum Scale:</string>
-             </property>
-             <property name="buddy">
-              <cstring>debrisScaleMax</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0">
-            <widget class="QLabel" name="label_19">
-             <property name="text">
-              <string>Scale-In Time:</string>
-             </property>
-             <property name="buddy">
-              <cstring>debrisTimeScaleIn</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_15">
-             <property name="text">
-              <string>Fade-In Time:</string>
-             </property>
-             <property name="buddy">
-              <cstring>debrisTimeFadeIn</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_17">
-             <property name="text">
-              <string>Minimum Scale:</string>
-             </property>
-             <property name="buddy">
-              <cstring>debrisScaleMin</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QDoubleSpinBox" name="debrisTimeFadeIn"/>
-           </item>
-           <item row="0" column="0" colspan="2">
-            <widget class="DKFormPicker" name="particleDebris"/>
-           </item>
-           <item row="6" column="0">
-            <widget class="QLabel" name="label_20">
-             <property name="text">
-              <string>Scale-Out Time:</string>
-             </property>
-             <property name="buddy">
-              <cstring>debrisTimeScaleOut</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QDoubleSpinBox" name="debrisTimeFadeOut"/>
-           </item>
-           <item row="3" column="1">
-            <widget class="QDoubleSpinBox" name="debrisScaleMin"/>
-           </item>
-           <item row="4" column="1">
-            <widget class="QDoubleSpinBox" name="debrisScaleMax"/>
-           </item>
-           <item row="5" column="1">
-            <widget class="QDoubleSpinBox" name="debrisTimeScaleIn"/>
-           </item>
-           <item row="6" column="1">
-            <widget class="QDoubleSpinBox" name="debrisTimeScaleOut"/>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <spacer name="verticalSpacer_4">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>0</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="2" column="0" colspan="2">
+   <item row="7" column="0" colspan="2">
     <layout class="QHBoxLayout" name="buttonsLayout">
      <item>
       <spacer name="horizontalSpacer_8">
@@ -2368,6 +58,2461 @@
      </item>
     </layout>
    </item>
+   <item row="0" column="0" colspan="2">
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="1" column="1">
+      <widget class="DKFormPicker" name="soundAmbient"/>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_70">
+       <property name="text">
+        <string>Ambient Sound:</string>
+       </property>
+       <property name="buddy">
+        <cstring>soundAmbient</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0" colspan="2">
+    <layout class="QGridLayout" name="gridLayout_18">
+     <item row="1" column="0">
+      <widget class="QCheckBox" name="flagEnableParticle">
+       <property name="text">
+        <string>Enable particle shader</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QCheckBox" name="flagEnableMembrane">
+       <property name="text">
+        <string>Enable membrane shader</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QCheckBox" name="flagBloodGeom">
+       <property name="text">
+        <string>Use Blood Geometry (Weapons Only)</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="6" column="0" colspan="2">
+    <widget class="QTabWidget" name="membraneParticleTabbox">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tabMembrane">
+      <attribute name="title">
+       <string>Membrane Shader</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <layout class="QGridLayout" name="membraneLayoutBlending">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Source Blend Mode:</string>
+           </property>
+           <property name="buddy">
+            <cstring>membraneBlendModeSrc</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="membraneBlendModeSrc"/>
+         </item>
+         <item row="1" column="4">
+          <widget class="QComboBox" name="membraneBlendZTest"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Destination Blend Mode:</string>
+           </property>
+           <property name="buddy">
+            <cstring>membraneBlendModeDst</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="membraneBlendModeDst"/>
+         </item>
+         <item row="0" column="3">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Blend Operation:</string>
+           </property>
+           <property name="buddy">
+            <cstring>membraneBlendOp</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Z-Test Function:</string>
+           </property>
+           <property name="buddy">
+            <cstring>membraneBlendZTest</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QComboBox" name="membraneBlendOp"/>
+         </item>
+         <item row="0" column="2">
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>8</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="gridLayout_13">
+         <item row="0" column="0">
+          <widget class="QCheckBox" name="flagMembraneIgnoreBaseAlpha">
+           <property name="text">
+            <string>Ignore Base Geometry Texture Alpha</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QCheckBox" name="flagMembraneSkinOnly">
+           <property name="whatsThis">
+            <string>If this option is enabled, then the membrane shader will only affect an actor's exposed skin, and not any apparel, weapons, or other items.</string>
+           </property>
+           <property name="text">
+            <string>Affect Skin Only</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QTabWidget" name="membraneTabbox">
+         <property name="currentIndex">
+          <number>0</number>
+         </property>
+         <widget class="QWidget" name="membraneTabFill">
+          <attribute name="title">
+           <string>Fill/Texture Effect</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_8" rowstretch="0,0,0,0,0">
+           <item row="2" column="0">
+            <widget class="QGroupBox" name="groupBox_5">
+             <property name="whatsThis">
+              <string>A membrane shader can use a solid color (defined by the Color Keys), or a texture image (with its color filtered by the Color Keys).</string>
+             </property>
+             <property name="title">
+              <string>Fill Texture</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_3">
+              <item>
+               <widget class="DKTextureAssetPane" name="membraneFillTexturePreview"/>
+              </item>
+              <item>
+               <widget class="DKGameFilePicker" name="membraneFillTexture">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="presetConfiguration">
+                 <enum>DKGameFilePicker::Textures</enum>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="4" column="0" colspan="2">
+            <spacer name="verticalSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>0</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="0" column="2" rowspan="5">
+            <widget class="QFrame" name="frame">
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Sunken</enum>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_8">
+              <item>
+               <widget class="QLabel" name="label_63">
+                <property name="font">
+                 <font>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>INFO</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="label_62">
+                <property name="text">
+                 <string>When the EffectShader is first applied to an object, the fill effect's alpha (opacity) will begin at zero and gradually increase to the Full Alpha Ratio, taking Alpha Fade-In Time seconds to do so. Once it reaches that point, it'll stay at that alpha for the Full Alpha Time duration. Afterwards, the alpha will gradually decrease to the Persistent Alpha Ratio, taking Alpha Fade-Out Time seconds to do so. By default, it'll stay at that alpha ratio until the EffectShader is removed. At that point, it'll fade out from its current opacity to zero over Alpha Fade-Out Time.
+
+If the Persistent Alpha Ratio is greater than the Full Alpha Ratio, then the shader will instantly switch from the Full Alpha Ratio to the Persistent Alpha Ratio after the Full Alpha Time elapses.
+
+The Alpha Pulse settings allow the alpha to fluctuate over the full lifetime of the shader, including during any fades. The Alpha Pulse Ratio defines the maximum ratio (multiplied by the Full or Persistent Alpha Ratio) by which the alpha can vary. The Alpha Pulse Frequency determines the length of the time period over which the alpha varies by ± the Alpha Pulse Ratio.</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_5">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="3" column="0" colspan="2">
+            <layout class="QGridLayout" name="membraneFillFlagsLayout">
+             <item row="1" column="1">
+              <widget class="QCheckBox" name="membraneFillFlagNoWeapons">
+               <property name="whatsThis">
+                <string>If this option is enabled, then the membrane shader will not be applied to weapons, including weapons held by an actor to which the shader is being applied.</string>
+               </property>
+               <property name="text">
+                <string>No Weapons</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QCheckBox" name="membraneFillFlagIgnoreAlpha">
+               <property name="text">
+                <string>Ignore Alpha</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QCheckBox" name="membraneFillFlagProjectedUVs">
+               <property name="text">
+                <string>Projected UVs</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QCheckBox" name="membraneFillFlagLighting">
+               <property name="text">
+                <string>Lighting</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QCheckBox" name="membraneFillFlagGreyscaleToPaletteColor">
+               <property name="whatsThis">
+                <string>Control whether the RGB values within the palette texture are used or ignored.</string>
+               </property>
+               <property name="text">
+                <string>Greyscale to Palette - Color</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QCheckBox" name="membraneFillFlagGreyscaleToPaletteAlpha">
+               <property name="whatsThis">
+                <string>Control whether alpha transparency within the palette texture is used or ignored.</string>
+               </property>
+               <property name="text">
+                <string>Greyscale to Palette - Alpha</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="2" column="1">
+            <widget class="QGroupBox" name="groupBox_6">
+             <property name="title">
+              <string>Palette Texture</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_4">
+              <item>
+               <widget class="DKTextureAssetPane" name="membranePaletteTexturePreview"/>
+              </item>
+              <item>
+               <widget class="DKGameFilePicker" name="membranePaletteTexture">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="presetConfiguration">
+                 <enum>DKGameFilePicker::Textures</enum>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="QGroupBox" name="groupBox_3">
+             <property name="title">
+              <string>Color Keys</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_19">
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_76">
+                <property name="text">
+                 <string>Color Key 1:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>membraneColorKey1Color</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_77">
+                <property name="text">
+                 <string>Color Key 2:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>membraneColorKey2Color</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QLabel" name="label_79">
+                <property name="text">
+                 <string>Scale</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QDoubleSpinBox" name="membraneColorKey1Scale">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="minimum">
+                 <double>0.000100000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>20.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="3">
+               <widget class="QDoubleSpinBox" name="membraneColorKey1Time">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="maximum">
+                 <double>120.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLabel" name="label_64">
+                <property name="text">
+                 <string>Color</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="DKColorPickerButton" name="membraneColorKey1Color"/>
+              </item>
+              <item row="0" column="3">
+               <widget class="QLabel" name="label_80">
+                <property name="text">
+                 <string>Time</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_78">
+                <property name="text">
+                 <string>Color Key 3:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>membraneColorKey3Color</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="DKColorPickerButton" name="membraneColorKey2Color"/>
+              </item>
+              <item row="2" column="2">
+               <widget class="QDoubleSpinBox" name="membraneColorKey2Scale">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="minimum">
+                 <double>0.000100000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>20.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="3">
+               <widget class="QDoubleSpinBox" name="membraneColorKey2Time">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="maximum">
+                 <double>120.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="DKColorPickerButton" name="membraneColorKey3Color"/>
+              </item>
+              <item row="3" column="2">
+               <widget class="QDoubleSpinBox" name="membraneColorKey3Scale">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="minimum">
+                 <double>0.000100000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>20.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="3">
+               <widget class="QDoubleSpinBox" name="membraneColorKey3Time">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="maximum">
+                 <double>120.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="0" column="0" colspan="2">
+            <layout class="QGridLayout" name="gridLayout_2">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_6">
+               <property name="text">
+                <string>Alpha Fade-In Time:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneFillAlphaTimeFadeIn</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="membraneFillAlphaTimeFadeIn">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>120.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="0">
+              <widget class="QLabel" name="label_14">
+               <property name="text">
+                <string>Texture Scale (U, V):</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneFillTextureScaleU</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_8">
+               <property name="text">
+                <string>Alpha Fade-Out Time:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneFillAlphaTimeFadeOut</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="label_9">
+               <property name="text">
+                <string>Full Alpha Ratio [0-1]:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneFillAlphaRatioFull</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QDoubleSpinBox" name="membraneFillAlphaRatioPersist">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QDoubleSpinBox" name="membraneFillAlphaPulseAmplitude">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="1">
+              <widget class="QDoubleSpinBox" name="membraneFillTextureSpeedU">
+               <property name="whatsThis">
+                <string>If the membrane shader uses a texture, then you can make the texture scroll over the surface of the target object. The U- and V-coordinates are used to refer to coordinates within the texture. These can be positive or negative, to control the direction of the animation.</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>120.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_7">
+               <property name="text">
+                <string>Full Alpha Time:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneFillAlphaTimeFull</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="0">
+              <widget class="QLabel" name="label_13">
+               <property name="text">
+                <string>Texture Animation Speed (U, V):</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneFillTextureSpeedU</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="0">
+              <widget class="QLabel" name="label_11">
+               <property name="text">
+                <string>Alpha Pulse Amplitude:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneFillAlphaPulseAmplitude</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QDoubleSpinBox" name="membraneFillAlphaRatioFull">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="membraneFillAlphaTimeFull">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>120.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="1">
+              <widget class="QDoubleSpinBox" name="membraneFillAlphaPulseFrequency">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>120.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="label_10">
+               <property name="text">
+                <string>Persistent Alpha Ratio [0-1]:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneFillAlphaRatioPersist</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="0">
+              <widget class="QLabel" name="label_12">
+               <property name="text">
+                <string>Alpha Pulse Frequency:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneFillAlphaPulseFrequency</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="membraneFillAlphaTimeFadeOut">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>120.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="2">
+              <widget class="QDoubleSpinBox" name="membraneFillTextureSpeedV">
+               <property name="whatsThis">
+                <string>If the membrane shader uses a texture, then you can make the texture scroll over the surface of the target object. The U- and V-coordinates are used to refer to coordinates within the texture. These can be positive or negative, to control the direction of the animation.</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>120.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="1">
+              <widget class="QDoubleSpinBox" name="membraneFillTextureScaleU">
+               <property name="whatsThis">
+                <string>If the membrane effect uses a texture, then a larger texture scale will repeat the texture more frequently across the surface of the target object. You can independently scale the texture over the U- and V-coordinates (that is, the horizontal and vertical coordinates within the texture image).</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="minimum">
+                <double>0.000100000000000</double>
+               </property>
+               <property name="maximum">
+                <double>20.000000000000000</double>
+               </property>
+               <property name="value">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="2">
+              <widget class="QDoubleSpinBox" name="membraneFillTextureScaleV">
+               <property name="whatsThis">
+                <string>If the membrane effect uses a texture, then a larger texture scale will repeat the texture more frequently across the surface of the target object. You can independently scale the texture over the U- and V-coordinates (that is, the horizontal and vertical coordinates within the texture image).</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="minimum">
+                <double>0.000100000000000</double>
+               </property>
+               <property name="maximum">
+                <double>20.000000000000000</double>
+               </property>
+               <property name="value">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="membraneTabEdge">
+          <attribute name="title">
+           <string>Edge Effect</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_9">
+           <item row="0" column="0">
+            <layout class="QGridLayout" name="gridLayout_6">
+             <item row="5" column="0">
+              <widget class="QLabel" name="label_31">
+               <property name="text">
+                <string>Persistent Alpha Ratio [0-1]:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneEdgeAlphaRatioPersist</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="1">
+              <widget class="QDoubleSpinBox" name="membraneEdgeAlphaPulseAmplitude">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="1">
+              <widget class="QDoubleSpinBox" name="membraneEdgeAlphaPulseFrequency">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>120.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_28">
+               <property name="text">
+                <string>Full Alpha Time:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneEdgeAlphaTimeFull</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="0">
+              <widget class="QLabel" name="label_29">
+               <property name="text">
+                <string>Falloff:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneEdgeFalloff</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="0">
+              <widget class="QLabel" name="label_30">
+               <property name="text">
+                <string>Alpha Pulse Amplitude:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneEdgeAlphaPulseAmplitude</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QDoubleSpinBox" name="membraneEdgeAlphaRatioFull">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="label_26">
+               <property name="text">
+                <string>Alpha Fade-Out Time:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneEdgeAlphaTimeFadeOut</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="1">
+              <widget class="QDoubleSpinBox" name="membraneEdgeFalloff">
+               <property name="whatsThis">
+                <string>This option controls the bias of the rim lighting: higher values will cause the rim effect to fall off quicker, giving it a sharper but thinner outline.</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>120.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="membraneEdgeAlphaTimeFadeIn">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>120.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_24">
+               <property name="text">
+                <string>Alpha Fade-In Time:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneEdgeAlphaTimeFadeIn</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="label_27">
+               <property name="text">
+                <string>Full Alpha Ratio [0-1]:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneEdgeAlphaRatioFull</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QDoubleSpinBox" name="membraneEdgeAlphaRatioPersist">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>1.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="membraneEdgeAlphaTimeFull">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>120.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="0">
+              <widget class="QLabel" name="label_32">
+               <property name="text">
+                <string>Alpha Pulse Frequency:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneEdgeAlphaPulseFrequency</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QDoubleSpinBox" name="membraneEdgeAlphaTimeFadeOut">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>4</number>
+               </property>
+               <property name="maximum">
+                <double>120.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="9" column="0" colspan="2">
+              <widget class="QCheckBox" name="membraneFlagEdgeInverse">
+               <property name="whatsThis">
+                <string>If this is checked, then the edge effect's blend mode is inverted relative to the fill effect. For example, an additive fill effect (to brighten the mesh) would produce a subtractive edge effect (darkening its edges).</string>
+               </property>
+               <property name="text">
+                <string>Inverse</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_25">
+               <property name="text">
+                <string>Color:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneEdgeColor</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="DKColorPickerButton" name="membraneEdgeColor"/>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="1">
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>314</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="1" column="0">
+            <spacer name="verticalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>273</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="membraneTabHoles">
+          <attribute name="title">
+           <string>Holes</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_12" rowstretch="0,1,0" columnstretch="0,0,0">
+           <item row="2" column="0" colspan="2">
+            <widget class="QGroupBox" name="groupBox">
+             <property name="title">
+              <string>Alpha Test Animation</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_11">
+              <item row="0" column="1">
+               <widget class="QLabel" name="label_36">
+                <property name="text">
+                 <string>Start</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QLabel" name="label_37">
+                <property name="text">
+                 <string>End</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_34">
+                <property name="text">
+                 <string>Time:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>membraneHoleTimeStart</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QDoubleSpinBox" name="membraneHoleTimeStart">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="maximum">
+                 <double>360.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QDoubleSpinBox" name="membraneHoleTimeEnd">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="maximum">
+                 <double>360.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_35">
+                <property name="text">
+                 <string>Value:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>membraneHoleAlphaStart</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QDoubleSpinBox" name="membraneHoleAlphaStart">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="maximum">
+                 <double>255.000000000000000</double>
+                </property>
+                <property name="value">
+                 <double>255.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="2">
+               <widget class="QDoubleSpinBox" name="membraneHoleAlphaEnd">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="maximum">
+                 <double>255.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <spacer name="horizontalSpacer_6">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="1" column="0" colspan="3">
+            <widget class="DKTextureAssetPane" name="membraneHoleTexturePreview"/>
+           </item>
+           <item row="0" column="0" colspan="3">
+            <layout class="QGridLayout" name="gridLayout_10">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_33">
+               <property name="text">
+                <string>Texture:</string>
+               </property>
+               <property name="buddy">
+                <cstring>membraneHoleTexture</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="DKGameFilePicker" name="membraneHoleTexture">
+               <property name="presetConfiguration">
+                <enum>DKGameFilePicker::Textures</enum>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabParticle">
+      <attribute name="title">
+       <string>Particle Shader</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_7">
+       <item>
+        <widget class="QLabel" name="particleExplanation">
+         <property name="text">
+          <string>If particle effects are enabled, then when this EffectShader is applied to an actor, particles will be emitted from the actor's joints (specifically, its animation nodes). Particles don't work for non-actors.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="particleLayoutBlending">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_38">
+           <property name="text">
+            <string>Source Blend Mode:</string>
+           </property>
+           <property name="buddy">
+            <cstring>particleBlendModeSrc</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="particleBlendModeSrc"/>
+         </item>
+         <item row="1" column="4">
+          <widget class="QComboBox" name="particleBlendZTest"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_39">
+           <property name="text">
+            <string>Destination Blend Mode:</string>
+           </property>
+           <property name="buddy">
+            <cstring>particleBlendModeDst</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="particleBlendModeDst"/>
+         </item>
+         <item row="0" column="3">
+          <widget class="QLabel" name="label_40">
+           <property name="text">
+            <string>Blend Operation:</string>
+           </property>
+           <property name="buddy">
+            <cstring>particleBlendOp</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QLabel" name="label_41">
+           <property name="text">
+            <string>Z-Test Function:</string>
+           </property>
+           <property name="buddy">
+            <cstring>particleBlendZTest</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QComboBox" name="particleBlendOp"/>
+         </item>
+         <item row="0" column="2">
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>8</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QTabWidget" name="particleTabbox">
+         <property name="currentIndex">
+          <number>0</number>
+         </property>
+         <widget class="QWidget" name="tab">
+          <attribute name="title">
+           <string>Particle Graphics</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_3">
+           <item row="3" column="0">
+            <widget class="QGroupBox" name="particleFlagAnimated">
+             <property name="title">
+              <string>Animated</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_26" columnstretch="1,1,0,1">
+              <item row="2" column="1">
+               <widget class="QDoubleSpinBox" name="particleAnimEnd"/>
+              </item>
+              <item row="0" column="2">
+               <widget class="QLabel" name="label_85">
+                <property name="text">
+                 <string>±</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleAnimStartVariance</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_81">
+                <property name="text">
+                 <string>Start Frame:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleAnimStart</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QDoubleSpinBox" name="particleAnimStart"/>
+              </item>
+              <item row="1" column="2">
+               <widget class="QLabel" name="label_86">
+                <property name="text">
+                 <string>±</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleAnimLoopStartVariance</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_83">
+                <property name="text">
+                 <string>End Frame:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleAnimEnd</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="2">
+               <widget class="QLabel" name="label_87">
+                <property name="text">
+                 <string>±</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleAnimFrameCountVariance</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_82">
+                <property name="text">
+                 <string>Loop Start Frame:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleAnimLoopStart</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_84">
+                <property name="text">
+                 <string>Frame Count:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleAnimFrameCount</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QDoubleSpinBox" name="particleAnimLoopStart"/>
+              </item>
+              <item row="3" column="1">
+               <widget class="QDoubleSpinBox" name="particleAnimFrameCount"/>
+              </item>
+              <item row="0" column="3">
+               <widget class="QDoubleSpinBox" name="particleAnimStartVariance"/>
+              </item>
+              <item row="1" column="3">
+               <widget class="QDoubleSpinBox" name="particleAnimLoopStartVariance"/>
+              </item>
+              <item row="3" column="3">
+               <widget class="QDoubleSpinBox" name="particleAnimFrameCountVariance"/>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QGroupBox" name="groupBox_2">
+             <property name="title">
+              <string>Color Keys</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_27">
+              <item row="0" column="2">
+               <widget class="QLabel" name="label_90">
+                <property name="text">
+                 <string>Scale</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QDoubleSpinBox" name="particleColorKey1Scale">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="minimum">
+                 <double>0.000100000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>20.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="2">
+               <widget class="QDoubleSpinBox" name="particleColorKey2Scale">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="minimum">
+                 <double>0.000100000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>20.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="3">
+               <widget class="QLabel" name="label_91">
+                <property name="text">
+                 <string>Time</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="3">
+               <widget class="QDoubleSpinBox" name="particleColorKey2Time">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="maximum">
+                 <double>120.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLabel" name="label_89">
+                <property name="text">
+                 <string>Color</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="3">
+               <widget class="QDoubleSpinBox" name="particleColorKey1Time">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="maximum">
+                 <double>120.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_88">
+                <property name="text">
+                 <string>Color Key 1:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleColorKey1Color</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="DKColorPickerButton" name="particleColorKey1Color"/>
+              </item>
+              <item row="2" column="1">
+               <widget class="DKColorPickerButton" name="particleColorKey2Color"/>
+              </item>
+              <item row="3" column="1">
+               <widget class="DKColorPickerButton" name="particleColorKey3Color"/>
+              </item>
+              <item row="3" column="2">
+               <widget class="QDoubleSpinBox" name="particleColorKey3Scale">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="minimum">
+                 <double>0.000100000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>20.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="3">
+               <widget class="QDoubleSpinBox" name="particleColorKey3Time">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="maximum">
+                 <double>120.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_92">
+                <property name="text">
+                 <string>Color Key 2:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleColorKey2Color</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_93">
+                <property name="text">
+                 <string>Color Key 3:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleColorKey3Color</cstring>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="0" column="0" colspan="2">
+            <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1">
+             <item>
+              <widget class="QGroupBox" name="particleTextureMainGroupbox">
+               <property name="title">
+                <string>Particle Texture</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_5">
+                <item row="3" column="0">
+                 <widget class="QLabel" name="label_22">
+                  <property name="text">
+                   <string>Count (V):</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleTextureCountV</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="label_21">
+                  <property name="text">
+                   <string>Count (U):</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleTextureCountU</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0" colspan="2">
+                 <widget class="DKGameFilePicker" name="particleTexture">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="presetConfiguration">
+                   <enum>DKGameFilePicker::Textures</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0" colspan="2">
+                 <widget class="DKTextureAssetPane" name="particleTexturePreview"/>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QSpinBox" name="particleTextureCountU">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>100</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="QSpinBox" name="particleTextureCountV">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>100</number>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QGroupBox" name="particleTexturePaletteGroupbox">
+               <property name="title">
+                <string>Palette Texture</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_5" stretch="1,0,0,0,0">
+                <item>
+                 <widget class="DKTextureAssetPane" name="particlePaletteTexturePreview"/>
+                </item>
+                <item>
+                 <widget class="DKGameFilePicker" name="particlePaletteTexture">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_23">
+                  <property name="text">
+                   <string>Greyscale to Palette:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="particleFlagGreyscaleToPaletteColor">
+                  <property name="text">
+                   <string>Color</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="particleFlagGreyscaleToPaletteAlpha">
+                  <property name="text">
+                   <string>Alpha</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tab_2">
+          <attribute name="title">
+           <string>Particle Behavior</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_17">
+           <item row="0" column="0">
+            <widget class="QGroupBox" name="particleBirthTimeGroupbox">
+             <property name="title">
+              <string>Particle Birth Timing</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_14">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_42">
+                <property name="text">
+                 <string>Ramp-Up Time:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleBirthTimeRampUp</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_43">
+                <property name="text">
+                 <string>Full Rate Time:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleBirthTimeFull</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_44">
+                <property name="text">
+                 <string>Ramp-Down Time:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleBirthTimeRampDown</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QDoubleSpinBox" name="particleBirthTimeRampUp">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="maximum">
+                 <double>120.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QDoubleSpinBox" name="particleBirthTimeFull">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="maximum">
+                 <double>120.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QDoubleSpinBox" name="particleBirthTimeRampDown">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="maximum">
+                 <double>120.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QGroupBox" name="particleTransformsOverTimeGroupbox">
+             <property name="whatsThis">
+              <string>All particles are spawned with a scale of 0. The scale keys indicate what size the particles will scale to at what times (in seconds).</string>
+             </property>
+             <property name="title">
+              <string>Transforms over Time</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_24">
+              <item row="0" column="1">
+               <widget class="QDoubleSpinBox" name="particleScaleKey1">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2" alignment="Qt::AlignRight">
+               <widget class="QLabel" name="label_72">
+                <property name="text">
+                 <string>Time:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleScaleKey1Time</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_71">
+                <property name="text">
+                 <string>Scale Key 1:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleScaleKey1</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="3">
+               <widget class="QDoubleSpinBox" name="particleScaleKey2Time">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="3">
+               <widget class="QDoubleSpinBox" name="particleScaleKey1Time">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QDoubleSpinBox" name="particleScaleKey2">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="3">
+               <widget class="QDoubleSpinBox" name="particleExplosionWindSpeed">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_73">
+                <property name="text">
+                 <string>Scale Key 2:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleScaleKey2</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2" alignment="Qt::AlignRight">
+               <widget class="QLabel" name="label_74">
+                <property name="text">
+                 <string>Time:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleScaleKey2Time</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0" colspan="3" alignment="Qt::AlignRight">
+               <widget class="QLabel" name="label_75">
+                <property name="text">
+                 <string>Explosion Wind Speed:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>particleExplosionWindSpeed</cstring>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="QGroupBox" name="particleCountGroupbox">
+             <property name="title">
+              <string>Particle Counts</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout">
+              <item>
+               <widget class="QLabel" name="particleCountExplanation">
+                <property name="text">
+                 <string>These values are measured in &quot;passes.&quot; One pass is 79 particles.</string>
+                </property>
+                <property name="wordWrap">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <layout class="QGridLayout" name="gridLayout_15" columnstretch="1,1,0,1">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_46">
+                  <property name="text">
+                   <string>Full Count:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleCountFull</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="2">
+                 <widget class="QLabel" name="label_50">
+                  <property name="text">
+                   <string>±</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleLifetimeVariance</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QDoubleSpinBox" name="particleCountPersist">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="maximum">
+                   <double>400.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="QDoubleSpinBox" name="particleLifetime">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="maximum">
+                   <double>120.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QLabel" name="label_49">
+                  <property name="text">
+                   <string>Particle Lifetime:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleLifetime</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QDoubleSpinBox" name="particleCountFull">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="maximum">
+                   <double>400.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_47">
+                  <property name="text">
+                   <string>Persistent Count:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleCountPersist</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="3">
+                 <widget class="QDoubleSpinBox" name="particleLifetimeVariance">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="maximum">
+                   <double>120.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="3">
+                 <widget class="QDoubleSpinBox" name="particleEmitDepthLimit">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="maximum">
+                   <double>400.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0" colspan="3">
+                 <widget class="QLabel" name="label_48">
+                  <property name="text">
+                   <string>Scene Graph Emit Depth Limit:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleEmitDepthLimit</cstring>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="2" column="0" colspan="2">
+            <widget class="QGroupBox" name="particleBirthCoordsGroupbox">
+             <property name="title">
+              <string>Particle Birth Positioning</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_2">
+              <item>
+               <layout class="QGridLayout" name="gridLayout_16" columnstretch="1,1,0,1">
+                <item row="0" column="1">
+                 <widget class="QDoubleSpinBox" name="particleSpawnOffset">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="maximum">
+                   <double>400.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="2">
+                 <widget class="QLabel" name="label_53">
+                  <property name="text">
+                   <string>±</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleSpawnOffsetVariance</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0">
+                 <widget class="QLabel" name="label_57">
+                  <property name="text">
+                   <string>Initial Rotation:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleInitialRotation</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QDoubleSpinBox" name="particleInitialSpeed">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="maximum">
+                   <double>400.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QLabel" name="label_56">
+                  <property name="text">
+                   <string>Acceleration:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleAccelX</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="3">
+                 <widget class="QDoubleSpinBox" name="particleInitialSpeedVariance">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="maximum">
+                   <double>400.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="label_55">
+                  <property name="text">
+                   <string>Initial Velocity:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleInitialVelocityX</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_52">
+                  <property name="text">
+                   <string>Initial Speed Along Normal:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleInitialSpeed</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="2">
+                 <widget class="QLabel" name="label_54">
+                  <property name="text">
+                   <string>±</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleInitialSpeedVariance</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="3">
+                 <widget class="QDoubleSpinBox" name="particleSpawnOffsetVariance">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="maximum">
+                   <double>400.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_51">
+                  <property name="text">
+                   <string>Position Offset:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleSpawnOffset</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="0">
+                 <widget class="QLabel" name="label_58">
+                  <property name="text">
+                   <string>Rotation Speed (deg/sec):</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleRotationSpeed</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="1">
+                 <widget class="QDoubleSpinBox" name="particleInitialRotation">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="minimum">
+                   <double>-360.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>360.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="1">
+                 <widget class="QDoubleSpinBox" name="particleRotationSpeed">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="minimum">
+                   <double>-1080.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>1080.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="2">
+                 <widget class="QLabel" name="label_59">
+                  <property name="text">
+                   <string>±</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleInitialRotationVariance</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="2">
+                 <widget class="QLabel" name="label_60">
+                  <property name="text">
+                   <string>±</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>particleRotationSpeedVariance</cstring>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="3">
+                 <widget class="QDoubleSpinBox" name="particleInitialRotationVariance">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="minimum">
+                   <double>-360.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>360.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="3">
+                 <widget class="QDoubleSpinBox" name="particleRotationSpeedVariance">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="minimum">
+                   <double>-1080.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>1080.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1" rowspan="2" colspan="3">
+                 <layout class="QGridLayout" name="gridLayout_4">
+                  <item row="1" column="0">
+                   <widget class="QDoubleSpinBox" name="particleAccelX">
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="decimals">
+                     <number>4</number>
+                    </property>
+                    <property name="maximum">
+                     <double>400.000000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QDoubleSpinBox" name="particleInitialVelocityX">
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="decimals">
+                     <number>4</number>
+                    </property>
+                    <property name="maximum">
+                     <double>400.000000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QDoubleSpinBox" name="particleAccelY">
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="decimals">
+                     <number>4</number>
+                    </property>
+                    <property name="maximum">
+                     <double>400.000000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QDoubleSpinBox" name="particleInitialVelocityY">
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="decimals">
+                     <number>4</number>
+                    </property>
+                    <property name="maximum">
+                     <double>400.000000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QDoubleSpinBox" name="particleInitialVelocityZ">
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="decimals">
+                     <number>4</number>
+                    </property>
+                    <property name="maximum">
+                     <double>400.000000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="2">
+                   <widget class="QDoubleSpinBox" name="particleAccelZ">
+                    <property name="alignment">
+                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    </property>
+                    <property name="decimals">
+                     <number>4</number>
+                    </property>
+                    <property name="maximum">
+                     <double>400.000000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="4" column="0" colspan="2">
+            <spacer name="verticalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>0</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tab_3">
+          <attribute name="title">
+           <string>Debris</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_25">
+           <item row="3" column="0">
+            <spacer name="verticalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>294</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="2" column="0">
+            <layout class="QGridLayout" name="gridLayout_7">
+             <item row="0" column="1">
+              <widget class="DKFormPicker" name="particleDebris"/>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="label_17">
+               <property name="text">
+                <string>Minimum Scale:</string>
+               </property>
+               <property name="buddy">
+                <cstring>debrisScaleMin</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_15">
+               <property name="text">
+                <string>Fade-In Time:</string>
+               </property>
+               <property name="buddy">
+                <cstring>debrisTimeFadeIn</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="0">
+              <widget class="QLabel" name="label_19">
+               <property name="text">
+                <string>Scale-In Time:</string>
+               </property>
+               <property name="buddy">
+                <cstring>debrisTimeScaleIn</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_16">
+               <property name="text">
+                <string>Fade-Out Time:</string>
+               </property>
+               <property name="buddy">
+                <cstring>debrisTimeFadeOut</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_45">
+               <property name="text">
+                <string>Debris Object:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <widget class="QLabel" name="label_18">
+               <property name="text">
+                <string>Maximum Scale:</string>
+               </property>
+               <property name="buddy">
+                <cstring>debrisScaleMax</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="0">
+              <widget class="QLabel" name="label_20">
+               <property name="text">
+                <string>Scale-Out Time:</string>
+               </property>
+               <property name="buddy">
+                <cstring>debrisTimeScaleOut</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="debrisTimeFadeIn"/>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="debrisTimeFadeOut"/>
+             </item>
+             <item row="3" column="1">
+              <widget class="QDoubleSpinBox" name="debrisScaleMin"/>
+             </item>
+             <item row="4" column="1">
+              <widget class="QDoubleSpinBox" name="debrisScaleMax"/>
+             </item>
+             <item row="5" column="1">
+              <widget class="QDoubleSpinBox" name="debrisTimeScaleIn"/>
+             </item>
+             <item row="6" column="1">
+              <widget class="QDoubleSpinBox" name="debrisTimeScaleOut"/>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="0" colspan="2">
+            <widget class="QLabel" name="label_61">
+             <property name="text">
+              <string>If a Debris object is selected, then instances of that Debris will be spawned at the target actor's joints. One example of how this is used in the vanilla game is the Ice Form shout, which uses ice crystals as Debris.</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <spacer name="horizontalSpacer_9">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>265</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="Line" name="line_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -2394,16 +2539,18 @@
  </customwidgets>
  <tabstops>
   <tabstop>editorID</tabstop>
-  <tabstop>flagBloodGeom</tabstop>
   <tabstop>soundAmbient</tabstop>
-  <tabstop>flagMembrane</tabstop>
+  <tabstop>flagEnableMembrane</tabstop>
+  <tabstop>flagEnableParticle</tabstop>
+  <tabstop>flagBloodGeom</tabstop>
+  <tabstop>membraneParticleTabbox</tabstop>
   <tabstop>membraneBlendModeSrc</tabstop>
   <tabstop>membraneBlendModeDst</tabstop>
   <tabstop>membraneBlendOp</tabstop>
   <tabstop>membraneBlendZTest</tabstop>
   <tabstop>flagMembraneIgnoreBaseAlpha</tabstop>
   <tabstop>flagMembraneSkinOnly</tabstop>
-  <tabstop>tabWidget</tabstop>
+  <tabstop>membraneTabbox</tabstop>
   <tabstop>membraneFillAlphaTimeFadeIn</tabstop>
   <tabstop>membraneFillAlphaTimeFull</tabstop>
   <tabstop>membraneFillAlphaTimeFadeOut</tabstop>
@@ -2447,54 +2594,11 @@
   <tabstop>membraneHoleTimeEnd</tabstop>
   <tabstop>membraneHoleAlphaStart</tabstop>
   <tabstop>membraneHoleAlphaEnd</tabstop>
-  <tabstop>flagParticle</tabstop>
   <tabstop>particleBlendModeSrc</tabstop>
   <tabstop>particleBlendModeDst</tabstop>
   <tabstop>particleBlendOp</tabstop>
   <tabstop>particleBlendZTest</tabstop>
-  <tabstop>particleBirthTimeRampUp</tabstop>
-  <tabstop>particleBirthTimeFull</tabstop>
-  <tabstop>particleBirthTimeRampDown</tabstop>
-  <tabstop>particleCountFull</tabstop>
-  <tabstop>particleCountPersist</tabstop>
-  <tabstop>particleEmitDepthLimit</tabstop>
-  <tabstop>particleLifetime</tabstop>
-  <tabstop>particleLifetimeVariance</tabstop>
-  <tabstop>particlePositionOffset</tabstop>
-  <tabstop>particleSpawnOffsetVariance</tabstop>
-  <tabstop>particleInitialSpeed</tabstop>
-  <tabstop>particleInitialSpeedVariance</tabstop>
-  <tabstop>particleInitialVelocityX</tabstop>
-  <tabstop>particleInitialVelocityY</tabstop>
-  <tabstop>particleInitialVelocityZ</tabstop>
-  <tabstop>particleAccelX</tabstop>
-  <tabstop>particleAccelY</tabstop>
-  <tabstop>particleAccelZ</tabstop>
-  <tabstop>particleInitialRotation</tabstop>
-  <tabstop>particleInitialRotationVariance</tabstop>
-  <tabstop>particleRotationSpeed</tabstop>
-  <tabstop>particleRotationSpeedVariance</tabstop>
-  <tabstop>particleScaleKey1</tabstop>
-  <tabstop>particleScaleKey1Time</tabstop>
-  <tabstop>particleScaleKey2</tabstop>
-  <tabstop>particleScaleKey2Time</tabstop>
-  <tabstop>particleExplosionWindSpeed</tabstop>
-  <tabstop>particleColorKey1Color</tabstop>
-  <tabstop>particleColorKey1Scale</tabstop>
-  <tabstop>particleColorKey1Time</tabstop>
-  <tabstop>particleColorKey2Color</tabstop>
-  <tabstop>particleColorKey2Scale</tabstop>
-  <tabstop>particleColorKey2Time</tabstop>
-  <tabstop>particleColorKey3Color</tabstop>
-  <tabstop>particleColorKey3Scale</tabstop>
-  <tabstop>particleColorKey3Time</tabstop>
-  <tabstop>particleDebris</tabstop>
-  <tabstop>debrisTimeFadeIn</tabstop>
-  <tabstop>debrisTimeFadeOut</tabstop>
-  <tabstop>debrisScaleMin</tabstop>
-  <tabstop>debrisScaleMax</tabstop>
-  <tabstop>debrisTimeScaleIn</tabstop>
-  <tabstop>debrisTimeScaleOut</tabstop>
+  <tabstop>particleTabbox</tabstop>
   <tabstop>particleTexture</tabstop>
   <tabstop>particleTextureCountU</tabstop>
   <tabstop>particleTextureCountV</tabstop>
@@ -2509,6 +2613,49 @@
   <tabstop>particleAnimEnd</tabstop>
   <tabstop>particleAnimFrameCount</tabstop>
   <tabstop>particleAnimFrameCountVariance</tabstop>
+  <tabstop>particleColorKey1Color</tabstop>
+  <tabstop>particleColorKey1Scale</tabstop>
+  <tabstop>particleColorKey1Time</tabstop>
+  <tabstop>particleColorKey2Color</tabstop>
+  <tabstop>particleColorKey2Scale</tabstop>
+  <tabstop>particleColorKey2Time</tabstop>
+  <tabstop>particleColorKey3Color</tabstop>
+  <tabstop>particleColorKey3Scale</tabstop>
+  <tabstop>particleColorKey3Time</tabstop>
+  <tabstop>particleBirthTimeRampUp</tabstop>
+  <tabstop>particleBirthTimeFull</tabstop>
+  <tabstop>particleBirthTimeRampDown</tabstop>
+  <tabstop>particleScaleKey1</tabstop>
+  <tabstop>particleScaleKey1Time</tabstop>
+  <tabstop>particleScaleKey2</tabstop>
+  <tabstop>particleScaleKey2Time</tabstop>
+  <tabstop>particleExplosionWindSpeed</tabstop>
+  <tabstop>particleCountFull</tabstop>
+  <tabstop>particleCountPersist</tabstop>
+  <tabstop>particleEmitDepthLimit</tabstop>
+  <tabstop>particleLifetime</tabstop>
+  <tabstop>particleLifetimeVariance</tabstop>
+  <tabstop>particleSpawnOffset</tabstop>
+  <tabstop>particleSpawnOffsetVariance</tabstop>
+  <tabstop>particleInitialSpeed</tabstop>
+  <tabstop>particleInitialSpeedVariance</tabstop>
+  <tabstop>particleInitialVelocityX</tabstop>
+  <tabstop>particleInitialVelocityY</tabstop>
+  <tabstop>particleInitialVelocityZ</tabstop>
+  <tabstop>particleAccelX</tabstop>
+  <tabstop>particleAccelY</tabstop>
+  <tabstop>particleAccelZ</tabstop>
+  <tabstop>particleInitialRotation</tabstop>
+  <tabstop>particleRotationSpeed</tabstop>
+  <tabstop>particleInitialRotationVariance</tabstop>
+  <tabstop>particleRotationSpeedVariance</tabstop>
+  <tabstop>particleDebris</tabstop>
+  <tabstop>debrisTimeFadeIn</tabstop>
+  <tabstop>debrisTimeFadeOut</tabstop>
+  <tabstop>debrisScaleMin</tabstop>
+  <tabstop>debrisScaleMax</tabstop>
+  <tabstop>debrisTimeScaleIn</tabstop>
+  <tabstop>debrisTimeScaleOut</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
  </tabstops>

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>598</width>
-    <height>458</height>
+    <height>432</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -41,11 +41,11 @@
          </property>
         </widget>
        </item>
+       <item row="3" column="0" colspan="2">
+        <widget class="DKFormDestructionDataButton" name="destructionData"/>
+       </item>
        <item row="4" column="1">
         <widget class="DKFormPicker" name="equipType"/>
-       </item>
-       <item row="5" column="1">
-        <widget class="DKFormPicker" name="legacyScript"/>
        </item>
        <item row="0" column="0">
         <widget class="QLabel" name="label_2">
@@ -60,16 +60,6 @@
        <item row="1" column="1">
         <widget class="QLineEdit" name="name"/>
        </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>Legacy Script:</string>
-         </property>
-         <property name="buddy">
-          <cstring>legacyScript</cstring>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="1">
         <widget class="QLineEdit" name="editorID"/>
        </item>
@@ -82,9 +72,6 @@
           <cstring>name</cstring>
          </property>
         </widget>
-       </item>
-       <item row="3" column="0" colspan="2">
-        <widget class="DKFormDestructionDataButton" name="destructionData"/>
        </item>
       </layout>
      </item>
@@ -412,7 +399,6 @@
   <tabstop>model</tabstop>
   <tabstop>destructionData</tabstop>
   <tabstop>equipType</tabstop>
-  <tabstop>legacyScript</tabstop>
   <tabstop>weight</tabstop>
   <tabstop>flagFood</tabstop>
   <tabstop>flagPoison</tabstop>
