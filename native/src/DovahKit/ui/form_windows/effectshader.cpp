@@ -2,9 +2,12 @@
 #include "dovah/core.h"
 #include "editor/asset_manager/asset_manager.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/shrink_dialog_on_show.h"
 
 FormDialogEffectShader::FormDialogEffectShader(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
+
+   ui::shrink_dialog_on_show(*this);
 
    this->ui.particleDebris->setAllowedFormType(dovah::form_type::debris);
    this->ui.soundAmbient->setAllowedFormType(dovah::form_type::sound_descriptor);
@@ -65,6 +68,21 @@ FormDialogEffectShader::FormDialogEffectShader(dovah::form_stub& stub, QWidget* 
    ui::bind(this->ui.membraneHoleTexture, this->ui.membraneHoleTexturePreview);
    ui::bind(this->ui.particleTexture, this->ui.particleTexturePreview);
    ui::bind(this->ui.particlePaletteTexture, this->ui.particlePaletteTexturePreview);
+   QObject::connect(this->ui.membraneFillFlagIgnoreAlpha, &QCheckBox::toggled, this, [this](bool checked) {
+      this->ui.membraneFillTexturePreview->setShowAlpha(!checked);
+   });
+   QObject::connect(
+      this->ui.membraneFillFlagGreyscaleToPaletteAlpha,
+      &QCheckBox::toggled,
+      this->ui.membranePaletteTexturePreview,
+      &DKTextureAssetPane::setShowAlpha
+   );
+   QObject::connect(
+      this->ui.particleFlagGreyscaleToPaletteAlpha,
+      &QCheckBox::toggled,
+      this->ui.particlePaletteTexturePreview,
+      &DKTextureAssetPane::setShowAlpha
+   );
 
    this->load(); // this creates the working copy.
 }
@@ -215,6 +233,10 @@ void FormDialogEffectShader::_load_impl() {
          ui::bind(this->ui.debrisTimeScaleOut, working.particle.debris.times.scale_out);
       #pragma endregion
    #pragma endregion
+
+   this->ui.membraneFillTexturePreview->setShowAlpha(!this->ui.membraneFillFlagIgnoreAlpha->isChecked());
+   this->ui.membranePaletteTexturePreview->setShowAlpha(this->ui.membraneFillFlagGreyscaleToPaletteAlpha->isChecked());
+   this->ui.particlePaletteTexturePreview->setShowAlpha(this->ui.particleFlagGreyscaleToPaletteAlpha->isChecked());
 }
 void FormDialogEffectShader::_save_impl() {
    //

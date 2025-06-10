@@ -95,6 +95,11 @@ namespace dovah::loaded_forms {
             float base     = 0;
             float variance = 0;
          };
+         struct uint_with_variance {
+            uint32_t base = 0;
+            uint32_t variance = 0;
+         };
+
          struct particle_scale_key {
             float scale = 0;
             float time  = 0;
@@ -178,10 +183,10 @@ namespace dovah::loaded_forms {
                std::string main;    // ICO2
                std::string palette; // NAM9
                struct {
-                  float_with_variance start_frame;
-                  float_with_variance loop_start_frame;
-                  float               end_frame = 0;
-                  float_with_variance frame_count;
+                  uint_with_variance start_frame;
+                  uint_with_variance loop_start_frame;
+                  uint32_t           end_frame = 0;
+                  uint_with_variance frame_count;
                } animation;
                struct {
                   uint32_t u = 1;

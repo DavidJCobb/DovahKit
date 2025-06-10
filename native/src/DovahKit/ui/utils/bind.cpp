@@ -4,6 +4,7 @@
 #include <QLineEdit>
 #include "dovah/forms/structs/color_dword.h"
 #include "dovah/forms/Form.h" // for working copies
+#include "dovah/forms/Sound.h" // for mapping TESSound to BGSSoundDescriptor.
 #include "dovah/core.h" // form_reference_t
 #include "editor/asset_manager/asset_manager.h" // for DKTextureAssetPane and whatnot
 #include "ui/types/game_file_path.h"
@@ -117,6 +118,20 @@ namespace ui {
    extern void bind(DKFormPicker* widget, dovah::form_reference_t& dst, dovah::loaded_forms::Form& dst_owner) {
       assert(dst_owner.is_working_copy && "This function was created to make things easier for the (messy) form-working-copy system. Don't use it for real forms.");
       auto* stub = dst.get_form_stub();
+      if (stub && stub->form_type == dovah::form_type::sound) {
+         if (!widget->allowsFormType(dovah::form_type::sound) && widget->allowsFormType(dovah::form_type::sound_descriptor)) {
+            //
+            // HACK to match Skyrim and CK behavior. Bethesda moved a lot of 
+            // data from SOUN to SNDR, and modified a lot of loading code to 
+            // silently replace SOUN references with references to the SNDR 
+            // that the SOUN wraps. We don't do that on load, but we'll do 
+            // it here to ensure that the UI doesn't get cleared out.
+            //
+            auto loaded = stub->load().ptr_cast<dovah::loaded_forms::Sound>();
+            if (loaded && loaded->descriptor)
+               stub = loaded->descriptor.get_form_stub();
+         }
+      }
       widget->setFormStub(stub);
       QObject::connect(widget, &DKFormPicker::formChanged, widget, [&dst, &dst_owner](dovah::form_stub* value) {
          dst.set(dst_owner, value);
@@ -154,8 +169,18 @@ namespace ui {
    }
 
    extern void bind(DKGameFilePicker* widget, std::string& dst) {
-      widget->setValue(ui::types::game_file_path(QString::fromStdString(dst)));
-      QObject::connect(widget, &DKGameFilePicker::valueChanged, widget, [&dst](const ui::types::game_file_path& path) {
+      auto stem = widget->pathStem();
+      if (!stem.empty()) {
+         widget->setValue(stem.append(QString::fromStdString(dst)));
+      } else {
+         widget->setValue(ui::types::game_file_path(QString::fromStdString(dst)));
+      }
+      QObject::connect(widget, &DKGameFilePicker::valueChanged, widget, [widget, &dst](ui::types::game_file_path path) {
+         {
+            auto stem = widget->pathStem();
+            if (!stem.empty())
+               path = path.lexically_relative(stem);
+         }
          dst = path.to_string().toStdString();
       });
    }
@@ -173,8 +198,7 @@ namespace ui {
             preview->setAsset(nullptr);
             return;
          }
-         auto str = path.lexically_relative("Data\\Textures\\").to_string();
-         preview->setAsset(DovahKitAssetManager::get().requestAsset(str));
+         preview->setAsset(DovahKitAssetManager::get().requestAsset(path.lexically_relative("Data\\").to_string()));
       });
    }
 }

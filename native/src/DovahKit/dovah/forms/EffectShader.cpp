@@ -113,7 +113,7 @@ namespace dovah::loaded_forms {
                subrecord.read(this->particle.debris.times.scale_in);
                subrecord.read(this->particle.debris.times.scale_out); // DATA+0x130
                if (auto& form = this->ambient_sound; subrecord.read(form)) { // DATA+0x134
-                  intfc.warn_if_ref_is_wrong_type(form, form_type::sound_descriptor, subrecord.signature());
+                  intfc.warn_if_ref_is_wrong_type(form, std::array{ form_type::sound_descriptor, form_type::sound }, subrecord.signature());
                }
                {
                   auto& list = this->membrane.fill.color_keys;
