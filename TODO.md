@@ -141,11 +141,11 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Items | SLGM | Soul Gem       | ✅ | ✅ | ⬛ |
 | Items | WEAP | Weapon         | ✅ | ✅ | ⬛ |
 | Magic | DUAL | Dual Cast Data | ✅ | ✅ | ⬛ |
-| Magic | ENCH | Enchantment    | ⬛ | 🟨 | ⬛ |
+| Magic | ENCH | Enchantment    | ✅ | ✅ | ⬛ |
 | Magic | LVSP | LeveledSpell   | ✅ | ✅ | ⬛ |
-| Magic | MGEF | Magic Effect   | ⬛ | 🟨 | ⬛ |
-| Magic | ALCH | Potion         | ⬛ | 🟨 | ⬛ |
-| Magic | SCRL | Scroll         | ⬛ | 🟨 | ⬛ |
+| Magic | MGEF | Magic Effect   | ✅ | ✅ | ⬛ |
+| Magic | ALCH | Potion         | ✅ | ✅ | ⬛ |
+| Magic | SCRL | Scroll         | ✅ | ✅ | ⬛ |
 | Magic | SHOU | Shout          | ✅ | ✅ | ✅ |
 | Magic | SPEL | Spell          | ✅ | ✅ | ⬛ |
 | Magic | WOOP | Word of Power  | ✅ | ✅ | ✅ |
@@ -166,7 +166,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | SpecialEffect | ADDN | AddOnNode       | ✅ | ✅ | ⬛ |
 | SpecialEffect | CAMS | CameraShot      | ✅ | ✅ | ⬛ |
 | SpecialEffect | DEBR | Debris          | ⬛ | 🟨 | ⬛ |
-| SpecialEffect | EFSH | EffectShader    | ⬛ | ⬛ | ⬛ |
+| SpecialEffect | EFSH | EffectShader    | ✅ | ✅ | ⬛ |
 | SpecialEffect | EXPL | Explosion       | ✅ | ✅ | ⬛ |
 | SpecialEffect | FSTP | Footstep        | ✅ | ✅ | ⬛ |
 | SpecialEffect | FSTS | Footstep Set    | ⬛ | ⬛ | ⬛ |
