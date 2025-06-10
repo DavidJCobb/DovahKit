@@ -33,7 +33,8 @@ namespace dovah::loaded_forms {
                subrecord.read(this->particle.textures.palette);
                break;
             case 'DATA':
-               subrecord.read(this->data_unk000);
+               subrecord.read(this->legacy_flags);
+               subrecord.skip_bytes(3);
                subrecord.read(this->membrane.blend.src);
                subrecord.read(this->membrane.blend.op);
                subrecord.read(this->membrane.blend.z_test);
@@ -138,6 +139,19 @@ namespace dovah::loaded_forms {
                subrecord.read(this->membrane.fill.textures.scale.u);
                subrecord.read(this->membrane.fill.textures.scale.v);
                subrecord.read(this->particle.behavior.spawn.scene_graph_emit_depth_limit); // DATA+0x18C
+               subrecord.skip_bytes(2);
+
+               if (record.version() < 26) {
+                  for (int i = 0; i < 7; ++i) {
+                     uint32_t mask = 1 << i;
+                     bool     flag = (this->legacy_flags & mask) != 0;
+                     if (flag)
+                        this->flags |= mask;
+                     else
+                        this->flags &= ~mask;
+                  }
+               }
+
                break;
 
             default:
@@ -179,6 +193,7 @@ namespace dovah::loaded_forms {
 
       copy->ambient_sound.set(*copy, this->ambient_sound);
       copy->flags = this->flags;
+      copy->legacy_flags = this->legacy_flags;
 
       copy->membrane = this->membrane;
 
@@ -195,7 +210,6 @@ namespace dovah::loaded_forms {
       copy->particle.scale_keys = this->particle.scale_keys;
       copy->particle.textures = this->particle.textures;
 
-      copy->data_unk000 = this->data_unk000;
       copy->data_unk108 = this->data_unk108;
       copy->data_unk10C = this->data_unk10C;
       copy->data_unk158 = this->data_unk158;
@@ -209,7 +223,8 @@ namespace dovah::loaded_forms {
       record.write_string_subrecord('NAM9', this->particle.textures.palette);
       {
          auto& subrecord = record.open_next_subrecord('DATA');
-         subrecord.write(this->data_unk000);
+         subrecord.write(this->legacy_flags);
+         subrecord.skip_bytes(3);
          subrecord.write(this->membrane.blend.src);
          subrecord.write(this->membrane.blend.op);
          subrecord.write(this->membrane.blend.z_test);
@@ -310,6 +325,7 @@ namespace dovah::loaded_forms {
          subrecord.write(this->membrane.fill.textures.scale.u);
          subrecord.write(this->membrane.fill.textures.scale.v);
          subrecord.write(this->particle.behavior.spawn.scene_graph_emit_depth_limit); // DATA+0x18C
+         subrecord.skip_bytes(2);
          subrecord.close();
       }
    }
@@ -317,15 +333,15 @@ namespace dovah::loaded_forms {
       this->script_data.clear(*this);
 
       this->ambient_sound.set(*this, nullptr);
-      this->flags = this->flags;
+      this->flags = 0;
+      this->legacy_flags = 0;
 
-      this->membrane = this->membrane;
+      this->membrane = {};
 
-      this->particle.behavior = this->particle.behavior;
-      this->particle.blend = this->particle.blend;
-      this->particle.color_keys = this->particle.color_keys;
+      this->particle.behavior   = {};
+      this->particle.blend      = {};
+      this->particle.color_keys = {};
       {
-         auto& src = this->particle.debris;
          auto& dst = this->particle.debris;
          dst.form.set(*this, nullptr);
          dst.scales = {};
@@ -334,7 +350,6 @@ namespace dovah::loaded_forms {
       this->particle.scale_keys = {};
       this->particle.textures = {};
 
-      this->data_unk000 = {};
       this->data_unk108 = {};
       this->data_unk10C = {};
       this->data_unk158 = {};

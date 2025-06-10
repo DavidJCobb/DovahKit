@@ -60,13 +60,27 @@ namespace dovah::loaded_forms {
          };
          using flags_t = std::underlying_type_t<flag::type>;
 
+         struct legacy_flag {
+            enum type : uint8_t {
+               no_membrane = 1 << 0,
+               membrane_greyscale_color = 1 << 1,
+               membrane_greyscale_alpha = 1 << 2,
+               no_particle = 1 << 3,
+               invert_edge_effect = 1 << 4,
+               skin_only = 1 << 5,
+               ignore_alpha = 1 << 6,
+               projected_uv = 1 << 7,
+            };
+         };
+         using legacy_flags_t = std::underlying_type_t<legacy_flag::type>;
+
          struct alpha_parameters {
             struct {
                float frequency = 1;
                float amplitude = 0;
             } pulse;
             struct {
-               float full       = 0;
+               float full       = 1;
                float persistent = 0;
             } ratios;
             struct {
@@ -76,14 +90,14 @@ namespace dovah::loaded_forms {
             } times;
          };
          struct blend_parameters {
-            blend_mode      src;
-            blend_mode      dst;
-            blend_operation op;
-            z_test_function z_test;
+            blend_mode      src    = blend_mode::src_alpha;
+            blend_mode      dst    = blend_mode::src_inv_alpha;
+            blend_operation op     = blend_operation::add;
+            z_test_function z_test = z_test_function::equal;
          };
          struct color_key {
             color_t color;
-            float   alpha = 0;
+            float   alpha = 1;
             float   time  = 0;
          };
          struct texture_scale {
@@ -101,7 +115,7 @@ namespace dovah::loaded_forms {
          };
 
          struct particle_scale_key {
-            float scale = 0;
+            float scale = 1;
             float time  = 0;
          };
 
@@ -110,12 +124,13 @@ namespace dovah::loaded_forms {
 
          form_reference_t ambient_sound;
          flags_t flags = 0;
+         legacy_flags_t legacy_flags = 0; // DATA+0x00
          struct {
             blend_parameters blend;
             struct {
                alpha_parameters alpha;
                color_t          color;
-               float            falloff = 0;
+               float            falloff = 1;
             } edge;
             struct {
                alpha_parameters alpha;
@@ -130,16 +145,20 @@ namespace dovah::loaded_forms {
             } fill;
             struct {
                float start_time  = 0;
-               float end_time    = 0;
+               float end_time    = 10;
                float start_value = 255;
                float end_value   = 0;
             } holes;
          } membrane;
          struct {
             blend_parameters         blend;
-            std::array<color_key, 3> color_keys;
+            std::array<color_key, 3> color_keys = {
+               color_key{ .color = {.hex = 0xFFFFFF}, .time = 0.0 },
+               color_key{ .color = {.hex = 0xFFFFFF}, .time = 0.5 },
+               color_key{ .color = {.hex = 0xFFFFFF}, .time = 1.0 }
+            };
             struct {
-               float_with_variance lifetime;
+               float_with_variance lifetime = { 1, 0 };
                struct {
                   struct {
                      cobb::vector3<float> absolute;
@@ -154,10 +173,10 @@ namespace dovah::loaded_forms {
                } movement;
                struct {
                   struct {
-                     float full       = 0;
-                     float persistent = 0;
+                     float full       = 1;
+                     float persistent = 1;
                   } counts;
-                  float scene_graph_emit_depth_limit = 0;
+                  uint16_t scene_graph_emit_depth_limit = 0;
                   struct {
                      float ramp_up   = 0;
                      float ramp_down = 0;
@@ -172,13 +191,13 @@ namespace dovah::loaded_forms {
                   float end   = 1;
                } scales;
                struct {
-                  float fade_in   = 0;
-                  float fade_out  = 0;
-                  float scale_in  = 0;
-                  float scale_out = 0;
+                  float fade_in   = 1;
+                  float fade_out  = 1;
+                  float scale_in  = 1;
+                  float scale_out = 1;
                } times;
             } debris;
-            std::array<particle_scale_key, 2> scale_keys;
+            std::array<particle_scale_key, 2> scale_keys = { particle_scale_key{1,0}, particle_scale_key{1,1} };
             struct {
                std::string main;    // ICO2
                std::string palette; // NAM9
@@ -194,7 +213,6 @@ namespace dovah::loaded_forms {
                } count;
             } textures;
          } particle;
-         uint32_t data_unk000;     // DATA+0x000
          float    data_unk108 = 0; // DATA+0x108
          color_t  data_unk10C;     // DATA+0x10C
          float    data_unk158 = 1; // DATA+0x158
