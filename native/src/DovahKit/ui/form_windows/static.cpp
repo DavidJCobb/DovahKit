@@ -26,6 +26,15 @@ FormDialogStatic::FormDialogStatic(dovah::form_stub& stub, QWidget* parent) : QD
       dialog->deleteLater();
    });
 
+   {
+      auto* widget = this->ui.directionalMaterialIsSnow;
+      auto& editor = DovahKitCore::get();
+      QObject::connect(&editor, &DovahKitCore::dataSaveComplete, this, [widget, &editor]() {
+         widget->setVisible(editor.get_current_game() == dovah::game::skyrim_special);
+      });
+      widget->setVisible(editor.get_current_game() == dovah::game::skyrim_special);
+   }
+
    this->load(); // this creates the working copy.
 }
 void FormDialogStatic::_load_impl() {
@@ -55,9 +64,6 @@ void FormDialogStatic::_load_impl() {
    ui::bind(this->ui.directionalMaterial,      working.directional_material.material_object, working);
    ui::bind(this->ui.directionalMaterialAngle, working.directional_material.max_angle);
    ui::bind(this->ui.directionalMaterialIsSnow, working.directional_material.flags, loaded_form_type::directional_material_data::flag::is_snow);
-   if (DovahKitCore::get().get_current_game() != dovah::game::skyrim_special) {
-      this->ui.directionalMaterialIsSnow->setVisible(false);
-   }
 
    ui::bind(this->ui.navmeshGeneration, this->record_flags());
 

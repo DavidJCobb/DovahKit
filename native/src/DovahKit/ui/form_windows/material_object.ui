@@ -2,12 +2,30 @@
 <ui version="4.0">
  <class>FormDialogMaterialObject</class>
  <widget class="QDialog" name="FormDialogMaterialObject">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>355</width>
+    <height>319</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Material Object</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="2" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagSinglePass">
+       <property name="text">
+        <string>Single-pass (faster but less detail)</string>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
@@ -28,18 +46,21 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="editorID"/>
-     </item>
-     <item row="2" column="0" colspan="2">
-      <widget class="QCheckBox" name="flagSinglePass">
-       <property name="text">
-        <string>Single-pass (faster but less detail)</string>
+     <item row="1" column="1">
+      <widget class="DKFormNIFPicker" name="model">
+       <property name="whatsThis">
+        <string>If you select a model here, then its shader properties will be extracted and copied into the Material Object's data. The model itself isn't used in any other way, and changes made to the model file later on won't be reflected in this Material Object's data.
+
+The model you select should have a NiNode as its root, and a NiGeometry (or any subclass thereof) as its first child. That geometry should have appropriate shader properties (e.g. BSLightingShaderProperty and/or NiAlphaProperty).</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="DKFormNIFPicker" name="model"/>
+     <item row="3" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagExtSnow">
+       <property name="text">
+        <string>Snow</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

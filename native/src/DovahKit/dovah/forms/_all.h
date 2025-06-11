@@ -20,6 +20,7 @@
    #include "Class.h"
    #include "CollisionLayer.h"
    #include "Color.h"
+   #include "CombatStyle.h"
    #include "Container.h"
    #include "DefaultObjectManager.h"
    #include "DialogueBranch.h"
@@ -51,6 +52,8 @@
    #include "Location.h"
    #include "LocationRefType.h"
    #include "MagicEffect.h"
+   #include "MaterialObject.h"
+   #include "MaterialType.h"
    #include "MiscItem.h"
    #include "MovementType.h"
    #include "MusicType.h"
@@ -102,6 +105,7 @@ namespace dovah {
       loaded_forms::Class,
       loaded_forms::CollisionLayer,
       loaded_forms::Color,
+      loaded_forms::CombatStyle,
       loaded_forms::Container,
       loaded_forms::DefaultObjectManager,
       loaded_forms::DialogueBranch,
@@ -133,6 +137,8 @@ namespace dovah {
       loaded_forms::Location,
       loaded_forms::LocationRefType,
       loaded_forms::MagicEffect,
+      loaded_forms::MaterialObject,
+      loaded_forms::MaterialType,
       loaded_forms::MiscItem,
       loaded_forms::MovementType,
       loaded_forms::MusicType,

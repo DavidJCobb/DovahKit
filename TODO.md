@@ -132,7 +132,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Items | ARMA | ArmorAddon     | ⬛ | ⬛ | ⬛ | Race has a checkbox list for equip types. Probably should make that a reusable widget, and use it here for Additional Races. |
 | Items | BOOK | Book           | ⬛ | 🟨 | ⬛ |
 | Items | COBJ | Constructible Object | ⬛ | 🟨 | ⬛ |
-| Items | INGR | Ingredient     | ⬛ | 🟨 | ⬛ | Reusable code for the effect list would be good |
+| Items | INGR | Ingredient     | ✅ | ✅ | ⬛ |
 | Items | KEYM | Key            | ✅ | ✅ | ⬛ |
 | Items | LVLI | LeveledItem    | ✅ | ✅ | ⬛ |
 | Items | MISC | MiscItem       | ✅ | ✅ | ⬛ |
@@ -153,14 +153,14 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Miscellaneous | ARTO | ArtObject       | ✅ | ✅ | ⬛ |
 | Miscellaneous | COLL | Collision Layer | ✅ | ✅ | ⬛ |
 | Miscellaneous | CLFM | ColorForm       | ✅ | ✅ | ⬛ |
-| Miscellaneous | CSTY | CombatStyle     | ⬛ | 🟨 | ⬛ |
+| Miscellaneous | CSTY | CombatStyle     | ✅ | ✅ | ⬛ |
 | Miscellaneous | FLST | FormList        | ✅ | ✅ | ✅ |
 | Miscellaneous | GLOB | Global          | ✅ | ✅ | ⬛ |
 | Miscellaneous | IDLM | IdleMarker      | ⬛ | 🟨 | ⬛ |
 | Miscellaneous | KYWD | Keyword         | ✅ | ✅ | ⬛ |
 | Miscellaneous | LTEX | LandTexture     | ✅ | ✅ | 🟨 |
 | Miscellaneous | LSCR | LoadScreen      | ⬛ | 🟨 | ⬛ |
-| Miscellaneous | MATO | Material Object | ⬛ | 🟨 | ⬛ |
+| Miscellaneous | MATO | Material Object | 🟥 | 🟥 | ⬛ | Impossible to complete until we have the ability to save NIF files. We'll get to that during sustain. |
 | Miscellaneous | MESG | Message         | ⬛ | 🟨 | ⬛ |
 | Miscellaneous | TXST | TextureSet      | ✅ | ✅ | ✅ |
 | SpecialEffect | ADDN | AddOnNode       | ✅ | ✅ | ⬛ |
@@ -175,7 +175,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | SpecialEffect | IMAD | Imagespace Modifier | ⬛ | ⬛ | ⬛ |
 | SpecialEffect | IPCT | ImpactData      | ✅ | ✅ | ⬛ |
 | SpecialEffect | IPDS | ImpactDataSet   | ⬛ | 🟨 | ⬛ |
-| SpecialEffect | MATT | Material Type   | ⬛ | 🟨 | ⬛ |
+| SpecialEffect | MATT | Material Type   | ✅ | ✅ | ⬛ |
 | SpecialEffect | PROJ | Projectile      | ⬛ | 🟨 | ⬛ |
 | WorldData | CLMT | Climate                  | ⬛ | ⬛ | ⬛ |
 | WorldData | ECZN | Encounter Zone           | ⬛ | ⬛ | ⬛ |

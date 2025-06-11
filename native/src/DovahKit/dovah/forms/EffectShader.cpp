@@ -355,6 +355,8 @@ namespace dovah::loaded_forms {
       this->data_unk158 = {};
    }
    void EffectShader::_sever_outbound_references_impl(form_stub& other) noexcept {
+      this->script_data.sever_outbound_references_to(other, *this);
+
       this->ambient_sound.clear_if(*this, other);
       this->particle.debris.form.clear_if(*this, other);
    }

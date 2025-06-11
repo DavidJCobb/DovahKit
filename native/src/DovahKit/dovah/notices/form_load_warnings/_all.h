@@ -26,6 +26,7 @@
    #include "./by_form_type/magic_effect/counters_itself.h"
    #include "./by_form_type/magic_effect/invalid_actor_value_index.h"
    #include "./by_form_type/magic_effect/redundant_sound.h"
+   #include "./by_form_type/material_type/name_too_long.h"
    #include "./by_form_type/note/non_texture_note_includes_texture_path.h"
    #include "./by_form_type/quest/alias_papyrus_data_belongs_to_missing_alias.h"
    #include "./by_form_type/quest/alias_papyrus_data_specifies_wrong_quest.h"

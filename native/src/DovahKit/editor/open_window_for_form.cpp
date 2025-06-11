@@ -19,6 +19,7 @@
 #include "../ui/form_windows/class.h"
 #include "../ui/form_windows/collision_layer.h"
 #include "../ui/form_windows/color.h"
+#include "../ui/form_windows/combat_style.h"
 #include "../ui/form_windows/container.h"
 #include "../ui/form_windows/dialogue_branch.h"
 #include "../ui/form_windows/door.h"
@@ -46,6 +47,8 @@
 #include "../ui/form_windows/light.h"
 #include "../ui/form_windows/location_ref_type.h"
 #include "../ui/form_windows/magic_effect.h"
+#include "../ui/form_windows/material_object.h"
+#include "../ui/form_windows/material_type.h"
 #include "../ui/form_windows/misc_item.h"
 #include "../ui/form_windows/movement_type.h"
 #include "../ui/form_windows/music_type.h"
@@ -94,6 +97,7 @@ namespace {
       std::pair{ dovah::form_type::combat_class,      _make<FormDialogClass> },
       std::pair{ dovah::form_type::collision_layer,   _make<FormDialogCollisionLayer> },
       std::pair{ dovah::form_type::color,             _make<FormDialogColor> },
+      std::pair{ dovah::form_type::combat_style,      _make<FormDialogCombatStyle> },
       std::pair{ dovah::form_type::container,         _make<FormDialogContainer> },
       std::pair{ dovah::form_type::dialogue_branch,   _make<FormDialogDialogueBranch> },
       std::pair{ dovah::form_type::door,              _make<FormDialogDoor> },
@@ -121,6 +125,8 @@ namespace {
       std::pair{ dovah::form_type::light,             _make<FormDialogLight> },
       std::pair{ dovah::form_type::location_ref_type, _make<FormDialogLocationRefType> },
       std::pair{ dovah::form_type::magic_effect,      _make<FormDialogMagicEffect> },
+      std::pair{ dovah::form_type::material_object,   _make<FormDialogMaterialObject> },
+      std::pair{ dovah::form_type::material_type,     _make<FormDialogMaterialType> },
       std::pair{ dovah::form_type::misc_item,         _make<FormDialogMiscItem> },
       std::pair{ dovah::form_type::movement_type,     _make<FormDialogMovementType> },
       std::pair{ dovah::form_type::music_type,        _make<FormDialogMusicType> },

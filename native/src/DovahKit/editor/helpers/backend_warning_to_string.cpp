@@ -821,6 +821,17 @@ namespace editor_helpers {
                   ).arg(subject).arg(type).arg(descriptor);
                }
             #pragma endregion
+            #pragma region material_type
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::material_type::name_too_long*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "The name for Material Type %1 is too long: it's %2 bytes long, but the Creation Kit "
+                     "and the game will only load the first %3 bytes.",
+                     disambig
+                  ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
+               }
+            #pragma endregion
             #pragma region note
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::note::non_texture_note_includes_texture_path*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
