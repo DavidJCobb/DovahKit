@@ -18,6 +18,7 @@
    #include "./by_form_type/cell/cell_type_not_yet_known.h"
    #include "./by_form_type/cell/data_for_wrong_cell_type.h"
    #include "./by_form_type/dialogue_branch/mishandled_owning_quest_id.h"
+   #include "./by_form_type/footstep_set/footstep_count_mismatch.h"
    #include "./by_form_type/head_part/invalid_morph_type.h"
    #include "./by_form_type/idle/event_name_too_long.h"
    #include "./by_form_type/idle/filename_too_long.h"

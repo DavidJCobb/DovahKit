@@ -22,6 +22,7 @@
    #include "Color.h"
    #include "CombatStyle.h"
    #include "Container.h"
+   #include "Debris.h"
    #include "DefaultObjectManager.h"
    #include "DialogueBranch.h"
    #include "Door.h"
@@ -33,6 +34,7 @@
    #include "Faction.h"
    #include "Flora.h"
    #include "Footstep.h"
+   #include "FootstepSet.h"
    #include "FormList.h"
    #include "Global.h"
    #include "Grass.h"
@@ -107,6 +109,7 @@ namespace dovah {
       loaded_forms::Color,
       loaded_forms::CombatStyle,
       loaded_forms::Container,
+      loaded_forms::Debris,
       loaded_forms::DefaultObjectManager,
       loaded_forms::DialogueBranch,
       loaded_forms::Door,
@@ -118,6 +121,7 @@ namespace dovah {
       loaded_forms::Faction,
       loaded_forms::Flora,
       loaded_forms::Footstep,
+      loaded_forms::FootstepSet,
       loaded_forms::FormList,
       loaded_forms::Global,
       loaded_forms::Grass,

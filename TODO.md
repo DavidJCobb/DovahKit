@@ -165,11 +165,11 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Miscellaneous | TXST | TextureSet      | ✅ | ✅ | ✅ |
 | SpecialEffect | ADDN | AddOnNode       | ✅ | ✅ | ⬛ |
 | SpecialEffect | CAMS | CameraShot      | ✅ | ✅ | ⬛ |
-| SpecialEffect | DEBR | Debris          | ⬛ | 🟨 | ⬛ |
+| SpecialEffect | DEBR | Debris          | ✅ | 🟨 | ⬛ |
 | SpecialEffect | EFSH | EffectShader    | ✅ | ✅ | ⬛ |
 | SpecialEffect | EXPL | Explosion       | ✅ | ✅ | ⬛ |
 | SpecialEffect | FSTP | Footstep        | ✅ | ✅ | ⬛ |
-| SpecialEffect | FSTS | Footstep Set    | ⬛ | ⬛ | ⬛ |
+| SpecialEffect | FSTS | Footstep Set    | ✅ | ⬛ | ⬛ |
 | SpecialEffect | HAZD | Hazard          | ✅ | ✅ | ⬛ |
 | SpecialEffect | IMGS | Imagespace      | ⬛ | ⬛ | ⬛ |
 | SpecialEffect | IMAD | Imagespace Modifier | ⬛ | ⬛ | ⬛ |

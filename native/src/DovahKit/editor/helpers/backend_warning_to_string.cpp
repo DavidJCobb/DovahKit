@@ -692,6 +692,19 @@ namespace editor_helpers {
                   ).arg(form).arg(intended);
                }
             #pragma endregion
+            #pragma region footstep set
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::footstep_set::footstep_count_mismatch*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  size_t  total_expected = 0;
+                  for (auto expected : casted->expected)
+                     total_expected += expected;
+                  //
+                  return QObject::tr(
+                     "Footstep Set %1 appears to contain %2 footsteps. It expected a total of %3 footsteps.",
+                     disambig
+                  ).arg(subject).arg(casted->total_found).arg(total_expected);
+               }
+            #pragma endregion
             #pragma region landscape
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::landscape::excess_layers_per_quad*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
