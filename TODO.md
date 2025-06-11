@@ -174,7 +174,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | SpecialEffect | IMGS | Imagespace      | ⬛ | ⬛ | ⬛ |
 | SpecialEffect | IMAD | Imagespace Modifier | ⬛ | ⬛ | ⬛ |
 | SpecialEffect | IPCT | ImpactData      | ✅ | ✅ | ⬛ |
-| SpecialEffect | IPDS | ImpactDataSet   | ⬛ | 🟨 | ⬛ |
+| SpecialEffect | IPDS | ImpactDataSet   | ✅ | 🟨 | ⬛ |
 | SpecialEffect | MATT | Material Type   | ✅ | ✅ | ⬛ |
 | SpecialEffect | PROJ | Projectile      | ⬛ | 🟨 | ⬛ |
 | WorldData | CLMT | Climate                  | ⬛ | ⬛ | ⬛ |

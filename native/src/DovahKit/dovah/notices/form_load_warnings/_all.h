@@ -22,6 +22,7 @@
    #include "./by_form_type/head_part/invalid_morph_type.h"
    #include "./by_form_type/idle/event_name_too_long.h"
    #include "./by_form_type/idle/filename_too_long.h"
+   #include "./by_form_type/impact_data_set/mapping_missing_data.h"
    #include "./by_form_type/landscape/excess_layers_per_quad.h"
    #include "./by_form_type/landscape/invalid_quad_for_land_texture.h"
    #include "./by_form_type/magic_effect/counters_itself.h"

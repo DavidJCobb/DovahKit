@@ -3081,6 +3081,9 @@
     <ClCompile Include="dovah\forms\FootstepSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\ImpactDataSet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -7599,6 +7602,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\footstep_set\footstep_count_mismatch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\ImpactDataSet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\impact_data_set\mapping_missing_data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

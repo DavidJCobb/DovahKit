@@ -42,6 +42,7 @@
    #include "HeadPart.h"
    #include "IdleAnimation.h"
    #include "ImpactData.h"
+   #include "ImpactDataSet.h"
    #include "Ingredient.h"
    #include "Key.h"
    #include "Keyword.h"
@@ -129,6 +130,7 @@ namespace dovah {
       loaded_forms::HeadPart,
       loaded_forms::IdleAnimation,
       loaded_forms::ImpactData,
+      loaded_forms::ImpactDataSet,
       loaded_forms::Ingredient,
       loaded_forms::Key,
       loaded_forms::Keyword,

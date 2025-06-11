@@ -768,6 +768,30 @@ namespace editor_helpers {
                   ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
                }
             #pragma endregion
+            #pragma region impact data set
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::impact_data_set::mapping_missing_data*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString matt    = form_identifiers_to_string(casted->material_type);
+                  QString impact  = form_identifiers_to_string(casted->impact_data);
+                  //
+                  if (casted->material_type) {
+                     return QObject::tr(
+                        "Mapping #%2 in Impact Data Set %1 is missing data: it maps material type %3 to no impact data.",
+                        disambig
+                     ).arg(subject).arg(casted->which).arg(matt);
+                  } else if (casted->impact_data) {
+                     return QObject::tr(
+                        "Mapping #%2 in Impact Data Set %1 is missing data: it maps a missing material type to impact data %3.",
+                        disambig
+                     ).arg(subject).arg(casted->which).arg(impact);
+                  } else {
+                     return QObject::tr(
+                        "Mapping #%2 in Impact Data Set %1 is empty.",
+                        disambig
+                     ).arg(subject).arg(casted->which);
+                  }
+               }
+            #pragma endregion
             #pragma region magic_effect
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::magic_effect::counters_itself*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
