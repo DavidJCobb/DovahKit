@@ -180,6 +180,8 @@
     <ClCompile Include="dovah\forms\Hazard.cpp" />
     <ClCompile Include="dovah\forms\HeadPart.cpp" />
     <ClCompile Include="dovah\forms\IdleAnimation.cpp" />
+    <ClCompile Include="dovah\forms\IdleMarker.cpp" />
+    <ClCompile Include="dovah\forms\Imagespace.cpp" />
     <ClCompile Include="dovah\forms\ImpactData.cpp" />
     <ClCompile Include="dovah\forms\ImpactDataSet.cpp" />
     <ClCompile Include="dovah\forms\Ingredient.cpp" />
@@ -191,6 +193,7 @@
     <ClCompile Include="dovah\forms\LocationRefType.cpp" />
     <ClCompile Include="dovah\forms\MaterialObject.cpp" />
     <ClCompile Include="dovah\forms\MaterialType.cpp" />
+    <ClCompile Include="dovah\forms\Message.cpp" />
     <ClCompile Include="dovah\forms\MovementType.cpp" />
     <ClCompile Include="dovah\forms\MusicType.cpp" />
     <ClCompile Include="dovah\forms\Outfit.cpp" />
@@ -1256,6 +1259,8 @@
     <ClInclude Include="dovah\forms\Hazard.h" />
     <ClInclude Include="dovah\forms\HeadPart.h" />
     <ClInclude Include="dovah\forms\IdleAnimation.h" />
+    <ClInclude Include="dovah\forms\IdleMarker.h" />
+    <ClInclude Include="dovah\forms\Imagespace.h" />
     <ClInclude Include="dovah\forms\ImpactData.h" />
     <ClInclude Include="dovah\forms\ImpactDataSet.h" />
     <ClInclude Include="dovah\forms\Ingredient.h" />
@@ -1267,6 +1272,7 @@
     <ClInclude Include="dovah\forms\LocationRefType.h" />
     <ClInclude Include="dovah\forms\MaterialObject.h" />
     <ClInclude Include="dovah\forms\MaterialType.h" />
+    <ClInclude Include="dovah\forms\Message.h" />
     <ClInclude Include="dovah\forms\MovementType.h" />
     <ClInclude Include="dovah\forms\MusicType.h" />
     <ClInclude Include="dovah\forms\Outfit.h" />
@@ -1379,6 +1385,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\head_part\invalid_morph_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\idle\event_name_too_long.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\idle\filename_too_long.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\idle_marker\incorrect_idle_count.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\impact_data_set\mapping_missing_data.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\excess_layers_per_quad.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\invalid_quad_for_land_texture.h" />
@@ -1386,6 +1393,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\invalid_actor_value_index.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\redundant_sound.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\material_type\name_too_long.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\message\orphaned_conditions.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\note\non_texture_note_includes_texture_path.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\alias_papyrus_data_belongs_to_missing_alias.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\alias_papyrus_data_specifies_wrong_quest.h" />
@@ -1430,6 +1438,7 @@
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\papyrus\too_many_properties_on_script.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\papyrus\too_many_scene_phase_fragments.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\papyrus\too_many_scripts.h" />
+    <ClInclude Include="dovah\notices\form_save_errors\by_form_type\idle_marker\too_many_idles.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\landscape\heightmap_contains_too_steep_a_slope.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\quest\too_many_log_entry_papyrus_fragments.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\quest\too_many_scripted_aliases.h" />

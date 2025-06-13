@@ -13,6 +13,7 @@
    #include "./by_form_component/papyrus/too_many_scripts.h"
 #pragma endregion
 #pragma region by form type
+   #include "./by_form_type/idle_marker/too_many_idles.h"
    #include "./by_form_type/landscape/heightmap_contains_too_steep_a_slope.h"
    #include "./by_form_type/quest/too_many_log_entry_papyrus_fragments.h"
    #include "./by_form_type/quest/too_many_scripted_aliases.h"

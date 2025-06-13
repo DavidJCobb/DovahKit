@@ -41,6 +41,8 @@
    #include "Hazard.h"
    #include "HeadPart.h"
    #include "IdleAnimation.h"
+   #include "IdleMarker.h"
+   #include "Imagespace.h"
    #include "ImpactData.h"
    #include "ImpactDataSet.h"
    #include "Ingredient.h"
@@ -57,6 +59,7 @@
    #include "MagicEffect.h"
    #include "MaterialObject.h"
    #include "MaterialType.h"
+   #include "Message.h"
    #include "MiscItem.h"
    #include "MovementType.h"
    #include "MusicType.h"
@@ -129,6 +132,8 @@ namespace dovah {
       loaded_forms::Hazard,
       loaded_forms::HeadPart,
       loaded_forms::IdleAnimation,
+      loaded_forms::IdleMarker,
+      loaded_forms::Imagespace,
       loaded_forms::ImpactData,
       loaded_forms::ImpactDataSet,
       loaded_forms::Ingredient,
@@ -145,6 +150,7 @@ namespace dovah {
       loaded_forms::MagicEffect,
       loaded_forms::MaterialObject,
       loaded_forms::MaterialType,
+      loaded_forms::Message,
       loaded_forms::MiscItem,
       loaded_forms::MovementType,
       loaded_forms::MusicType,

@@ -5,7 +5,6 @@
 #include "_common.h"
 #include "components/model.h"
 #include "components/papyrus.h"
-#include "../data/skills.h"
 
 namespace dovah::loaded_forms {
    class ImpactDataSet : public Form {

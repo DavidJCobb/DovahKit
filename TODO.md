@@ -156,12 +156,12 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Miscellaneous | CSTY | CombatStyle     | ✅ | ✅ | ⬛ |
 | Miscellaneous | FLST | FormList        | ✅ | ✅ | ✅ |
 | Miscellaneous | GLOB | Global          | ✅ | ✅ | ⬛ |
-| Miscellaneous | IDLM | IdleMarker      | ⬛ | 🟨 | ⬛ |
+| Miscellaneous | IDLM | IdleMarker      | ✅ | 🟨 | ⬛ |
 | Miscellaneous | KYWD | Keyword         | ✅ | ✅ | ⬛ |
 | Miscellaneous | LTEX | LandTexture     | ✅ | ✅ | 🟨 |
 | Miscellaneous | LSCR | LoadScreen      | ⬛ | 🟨 | ⬛ |
 | Miscellaneous | MATO | Material Object | 🟥 | 🟥 | ⬛ | Impossible to complete until we have the ability to save NIF files. We'll get to that during sustain. |
-| Miscellaneous | MESG | Message         | ⬛ | 🟨 | ⬛ |
+| Miscellaneous | MESG | Message         | ✅ | 🟨 | ⬛ |
 | Miscellaneous | TXST | TextureSet      | ✅ | ✅ | ✅ |
 | SpecialEffect | ADDN | AddOnNode       | ✅ | ✅ | ⬛ |
 | SpecialEffect | CAMS | CameraShot      | ✅ | ✅ | ⬛ |
@@ -171,7 +171,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | SpecialEffect | FSTP | Footstep        | ✅ | ✅ | ⬛ |
 | SpecialEffect | FSTS | Footstep Set    | ✅ | ⬛ | ⬛ |
 | SpecialEffect | HAZD | Hazard          | ✅ | ✅ | ⬛ |
-| SpecialEffect | IMGS | Imagespace      | ⬛ | ⬛ | ⬛ |
+| SpecialEffect | IMGS | Imagespace      | ✅ | ⬛ | ⬛ |
 | SpecialEffect | IMAD | Imagespace Modifier | ⬛ | ⬛ | ⬛ |
 | SpecialEffect | IPCT | ImpactData      | ✅ | ✅ | ⬛ |
 | SpecialEffect | IPDS | ImpactDataSet   | ✅ | 🟨 | ⬛ |

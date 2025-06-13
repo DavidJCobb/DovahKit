@@ -768,6 +768,17 @@ namespace editor_helpers {
                   ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
                }
             #pragma endregion
+            #pragma region idle marker
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::idle_marker::incorrect_idle_count*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Idle Marker %1 claims to have %2 idles, but its data supplies %3 idles. The game will detect "
+                     "this discrepancy and refuse to load the animation list.",
+                     disambig
+                  ).arg(subject).arg(casted->count_expected).arg(casted->count_seen);
+               }
+            #pragma endregion
             #pragma region impact data set
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::impact_data_set::mapping_missing_data*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
@@ -867,6 +878,24 @@ namespace editor_helpers {
                      "and the game will only load the first %3 bytes.",
                      disambig
                   ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
+               }
+            #pragma endregion
+            #pragma region message
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::message::orphaned_conditions*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString format;
+                  if (casted->retained) {
+                     format = QObject::tr(
+                        "Message %1 contains %2 condition(s) not associated with any menu button. A blank "
+                        "button has been added for them."
+                     );
+                  } else {
+                     format = QObject::tr(
+                        "Message %1 contains %2 condition(s) not associated with any menu button. These "
+                        "conditions have been discarded."
+                     );
+                  }
+                  return format.arg(subject).arg(casted->count);
                }
             #pragma endregion
             #pragma region note

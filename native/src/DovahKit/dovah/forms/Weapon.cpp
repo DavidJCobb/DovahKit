@@ -882,21 +882,21 @@ namespace dovah::loaded_forms {
       this->scope_model.sever_outbound_references_to(other, *this);
       this->script_data.sever_outbound_references_to(other, *this);
       //
-      this->block_bash.alternate_material.set(*this, nullptr);
-      this->block_bash.impact_data_set.set(*this, nullptr);
-      this->crit_data.spell_to_apply.set(*this, nullptr);
-      this->equip_type.set(*this, nullptr);
-      this->first_person_model.set(*this, nullptr);
-      this->impact_data_set.set(*this, nullptr);
-      this->sounds.attack.set(*this, nullptr);
-      this->sounds.attack_2D.set(*this, nullptr);
-      this->sounds.attack_loop.set(*this, nullptr);
-      this->sounds.attack_fail.set(*this, nullptr);
-      this->sounds.idle.set(*this, nullptr);
-      this->sounds.equip.set(*this, nullptr);
-      this->sounds.unequip.set(*this, nullptr);
-      this->template_weapon.set(*this, nullptr);
-      this->item_data.sounds.take.set(*this, nullptr);
-      this->item_data.sounds.drop.set(*this, nullptr);
+      this->block_bash.alternate_material.clear_if(*this, other);
+      this->block_bash.impact_data_set.clear_if(*this, other);
+      this->crit_data.spell_to_apply.clear_if(*this, other);
+      this->equip_type.clear_if(*this, other);
+      this->first_person_model.clear_if(*this, other);
+      this->impact_data_set.clear_if(*this, other);
+      this->sounds.attack.clear_if(*this, other);
+      this->sounds.attack_2D.clear_if(*this, other);
+      this->sounds.attack_loop.clear_if(*this, other);
+      this->sounds.attack_fail.clear_if(*this, other);
+      this->sounds.idle.clear_if(*this, other);
+      this->sounds.equip.clear_if(*this, other);
+      this->sounds.unequip.clear_if(*this, other);
+      this->template_weapon.clear_if(*this, other);
+      this->item_data.sounds.take.clear_if(*this, other);
+      this->item_data.sounds.drop.clear_if(*this, other);
    }
 }
