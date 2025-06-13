@@ -13,6 +13,7 @@
    #include "AddOnNode.h"
    #include "Ammo.h"
    #include "AnimationProp.h"
+   #include "Apparatus.h"
    #include "ArtObject.h"
    #include "AssociationType.h"
    #include "CameraShot.h"
@@ -31,6 +32,7 @@
    #include "Enchantment.h"
    #include "EquipSlot.h"
    #include "Explosion.h"
+   #include "Eyes.h"
    #include "Faction.h"
    #include "Flora.h"
    #include "Footstep.h"
@@ -70,6 +72,7 @@
    #include "Potion.h"
    #include "Quest.h"
    #include "Race.h"
+   #include "Ragdoll.h"
    #include "Relationship.h"
    #include "ReverbParameters.h"
    #include "Scene.h"
@@ -104,6 +107,7 @@ namespace dovah {
       loaded_forms::AddOnNode,
       loaded_forms::Ammo,
       loaded_forms::AnimationProp,
+      loaded_forms::Apparatus,
       loaded_forms::ArtObject,
       loaded_forms::AssociationType,
       loaded_forms::CameraShot,
@@ -122,6 +126,7 @@ namespace dovah {
       loaded_forms::Enchantment,
       loaded_forms::EquipSlot,
       loaded_forms::Explosion,
+      loaded_forms::Eyes,
       loaded_forms::Faction,
       loaded_forms::Flora,
       loaded_forms::Footstep,
@@ -161,6 +166,7 @@ namespace dovah {
       loaded_forms::Potion,
       loaded_forms::Quest,
       loaded_forms::Race,
+      loaded_forms::Ragdoll,
       loaded_forms::Relationship,
       loaded_forms::ReverbParameters,
       loaded_forms::Scene,

@@ -215,10 +215,10 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | | SMBN | Story Manager Branch Node | ⬛ | ⬛ | ⬛ |
 | | SMQN | Story Manager Quest Node | ⬛ | ⬛ | ⬛ |
 | | WRLD | Worldspace | ✅ | ⬛ | 🟨 |
-| Deprecated | APPA | BGSApparatus | ⬛ | ⬛ | ⬛ | CK32 has a loader for this; test in-game behavior |
-| Deprecated | EYES | TESEyes | ⬛ | ⬛ | ⬛ | CK32 has a loader for this |
+| Deprecated | APPA | BGSApparatus | ✅ | ⬛ | ⬛ | CK32 has a loader for this; test in-game behavior |
+| Deprecated | EYES | TESEyes | ✅ | ⬛ | ⬛ | CK32 has a loader for this |
 | Deprecated | MICO | BGSMenuIcon | ⬛ | ⬛ | ⬛ | CK32 has a loader for this |
-| Deprecated | RGDL | BGSRagdoll | ⬛ | ⬛ | ⬛ | CK32 has a loader for this |
+| Deprecated | RGDL | BGSRagdoll | ✅ | ⬛ | ⬛ | CK32 has a loader for this |
 | Skyrim Special | LENS | Lens Flare | ⬛ | ⬛ | ⬛ |
 | Skyrim Special | VOLI | Volumetric Lighting | ⬛ | ⬛ | ⬛ |
 

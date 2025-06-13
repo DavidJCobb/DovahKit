@@ -142,6 +142,7 @@
     <ClCompile Include="dovah\forms\AddOnNode.cpp" />
     <ClCompile Include="dovah\forms\Ammo.cpp" />
     <ClCompile Include="dovah\forms\AnimationProp.cpp" />
+    <ClCompile Include="dovah\forms\Apparatus.cpp" />
     <ClCompile Include="dovah\forms\ArtObject.cpp" />
     <ClCompile Include="dovah\forms\AssociationType.cpp" />
     <ClCompile Include="dovah\forms\CameraShot.cpp" />
@@ -173,6 +174,7 @@
     <ClCompile Include="dovah\forms\Enchantment.cpp" />
     <ClCompile Include="dovah\forms\EquipSlot.cpp" />
     <ClCompile Include="dovah\forms\Explosion.cpp" />
+    <ClCompile Include="dovah\forms\Eyes.cpp" />
     <ClCompile Include="dovah\forms\Footstep.cpp" />
     <ClCompile Include="dovah\forms\FootstepSet.cpp" />
     <ClCompile Include="dovah\forms\Global.cpp" />
@@ -199,6 +201,7 @@
     <ClCompile Include="dovah\forms\Outfit.cpp" />
     <ClCompile Include="dovah\forms\Potion.cpp" />
     <ClCompile Include="dovah\forms\Race.cpp" />
+    <ClCompile Include="dovah\forms\Ragdoll.cpp" />
     <ClCompile Include="dovah\forms\Relationship.cpp" />
     <ClCompile Include="dovah\forms\ReverbParameters.cpp" />
     <ClCompile Include="dovah\forms\Scene.cpp" />
@@ -1201,6 +1204,7 @@
     <ClInclude Include="dovah\data\magic_effect_archetypes.h" />
     <ClInclude Include="dovah\data\sex.h" />
     <ClInclude Include="dovah\data\skills.h" />
+    <ClInclude Include="dovah\data\skill_level.h" />
     <ClInclude Include="dovah\data\soul_size.h" />
     <ClInclude Include="dovah\data\weapon_type.h" />
     <ClInclude Include="dovah\exceptions\actor_base_template_is_cyclical.h" />
@@ -1227,6 +1231,7 @@
     <ClInclude Include="dovah\forms\AddOnNode.h" />
     <ClInclude Include="dovah\forms\Ammo.h" />
     <ClInclude Include="dovah\forms\AnimationProp.h" />
+    <ClInclude Include="dovah\forms\Apparatus.h" />
     <ClInclude Include="dovah\forms\ArtObject.h" />
     <ClInclude Include="dovah\forms\AssociationType.h" />
     <ClInclude Include="dovah\forms\CameraShot.h" />
@@ -1252,6 +1257,7 @@
     <ClInclude Include="dovah\forms\Enchantment.h" />
     <ClInclude Include="dovah\forms\EquipSlot.h" />
     <ClInclude Include="dovah\forms\Explosion.h" />
+    <ClInclude Include="dovah\forms\Eyes.h" />
     <ClInclude Include="dovah\forms\Footstep.h" />
     <ClInclude Include="dovah\forms\FootstepSet.h" />
     <ClInclude Include="dovah\forms\Global.h" />
@@ -1278,6 +1284,7 @@
     <ClInclude Include="dovah\forms\Outfit.h" />
     <ClInclude Include="dovah\forms\Potion.h" />
     <ClInclude Include="dovah\forms\Race.h" />
+    <ClInclude Include="dovah\forms\Ragdoll.h" />
     <ClInclude Include="dovah\forms\Relationship.h" />
     <ClInclude Include="dovah\forms\ReverbParameters.h" />
     <ClInclude Include="dovah\forms\Scene.h" />
