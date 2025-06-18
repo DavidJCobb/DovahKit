@@ -154,6 +154,10 @@
     <ClCompile Include="dovah\forms\components\conditions\context.cpp" />
     <ClCompile Include="dovah\forms\components\conditions\working_condition.cpp" />
     <ClCompile Include="dovah\forms\components\enchantable.cpp" />
+    <ClCompile Include="dovah\forms\MusicTrack.cpp" />
+    <ClCompile Include="dovah\forms\Perk.cpp" />
+    <ClCompile Include="dovah\forms\StaticCollection.cpp" />
+    <ClCompile Include="dovah\forms\structs\perk_entry_point_data.cpp" />
     <ClCompile Include="dovah\forms\components\harvestable.cpp" />
     <ClCompile Include="dovah\forms\components\leveled_list.cpp" />
     <ClCompile Include="dovah\forms\components\magic_effect_list.cpp" />
@@ -214,9 +218,11 @@
     <ClCompile Include="dovah\forms\Spell.cpp" />
     <ClCompile Include="dovah\forms\structs\actor_creature_sounds.cpp" />
     <ClCompile Include="dovah\forms\structs\container_object_extra_data.cpp" />
+    <ClCompile Include="dovah\forms\structs\perk_effect.cpp" />
     <ClCompile Include="dovah\forms\structs\world_large_ref_data.cpp" />
     <ClCompile Include="dovah\forms\structs\movement_type_speeds.cpp" />
     <ClCompile Include="dovah\forms\structs\world_max_height_data.cpp" />
+    <ClCompile Include="dovah\forms\Tree.cpp" />
     <ClCompile Include="dovah\forms\VisualEffect.cpp" />
     <ClCompile Include="dovah\forms\Weapon.cpp" />
     <ClCompile Include="dovah\form_reference_t.cpp" />
@@ -1191,6 +1197,7 @@
     <ClInclude Include="dovah\data\dialogue\category.h" />
     <ClInclude Include="dovah\data\dialogue\emotion.h" />
     <ClInclude Include="dovah\data\dialogue\topic_subtype.h" />
+    <ClInclude Include="dovah\data\entry_point_functions.h" />
     <ClInclude Include="dovah\data\face_fx\default_facegen_race_phonemes.h" />
     <ClInclude Include="dovah\data\face_fx\phonemes.h" />
     <ClInclude Include="dovah\data\face_tints.h" />
@@ -1202,6 +1209,7 @@
     <ClInclude Include="dovah\data\magic_casting_type.h" />
     <ClInclude Include="dovah\data\magic_delivery_type.h" />
     <ClInclude Include="dovah\data\magic_effect_archetypes.h" />
+    <ClInclude Include="dovah\data\perk_entry_points.h" />
     <ClInclude Include="dovah\data\sex.h" />
     <ClInclude Include="dovah\data\skills.h" />
     <ClInclude Include="dovah\data\skill_level.h" />
@@ -1247,6 +1255,9 @@
     <ClInclude Include="dovah\forms\components\conditions\working_condition.h" />
     <ClInclude Include="dovah\forms\components\conditions\working_parameter.h" />
     <ClInclude Include="dovah\forms\components\enchantable.h" />
+    <ClInclude Include="dovah\forms\MusicTrack.h" />
+    <ClInclude Include="dovah\forms\StaticCollection.h" />
+    <ClInclude Include="dovah\forms\structs\perk_entry_point_data.h" />
     <ClInclude Include="dovah\forms\components\harvestable.h" />
     <ClInclude Include="dovah\forms\components\leveled_list.h" />
     <ClInclude Include="dovah\forms\components\magic_effect_list.h" />
@@ -1282,6 +1293,7 @@
     <ClInclude Include="dovah\forms\MovementType.h" />
     <ClInclude Include="dovah\forms\MusicType.h" />
     <ClInclude Include="dovah\forms\Outfit.h" />
+    <ClInclude Include="dovah\forms\Perk.h" />
     <ClInclude Include="dovah\forms\Potion.h" />
     <ClInclude Include="dovah\forms\Race.h" />
     <ClInclude Include="dovah\forms\Ragdoll.h" />
@@ -1299,10 +1311,12 @@
     <ClInclude Include="dovah\forms\structs\actor_facegen_morphs.h" />
     <ClInclude Include="dovah\forms\structs\alias_fill_params.h" />
     <ClInclude Include="dovah\forms\structs\container_object_extra_data.h" />
+    <ClInclude Include="dovah\forms\structs\perk_effect.h" />
     <ClInclude Include="dovah\forms\structs\world_large_ref_data.h" />
     <ClInclude Include="dovah\forms\structs\movement_type_speeds.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
     <ClInclude Include="dovah\forms\structs\world_max_height_data.h" />
+    <ClInclude Include="dovah\forms\Tree.h" />
     <ClInclude Include="dovah\forms\VisualEffect.h" />
     <ClInclude Include="dovah\forms\Weapon.h" />
     <ClInclude Include="dovah\form_reference_t.h" />
@@ -1401,7 +1415,17 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\redundant_sound.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\material_type\name_too_long.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\message\orphaned_conditions.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\music_track\invalid_track_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\note\non_texture_note_includes_texture_path.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\effect_entry_point_has_mismatched_data_for_type.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\effect_entry_point_has_mismatched_type_for_function.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\effect_entry_point_params_specify_an_invalid_av.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\effect_header_has_invalid_size.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\entry_point_data_for_effect_of_other_type.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\invalid_effect_type.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\orphaned_effect_subrecord.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\orphaned_entry_point_conditions.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\perk\unterminated_perk_effect.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\alias_papyrus_data_belongs_to_missing_alias.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\alias_papyrus_data_specifies_wrong_quest.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\quest\papyrus_fragment_belongs_to_missing_log_entry.h" />
@@ -1427,6 +1451,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_category\is_own_parent.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\unexpected_subrecord_after_cnam.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\sound_file_path_too_long.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\static_collection\orphaned_instances.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_addendum_subrecord_too_early.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_ids_are_not_unique.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_has_id_zero.h" />

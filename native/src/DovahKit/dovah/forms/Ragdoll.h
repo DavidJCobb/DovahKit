@@ -18,48 +18,56 @@ namespace dovah::loaded_forms {
          components::papyrus_attachment_data script_data; // VMAD
          //
          struct { // sizeof == 0xE
-            uint16_t unk00 = 0; // number of values in RAFB. DATA must precede RAFB, because the array is init'd via [the equivalent of] std::vector::resize
+            uint16_t dynamic_bone_count = 0; // 00 // number of values in RAFB. DATA must precede RAFB, because the array is init'd via [the equivalent of] std::vector::resize
             uint16_t unk02 = 0; // size of some sort of array in the form's run-time data
             uint16_t unk04 = 0; // size of some sort of array in the form's run-time data
             uint16_t unk06 = 0; // size of some sort of array in the form's run-time data
-            uint8_t  unk08 = 0;
-            uint8_t  unk09 = 0;
-            uint8_t  unk0A = 0;
-            uint8_t  unk0B = 0;
-            uint8_t  unk0C = 0;
+            bool     feedback = 0;
+            bool     foot_ik = 0;
+            bool     look_ik = 0;
+            bool     grab_ik = 0;
+            bool     pose_matching = 0;
             uint8_t  unk0D = 0;
          } data; // DATA
          struct { // sizeof == 0x3C
-            float    unk00 = 0.9;   // 00
-            float    unk04 = 0.8;   // 04
-            float    unk08 = 0.4;   // 08
-            float    unk0C = 0.8;   // 0C
-            float    unk10 = 0.1;   // 10
-            float    unk14 = 0.3;   // 14
-            float    unk18 = 0;     // 18
-            float    unk1C = 50;    // 1C
-            float    unk20 = 50;    // 20
-            float    unk24 = 25;    // 24
-            float    unk28 = 25;    // 28
-            float    unk2C = 50;    // 2C
-            float    unk30 = 50;    // 30
-            uint32_t unk34 = 10000; // 34
-            uint32_t unk38 = 30000; // 38
-         } rafd; // RAFD
+            float dynamic_keyframe_blend_amount = 0.9; // 00
+            struct {
+               float hierarchy    = 0.8; // 04
+               float position     = 0.4; // 08
+               float velocity     = 0.8; // 0C
+               float acceleration = 0.1; // 10
+               float snap         = 0.3; // 14
+            } gain;
+            float velocity_damping = 0; // 18
+            struct {
+               struct {
+                  float linear  = 50; // 1C
+                  float angular = 50; // 20
+               } velocity;
+               struct {
+                  float linear  = 25; // 24
+                  float angular = 25; // 28
+               } distance;
+            } snap_max;
+            struct {
+               float   linear     = 50;    // 2C
+               float   angular    = 50;    // 30
+               int32_t projectile = 10000; // 34 // stored as fixed-point, to two decimal places
+               int32_t melee      = 30000; // 38 // stored as fixed-point, to two decimal places
+            } max_velocity;
+         } feedback_data; // RAFD
          struct { // sizeof == 0x18
-            uint16_t unk00 = 0xFFFF; // 00
-            uint16_t unk02 = 0;      // 02
-            uint16_t unk04 = 0;      // 04
-            uint8_t  unk06 = 0;      // 06
+            std::array<uint16_t, 3> bones = { 0xFFFF, 0, 0 }; // 00, 02, 04
+            bool     disable_on_move = 0; // 06
             // padding
-            float    unk08 = 0;      // 08
-            float    unk0C = 0;      // 0C
-            float    unk10 = 0.1;    // 10
-            float    unk14 = 0;      // 14
-         } raps;
-         std::vector<uint16_t> rafb; // RAFB
+            float    motors_strength            = 0;   // 08
+            float    pose_activation_delay_time = 0;   // 0C
+            float    match_error_allowance      = 0.1; // 10
+            float    displacement_to_disable    = 0;   // 14
+         } pose_matching_data; // RAPS
+         std::vector<uint16_t> feedback_dynamic_bones; // RAFB
          //
-         std::string      anam;           // ANAM
+         std::string      death_pose;     // ANAM
          form_reference_t body_part_data; // TNAM
          form_reference_t preview_actor;  // XNAM
          uint32_t         version = 1;    // NVER

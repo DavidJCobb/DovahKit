@@ -64,11 +64,13 @@
    #include "Message.h"
    #include "MiscItem.h"
    #include "MovementType.h"
+   #include "MusicTrack.h"
    #include "MusicType.h"
    #include "Note.h"
    #include "ObjectReference.h"
    #include "Outfit.h"
    #include "Package.h"
+   #include "Perk.h"
    #include "Potion.h"
    #include "Quest.h"
    #include "Race.h"
@@ -85,9 +87,11 @@
    #include "SoundOutputModel.h"
    #include "Spell.h"
    #include "Static.h"
+   #include "StaticCollection.h"
    #include "TextureSet.h"
    #include "Topic.h"
    #include "TopicInfo.h"
+   #include "Tree.h"
    #include "VisualEffect.h"
    #include "Voicetype.h"
    #include "Weapon.h"
@@ -158,11 +162,13 @@ namespace dovah {
       loaded_forms::Message,
       loaded_forms::MiscItem,
       loaded_forms::MovementType,
+      loaded_forms::MusicTrack,
       loaded_forms::MusicType,
       loaded_forms::Note,
       loaded_forms::ObjectReference,
       loaded_forms::Outfit,
       loaded_forms::Package,
+      loaded_forms::Perk,
       loaded_forms::Potion,
       loaded_forms::Quest,
       loaded_forms::Race,
@@ -179,9 +185,11 @@ namespace dovah {
       loaded_forms::SoundOutputModel,
       loaded_forms::Spell,
       loaded_forms::Static,
+      loaded_forms::StaticCollection,
       loaded_forms::TextureSet,
       loaded_forms::Topic,
       loaded_forms::TopicInfo,
+      loaded_forms::Tree,
       loaded_forms::VisualEffect,
       loaded_forms::Voicetype,
       loaded_forms::Weapon,

@@ -230,6 +230,8 @@ namespace dovah::loaded_forms {
       this->activation_sound.clear_if(*this, other);
       this->water_type.clear_if(*this, other);
       this->interact_keyword.clear_if(*this, other);
+      //
+      this->harvestable.sever_outbound_references_to(other, *this);
    }
    void Flora::_clear_impl() noexcept {
       this->script_data.clear(*this);
@@ -239,6 +241,7 @@ namespace dovah::loaded_forms {
          this->destruction_data.value().clear(*this);
          this->destruction_data = {};
       }
+      this->harvestable.clear(*this);
       this->keywords.clear(*this);
       this->name.reset();
       this->activation_sound.set(*this, nullptr);

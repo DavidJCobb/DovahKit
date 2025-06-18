@@ -105,10 +105,10 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Actors | AACT | Action           | ✅ | ✅ | ⬛ |
 | Actors | BPDT | BodyPartData     | ✅ | ✅ | ⬛ |
 | Actors | LVLN | LeveledCharacter | ✅ | ✅ | ⬛ |
-| Actors | PERK | Perk             | ⬛ | ⬛ | ⬛ | UI for entry points needs special care |
+| Actors | PERK | Perk             | ✅ | ⬛ | ⬛ | UI for entry points needs special care |
 | Actors | TACT | TalkingActivator | ⬛ | 🟨 | ⬛ |
 | Audio | ACSP | Acoustic Space     | ✅ | ✅ | ⬛ |
-| Audio | MUST | Music Track        | ⬛ | 🟨 | ⬛ |
+| Audio | MUST | Music Track        | ✅ | 🟨 | ⬛ |
 | Audio | MUSC | Music Type         | ✅ | ✅ | ⬛ |
 | Audio | REVB | Reverb Parameters  | ✅ | ✅ | ⬛ |
 | Audio | SNCT | Sound Category     | ✅ | ✅ | ⬛ |
@@ -195,8 +195,8 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | WorldObjects | LIGH | Light         | ✅ | ✅ | ⬛ |
 | WorldObjects | MSTT | MovableStatic | ⬛ | 🟨 | ⬛ |
 | WorldObjects | STAT | Static        | ✅ | ✅ | 🟨 |
-| WorldObjects | SCOL | Static Collection | ⬛ | ⬛ | ⬛ | CK32 has a loader for this |
-| WorldObjects | TREE | Tree          | ⬛ | 🟨 | ⬛ |
+| WorldObjects | SCOL | Static Collection | ✅ | ⬛ | ⬛ |
+| WorldObjects | TREE | Tree          | ✅ | 🟨 | ⬛ |
 | Menu: Gameplay | CPTH | Camera Path | ⬛ | ⬛ | ⬛ |
 | Dialogue | DLBR | Dialogue Branch | ✅ | ✅ | ⬛ |
 | Dialogue | DIAL | Dialogue Topic  | ✅ | ✅ | 🟨 |

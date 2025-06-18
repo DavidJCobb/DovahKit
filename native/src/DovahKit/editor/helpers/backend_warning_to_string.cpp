@@ -898,6 +898,14 @@ namespace editor_helpers {
                   return format.arg(subject).arg(casted->count);
                }
             #pragma endregion
+            #pragma region music track
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::music_track::invalid_track_type*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Music track %1 specified an invalid type (%2)."
+                  ).arg(subject).arg(casted->seen_type);
+               }
+            #pragma endregion
             #pragma region note
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::note::non_texture_note_includes_texture_path*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
@@ -906,6 +914,151 @@ namespace editor_helpers {
                      "Note %1 is not a texture note, but still supplies a texture path.",
                      disambig
                   ).arg(subject);
+               }
+            #pragma endregion
+            #pragma region perk
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::effect_entry_point_has_mismatched_data_for_type*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  QString signature = cobb::qt::four_cc_to_string(casted->subrecord);
+                  return  QObject::tr(
+                     "Perk %1 effect %2 contains subrecord %3, which should not be present given the "
+                     "chosen entry point and options."
+                  ).arg(subject).arg(casted->which_effect).arg(signature);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::effect_entry_point_has_mismatched_type_for_function*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  QString function;
+                  QString type_seen;
+                  QString type_expected;
+
+                  switch (casted->function) {
+                     case dovah::entry_point_function::absolute_value:
+                        function = QObject::tr("Absolute Value", "entry point function");
+                        break;
+                     case dovah::entry_point_function::add_activate_choice:
+                        function = QObject::tr("Add Activate Choice", "entry point function");
+                        break;
+                     case dovah::entry_point_function::add_actor_value_mult:
+                        function = QObject::tr("Add Actor Value Mult", "entry point function");
+                        break;
+                     case dovah::entry_point_function::add_leveled_list:
+                        function = QObject::tr("Add Leveled List", "entry point function");
+                        break;
+                     case dovah::entry_point_function::add_range_to_value:
+                        function = QObject::tr("Add Range to Value", "entry point function");
+                        break;
+                     case dovah::entry_point_function::add_value:
+                        function = QObject::tr("Add Value", "entry point function");
+                        break;
+                     case dovah::entry_point_function::multiply_actor_value_mult:
+                        function = QObject::tr("Absolute Value", "entry point function");
+                        break;
+                     case dovah::entry_point_function::multiply_one_plus_av_mult:
+                        function = QObject::tr("Multiply 1 + Actor Value Mult", "entry point function");
+                        break;
+                     case dovah::entry_point_function::multiply_value:
+                        function = QObject::tr("Multiply Value", "entry point function");
+                        break;
+                     case dovah::entry_point_function::negative_absolute_value:
+                        function = QObject::tr("Negative Absolute Value", "entry point function");
+                        break;
+                     case dovah::entry_point_function::none:
+                        function = QObject::tr("None", "entry point function");
+                        break;
+                     case dovah::entry_point_function::select_spell:
+                        function = QObject::tr("Select Spell", "entry point function");
+                        break;
+                     case dovah::entry_point_function::select_text:
+                        function = QObject::tr("Select Text", "entry point function");
+                        break;
+                     case dovah::entry_point_function::set_text:
+                        function = QObject::tr("Set Text", "entry point function");
+                        break;
+                     case dovah::entry_point_function::set_to_actor_value_mult:
+                        function = QObject::tr("Set to Actor Value Mult", "entry point function");
+                        break;
+                     case dovah::entry_point_function::set_value:
+                        function = QObject::tr("Set Value", "entry point function");
+                        break;
+                  }
+
+                  auto _type_to_string = [](dovah::entry_point_function_type t) -> QString {
+                     switch (t) {
+                        case dovah::entry_point_function_type::activate_choice:
+                           return QObject::tr("Activate Choice", "entry point function data type");
+                        case dovah::entry_point_function_type::animation_graph_var:
+                           return QObject::tr("Animation Graph Variable Name", "entry point function data type");
+                        case dovah::entry_point_function_type::leveled_item:
+                           return QObject::tr("Leveled Item", "entry point function data type");
+                        case dovah::entry_point_function_type::localized_string:
+                           return QObject::tr("Localized String", "entry point function data type");
+                        case dovah::entry_point_function_type::none:
+                           return QObject::tr("None", "entry point function data type");
+                        case dovah::entry_point_function_type::one_float:
+                           return QObject::tr("One Float", "entry point function data type");
+                        case dovah::entry_point_function_type::spell:
+                           return QObject::tr("Spell", "entry point function data type");
+                        case dovah::entry_point_function_type::two_floats:
+                           return QObject::tr("Two Floats", "entry point function data type");
+                     }
+                     return QString::number((uint32_t)t);
+                  };
+                  type_expected = _type_to_string(casted->type_expected);
+                  type_seen     = _type_to_string(casted->type_seen);
+
+                  return  QObject::tr(
+                     "Perk %1 effect %2 uses entry point function %3. The function parameter type should "
+                     "be %4, but is instead %5."
+                  ).arg(subject).arg(casted->which_effect).arg(function).arg(type_expected).arg(type_seen);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::effect_entry_point_params_specify_an_invalid_av*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return  QObject::tr(
+                     "Perk %1 effect %2 specifies an invalid Actor Value index (%3)."
+                  ).arg(subject).arg(casted->which_effect).arg(casted->av_seen);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::effect_header_has_invalid_size*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return  QObject::tr(
+                     "Perk %1 effect %2 has a header (PRKE subrecord) with an incorrect size in bytes. "
+                     "The header is size %3, but the game will only accept size %4."
+                  ).arg(subject).arg(casted->which_effect).arg(casted->size_seen).arg(casted->size_expected);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::entry_point_data_for_effect_of_other_type*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  QString signature = cobb::qt::four_cc_to_string(casted->subrecord);
+                  return  QObject::tr(
+                     "Perk %1 effect %2 contains subrecord %3, which should not be present given the "
+                     "chosen effect type."
+                  ).arg(subject).arg(casted->which_effect).arg(signature);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::invalid_effect_type*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return  QObject::tr(
+                     "Perk %1 effect %2 uses invalid effect type %3."
+                  ).arg(subject).arg(casted->which_effect).arg(casted->seen_type);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::orphaned_effect_subrecord*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  QString signature = cobb::qt::four_cc_to_string(casted->subrecord);
+                  return  QObject::tr(
+                     "Perk %1 contains an instance of subrecord %2 not associated with any perk effect."
+                  ).arg(subject).arg(signature);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::orphaned_entry_point_conditions*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return  QObject::tr(
+                     "Perk %1 effect %2 contains %3 condition(s) not associated with any subject. These "
+                     "conditions have been discarded."
+                  ).arg(subject).arg(casted->which_effect).arg(casted->count);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::perk::unterminated_perk_effect*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Perk %1 effect %2 is missing its closing PRKF subrecord.",
+                     disambig
+                  ).arg(subject).arg(casted->which_effect);
                }
             #pragma endregion
             #pragma region quest
@@ -1179,6 +1332,15 @@ namespace editor_helpers {
                      "mistake this unexpected subrecord for GNAM and misread its contents.",
                      disambig
                   ).arg(subject).arg(signature);
+               }
+            #pragma endregion
+            #pragma region static collection
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::static_collection::orphaned_instances*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Static Collection %1 contains %2 object instances not associated with any object "
+                     "type (i.e. Static). These will be discarded."
+                  ).arg(subject).arg(casted->count);
                }
             #pragma endregion
             #pragma region topic info

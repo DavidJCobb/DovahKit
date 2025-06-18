@@ -24,17 +24,17 @@ namespace dovah::loaded_forms {
                subrecord.read(this->version);
                break;
             case 'DATA':
-               subrecord.read(this->data.unk00);
+               subrecord.read(this->data.dynamic_bone_count);
                subrecord.read(this->data.unk02);
                subrecord.read(this->data.unk04);
                subrecord.read(this->data.unk06);
-               subrecord.read(this->data.unk08);
-               subrecord.read(this->data.unk09);
-               subrecord.read(this->data.unk0A);
-               subrecord.read(this->data.unk0B);
-               subrecord.read(this->data.unk0C);
+               subrecord.read(this->data.feedback);
+               subrecord.read(this->data.foot_ik);
+               subrecord.read(this->data.look_ik);
+               subrecord.read(this->data.grab_ik);
+               subrecord.read(this->data.pose_matching);
                subrecord.read(this->data.unk0D);
-               this->rafb.resize(this->data.unk00);
+               this->feedback_dynamic_bones.resize(this->data.dynamic_bone_count);
                break;
             case 'XNAM':
                if (auto& form = this->preview_actor; subrecord.read(form))
@@ -45,21 +45,21 @@ namespace dovah::loaded_forms {
                   intfc.warn_if_ref_is_wrong_type(form, form_type::body_part_data, subrecord.signature());
                break;
             case 'RAFD':
-               subrecord.read(this->rafd.unk00);
-               subrecord.read(this->rafd.unk04);
-               subrecord.read(this->rafd.unk08);
-               subrecord.read(this->rafd.unk0C);
-               subrecord.read(this->rafd.unk10);
-               subrecord.read(this->rafd.unk14);
-               subrecord.read(this->rafd.unk18);
-               subrecord.read(this->rafd.unk1C);
-               subrecord.read(this->rafd.unk20);
-               subrecord.read(this->rafd.unk24);
-               subrecord.read(this->rafd.unk28);
-               subrecord.read(this->rafd.unk2C);
-               subrecord.read(this->rafd.unk30);
-               subrecord.read(this->rafd.unk34);
-               subrecord.read(this->rafd.unk38);
+               subrecord.read(this->feedback_data.dynamic_keyframe_blend_amount);
+               subrecord.read(this->feedback_data.gain.hierarchy);
+               subrecord.read(this->feedback_data.gain.position);
+               subrecord.read(this->feedback_data.gain.velocity);
+               subrecord.read(this->feedback_data.gain.acceleration);
+               subrecord.read(this->feedback_data.gain.snap);
+               subrecord.read(this->feedback_data.velocity_damping);
+               subrecord.read(this->feedback_data.snap_max.velocity.linear);
+               subrecord.read(this->feedback_data.snap_max.velocity.angular);
+               subrecord.read(this->feedback_data.snap_max.distance.linear);
+               subrecord.read(this->feedback_data.snap_max.distance.angular);
+               subrecord.read(this->feedback_data.max_velocity.linear);
+               subrecord.read(this->feedback_data.max_velocity.angular);
+               subrecord.read(this->feedback_data.max_velocity.projectile);
+               subrecord.read(this->feedback_data.max_velocity.melee);
                break;
             case 'RAFB': // present only if not empty
                //
@@ -69,21 +69,19 @@ namespace dovah::loaded_forms {
                // this is or does, but these fields, which you're equally clueless about, 
                // don't match."
                //
-               for (auto& v : this->rafb)
+               for (auto& v : this->feedback_dynamic_bones)
                   subrecord.read(v);
                break;
             case 'RAPS':
-               subrecord.read(this->raps.unk00);
-               subrecord.read(this->raps.unk02);
-               subrecord.read(this->raps.unk04);
-               subrecord.read(this->raps.unk06);
-               subrecord.read(this->raps.unk08);
-               subrecord.read(this->raps.unk0C);
-               subrecord.read(this->raps.unk10);
-               subrecord.read(this->raps.unk14);
+               subrecord.read(this->pose_matching_data.bones);
+               subrecord.read(this->pose_matching_data.disable_on_move);
+               subrecord.read(this->pose_matching_data.motors_strength);
+               subrecord.read(this->pose_matching_data.pose_activation_delay_time);
+               subrecord.read(this->pose_matching_data.match_error_allowance);
+               subrecord.read(this->pose_matching_data.displacement_to_disable);
                break;
             case 'ANAM':
-               subrecord.read(this->anam);
+               subrecord.read(this->death_pose);
                break;
 
             default:
@@ -126,11 +124,11 @@ namespace dovah::loaded_forms {
       
       copy->script_data.clone_from(this->script_data, *copy);
 
-      copy->anam = this->anam;
+      copy->death_pose = this->death_pose;
       copy->data = this->data;
-      copy->rafb = this->rafb;
-      copy->rafd = this->rafd;
-      copy->raps = this->raps;
+      copy->feedback_dynamic_bones = this->feedback_dynamic_bones;
+      copy->feedback_data = this->feedback_data;
+      copy->pose_matching_data = this->pose_matching_data;
 
       copy->body_part_data.set(*copy, this->body_part_data);
       copy->preview_actor.set(*copy, this->preview_actor);
@@ -145,15 +143,15 @@ namespace dovah::loaded_forms {
       }
       {
          auto& subrecord = record.open_next_subrecord('DATA');
-         subrecord.write(this->data.unk00);
+         subrecord.write(this->data.dynamic_bone_count);
          subrecord.write(this->data.unk02);
          subrecord.write(this->data.unk04);
          subrecord.write(this->data.unk06);
-         subrecord.write(this->data.unk08);
-         subrecord.write(this->data.unk09);
-         subrecord.write(this->data.unk0A);
-         subrecord.write(this->data.unk0B);
-         subrecord.write(this->data.unk0C);
+         subrecord.write(this->data.feedback);
+         subrecord.write(this->data.foot_ik);
+         subrecord.write(this->data.look_ik);
+         subrecord.write(this->data.grab_ik);
+         subrecord.write(this->data.pose_matching);
          subrecord.write(this->data.unk0D);
          subrecord.close();
       }
@@ -161,52 +159,50 @@ namespace dovah::loaded_forms {
       record.write_formID_subrecord('TNAM', this->body_part_data, true);
       {
          auto& subrecord = record.open_next_subrecord('RAFD');
-         subrecord.write(this->rafd.unk00);
-         subrecord.write(this->rafd.unk04);
-         subrecord.write(this->rafd.unk08);
-         subrecord.write(this->rafd.unk0C);
-         subrecord.write(this->rafd.unk10);
-         subrecord.write(this->rafd.unk14);
-         subrecord.write(this->rafd.unk18);
-         subrecord.write(this->rafd.unk1C);
-         subrecord.write(this->rafd.unk20);
-         subrecord.write(this->rafd.unk24);
-         subrecord.write(this->rafd.unk28);
-         subrecord.write(this->rafd.unk2C);
-         subrecord.write(this->rafd.unk30);
-         subrecord.write(this->rafd.unk34);
-         subrecord.write(this->rafd.unk38);
+         subrecord.write(this->feedback_data.dynamic_keyframe_blend_amount);
+         subrecord.write(this->feedback_data.gain.hierarchy);
+         subrecord.write(this->feedback_data.gain.position);
+         subrecord.write(this->feedback_data.gain.velocity);
+         subrecord.write(this->feedback_data.gain.acceleration);
+         subrecord.write(this->feedback_data.gain.snap);
+         subrecord.write(this->feedback_data.velocity_damping);
+         subrecord.write(this->feedback_data.snap_max.velocity.linear);
+         subrecord.write(this->feedback_data.snap_max.velocity.angular);
+         subrecord.write(this->feedback_data.snap_max.distance.linear);
+         subrecord.write(this->feedback_data.snap_max.distance.angular);
+         subrecord.write(this->feedback_data.max_velocity.linear);
+         subrecord.write(this->feedback_data.max_velocity.angular);
+         subrecord.write(this->feedback_data.max_velocity.projectile);
+         subrecord.write(this->feedback_data.max_velocity.melee);
          subrecord.close();
       }
-      if (!this->rafb.empty()) {
+      if (!this->feedback_dynamic_bones.empty()) {
          auto& subrecord = record.open_next_subrecord('RAFB');
-         for (auto& v : this->rafb)
+         for (auto& v : this->feedback_dynamic_bones)
             subrecord.write(v);
          subrecord.close();
       }
       {
          auto& subrecord = record.open_next_subrecord('RAPS');
-         subrecord.write(this->raps.unk00);
-         subrecord.write(this->raps.unk02);
-         subrecord.write(this->raps.unk04);
-         subrecord.write(this->raps.unk06);
-         subrecord.write(this->raps.unk08);
-         subrecord.write(this->raps.unk0C);
-         subrecord.write(this->raps.unk10);
-         subrecord.write(this->raps.unk14);
+         subrecord.write(this->pose_matching_data.bones);
+         subrecord.write(this->pose_matching_data.disable_on_move);
+         subrecord.write(this->pose_matching_data.motors_strength);
+         subrecord.write(this->pose_matching_data.pose_activation_delay_time);
+         subrecord.write(this->pose_matching_data.match_error_allowance);
+         subrecord.write(this->pose_matching_data.displacement_to_disable);
          subrecord.close();
       }
-      record.write_string_subrecord('ANAM', this->anam);
+      record.write_string_subrecord('ANAM', this->death_pose);
    }
    void Ragdoll::_clear_impl() noexcept {
       this->model.clear();
       this->script_data.clear(*this);
 
-      this->anam.clear();
+      this->death_pose.clear();
       this->data = {};
-      this->rafb.clear();
-      this->rafd = {};
-      this->raps = {};
+      this->feedback_dynamic_bones.clear();
+      this->feedback_data = {};
+      this->pose_matching_data = {};
 
       this->body_part_data.set(*this, nullptr);
       this->preview_actor.set(*this, nullptr);
