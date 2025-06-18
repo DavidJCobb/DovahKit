@@ -10,6 +10,7 @@
    #include "Actor.h"
    #include "ActorAction.h"
    #include "ActorBase.h"
+   #include "ActorValueInfo.h"
    #include "AddOnNode.h"
    #include "Ammo.h"
    #include "AnimationProp.h"
@@ -30,6 +31,7 @@
    #include "DualCastData.h"
    #include "EffectShader.h"
    #include "Enchantment.h"
+   #include "EncounterZone.h"
    #include "EquipSlot.h"
    #include "Explosion.h"
    #include "Eyes.h"
@@ -108,6 +110,7 @@ namespace dovah {
       loaded_forms::Actor,
       loaded_forms::ActorAction,
       loaded_forms::ActorBase,
+      loaded_forms::ActorValueInfo,
       loaded_forms::AddOnNode,
       loaded_forms::Ammo,
       loaded_forms::AnimationProp,
@@ -128,6 +131,7 @@ namespace dovah {
       loaded_forms::DualCastData,
       loaded_forms::EffectShader,
       loaded_forms::Enchantment,
+      loaded_forms::EncounterZone,
       loaded_forms::EquipSlot,
       loaded_forms::Explosion,
       loaded_forms::Eyes,

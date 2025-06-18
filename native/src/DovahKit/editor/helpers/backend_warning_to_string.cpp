@@ -647,6 +647,16 @@ namespace editor_helpers {
             #pragma endregion
          #pragma endregion
          #pragma region by form type
+            #pragma region actor value info
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::actor_value_info::unterminated_perk_tree_node*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString perk    = form_identifiers_to_string(casted->perk);
+                  return QObject::tr(
+                     "Actor Value Info %1 contains an unterminated perk tree node (for %2), i.e. a node missing "
+                     "its INAM subrecord."
+                  ).arg(subject).arg(perk);
+               }
+            #pragma endregion
             #pragma region cell
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::cell::cell_type_not_yet_known*>(&warning)) {
                   QString form      = form_identifiers_to_string(&casted->subject);

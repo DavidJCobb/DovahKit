@@ -15,6 +15,8 @@
    #include "./by_form_component/package_event_dialogue/unrecognized_subrecord.h"
 #pragma endregion
 #pragma region by form type
+   #include "./by_form_type/actor_value_info/unexpected_subrecord_in_perk_tree_node.h"
+   #include "./by_form_type/actor_value_info/unterminated_perk_tree_node.h"
    #include "./by_form_type/cell/cell_type_not_yet_known.h"
    #include "./by_form_type/cell/data_for_wrong_cell_type.h"
    #include "./by_form_type/dialogue_branch/mishandled_owning_quest_id.h"

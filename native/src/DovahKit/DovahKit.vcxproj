@@ -139,6 +139,7 @@
     <ClCompile Include="dovah\forms\AcousticSpace.cpp" />
     <ClCompile Include="dovah\forms\ActorAction.cpp" />
     <ClCompile Include="dovah\forms\ActorBase.cpp" />
+    <ClCompile Include="dovah\forms\ActorValueInfo.cpp" />
     <ClCompile Include="dovah\forms\AddOnNode.cpp" />
     <ClCompile Include="dovah\forms\Ammo.cpp" />
     <ClCompile Include="dovah\forms\AnimationProp.cpp" />
@@ -154,6 +155,7 @@
     <ClCompile Include="dovah\forms\components\conditions\context.cpp" />
     <ClCompile Include="dovah\forms\components\conditions\working_condition.cpp" />
     <ClCompile Include="dovah\forms\components\enchantable.cpp" />
+    <ClCompile Include="dovah\forms\EncounterZone.cpp" />
     <ClCompile Include="dovah\forms\MusicTrack.cpp" />
     <ClCompile Include="dovah\forms\Perk.cpp" />
     <ClCompile Include="dovah\forms\StaticCollection.cpp" />
@@ -1236,6 +1238,7 @@
     <ClInclude Include="dovah\files\pex\parsers\util\file_string_table.h" />
     <ClInclude Include="dovah\forms\AcousticSpace.h" />
     <ClInclude Include="dovah\forms\ActorAction.h" />
+    <ClInclude Include="dovah\forms\ActorValueInfo.h" />
     <ClInclude Include="dovah\forms\AddOnNode.h" />
     <ClInclude Include="dovah\forms\Ammo.h" />
     <ClInclude Include="dovah\forms\AnimationProp.h" />
@@ -1255,6 +1258,7 @@
     <ClInclude Include="dovah\forms\components\conditions\working_condition.h" />
     <ClInclude Include="dovah\forms\components\conditions\working_parameter.h" />
     <ClInclude Include="dovah\forms\components\enchantable.h" />
+    <ClInclude Include="dovah\forms\EncounterZone.h" />
     <ClInclude Include="dovah\forms\MusicTrack.h" />
     <ClInclude Include="dovah\forms\StaticCollection.h" />
     <ClInclude Include="dovah\forms\structs\perk_entry_point_data.h" />
@@ -1399,6 +1403,8 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\magic_effect_list\misplaced_effect_item_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\magic_effect_list\too_many_effects.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\package_event_dialogue\unrecognized_subrecord.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\actor_value_info\unexpected_subrecord_in_perk_tree_node.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\actor_value_info\unterminated_perk_tree_node.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\cell_type_not_yet_known.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\data_for_wrong_cell_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.h" />

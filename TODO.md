@@ -178,7 +178,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | SpecialEffect | MATT | Material Type   | ✅ | ✅ | ⬛ |
 | SpecialEffect | PROJ | Projectile      | ⬛ | 🟨 | ⬛ |
 | WorldData | CLMT | Climate                  | ⬛ | ⬛ | ⬛ |
-| WorldData | ECZN | Encounter Zone           | ⬛ | ⬛ | ⬛ |
+| WorldData | ECZN | Encounter Zone           | ✅ | ⬛ | ⬛ |
 | WorldData | LGTM | Lighting Template        | ⬛ | ⬛ | ⬛ |
 | WorldData | LCTN | Location                 | 🟨 | ⬛ | ⬛ |
 | WorldData | LCRT | Location Ref Type        | ✅ | ✅ | ⬛ |
@@ -207,7 +207,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Cell Children | REFR | Reference | ✅ | 🟨 | 🟨 |
 | Singletons | DOBJ | Default Object Manager | ✅ | ✅ | ⬛ |
 | Singletons | NAVI | Navmesh Info Map | ⬛ |   | ⬛ |
-| | AVIF | Actor Value | ⬛ | 🟨 | ⬛ | We'll also need a custom widget and dialog for Perk Trees. |
+| | AVIF | Actor Value | ✅ | 🟨 | ⬛ | We'll also need a custom widget and dialog for Perk Trees. |
 | | CELL | Cell | ✅ | ✅ | 🟨 |
 | | IDLE | Idle Animation | ✅ | 🟨 | ⬛ | Not a per-form dialog, but a shared dialog for all forms of this type. |
 | | REGN | Region | ⬛ | ⬛ | ⬛ |
