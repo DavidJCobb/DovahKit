@@ -129,7 +129,7 @@ namespace dovah::loaded_forms {
                subrecord.read(this->vendor_data.vendor_list_is_blacklist);
                subrecord.read(this->vendor_data.unused0A);
                break;
-            case 'PLVD':
+            case structs::package_location::subrecord_vendor_data:
                this->package_location_vendor.load(subrecord, intfc);
                break;
             case 'CITC':
@@ -174,7 +174,7 @@ namespace dovah::loaded_forms {
       form_id_t jail_outfit;
       form_id_t vendor_list;
       form_id_t vendor_chest;
-      components::package_location::use_info_state vendor_location;
+      structs::package_location::use_info_state vendor_location;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'JAIL': // jail marker
@@ -201,7 +201,7 @@ namespace dovah::loaded_forms {
             case 'VENC': // vendor chest
                subrecord.read(vendor_chest);
                break;
-            case 'PLVD':
+            case structs::package_location::subrecord_vendor_data:
                vendor_location.generate_use_info(subrecord);
                break;
          }
@@ -321,8 +321,8 @@ namespace dovah::loaded_forms {
       VENV.write(this->vendor_data.vendor_list_is_blacklist);
       VENV.write(this->vendor_data.unused0A);
       VENV.close();
-      auto& PLVD = record.open_next_subrecord('PLVD');
-      this->package_location_vendor.save(PLVD);
+      auto& PLVD = record.open_next_subrecord(structs::package_location::subrecord_vendor_data);
+      this->package_location_vendor.save(PLVD, intfc);
       PLVD.close();
       auto& CITC = record.open_next_subrecord('CITC');
       CITC.write(uint32_t(this->vendor_conditions.size()));

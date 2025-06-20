@@ -5,8 +5,8 @@
 #include "Form.h"
 #include "_common.h"
 #include "components/conditions.h"
-#include "components/package_location.h"
 #include "components/papyrus.h"
+#include "structs/package_location.h"
 
 namespace dovah::loaded_forms {
    class Faction : public Form {
@@ -85,7 +85,7 @@ namespace dovah::loaded_forms {
             bool     vendor_list_is_blacklist = false;
             uint16_t unused0A    = 0;
          } vendor_data;
-         components::package_location package_location_vendor;
+         structs::package_location  package_location_vendor;
          components::condition_list vendor_conditions; // conditions for buying/selling
          //
          // Additional content that the game is theoretically capable of identifying, but 

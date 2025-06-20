@@ -27,15 +27,15 @@ FormSubdialogFactionVendorLocation::FormSubdialogFactionVendorLocation(QWidget* 
 }
 
 void FormSubdialogFactionVendorLocation::importFrom(const location_type& src) {
-   switch (src.type) {
-      using enum std::decay_t<decltype(location_type::type)>;
+   switch (src.get_type()) {
+      using enum dovah::package_location_type;
       case near_reference:
          this->ui.nearRef->setChecked(true);
-         this->ui.nearRefForm->setRef(src.detail.form.get_form_stub());
+         this->ui.nearRefForm->setRef(src.as_type<near_reference>()->get_form_stub());
          break;
       case in_cell:
          this->ui.nearCell->setChecked(true);
-         this->ui.nearCellForm->setFormStub(src.detail.form.get_form_stub());
+         this->ui.nearCellForm->setFormStub(src.as_type<in_cell>()->get_form_stub());
          break;
       case near_package_start_location:
          this->ui.nearPackStart->setChecked(true);
@@ -45,7 +45,7 @@ void FormSubdialogFactionVendorLocation::importFrom(const location_type& src) {
          break;
       case near_linked_reference:
          this->ui.nearLinkedRef->setChecked(true);
-         this->ui.nearLinkedRefKeyword->setFormStub(src.detail.form.get_form_stub());
+         this->ui.nearLinkedRefKeyword->setFormStub(src.as_type<near_linked_reference>()->get_form_stub());
          break;
       case near_self:
          this->ui.nearSelf->setChecked(true);
@@ -57,8 +57,6 @@ void FormSubdialogFactionVendorLocation::importFrom(const location_type& src) {
       case object_type:
       case reference_alias: // disabled in CK
       case location_alias: // disabled in CK
-      case unknown_10:
-      case unknown_11:
       default:
          //
          // Fall back to "Near Editor Location."
@@ -68,25 +66,21 @@ void FormSubdialogFactionVendorLocation::importFrom(const location_type& src) {
    }
 }
 void FormSubdialogFactionVendorLocation::commitTo(loaded_form_type& dst_owner, location_type& dst) const {
-   using loc_type = std::decay_t<decltype(location_type::type)>;
-
-   dst.detail.form.set(dst_owner, nullptr);
-
    if (this->ui.nearRef->isChecked()) {
-      dst.type = loc_type::near_reference;
-      dst.detail.form.set(dst_owner, this->ui.nearRefForm->ref());
+      dst.set_type(dst_owner, dovah::package_location_type::near_reference);
+      dst.as_type<dovah::package_location_type::near_reference>()->set(dst_owner, this->ui.nearRefForm->ref());
    } else if (this->ui.nearCell->isChecked()) {
-      dst.type = loc_type::in_cell;
-      dst.detail.form.set(dst_owner, this->ui.nearCellForm->formStub());
+      dst.set_type(dst_owner, dovah::package_location_type::in_cell);
+      dst.as_type<dovah::package_location_type::in_cell>()->set(dst_owner, this->ui.nearCellForm->formStub());
    } else if (this->ui.nearLinkedRef->isChecked()) {
-      dst.type = loc_type::near_linked_reference;
-      dst.detail.form.set(dst_owner, this->ui.nearLinkedRefKeyword->formStub());
+      dst.set_type(dst_owner, dovah::package_location_type::near_linked_reference);
+      dst.as_type<dovah::package_location_type::near_linked_reference>()->set(dst_owner, this->ui.nearLinkedRefKeyword->formStub());
    } else if (this->ui.nearPackStart->isChecked()) {
-      dst.type = loc_type::near_package_start_location;
+      dst.set_type(dst_owner, dovah::package_location_type::near_package_start_location);
    } else if (this->ui.nearEditorLoc->isChecked()) {
-      dst.type = loc_type::near_editor_location;
+      dst.set_type(dst_owner, dovah::package_location_type::near_editor_location);
    } else if (this->ui.nearSelf->isChecked()) {
-      dst.type = loc_type::near_self;
+      dst.set_type(dst_owner, dovah::package_location_type::near_self);
    } else {
       //
       // Fall back to "Near Editor Location."
@@ -94,6 +88,6 @@ void FormSubdialogFactionVendorLocation::commitTo(loaded_form_type& dst_owner, l
       #if _DEBUG
          __debugbreak(); // ...but debugbreak since the UI shouldn't be able to get into this state.
       #endif
-      dst.type = loc_type::near_editor_location;
+      dst.set_type(dst_owner, dovah::package_location_type::near_editor_location);
    }
 }

@@ -159,6 +159,7 @@
     <ClCompile Include="dovah\forms\MusicTrack.cpp" />
     <ClCompile Include="dovah\forms\Perk.cpp" />
     <ClCompile Include="dovah\forms\StaticCollection.cpp" />
+    <ClCompile Include="dovah\forms\structs\package_location.cpp" />
     <ClCompile Include="dovah\forms\structs\perk_entry_point_data.cpp" />
     <ClCompile Include="dovah\forms\components\harvestable.cpp" />
     <ClCompile Include="dovah\forms\components\leveled_list.cpp" />
@@ -224,6 +225,7 @@
     <ClCompile Include="dovah\forms\structs\world_large_ref_data.cpp" />
     <ClCompile Include="dovah\forms\structs\movement_type_speeds.cpp" />
     <ClCompile Include="dovah\forms\structs\world_max_height_data.cpp" />
+    <ClCompile Include="dovah\forms\TalkingActivator.cpp" />
     <ClCompile Include="dovah\forms\Tree.cpp" />
     <ClCompile Include="dovah\forms\VisualEffect.cpp" />
     <ClCompile Include="dovah\forms\Weapon.cpp" />
@@ -583,7 +585,6 @@
     <ClCompile Include="dovah\forms\components\legacy_script.cpp" />
     <ClCompile Include="dovah\forms\components\model.cpp" />
     <ClCompile Include="dovah\forms\components\package_event_dialogue.cpp" />
-    <ClCompile Include="dovah\forms\components\package_location.cpp" />
     <ClCompile Include="dovah\forms\Container.cpp" />
     <ClCompile Include="dovah\forms\DefaultObjectManager.cpp" />
     <ClCompile Include="dovah\forms\DialogueBranch.cpp" />
@@ -1211,6 +1212,9 @@
     <ClInclude Include="dovah\data\magic_casting_type.h" />
     <ClInclude Include="dovah\data\magic_delivery_type.h" />
     <ClInclude Include="dovah\data\magic_effect_archetypes.h" />
+    <ClInclude Include="dovah\data\package_interrupt_override_type.h" />
+    <ClInclude Include="dovah\data\package_location_type.h" />
+    <ClInclude Include="dovah\data\package_type.h" />
     <ClInclude Include="dovah\data\perk_entry_points.h" />
     <ClInclude Include="dovah\data\sex.h" />
     <ClInclude Include="dovah\data\skills.h" />
@@ -1261,6 +1265,7 @@
     <ClInclude Include="dovah\forms\EncounterZone.h" />
     <ClInclude Include="dovah\forms\MusicTrack.h" />
     <ClInclude Include="dovah\forms\StaticCollection.h" />
+    <ClInclude Include="dovah\forms\structs\package_location.h" />
     <ClInclude Include="dovah\forms\structs\perk_entry_point_data.h" />
     <ClInclude Include="dovah\forms\components\harvestable.h" />
     <ClInclude Include="dovah\forms\components\leveled_list.h" />
@@ -1320,6 +1325,7 @@
     <ClInclude Include="dovah\forms\structs\movement_type_speeds.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
     <ClInclude Include="dovah\forms\structs\world_max_height_data.h" />
+    <ClInclude Include="dovah\forms\TalkingActivator.h" />
     <ClInclude Include="dovah\forms\Tree.h" />
     <ClInclude Include="dovah\forms\VisualEffect.h" />
     <ClInclude Include="dovah\forms\Weapon.h" />
@@ -2789,7 +2795,6 @@
     <ClInclude Include="dovah\forms\components\interior_lighting.h" />
     <ClInclude Include="dovah\forms\components\keyword_list.h" />
     <ClInclude Include="dovah\forms\components\legacy_script.h" />
-    <ClInclude Include="dovah\forms\components\package_location.h" />
     <ClInclude Include="dovah\forms\components\package_event_dialogue.h" />
     <ClInclude Include="dovah\data\story_manager.h" />
     <ClInclude Include="dovah\forms\DefaultObjectManager.h" />
@@ -3250,6 +3255,7 @@
       <SubType>
       </SubType>
     </None>
+    <None Include="dovah\_docs\packages.md" />
     <None Include="dovah\_docs\papyrus script bindings.md" />
     <None Include="dovah\_docs\rewrites I want to do someday post-launch.md" />
     <None Include="dovah\_docs\TO-DO LIST.md" />

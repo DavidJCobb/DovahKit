@@ -90,6 +90,7 @@
    #include "Spell.h"
    #include "Static.h"
    #include "StaticCollection.h"
+   #include "TalkingActivator.h"
    #include "TextureSet.h"
    #include "Topic.h"
    #include "TopicInfo.h"
@@ -190,6 +191,7 @@ namespace dovah {
       loaded_forms::Spell,
       loaded_forms::Static,
       loaded_forms::StaticCollection,
+      loaded_forms::TalkingActivator,
       loaded_forms::TextureSet,
       loaded_forms::Topic,
       loaded_forms::TopicInfo,

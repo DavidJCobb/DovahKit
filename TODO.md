@@ -106,7 +106,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Actors | BPDT | BodyPartData     | ✅ | ✅ | ⬛ |
 | Actors | LVLN | LeveledCharacter | ✅ | ✅ | ⬛ |
 | Actors | PERK | Perk             | ✅ | ⬛ | ⬛ | UI for entry points needs special care |
-| Actors | TACT | TalkingActivator | ⬛ | 🟨 | ⬛ |
+| Actors | TACT | TalkingActivator | ✅ | 🟨 | ⬛ |
 | Audio | ACSP | Acoustic Space     | ✅ | ✅ | ⬛ |
 | Audio | MUST | Music Track        | ✅ | 🟨 | ⬛ |
 | Audio | MUSC | Music Type         | ✅ | ✅ | ⬛ |
