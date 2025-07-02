@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <cstdint>
 
 namespace dovah {
@@ -23,8 +24,8 @@ namespace dovah {
       dialogue = 15,
       use_weapon,
       find2,
-      package = 18,
-      package_template = 19,
+      custom = 18, // "Package"
+      custom_template = 19, // "Package Template"
       activate = 20,
       alarm,
       flee,
@@ -37,8 +38,11 @@ namespace dovah {
       surface,
       search_for_attacker = 30,
       avoid_player = 31,
-
-      // internal use only
+      react_to_destroyed_object,
+      react_to_grenade_or_mine,
+      steal_warning,
+      pickpocket_warning,
+      movement_blocked,
       vampire_feed  = 37,
       cannibal_feed = 38,
    };

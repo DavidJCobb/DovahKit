@@ -7,6 +7,7 @@
 #include "./face_fx_phoneme_name.h"
 #include "./form_identifiers_to_string.h"
 #include "./form_type_name_to_string.h"
+#include "../localize/package_data_type.h"
 #include "helpers/qt/strings.h"
 
 #include "dovah/form_stub.h"
@@ -571,6 +572,17 @@ namespace editor_helpers {
                   }
                #pragma endregion
             #pragma endregion
+            #pragma region idle collection
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::idle_collection::incorrect_idle_count*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Form %1 claims to have %2 idles, but its data supplies %3 idles. The game will detect "
+                     "this discrepancy and refuse to load the animation list.",
+                     disambig
+                  ).arg(subject).arg(casted->count_expected).arg(casted->count_seen);
+               }
+            #pragma endregion
             #pragma region leveled list
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::leveled_list::leading_coed_bleedthrough*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);
@@ -702,6 +714,26 @@ namespace editor_helpers {
                   ).arg(form).arg(intended);
                }
             #pragma endregion
+            #pragma region faction
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::faction::interrupt_override_target_not_in_a_package*>(&warning)) {
+                  QString format;
+                  if (casted->subject.form_type == dovah::form_type::faction) {
+                     format = QObject::tr(
+                        "Faction %1 specifies an invalid vendor location -- specifically, one which only makes sense "
+                        "for Packages that can serve as interrupt overrides.",
+                        disambig
+                     );
+                  } else {
+                     format = QObject::tr(
+                        "Form %1 is not a Package, but has data which specifies a world location, and the location "
+                        "in question only makes sense for Packages that can serve as interrupt overrides.",
+                        disambig
+                     );
+                  }
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return format.arg(subject);
+               }
+            #pragma endregion
             #pragma region footstep set
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::footstep_set::footstep_count_mismatch*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
@@ -776,17 +808,6 @@ namespace editor_helpers {
                      "and the game will only load the first %3 bytes.",
                      disambig
                   ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
-               }
-            #pragma endregion
-            #pragma region idle marker
-               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::idle_marker::incorrect_idle_count*>(&warning)) {
-                  QString subject = form_identifiers_to_string(&casted->subject);
-                  //
-                  return QObject::tr(
-                     "Idle Marker %1 claims to have %2 idles, but its data supplies %3 idles. The game will detect "
-                     "this discrepancy and refuse to load the animation list.",
-                     disambig
-                  ).arg(subject).arg(casted->count_expected).arg(casted->count_seen);
                }
             #pragma endregion
             #pragma region impact data set
@@ -924,6 +945,204 @@ namespace editor_helpers {
                      "Note %1 is not a texture note, but still supplies a texture path.",
                      disambig
                   ).arg(subject);
+               }
+            #pragma endregion
+            #pragma region package
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::invalid_interrupt_override_target*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "One of the targets in Package %1 refers to an invalid interrupt override target (raw value %2).",
+                     disambig
+                  ).arg(subject).arg(casted->seen);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::package_data_metadata_belongs_to_none*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Package %1 contains invalid metadata for one of its Package Data. Specifically, it attempts to "
+                     "associate metadata (a UNAM+BNAM+PNAM subrecord triplet) with the \"None\" (255) Package Data ID.",
+                     disambig
+                  ).arg(subject).arg(casted->which);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::package_data_unexpected_value_subrecord*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString data_type = editor::localize::package_data_type(casted->data_type);
+                  QString signature = cobb::qt::four_cc_to_string(casted->signature);
+                  if (data_type.isEmpty()) {
+                     data_type = QObject::tr("?", disambig);
+                  }
+                  return QObject::tr(
+                     "Failed to load the value for a Package Data in Package %1. Package Data #%2 (%3) ran into unexpected subrecord %4.",
+                     disambig
+                  ).arg(subject).arg(casted->which).arg(data_type).arg(signature);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::paackage_data_unrecognized_typename*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Failed to load a Package Data in Package %1. Package Data #%2 has unrecognized typename %3. If "
+                     "the current version of the game and Creation Kit don't recognize this typename either, then they "
+                     "will experience cascading errors when trying to load this Package, and probably fail to properly "
+                     "load anything within the Package that comes after this Package Data.",
+                     disambig
+                  ).arg(subject).arg(casted->which).arg(QString::fromStdString(casted->type));
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::package_data_wants_none_as_unique_id*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  QString data_type = editor::localize::package_data_type(casted->data_type);
+                  if (data_type.isEmpty()) {
+                     data_type = QObject::tr("?", disambig);
+                  }
+                  return QObject::tr(
+                     "Failed to load the internal ID for a Package Data in Package %1. Package Data #%2 (%3) wants to use \"None\" (255) "
+                     "as its unique ID.",
+                     disambig
+                  ).arg(subject).arg(casted->which).arg(data_type);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::procedure_has_extra_parameters*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Package %1 contains a Procedure with %2 too many parameters.",
+                     disambig
+                  ).arg(subject).arg(casted->count);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::procedure_missing_required_parameter*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Package %1 contains a Procedure that is missing a required parameter (#%2: %3).",
+                     disambig
+                  ).arg(subject).arg(casted->param_index).arg(QString::fromStdString(casted->param_name));
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::procedure_typename_unrecognized*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Failed to load a Procedure in Package %1. The Procedure had unrecognized typename %2..",
+                     disambig
+                  ).arg(subject).arg(QString::fromStdString(casted->type));
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::target_has_an_invalid_object_type*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString format;
+                  if (casted->subject.form_type == dovah::form_type::faction) {
+                     format = QObject::tr(
+                        "Faction %1 specifies an invalid vendor location: it refers to an invalid object type (raw value %2).",
+                        disambig
+                     );
+                  } else {
+                     format = QObject::tr(
+                        "One of the targets in Package %1 refers to an invalid interrupt override target (raw value %2).",
+                        disambig
+                     );
+                  }
+                  return format.arg(subject).arg(casted->seen);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::target_is_exterior_cell*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString cell    = form_identifiers_to_string(&casted->cell);
+                  QString format;
+                  if (casted->subject.form_type == dovah::form_type::faction) {
+                     format = QObject::tr(
+                        "Faction %1 specifies an invalid vendor location: it refers to exterior cell %2. Vendor locations "
+                        "must be interior cells.",
+                        disambig
+                     );
+                  } else {
+                     format = QObject::tr(
+                        "One of the targets in Package %1 refers to exterior cell %2. Package targets must be interior cells.",
+                        disambig
+                     );
+                  }
+                  return format.arg(subject).arg(cell);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::too_many_package_data*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Package %1 contains %2 Package Data. However, Package Data require a (hidden) unique ID to be used, "
+                     "and only 255 unique IDs are possible.",
+                     disambig
+                  ).arg(subject).arg(casted->count);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::unexpected_subrecord_in_unique_id_list*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  QString signature = cobb::qt::four_cc_to_string(casted->signature);
+                  return QObject::tr(
+                     "Package %1 is supposed to contain a list of internal \"unique IDs\" for all of its Package Data. "
+                     "These should be a set of UNAM subrecords, one per package data. However, subrecord #%2 was instead "
+                     "a %3 subrecord. The game, Creation Kit, and DovahKit will treat this a sif it were a UNAM subrecord "
+                     "whose content was the unique ID %2.",
+                     disambig
+                  ).arg(subject).arg(casted->which).arg(signature);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::unique_id_has_multiple_metadata*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Package %1 contains multiple sets of metadata (i.e. name and \"public\" flag) associated with "
+                     "Package Data Unique ID %2. The last-loaded set will be retained.",
+                     disambig
+                  ).arg(subject).arg(casted->unique_id);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::unique_id_used_by_multiple_package_data*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Package %1 contains multiple Package Data that are all trying to use the same unique ID (%2).",
+                     disambig
+                  ).arg(subject).arg(casted->unique_id);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::wrong_target_for_interrupt_override*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+
+                  QString target;
+                  QString required_type;
+                  QString actual_type;
+                  switch (casted->target) {
+                     using enum dovah::packages::interrupt_override_target;
+                     case threat_to_spectate:
+                        target = QObject::tr("Threat Ref", disambig);
+                        break;
+                     case corpse_to_observe:
+                        target = QObject::tr("Dead Ref", disambig);
+                        break;
+                     case ref_to_guard:
+                        target = QObject::tr("Guarded Ref", disambig);
+                        break;
+                     case trespasser:
+                        target = QObject::tr("Trespasser Ref", disambig);
+                        break;
+                     case combat_target:
+                        target = QObject::tr("Target Ref", disambig);
+                        break;
+                  }
+
+                  auto _stringify_interrupt_override_type = [](dovah::packages::interrupt_override_type type) -> QString {
+                     switch (type) {
+                        using enum dovah::packages::interrupt_override_type;
+                        case none:
+                           return QObject::tr("None", disambig);
+                        case spectator:
+                           return QObject::tr("Spectator", disambig);
+                        case observe_dead:
+                           return QObject::tr("Observe Corpse", disambig);
+                        case guard_warn:
+                           return QObject::tr("Guard Warn", disambig);
+                        case combat:
+                           return QObject::tr("Combat", disambig);
+                     }
+                     return QObject::tr("?", disambig);
+                  };
+                  required_type = _stringify_interrupt_override_type(casted->required_type);
+                  actual_type   = _stringify_interrupt_override_type(casted->actual_type);
+                  //
+                  if (casted->actual_type == dovah::packages::interrupt_override_type::none) {
+                     return QObject::tr(
+                        "One of the targets in Package %1 is \"%2\", specific to the \"%3\" interrupt override type. "
+                        "However, this package is not an interrupt override.",
+                        disambig
+                     ).arg(subject).arg(target).arg(required_type).arg(actual_type);
+                  } else {
+                     return QObject::tr(
+                        "One of the targets in Package %1 is \"%2\", specific to the \"%3\" interrupt override type. "
+                        "However, this package is for the \"%4\" interrupt override.",
+                        disambig
+                     ).arg(subject).arg(target).arg(required_type).arg(actual_type);
+                  }
                }
             #pragma endregion
             #pragma region perk

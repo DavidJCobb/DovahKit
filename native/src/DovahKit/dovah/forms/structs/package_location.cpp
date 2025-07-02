@@ -1,11 +1,26 @@
 #include "./package_location.h"
 #include "../_common_cpp.h"
 
-namespace dovah::loaded_forms::structs {
-   package_location_type package_location::get_type() const {
-      return (package_location_type)this->data.index();
+#include "../Package.h"
+
+#include "../../notices/form_load_warnings/by_form_type/faction/interrupt_override_target_not_in_a_package.h"
+#include "../../notices/form_load_warnings/by_form_type/package/invalid_interrupt_override_target.h"
+#include "../../notices/form_load_warnings/by_form_type/package/target_has_an_invalid_object_type.h"
+#include "../../notices/form_load_warnings/by_form_type/package/target_is_exterior_cell.h"
+#include "../../notices/form_load_warnings/by_form_type/package/wrong_target_for_interrupt_override.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_type::faction;
+      using namespace dovah::notices::form_load_warnings::by_type::package;
    }
-   void package_location::set_type(Form& my_owner, package_location_type t) {
+}
+
+namespace dovah::loaded_forms::structs {
+   package_location::location_type package_location::get_type() const {
+      return (location_type)this->data.index();
+   }
+   void package_location::set_type(Form& my_owner, location_type t) {
       auto prior = this->get_type();
       if (prior == t)
          return;
@@ -15,6 +30,7 @@ namespace dovah::loaded_forms::structs {
 
    void package_location::_clear_data(Form& my_owner) {
       switch (this->get_type()) {
+         // Handle forms:
          #pragma push_macro("CASE")
          #undef CASE
          #define CASE(name) \
@@ -22,14 +38,14 @@ namespace dovah::loaded_forms::structs {
             std::get<(size_t)name>(this->data).set(my_owner, nullptr); \
             break;
 
-         CASE(package_location_type::near_reference);
-         CASE(package_location_type::in_cell);
-         CASE(package_location_type::object_id);
-         CASE(package_location_type::near_linked_reference);
+         CASE(location_type::reference);
+         CASE(location_type::interior_cell);
+         CASE(location_type::object);
+         CASE(location_type::linked_ref);
          #pragma pop_macro("CASE")
       }
    }
-   void package_location::_emplace_data_for_type(package_location_type t) {
+   void package_location::_emplace_data_for_type(location_type t) {
       if (this->get_type() == t)
          return;
       switch (t) {
@@ -38,87 +54,141 @@ namespace dovah::loaded_forms::structs {
          #define CASE(name) \
          case name: this->data.emplace<(size_t)name>(); break;
 
-         CASE(package_location_type::near_reference);
-         CASE(package_location_type::in_cell);
-         CASE(package_location_type::near_package_start_location);
-         CASE(package_location_type::near_editor_location);
-         CASE(package_location_type::object_id);
-         CASE(package_location_type::object_type);
-         CASE(package_location_type::near_linked_reference);
-         CASE(package_location_type::at_package_location);
-         CASE(package_location_type::reference_alias);
-         CASE(package_location_type::location_alias);
-         CASE((package_location_type)10);
-         CASE((package_location_type)11);
-         CASE(package_location_type::near_self);
+         CASE(location_type::reference);
+         CASE(location_type::interior_cell);
+         CASE(location_type::near_package_start_location);
+         CASE(location_type::near_editor_location);
+         CASE(location_type::object);
+         CASE(location_type::object_type);
+         CASE(location_type::linked_ref);
+         CASE(location_type::at_package_location);
+         CASE(location_type::reference_alias);
+         CASE(location_type::location_alias);
+         CASE(location_type::interrupt_override_target);
+         CASE((location_type)11);
+         CASE(location_type::self);
          #pragma pop_macro("CASE")
       }
    }
 
-   void package_location::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
-      package_location_type t = (package_location_type)0;
+   void package_location::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc, Form& my_owner) {
+      location_type t = (location_type)0;
       subrecord.read(t);
       this->_emplace_data_for_type(t);
       switch (t) {
-         case package_location_type::near_reference:
+         case location_type::reference:
             {
-               auto& form = std::get<(size_t)package_location_type::near_reference>(this->data);
-               if (subrecord.read(form)) {
+               auto& form = this->_as_type<location_type::reference>();
+               if (subrecord.read(form))
                   intfc.warn_if_ref_is_wrong_type(form, dovah::form_type::reference, subrecord);
-               }
             }
             break;
-         case package_location_type::in_cell:
+         case location_type::interior_cell:
             {
-               auto& form = std::get<(size_t)package_location_type::in_cell>(this->data);
+               auto& form = this->_as_type<location_type::interior_cell>();
                if (subrecord.read(form)) {
                   intfc.warn_if_ref_is_wrong_type(form, dovah::form_type::cell, subrecord);
+                  if (form && form.get_form_stub()->is_exterior_cell()) {
+                     specific_load_warnings::target_is_exterior_cell notice(
+                        intfc.target_stub,
+                        *form.get_form_stub()
+                     );
+                     intfc.log_load_warning(notice);
+                  }
                }
             }
             break;
-         case package_location_type::object_id:
+         case location_type::object:
             {
-               auto& form = std::get<(size_t)package_location_type::object_id>(this->data);
-               if (subrecord.read(form)) {
+               auto& form = this->_as_type<location_type::object>();
+               if (subrecord.read(form))
                   ; // TODO: What form types are valid here?
+            }
+            break;
+         case location_type::object_type:
+            {
+               auto& data = this->_as_type<location_type::object_type>();
+               if (subrecord.read(data)) {
+                  if ((uint32_t)data > (uint32_t)object_type::actors_any) {
+                     specific_load_warnings::target_has_an_invalid_object_type notice(
+                        intfc.target_stub,
+                        (std::underlying_type_t<object_type>)data
+                     );
+                     intfc.log_load_warning(notice);
+                  }
                }
             }
             break;
-         case package_location_type::object_type:
+         case location_type::linked_ref:
             {
-               auto& v = std::get<(size_t)package_location_type::object_type>(this->data);
-               if (subrecord.read(v)) {
-                  // TODO: Warn if v is out of bounds
-               }
-            }
-            break;
-         case package_location_type::near_linked_reference:
-            {
-               auto& form = std::get<(size_t)package_location_type::near_linked_reference>(this->data);
+               auto& form = this->_as_type<location_type::linked_ref>();
                if (subrecord.read(form)) {
                   intfc.warn_if_ref_is_wrong_type(form, dovah::form_type::keyword, subrecord);
                }
             }
             break;
-         case package_location_type::reference_alias:
+         case location_type::reference_alias:
             {
-               auto& alias_id = std::get<(size_t)package_location_type::reference_alias>(this->data);
+               auto& alias_id = this->_as_type<location_type::reference_alias>();
                subrecord.read(alias_id);
             }
             break;
-         case package_location_type::location_alias:
+         case location_type::location_alias:
             {
-               auto& alias_id = std::get<(size_t)package_location_type::location_alias>(this->data);
+               auto& alias_id = this->_as_type<location_type::location_alias>();
                subrecord.read(alias_id);
+            }
+            break;
+         case location_type::interrupt_override_target:
+            {
+               auto& data = this->_as_type<location_type::interrupt_override_target>();
+               subrecord.read(data);
+
+               bool valid = false;
+               switch (data) {
+                  case interrupt_override_target::threat_to_spectate:
+                  case interrupt_override_target::corpse_to_observe:
+                  case interrupt_override_target::ref_to_guard:
+                  case interrupt_override_target::trespasser:
+                  case interrupt_override_target::combat_target:
+                     valid = true;
+                     break;
+               }
+
+               if (my_owner.stub.form_type == form_type::package) {
+                  if (valid) {
+                     auto& casted = (Package&)my_owner;
+                     if (casted.interrupt_override != packages::interrupt_override_for_target(data)) {
+                        specific_load_warnings::wrong_target_for_interrupt_override notice(
+                           intfc.target_stub,
+                           data,
+                           packages::interrupt_override_for_target(data),
+                           casted.interrupt_override
+                        );
+                        intfc.log_load_warning(notice);
+                     }
+                  } else {
+                     specific_load_warnings::invalid_interrupt_override_target notice(
+                        intfc.target_stub,
+                        (std::underlying_type_t<interrupt_override_target>)data
+                     );
+                     intfc.log_load_warning(notice);
+                  }
+               } else {
+                  specific_load_warnings::interrupt_override_target_not_in_a_package notice(
+                     intfc.target_stub,
+                     data
+                  );
+                  intfc.log_load_warning(notice);
+               }
             }
             break;
 
-         case package_location_type::near_package_start_location:
-         case package_location_type::near_editor_location:
-         case package_location_type::at_package_location:
-         case (package_location_type)10: // TODO: identify this and confirm it has no data
-         case (package_location_type)11: // TODO: identify this and confirm it has no data
-         case package_location_type::near_self:
+         case location_type::near_package_start_location:
+         case location_type::near_editor_location:
+         case location_type::at_package_location:
+         case (location_type)11:
+         case location_type::self:
          default:
             subrecord.skip_bytes(4);
             break;
@@ -129,34 +199,21 @@ namespace dovah::loaded_forms::structs {
       const auto type = this->get_type();
       subrecord.write(type);
       switch (type) {
-         case package_location_type::near_reference:
-            subrecord.write(std::get<(size_t)package_location_type::near_reference>(this->data));
-            break;
-         case package_location_type::in_cell:
-            subrecord.write(std::get<(size_t)package_location_type::in_cell>(this->data));
-            break;
-         case package_location_type::object_id:
-            subrecord.write(std::get<(size_t)package_location_type::object_id>(this->data));
-            break;
-         case package_location_type::object_type:
-            subrecord.write(std::get<(size_t)package_location_type::object_type>(this->data));
-            break;
-         case package_location_type::near_linked_reference:
-            subrecord.write(std::get<(size_t)package_location_type::near_linked_reference>(this->data));
-            break;
-         case package_location_type::reference_alias:
-            subrecord.write(std::get<(size_t)package_location_type::reference_alias>(this->data));
-            break;
-         case package_location_type::location_alias:
-            subrecord.write(std::get<(size_t)package_location_type::location_alias>(this->data));
-            break;
+         #pragma push_macro("CASE")
+         #undef CASE
+         #define CASE(name) \
+         case name: subrecord.write(std::get<(size_t)name>(this->data)); break;
 
-         case package_location_type::near_package_start_location:
-         case package_location_type::near_editor_location:
-         case package_location_type::at_package_location:
-         case (package_location_type)10: // TODO: identify this and confirm it has no data
-         case (package_location_type)11: // TODO: identify this and confirm it has no data
-         case package_location_type::near_self:
+         CASE(location_type::reference);
+         CASE(location_type::interior_cell);
+         CASE(location_type::object);
+         CASE(location_type::object_type);
+         CASE(location_type::linked_ref);
+         CASE(location_type::reference_alias);
+         CASE(location_type::location_alias);
+         CASE(location_type::interrupt_override_target);
+         #pragma pop_macro("CASE")
+
          default:
             subrecord.skip_bytes(4);
             break;
@@ -167,14 +224,33 @@ namespace dovah::loaded_forms::structs {
    void package_location::clone_from(const package_location& src, Form& my_owner) noexcept {
       this->_clear_data(my_owner);
       switch (src.get_type()) {
+         // Handle forms:
          #pragma push_macro("CASE")
          #undef CASE
          #define CASE(name) \
             case name: this->data.emplace<(size_t)name>().set(my_owner, std::get<(size_t)name>(src.data)); break;
-         CASE(package_location_type::near_reference);
-         CASE(package_location_type::in_cell);
-         CASE(package_location_type::object_id);
-         CASE(package_location_type::near_linked_reference);
+         CASE(location_type::reference);
+         CASE(location_type::interior_cell);
+         CASE(location_type::object);
+         CASE(location_type::linked_ref);
+         #pragma pop_macro("CASE")
+
+         default:
+            this->data = src.data;
+      }
+      this->radius = src.radius;
+   }
+   void package_location::unmanaged_clone_from(const package_location& src, load_order_interfaces::form_load&) noexcept {
+      switch (src.get_type()) {
+         // Handle forms:
+         #pragma push_macro("CASE")
+         #undef CASE
+         #define CASE(name) \
+            case name: this->data.emplace<(size_t)name>().unmanaged_set(std::get<(size_t)name>(src.data).get_form_stub()); break;
+         CASE(location_type::reference);
+         CASE(location_type::interior_cell);
+         CASE(location_type::object);
+         CASE(location_type::linked_ref);
          #pragma pop_macro("CASE")
 
          default:
@@ -192,23 +268,23 @@ namespace dovah::loaded_forms::structs {
          #undef CASE
          #define CASE(name) \
             case name: std::get<(size_t)name>(this->data).clear_if(my_owner, other); break;
-         CASE(package_location_type::near_reference);
-         CASE(package_location_type::in_cell);
-         CASE(package_location_type::object_id);
-         CASE(package_location_type::near_linked_reference);
+         CASE(location_type::reference);
+         CASE(location_type::interior_cell);
+         CASE(location_type::object);
+         CASE(location_type::linked_ref);
          #pragma pop_macro("CASE")
       }
    }
 
    #pragma region package_location::use_info_state
    void package_location::use_info_state::generate_use_info(tes_subrecord_reader& subrecord) {
-      package_location_type t;
+      location_type t;
       if (subrecord.read(t)) {
          switch (t) {
-            case package_location_type::near_reference:
-            case package_location_type::in_cell:
-            case package_location_type::object_id:
-            case package_location_type::near_linked_reference:
+            case location_type::reference:
+            case location_type::interior_cell:
+            case location_type::object:
+            case location_type::linked_ref:
                subrecord.read(this->form);
                break;
          }

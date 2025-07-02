@@ -360,9 +360,6 @@
     <ClCompile Include="dovah\forms\Faction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\forms\components\package_location.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="editor\helpers\make_editor_id_for_duplicate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -3126,6 +3123,84 @@
     <ClCompile Include="dovah\forms\EncounterZone.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\structs\package_location.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\TalkingActivator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\Package.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\package_schedule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\package_event_addon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\idle_collection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\package_target.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\typed_package_info\dialogue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\typed_package_info\ambush.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\typed_package_info\eat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\typed_package_info\follow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\typed_package_info\use_weapon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\typed_package_info\use_item_at.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\typed_package_info\patrol.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data\boolean.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data\unknown.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\localize\package_data_type.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data\float.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data\int.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data\topic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\typed_package_info\custom.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_flag_overrides.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\custom_packages\procedure_nodes\procedure.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\custom_packages\procedure_nodes\branch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\custom_packages\procedure_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -3543,9 +3618,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\Faction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\package_location.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\files\tes_file_writing\config.h">
@@ -7664,10 +7736,10 @@
     <ClInclude Include="dovah\forms\IdleMarker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\idle_marker\incorrect_idle_count.h">
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\idle_collection\incorrect_idle_count.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\notices\form_save_errors\by_form_type\idle_marker\too_many_idles.h">
+    <ClInclude Include="dovah\notices\form_save_errors\by_form_component\idle_collection\too_many_idles.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\data\skill_level.h">
@@ -7749,6 +7821,177 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\EncounterZone.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\package_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\package_location.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\TalkingActivator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\packages\package_data_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\packages\procedure_node_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\package_schedule.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\package_event_addon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\idle_collection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\typed_package_info\ambush.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\typed_package_info\base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\typed_package_info\escort.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\typed_package_info\dialogue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\typed_package_info\legacy_general.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\packages\target_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\packages\interrupt_override_target.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\packages\interrupt_override_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\packages\location_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\package_target.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\packages\object_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\wrong_target_for_interrupt_override.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\invalid_interrupt_override_target.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\faction\interrupt_override_target_not_in_a_package.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\target_has_an_invalid_object_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\target_is_exterior_cell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\packages\legacy_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\typed_package_info\_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\typed_package_info\eat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\typed_package_info\follow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\typed_package_info\use_weapon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\typed_package_info\use_item_at.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\typed_package_info\patrol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\typed_package_info\custom.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data\boolean.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data\unknown.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_data_unexpected_value_subrecord.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data\_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_data_wants_none_as_unique_id.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\localize\package_data_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data\float.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data\int.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data\topic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_data_unrecognized_typename.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_data_metadata_belongs_to_none.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\unique_id_used_by_multiple_package_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\too_many_package_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\unique_id_has_multiple_metadata.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\unexpected_subrecord_in_unique_id_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_flag_overrides.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\packages\preferred_movement_speed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\custom_packages\procedure_nodes\procedure.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\packages\procedure_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_typename_unrecognized.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_has_extra_parameters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_missing_required_parameter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\custom_packages\procedure_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\custom_packages\procedure_nodes\branch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -9375,6 +9618,7 @@
     <None Include="ui\_docs\scenes.md" />
     <None Include="dovah\_docs\magic effect archetypes.md" />
     <None Include="dovah\_docs\enchanting.md" />
+    <None Include="dovah\_docs\packages.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

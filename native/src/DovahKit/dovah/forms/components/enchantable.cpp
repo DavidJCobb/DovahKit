@@ -11,7 +11,7 @@ namespace dovah::loaded_forms::components {
          case subrecord_signature_charge_legacy:
             break;
          default: // invalid
-            assert(false && "Why was harvestable::load called on a subrecord it's not built to handle?");
+            assert(false && "Why was enchantable::load called on a subrecord it's not built to handle?");
       }
       
       if (signature == subrecord_signature_effect || signature == subrecord_signature_effect_legacy) {

@@ -317,6 +317,15 @@ namespace editor_helpers {
                      }
                   #pragma endregion
                #pragma endregion
+               #pragma region idle collection
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::by_component::idle_collection::too_many_idles*>(&warning)) {
+                     return QObject::tr(
+                        "Form %1 attempts to specify %2 idles, but the file format can only encode up to %3 "
+                        "idles in that list.",
+                        disambig
+                     ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
+                  }
+               #pragma endregion
                #pragma region leveled list
                   if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::by_component::leveled_list::too_many_entries*>(&warning)) {
                      return QObject::tr(
@@ -357,15 +366,6 @@ namespace editor_helpers {
                #pragma endregion
             #pragma endregion
             #pragma region by form type
-               #pragma region idle marker
-                  if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::by_type::idle_marker::too_many_idles*>(&warning)) {
-                     return QObject::tr(
-                        "Idle Marker %1 attempts to specify %2 idles, but the file format can only encode up to %3 "
-                        "idles per marker.",
-                        disambig
-                     ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
-                  }
-               #pragma endregion
                #pragma region landscape
                   if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::by_type::landscape::heightmap_contains_too_steep_a_slope*>(&warning)) {
                      return QObject::tr(

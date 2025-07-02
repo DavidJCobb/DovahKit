@@ -7,6 +7,8 @@ I plan on releasing DovahKit as an alpha or beta with core editing functionality
 
 * **Phase 1: Rewrite the backend for loaded form data.**  
   Loaded form data is handled very messily, and the "working copy" system forces ephemeral copies of form data to have all the same boilerplate as the persistent stuff. This makes it harder and jankier to write UI-related code. The refactor plans described further below should make it significantly easier to write UI-related code, should allow a lot of cleanup of existing UI-related code, and should lead to higher-quality code in general.
+  
+  In general, rewriting a software project is a bad idea. In this case, though, a very large amount of the code can just be copied, pasted, and adjusted to match different conventions. In eseence, DovahKit does all of the *things* it needs to do; it just doesn't do them the best *way*, and [sometimes, you really do need to just rebuild atop more stable foundations and with an updated plan, rather than continuing to extend old structures](http://thecodelesscode.com/case/33).
 
   This phase is expected to enable, or make it easier to implement, the following features:
 
