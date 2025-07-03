@@ -1,9 +1,7 @@
 #pragma once
 
 namespace dovah::packages {
-   enum class procedure_node_type {
-      procedure, // "Procedure"
-
+   enum class procedure_tree_branch_type {
       random,       // "Random"
       sequence,     // "Sequence"
       simultaneous, // "Simultaneous"

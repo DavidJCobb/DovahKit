@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include "../../../_common.h"
+#include "../../../../data/packages/procedure_tree_branch_type.h"
 
 namespace dovah::loaded_forms::structs::custom_packages {
    class procedure_node;
@@ -22,6 +23,7 @@ namespace dovah::loaded_forms::structs::custom_packages::procedure_node_data {
          };
 
       public:
+         packages::procedure_tree_branch_type branch_type = packages::procedure_tree_branch_type::sequence;
          std::vector<std::unique_ptr<procedure_node>> children;
          uint32_t flags = 0;
          

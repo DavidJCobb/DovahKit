@@ -4,40 +4,25 @@
 #include "../../components/conditions.h"
 #include "./procedure_nodes/branch.h"
 #include "./procedure_nodes/procedure.h"
-#include "dovah/data/packages/procedure_node_type.h"
+#include "./procedure_nodes/unknown.h"
 
 namespace dovah::loaded_forms::structs::custom_packages {
    class procedure_node {
       public:
          static constexpr const uint32_t subrecord_typename  = 'ANAM';
 
-         using procedure_node_type = packages::procedure_node_type;
-
       public:
          components::condition_list conditions; // CITC+CTDA[]
          std::variant<
-            procedure_node_data::procedure, // "Procedure"
-            procedure_node_data::branch,    // "Random"
-            procedure_node_data::branch,    // "Sequence"
-            procedure_node_data::branch,    // "Simultaneous"
-            procedure_node_data::branch     // "Stacked"
+            procedure_node_data::unknown,
+            procedure_node_data::procedure,
+            procedure_node_data::branch
          > data;
 
-         static_assert(
-            false,
-            "TODO: This sucks. We should have a variant with just two members (`procedure` and `branch`), and "
-            "have an enum on `branch` that indicates the branch type. (Currently the variant as a whole is "
-            "synched with the `procedure_node_type` enum.)"
-         );
-
       public:
-         constexpr packages::procedure_node_type get_type() const noexcept { return (packages::procedure_node_type) this->data.index(); }
          constexpr size_t child_count() const noexcept {
-            switch (this->data.index()) {
-               case 1: return std::get<1>(this->data).children.size();
-               case 2: return std::get<2>(this->data).children.size();
-               case 3: return std::get<3>(this->data).children.size();
-               case 4: return std::get<4>(this->data).children.size();
+            if (std::holds_alternative<procedure_node_data::branch>(this->data)) {
+               return std::get<procedure_node_data::branch>(this->data).children.size();
             }
             return 0;
          }
