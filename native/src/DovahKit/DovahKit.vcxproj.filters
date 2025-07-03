@@ -3201,6 +3201,12 @@
     <ClCompile Include="dovah\forms\structs\custom_packages\procedure_node.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data_declaration_map.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data_value_map.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -7992,6 +7998,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\structs\custom_packages\procedure_nodes\branch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data_declaration_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data_value_map.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

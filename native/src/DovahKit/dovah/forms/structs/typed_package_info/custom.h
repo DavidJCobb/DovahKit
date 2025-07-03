@@ -2,6 +2,8 @@
 #include <memory>
 #include <vector>
 #include "./base.h"
+#include "../custom_packages/package_data_declaration_map.h"
+#include "../custom_packages/package_data_value_map.h"
 
 namespace dovah::loaded_forms::structs::custom_packages {
    class package_data;
@@ -21,11 +23,13 @@ namespace dovah::loaded_forms::structs::typed_package_info {
          static constexpr const size_t max_valid_package_data = std::numeric_limits<uint8_t>::max() - 1; // minus one to account for the `no_unique_id` sentinel value
 
       public:
-         std::vector<package_data*> data;
+         struct {
+            custom_packages::package_data_declaration_map declarations;
+            custom_packages::package_data_value_map       values;
+         } data;
          std::unique_ptr<procedure_node> procedure_tree = nullptr;
          form_reference_t template_package; // PKCU+0x04 -> PACK
          uint32_t         revision = 0; // PKCU+0x08
-         uint32_t         next_unique_id = 0; // XNAM
 
       public:
          virtual package_location* get_location_1() override { return nullptr; };

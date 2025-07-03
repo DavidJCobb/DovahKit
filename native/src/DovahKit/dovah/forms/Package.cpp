@@ -45,7 +45,7 @@ namespace dovah::loaded_forms {
             break;
 
          default:
-            static_assert(false, "TODO: generic typed info");
+            static_assert(false, "TODO: generic typed info. Note that some types may or may not have a primary location or primary target.");
             break;
       }
    }

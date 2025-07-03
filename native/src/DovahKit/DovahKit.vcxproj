@@ -167,6 +167,8 @@
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data\int.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data\topic.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data\unknown.cpp" />
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data_declaration_map.cpp" />
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data_value_map.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_flag_overrides.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\procedure_node.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\procedure_nodes\branch.cpp" />
@@ -1305,6 +1307,8 @@
     <ClInclude Include="dovah\forms\structs\custom_packages\package_data\topic.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\package_data\unknown.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\package_data\_all.h" />
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data_declaration_map.h" />
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data_value_map.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\package_flag_overrides.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\procedure_node.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\procedure_nodes\branch.h" />
