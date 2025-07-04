@@ -2,6 +2,14 @@
 #include <memory>
 #include "../../_common_cpp.h"
 
+#include "dovah/notices/form_save_errors/by_form_type/package/too_many_package_data_values.h"
+
+namespace {
+   namespace specific_save_errors {
+      using namespace dovah::notices::form_save_errors::by_type::package;
+   }
+}
+
 #include "../custom_packages/procedure_node.h"
 
 namespace dovah::loaded_forms::structs::typed_package_info {
@@ -54,7 +62,11 @@ namespace dovah::loaded_forms::structs::typed_package_info {
    }
    /*virtual*/ void custom::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) /*override*/ {
       if (this->data.values.entries.size() > custom_packages::package_data_value_map::max_serializable_count) {
-         static_assert(false, "TODO: throw save error");
+         auto notice = specific_save_errors::too_many_package_data_values(
+            *intfc.target_stub,
+            this->data.values.entries.size()
+         );
+         intfc.throw_save_error(notice);
       }
 
       auto& subrecord = record.open_next_subrecord(header_subrecord);

@@ -1497,12 +1497,14 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\note\non_texture_note_includes_texture_path.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\faction\interrupt_override_target_not_in_a_package.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\invalid_interrupt_override_target.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_data_header_missing.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_data_metadata_belongs_to_none.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_data_unexpected_value_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_data_unrecognized_typename.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_data_wants_none_as_unique_id.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_has_extra_parameters.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_missing_required_parameter.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_node_unrecognized_typename.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_tree_has_orphaned_nodes.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_typename_unrecognized.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\target_is_exterior_cell.h" />
@@ -1567,6 +1569,8 @@
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\papyrus\too_many_scripts.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_component\idle_collection\too_many_idles.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\landscape\heightmap_contains_too_steep_a_slope.h" />
+    <ClInclude Include="dovah\notices\form_save_errors\by_form_type\package\too_many_package_data_values.h" />
+    <ClInclude Include="dovah\notices\form_save_errors\by_form_type\package\too_many_procedure_tree_branch_children.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\quest\too_many_log_entry_papyrus_fragments.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\quest\too_many_scripted_aliases.h" />
     <ClInclude Include="dovah\notices\form_save_errors\by_form_type\race\biped_object_name_is_too_long.h" />

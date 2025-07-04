@@ -34,10 +34,8 @@ namespace dovah::loaded_forms::structs::custom_packages {
          custom_packages::package_data::load_context context;
          context.which = this->entries.size();
 
-         static_assert(false, "TODO: this should return a unique_ptr, and should not be allowed to return null.");
-         auto* packdata = custom_packages::package_data::load_content(record, intfc, context);
-         assert(packdata != nullptr);
-         entry.value.reset(packdata);
+         entry.value = custom_packages::package_data::load_content(record, intfc, context);
+         assert(!!entry.value);
       }
       //
       // Load the mapping of BGSPackageData indices to unique IDs.

@@ -1,6 +1,14 @@
 #include "./branch.h"
 #include "../../../_common_cpp.h"
 
+#include "../../../../notices/form_save_errors/by_form_type/package/too_many_procedure_tree_branch_children.h"
+
+namespace {
+   namespace specific_save_errors {
+      using namespace dovah::notices::form_save_errors::by_type::package;
+   }
+}
+
 namespace dovah::loaded_forms::structs::custom_packages::procedure_node_data {
    size_t branch::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       size_t child_count = 0;
@@ -26,7 +34,11 @@ namespace dovah::loaded_forms::structs::custom_packages::procedure_node_data {
    }
    void branch::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       if (this->children.size() > max_children) {
-         static_assert(false, "TODO: Save error");
+         auto notice = specific_save_errors::too_many_procedure_tree_branch_children(
+            *intfc.target_stub,
+            this->children.size()
+         );
+         intfc.throw_save_error(notice);
       }
       auto& subrecord = record.open_next_subrecord(subrecord_branch);
       subrecord.write((uint32_t)this->children.size());

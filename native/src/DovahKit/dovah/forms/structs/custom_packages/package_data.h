@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <string>
 #include "../../_common.h"
 #include "dovah/data/packages/package_data_type.h"
@@ -28,7 +29,9 @@ namespace dovah::loaded_forms::structs::custom_packages {
       public:
          virtual ~package_data() {}
 
-         static package_data* load_content(tes_record_reader&, load_order_interfaces::form_load&, const load_context&); // ANAM+[BNAM+PNAM]+<value>
+         static std::unique_ptr<package_data> load_content(tes_record_reader&, load_order_interfaces::form_load&, const load_context&); // ANAM+[BNAM+PNAM]+<value>
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
+
 
          // caller must handle ANAM
          // call load_value
