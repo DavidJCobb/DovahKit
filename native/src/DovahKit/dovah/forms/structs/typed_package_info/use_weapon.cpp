@@ -23,7 +23,7 @@ namespace dovah::loaded_forms::structs::typed_package_info {
          intfc.warn_if_ref_is_wrong_type(form, form_type::weapon, subrecord.signature());
       }
    }
-   /*static*/ void use_weapon::generate_header_use_info(tes_record_reader& record, std::vector<form_id_t>& out) {
+   /*static*/ void use_weapon::generate_header_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       auto& subrecord = record.get_current_subrecord();
       if (subrecord.signature() != header_subrecord)
          return;
@@ -33,7 +33,7 @@ namespace dovah::loaded_forms::structs::typed_package_info {
       subrecord.skip_bytes(14);
       subrecord.read(weapon);
       if (weapon)
-         out.push_back(weapon);
+         uib.add_outbound_reference(weapon);
    }
    /*virtual*/ void use_weapon::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) /*override*/ {
       auto& subrecord = record.open_next_subrecord(header_subrecord);

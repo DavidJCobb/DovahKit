@@ -27,11 +27,10 @@ namespace dovah::loaded_forms::structs::custom_packages::procedure_node_data {
          std::vector<std::unique_ptr<procedure_node>> children;
          uint32_t flags = 0;
          
-         // When we load PRCB, we resize our children vector to match the child count, 
-         // but leave it empty. Procedure nodes are serialized list, you see, so our 
-         // caller has to reorganize the children accordingly.
+         // The `load` function returns the declared child count.
          //
-         void load(tes_record_reader&, load_order_interfaces::form_load&);
-         void save(tes_record_writer&, load_order_interfaces::form_save&);
+         size_t load(tes_record_reader&, load_order_interfaces::form_load&);
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
+         void   save(tes_record_writer&, load_order_interfaces::form_save&);
    };
 }

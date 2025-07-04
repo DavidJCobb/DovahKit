@@ -271,3 +271,5 @@ The above is all off the top of my head, untested. I'll probably want to lab thi
   This is, of course, only important when an active-file form has discarded-during-load uses of another active-file form. Loader code should always discard-during-load as appropriate, but the backend may only need to track this for discarded uses of active file forms by active file forms.
   
   To that end, we should do two things. First: We should extend the use info system to be able to track discarded-during-load uses. Then, we should have a non-member `discard_during_load` function similar to the non-member `clear` function proposed above, which we can invoke on managed structs during the load process. Finally, the save process should wipe all discarded-during-load use info on a form after the form is saved.
+  
+  * See also: [use info builders.md](./use%20info%20builders.md)

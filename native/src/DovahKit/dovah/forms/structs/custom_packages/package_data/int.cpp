@@ -26,7 +26,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
       subrecord.read(this->value);
       record.next_subrecord();
    }
-   /*static*/ void package_data_int::generate_use_info(tes_record_reader& record, std::vector<form_id_t>& out) {
+   /*static*/ void package_data_int::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
    };
    /*virtual*/ void package_data_int::save_value(tes_record_writer& record, load_order_interfaces::form_save& intfc) /*override*/ {
       auto& subrecord = record.open_next_subrecord('CNAM');

@@ -58,7 +58,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
       }
       record.next_subrecord();
    }
-   /*static*/ void package_data_topic::generate_use_info(tes_record_reader& record, std::vector<form_id_t>& out) {
+   /*static*/ void package_data_topic::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       form_id_t topic;
 
       auto& subrecord = record.get_current_subrecord();
@@ -76,7 +76,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
          return;
       }
       if (topic)
-         out.push_back(topic);
+         uib.add_outbound_reference(topic);
       record.next_subrecord();
    };
    /*virtual*/ void package_data_topic::save_value(tes_record_writer& record, load_order_interfaces::form_save& intfc) /*override*/ {

@@ -65,7 +65,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
          //
       } while (++which, record.get_current_subrecord().signature() == subrecord_unique_id);
    }
-   /*static*/ void package_data_declaration_map::generate_use_info(tes_record_reader& record, std::vector<form_id_t>& out) {
+   /*static*/ void package_data_declaration_map::generate_use_info(tes_record_reader& record, form_stub_use_info_builder&) {
       //
       // We don't actually contain any uses, but we need to skip the right number 
       // of subrecords.

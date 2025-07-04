@@ -43,6 +43,7 @@
    #include "./by_form_type/package/package_data_wants_none_as_unique_id.h"
    #include "./by_form_type/package/procedure_has_extra_parameters.h"
    #include "./by_form_type/package/procedure_missing_required_parameter.h"
+   #include "./by_form_type/package/procedure_tree_has_orphaned_nodes.h"
    #include "./by_form_type/package/procedure_typename_unrecognized.h"
    #include "./by_form_type/package/target_has_an_invalid_object_type.h"
    #include "./by_form_type/package/target_is_exterior_cell.h"

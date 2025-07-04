@@ -110,11 +110,11 @@ namespace dovah::loaded_forms::structs::custom_packages {
          }
       }
    }
-   /*static*/ void package_data_value_map::generate_use_info(tes_record_reader& record, size_t count, std::vector<form_id_t>& out) {
+   /*static*/ void package_data_value_map::generate_use_info(tes_record_reader& record, size_t count, form_stub_use_info_builder& uib) {
       // Value list:
       for (size_t i = 0; i < count; ++i) {
          auto& subrecord = record.next_subrecord();
-         custom_packages::package_data::generate_use_info(record, out);
+         custom_packages::package_data::generate_use_info(record, uib);
       }
 
       // Unique ID list:

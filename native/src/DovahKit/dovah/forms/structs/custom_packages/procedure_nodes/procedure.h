@@ -29,6 +29,7 @@ namespace dovah::loaded_forms::structs::custom_packages::procedure_node_data {
          std::vector<uint8_t> parameter_unique_ids; // PKC2[]
          
          void load(tes_record_reader&, load_order_interfaces::form_load&);
+         static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          void save(tes_record_writer&, load_order_interfaces::form_save&);
    };
 }

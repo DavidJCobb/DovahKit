@@ -1,9 +1,11 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include "helpers/optional_ref.h"
 #include "./base.h"
 #include "../custom_packages/package_data_declaration_map.h"
 #include "../custom_packages/package_data_value_map.h"
+#include "../custom_packages/procedure_tree.h"
 
 namespace dovah::loaded_forms::structs::custom_packages {
    class package_data;
@@ -27,11 +29,15 @@ namespace dovah::loaded_forms::structs::typed_package_info {
             custom_packages::package_data_declaration_map declarations;
             custom_packages::package_data_value_map       values;
          } data;
-         std::unique_ptr<procedure_node> procedure_tree = nullptr;
+         custom_packages::procedure_tree procedures;
          form_reference_t template_package; // PKCU+0x04 -> PACK
          uint32_t         revision = 0; // PKCU+0x08
 
-      public:
+      private:
+         //
+         // Force these members to private because they're worthless outside of serialization code, 
+         // where they're invoked via base class pointers.
+         //
          virtual package_location* get_location_1() override { return nullptr; };
          virtual package_location* get_location_2() override { return nullptr; };
          virtual package_target* get_target_1() override { return nullptr; };
@@ -44,8 +50,9 @@ namespace dovah::loaded_forms::structs::typed_package_info {
          //
          virtual bool is_of_legacy_type(legacy_type t) const noexcept override { return t == legacy_type::custom || t == legacy_type::custom_template; };
 
+      public:
          virtual void load(tes_record_reader&, load_order_interfaces::form_load&) override;
-         static void generate_header_use_info(tes_record_reader&, std::vector<form_id_t>& out);
+         static void generate_header_use_info(tes_record_reader&, form_stub_use_info_builder&);
          virtual void save(tes_record_writer&, load_order_interfaces::form_save&) override;
          virtual base* clone(loaded_forms::Form& owner_of_clone) const noexcept override;
          virtual void sever_outbound_references_to(form_stub&, loaded_forms::Form& my_containing_form) noexcept override;

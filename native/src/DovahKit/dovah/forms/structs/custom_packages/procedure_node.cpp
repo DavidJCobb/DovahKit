@@ -27,7 +27,7 @@ namespace {
 }
 
 namespace dovah::loaded_forms::structs::custom_packages {
-   void procedure_node::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
+   size_t procedure_node::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       if (record.get_current_subrecord().signature() != subrecord_typename) {
          static_assert("TODO: Warn");
          return;
@@ -71,13 +71,47 @@ namespace dovah::loaded_forms::structs::custom_packages {
       } else if (branch_type.has_value()) {
          auto& data = this->data.emplace<procedure_node_data::branch>();
          data.branch_type = branch_type.value();
-         data.load(record, intfc);
+         return data.load(record, intfc);
       } else {
          auto& data = this->data.emplace<procedure_node_data::unknown>();
          data.serialized_typename = serialized_typename;
       }
+      return 0;
    }
-   /*static*/ void procedure_node::generate_use_info(tes_record_reader& record, std::vector<form_id_t>& out);
+   /*static*/ void procedure_node::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
+      if (record.get_current_subrecord().signature() != subrecord_typename) {
+         return;
+      }
+      std::string serialized_typename;
+      record.get_current_subrecord().read(serialized_typename);
+      record.next_subrecord();
+
+      std::optional<packages::procedure_tree_branch_type> branch_type;
+      bool is_leaf = false;
+      if (serialized_typename == leaf_node_typename) {
+         is_leaf = true;
+      } else {
+         for (const auto& item : branch_typename_mapping) {
+            if (item.first == serialized_typename) {
+               branch_type = item.second;
+               break;
+            }
+         }
+      }
+
+      if (auto& subrecord = record.get_current_subrecord(); subrecord.signature() == 'CITC') {
+         record.next_subrecord();
+      }
+      while (record.get_current_subrecord().signature() == 'CTDA') {
+         components::condition::generate_use_info(record, uib);
+      }
+
+      if (is_leaf) {
+         procedure_node_data::procedure::generate_use_info(record, uib);
+      } else if (branch_type.has_value()) {
+         procedure_node_data::branch::generate_use_info(record, uib);
+      }
+   }
    void procedure_node::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       {
          std::string_view name = "";
@@ -109,7 +143,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
          casted->save(record, intfc);
       }
    }
-   procedure_node* procedure_node::clone(loaded_forms::Form& owner_of_clone) const noexcept {
+   std::unique_ptr<procedure_node> procedure_node::clone(loaded_forms::Form& owner_of_clone) const noexcept {
       auto  copy_ptr = std::make_unique<procedure_node>();
       auto* copy     = copy_ptr.get();
 
@@ -121,13 +155,35 @@ namespace dovah::loaded_forms::structs::custom_packages {
          auto& dst_data = copy->data.emplace<procedure_node_data::branch>();
          dst_data.branch_type = src_data.branch_type;
          dst_data.flags       = src_data.flags;
-         static_assert(false, "TODO: Recursively clone child nodes");
+         for (auto& child_ptr : src_data.children) {
+            auto clone_ptr = child_ptr->clone(owner_of_clone);
+            dst_data.children.push_back(std::move(clone_ptr));
+         }
       } else if (auto* casted = std::get_if<procedure_node_data::unknown>(&this->data)) {
          copy->data.emplace<procedure_node_data::unknown>() = *casted;
       }
 
-      return copy_ptr.release();
+      return copy_ptr;
    }
-   void procedure_node::sever_outbound_references_to(form_stub& other, loaded_forms::Form& my_owner) noexcept;
-   void procedure_node::clear(loaded_forms::Form& my_owner);
+   void procedure_node::sever_outbound_references_to(form_stub& other, loaded_forms::Form& my_owner) noexcept {
+      for (auto& cnd : this->conditions)
+         cnd.sever_outbound_references_to(other, my_owner);
+
+      if (auto* casted = std::get_if<procedure_node_data::branch>(&this->data)) {
+         auto& data = *casted;
+         for (auto& child_ptr : data.children)
+            child_ptr->sever_outbound_references_to(other, my_owner);
+      }
+   }
+   void procedure_node::clear(loaded_forms::Form& my_owner) {
+      this->conditions.clear(my_owner);
+
+      if (auto* casted = std::get_if<procedure_node_data::branch>(&this->data)) {
+         auto& data = *casted;
+         for (auto& child_ptr : data.children)
+            child_ptr->clear(my_owner);
+         data.children.clear();
+      }
+      this->data = {};
+   }
 }

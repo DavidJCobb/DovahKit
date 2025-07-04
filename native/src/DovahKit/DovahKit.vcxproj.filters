@@ -3207,6 +3207,12 @@
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data_value_map.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\structs\custom_packages\procedure_tree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\typed_package_info\escort.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -7841,9 +7847,6 @@
     <ClInclude Include="dovah\data\packages\package_data_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\data\packages\procedure_node_type.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\forms\structs\package_schedule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -7863,9 +7866,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\structs\typed_package_info\dialogue.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\structs\typed_package_info\legacy_general.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\data\packages\target_type.h">
@@ -8004,6 +8004,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\structs\custom_packages\package_data_value_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\packages\procedure_tree_branch_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\custom_packages\procedure_nodes\unknown.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\custom_packages\procedure_tree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_tree_has_orphaned_nodes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\optional_ref.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

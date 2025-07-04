@@ -181,9 +181,9 @@ namespace dovah::loaded_forms {
       } events;
       structs::package_location::use_info_state legacy_location_1;
       structs::package_target::use_info_state   legacy_target_1;
-      std::vector<form_id_t> typed_info_uses;
       form_id_t combat_style;
       form_id_t owning_quest;
+      auto typed_uib = uib.spawn_subordinate_on_stack();
 
       auto _handle_typed_header = [&]<legacy_type NewType>() {
          {
@@ -197,7 +197,7 @@ namespace dovah::loaded_forms {
                return;
          }
 
-         typed_info_uses.clear();
+         typed_uib.clear_pending_use_info();
 
          constexpr auto& info = packages::all_legacy_type_info[(size_t)NewType];
          if (info.has_location[0] == packages::legacy_type_info::have::no) {
@@ -242,7 +242,7 @@ namespace dovah::loaded_forms {
                      //
                      // The type changed.
                      //
-                     typed_info_uses.clear();
+                     typed_uib.clear_pending_use_info();
                      if ((size_t)new_type < packages::all_legacy_type_info.size()) {
                         const auto& info = packages::all_legacy_type_info[(size_t)new_type];
                         if (info.has_location[0] == packages::legacy_type_info::have::no) {
@@ -285,39 +285,39 @@ namespace dovah::loaded_forms {
             #pragma region Custom package data
             case structs::typed_package_info::ambush::header_subrecord:
                _handle_typed_header.template operator()<legacy_type::ambush>();
-               structs::typed_package_info::ambush::generate_header_use_info(record, typed_info_uses);
+               structs::typed_package_info::ambush::generate_header_use_info(record, typed_uib);
                break;
             case 'PKCU':
                _handle_typed_header.template operator()<legacy_type::custom>();
-               structs::typed_package_info::custom::generate_header_use_info(record, typed_info_uses);
+               structs::typed_package_info::custom::generate_header_use_info(record, typed_uib);
                break;
             case structs::typed_package_info::dialogue::header_subrecord:
                _handle_typed_header.template operator()<legacy_type::dialogue>();
-               structs::typed_package_info::dialogue::generate_header_use_info(record, typed_info_uses);
+               structs::typed_package_info::dialogue::generate_header_use_info(record, typed_uib);
                break;
             case structs::typed_package_info::escort::header_subrecord:
                _handle_typed_header.template operator()<legacy_type::escort>();
-               structs::typed_package_info::escort::generate_header_use_info(record, typed_info_uses);
+               structs::typed_package_info::escort::generate_header_use_info(record, typed_uib);
                break;
             case structs::typed_package_info::eat::header_subrecord:
                _handle_typed_header.template operator()<legacy_type::eat>();
-               structs::typed_package_info::eat::generate_header_use_info(record, typed_info_uses);
+               structs::typed_package_info::eat::generate_header_use_info(record, typed_uib);
                break;
             case structs::typed_package_info::follow::header_subrecord:
                _handle_typed_header.template operator()<legacy_type::follow>();
-               structs::typed_package_info::follow::generate_header_use_info(record, typed_info_uses);
+               structs::typed_package_info::follow::generate_header_use_info(record, typed_uib);
                break;
             case structs::typed_package_info::patrol::header_subrecord:
                _handle_typed_header.template operator()<legacy_type::patrol>();
-               structs::typed_package_info::patrol::generate_header_use_info(record, typed_info_uses);
+               structs::typed_package_info::patrol::generate_header_use_info(record, typed_uib);
                break;
             case structs::typed_package_info::use_weapon::header_subrecord:
                _handle_typed_header.template operator()<legacy_type::use_weapon>();
-               structs::typed_package_info::use_weapon::generate_header_use_info(record, typed_info_uses);
+               structs::typed_package_info::use_weapon::generate_header_use_info(record, typed_uib);
                break;
             case structs::typed_package_info::use_item_at::header_subrecord:
                _handle_typed_header.template operator()<legacy_type::use_item_at>();
-               structs::typed_package_info::use_item_at::generate_header_use_info(record, typed_info_uses);
+               structs::typed_package_info::use_item_at::generate_header_use_info(record, typed_uib);
                break;
             #pragma endregion
          }
@@ -332,8 +332,8 @@ namespace dovah::loaded_forms {
       // typed package info:
       legacy_location_1.commit_to(uib);
       legacy_target_1.commit_to(uib);
-      for (auto id : typed_info_uses)
-         uib.add_outbound_reference(id);
+
+      typed_uib.commit();
    }
    void Package::_clone_impl(Form* out) const noexcept {
       assert(out->type == form_type);

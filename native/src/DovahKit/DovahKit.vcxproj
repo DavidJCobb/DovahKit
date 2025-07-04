@@ -173,6 +173,7 @@
     <ClCompile Include="dovah\forms\structs\custom_packages\procedure_node.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\procedure_nodes\branch.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\procedure_nodes\procedure.cpp" />
+    <ClCompile Include="dovah\forms\structs\custom_packages\procedure_tree.cpp" />
     <ClCompile Include="dovah\forms\structs\package_event_addon.cpp" />
     <ClCompile Include="dovah\forms\structs\package_location.cpp" />
     <ClCompile Include="dovah\forms\structs\package_schedule.cpp" />
@@ -243,6 +244,7 @@
     <ClCompile Include="dovah\forms\structs\typed_package_info\custom.cpp" />
     <ClCompile Include="dovah\forms\structs\typed_package_info\dialogue.cpp" />
     <ClCompile Include="dovah\forms\structs\typed_package_info\eat.cpp" />
+    <ClCompile Include="dovah\forms\structs\typed_package_info\escort.cpp" />
     <ClCompile Include="dovah\forms\structs\typed_package_info\follow.cpp" />
     <ClCompile Include="dovah\forms\structs\typed_package_info\patrol.cpp" />
     <ClCompile Include="dovah\forms\structs\typed_package_info\use_item_at.cpp" />
@@ -1244,10 +1246,10 @@
     <ClInclude Include="dovah\data\packages\location_type.h" />
     <ClInclude Include="dovah\data\packages\object_type.h" />
     <ClInclude Include="dovah\data\packages\preferred_movement_speed.h" />
+    <ClInclude Include="dovah\data\packages\procedure_tree_branch_type.h" />
     <ClInclude Include="dovah\data\packages\procedure_type.h" />
     <ClInclude Include="dovah\data\packages\target_type.h" />
     <ClInclude Include="dovah\data\packages\package_data_type.h" />
-    <ClInclude Include="dovah\data\packages\procedure_node_type.h" />
     <ClInclude Include="dovah\data\package_type.h" />
     <ClInclude Include="dovah\data\perk_entry_points.h" />
     <ClInclude Include="dovah\data\sex.h" />
@@ -1313,6 +1315,8 @@
     <ClInclude Include="dovah\forms\structs\custom_packages\procedure_node.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\procedure_nodes\branch.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\procedure_nodes\procedure.h" />
+    <ClInclude Include="dovah\forms\structs\custom_packages\procedure_nodes\unknown.h" />
+    <ClInclude Include="dovah\forms\structs\custom_packages\procedure_tree.h" />
     <ClInclude Include="dovah\forms\structs\package_event_addon.h" />
     <ClInclude Include="dovah\forms\structs\package_location.h" />
     <ClInclude Include="dovah\forms\structs\package_schedule.h" />
@@ -1379,7 +1383,6 @@
     <ClInclude Include="dovah\forms\structs\typed_package_info\eat.h" />
     <ClInclude Include="dovah\forms\structs\typed_package_info\escort.h" />
     <ClInclude Include="dovah\forms\structs\typed_package_info\follow.h" />
-    <ClInclude Include="dovah\forms\structs\typed_package_info\legacy_general.h" />
     <ClInclude Include="dovah\forms\structs\typed_package_info\patrol.h" />
     <ClInclude Include="dovah\forms\structs\typed_package_info\use_item_at.h" />
     <ClInclude Include="dovah\forms\structs\typed_package_info\use_weapon.h" />
@@ -1500,6 +1503,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_data_wants_none_as_unique_id.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_has_extra_parameters.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_missing_required_parameter.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_tree_has_orphaned_nodes.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_typename_unrecognized.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\target_is_exterior_cell.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\target_has_an_invalid_object_type.h" />
@@ -1620,6 +1624,7 @@
     <QtMoc Include="ui\form_windows\ingredient.h" />
     <QtMoc Include="ui\form_windows\effectshader.h" />
     <QtMoc Include="ui\form_windows\combat_style.h" />
+    <ClInclude Include="helpers\optional_ref.h" />
     <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h" />
     <QtMoc Include="ui\form_windows\potion.h" />
     <QtMoc Include="ui\form_windows\material_type.h" />

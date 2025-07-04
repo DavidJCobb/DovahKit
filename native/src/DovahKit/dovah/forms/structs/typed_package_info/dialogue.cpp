@@ -19,7 +19,7 @@ namespace dovah::loaded_forms::structs::typed_package_info {
       subrecord.read(this->dialogue_type);
       subrecord.read(this->unk14);
    }
-   /*static*/ void dialogue::generate_header_use_info(tes_record_reader& record, std::vector<form_id_t>& out) {
+   /*static*/ void dialogue::generate_header_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       auto& subrecord = record.get_current_subrecord();
       if (subrecord.signature() != header_subrecord)
          return;
@@ -29,7 +29,7 @@ namespace dovah::loaded_forms::structs::typed_package_info {
       subrecord.skip_bytes(sizeof(fov));
       subrecord.read(topic);
       if (topic)
-         out.push_back(topic);
+         uib.add_outbound_reference(topic);
    }
    /*virtual*/ void dialogue::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) /*override*/ {
       auto& subrecord = record.open_next_subrecord(header_subrecord);

@@ -44,7 +44,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
          virtual package_data_type get_type() const noexcept = 0;
          //
          virtual void load_value(tes_record_reader&, load_order_interfaces::form_load&, const load_context&) = 0;
-         //static void generate_use_info(tes_record_reader&, std::vector<form_id_t>& out) {};
+         //static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&) {};
          virtual void save_value(tes_record_writer&, load_order_interfaces::form_save&) = 0;
          virtual package_data* clone(loaded_forms::Form& owner_of_clone) const noexcept = 0;
          virtual void sever_outbound_references_to(form_stub&, loaded_forms::Form& my_containing_form) noexcept = 0;

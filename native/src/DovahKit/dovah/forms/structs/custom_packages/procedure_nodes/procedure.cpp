@@ -195,6 +195,39 @@ namespace dovah::loaded_forms::structs::custom_packages::procedure_node_data {
          }
       }
    }
+   /*static*/ void procedure::generate_use_info(tes_record_reader& record, form_stub_use_info_builder&) {
+      //
+      // We don't actually contain any uses, but we need to skip the right number 
+      // of subrecords.
+      //
+      if (record.get_current_subrecord().signature() == subrecord_procedure_type)
+         record.next_subrecord();
+      if (record.get_current_subrecord().signature() == subrecord_flags)
+         record.next_subrecord();
+      //
+      // Parameter IDs:
+      //
+      while (true) {
+         bool is_extra = false;
+         switch (record.get_current_subrecord().signature()) {
+            case subrecord_param_id_legacy:
+            case subrecord_param_id_modern:
+               is_extra = true;
+               break;
+         }
+         if (!is_extra)
+            break;
+
+         record.next_subrecord();
+      }
+      //
+      // Flag overrides:
+      //
+      if (record.get_current_subrecord().signature() == package_flag_overrides::subrecord_modern)
+         record.next_subrecord();
+      if (record.get_current_subrecord().signature() == package_flag_overrides::subrecord_legacy)
+         record.next_subrecord();
+   }
    void procedure::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       {
          std::string_view name = "";

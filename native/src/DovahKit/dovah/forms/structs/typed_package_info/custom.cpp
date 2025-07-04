@@ -27,66 +27,11 @@ namespace dovah::loaded_forms::structs::typed_package_info {
       this->data.values.load(record, intfc, package_data_count);
 
       if (!this->template_package) {
-         #pragma region Procedure tree
-         {
-            std::vector<std::unique_ptr<procedure_node>> nodes;
-            while (record.get_current_subrecord().signature() == 'ANAM') {
-               auto  node_ptr = std::make_unique<procedure_node>();
-               auto* node     = node_ptr.get();
-               nodes.push_back(std::move(node_ptr));
-
-               node->load(record, intfc);
-            }
-            if (!nodes.empty()) {
-               std::vector<procedure_node*> bare_ptrs;
-               bare_ptrs.resize(nodes.size());
-               for (size_t i = 0; i < nodes.size(); ++i)
-                  bare_ptrs[i] = nodes[i].get();
-
-               auto _traverse = [&bare_ptrs, &nodes](this auto&& recurse, procedure_node* parent, size_t parent_index) -> size_t {
-                  size_t count = parent->child_count();
-
-                  size_t index = parent_index + 1;
-                  for (size_t i = 0; i < count; ++i) {
-                     auto* child     = bare_ptrs[index + i];
-                     auto& child_ptr = nodes[index + i];
-                     
-                     static_assert(
-                        false,
-                        "TODO: This sucks. We should have a variant with just two members (`procedure` and `branch`), and "
-                        "have an enum on `branch` that indicates the branch type. (Currently the variant as a whole is "
-                        "synched with the `procedure_node_type` enum.)"
-                     );
-                     switch (parent->data.index()) {
-                        case 1: std::get<1>(parent->data).children[i] = std::move(child_ptr); break;
-                        case 2: std::get<2>(parent->data).children[i] = std::move(child_ptr); break;
-                        case 3: std::get<3>(parent->data).children[i] = std::move(child_ptr); break;
-                        case 4: std::get<4>(parent->data).children[i] = std::move(child_ptr); break;
-                     }
-                     if (child->data.index() != 0) {
-                        recurse(child, index + i);
-                        index += child->child_count();
-                     }
-                  }
-                  return index;
-               };
-
-               size_t i = 0;
-               while (i < bare_ptrs.size()) {
-                  i = _traverse(bare_ptrs[i], i);
-               }
-               if (i < bare_ptrs.size()) {
-                  static_assert(false, "TODO: Warn: Multiple top-level nodes; the others will be discarded");
-               }
-               this->procedure_tree = std::move(nodes[0]);
-            }
-         }
-         #pragma endregion
-         //
+         this->procedures.load(record, intfc);
          this->data.declarations.load(record, intfc);
       }
    }
-   /*static*/ void custom::generate_header_use_info(tes_record_reader& record, std::vector<form_id_t>& out) {
+   /*static*/ void custom::generate_header_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       auto& subrecord = record.get_current_subrecord();
       if (subrecord.signature() != header_subrecord)
          return;
@@ -101,16 +46,10 @@ namespace dovah::loaded_forms::structs::typed_package_info {
       subrecord.read(template_package);
       record.next_subrecord();
 
-      static_assert(false, "TODO: Mirror the load process above.");
-      custom_packages::package_data_value_map::generate_use_info(record, package_data_count, out);
+      custom_packages::package_data_value_map::generate_use_info(record, package_data_count, uib);
       if (template_package) {
-         static_assert(
-            false,
-            "TODO: Procedure tree. We don't need to build a tree structure, but we do need a "
-            "recursive function which, after reading PRCB, will read the next N children; and "
-            "then we'd ignore any non-children past the first."
-         );
-         custom_packages::package_data_declaration_map::generate_use_info(record, out);
+         custom_packages::procedure_tree::generate_use_info(record, uib);
+         custom_packages::package_data_declaration_map::generate_use_info(record, uib);
       }
    }
    /*virtual*/ void custom::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) /*override*/ {
@@ -126,15 +65,17 @@ namespace dovah::loaded_forms::structs::typed_package_info {
 
       this->data.values.save(record, intfc);
       if (this->template_package) {
-         static_assert(false, "TODO: Clear procedure tree, since we won't be saving it.");
+         //
+         // Packages that use a template cannot declare their own packdata nor store 
+         // their own procedure trees. We want to explicitly clear them now, so that 
+         // we don't end up with "phantom use info" (e.g. if we save the form, unload 
+         // it, and then reload it).
+         //
+         auto& my_owner = *intfc.target_stub->form;
+         this->procedures.clear(my_owner);
          this->data.declarations = {};
       } else {
-         #pragma region Procedure tree
-            if (this->procedure_tree) {
-               this->procedure_tree->save(record, intfc);
-               static_assert(false, "TODO: Recursively serialize children");
-            }
-         #pragma endregion
+         this->procedures.save(record, intfc);
          this->data.declarations.save(record, intfc);
       }
    }
@@ -146,21 +87,21 @@ namespace dovah::loaded_forms::structs::typed_package_info {
       copy->revision = this->revision;
 
       copy->data.values.clone_from(this->data.values, owner_of_clone);
-      static_assert(false, "TODO: `procedure_tree`");
       copy->data.declarations = this->data.declarations;
+      copy->procedures.clone_from(this->procedures, owner_of_clone);
 
       return copy_ptr.release();
    }
    /*virtual*/ void custom::sever_outbound_references_to(form_stub& other, loaded_forms::Form& my_owner) noexcept /*override*/ {
       this->template_package.clear_if(my_owner, other);
       this->data.values.sever_outbound_references_to(other, my_owner);
-      static_assert(false, "TODO: `procedure_tree`");
+      this->procedures.sever_outbound_references_to(other, my_owner);
    }
    /*virtual*/ void custom::clear(loaded_forms::Form& my_owner) /*override*/ {
       this->template_package.set(my_owner, nullptr);
 
       this->data.values.clear(my_owner);
-      static_assert(false, "TODO: `procedure_tree`");
       this->data.declarations = {};
+      this->procedures.clear(my_owner);
    }
 }
