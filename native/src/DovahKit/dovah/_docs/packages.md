@@ -279,7 +279,7 @@ TESUseWeaponPackageData
 
 | # | Name | Header | Data class | Has Target&nbsp;1 | Has Target&nbsp;2 | Has Location&nbsp;1 | Has Location&nbsp;2 | Notes |
 | -: | :- | :-: | :- | :-: | :-: | :-: | :-: | :- |
-| 0 | Find | | - | Yes | No | ? | No |
+| 0 | Find | | - | Yes | No | Optional | No | Location 1 is a Search Location. |
 | 1 | Follow | `PKFD` | `TESFollowPackageData` | Yes | No | Optional | **Optional** | Location 1 is the End Location. Location 2 is the Start Location. Target 1 is the ref to follow. |
 | 2 | Escort | `PKE2` | `TESEscortPackageData` | Yes | No | Yes | **Optional** | Location 1 is the Destination. Location 2 is the Search Location, if Allow Search is enabled. Target 1 is the Escort Target. |
 | 3 | Eat | `PKED`? | `TESEatPackageData` | Yes | No | Yes | **Optional** | Location 1 is the Eat Location. Location 2 is the Search Location, if Allow Search is enabled. Target 1 has its type forced to 2. |
@@ -289,14 +289,14 @@ TESUseWeaponPackageData
 | 7 | Accompany | | - | Yes | No | No | No | Target 1 has its type forced to 0. |
 | 8 | Use Item At | `PUID` | `TESUseItemPackageData` | Yes | No | Yes | **Yes** | Location 1 is the Location. Location 2 is the Search Location, if Allow Search is enabled. Target 1 is the Item To Use. |
 | 9 | Ambush | `PKAM`? | `TESAmbushPackageData` | Optional | No | Yes | **Yes** | Location 1 is the Wait Location. Location 2 is the Ambush Location. Target 1 is the Ambush Target. |
-| 10 | Flee (Non-Combat) | | - | ? | No | ? | No |
-| 11 | Use Magic | | - | ? | No | ? | No |
+| 10 | Flee (Non-Combat) | | - | Optional | No | Optional | No |
+| 11 | Use Magic | | - | Optional | No | Optional | No |
 | 12 | Sandbox | | - | No | No | Yes | No |
 | 13 | Patrol | `PKPT` | `TESPatrolPackageData` | No | No | Yes | No | Location 1 is the Start Location. |
 | 14 | Guard | | - | Yes | No | Optional | No | Location 1 is the Guard Location. |
 | 15 | Dialogue | `PKDD` | `TESDialoguePackageData` | Yes | No | Optional | **Optional** | Location 1 is the Start/Wait Location. Location 2 is the Trigger Location. Target 1 has its type forced to 0. |
 | 16 | Use Weapon | `PKW3` | `TESUseWeaponPackageData` | Yes | Yes | Yes | **Optional** | Location 1 is the Location. Location 2 is the Target Location. |
-| 17 | Find2 | | - | Yes | No | ? | No | Remapped to 0 (Find) on load, but still handled separately in some switch-cases. |
+| 17 | Find2 | | - | Yes | No | Optional | No | Remapped to 0 (Find) on load, but still handled separately in some switch-cases. Location 1 is assumed. |
 | 18 | Custom | `PKCU` | `TESCustomPackageData` | No | No | No | No |
 | 19 | Custom Template | `PKCU` | `TESCustomPackageData` | No | No | No | No |
 | 20 | Activate | | - | ? | No | ? | No |

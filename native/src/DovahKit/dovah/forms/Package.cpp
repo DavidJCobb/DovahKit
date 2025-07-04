@@ -2,6 +2,7 @@
 #include "_common_cpp.h"
 #include "./structs/typed_package_info/_all.h"
 
+#include "../notices/form_load_warnings/by_form_type/package/legacy_type_unrecognized.h"
 #include "../notices/form_load_warnings/by_form_type/package/package_changed_legacy_type_during_load.h"
 
 namespace {
@@ -57,8 +58,34 @@ namespace dovah::loaded_forms {
             this->typed_info = new structs::typed_package_info::use_weapon;
             break;
 
+         case legacy_type::sandbox:
+         case legacy_type::sleep:
+         case legacy_type::travel:
+         case legacy_type::wander:
+            this->typed_info = new structs::typed_package_info::generic::with_location(t);
+            break;
+         case legacy_type::accompany:
+            this->typed_info = new structs::typed_package_info::generic::with_target(t);
+            break;
+         case legacy_type::flee_non_combat:
+         case legacy_type::use_magic: // guessed
+            this->typed_info = new structs::typed_package_info::generic::with_maybe_each(t);
+            break;
+         case legacy_type::find:
+         case legacy_type::find_deprecated:
+         case legacy_type::guard:
+            this->typed_info = new structs::typed_package_info::generic::with_target_and_maybe_location(t);
+            break;
+
          default:
-            static_assert(false, "TODO: generic typed info. Note that some types may or may not have a primary location or primary target.");
+            specific_load_warnings::legacy_type_unrecognized notice(
+               intfc.target_stub,
+               t
+            );
+            intfc.log_load_warning(notice);
+
+            this->typed_info = new structs::typed_package_info::custom;
+
             break;
       }
    }

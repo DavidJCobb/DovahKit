@@ -10,3 +10,8 @@
 #include "./patrol.h"
 #include "./use_item_at.h"
 #include "./use_weapon.h"
+
+#include "./generic/with_location.h"
+#include "./generic/with_target.h"
+#include "./generic/with_target_and_maybe_location.h"
+#include "./generic/with_maybe_each.h"

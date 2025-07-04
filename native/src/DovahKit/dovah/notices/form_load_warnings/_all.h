@@ -37,6 +37,7 @@
    #include "./by_form_type/music_track/invalid_track_type.h"
    #include "./by_form_type/note/non_texture_note_includes_texture_path.h"
    #include "./by_form_type/package/invalid_interrupt_override_target.h"
+   #include "./by_form_type/package/legacy_type_unrecognized.h"
    #include "./by_form_type/package/package_changed_legacy_type_during_load.h"
    #include "./by_form_type/package/package_data_header_missing.h"
    #include "./by_form_type/package/package_data_metadata_belongs_to_none.h"

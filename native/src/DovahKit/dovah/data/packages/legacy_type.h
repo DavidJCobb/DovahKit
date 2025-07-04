@@ -17,7 +17,7 @@ namespace dovah::packages {
       accompany       =  7,
       use_item_at     =  8,
       ambush          =  9,
-      flee_non_combat = 10,
+      flee_non_combat = 10, // Actor flees without actually entering a combat state.
       use_magic       = 11,
       sandbox         = 12,
       patrol          = 13,

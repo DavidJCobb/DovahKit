@@ -956,6 +956,13 @@ namespace editor_helpers {
                      disambig
                   ).arg(subject).arg(casted->seen);
                }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::legacy_type_unrecognized*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Package %1 specified an invalid package type (%2). Defaulting it to a typical Package.",
+                     disambig
+                  ).arg(subject).arg(casted->seen);
+               }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::package_changed_legacy_type_during_load*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   QString from    = editor::localize::package_legacy_type(casted->from);
