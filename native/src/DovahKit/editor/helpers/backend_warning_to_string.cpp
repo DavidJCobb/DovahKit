@@ -8,6 +8,7 @@
 #include "./form_identifiers_to_string.h"
 #include "./form_type_name_to_string.h"
 #include "../localize/package_data_type.h"
+#include "../localize/package_legacy_type.h"
 #include "helpers/qt/strings.h"
 
 #include "dovah/form_stub.h"
@@ -955,6 +956,30 @@ namespace editor_helpers {
                      disambig
                   ).arg(subject).arg(casted->seen);
                }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::package_changed_legacy_type_during_load*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString from    = editor::localize::package_legacy_type(casted->from);
+                  QString to      = editor::localize::package_legacy_type(casted->to);
+                  if (from.isEmpty()) {
+                     from = QObject::tr("?", disambig);
+                  }
+                  if (to.isEmpty()) {
+                     to = QObject::tr("?", disambig);
+                  }
+                  return QObject::tr(
+                     "Package %1 changed its internal type during load, from %2 to %3.",
+                     disambig
+                  ).arg(subject).arg(from).arg(to);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::package_data_header_missing*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  QString signature = cobb::qt::four_cc_to_string(casted->signature);
+                  return QObject::tr(
+                     "Failed to load a Package Data in Package %1. Package Data #%2 was missing its header subrecord "
+                     "ANAM, containing instead %3.",
+                     disambig
+                  ).arg(subject).arg(casted->which).arg(signature);
+               }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::package_data_metadata_belongs_to_none*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   return QObject::tr(
@@ -1011,10 +1036,36 @@ namespace editor_helpers {
                      disambig
                   ).arg(subject).arg(casted->param_index).arg(QString::fromStdString(casted->param_name));
                }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::procedure_node_unrecognized_typename*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Package %1 contains a procedure tree node with an unrecognized type (%2). Expect further errors "
+                     "due to this problem, as we have no idea what additional data within the Package to read: we can't "
+                     "know where this procedure tree node ends and the next piece of data begins.",
+                     disambig
+                  ).arg(subject).arg(QString::fromStdString(casted->type));
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::procedure_tree_has_orphaned_nodes*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Package %1 contains a procedure tree with %2 orphaned node(s).",
+                     disambig
+                  ).arg(subject).arg(casted->orphan_count);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::procedure_tree_leaf_missing_header*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  QString signature = cobb::qt::four_cc_to_string(casted->signature);
+                  return QObject::tr(
+                     "Package %1 contains a procedure whose typename (%2) is unrecognized. Expect further errors "
+                     "due to this problem, as we have no idea what additional data within the Package to read: we can't "
+                     "know where this procedure tree node ends and the next piece of data begins.",
+                     disambig
+                  ).arg(subject).arg(signature);
+               }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::procedure_typename_unrecognized*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   return QObject::tr(
-                     "Failed to load a Procedure in Package %1. The Procedure had unrecognized typename %2..",
+                     "Failed to load a Procedure in Package %1. The Procedure had unrecognized typename %2.",
                      disambig
                   ).arg(subject).arg(QString::fromStdString(casted->type));
                }

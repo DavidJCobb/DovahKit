@@ -94,7 +94,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
                result = std::make_unique<package_data_object_list>();
                break;
             case package_data_type::single_ref:
-               result = std::make_unique<package_data_ref>();
+               result = std::make_unique<package_data_single_ref>();
                break;
             case package_data_type::target_selector:
                result = std::make_unique<package_data_target_selector>();
@@ -156,7 +156,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
             package_data_object_list::generate_use_info(record, uib);
             break;
          case package_data_type::single_ref:
-            package_data_ref::generate_use_info(record, uib);
+            package_data_single_ref::generate_use_info(record, uib);
             break;
          case package_data_type::target_selector:
             package_data_target_selector::generate_use_info(record, uib);

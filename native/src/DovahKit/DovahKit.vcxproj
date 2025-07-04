@@ -165,8 +165,11 @@
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data\boolean.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data\float.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data\int.cpp" />
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data\location.cpp" />
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data\object_list.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data\topic.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data\unknown.cpp" />
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data\_target_base.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data_declaration_map.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data_value_map.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_flag_overrides.cpp" />
@@ -296,6 +299,7 @@
     <ClCompile Include="editor\helpers\story_event_name.cpp" />
     <ClCompile Include="editor\ini\main.cpp" />
     <ClCompile Include="editor\localize\package_data_type.cpp" />
+    <ClCompile Include="editor\localize\package_legacy_type.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\faction.cpp" />
@@ -1306,6 +1310,11 @@
     <ClInclude Include="dovah\forms\structs\custom_packages\package_data\boolean.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\package_data\float.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\package_data\int.h" />
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data\location.h" />
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data\object_list.h" />
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data\single_ref.h" />
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data\target_selector.h" />
+    <ClInclude Include="dovah\forms\structs\custom_packages\package_data\_target_base.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\package_data\topic.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\package_data\unknown.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\package_data\_all.h" />
@@ -1497,6 +1506,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\note\non_texture_note_includes_texture_path.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\faction\interrupt_override_target_not_in_a_package.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\invalid_interrupt_override_target.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_changed_legacy_type_during_load.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_data_header_missing.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_data_metadata_belongs_to_none.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_data_unexpected_value_subrecord.h" />
@@ -1506,6 +1516,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_missing_required_parameter.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_node_unrecognized_typename.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_tree_has_orphaned_nodes.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_tree_leaf_missing_header.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_typename_unrecognized.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\target_is_exterior_cell.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\target_has_an_invalid_object_type.h" />
@@ -1619,6 +1630,7 @@
     <QtMoc Include="ui\form_windows\magic_effect.h" />
     <ClInclude Include="editor\localize\magic_casting_type.h" />
     <ClInclude Include="editor\localize\package_data_type.h" />
+    <ClInclude Include="editor\localize\package_legacy_type.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\_base.h" />

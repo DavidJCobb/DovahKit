@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "../../../notices/form_load_warnings/by_form_type/package/procedure_node_unrecognized_typename.h"
+#include "../../../notices/form_load_warnings/by_form_type/package/procedure_tree_leaf_missing_header.h"
 
 namespace {
    namespace specific_load_warnings {
@@ -28,8 +29,12 @@ namespace {
 
 namespace dovah::loaded_forms::structs::custom_packages {
    size_t procedure_node::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
-      if (record.get_current_subrecord().signature() != subrecord_typename) {
-         static_assert("TODO: Warn");
+      if (auto sig = record.get_current_subrecord().signature(); sig != subrecord_typename) {
+         specific_load_warnings::procedure_tree_leaf_missing_header notice(
+            intfc.target_stub,
+            sig
+         );
+         intfc.log_load_warning(notice);
          return;
       }
       std::string serialized_typename;

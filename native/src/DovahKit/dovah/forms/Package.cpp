@@ -2,13 +2,26 @@
 #include "_common_cpp.h"
 #include "./structs/typed_package_info/_all.h"
 
+#include "../notices/form_load_warnings/by_form_type/package/package_changed_legacy_type_during_load.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_type::package;
+   }
+}
+
 namespace dovah::loaded_forms {
-   void Package::_force_type_during_load(legacy_type t, bool complain_on_change) {
+   void Package::_force_type_during_load(legacy_type t, bool complain_on_change, load_order_interfaces::form_load& intfc) {
       if (this->typed_info) {
          if (this->typed_info->is_of_legacy_type(t))
             return;
          if (complain_on_change) {
-            static_assert(false, "TODO: Warn on type change");
+            specific_load_warnings::package_changed_legacy_type_during_load notice(
+               intfc.target_stub,
+               this->type,
+               t
+            );
+            intfc.log_load_warning(notice);
          }
          delete this->typed_info;
          this->typed_info = nullptr;
@@ -79,26 +92,28 @@ namespace dovah::loaded_forms {
                break;
 
             case 'PKDT':
-               subrecord.read(this->general_flags);
-               subrecord.read(this->type);
-               subrecord.read(this->interrupt_override);
-               subrecord.read(this->preferred_speed);
-               subrecord.skip_bytes(1);
-               subrecord.read(this->interrupt_flags);
-               subrecord.read(this->legacy_typed_flags);
+               {
+                  legacy_type new_type = (legacy_type)0;
+                  subrecord.read(this->general_flags);
+                  subrecord.read(new_type);
+                  subrecord.read(this->interrupt_override);
+                  subrecord.read(this->preferred_speed);
+                  subrecord.skip_bytes(1);
+                  subrecord.read(this->interrupt_flags);
+                  subrecord.read(this->legacy_typed_flags);
 
-               if (this->typed_info && this->typed_info->is_of_legacy_type(this->type)) {
-                  break;
-               }
-               static_assert(false, "TODO: Warn: Package re-typed itself!");
-               this->_force_type_during_load(this->type, false);
-               if ((size_t)this->type < packages::all_legacy_type_info.size()) {
-                  const auto& info = packages::all_legacy_type_info[(size_t)this->type];
-                  if (info.has_location[0] == packages::legacy_type_info::have::no) {
-                     legacy_location_1.reset();
+                  if (this->typed_info && this->typed_info->is_of_legacy_type(this->type)) {
+                     break;
                   }
-                  if (info.has_target[0] == packages::legacy_type_info::have::no) {
-                     legacy_target_1.reset();
+                  this->_force_type_during_load(new_type, true, intfc);
+                  if ((size_t)this->type < packages::all_legacy_type_info.size()) {
+                     const auto& info = packages::all_legacy_type_info[(size_t)this->type];
+                     if (info.has_location[0] == packages::legacy_type_info::have::no) {
+                        legacy_location_1.reset();
+                     }
+                     if (info.has_target[0] == packages::legacy_type_info::have::no) {
+                        legacy_target_1.reset();
+                     }
                   }
                }
                break;
@@ -133,31 +148,31 @@ namespace dovah::loaded_forms {
 
             #pragma region Custom package data
             case structs::typed_package_info::ambush::header_subrecord:
-               this->_force_type_during_load(legacy_type::ambush, true);
+               this->_force_type_during_load(legacy_type::ambush, true, intfc);
                break;
             case 'PKCU':
-               this->_force_type_during_load(legacy_type::custom, true);
+               this->_force_type_during_load(legacy_type::custom, true, intfc);
                break;
             case structs::typed_package_info::dialogue::header_subrecord:
-               this->_force_type_during_load(legacy_type::dialogue, true);
+               this->_force_type_during_load(legacy_type::dialogue, true, intfc);
                break;
             case structs::typed_package_info::escort::header_subrecord:
-               this->_force_type_during_load(legacy_type::escort, true);
+               this->_force_type_during_load(legacy_type::escort, true, intfc);
                break;
             case structs::typed_package_info::eat::header_subrecord:
-               this->_force_type_during_load(legacy_type::eat, true);
+               this->_force_type_during_load(legacy_type::eat, true, intfc);
                break;
             case structs::typed_package_info::follow::header_subrecord:
-               this->_force_type_during_load(legacy_type::follow, true);
+               this->_force_type_during_load(legacy_type::follow, true, intfc);
                break;
             case structs::typed_package_info::patrol::header_subrecord:
-               this->_force_type_during_load(legacy_type::patrol, true);
+               this->_force_type_during_load(legacy_type::patrol, true, intfc);
                break;
             case structs::typed_package_info::use_weapon::header_subrecord:
-               this->_force_type_during_load(legacy_type::use_weapon, true);
+               this->_force_type_during_load(legacy_type::use_weapon, true, intfc);
                break;
             case structs::typed_package_info::use_item_at::header_subrecord:
-               this->_force_type_during_load(legacy_type::use_item_at, true);
+               this->_force_type_during_load(legacy_type::use_item_at, true, intfc);
                break;
             #pragma endregion
 

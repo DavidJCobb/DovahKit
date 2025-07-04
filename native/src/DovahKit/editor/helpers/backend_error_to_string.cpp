@@ -382,6 +382,15 @@ namespace editor_helpers {
                         .arg(form_save_errors::by_type::landscape::heightmap_contains_too_steep_a_slope::allowed_height_range.second);
                   }
                #pragma endregion
+               #pragma region package
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::by_type::package::too_many_procedure_tree_branch_children*>(&warning)) {
+                     return QObject::tr(
+                        "Package %1 contains a procedure tree branch with %2 children. The file format can only encode a "
+                        "child count up to and including %3.",
+                        disambig
+                     ).arg(subject).arg(casted->size).arg(casted->max_serializable_size);
+                  }
+               #pragma endregion
                #pragma region quest
                   if (auto* casted = cobb::dynamic_fast_cast<const form_save_errors::by_type::quest::too_many_log_entry_papyrus_fragments*>(&warning)) {
                      return QObject::tr(
