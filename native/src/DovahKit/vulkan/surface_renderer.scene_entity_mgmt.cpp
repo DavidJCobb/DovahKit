@@ -555,8 +555,8 @@ namespace vulkanDK {
                   any_succeeded = true;
                   //
                   auto& model = *item.form_data.model;
-                  if (model.supports_texture_swaps) {
-                     item.nif->apply_texture_swaps(*(const dovah::loaded_forms::components::model_ts*)&model);
+                  if (auto* casted = model.as_model_ts()) {
+                     item.nif->apply_texture_swaps(*casted);
                   }
                   item.form_data.loaded_form = nullptr; // allow the form to unload, if nothing else is using it
                   item.nif->multi_thread_state.flags |= rendered_nif::loading_flag::generating_meshes;

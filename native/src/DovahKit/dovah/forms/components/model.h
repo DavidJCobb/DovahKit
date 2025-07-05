@@ -5,11 +5,13 @@
 #include "../structs/precached_nif_info.h"
 
 namespace dovah::loaded_forms::components {
+   class model_ts;
+
    class model { // MODL
       protected:
-         model(bool sts) : supports_texture_swaps(sts) {}
+         model(bool sts) : _supports_texture_swaps(sts) {}
       public:
-         model() : supports_texture_swaps(false) {}
+         model() : _supports_texture_swaps(false) {}
 
          struct facegen_flag {
             facegen_flag() = delete;
@@ -22,10 +24,20 @@ namespace dovah::loaded_forms::components {
          };
          using facegen_flags_t = std::underlying_type_t<facegen_flag::type>;
 
-         const bool         supports_texture_swaps;
+      private:
+         bool _supports_texture_swaps;
+      public:
          std::string        model_path;
          precached_nif_info precached_info; // MODT (used to be just texture hashes, in past games)
          facegen_flags_t    facegen_flags = 0; // MODD
+
+         constexpr bool supports_texture_swaps() const noexcept { return this->_supports_texture_swaps; }
+         constexpr const model_ts* as_model_ts() const noexcept {
+            return supports_texture_swaps() ? (const model_ts*)this : nullptr;
+         }
+         constexpr model_ts* as_model_ts() noexcept {
+            return supports_texture_swaps() ? (model_ts*)this : nullptr;
+         }
          
          // Special-case load functions for when alternate subrecord signatures are used (e.g. RACE/ANAM).
          void load_model_path(tes_subrecord_reader&, load_order_interfaces::form_load&);

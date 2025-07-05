@@ -9,16 +9,12 @@
 #include "components/idle_collection.h"
 #include "components/papyrus.h"
 #include "structs/package_location.h"
-#include "structs/package_data_topic.h"
 #include "structs/package_event_addon.h"
 #include "structs/package_schedule.h"
 #include "structs/package_target.h"
-#include "../data/package_data_type.h"
 #include "../data/packages/interrupt_override_type.h"
 #include "../data/packages/legacy_type.h"
 #include "../data/packages/preferred_movement_speed.h"
-#include "../data/packages/procedure_node_type.h"
-#include "../data/package_type.h"
 
 namespace dovah::loaded_forms::structs::typed_package_info {
    class base;
@@ -73,54 +69,6 @@ namespace dovah::loaded_forms {
             };
          };
          using interrupt_flags_t = std::underlying_type_t<interrupt_flag::type>;
-
-         #pragma region Custom package data
-            using packdata_unique_id = uint8_t;
-            static constexpr const packdata_unique_id no_unique_id = 0xFF;
-
-            using packdata_value = std::variant< // indices should line up with dovah::package_data_type
-               bool,    // CNAM // BGSPackageDataBool
-               float,   // CNAM // BGSPackageDataFloat
-               int32_t, // CNAM // BGSPackageDataInt
-               structs::package_location,  // PLDT      // BGSPackageDataLocation
-               float,   // CNAM // BGSPackageDataObjectList
-               structs::package_location,  // PTDA      // BGSPackageDataRef
-               structs::package_location,  // PTDA/PTDT // BGSPackageDataTargetSelector
-               structs::package_data_topic // PDTO/TPIC // BGSPackageDataTopic
-            >;
-
-            struct packdata_base {
-               std::string        name; // BNAM
-               packdata_unique_id unique_id = no_unique_id; // UNAM
-               bool               is_public = false; // PNAM
-               packdata_value     value;
-
-               package_data_type get_type() const noexcept { return (package_data_type)this->value.index(); }
-            };
-
-            #pragma region Procedure tree
-               struct procedure_flag_overrides {
-                  struct {
-                     general_flags_t set   = 0;
-                     general_flags_t clear = 0;
-                  } general;
-                  struct {
-                     interrupt_flags_t set   = 0;
-                     interrupt_flags_t clear = 0;
-                  } interrupt;
-                  preferred_movement_speed preferred_speed = preferred_movement_speed::run;
-               };
-
-               struct procedure_tree_node {
-                  package_procedure_node_type type = package_procedure_node_type::procedure;
-                  procedure_flag_overrides    flags;
-
-                  std::string name;
-                  std::vector<procedure_tree_node*> children;
-                  std::vector<packdata_unique_id> parameters; // packdata unique IDs
-               };
-            #pragma endregion
-         #pragma endregion
 
       public:
          components::condition_list conditions; // CTDA[]

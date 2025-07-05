@@ -130,7 +130,7 @@ namespace dovah::loaded_forms {
                subrecord.read(this->vendor_data.unused0A);
                break;
             case structs::package_location::subrecord_vendor_data:
-               this->package_location_vendor.load(subrecord, intfc);
+               this->package_location_vendor.load(subrecord, intfc, *this);
                break;
             case 'CITC':
                {
