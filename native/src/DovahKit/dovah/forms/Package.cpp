@@ -97,6 +97,28 @@ namespace dovah::loaded_forms {
       std::optional<structs::package_location> legacy_location_1;
       std::optional<structs::package_target>   legacy_target_1;
 
+      //
+      // The subrecord-reading loop in this function is a little different from 
+      // the usual for form loaders; it has a `already_in_next_subrecord` local 
+      // variable.
+      // 
+      // In general, loaders (both mine and Bethesda's) are structured as if 
+      // subrecords are unordered. The individual handlers for subrecords may 
+      // not behave that way -- the code to read one subrecord may have behavior 
+      // contingent on data read from a previous subrecord -- but the code that 
+      // deals with the subrecords *themselves* -- opening them, and checking 
+      // which signature we're in -- is just a looped switch-case that doesn't 
+      // care about subrecord ordering.
+      // 
+      // Modern package data (TESCustomPackageData in Bethesda's codebase) is 
+      // NOT structured that way. Rather, it expects a very specific subrecord 
+      // ordering, and in general, it will consume subrecords as it reads them, 
+      // such that once all "custom"-type package data is loaded, we're already 
+      // in the next subrecord after that data. Bethesda's code (at least as it 
+      // was compiled) handles that with a goto; we handle that with a variable 
+      // that we use to skip opening the next subrecord out here, in this loop.
+      //
+
       size_t orphaned_condition_count  = 0;
       bool   already_in_next_subrecord = false;
       auto& subrecord = record.get_current_subrecord();
@@ -269,8 +291,15 @@ namespace dovah::loaded_forms {
 
          last_seen_type = NewType;
       };
+      
+      //
+      // Re: `already_in_next_subrecord`: see comments in `Package::load`.
+      //
+      bool  already_in_next_subrecord = false;
+      auto& subrecord = record.get_current_subrecord();
+      while ((already_in_next_subrecord && record.get_current_subrecord()) || record.next_subrecord()) {
+         already_in_next_subrecord = false;
 
-      while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
          switch (subrecord.signature()) {
@@ -350,6 +379,7 @@ namespace dovah::loaded_forms {
             case 'PKCU':
                _handle_typed_header.template operator()<legacy_type::custom>();
                structs::typed_package_info::custom::generate_header_use_info(record, typed_uib);
+               already_in_next_subrecord = true;
                break;
             case structs::typed_package_info::dialogue::header_subrecord:
                _handle_typed_header.template operator()<legacy_type::dialogue>();
