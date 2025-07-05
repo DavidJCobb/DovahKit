@@ -28,7 +28,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
       // Spawn [our equivalent to] BGSPackageData objects and load their values.
       //
       for (size_t i = 0; i < count; ++i) {
-         auto& subrecord = record.next_subrecord();
+         auto& subrecord = record.get_current_subrecord();
          auto& entry     = this->entries.emplace_back();
 
          custom_packages::package_data::load_context context;
@@ -42,7 +42,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
       //
       std::bitset<255> ids_already_assigned;
       for (uint32_t i = 0; i < count; ++i) {
-         auto& subrecord = record.next_subrecord();
+         auto& subrecord = record.get_current_subrecord();
          auto& entry     = this->entries[i];
          auto* packdata  = entry.value.get();
          switch (subrecord.signature()) {
@@ -93,6 +93,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
                }
                break;
          }
+         record.next_subrecord();
       }
 
       record.next_subrecord();
@@ -111,7 +112,6 @@ namespace dovah::loaded_forms::structs::custom_packages {
    /*static*/ void package_data_value_map::generate_use_info(tes_record_reader& record, size_t count, form_stub_use_info_builder& uib) {
       // Value list:
       for (size_t i = 0; i < count; ++i) {
-         auto& subrecord = record.next_subrecord();
          custom_packages::package_data::generate_use_info(record, uib);
       }
 

@@ -2,7 +2,7 @@
 #include <cstdint>
 
 namespace dovah::packages {
-   enum class target_type : uint8_t {
+   enum class target_type : uint32_t {
       reference                 = 0, // REFR form (warns if not persistent)
       object                    = 1, // general form
       object_type               = 2,

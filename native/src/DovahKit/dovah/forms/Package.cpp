@@ -97,8 +97,12 @@ namespace dovah::loaded_forms {
       std::optional<structs::package_location> legacy_location_1;
       std::optional<structs::package_target>   legacy_target_1;
 
-      size_t orphaned_condition_count = 0;
-      while (auto& subrecord = record.next_subrecord()) {
+      size_t orphaned_condition_count  = 0;
+      bool   already_in_next_subrecord = false;
+      auto& subrecord = record.get_current_subrecord();
+      while ((already_in_next_subrecord && record.get_current_subrecord()) || record.next_subrecord()) {
+         already_in_next_subrecord = false;
+
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
          switch (subrecord.signature()) {
@@ -176,30 +180,44 @@ namespace dovah::loaded_forms {
             #pragma region Custom package data
             case structs::typed_package_info::ambush::header_subrecord:
                this->_force_type_during_load(legacy_type::ambush, true, intfc);
+               this->typed_info->load(record, intfc);
                break;
             case 'PKCU':
                this->_force_type_during_load(legacy_type::custom, true, intfc);
+               this->typed_info->load(record, intfc);
+               //
+               // When we finish loading `custom` typed info, we're already in the next subrecord. 
+               // The logic for loading TESCustomPackageData just kinda shakes out that way.
+               //
+               already_in_next_subrecord = true;
                break;
             case structs::typed_package_info::dialogue::header_subrecord:
                this->_force_type_during_load(legacy_type::dialogue, true, intfc);
+               this->typed_info->load(record, intfc);
                break;
             case structs::typed_package_info::escort::header_subrecord:
                this->_force_type_during_load(legacy_type::escort, true, intfc);
+               this->typed_info->load(record, intfc);
                break;
             case structs::typed_package_info::eat::header_subrecord:
                this->_force_type_during_load(legacy_type::eat, true, intfc);
+               this->typed_info->load(record, intfc);
                break;
             case structs::typed_package_info::follow::header_subrecord:
                this->_force_type_during_load(legacy_type::follow, true, intfc);
+               this->typed_info->load(record, intfc);
                break;
             case structs::typed_package_info::patrol::header_subrecord:
                this->_force_type_during_load(legacy_type::patrol, true, intfc);
+               this->typed_info->load(record, intfc);
                break;
             case structs::typed_package_info::use_weapon::header_subrecord:
                this->_force_type_during_load(legacy_type::use_weapon, true, intfc);
+               this->typed_info->load(record, intfc);
                break;
             case structs::typed_package_info::use_item_at::header_subrecord:
                this->_force_type_during_load(legacy_type::use_item_at, true, intfc);
+               this->typed_info->load(record, intfc);
                break;
             #pragma endregion
 

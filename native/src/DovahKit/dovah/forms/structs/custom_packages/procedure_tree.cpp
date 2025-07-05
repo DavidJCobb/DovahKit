@@ -39,8 +39,8 @@ namespace dovah::loaded_forms::structs::custom_packages {
          assert(std::holds_alternative<procedure_node_data::branch>(parent.data));
          auto& branch_data = std::get<procedure_node_data::branch>(parent.data);
 
+         size_t child_index = parent_index + 1;
          for (size_t i = 0; i < child_count; ++i) {
-            size_t child_index = parent_index + 1 + i;
             auto&  child_info  = nodes[child_index];
             auto&  child_ptr   = child_info.ptr;
             auto*  child       = child_ptr.get();
@@ -48,11 +48,12 @@ namespace dovah::loaded_forms::structs::custom_packages {
             branch_data.children.push_back(std::move(child_ptr));
 
             if (auto* casted = std::get_if<procedure_node_data::branch>(&child->data)) {
-               recurse(*child, child_index, child_info.child_count);
-               parent_index += child_info.child_count;
+               child_index = recurse(*child, child_index, child_info.child_count);
+            } else {
+               ++child_index;
             }
          }
-         return parent_index + 1;
+         return child_index;
       };
       
       this->root = std::move(nodes[0].ptr);

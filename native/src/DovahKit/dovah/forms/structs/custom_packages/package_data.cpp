@@ -40,6 +40,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
          );
          intfc.log_load_warning(notice);
 
+         record.next_subrecord();
          return std::make_unique<package_data_unknown>();
       }
       std::unique_ptr<package_data> result;
@@ -115,6 +116,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
    }
    /*static*/ void package_data::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       if (record.get_current_subrecord().signature() != subrecord_typename) {
+         record.next_subrecord();
          return;
       }
       std::string serialized_typename;

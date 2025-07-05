@@ -2,7 +2,7 @@
 #include <cstdint>
 
 namespace dovah::packages {
-   enum class location_type : uint8_t {
+   enum class location_type : uint32_t {
       reference                   =  0, // REFR form (warns if not persistent)
       interior_cell               =  1, // CELL form
       near_package_start_location =  2,

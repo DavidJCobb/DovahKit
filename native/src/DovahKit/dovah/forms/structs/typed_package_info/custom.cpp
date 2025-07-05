@@ -31,6 +31,7 @@ namespace dovah::loaded_forms::structs::typed_package_info {
       // NOTE: If the revision number can't be stored in a uint16_t without truncation, 
       // then the Creation Kit will warn about it.
       //
+      record.next_subrecord();
 
       this->data.values.load(record, intfc, package_data_count);
 

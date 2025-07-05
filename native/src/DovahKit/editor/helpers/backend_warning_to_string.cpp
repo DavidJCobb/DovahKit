@@ -1124,7 +1124,7 @@ namespace editor_helpers {
                   return QObject::tr(
                      "Package %1 is supposed to contain a list of internal \"unique IDs\" for all of its Package Data. "
                      "These should be a set of UNAM subrecords, one per package data. However, subrecord #%2 was instead "
-                     "a %3 subrecord. The game, Creation Kit, and DovahKit will treat this a sif it were a UNAM subrecord "
+                     "a %3 subrecord. The game, Creation Kit, and DovahKit will treat this as if it were a UNAM subrecord "
                      "whose content was the unique ID %2.",
                      disambig
                   ).arg(subject).arg(casted->which).arg(signature);
