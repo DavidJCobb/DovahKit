@@ -43,3 +43,4 @@ namespace dovah::loaded_forms::structs::typed_package_info {
 
       this->repeatable = false;
    }
+}

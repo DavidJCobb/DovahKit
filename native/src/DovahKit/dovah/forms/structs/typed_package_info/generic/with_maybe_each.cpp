@@ -8,7 +8,7 @@ namespace dovah::loaded_forms::structs::typed_package_info::generic {
    /*virtual*/ void with_maybe_each::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) /*override*/ {
    }
    /*virtual*/ base* with_maybe_each::clone(loaded_forms::Form& owner_of_clone) const noexcept /*override*/ {
-      auto  clone_ptr = std::make_unique<with_maybe_each>();
+      auto  clone_ptr = std::make_unique<with_maybe_each>(this->type);
       auto* clone     = clone_ptr.get();
       
       {

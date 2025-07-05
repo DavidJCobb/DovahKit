@@ -43,14 +43,14 @@ namespace dovah::loaded_forms::structs {
          void set_type(Form& my_owner, target_type);
 
          template<target_type PLT>
-         auto* as_type() {
+         std::variant_alternative_t<(size_t)PLT, data_variant>* as_type() {
             if (this->data.index() != (size_t)PLT)
                return nullptr;
             return &std::get<(size_t)PLT>(this->data);
          };
          //
          template<target_type PLT>
-         const auto* as_type() const {
+         const std::variant_alternative_t<(size_t)PLT, data_variant>* as_type() const {
             if (this->data.index() != (size_t)PLT)
                return nullptr;
             return &std::get<(size_t)PLT>(this->data);

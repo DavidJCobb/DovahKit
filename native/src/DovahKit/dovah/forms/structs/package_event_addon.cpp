@@ -11,7 +11,7 @@ namespace dovah::loaded_forms::structs {
                if (auto& form = this->idle; subrecord.read(form))
                   intfc.warn_if_ref_is_wrong_type(form, dovah::form_type::idle, subrecord);
                break;
-            case package_data_topic::subrecord_modern:
+            case package_topic::subrecord_modern: // the legacy subrecord is not supported here
                this->topic.load(subrecord, intfc);
                exit = true;
                break;
@@ -28,11 +28,7 @@ namespace dovah::loaded_forms::structs {
    }
    void package_event_addon::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       record.write_formID_subrecord('INAM', this->idle, false);
-      {
-         auto& subrecord = record.open_next_subrecord(package_data_topic::subrecord_modern);
-         this->topic.save(subrecord, intfc);
-         subrecord.close();
-      }
+      this->topic.save(record, intfc);
    }
 
    void package_event_addon::clone_from(const package_event_addon& src, Form& my_owner) noexcept {
@@ -57,7 +53,7 @@ namespace dovah::loaded_forms::structs {
             case 'INAM':
                subrecord.read(this->idle);
                break;
-            case package_data_topic::subrecord_modern:
+            case package_topic::subrecord_modern:
                {
                   uint32_t type = 0;
                   subrecord.read(type);

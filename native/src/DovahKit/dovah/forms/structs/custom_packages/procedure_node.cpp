@@ -35,7 +35,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
             sig
          );
          intfc.log_load_warning(notice);
-         return;
+         return 0;
       }
       std::string serialized_typename;
       record.get_current_subrecord().read(serialized_typename);

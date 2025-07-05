@@ -27,7 +27,7 @@ namespace dovah::loaded_forms::structs::typed_package_info {
          virtual bool is_of_legacy_type(legacy_type t) const noexcept override { return t == type; };
 
          virtual void load(tes_record_reader&, load_order_interfaces::form_load&) override;
-         static void generate_header_use_info(tes_record_reader&, form_stub_use_info_builder&);
+         static void generate_header_use_info(tes_record_reader&, form_stub_use_info_builder&) {};
          virtual void save(tes_record_writer&, load_order_interfaces::form_save&) override;
          virtual base* clone(loaded_forms::Form& owner_of_clone) const noexcept override;
          virtual void sever_outbound_references_to(form_stub&, loaded_forms::Form& my_containing_form) noexcept override;

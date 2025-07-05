@@ -22,29 +22,8 @@ namespace dovah::loaded_forms::structs::custom_packages {
       auto& subrecord = record.get_current_subrecord();
       switch (subrecord.signature()) {
          case subrecord_legacy:
-            {
-               auto& form = this->data.emplace<form_reference_t>();
-               if (subrecord.read(form))
-                  intfc.warn_if_ref_is_wrong_type(form, dovah::form_type::topic, subrecord);
-            }
-            break;
          case subrecord_modern:
-            {
-               serialized_type type = serialized_type::topic_form;
-               subrecord.read(type);
-               switch (type) {
-                  case serialized_type::topic_form:
-                     {
-                        auto& form = this->data.emplace<form_reference_t>();
-                        if (subrecord.read(form))
-                           intfc.warn_if_ref_is_wrong_type(form, dovah::form_type::topic, subrecord);
-                     }
-                     break;
-                  case serialized_type::topic_subtype:
-                     subrecord.read(this->data.emplace<uint32_t>());
-                     break;
-               }
-            }
+            this->data.load(subrecord, intfc);
             break;
          default:
             specific_load_warnings::package_data_unexpected_value_subrecord notice(
@@ -59,58 +38,28 @@ namespace dovah::loaded_forms::structs::custom_packages {
       record.next_subrecord();
    }
    /*static*/ void package_data_topic::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
-      form_id_t topic;
-
-      auto& subrecord = record.get_current_subrecord();
-      if (subrecord.signature() == subrecord_legacy) {
-         subrecord.read(topic);
-      } else if (subrecord.signature() == subrecord_modern) {
-         serialized_type type = serialized_type::topic_form;
-         subrecord.read(type);
-         switch (type) {
-            case serialized_type::topic_form:
-               subrecord.read(topic);
-               break;
-         }
-      } else {
-         return;
+      switch (record.get_current_subrecord().signature()) {
+         case subrecord_legacy:
+         case subrecord_modern:
+            package_topic::generate_use_info(record.get_current_subrecord(), uib);
+            break;
       }
-      if (topic)
-         uib.add_outbound_reference(topic);
-      record.next_subrecord();
    };
    /*virtual*/ void package_data_topic::save_value(tes_record_writer& record, load_order_interfaces::form_save& intfc) /*override*/ {
-      auto& subrecord = record.open_next_subrecord(subrecord_modern);
-      if (std::holds_alternative<form_reference_t>(this->data)) {
-         subrecord.write(serialized_type::topic_form);
-         subrecord.write(std::get<form_reference_t>(this->data));
-      } else {
-         subrecord.write(serialized_type::topic_subtype);
-         subrecord.write(std::get<uint32_t>(this->data));
-      }
-      subrecord.close();
+      this->data.save(record, intfc);
    }
    /*virtual*/ package_data* package_data_topic::clone(loaded_forms::Form& owner_of_clone) const noexcept /*override*/ {
       auto  copy_ptr = std::make_unique<package_data_topic>();
       auto* copy = copy_ptr.get();
 
-      if (std::holds_alternative<form_reference_t>(this->data)) {
-         copy->data.emplace<form_reference_t>().set(owner_of_clone, std::get<form_reference_t>(this->data));
-      } else {
-         copy->data.emplace<uint32_t>() = std::get<uint32_t>(this->data);
-      }
+      copy->data.clone_from(this->data, owner_of_clone);
 
       return copy_ptr.release();
    }
    /*virtual*/ void package_data_topic::sever_outbound_references_to(form_stub& other, loaded_forms::Form& my_owner) noexcept /*override*/ {
-      if (std::holds_alternative<form_reference_t>(this->data)) {
-         std::get<form_reference_t>(this->data).clear_if(my_owner, other);
-      }
+      this->data.sever_outbound_references_to(other, my_owner);
    }
    /*virtual*/ void package_data_topic::clear(loaded_forms::Form& my_owner) /*override*/ {
-      if (std::holds_alternative<form_reference_t>(this->data)) {
-         std::get<form_reference_t>(this->data).set(my_owner, nullptr);
-      }
-      this->data.emplace<uint32_t>() = 0;
+      this->data.clear(my_owner);
    }
 }

@@ -3237,6 +3237,15 @@
     <ClCompile Include="dovah\forms\structs\typed_package_info\generic\with_maybe_each.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\structs\package_topic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data\target_selector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data\single_ref.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8042,9 +8051,6 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_tree_has_orphaned_nodes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="helpers\optional_ref.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\procedure_node_unrecognized_typename.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -8094,6 +8100,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\legacy_type_unrecognized.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\package_topic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

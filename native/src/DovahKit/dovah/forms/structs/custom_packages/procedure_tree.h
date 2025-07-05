@@ -13,7 +13,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
       public:
          template<typename Functor>
          void for_each_node(Functor&& functor) {
-            auto traverse = [&functor](this auto&& recurse, procedure_node& node) {
+            auto traverse = [&functor](this auto&& recurse, procedure_node& node) -> void {
                functor(node);
                if (auto* casted = std::get_if<procedure_node_data::branch>(&node.data)) {
                   for (auto& child_ptr : casted->children)

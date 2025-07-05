@@ -41,35 +41,37 @@ namespace dovah::loaded_forms {
                   intfc.warn_if_ref_is_wrong_type(last_seen_static, form_type::statik, subrecord.signature());
                break;
             case 'DATA':
-               size_t count = subrecord.size() / 0x1C;
-               if (!count)
-                  break;
-               if (!last_seen_static) {
-                  orphaned_instances_count += count;
-                  break;
-               }
                {
-                  form_instance_list* list = nullptr;
-                  for (auto& item : this->forms) {
-                     if (item.base_form == last_seen_static) {
-                        list = &item;
-                        break;
+                  size_t count = subrecord.size() / 0x1C;
+                  if (!count)
+                     break;
+                  if (!last_seen_static) {
+                     orphaned_instances_count += count;
+                     break;
+                  }
+                  {
+                     form_instance_list* list = nullptr;
+                     for (auto& item : this->forms) {
+                        if (item.base_form == last_seen_static) {
+                           list = &item;
+                           break;
+                        }
                      }
-                  }
-                  if (!list) {
-                     auto& item = this->forms.emplace_back();
-                     item.base_form = last_seen_static;
-                     list = &item;
-                  }
-                  for (size_t i = 0; i < count; ++i) {
-                     auto& item = list->instances.emplace_back();
-                     subrecord.unchecked_read(item.pos.x);
-                     subrecord.unchecked_read(item.pos.y);
-                     subrecord.unchecked_read(item.pos.z);
-                     subrecord.unchecked_read(item.rot.x);
-                     subrecord.unchecked_read(item.rot.y);
-                     subrecord.unchecked_read(item.rot.z);
-                     subrecord.unchecked_read(item.scale);
+                     if (!list) {
+                        auto& item = this->forms.emplace_back();
+                        item.base_form = last_seen_static;
+                        list = &item;
+                     }
+                     for (size_t i = 0; i < count; ++i) {
+                        auto& item = list->instances.emplace_back();
+                        subrecord.unchecked_read(item.pos.x);
+                        subrecord.unchecked_read(item.pos.y);
+                        subrecord.unchecked_read(item.pos.z);
+                        subrecord.unchecked_read(item.rot.x);
+                        subrecord.unchecked_read(item.rot.y);
+                        subrecord.unchecked_read(item.rot.z);
+                        subrecord.unchecked_read(item.scale);
+                     }
                   }
                }
                break;

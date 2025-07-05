@@ -8,7 +8,7 @@ namespace dovah::loaded_forms::structs::typed_package_info::generic {
    /*virtual*/ void with_target::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) /*override*/ {
    }
    /*virtual*/ base* with_target::clone(loaded_forms::Form& owner_of_clone) const noexcept /*override*/ {
-      auto  clone_ptr = std::make_unique<with_target>();
+      auto  clone_ptr = std::make_unique<with_target>(this->type);
       auto* clone     = clone_ptr.get();
 
       clone->target.clone_from(this->target, owner_of_clone);

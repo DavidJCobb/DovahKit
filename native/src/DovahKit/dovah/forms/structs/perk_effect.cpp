@@ -120,7 +120,7 @@ namespace dovah::loaded_forms::structs {
                   case type::entry_point:
                      {
                         auto& casted = std::get<data_types::entry_point>(this->data);
-                        subrecord.read(casted.entry_point);
+                        subrecord.read(casted.entry);
                         subrecord.read(casted.function.function);
                         subrecord.read(perk_condition_tab_count);
                      }
@@ -279,7 +279,7 @@ namespace dovah::loaded_forms::structs {
                auto& casted = std::get<data_types::entry_point>(this->data);
                { // DATA
                   auto& subrecord = record.open_next_subrecord('DATA');
-                  subrecord.write(casted.entry_point);
+                  subrecord.write(casted.entry);
                   subrecord.write(casted.function.function);
 
                   uint8_t group_count = 0;
@@ -329,7 +329,7 @@ namespace dovah::loaded_forms::structs {
             {
                auto& src_data = std::get<data_types::entry_point>(src.data);
                auto& dst_data = std::get<data_types::entry_point>(this->data);
-               dst_data.entry_point = src_data.entry_point;
+               dst_data.entry = src_data.entry;
                dst_data.function.clone_from(src_data.function, my_owner);
 
                size_t size = src_data.condition_groups.size();

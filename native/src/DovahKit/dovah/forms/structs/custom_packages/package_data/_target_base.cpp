@@ -52,14 +52,6 @@ namespace dovah::loaded_forms::structs::custom_packages {
       this->data.save(subrecord, intfc);
       subrecord.close();
    }
-   /*virtual*/ package_data* package_data_target_base::clone(loaded_forms::Form& owner_of_clone) const noexcept /*override*/ {
-      auto  copy_ptr = std::make_unique<package_data_target_base>();
-      auto* copy = copy_ptr.get();
-
-      copy->data.clone_from(this->data, owner_of_clone);
-
-      return copy_ptr.release();
-   }
    /*virtual*/ void package_data_target_base::sever_outbound_references_to(form_stub& other, loaded_forms::Form& my_owner) noexcept /*override*/ {
       this->data.sever_outbound_references_to(other, my_owner);
    }

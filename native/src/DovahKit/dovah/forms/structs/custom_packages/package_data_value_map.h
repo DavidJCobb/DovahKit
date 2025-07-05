@@ -4,10 +4,7 @@
 #include <string>
 #include <vector>
 #include "../../_common.h"
-
-namespace dovah::loaded_forms::structs::custom_packages {
-   class package_data;
-}
+#include "./package_data.h"
 
 namespace dovah::loaded_forms::structs::custom_packages {
    class package_data_value_map { // counterpart to BGSPackageDataList

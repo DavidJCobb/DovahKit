@@ -1,20 +1,18 @@
 #pragma once
 #include <variant>
 #include "../package_data.h"
+#include "../../package_topic.h"
 
 namespace dovah::loaded_forms::structs::custom_packages {
    class package_data_topic : public package_data {
       public:
          static constexpr const char* const serialized_typename = "Topic";
          
-         static constexpr const uint32_t subrecord_legacy = 'TPIC';
-         static constexpr const uint32_t subrecord_modern = 'PDTO';
+         static constexpr const uint32_t subrecord_legacy = package_topic::subrecord_legacy;
+         static constexpr const uint32_t subrecord_modern = package_topic::subrecord_modern;
 
       public:
-         std::variant<
-            uint32_t,        // topic subtype signature
-            form_reference_t // topic
-         > data;
+         package_topic data;
 
       public:
          virtual package_data_type get_type() const noexcept { return package_data_type::topic; }

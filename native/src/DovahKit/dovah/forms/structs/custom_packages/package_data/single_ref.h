@@ -8,5 +8,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
 
       public:
          virtual package_data_type get_type() const noexcept { return package_data_type::single_ref; }
+
+         virtual package_data* clone(loaded_forms::Form& owner_of_clone) const noexcept override;
    };
 }

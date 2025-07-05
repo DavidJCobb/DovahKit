@@ -1,7 +1,6 @@
 #pragma once
 #include <memory>
 #include <vector>
-#include "helpers/optional_ref.h"
 #include "./base.h"
 #include "../custom_packages/package_data_declaration_map.h"
 #include "../custom_packages/package_data_value_map.h"

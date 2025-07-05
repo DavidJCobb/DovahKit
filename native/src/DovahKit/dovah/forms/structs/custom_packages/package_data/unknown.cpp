@@ -5,8 +5,6 @@
 namespace dovah::loaded_forms::structs::custom_packages {
    /*virtual*/ void package_data_unknown::load_value(tes_record_reader& record, load_order_interfaces::form_load& intfc, const load_context& context) /*override*/ {
    }
-   /*static*/ void package_data_unknown::generate_use_info(tes_record_reader& record, std::vector<form_id_t>& out) {
-   };
    /*virtual*/ void package_data_unknown::save_value(tes_record_writer& record, load_order_interfaces::form_save& intfc) /*override*/ {
    }
    /*virtual*/ package_data* package_data_unknown::clone(loaded_forms::Form& owner_of_clone) const noexcept /*override*/ {

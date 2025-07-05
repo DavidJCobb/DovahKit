@@ -5,7 +5,7 @@
 
 namespace dovah::packages {
    enum class legacy_type : uint8_t {
-      invalid = -1,
+      invalid = std::numeric_limits<uint8_t>::max(),
       
       find            =  0,
       follow          =  1,

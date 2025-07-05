@@ -167,6 +167,8 @@
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data\int.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data\location.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data\object_list.cpp" />
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data\single_ref.cpp" />
+    <ClCompile Include="dovah\forms\structs\custom_packages\package_data\target_selector.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data\topic.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data\unknown.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data\_target_base.cpp" />
@@ -181,6 +183,7 @@
     <ClCompile Include="dovah\forms\structs\package_location.cpp" />
     <ClCompile Include="dovah\forms\structs\package_schedule.cpp" />
     <ClCompile Include="dovah\forms\structs\package_target.cpp" />
+    <ClCompile Include="dovah\forms\structs\package_topic.cpp" />
     <ClCompile Include="dovah\forms\structs\perk_entry_point_data.cpp" />
     <ClCompile Include="dovah\forms\components\harvestable.cpp" />
     <ClCompile Include="dovah\forms\components\leveled_list.cpp" />
@@ -1334,6 +1337,7 @@
     <ClInclude Include="dovah\forms\structs\package_location.h" />
     <ClInclude Include="dovah\forms\structs\package_schedule.h" />
     <ClInclude Include="dovah\forms\structs\package_target.h" />
+    <ClInclude Include="dovah\forms\structs\package_topic.h" />
     <ClInclude Include="dovah\forms\structs\perk_entry_point_data.h" />
     <ClInclude Include="dovah\forms\components\harvestable.h" />
     <ClInclude Include="dovah\forms\components\leveled_list.h" />
@@ -1649,7 +1653,6 @@
     <QtMoc Include="ui\form_windows\ingredient.h" />
     <QtMoc Include="ui\form_windows\effectshader.h" />
     <QtMoc Include="ui\form_windows\combat_style.h" />
-    <ClInclude Include="helpers\optional_ref.h" />
     <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h" />
     <QtMoc Include="ui\form_windows\potion.h" />
     <QtMoc Include="ui\form_windows\material_type.h" />

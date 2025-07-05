@@ -1,13 +1,13 @@
 #pragma once
 #include <cstdint>
 #include "../_common.h"
-#include "./package_data_topic.h"
+#include "./package_topic.h"
 
 namespace dovah::loaded_forms::structs {
    struct package_event_addon {
       public:
-         form_reference_t   idle;
-         package_data_topic topic;
+         form_reference_t idle;
+         package_topic    topic;
 
       public:
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);

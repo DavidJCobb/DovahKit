@@ -36,7 +36,7 @@ namespace dovah::loaded_forms::structs {
                form_reference_t spell;
             };
             struct entry_point {
-               perk_entry_point      entry_point = (perk_entry_point)0;
+               perk_entry_point      entry = static_cast<perk_entry_point>(0);
                perk_entry_point_data function;
                std::vector<condition_group> condition_groups;
             };
