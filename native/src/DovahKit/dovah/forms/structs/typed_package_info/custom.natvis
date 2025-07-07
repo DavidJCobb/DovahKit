@@ -7,7 +7,7 @@
       <Expand>
          <Synthetic Name="[package data]" Condition="template_package.stub == 0">
             <Expand>
-               <CustomListItems MaxItemsPerView="5000" Condition="_decl_count() &amp;&amp; _decl_count() == _value_count()">
+               <CustomListItems MaxItemsPerView="5000">
                   <!-- First, list all declarations and their associated values. -->
                   <Variable Name="decl" InitialValue="&amp;data.declarations.entries[0]" />
                   <Variable Name="value" InitialValue="&amp;data.values.entries[0]" />
@@ -33,7 +33,7 @@
                      </Loop>
                      <If Condition="!found_this">
                         <!-- List any declarations not associated with a value. -->
-                        <Item Name="[{di}]">decl,na</Item>
+                        <Item Name="[{(int)decl-&gt;unique_id,d}] [{*decl,view(accessspecifieronly)}] {decl-&gt;name,nasb}">nullptr</Item>
                      </If>
                      <Exec>++decl</Exec>
                      <Exec>++di</Exec>

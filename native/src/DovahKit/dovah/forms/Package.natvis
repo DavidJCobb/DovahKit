@@ -4,7 +4,7 @@
       <Intrinsic Name="_is_legacy" Expression="type != dovah::packages::legacy_type::custom &amp;&amp; type != dovah::packages::legacy_type::custom_template" />
       
       <Expand>
-         <Item Name="dovah::loaded_forms::Form">(dovah::loaded_forms::Form*)this,nd</Item>
+         <Item Name="dovah::loaded_forms::Form">(dovah::loaded_forms::Form*)this,ndna</Item>
          <Item Name="[conditions]">conditions</Item>
          <Item Name="[idles]">idles</Item>
          <Item Name="[papyrus]">script_data</Item>

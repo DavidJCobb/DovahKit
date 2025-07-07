@@ -69,6 +69,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
       }
       while (record.get_current_subrecord().signature() == 'CTDA') {
          this->conditions.read_next(record, intfc);
+         record.next_subrecord();
       }
 
       if (is_leaf) {
@@ -109,6 +110,7 @@ namespace dovah::loaded_forms::structs::custom_packages {
       }
       while (record.get_current_subrecord().signature() == 'CTDA') {
          components::condition::generate_use_info(record, uib);
+         record.next_subrecord();
       }
 
       if (is_leaf) {

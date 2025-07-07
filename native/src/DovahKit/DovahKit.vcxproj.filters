@@ -9808,5 +9808,18 @@
     <Natvis Include="dovah\forms\components\conditions.natvis" />
     <Natvis Include="dovah\forms\components\conditions\parameter.natvis" />
     <Natvis Include="dovah\forms\Scene.natvis" />
+    <Natvis Include="dovah\forms\structs\package_target.natvis" />
+    <Natvis Include="dovah\forms\structs\package_location.natvis" />
+    <Natvis Include="dovah\forms\structs\custom_packages\procedure_node.natvis" />
+    <Natvis Include="dovah\forms\structs\custom_packages\procedure_nodes\procedure.natvis" />
+    <Natvis Include="dovah\forms\structs\custom_packages\procedure_nodes\branch.natvis" />
+    <Natvis Include="dovah\forms\structs\custom_packages\package_data_value_map.natvis" />
+    <Natvis Include="dovah\forms\structs\custom_packages\package_data_declaration_map.natvis" />
+    <Natvis Include="dovah\forms\structs\custom_packages\package_data.natvis" />
+    <Natvis Include="dovah\forms\structs\custom_packages\procedure_tree.natvis" />
+    <Natvis Include="dovah\forms\structs\typed_package_info\custom.natvis" />
+    <Natvis Include="dovah\forms\Package.natvis" />
+    <Natvis Include="dovah\forms\structs\package_topic.natvis" />
+    <Natvis Include="dovah\form_reference_t.natvis" />
   </ItemGroup>
 </Project>

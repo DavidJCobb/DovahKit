@@ -20,7 +20,7 @@
       
       <DisplayString>{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}:{header.formID,Xb} v{header.version,d}</DisplayString>
       <Expand>
-         <Item Name="[file or reader]" ExcludeView="dovahkit_tesfile_already_in_file">owner</Item>
+         <Item Name="[file or reader]">owner</Item>
          <Synthetic Name="[signature]">
             <DisplayString>{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}</DisplayString>
          </Synthetic>
@@ -79,7 +79,7 @@
       
       <DisplayString>{_record_signature_char(0),[1]nasb}{_record_signature_char(1),[1]nasb}{_record_signature_char(2),[1]nasb}{_record_signature_char(3),[1]nasb}/{_signature_char(0),[1]nasb}{_signature_char(1),[1]nasb}{_signature_char(2),[1]nasb}{_signature_char(3),[1]nasb}</DisplayString>
       <Expand>
-         <Item Name="[file or reader]" ExcludeView="dovahkit_tesfile_already_in_file">owner</Item>
+         <Item Name="[file or reader]">owner</Item>
          <Item Name="[containing record]">owner._record</Item>
          <Item Name="[size]">header.size</Item>
          <Synthetic Name="[pointers]">

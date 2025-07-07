@@ -106,4 +106,12 @@
          </Synthetic>
       </Expand>
    </Type>
+   
+   <Type Name="dovah::loaded_form_ptr&lt;*&gt;">
+      <DisplayString Condition="wrapped">{wrapped,na}</DisplayString>
+      <Expand>
+         <ExpandedItem Condition="wrapped &amp;&amp; wrapped-&gt;form">wrapped-&gt;form</ExpandedItem>
+         <Item Condition="!wrapped || !wrapped-&gt;form" Name="[stub]">wrapped,na</Item>
+      </Expand>
+   </Type>
 </AutoVisualizer>
