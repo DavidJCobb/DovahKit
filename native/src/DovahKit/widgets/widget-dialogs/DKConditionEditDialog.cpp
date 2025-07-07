@@ -24,8 +24,10 @@
 #include "dovah/data/conditions/parameter_underlying_type.h"
 #include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/data/story_manager.h"
+#include "dovah/forms/structs/typed_package_info/custom.h"
 #include "dovah/forms/Package.h"
 #include "dovah/forms/Quest.h"
+#include "dovah/forms/Scene.h"
 
 // for special cases: GetVMQuestVariable
 #include "dovah/files/bsa/bsa_archived_file.h"
@@ -55,6 +57,31 @@ namespace {
       constexpr const auto IsLimbGone            = _lookup_function_id_by_name("IsLimbGone");
       constexpr const auto IsPlayerActionActive  = _lookup_function_id_by_name("IsPlayerActionActive");
       constexpr const auto IsSceneActionComplete = _lookup_function_id_by_name("IsSceneActionComplete");
+   }
+}
+
+namespace {
+   dovah::loaded_forms::structs::custom_packages::package_data_declaration_map* _get_package_data_declaration_list(dovah::loaded_forms::Package* package) {
+      using modern_package_info = dovah::loaded_forms::structs::typed_package_info::custom;
+      if (!package)
+         return nullptr;
+
+      auto* custom = dynamic_cast<modern_package_info*>(package->typed_info);
+      if (!custom)
+         return nullptr;
+      //
+      // First, check if the package has a template. If so, redirect our checks to that 
+      // template.
+      //
+      if (auto* tp_stub = custom->template_package.get_form_stub(); tp_stub) {
+         package = tp_stub->load().ptr_cast<dovah::loaded_forms::Package>();
+         if (!package)
+            return nullptr;
+         custom = dynamic_cast<modern_package_info*>(package->typed_info);
+         if (!custom)
+            return nullptr;
+      }
+      return &custom->data.declarations;
    }
 }
 
@@ -582,12 +609,20 @@ void DKConditionEditDialog::_update_run_on_ui() {
          this->ui.runOnDropdown->setEnabled(true);
          this->ui.runOnDropdown->clear();
          this->ui.runOnDropdown->addItem(tr("NONE"), -1);
-         if (auto* p = this->_context.get_owning_package()) {
-            //
-            // TODO: package data
-            //
-         } else {
-            this->ui.runOnDropdown->setEnabled(false);
+         {
+            bool valid = false;
+            if (auto* package = this->_context.get_owning_package()) {
+               if (auto* decls = _get_package_data_declaration_list(package)) {
+                  valid = true;
+                  for (auto& entry : decls->entries) {
+                     if (entry.unique_id == 0xFF)
+                        continue;
+                     auto name = QString::fromStdString(entry.name);
+                     this->ui.runOnDropdown->addItem(name, (int)entry.unique_id);
+                  }
+               }
+            }
+            this->ui.runOnDropdown->setEnabled(valid);
          }
          if (auto* casted = std::get_if<uint32_t>(&entity)) {
             this->ui.runOnDropdown->setCurrentIndex(this->ui.runOnDropdown->findData(*casted));
@@ -684,6 +719,14 @@ void DKConditionEditDialog::_on_parameter_changed(size_t index, QVariant value) 
       const auto* next_typeinfo = this->_value.get_effective_argument_typeinfo(index + 1);
       if (next_typeinfo && next_typeinfo->is_union()) {
          this->_update_parameter_ui(index + 1);
+      } else {
+         switch (this->_value.function) {
+            case special_case_functions::GetVMQuestVariable:
+            case special_case_functions::GetVMScriptVariable:
+            case special_case_functions::IsSceneActionComplete:
+               this->_update_parameter_ui(index + 1);
+               break;
+         }
       }
    }
 }
@@ -999,11 +1042,49 @@ bool DKConditionEditDialog::_update_parameter_ui_for_special_case(size_t index) 
    }
    if (function_id == special_case_functions::IsSceneActionComplete) {
       //
-      // TODO: First parameter is a Scene form; second parameter is the index of an action in that 
-      //       scene. When we can load Scenes, show a drop-down of the actions instead of a spinbox.
+      // First parameter is a Scene form; second parameter is the index of an action in that 
+      // scene. When we can load Scenes, show a drop-down of the actions instead of a spinbox.
       // 
-      // TODO: Should we handle GetStageDone's quest stage parameter the same way, and remove the 
-      //       "quest stage" type that's built into the condition internals?
+      if (index != 1)
+         return false;
+
+      dovah::form_stub* scene = nullptr;
+      {
+         auto& scene_value = this->_value.parameters[index - 1];
+         if (!std::holds_alternative<dovah::form_stub*>(scene_value))
+            return false;
+         scene = std::get<dovah::form_stub*>(scene_value);
+      }
+      if (!scene)
+         return false;
+
+      auto loaded = scene->load().ptr_cast<dovah::loaded_forms::Scene>();
+
+      auto* widget = param.combobox;
+      widget->clear();
+      widget->setEditable(false);
+      if (loaded) {
+         for (auto& action : loaded->actions) {
+            auto name = QString::fromStdString(action.name);
+            if (name.isEmpty())
+               name = tr("Action #%1").arg(action.action_id);
+            else
+               name = tr("Action #%1: %2").arg(action.action_id).arg(name);
+            widget->addItem(name, (int)action.action_id);
+         }
+
+         int i = -1;
+         if (auto* casted = std::get_if<uint32_t>(&this->_value.parameters[index])) {
+            i = widget->findData(*casted);
+         }
+         if (i >= 0)
+            widget->setCurrentIndex(i);
+      }
+      param.stack->setCurrentWidget(widget);
+      return true;
+      //
+      // TODO: Should we handle GetStageDone's quest stage parameter the same way, and remove 
+      //       the "quest stage" type that's built into the condition internals?
       //
    }
    return false;
@@ -1439,9 +1520,25 @@ void DKConditionEditDialog::_update_parameter_ui(size_t index) {
          {
             auto* widget = param.combobox;
             widget->clear();
-            //
-            // TODO: package data
-            //
+            widget->setEnabled(false);
+            if (auto* package = this->_context.get_owning_package()) {
+               if (auto* decls = _get_package_data_declaration_list(package)) {
+                  bool empty = true;
+                  for (auto& entry : decls->entries) {
+                     if (entry.unique_id == 0xFF)
+                        continue;
+                     auto name = QString::fromStdString(entry.name);
+                     widget->addItem(name, (int)entry.unique_id);
+                     empty = false;
+                  }
+                  widget->setEnabled(!empty);
+                  if (std::holds_alternative<uint32_t>(value)) {
+                     auto i = widget->findData(std::get<uint32_t>(value));
+                     if (i >= 0)
+                        widget->setCurrentIndex(i);
+                  }
+               }
+            }
             param.stack->setCurrentWidget(widget);
          }
          break;

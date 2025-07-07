@@ -11,6 +11,7 @@
 #include "editor/helpers/form_type_name_to_string.h"
 #include "editor/core.h"
 
+#include "dovah/forms/structs/typed_package_info/custom.h"
 #include "dovah/forms/Package.h"
 #include "dovah/forms/Quest.h"
 
@@ -219,9 +220,27 @@ QString DKConditionListModel::_stringify_condition_parameter(const Condition& co
             if (dword == -1)
                return QObject::tr("NONE", "condition argument (no package data)");
             if (auto* package = this->_context.get_owning_package()) {
-               //
-               // TODO
-               //
+               using modern_package_info = dovah::loaded_forms::structs::typed_package_info::custom;
+
+               if (auto* custom = dynamic_cast<modern_package_info*>(package->typed_info)) {
+                  //
+                  // First, check if the package has a template. If so, redirect our checks to that 
+                  // template.
+                  //
+                  if (auto* tp_stub = custom->template_package.get_form_stub(); tp_stub) {
+                     package = tp_stub->load().ptr_cast<dovah::loaded_forms::Package>();
+                     custom  = nullptr;
+                     if (package) {
+                        custom = dynamic_cast<modern_package_info*>(package->typed_info);
+                     }
+                  }
+                  if (custom) {
+                     QString name;
+                     for (auto& entry : custom->data.declarations.entries)
+                        if (entry.unique_id == dword)
+                           return QString::fromStdString(entry.name);
+                  }
+               }
             }
             return QObject::tr("Package Data #%1", "condition argument (packge data with no identifiable owning quest)").arg(dword);
 

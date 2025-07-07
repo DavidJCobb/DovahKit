@@ -9821,5 +9821,6 @@
     <Natvis Include="dovah\forms\Package.natvis" />
     <Natvis Include="dovah\forms\structs\package_topic.natvis" />
     <Natvis Include="dovah\form_reference_t.natvis" />
+    <Natvis Include="dovah\forms\structs\package_schedule.natvis" />
   </ItemGroup>
 </Project>

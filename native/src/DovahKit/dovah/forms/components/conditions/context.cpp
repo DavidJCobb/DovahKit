@@ -3,6 +3,7 @@
 #include "../../../form_stub.h"
 #include "../../Package.h"
 #include "../../Quest.h"
+#include "../../Scene.h"
 
 namespace dovah::loaded_forms::components::conditions {
    context::context(form_stub& owner, bool prefer_working_copy) : owner(&owner), prefer_working_copy(prefer_working_copy) {
@@ -11,12 +12,14 @@ namespace dovah::loaded_forms::components::conditions {
       } else if (owner.form_type == form_type::package) {
          this->package = &owner;
          //
-         // TODO: get owning quest
+         // We'll defer getting the owning quest 'til later, since we have to 
+         // keep the package loaded anyway.
          //
       } else if (owner.form_type == form_type::scene) {
-         //
-         // TODO: get owning quest
-         //
+         auto loaded = owner.load().ptr_cast<loaded_forms::Scene>();
+         if (loaded) {
+            this->quest = loaded->owning_quest.get_form_stub();
+         }
       } else if (owner.form_type == form_type::topic) {
          auto* quest = owner.get_outbound_use_with_flag(dovah::use_info_entry::flag::dialogue_quest);
          if (quest->form_type == dovah::form_type::quest)
@@ -35,6 +38,13 @@ namespace dovah::loaded_forms::components::conditions {
             this->package = nullptr;
          else
             this->loaded.package = s->load().ptr_cast<loaded_forms::Package>();
+
+         if (this->loaded.package && !this->quest) {
+            auto* stub = this->loaded.package->owning_quest.get_form_stub();
+            if (stub && stub->form_type == form_type::quest) {
+               this->loaded.quest = stub->load().ptr_cast<loaded_forms::Quest>();
+            }
+         }
       }
       if (auto* s = this->quest) {
          if (s->form_type != form_type::quest)

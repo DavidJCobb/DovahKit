@@ -3602,6 +3602,7 @@
     <Natvis Include="dovah\forms\structs\custom_packages\procedure_nodes\procedure.natvis" />
     <Natvis Include="dovah\forms\structs\custom_packages\procedure_tree.natvis" />
     <Natvis Include="dovah\forms\structs\package_location.natvis" />
+    <Natvis Include="dovah\forms\structs\package_schedule.natvis" />
     <Natvis Include="dovah\forms\structs\package_target.natvis" />
     <Natvis Include="dovah\forms\structs\package_topic.natvis" />
     <Natvis Include="dovah\forms\structs\typed_package_info\custom.natvis" />
