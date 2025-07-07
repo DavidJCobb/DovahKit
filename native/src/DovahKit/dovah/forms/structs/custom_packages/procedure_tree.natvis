@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::loaded_forms::structs::custom_packages::procedure_tree">
+      <Expand>
+         <Item Name="[root]">root._Mypair._Myval2,na</Item>
+         <Synthetic Name="[orphans]" Condition="orphans.size() != 0">
+            <DisplayString>{{ size={orphans.size()} }}</DisplayString>
+            <Expand>
+               <CustomListItems MaxItemsPerView="5000" Condition="orphans.size() != 0">
+                  <Variable Name="item" InitialValue="&amp;orphans[0]" />
+                  <Variable Name="i" InitialValue="0" />
+                  <Size>orphans.size()</Size>
+                  <Loop>
+                     <Item Name="[{i}]">item-&gt;_Mypair._Myval2,na</Item>
+                     <Exec>++item</Exec>
+                     <Exec>++i</Exec>
+                  </Loop>
+               </CustomListItems>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+</AutoVisualizer>

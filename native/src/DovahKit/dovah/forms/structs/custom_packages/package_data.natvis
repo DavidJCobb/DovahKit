@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::loaded_forms::structs::custom_packages::package_data">
+      <Expand>
+         <Item Name="[legacy name]" Condition="name.size() != 0">name</Item>
+         <Item Name="[legacy is-public]" Condition="is_public">is_public</Item>
+      </Expand>
+   </Type>
+   
+   <Type Name="dovah::loaded_forms::structs::custom_packages::package_data_bool">
+      <DisplayString>Bool({value})</DisplayString>
+      <Expand>
+         <ExpandedItem>*(package_data*)this,nd</ExpandedItem>
+         <Item Name="[value]">value</Item>
+      </Expand>
+   </Type>
+   <Type Name="dovah::loaded_forms::structs::custom_packages::package_data_float">
+      <DisplayString>Float({value})</DisplayString>
+      <Expand>
+         <ExpandedItem>*(package_data*)this,nd</ExpandedItem>
+         <Item Name="[value]">value</Item>
+      </Expand>
+   </Type>
+   <Type Name="dovah::loaded_forms::structs::custom_packages::package_data_int">
+      <DisplayString>Int({value,d})</DisplayString>
+      <Expand>
+         <ExpandedItem>*(package_data*)this,nd</ExpandedItem>
+         <Item Name="[value]">value,d</Item>
+      </Expand>
+   </Type>
+   <Type Name="dovah::loaded_forms::structs::custom_packages::package_data_location">
+      <DisplayString>Location({data})</DisplayString>
+      <Expand>
+         <ExpandedItem>*(package_data*)this,nd</ExpandedItem>
+         <Item Name="[data]">data</Item>
+      </Expand>
+   </Type>
+   <Type Name="dovah::loaded_forms::structs::custom_packages::package_data_object_list">
+      <DisplayString>ObjectList({value})</DisplayString>
+      <Expand>
+         <ExpandedItem>*(package_data*)this,nd</ExpandedItem>
+         <Item Name="[value]">value</Item>
+      </Expand>
+   </Type>
+   <Type Name="dovah::loaded_forms::structs::custom_packages::package_data_single_ref">
+      <DisplayString>Ref({data})</DisplayString>
+      <Expand>
+         <ExpandedItem>*(package_data*)this,nd</ExpandedItem>
+         <Item Name="[data]">data</Item>
+      </Expand>
+   </Type>
+   <Type Name="dovah::loaded_forms::structs::custom_packages::package_data_target_selector">
+      <DisplayString>TargetSelector({data})</DisplayString>
+      <Expand>
+         <ExpandedItem>*(package_data*)this,nd</ExpandedItem>
+         <Item Name="[data]">data</Item>
+      </Expand>
+   </Type>
+   <Type Name="dovah::loaded_forms::structs::custom_packages::package_data_topic">
+      <DisplayString>Topic({data})</DisplayString>
+      <Expand>
+         <ExpandedItem>*(package_data*)this,nd</ExpandedItem>
+         <Item Name="[data]">data</Item>
+      </Expand>
+   </Type>
+   <Type Name="dovah::loaded_forms::structs::custom_packages::package_data_unknown">
+      <DisplayString>{type}</DisplayString>
+      <Expand>
+         <ExpandedItem>*(package_data*)this,nd</ExpandedItem>
+      </Expand>
+   </Type>
+</AutoVisualizer>

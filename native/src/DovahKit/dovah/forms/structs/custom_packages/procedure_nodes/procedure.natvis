@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::loaded_forms::structs::custom_packages::procedure_node_data::procedure">
+      <Expand>
+         <Item Name="[type]" ExcludeView="viewfromnode">type,en</Item>
+         <Synthetic Name="[flags]">
+            <DisplayString>{flags}</DisplayString>
+            <Expand>
+               <Item Name="[success completes package]">flags &amp; 1 != 0</Item>
+               <Item Name="[raw]">flags</Item>
+            </Expand>
+         </Synthetic>
+         <Item Name="[flag overrides]">flag_overrides</Item>
+         <Item Name="[parameters]">parameter_unique_ids</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

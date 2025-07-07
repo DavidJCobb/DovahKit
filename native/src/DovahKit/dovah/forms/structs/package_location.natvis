@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::loaded_forms::structs::package_location">
+      <Intrinsic Name="variant_index" Expression="(dovah::packages::location_type)data._Which"/>
+      
+      <Intrinsic Name="_data_as_ref" Expression="data._Head" />
+      <Intrinsic Name="_data_as_interior_cell" Expression="data._Tail._Head" />
+      <Intrinsic Name="_data_as_object" Expression="data._Tail._Tail._Tail._Tail._Head" />
+      <Intrinsic Name="_data_as_object_type" Expression="data._Tail._Tail._Tail._Tail._Tail._Head" />
+      <Intrinsic Name="_data_as_linked_ref_keyword" Expression="data._Tail._Tail._Tail._Tail._Tail._Tail._Head" />
+      <Intrinsic Name="_data_as_ref_alias" Expression="data._Tail._Tail._Tail._Tail._Tail._Tail._Tail._Tail._Head" />
+      <Intrinsic Name="_data_as_loc_alias" Expression="data._Tail._Tail._Tail._Tail._Tail._Tail._Tail._Tail._Tail._Head" />
+      <Intrinsic Name="_data_as_interrupt_target" Expression="data._Tail._Tail._Tail._Tail._Tail._Tail._Tail._Tail._Tail._Tail._Head" />
+      
+      <DisplayString Condition="variant_index() == dovah::packages::location_type::reference">Ref({_data_as_ref()})</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::location_type::interior_cell">Cell({_data_as_interior_cell()})</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::location_type::near_package_start_location">Near Package Start Location</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::location_type::near_editor_location">Near Editor Location</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::location_type::object">Object({_data_as_object()})</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::location_type::object_type">Object Type({_data_as_object_type(),en})</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::location_type::linked_ref">Linked Ref with Keyword({_data_as_linked_ref_keyword()})</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::location_type::at_package_location">At Package Location</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::location_type::reference_alias">Reference Alias ID({_data_as_ref_alias()})</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::location_type::location_alias">Location Alias ID({_data_as_loc_alias()})</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::location_type::interrupt_override_target">Interrupt Target({_data_as_interrupt_target(),en})</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::location_type::self">Near Self</DisplayString>
+      <Expand>
+         <Item Name="[type]">variant_index(),en</Item>
+         <Item Condition="variant_index() == dovah::packages::location_type::reference" Name="[reference]">_data_as_ref()</Item>
+         <Item Condition="variant_index() == dovah::packages::location_type::object" Name="[object]">_data_as_object()</Item>
+         <Item Condition="variant_index() == dovah::packages::location_type::object_type" Name="[object type]">_data_as_object_type(),en</Item>
+         <Item Condition="variant_index() == dovah::packages::location_type::linked_ref" Name="[linked ref keyword]">_data_as_linked_ref_keyword()</Item>
+         <Item Condition="variant_index() == dovah::packages::location_type::reference_alias" Name="[ref alias ID]">_data_as_ref_alias()</Item>
+         <Item Condition="variant_index() == dovah::packages::location_type::location_alias" Name="[loc alias ID]">_data_as_loc_alias()</Item>
+         <Item Condition="variant_index() == dovah::packages::location_type::interrupt_override_target" Name="[interrupt target]">_data_as_interrupt_target(),en</Item>
+         <Item Name="[radius]">radius</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

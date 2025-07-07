@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::loaded_forms::structs::custom_packages::package_data_declaration_map">
+      <Expand>
+         <CustomListItems Condition="entries.size() != 0">
+            <Variable Name="item" InitialValue="&amp;entries[0]"/>
+            <Size>entries.size()</Size>
+            <Loop>
+               <Item Condition="item-&gt;id_is_none()" Name="{*item,view(mapkey)} None">*item,view(viewfrommap)</Item>
+               <Item Condition="!item-&gt;id_is_none()" Name="{*item,view(mapkey)}">*item,view(viewfrommap)</Item>
+               <Exec>item++</Exec>
+            </Loop>
+         </CustomListItems>
+      </Expand>
+   </Type>
+   
+   <Type Name="dovah::loaded_forms::structs::custom_packages::package_data_declaration_map::entry">
+      <Intrinsic Name="id_is_none" Expression="unique_id == 255" />
+      
+      <DisplayString IncludeView="accessspecifieronly" Condition="is_public">public</DisplayString>
+      <DisplayString IncludeView="accessspecifieronly" Condition="!is_public">private</DisplayString>
+      
+      <DisplayString IncludeView="mapkey" Condition="is_public &amp;&amp; id_is_none()">public None</DisplayString>
+      <DisplayString IncludeView="mapkey" Condition="is_public &amp;&amp; !id_is_none()">public {(int)unique_id,d}</DisplayString>
+      <DisplayString IncludeView="mapkey" Condition="!is_public &amp;&amp; id_is_none()">private None</DisplayString>
+      <DisplayString IncludeView="mapkey" Condition="!is_public &amp;&amp; !id_is_none()">private {(int)unique_id,d}</DisplayString>
+      <DisplayString IncludeView="mapkey">{unique_id,d}</DisplayString>
+      
+      <DisplayString IncludeView="viewfrommap">{name,nasb}</DisplayString>
+      
+      <DisplayString Condition="!is_public">private {name}</DisplayString>
+      <DisplayString>public {name}</DisplayString>
+      <Expand>
+         <Item Name="[unique id]" ExcludeView="viewfrommap">unique_id,d</Item>
+         <Item Name="[name]">name</Item>
+         <Item Name="[is public]">is_public</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

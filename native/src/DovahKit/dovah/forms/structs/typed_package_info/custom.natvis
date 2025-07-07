@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::loaded_forms::structs::typed_package_info::custom">
+      <Intrinsic Name="_decl_count" Expression="data.declarations.entries.size()" />
+      <Intrinsic Name="_value_count" Expression="data.values.entries.size()" />
+      
+      <Expand>
+         <Synthetic Name="[package data]" Condition="template_package.stub == 0">
+            <Expand>
+               <CustomListItems MaxItemsPerView="5000" Condition="_decl_count() &amp;&amp; _decl_count() == _value_count()">
+                  <!-- First, list all declarations and their associated values. -->
+                  <Variable Name="decl" InitialValue="&amp;data.declarations.entries[0]" />
+                  <Variable Name="value" InitialValue="&amp;data.values.entries[0]" />
+                  <Variable Name="di" InitialValue="0" />
+                  <Variable Name="vi" InitialValue="0" />
+                  <Variable Name="found_this" InitialValue="false" />
+                  <Loop>
+                     <Break Condition="di &gt;= _decl_count()" />
+                     <Exec>value = &amp;data.values.entries[0]</Exec>
+                     <Exec>vi = 0</Exec>
+                     <Exec>found_this = false</Exec>
+                     <Loop>
+                        <Break Condition="vi &gt;= _value_count()" />
+                        <If Condition="value-&gt;unique_id == decl-&gt;unique_id">
+                           <Exec>found_this = true</Exec>
+                           <Item Name="[{(int)value-&gt;unique_id,d}] [{*decl,view(accessspecifieronly)}] {decl-&gt;name,nasb}">
+                              value-&gt;value._Mypair._Myval2,na
+                           </Item>
+                        </If>
+                        <Break Condition="found_this" />
+                        <Exec>++vi</Exec>
+                        <Exec>++value</Exec>
+                     </Loop>
+                     <If Condition="!found_this">
+                        <!-- List any declarations not associated with a value. -->
+                        <Item Name="[{di}]">decl,na</Item>
+                     </If>
+                     <Exec>++decl</Exec>
+                     <Exec>++di</Exec>
+                  </Loop>
+                  
+                  <!-- List any values not associated with a declaration. -->
+                  <Exec>value = &amp;data.values.entries[0]</Exec>
+                  <Exec>vi = 0</Exec>
+                  <Loop>
+                     <Break Condition="vi &gt;= _value_count()" />
+                     <Exec>decl = &amp;data.declarations.entries[0]</Exec>
+                     <Exec>di = 0</Exec>
+                     <Exec>found_this = false</Exec>
+                     <Loop>
+                        <Break Condition="di &gt;= _decl_count()" />
+                        <If Condition="value-&gt;unique_id == decl-&gt;unique_id">
+                           <Exec>found_this = true</Exec>
+                        </If>
+                        <Break Condition="found_this" />
+                        <Exec>++di</Exec>
+                        <Exec>++decl</Exec>
+                     </Loop>
+                     <If Condition="!found_this">
+                        <Item Name="orphaned value: [{vi}]">value,na</Item>
+                     </If>
+                     <Exec>++value</Exec>
+                     <Exec>++vi</Exec>
+                  </Loop>
+               </CustomListItems>
+            </Expand>
+         </Synthetic>
+         <Item Name="[values]" Condition="template_package.stub != 0">data.values</Item>
+         <Item Name="[procedures]">procedures</Item>
+         <Item Name="[template]">template_package</Item>
+         <Item Name="[revision]">revision</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

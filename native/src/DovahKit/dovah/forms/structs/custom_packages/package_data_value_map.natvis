@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::loaded_forms::structs::custom_packages::package_data_value_map">
+      <Expand>
+         <Item Name="[next unique ID]">next_unique_id</Item>
+         <CustomListItems Condition="entries.size() != 0">
+            <Variable Name="item" InitialValue="&amp;entries[0]"/>
+            <Size>entries.size()</Size>
+            <Loop>
+               <Item Condition="item-&gt;unique_id == 255" Name="None">*item-&gt;value._Mypair._Myval2,na</Item>
+               <Item Condition="item-&gt;unique_id != 255" Name="{(int)item-&gt;unique_id,u}">*item-&gt;value._Mypair._Myval2,na</Item>
+               <Exec>item++</Exec>
+            </Loop>
+         </CustomListItems>
+      </Expand>
+   </Type>
+</AutoVisualizer>

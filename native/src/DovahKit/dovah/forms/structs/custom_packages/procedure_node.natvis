@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::loaded_forms::structs::custom_packages::procedure_node">
+      <DisplayString Condition="data._Which == 0">{data._Head.serialized_typename}</DisplayString>
+      <DisplayString Condition="data._Which == 1">Procedure({data._Tail._Head.type,en})</DisplayString>
+      <DisplayString Condition="data._Which == 2">Branch({data._Tail._Tail._Head.branch_type,en})</DisplayString>
+      <Expand>
+         <Item Name="[conditions]">conditions</Item>
+         <Item Condition="data._Which == 0" Name="[type]">data._Head.serialized_typename</Item>
+         <Item Condition="data._Which == 1" Name="[type]">data._Tail._Head.type,en</Item>
+         <Item Condition="data._Which == 2" Name="[type]">data._Tail._Tail._Head.branch_type,en</Item>
+         <ExpandedItem Condition="data._Which == 1">data._Tail._Head,view(viewfromnode)</ExpandedItem>
+         <ExpandedItem Condition="data._Which == 2">data._Tail._Tail._Head,view(viewfromnode)</ExpandedItem>
+      </Expand>
+   </Type>
+</AutoVisualizer>

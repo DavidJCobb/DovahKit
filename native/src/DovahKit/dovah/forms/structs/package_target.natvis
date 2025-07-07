@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::loaded_forms::structs::package_target">
+      <Intrinsic Name="variant_index" Expression="(dovah::packages::target_type)data._Which"/>
+      
+      <Intrinsic Name="_data_as_ref" Expression="data._Head" />
+      <Intrinsic Name="_data_as_object" Expression="data._Tail._Head" />
+      <Intrinsic Name="_data_as_object_type" Expression="data._Tail._Tail._Head" />
+      <Intrinsic Name="_data_as_linked_ref_keyword" Expression="data._Tail._Tail._Tail._Head" />
+      <Intrinsic Name="_data_as_ref_alias" Expression="data._Tail._Tail._Tail._Tail._Head" />
+      <Intrinsic Name="_data_as_interrupt_target" Expression="data._Tail._Tail._Tail._Tail._Tail._Head" />
+      
+      <DisplayString Condition="variant_index() == dovah::packages::target_type::reference">Ref({_data_as_ref()})</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::target_type::object">Object({_data_as_object()})</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::target_type::object_type">Object Type({_data_as_object_type(),en})</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::target_type::linked_ref">Linked Ref with Keyword({_data_as_linked_ref_keyword()})</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::target_type::reference_alias">Reference Alias ID({_data_as_ref_alias()})</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::target_type::interrupt_override_target">Interrupt Target({_data_as_interrupt_target(),en})</DisplayString>
+      <DisplayString Condition="variant_index() == dovah::packages::target_type::self">Self</DisplayString>
+      <Expand>
+         <Item Name="[type]">variant_index(),en</Item>
+         <Item Condition="variant_index() == dovah::packages::target_type::reference" Name="[reference]">_data_as_ref()</Item>
+         <Item Condition="variant_index() == dovah::packages::target_type::object" Name="[object]">_data_as_object()</Item>
+         <Item Condition="variant_index() == dovah::packages::target_type::object_type" Name="[object type]">_data_as_object_type(),en</Item>
+         <Item Condition="variant_index() == dovah::packages::target_type::linked_ref" Name="[linked ref keyword]">_data_as_linked_ref_keyword()</Item>
+         <Item Condition="variant_index() == dovah::packages::target_type::reference_alias" Name="[ref alias ID]">_data_as_ref_alias()</Item>
+         <Item Condition="variant_index() == dovah::packages::target_type::interrupt_override_target" Name="[interrupt target]">_data_as_interrupt_target(),en</Item>
+         <Item Name="[count or distance]">count</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::form_reference_t">
+      <DisplayString Condition="stub == nullptr">NONE</DisplayString>
+      <DisplayString>{stub,na}</DisplayString>
+      <Expand>
+         <Item Name="[stub]">stub</Item>
+         <Item Name="[use info flags]">use_info_flags</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>
