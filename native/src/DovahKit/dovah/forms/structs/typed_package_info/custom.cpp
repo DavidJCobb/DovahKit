@@ -46,7 +46,6 @@ namespace dovah::loaded_forms::structs::typed_package_info {
          return;
 
       form_id_t template_package;
-
       //
       // Load header.
       //
@@ -54,6 +53,9 @@ namespace dovah::loaded_forms::structs::typed_package_info {
       subrecord.read(package_data_count);
       subrecord.read(template_package);
       record.next_subrecord();
+      //
+      if (template_package)
+         uib.add_outbound_reference(template_package);
 
       custom_packages::package_data_value_map::generate_use_info(record, package_data_count, uib);
       if (template_package) {

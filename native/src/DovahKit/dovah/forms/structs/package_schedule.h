@@ -42,11 +42,12 @@ namespace dovah::loaded_forms::structs {
 
          static constexpr const int8_t any_hour = -1;
          static constexpr const int8_t any_minute = -1;
+         static constexpr const int8_t any_day = 0;
 
       public:
          schedule_month   month    = schedule_month::any;
          schedule_weekday weekday  = schedule_weekday::any;
-         uint8_t          day      = 0;
+         uint8_t          day      = any_day;
          int8_t           hour     = any_hour;
          int8_t           minute   = any_minute;
          uint32_t         duration = 0;

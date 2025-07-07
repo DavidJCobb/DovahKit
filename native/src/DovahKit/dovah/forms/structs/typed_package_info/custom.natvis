@@ -5,67 +5,77 @@
       <Intrinsic Name="_value_count" Expression="data.values.entries.size()" />
       
       <Expand>
-         <Synthetic Name="[package data]" Condition="template_package.stub == 0">
+         <Synthetic Name="[package data]" Condition="template_package.stub == nullptr">
             <Expand>
                <CustomListItems MaxItemsPerView="5000">
                   <!-- First, list all declarations and their associated values. -->
-                  <Variable Name="decl" InitialValue="&amp;data.declarations.entries[0]" />
-                  <Variable Name="value" InitialValue="&amp;data.values.entries[0]" />
-                  <Variable Name="di" InitialValue="0" />
-                  <Variable Name="vi" InitialValue="0" />
+                  <Variable Name="decl" InitialValue="(dovah::loaded_forms::structs::custom_packages::package_data_declaration_map::entry*)nullptr" />
+                  <Variable Name="value" InitialValue="(dovah::loaded_forms::structs::custom_packages::package_data_value_map::entry*)nullptr" />
+                  <Variable Name="di" InitialValue="(size_t)0" />
+                  <Variable Name="vi" InitialValue="(size_t)0" />
                   <Variable Name="found_this" InitialValue="false" />
-                  <Loop>
-                     <Break Condition="di &gt;= _decl_count()" />
-                     <Exec>value = &amp;data.values.entries[0]</Exec>
-                     <Exec>vi = 0</Exec>
-                     <Exec>found_this = false</Exec>
-                     <Loop>
-                        <Break Condition="vi &gt;= _value_count()" />
-                        <If Condition="value-&gt;unique_id == decl-&gt;unique_id">
-                           <Exec>found_this = true</Exec>
-                           <Item Name="[{(int)value-&gt;unique_id,d}] [{*decl,view(accessspecifieronly)}] {decl-&gt;name,nasb}">
-                              value-&gt;value._Mypair._Myval2,na
-                           </Item>
-                        </If>
-                        <Break Condition="found_this" />
-                        <Exec>++vi</Exec>
-                        <Exec>++value</Exec>
-                     </Loop>
-                     <If Condition="!found_this">
-                        <!-- List any declarations not associated with a value. -->
-                        <Item Name="[{(int)decl-&gt;unique_id,d}] [{*decl,view(accessspecifieronly)}] {decl-&gt;name,nasb}">nullptr</Item>
-                     </If>
-                     <Exec>++decl</Exec>
-                     <Exec>++di</Exec>
-                  </Loop>
-                  
-                  <!-- List any values not associated with a declaration. -->
-                  <Exec>value = &amp;data.values.entries[0]</Exec>
-                  <Exec>vi = 0</Exec>
-                  <Loop>
-                     <Break Condition="vi &gt;= _value_count()" />
+                  <If Condition="_decl_count() != 0">
                      <Exec>decl = &amp;data.declarations.entries[0]</Exec>
-                     <Exec>di = 0</Exec>
-                     <Exec>found_this = false</Exec>
                      <Loop>
-                        <Break Condition="di &gt;= _decl_count()" />
-                        <If Condition="value-&gt;unique_id == decl-&gt;unique_id">
-                           <Exec>found_this = true</Exec>
+                        <Exec>found_this = false</Exec>
+                        <If Condition="_value_count() != 0">
+                           <Exec>vi    = 0</Exec>
+                           <Exec>value = &amp;data.values.entries[0]</Exec>
+                           <Loop>
+                              <If Condition="value-&gt;unique_id == decl-&gt;unique_id">
+                                 <Exec>found_this = true</Exec>
+                                 <Item Name="[{(int)value-&gt;unique_id,d}] [{*decl,view(accessspecifieronly)}] {decl-&gt;name,nasb}">
+                                    value-&gt;value._Mypair._Myval2,na
+                                 </Item>
+                              </If>
+                              <Break Condition="found_this" />
+                              <Exec>++vi</Exec>
+                              <Break Condition="vi &gt;= _value_count()" />
+                              <Exec>++value</Exec>
+                           </Loop>
                         </If>
-                        <Break Condition="found_this" />
+                        <If Condition="!found_this">
+                           <!-- List any declarations not associated with a value. -->
+                           <Item Name="[{(int)decl-&gt;unique_id,d}] [{*decl,view(accessspecifieronly)}] {decl-&gt;name,nasb}">nullptr</Item>
+                        </If>
                         <Exec>++di</Exec>
+                        <Break Condition="di &gt;= _decl_count()" />
                         <Exec>++decl</Exec>
                      </Loop>
-                     <If Condition="!found_this">
-                        <Item Name="orphaned value: [{vi}]">value,na</Item>
-                     </If>
-                     <Exec>++value</Exec>
-                     <Exec>++vi</Exec>
-                  </Loop>
+                  </If>
+                  
+                  <!-- List any values not associated with a declaration. -->
+                  <If Condition="_value_count() != 0">
+                     <Exec>vi    = 0</Exec>
+                     <Exec>value = &amp;data.values.entries[0]</Exec>
+                     <Loop>
+                        <Exec>found_this = false</Exec>
+                        <If Condition="_decl_count() != 0">
+                           <Exec>decl = &amp;data.declarations.entries[0]</Exec>
+                           <Exec>di = 0</Exec>
+                           <Loop>
+                              <Break Condition="di &gt;= _decl_count()" />
+                              <If Condition="value-&gt;unique_id == decl-&gt;unique_id">
+                                 <Exec>found_this = true</Exec>
+                              </If>
+                              <Break Condition="found_this" />
+                              <Exec>++di</Exec>
+                              <Exec>++decl</Exec>
+                           </Loop>
+                        </If>
+                        <If Condition="!found_this">
+                           <Item Name="orphaned value: [{vi}]">value,na</Item>
+                        </If>
+                        <Exec>++vi</Exec>
+                        <Break Condition="vi &gt;= _value_count()" />
+                        <Exec>++value</Exec>
+                     </Loop>
+                  </If>
                </CustomListItems>
             </Expand>
          </Synthetic>
-         <Item Name="[values]" Condition="template_package.stub != 0">data.values</Item>
+         <Item Name="[package data declarations (superfluous)]" Condition="template_package.stub != nullptr &amp;&amp; _decl_count() != 0">data.declarations</Item>
+         <Item Name="[package data values]" Condition="template_package.stub != nullptr">data.values</Item>
          <Item Name="[procedures]">procedures</Item>
          <Item Name="[template]">template_package</Item>
          <Item Name="[revision]">revision</Item>

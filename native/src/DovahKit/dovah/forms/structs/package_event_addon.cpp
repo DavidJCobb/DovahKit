@@ -1,5 +1,6 @@
 #include "./package_event_addon.h"
 #include "../_common_cpp.h"
+#include "../components/legacy_script.h"
 
 namespace dovah::loaded_forms::structs {
    void package_event_addon::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
@@ -17,6 +18,18 @@ namespace dovah::loaded_forms::structs {
                break;
             case 'TNAM':
                exit = true;
+               break;
+            case components::legacy_script::subrecord_signature_compiled_data:
+            case components::legacy_script::subrecord_signature_header:
+            case components::legacy_script::subrecord_signature_quest:
+            case components::legacy_script::subrecord_signature_ref_objects:
+            case components::legacy_script::subrecord_signature_ref_variables:
+            case components::legacy_script::subrecord_signature_source_code:
+               //
+               // The CK's loader doesn't actually load these anymore, but some old test forms in 
+               // Skyrim.esm have SCHR, and I'd rather not warn on that. [PACK:18F0E]TestWanderPack 
+               // is a known case.
+               //
                break;
             default:
                intfc.warn_on_unrecognized_subrecord(subrecord); // TODO: Warning specific to this reader loop

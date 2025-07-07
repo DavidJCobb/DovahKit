@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="int8_t" Priority="Low">
+      <DisplayString IncludeView="packagescheduleminute">Any</DisplayString>
+   </Type>
+   
+   <Type Name="dovah::loaded_forms::structs::package_schedule">
+      <Intrinsic Name="_any_month" Expression="month == schedule_month::any" />
+      <Intrinsic Name="_any_weekday" Expression="weekday == schedule_weekday::any" />
+      <Intrinsic Name="_any_day" Expression="day == 0" />
+      <Intrinsic Name="_any_date" Expression="_any_month() &amp;&amp; _any_weekday() &amp;&amp; _any_day()" />
+      
+      <Intrinsic Name="_any_hour" Expression="hour == -1" />
+      <Intrinsic Name="_any_minute" Expression="minute == -1" />
+      <Intrinsic Name="_any_time" Expression="_any_hour() &amp;&amp; _any_minute()" />
+      
+      <DisplayString IncludeView="weekday" Condition="weekday == schedule_weekday::all_weekdays">weekday</DisplayString>
+      <DisplayString IncludeView="weekday" Condition="weekday == schedule_weekday::all_weekends">weekend</DisplayString>
+      <DisplayString IncludeView="weekday" Condition="weekday == schedule_weekday::monday_wednesday_friday">Monday, Wednesday, and Friday</DisplayString>
+      <DisplayString IncludeView="weekday" Condition="weekday == schedule_weekday::tuesday_thursday">Tuesday and Thursday</DisplayString>
+      <DisplayString IncludeView="weekday">{weekday,en}</DisplayString>
+      
+      <DisplayString IncludeView="dateordinal" Condition="(day % 10) == 1">1st</DisplayString>
+      <DisplayString IncludeView="dateordinal" Condition="(day % 10) == 2">2nd</DisplayString>
+      <DisplayString IncludeView="dateordinal" Condition="(day % 10) == 3">3rd</DisplayString>
+      <DisplayString IncludeView="dateordinal">{(int)day,u}th</DisplayString>
+      
+      <DisplayString ExcludeView="dateordinal;weekday" IncludeView="dateonly" Condition="
+         !_any_month()   &amp;&amp;
+         !_any_weekday() &amp;&amp;
+         !_any_day()
+      ">
+         on the {*this,view(dateordinal)} of {month,en} if it's a {*this,view(weekday)}
+      </DisplayString>
+      <DisplayString ExcludeView="dateordinal;weekday" IncludeView="dateonly" Condition="
+         !_any_month()   &amp;&amp;
+         !_any_weekday() &amp;&amp;
+         !_any_day()     &amp;&amp;
+         (
+            weekday != schedule_weekday::all_weekdays &amp;&amp;
+            weekday != schedule_weekday::all_weekends
+         )
+      ">
+         on {*this,view(weekday)} the {*this,view(dateordinal)} of {month,en}
+      </DisplayString>
+      <DisplayString ExcludeView="dateordinal" IncludeView="dateonly" Condition="
+         _any_month()   &amp;&amp;
+         _any_weekday() &amp;&amp;
+         !_any_day()
+      ">
+         on the {*this,view(dateordinal)} of any month
+      </DisplayString>
+      <DisplayString ExcludeView="weekday" IncludeView="dateonly" Condition="
+         _any_month()    &amp;&amp;
+         !_any_weekday() &amp;&amp;
+         _any_day()
+      ">
+         on any {*this,view(weekday)}
+      </DisplayString>
+      <DisplayString ExcludeView="weekday" IncludeView="dateonly" Condition="
+         !_any_month()  &amp;&amp;
+         _any_weekday() &amp;&amp;
+         _any_day()
+      ">
+         on any day of {month,en}
+      </DisplayString>
+      <DisplayString ExcludeView="dateordinal;weekday" IncludeView="dateonly" Condition="
+         _any_month()    &amp;&amp;
+         !_any_weekday() &amp;&amp;
+         !_any_day()     &amp;&amp;
+         (
+            weekday == schedule_weekday::all_weekdays ||
+            weekday == schedule_weekday::all_weekends
+         )
+      ">
+         on the {*this,view(dateordinal)} of any month if it's a {*this,view(weekday)}
+      </DisplayString>
+      <DisplayString ExcludeView="dateordinal;weekday" IncludeView="dateonly" Condition="
+         _any_month()    &amp;&amp;
+         !_any_weekday() &amp;&amp;
+         !_any_day()
+      ">
+         on any {*this,view(weekday)} the {*this,view(dateordinal)}
+      </DisplayString>
+      <DisplayString ExcludeView="weekday" IncludeView="dateonly" Condition="
+         !_any_month()   &amp;&amp;
+         _any_weekday() &amp;&amp;
+         !_any_day()
+      ">
+         on any {*this,view(weekday)}
+      </DisplayString>
+      <DisplayString ExcludeView="dateordinal;weekday" IncludeView="dateonly" Condition="
+         !_any_month()   &amp;&amp;
+         !_any_weekday() &amp;&amp;
+         _any_day()
+      ">
+         on the {*this,view(dateordinal)} of any month
+      </DisplayString>
+      
+      <DisplayString IncludeView="timeonly" Condition="!_any_hour() &amp;&amp; !_any_minute()">at {(int)hour,2u}:{(int)minute,2u}</DisplayString>
+      <DisplayString IncludeView="timeonly" Condition="!_any_hour() &amp;&amp; _any_minute()">from {(int)hour,2u}:00 through {(int)hour,2u}:59</DisplayString>
+      <DisplayString IncludeView="timeonly" Condition="_any_hour() &amp;&amp; !_any_minute()">{(int)minute,u} minutes into any hour</DisplayString>
+      
+      <DisplayString IncludeView="durationonly" Condition="duration == 0"></DisplayString>
+      <DisplayString IncludeView="durationonly" Condition="duration &gt;= 60 &amp;&amp; duration % 60 == 0">, for {duration / 60,u}h</DisplayString>
+      <DisplayString IncludeView="durationonly" Condition="duration &gt;= 60">, for {duration / 60,u}h{duration % 60}m</DisplayString>
+      <DisplayString IncludeView="durationonly">, for {duration,u}m</DisplayString>
+      
+      <DisplayString ExcludeView="dateonly;timeonly;durationonly;weekday" Condition="!_any_date() &amp;&amp; !_any_time()">{*this,view(dateonly)}, {*this,view(timeonly)}{*this,view(durationonly)}</DisplayString>
+      <DisplayString ExcludeView="dateonly;timeonly;durationonly;weekday" Condition="_any_date() &amp;&amp; !_any_time()">{*this,view(timeonly)}{*this,view(durationonly)}</DisplayString>
+      <DisplayString ExcludeView="dateonly;timeonly;durationonly;weekday" Condition="_any_date() &amp;&amp; _any_time()">any date and time{*this,view(durationonly)}</DisplayString>
+      <DisplayString>...</DisplayString>
+      <Expand>
+         <Item Name="[month]">month,en</Item>
+         <Item Name="[weekday]">weekday,en</Item>
+         <Item Name="[day]">day,u</Item>
+         <Item Name="[hour]">hour,u</Item>
+         <Item Name="[minute]">minute,u</Item>
+         <Item Name="[duration in minutes]">duration,u</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

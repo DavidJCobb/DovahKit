@@ -14,24 +14,24 @@
                   <DisplayString Condition="general_flags == 0">none</DisplayString>
                   <DisplayString>{general_flags}</DisplayString>
                   <Expand>
-                     <Item Name="[offers services]">(bool)(general_flags &amp; (1 &lt;&lt; 0) != 0)</Item>
-                     <Item Name="[must complete]">(bool)(general_flags &amp; (1 &lt;&lt; 2) != 0)</Item>
-                     <Item Name="[maintain speed at goal]">(bool)(general_flags &amp; (1 &lt;&lt; 3) != 0)</Item>
-                     <Item Name="[treat as player follower]">(bool)(general_flags &amp; (1 &lt;&lt; 4) != 0)</Item>
-                     <Item Name="[unlock doors at start]">(bool)(general_flags &amp; (1 &lt;&lt; 6) != 0)</Item>
-                     <Item Name="[unlock doors at end]">(bool)(general_flags &amp; (1 &lt;&lt; 7) != 0)</Item>
-                     <Item Name="[request block idles]">(bool)(general_flags &amp; (1 &lt;&lt; 8) != 0)</Item>
-                     <Item Name="[continue if player near]">(bool)(general_flags &amp; (1 &lt;&lt; 9) != 0)</Item>
-                     <Item Name="[once per day]">(bool)(general_flags &amp; (1 &lt;&lt; 10) != 0)</Item>
-                     <Item Name="[skip load into furniture]">(bool)(general_flags &amp; (1 &lt;&lt; 12) != 0)</Item>
-                     <Item Name="[has preferred speed]">(bool)(general_flags &amp; (1 &lt;&lt; 13) != 0)</Item>
-                     <Item Name="[always sneak]">(bool)(general_flags &amp; (1 &lt;&lt; 17) != 0)</Item>
-                     <Item Name="[allow swimming]">(bool)(general_flags &amp; (1 &lt;&lt; 18) != 0)</Item>
-                     <Item Name="[ignore combat]">(bool)(general_flags &amp; (1 &lt;&lt; 20) != 0)</Item>
-                     <Item Name="[weapons unequipped]">(bool)(general_flags &amp; (1 &lt;&lt; 21) != 0)</Item>
-                     <Item Name="[weapons drawn]">(bool)(general_flags &amp; (1 &lt;&lt; 23) != 0)</Item>
-                     <Item Name="[no combat alert]">(bool)(general_flags &amp; (1 &lt;&lt; 27) != 0)</Item>
-                     <Item Name="[wear sleep outfit]">(bool)(general_flags &amp; (1 &lt;&lt; 29) != 0)</Item>
+                     <Item Name="[offers services]">(bool)((general_flags &amp; (1 &lt;&lt; 0)) != 0)</Item>
+                     <Item Name="[must complete]">(bool)((general_flags &amp; (1 &lt;&lt; 2)) != 0)</Item>
+                     <Item Name="[maintain speed at goal]">(bool)((general_flags &amp; (1 &lt;&lt; 3)) != 0)</Item>
+                     <Item Name="[treat as player follower]">(bool)((general_flags &amp; (1 &lt;&lt; 4)) != 0)</Item>
+                     <Item Name="[unlock doors at start]">(bool)((general_flags &amp; (1 &lt;&lt; 6)) != 0)</Item>
+                     <Item Name="[unlock doors at end]">(bool)((general_flags &amp; (1 &lt;&lt; 7)) != 0)</Item>
+                     <Item Name="[request block idles]">(bool)((general_flags &amp; (1 &lt;&lt; 8)) != 0)</Item>
+                     <Item Name="[continue if player near]">(bool)((general_flags &amp; (1 &lt;&lt; 9)) != 0)</Item>
+                     <Item Name="[once per day]">(bool)((general_flags &amp; (1 &lt;&lt; 10)) != 0)</Item>
+                     <Item Name="[skip load into furniture]">(bool)((general_flags &amp; (1 &lt;&lt; 12)) != 0)</Item>
+                     <Item Name="[has preferred speed]">(bool)((general_flags &amp; (1 &lt;&lt; 13)) != 0)</Item>
+                     <Item Name="[always sneak]">(bool)((general_flags &amp; (1 &lt;&lt; 17)) != 0)</Item>
+                     <Item Name="[allow swimming]">(bool)((general_flags &amp; (1 &lt;&lt; 18)) != 0)</Item>
+                     <Item Name="[ignore combat]">(bool)((general_flags &amp; (1 &lt;&lt; 20)) != 0)</Item>
+                     <Item Name="[weapons unequipped]">(bool)((general_flags &amp; (1 &lt;&lt; 21)) != 0)</Item>
+                     <Item Name="[weapons drawn]">(bool)((general_flags &amp; (1 &lt;&lt; 23)) != 0)</Item>
+                     <Item Name="[no combat alert]">(bool)((general_flags &amp; (1 &lt;&lt; 27)) != 0)</Item>
+                     <Item Name="[wear sleep outfit]">(bool)((general_flags &amp; (1 &lt;&lt; 29)) != 0)</Item>
                      <Item Name="[raw]">general_flags</Item>
                   </Expand>
                </Synthetic>
@@ -40,15 +40,15 @@
                   <DisplayString Condition="interrupt_flags == 0">none</DisplayString>
                   <DisplayString>{interrupt_flags}</DisplayString>
                   <Expand>
-                     <Item Name="[hellos to player]">(bool)(interrupt_flags &amp; (1 &lt;&lt; 0) != 0)</Item>
-                     <Item Name="[random conversations]">(bool)(interrupt_flags &amp; (1 &lt;&lt; 1) != 0)</Item>
-                     <Item Name="[observe combat]">(bool)(interrupt_flags &amp; (1 &lt;&lt; 2) != 0)</Item>
-                     <Item Name="[observe corpse]">(bool)(interrupt_flags &amp; (1 &lt;&lt; 3) != 0)</Item>
-                     <Item Name="[react to player actions]">(bool)(interrupt_flags &amp; (1 &lt;&lt; 4) != 0)</Item>
-                     <Item Name="[friendly fire comments]">(bool)(interrupt_flags &amp; (1 &lt;&lt; 5) != 0)</Item>
-                     <Item Name="[aggro radius behavior]">(bool)(interrupt_flags &amp; (1 &lt;&lt; 6) != 0)</Item>
-                     <Item Name="[allow idle chatter]">(bool)(interrupt_flags &amp; (1 &lt;&lt; 7) != 0)</Item>
-                     <Item Name="[world interactions]">(bool)(interrupt_flags &amp; (1 &lt;&lt; 9) != 0)</Item>
+                     <Item Name="[hellos to player]">(bool)((interrupt_flags &amp; (1 &lt;&lt; 0)) != 0)</Item>
+                     <Item Name="[random conversations]">(bool)((interrupt_flags &amp; (1 &lt;&lt; 1)) != 0)</Item>
+                     <Item Name="[observe combat]">(bool)((interrupt_flags &amp; (1 &lt;&lt; 2)) != 0)</Item>
+                     <Item Name="[observe corpse]">(bool)((interrupt_flags &amp; (1 &lt;&lt; 3)) != 0)</Item>
+                     <Item Name="[react to player actions]">(bool)((interrupt_flags &amp; (1 &lt;&lt; 4)) != 0)</Item>
+                     <Item Name="[friendly fire comments]">(bool)((interrupt_flags &amp; (1 &lt;&lt; 5)) != 0)</Item>
+                     <Item Name="[aggro radius behavior]">(bool)((interrupt_flags &amp; (1 &lt;&lt; 6)) != 0)</Item>
+                     <Item Name="[allow idle chatter]">(bool)((interrupt_flags &amp; (1 &lt;&lt; 7)) != 0)</Item>
+                     <Item Name="[world interactions]">(bool)((interrupt_flags &amp; (1 &lt;&lt; 9)) != 0)</Item>
                      <Item Name="[raw]">interrupt_flags</Item>
                   </Expand>
                </Synthetic>

@@ -8,7 +8,7 @@
       <DisplayString>general</DisplayString>
    </Type>
    <Type Name="std::pair&lt;unsigned int const, dovah::use_info_entry&gt;" IncludeView="dkFormOutboundStub">
-      <DisplayString>{second.other,na}</DisplayString>
+      <DisplayString>{second.refcount,u}x {second.other,na}</DisplayString>
       <Expand>
          <ExpandedItem>second.other</ExpandedItem>
       </Expand>

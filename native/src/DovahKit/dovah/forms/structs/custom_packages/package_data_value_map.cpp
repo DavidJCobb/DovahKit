@@ -96,8 +96,6 @@ namespace dovah::loaded_forms::structs::custom_packages {
          record.next_subrecord();
       }
 
-      record.next_subrecord();
-
       //
       // Load next unique ID.
       //
@@ -121,7 +119,6 @@ namespace dovah::loaded_forms::structs::custom_packages {
       }
 
       // Next unique ID:
-      record.next_subrecord();
       if (record.get_current_subrecord().signature() == subrecord_next_uid)
          record.next_subrecord();
    }

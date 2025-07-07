@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="std::array&lt;dovah::packages::procedure_type_info,*&gt;" Priority="High">
+      <Intrinsic Name="size" Expression="$T1"/>
+      
+      <Intrinsic Name="_has_index" Expression="i &gt;= 0 &amp;&amp; i &lt; size()">
+         <Parameter Name="i" Type="int" />
+      </Intrinsic>
+   </Type>
+   
    <Type Name="dovah::loaded_forms::structs::custom_packages::procedure_node_data::procedure">
+      <Intrinsic Name="_procedure_info" Expression="&amp;dovah::packages::all_procedure_type_info._Elems[(size_t)type]"/>
+      
       <Expand>
          <Item Name="[type]" ExcludeView="viewfromnode">type,en</Item>
          <Synthetic Name="[flags]">
@@ -12,6 +22,14 @@
          </Synthetic>
          <Item Name="[flag overrides]">flag_overrides</Item>
          <Item Name="[parameters]">parameter_unique_ids</Item>
+         <Synthetic Name="[parameter definitions]" Condition="dovah::packages::all_procedure_type_info._has_index((size_t)type)">
+            <DisplayString>[{type,en} procedures take {_procedure_info()-&gt;param_count,u} parameters]</DisplayString>
+            <Expand>
+               <ExpandedItem>
+                  _procedure_info()-&gt;params._Elems,[_procedure_info()-&gt;param_count]na
+               </ExpandedItem>
+            </Expand>
+         </Synthetic>
       </Expand>
    </Type>
 </AutoVisualizer>
