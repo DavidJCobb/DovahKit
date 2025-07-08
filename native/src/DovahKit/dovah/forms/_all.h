@@ -63,11 +63,14 @@
    #include "MagicEffect.h"
    #include "MaterialObject.h"
    #include "MaterialType.h"
+   #include "MenuIcon.h"
    #include "Message.h"
    #include "MiscItem.h"
+   #include "MovableStatic.h"
    #include "MovementType.h"
    #include "MusicTrack.h"
    #include "MusicType.h"
+   #include "NavMeshInfoMap.h"
    #include "Note.h"
    #include "ObjectReference.h"
    #include "Outfit.h"
@@ -164,11 +167,14 @@ namespace dovah {
       loaded_forms::MagicEffect,
       loaded_forms::MaterialObject,
       loaded_forms::MaterialType,
+      loaded_forms::MenuIcon,
       loaded_forms::Message,
       loaded_forms::MiscItem,
+      loaded_forms::MovableStatic,
       loaded_forms::MovementType,
       loaded_forms::MusicTrack,
       loaded_forms::MusicType,
+      loaded_forms::NavMeshInfoMap,
       loaded_forms::Note,
       loaded_forms::ObjectReference,
       loaded_forms::Outfit,

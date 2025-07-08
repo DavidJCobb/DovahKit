@@ -193,7 +193,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | WorldObjects | FURN | Furniture     | ⬛ | 🟨 | ⬛ | Will need to be able to extract `FRN` data from the NIF |
 | WorldObjects | GRAS | Grass         | ✅ | ✅ | ⬛ |
 | WorldObjects | LIGH | Light         | ✅ | ✅ | ⬛ |
-| WorldObjects | MSTT | MovableStatic | ⬛ | 🟨 | ⬛ |
+| WorldObjects | MSTT | MovableStatic | ✅ | 🟨 | ⬛ |
 | WorldObjects | STAT | Static        | ✅ | ✅ | 🟨 |
 | WorldObjects | SCOL | Static Collection | ✅ | ⬛ | ⬛ |
 | WorldObjects | TREE | Tree          | ✅ | 🟨 | ⬛ |
@@ -217,7 +217,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | | WRLD | Worldspace | ✅ | ⬛ | 🟨 |
 | Deprecated | APPA | BGSApparatus | ✅ | ⬛ | ⬛ | CK32 has a loader for this; test in-game behavior |
 | Deprecated | EYES | TESEyes | ✅ | ⬛ | ⬛ | CK32 has a loader for this |
-| Deprecated | MICO | BGSMenuIcon | ⬛ | ⬛ | ⬛ | CK32 has a loader for this |
+| Deprecated | MICO | BGSMenuIcon | ✅ | ⬛ | ⬛ | CK32 has a loader for this |
 | Deprecated | RGDL | BGSRagdoll | ✅ | ⬛ | ⬛ | CK32 has a loader for this |
 | Skyrim Special | LENS | Lens Flare | ⬛ | ⬛ | ⬛ |
 | Skyrim Special | VOLI | Volumetric Lighting | ⬛ | ⬛ | ⬛ |

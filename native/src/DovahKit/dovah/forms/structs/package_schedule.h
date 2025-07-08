@@ -22,6 +22,11 @@ namespace dovah::loaded_forms::structs {
             october,
             november,
             december,
+
+            spring, // march/april/may
+            summer, // june/july/august
+            autumn, // september/october/november
+            winter, // december/january/february
          };
          enum class schedule_weekday : int8_t {
             any = -1,

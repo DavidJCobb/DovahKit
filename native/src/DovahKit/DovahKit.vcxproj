@@ -157,7 +157,10 @@
     <ClCompile Include="dovah\forms\components\enchantable.cpp" />
     <ClCompile Include="dovah\forms\components\idle_collection.cpp" />
     <ClCompile Include="dovah\forms\EncounterZone.cpp" />
+    <ClCompile Include="dovah\forms\MenuIcon.cpp" />
+    <ClCompile Include="dovah\forms\MovableStatic.cpp" />
     <ClCompile Include="dovah\forms\MusicTrack.cpp" />
+    <ClCompile Include="dovah\forms\NavMeshInfoMap.cpp" />
     <ClCompile Include="dovah\forms\Package.cpp" />
     <ClCompile Include="dovah\forms\Perk.cpp" />
     <ClCompile Include="dovah\forms\StaticCollection.cpp" />
@@ -179,6 +182,10 @@
     <ClCompile Include="dovah\forms\structs\custom_packages\procedure_nodes\branch.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\procedure_nodes\procedure.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\procedure_tree.cpp" />
+    <ClCompile Include="dovah\forms\structs\navmesh_info_map\navmesh_info.cpp" />
+    <ClCompile Include="dovah\forms\structs\navmesh_info_map\navmesh_info_collection.cpp" />
+    <ClCompile Include="dovah\forms\structs\navmesh_info_map\precomputed_path.cpp" />
+    <ClCompile Include="dovah\forms\structs\navmesh_info_map\precomputed_path_collection.cpp" />
     <ClCompile Include="dovah\forms\structs\package_event_addon.cpp" />
     <ClCompile Include="dovah\forms\structs\package_location.cpp" />
     <ClCompile Include="dovah\forms\structs\package_schedule.cpp" />
@@ -1311,7 +1318,10 @@
     <ClInclude Include="dovah\forms\components\enchantable.h" />
     <ClInclude Include="dovah\forms\components\idle_collection.h" />
     <ClInclude Include="dovah\forms\EncounterZone.h" />
+    <ClInclude Include="dovah\forms\MenuIcon.h" />
+    <ClInclude Include="dovah\forms\MovableStatic.h" />
     <ClInclude Include="dovah\forms\MusicTrack.h" />
+    <ClInclude Include="dovah\forms\NavMeshInfoMap.h" />
     <ClInclude Include="dovah\forms\StaticCollection.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\package_data.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\package_data\boolean.h" />
@@ -1333,6 +1343,10 @@
     <ClInclude Include="dovah\forms\structs\custom_packages\procedure_nodes\procedure.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\procedure_nodes\unknown.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\procedure_tree.h" />
+    <ClInclude Include="dovah\forms\structs\navmesh_info_map\navmesh_info.h" />
+    <ClInclude Include="dovah\forms\structs\navmesh_info_map\navmesh_info_collection.h" />
+    <ClInclude Include="dovah\forms\structs\navmesh_info_map\precomputed_path.h" />
+    <ClInclude Include="dovah\forms\structs\navmesh_info_map\precomputed_path_collection.h" />
     <ClInclude Include="dovah\forms\structs\package_event_addon.h" />
     <ClInclude Include="dovah\forms\structs\package_location.h" />
     <ClInclude Include="dovah\forms\structs\package_schedule.h" />
@@ -1515,6 +1529,12 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\material_type\name_too_long.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\message\orphaned_conditions.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\music_track\invalid_track_type.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_info_pathing_cell_bad_crc.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_info_pathing_cell_is_improper_exterior.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_info_pathing_door_bad_crc.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\precomputed_path_has_gaps.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\precomputed_path_is_empty.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\_generic_crc_mismatch_notice.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\note\non_texture_note_includes_texture_path.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\faction\interrupt_override_target_not_in_a_package.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\invalid_interrupt_override_target.h" />

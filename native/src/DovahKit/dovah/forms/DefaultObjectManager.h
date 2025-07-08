@@ -24,7 +24,7 @@ namespace dovah::loaded_forms {
          void set_entry(signature_t, form_stub*); // can throw `dovah::exceptions::default_object_assign_failed`
          bool entry_is_edited(signature_t) const noexcept;
 
-         void load(tes_record_reader&, load_order_interfaces::form_load& intfc); // TODO: FINISH ME
+         void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
          //
       protected:

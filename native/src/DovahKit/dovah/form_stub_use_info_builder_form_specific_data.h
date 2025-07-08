@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <optional>
 #include <unordered_map> // for DOBJ
+#include "./forms/structs/navmesh_info_map/navmesh_info_collection.h"
+#include "./forms/structs/navmesh_info_map/precomputed_path_collection.h"
 #include "./forms/structs/world_large_ref_data.h"
 #include "./core.h"
 
@@ -34,10 +36,15 @@ namespace dovah {
          struct for_default_object_manager_form {
             std::unordered_map<uint32_t, form_id_t> default_objects; // key is the DOBJ signature
          };
+         struct for_navmesh_info_map_form {
+            loaded_forms::structs::navmesh_info_map::navmesh_info_collection::form_specific_use_info_data     navmesh_info;
+            loaded_forms::structs::navmesh_info_map::precomputed_path_collection::form_specific_use_info_data precomputed_paths;
+         };
 
       public:
          struct {
             std::optional<for_default_object_manager_form> default_object_manager;
+            std::optional<for_navmesh_info_map_form>       navmesh_info_map;
          } by_form_type;
          struct {
             std::optional<loaded_forms::structs::world_large_ref_data::form_specific_use_info_data> world_large_ref_data;

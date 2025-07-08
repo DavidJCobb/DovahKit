@@ -14,6 +14,12 @@
       <Intrinsic Name="_any_minute" Expression="minute == -1" />
       <Intrinsic Name="_any_time" Expression="_any_hour() &amp;&amp; _any_minute()" />
       
+      <DisplayString IncludeView="month" Condition="month == schedule_month::spring">March, April, and May</DisplayString>
+      <DisplayString IncludeView="month" Condition="month == schedule_month::summer">June, July, and August</DisplayString>
+      <DisplayString IncludeView="month" Condition="month == schedule_month::autumn">September, October, and November</DisplayString>
+      <DisplayString IncludeView="month" Condition="month == schedule_month::winter">December, January, and February</DisplayString>
+      <DisplayString IncludeView="month">{month,en}</DisplayString>
+      
       <DisplayString IncludeView="weekday" Condition="weekday == schedule_weekday::all_weekdays">weekday</DisplayString>
       <DisplayString IncludeView="weekday" Condition="weekday == schedule_weekday::all_weekends">weekend</DisplayString>
       <DisplayString IncludeView="weekday" Condition="weekday == schedule_weekday::monday_wednesday_friday">Monday, Wednesday, and Friday</DisplayString>
@@ -25,14 +31,14 @@
       <DisplayString IncludeView="dateordinal" Condition="(day % 10) == 3">3rd</DisplayString>
       <DisplayString IncludeView="dateordinal">{(int)day,u}th</DisplayString>
       
-      <DisplayString ExcludeView="dateordinal;weekday" IncludeView="dateonly" Condition="
+      <DisplayString ExcludeView="dateordinal;weekday;month" IncludeView="dateonly" Condition="
          !_any_month()   &amp;&amp;
          !_any_weekday() &amp;&amp;
          !_any_day()
       ">
-         on the {*this,view(dateordinal)} of {month,en} if it's a {*this,view(weekday)}
+         on the {*this,view(dateordinal)} of {*this,view(month)} if it's a {*this,view(weekday)}
       </DisplayString>
-      <DisplayString ExcludeView="dateordinal;weekday" IncludeView="dateonly" Condition="
+      <DisplayString ExcludeView="dateordinal;weekday;month" IncludeView="dateonly" Condition="
          !_any_month()   &amp;&amp;
          !_any_weekday() &amp;&amp;
          !_any_day()     &amp;&amp;
@@ -41,7 +47,7 @@
             weekday != schedule_weekday::all_weekends
          )
       ">
-         on {*this,view(weekday)} the {*this,view(dateordinal)} of {month,en}
+         on {*this,view(weekday)} the {*this,view(dateordinal)} of {*this,view(month)}
       </DisplayString>
       <DisplayString ExcludeView="dateordinal" IncludeView="dateonly" Condition="
          _any_month()   &amp;&amp;
@@ -57,12 +63,12 @@
       ">
          on any {*this,view(weekday)}
       </DisplayString>
-      <DisplayString ExcludeView="weekday" IncludeView="dateonly" Condition="
+      <DisplayString ExcludeView="month" IncludeView="dateonly" Condition="
          !_any_month()  &amp;&amp;
          _any_weekday() &amp;&amp;
          _any_day()
       ">
-         on any day of {month,en}
+         on any day of {*this,view(month)}
       </DisplayString>
       <DisplayString ExcludeView="dateordinal;weekday" IncludeView="dateonly" Condition="
          _any_month()    &amp;&amp;

@@ -105,8 +105,10 @@ namespace dovah::loaded_forms {
          auto& entry = pair.second;
          if (!entry.is_active_file)
             continue;
-         if (!opened)
+         if (!opened) {
+            opened = true;
             record.open_next_subrecord('DNAM');
+         }
          auto& subrecord = record.get_current_subrecord();
          subrecord.write_signature(pair.first);
          subrecord.write(entry.form);

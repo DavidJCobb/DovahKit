@@ -938,6 +938,104 @@ namespace editor_helpers {
                   ).arg(subject).arg(casted->seen_type);
                }
             #pragma endregion
+            #pragma region navmesh info map
+               if (auto* casted_general = dynamic_cast<const form_load_warnings::by_type::navmesh_info_map::_generic_crc_mismatch_notice*>(&warning)) {
+                  QString subject      = form_identifiers_to_string(&casted_general->subject);
+                  QString crc_seen     = QString::number(casted_general->crc_seen, 16).rightJustified(8, '0').toUpper();
+                  QString crc_expected = QString::number(casted_general->crc_expected, 16).rightJustified(8, '0').toUpper();
+                  QString crc_is_of    = QString::fromStdString(casted_general->crc_expected_is_of);
+
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::navmesh_info_map::navmesh_info_pathing_cell_bad_crc*>(&warning)) {
+                     QString navmesh = form_identifiers_to_string(casted->navmesh);
+                     return QObject::tr(
+                        "Info for Navmesh %5 in the Navmesh Info Map had a pathing cell with a bad CRC. The CRC seen was %2, but we expected %3 (%4).",
+                        disambig
+                     ).arg(subject).arg(crc_seen).arg(crc_expected).arg(crc_is_of).arg(navmesh);
+                  }
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::navmesh_info_map::navmesh_info_pathing_door_bad_crc*>(&warning)) {
+                     QString navmesh = form_identifiers_to_string(casted->navmesh);
+                     return QObject::tr(
+                        "Info for Navmesh %5 in the Navmesh Info Map had a door link with a bad CRC. The CRC seen was %2, but we expected %3 (%4).",
+                        disambig
+                     ).arg(subject).arg(crc_seen).arg(crc_expected).arg(crc_is_of).arg(navmesh);
+                  }
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::navmesh_info_map::navmesh_info_pathing_cell_is_improper_exterior*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString navmesh = form_identifiers_to_string(casted->navmesh);
+                  QString cell    = form_identifiers_to_string(&casted->cell);
+                  //
+                  return QObject::tr(
+                     "Info for Navmesh %2 in the Navmesh Info Map specifies exterior cell %3 as its pathing cell. However, the format used "
+                     "to specify this exterior cell is only valid for interior cells. (The cell is specified by record ID; exterior cells "
+                     "must be specified via the parent worldspace's record ID and the cell's grid position.)",
+                     disambig
+                  ).arg(subject).arg(navmesh).arg(cell);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::navmesh_info_map::precomputed_path_has_gaps*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString format;
+                  if (casted->endpoints.a && casted->endpoints.b) {
+                     QString endpoint_a = form_identifiers_to_string(casted->endpoints.a);
+                     QString endpoint_b = form_identifiers_to_string(casted->endpoints.b);
+                     if (casted->endpoints.a_is_end) {
+                        if (casted->endpoints.b_is_end) {
+                           format = QObject::tr(
+                              "Path #%1, ranging from %2 to %3, contains gaps (missing navmeshes).",
+                              disambig
+                           );
+                        } else {
+                           format = QObject::tr(
+                              "Path #%1, ranging from %2 to somewhere past %3, contains gaps (missing navmeshes).",
+                              disambig
+                           );
+                        }
+                     } else {
+                        if (casted->endpoints.b_is_end) {
+                           format = QObject::tr(
+                              "Path #%1, ranging from somewhere before %2, to %3, contains gaps (missing navmeshes).",
+                              disambig
+                           );
+                        } else {
+                           format = QObject::tr(
+                              "Path #%1, ranging from somewhere before %2 to somewhere past %3, contains gaps (missing navmeshes).",
+                              disambig
+                           );
+                        }
+                     }
+                     format = format.arg(casted->which).arg(endpoint_a).arg(endpoint_b);
+                  } else {
+                     dovah::form_stub* endpoint = casted->endpoints.a;
+                     if (!endpoint) {
+                        endpoint = casted->endpoints.b;
+                     }
+                     if (endpoint) {
+                        QString endpoint_str = form_identifiers_to_string(endpoint);
+                        format = QObject::tr(
+                           "Path #%1, intersecting %2, contains gaps (missing navmeshes).",
+                           disambig
+                        ).arg(casted->which).arg(endpoint_str);
+                     } else {
+                        format = QObject::tr(
+                           "Path #%1 consists entirely of missing paths.",
+                           disambig
+                        ).arg(casted->which);
+                     }
+                  }
+                  return QObject::tr(
+                     "The Navmesh Info Map contains an invalid precomputed path. %2",
+                     disambig
+                  ).arg(subject).arg(casted->which).arg(format);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::navmesh_info_map::precomputed_path_is_empty*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Precomputed path #%2 in the Navmesh Info Map is invalid: the path is empty.",
+                     disambig
+                  ).arg(subject).arg(casted->which);
+               }
+            #pragma endregion
             #pragma region note
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::note::non_texture_note_includes_texture_path*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
