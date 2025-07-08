@@ -121,7 +121,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Character | FACT | Faction          | ✅ | ✅ | ⬛ |
 | Character | HDPT | HeadPart         | ✅ | ✅ | ⬛ |
 | Character | MOVT | Movement Type    | ✅ | ✅ | ⬛ |
-| Character | PACK | Package          | ⬛ | 🟨 | ⬛ | Need implementation for packdata/procedure values |
+| Character | PACK | Package          | ✅ | 🟨 | ⬛ |
 | Character | QUST | Quest            | ✅ | 🟩 | 🟨 |
 | Character | RACE | Race             | ✅ | ✅ | ⬛ |
 | Character | RELA | Relationship     | ✅ | ✅ | ⬛ |
