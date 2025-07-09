@@ -3267,6 +3267,9 @@
     <ClCompile Include="dovah\forms\structs\navmesh_info_map\navmesh_info_collection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\structs\navmesh_info_map\road_marker_map.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8163,6 +8166,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_info_pathing_cell_is_improper_exterior.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_may_be_multiply_deleted.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\structs\navmesh_info_map\road_marker_map.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,16 +1,13 @@
 #pragma once
 #include <cstdint>
-#include <optional>
-#include <string>
-#include <variant>
 #include <vector>
-#include "helpers/vector3.h"
 #include "Form.h"
 #include "_common.h"
 #include "./structs/navmesh_info_map/navmesh_info.h"
 #include "./structs/navmesh_info_map/navmesh_info_collection.h"
 #include "./structs/navmesh_info_map/precomputed_path.h"
 #include "./structs/navmesh_info_map/precomputed_path_collection.h"
+#include "./structs/navmesh_info_map/road_marker_map.h"
 
 namespace dovah::loaded_forms {
    class NavMeshInfoMap : public Form {
@@ -24,18 +21,12 @@ namespace dovah::loaded_forms {
          using precomputed_path            = structs::navmesh_info_map::precomputed_path;
          using precomputed_path_collection = structs::navmesh_info_map::precomputed_path_collection;
 
-         static_assert(false, "TODO: These are stored in a map of navmesh info pointers to indices.");
-         struct road_marker {
-            bool is_active_file_data = false;
-
-            form_reference_t navmesh;
-            uint32_t index = 0;
-         };
+         using road_marker_map = structs::navmesh_info_map::road_marker_map;
 
       public:
-         navmesh_info_collection       navmesh_infos;     // NVMI[]
-         precomputed_path_collection   precomputed_paths; // NVPP
-         std::vector<road_marker>      road_markers;      // NVPP
+         navmesh_info_collection     navmesh_infos;     // NVMI[]
+         precomputed_path_collection precomputed_paths; // NVPP
+         road_marker_map             road_markers; // NVPP
          struct {
             std::vector<form_reference_t> masters;
             std::vector<form_reference_t> active_file;

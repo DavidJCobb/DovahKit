@@ -7,6 +7,7 @@
 #include <vector>
 #include "./forms/structs/navmesh_info_map/navmesh_info_collection.h"
 #include "./forms/structs/navmesh_info_map/precomputed_path_collection.h"
+#include "./forms/structs/navmesh_info_map/road_marker_map.h"
 #include "./forms/structs/world_large_ref_data.h"
 #include "./core.h"
 
@@ -41,7 +42,8 @@ namespace dovah {
          struct for_navmesh_info_map_form {
             loaded_forms::structs::navmesh_info_map::navmesh_info_collection::form_specific_use_info_data     navmesh_info;
             loaded_forms::structs::navmesh_info_map::precomputed_path_collection::form_specific_use_info_data precomputed_paths;
-            std::set<form_id_t, uint32_t> deleted_navmeshes;
+            loaded_forms::structs::navmesh_info_map::road_marker_map::form_specific_use_info_data             road_markers;
+            std::set<form_id_t> deleted_navmeshes;
          };
 
       public:

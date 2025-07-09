@@ -186,6 +186,7 @@
     <ClCompile Include="dovah\forms\structs\navmesh_info_map\navmesh_info_collection.cpp" />
     <ClCompile Include="dovah\forms\structs\navmesh_info_map\precomputed_path.cpp" />
     <ClCompile Include="dovah\forms\structs\navmesh_info_map\precomputed_path_collection.cpp" />
+    <ClCompile Include="dovah\forms\structs\navmesh_info_map\road_marker_map.cpp" />
     <ClCompile Include="dovah\forms\structs\package_event_addon.cpp" />
     <ClCompile Include="dovah\forms\structs\package_location.cpp" />
     <ClCompile Include="dovah\forms\structs\package_schedule.cpp" />
@@ -1347,6 +1348,7 @@
     <ClInclude Include="dovah\forms\structs\navmesh_info_map\navmesh_info_collection.h" />
     <ClInclude Include="dovah\forms\structs\navmesh_info_map\precomputed_path.h" />
     <ClInclude Include="dovah\forms\structs\navmesh_info_map\precomputed_path_collection.h" />
+    <ClInclude Include="dovah\forms\structs\navmesh_info_map\road_marker_map.h" />
     <ClInclude Include="dovah\forms\structs\package_event_addon.h" />
     <ClInclude Include="dovah\forms\structs\package_location.h" />
     <ClInclude Include="dovah\forms\structs\package_schedule.h" />
@@ -1532,6 +1534,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_info_pathing_cell_bad_crc.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_info_pathing_cell_is_improper_exterior.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_info_pathing_door_bad_crc.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_may_be_multiply_deleted.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\precomputed_path_has_gaps.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\precomputed_path_is_empty.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\_generic_crc_mismatch_notice.h" />

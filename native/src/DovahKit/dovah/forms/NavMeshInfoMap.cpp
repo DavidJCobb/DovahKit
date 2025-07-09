@@ -128,19 +128,7 @@ namespace dovah::loaded_forms {
                // we should endeavor to correct, though we don't emit a warning for it at this time.)
                //
                this->precomputed_paths.load(subrecord, intfc, *this);
-               {  // road markers
-                  uint32_t count = 0;
-                  subrecord.read(count);
-                  for (uint32_t i = 0; i < count; ++i) {
-                     auto& entry = this->road_markers.emplace_back();
-                     entry.is_active_file_data = is_active_file;
-
-                     if (auto& form = entry.navmesh; subrecord.read(form)) {
-                        intfc.warn_if_ref_is_wrong_type(form, form_type::navmesh, subrecord.signature());
-                     }
-                     subrecord.read(entry.index);
-                  }
-               }
+               this->road_markers.load(subrecord, intfc);
                break;
             case 'NVSI':
                //
@@ -229,18 +217,8 @@ namespace dovah::loaded_forms {
                   auto& dst_opt = uib.get_form_specific_data()->by_form_type.navmesh_info_map;
                   auto& dst     = dst_opt.has_value() ? dst_opt.value() : dst_opt.emplace();
 
-                  auto& uses = dst.precomputed_paths;
-                  precomputed_path_collection::generate_use_info(subrecord, uses);
-               }
-               {
-                  uint32_t count = 0;
-                  subrecord.read(count);
-                  for (uint32_t i = 0; i < count; ++i) {
-                     form_id_t target;
-                     subrecord.read(target);
-                     uib.add_outbound_reference(target);
-                     subrecord.skip_bytes(4);
-                  }
+                  precomputed_path_collection::generate_use_info(subrecord, dst.precomputed_paths);
+                  road_marker_map::generate_use_info(subrecord, dst.road_markers);
                }
                break;
             case 'NVSI':
@@ -267,20 +245,7 @@ namespace dovah::loaded_forms {
       
       copy->navmesh_infos.clone_from(this->navmesh_infos, *copy);
       copy->precomputed_paths.clone_from(this->precomputed_paths, *copy);
-
-      {
-         auto&  src_list = this->road_markers;
-         auto&  dst_list = copy->road_markers;
-         size_t size     = src_list.size();
-         dst_list.resize(size);
-         for (size_t i = 0; i < size; ++i) {
-            auto& src_item = src_list[i];
-            auto& dst_item = dst_list[i];
-            dst_item.is_active_file_data = src_item.is_active_file_data;
-            dst_item.navmesh.set(*copy, src_item.navmesh);
-            dst_item.index = src_item.index;
-         }
-      }
+      copy->road_markers.clone_from(this->road_markers, *copy);
 
       copy_form_reference_list(*copy, copy->deleted_navmeshes.masters,     this->deleted_navmeshes.masters);
       copy_form_reference_list(*copy, copy->deleted_navmeshes.active_file, this->deleted_navmeshes.active_file);
@@ -296,22 +261,14 @@ namespace dovah::loaded_forms {
 
       // NVPP
       {
-         size_t pp_to_save = this->precomputed_paths.paths.size();
-         size_t rm_to_save = 0;
-         for (auto& item : this->road_markers)
-            if (item.is_active_file_data)
-               ++rm_to_save;
-         if (pp_to_save || rm_to_save) {
+         bool empty = (
+            this->precomputed_paths.paths.empty() &&
+            this->road_markers.empty()
+         );
+         if (!empty) {
             auto& subrecord = record.open_next_subrecord('NVPP');
             this->precomputed_paths.save(subrecord, intfc);
-            subrecord.write((uint32_t)rm_to_save);
-            for (auto& item : this->road_markers) {
-               if (!item.is_active_file_data)
-                  continue;
-               auto& subrecord = record.get_current_subrecord();
-               subrecord.write(item.navmesh);
-               subrecord.write(item.index);
-            }
+            this->road_markers.save(subrecord, intfc);
             subrecord.close();
          }
       }
@@ -354,10 +311,7 @@ namespace dovah::loaded_forms {
    void NavMeshInfoMap::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->navmesh_infos.sever_outbound_references_to(other, *this);
       this->precomputed_paths.sever_outbound_references_to(other, *this);
-
-      for (auto& item : this->road_markers) {
-         item.navmesh.clear_if(*this, other);
-      }
+      this->road_markers.sever_outbound_references_to(other, *this);
 
       remove_form_from_reference_list(this->deleted_navmeshes.masters, other, *this);
       remove_form_from_reference_list(this->deleted_navmeshes.active_file, other, *this);
@@ -365,11 +319,7 @@ namespace dovah::loaded_forms {
    void NavMeshInfoMap::_clear_impl() noexcept {
       this->navmesh_infos.clear(*this);
       this->precomputed_paths.clear(*this);
-
-      for (auto& item : this->road_markers) {
-         item.navmesh.set(*this, nullptr);
-      }
-      this->road_markers.clear();
+      this->road_markers.clear(*this);
 
       clear_form_reference_list(this->deleted_navmeshes.masters, *this);
       clear_form_reference_list(this->deleted_navmeshes.active_file, *this);
