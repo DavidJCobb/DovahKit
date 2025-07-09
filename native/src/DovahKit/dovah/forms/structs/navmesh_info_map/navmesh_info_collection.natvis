@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::loaded_forms::structs::navmesh_info_map::navmesh_info_collection">
+      
+      <!-- EDIT ME: -->
+      <Intrinsic Name="form_id_to_find" Expression="0x00098776" />
+      
+      <!-- DON'T EDIT ME: -->
+      
+      <Intrinsic Name="size" Expression="infos._List._Mypair._Myval2._Mysize" />
+      
+      <DisplayString>{{ size = {size()} }}</DisplayString>
+      <Expand HideRawView="true">
+         <Synthetic Name="[tip]">
+            <DisplayString>NavMeshInfoMap NVMI maps tend to be too large to display, and may even crash VS's debugger.</DisplayString>
+         </Synthetic>
+         <Synthetic Name="[tip]">
+            <DisplayString>To look up a specific Navmesh's NVMI by form ID, edit this Natvis.</DisplayString>
+         </Synthetic>
+         <CustomListItems MaxItemsPerView="1">
+            <Variable Name="ptr" InitialValue="infos._List._Mypair._Myval2._Myhead-&gt;_Next" />
+            <Loop>
+               <Break Condition="ptr == nullptr" />
+               <If Condition="ptr-&gt;_Myval.first &amp;&amp; ptr-&gt;_Myval.first-&gt;formID == form_id_to_find()">
+                  <Item Name="[{form_id_to_find(),X}]">ptr-&gt;_Myval</Item>
+                  <Break />
+               </If>
+               <Exec>ptr = ptr-&gt;_Next</Exec>
+            </Loop>
+         </CustomListItems>
+      </Expand>
+   </Type>
+</AutoVisualizer>

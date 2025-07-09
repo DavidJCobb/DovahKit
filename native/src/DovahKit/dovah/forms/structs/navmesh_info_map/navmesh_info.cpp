@@ -110,12 +110,12 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
          if (world) {
             intfc.warn_if_ref_is_wrong_type(world, form_type::worldspace, subrecord.signature());
 
-            auto& data = std::get<pathing_cell_exterior>(this->pathing_cell.data);
+            auto& data = this->pathing_cell.data.emplace<pathing_cell_exterior>();
             data.parent_world.unmanaged_set(world.get_form_stub());
+            subrecord.read(data.grid_y); // NOT a mistake; Y comes before X here.
             subrecord.read(data.grid_x);
-            subrecord.read(data.grid_y);
          } else {
-            auto& data = std::get<pathing_cell_interior>(this->pathing_cell.data);
+            auto& data = this->pathing_cell.data.emplace<pathing_cell_interior>();
             if (auto& form = data.cell; subrecord.read(form)) {
                intfc.warn_if_ref_is_wrong_type(form, form_type::cell, subrecord.signature());
                if (auto* stub = form.get_form_stub(); stub && stub->form_type == form_type::cell) {
@@ -186,8 +186,8 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
       subrecord.write(this->pathing_cell.crc);
       if (auto* casted = std::get_if<pathing_cell_exterior>(&this->pathing_cell.data)) {
          subrecord.write(casted->parent_world);
+         subrecord.write(casted->grid_y); // NOT a mistake; Y comes before X here
          subrecord.write(casted->grid_x);
-         subrecord.write(casted->grid_y);
       } else if (auto* casted = std::get_if<pathing_cell_interior>(&this->pathing_cell.data)) {
          subrecord.write((uint32_t)0);
          subrecord.write(casted->cell);

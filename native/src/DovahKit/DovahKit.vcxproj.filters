@@ -9894,5 +9894,6 @@
     <Natvis Include="dovah\forms\structs\package_topic.natvis" />
     <Natvis Include="dovah\form_reference_t.natvis" />
     <Natvis Include="dovah\forms\structs\package_schedule.natvis" />
+    <Natvis Include="dovah\forms\structs\navmesh_info_map\navmesh_info_collection.natvis" />
   </ItemGroup>
 </Project>
