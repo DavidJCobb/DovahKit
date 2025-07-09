@@ -271,6 +271,20 @@ AFAIK, the CK never should've produced records overrides with that quirk, but wh
 
 ### `NavMeshInfoMap`
 
+#### Loading perf
+`NavMeshInfoMap` is massive, taking several seconds to load the full form data, and being large enough to make Visual Studio's debugger crash (absent Natvis tricks I've used specifically to prevent this) when I try to inspect the form data. This is not strictly a unique failing of DovahKit: xEdit also takes several seconds to prepare Skyrim.esm's 15462 `NVMI` entries for display. Is there anything we can do about this?
+
+Potentially, we could multi-thread loading the data somehow -- spawn subordinate file readers, and divide `NVMI` subrecords across multiple threads. I'm not 100% clear on how we could sensibly handle the fact that `NVMI`s are, conceptually, a map. We store them as a `std::vector` which means that in theory, we could have each thread load its own `std::vector` of NVMIs, and then coalesce them via slicing somehow. Alternatively, the code that doles NVMI subrecords out for reading could peek and resolve the navmesh form ID at the start of each NVMI, and use that to track and override duplicates.
+
+**That said: we should benchmark every part of the load process before we try to optimize anything. For all we know, the overhead may just come from all the times we expand the std::vector, and not from the actual reading.**
+
+Some notes:
+
+* The reason we store NVMI using a `std::vector` is because `form_reference_t` can't be used as a map/set key. Even if we added a `std::hash` specialization for it, the problem is that we can't control precisely how the things are created or destroyed -- that logic is handled within the container -- and as such, it becomes incredibly difficult to maintain use info.
+
+* Since we don't offer navmesh editing, files created in DovahKit cannot end up making any change that updates `NAVI`, and so in that instance, we don't need to load `NAVI` at all, much less for the purpose of re-saving it. However, if users use DovahKit to modify files originally made in the CK which contain navmesh edits, then those files will contain `NAVI` overrides, which we'll have to load and resave, and so this perf issue would add several seconds to the file-save time.
+
+#### Updating/regeneration
 We can load and re-save the `NavMeshInfoMap` (the `NAVI` singleton form), but we don't actually know how to update it. The CK updates it just before saving, at the start of `NavMeshInfoMap::Save`; the code involved has INI settings and log strings that make it easy to identify.
 
 
