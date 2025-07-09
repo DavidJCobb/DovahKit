@@ -1,5 +1,4 @@
 #pragma once
-#include "../../core.h"
 
 namespace dovah {
    class file_load_order;

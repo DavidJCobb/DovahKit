@@ -121,7 +121,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Character | FACT | Faction          | ✅ | ✅ | ⬛ |
 | Character | HDPT | HeadPart         | ✅ | ✅ | ⬛ |
 | Character | MOVT | Movement Type    | ✅ | ✅ | ⬛ |
-| Character | PACK | Package          | ✅ | 🟨 | ⬛ |
+| Character | PACK | Package          | ✅ | 🟨 | ⬛ | Once the UI's done, test editing conditions with packdata run-on/params. |
 | Character | QUST | Quest            | ✅ | 🟩 | 🟨 |
 | Character | RACE | Race             | ✅ | ✅ | ⬛ |
 | Character | RELA | Relationship     | ✅ | ✅ | ⬛ |
@@ -206,7 +206,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Cell Children | NAVM | Navmesh | ⬛ | ⬛ | ⬛ |
 | Cell Children | REFR | Reference | ✅ | 🟨 | 🟨 |
 | Singletons | DOBJ | Default Object Manager | ✅ | ✅ | ⬛ |
-| Singletons | NAVI | Navmesh Info Map | ⬛ |   | ⬛ |
+| Singletons | NAVI | Navmesh Info Map | 🟩 |   | ⬛ | Can load and re-save; can't update/regenerate. |
 | | AVIF | Actor Value | ✅ | 🟨 | ⬛ | We'll also need a custom widget and dialog for Perk Trees. |
 | | CELL | Cell | ✅ | ✅ | 🟨 |
 | | IDLE | Idle Animation | ✅ | 🟨 | ⬛ | Not a per-form dialog, but a shared dialog for all forms of this type. |
@@ -257,6 +257,7 @@ SSE: Files with header versions below 1.71 need to warn on records with form IDs
 
 AFAIK, the CK never should've produced records overrides with that quirk, but who knows what community tools (e.g. clumsily performed mod merges, maybe?) might've done. Records of that variety shouldn't exist so if they do exist, in pre-1.71 files, then they almost certainly rely on pre-1.71 behavior and we should warn that they'll use post-1.71 behavior in-game. (I believe we do the HEDR check that the game doesn't, so we should apply pre-1.71 behavior to pre-1.71 files.)
 
+
 ## Long-term
 
 ### General UI
@@ -267,15 +268,21 @@ AFAIK, the CK never should've produced records overrides with that quirk, but wh
 
 * DKHeaderView: Bug: If the total width of all columns is wider than the containing view, then you can resize a colum and enlarge it properly. However, attempting to shrink a column causes glitchy behavior: the column size shrinks by an unpredictable amount, and the table and header become visually desynched until you force the table rows to re-render (e.g. by changing your selection).
 
+
+### `NavMeshInfoMap`
+
+We can load and re-save the `NavMeshInfoMap` (the `NAVI` singleton form), but we don't actually know how to update it. The CK updates it just before saving, at the start of `NavMeshInfoMap::Save`; the code involved has INI settings and log strings that make it easy to identify.
+
+
 ### Dialogue/alias edge-case
 
 So it turns out, I thought ahead when implementing the editing of conditions: the QUST UI already communicates with `DovahKitCore` regarding changes to its quest stages or aliases, and the condition-editing UI and supporting backend structures are both designed to prefer working-copy data by default. This leaves safeguards for editing INFOs, though, because this means it's possible to:
 
 1. Begin editing a QUST.
-1. Add a new alias Foo to that QUST.
-1. Edit an INFO which is parented to the quest, and add conditions which refer to Foo.
-1. Commit changes to the INFO.
-1. Cancel changes to the QUST, such that Foo disappears and the INFO now has a dangling reference to an invalid alias ID.
+2. Add a new alias Foo to that QUST.
+3. Edit an INFO which is parented to the quest, and add conditions which refer to Foo.
+4. Commit changes to the INFO.
+5. Cancel changes to the QUST, such that Foo disappears and the INFO now has a dangling reference to an invalid alias ID.
 
 This generalizes to any forms that have an owning quest (since "Alias #123 on whatever my owning quest is" can be the run-on target for a condition), as well as to conditions in *any* form that take quest stages or quest alias IDs as parameters. A half-remedy -- something to cover the case of dangling references to not-yet-committed quest edits -- would be to have all form-editing dialogs [for forms that have conditions] inform DovahKitCore on save, as to what quest stages and aliases their conditions refer to; and then when canceling changes to a quest, DovahKitCore can silently sever references to any to-be-cancelled stages and aliases. However, there are all sorts of ways to have dangling references to individual parts of forms, so it may perhaps be better to instead make long-term (i.e. post-launch) plans for a system akin to use info that handles references to individual pieces of data within a given form, be those quest aliases, quest stages, or perhaps other things like package data.
 

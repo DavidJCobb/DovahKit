@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include "../core.h"
 #include "../form_types.h"
 
 namespace dovah {

@@ -1,7 +1,7 @@
 #include "hardcoded.h"
+#include <array>
 #include "construct.h"
 #include "../../data/hardcoded_form_ids.h"
-#include "../../core.h"
 #include "../../form_stub.h"
 #include "../../form_stub_use_info_builder.h"
 #include "../../files/tes_file_reading/file_loader.h"

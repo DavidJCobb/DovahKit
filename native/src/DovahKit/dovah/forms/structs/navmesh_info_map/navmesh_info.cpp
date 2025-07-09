@@ -80,6 +80,7 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
                auto&    list = island.triangles;
                uint32_t size = 0;
                subrecord.read(size);
+               list.resize(size);
                for (uint32_t i = 0; i < size; ++i) {
                   auto& item = list[i];
                   subrecord.read(item.vertices);
@@ -89,6 +90,7 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
                auto&    list = island.vertices;
                uint32_t size = 0;
                subrecord.read(size);
+               list.resize(size);
                for (uint32_t i = 0; i < size; ++i) {
                   auto& item = list[i];
                   subrecord.read(item.x);

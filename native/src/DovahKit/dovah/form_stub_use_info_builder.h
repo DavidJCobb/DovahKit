@@ -1,9 +1,12 @@
 #pragma once
 #include <array>
+#include <cstdint>
 #include <vector>
-#include "form_stub.h"
+#include "./form_id_t.h"
+#include "./use_info_entry.h"
 
 namespace dovah {
+   class form_stub;
    class form_stub_use_info_builder_form_specific_data;
 }
 

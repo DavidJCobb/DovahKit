@@ -141,17 +141,6 @@ namespace dovah::loaded_forms {
                // we can update the latter list (and this form's use info) properly on save.
                //
                {
-                  std::vector<form_reference_t> list;
-                  {
-                     size_t count = subrecord.size() / 4;
-                     list.resize(count);
-                     for (size_t i = 0; i < count; ++i) {
-                        auto& form = list[i];
-                        subrecord.unchecked_read(form);
-                        intfc.warn_if_ref_is_wrong_type(form, form_type::navmesh, subrecord.signature());
-                     }
-                  }
-
                   auto& list  = is_active_file  ? this->deleted_navmeshes.active_file : this->deleted_navmeshes.masters;
                   auto& other = !is_active_file ? this->deleted_navmeshes.active_file : this->deleted_navmeshes.masters;
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "../../core.h"
+#include "../../form_types.h"
 
 namespace dovah {
    class form_stub;

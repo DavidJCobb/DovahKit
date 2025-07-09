@@ -1,13 +1,13 @@
 #pragma once
-#include "../../core.h"
+#include "../../form_types.h"
 #include "../Form.h"
 
 namespace dovah {
-   namespace tes_file_reading {
-      class record;
-   }
    namespace load_order_interfaces {
       class form_load;
+   }
+   namespace tes_file_reading {
+      class record;
    }
    using form_loader_function_t = void(*)(loaded_forms::Form*, tes_file_reading::record&, load_order_interfaces::form_load&); // construct and load
 

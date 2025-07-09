@@ -1,4 +1,5 @@
-#include "form_stub_use_info_builder.h"
+#include "./form_stub_use_info_builder.h"
+#include "./form_stub.h"
 #include "./form_stub_use_info_builder_form_specific_data.h"
 
 namespace dovah {
@@ -19,10 +20,6 @@ namespace dovah {
       }
    }
    void form_stub_use_info_builder::add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
-#if _DEBUG
-if (toFormID == 0x23)
-   __debugbreak();
-#endif
       if (++this->_pending.size < preallocated_array_size) {
          this->_pending.fixed[this->_pending.size - 1] = _pending_entry(toFormID, flags);
       } else {

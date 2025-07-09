@@ -1,15 +1,13 @@
 #pragma once
-#include <array>
 #include <cstdint>
 #include <optional>
 #include <set>
 #include <unordered_map>
-#include <vector>
 #include "./forms/structs/navmesh_info_map/navmesh_info_collection.h"
 #include "./forms/structs/navmesh_info_map/precomputed_path_collection.h"
 #include "./forms/structs/navmesh_info_map/road_marker_map.h"
 #include "./forms/structs/world_large_ref_data.h"
-#include "./core.h"
+#include "./form_id_t.h"
 
 namespace dovah {
    class form_stub_use_info_builder;

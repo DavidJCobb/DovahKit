@@ -1432,6 +1432,7 @@
     <ClInclude Include="dovah\forms\Tree.h" />
     <ClInclude Include="dovah\forms\VisualEffect.h" />
     <ClInclude Include="dovah\forms\Weapon.h" />
+    <ClInclude Include="dovah\form_id_t.h" />
     <ClInclude Include="dovah\form_reference_t.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_child_form.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_dialogue_branch_topic.h" />

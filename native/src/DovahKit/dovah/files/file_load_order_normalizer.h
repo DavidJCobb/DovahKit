@@ -1,8 +1,9 @@
 #pragma once
+#include <cstdint>
 #include <set>
 #include <string>
 #include <vector>
-#include "../core.h"
+#include "../data/game.h"
 
 namespace dovah {
    namespace tes_file_reading {

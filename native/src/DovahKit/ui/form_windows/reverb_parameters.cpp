@@ -439,7 +439,7 @@ FormDialogReverbParameters::FormDialogReverbParameters(dovah::form_stub& stub, Q
       });
    }
 
-   #pragma push_macro("MAKE_EDIT");
+   #pragma push_macro("MAKE_EDIT")
    #define MAKE_EDIT(field, uiName) \
       { \
          using value_type   = std::decay_t<decltype(this->ui.uiName##Slider->value())>; \
@@ -465,7 +465,7 @@ FormDialogReverbParameters::FormDialogReverbParameters(dovah::form_stub& stub, Q
    MAKE_EDIT(reflect_delay, reflectDelay);
    MAKE_EDIT(diffusion, diffusion);
    MAKE_EDIT(density, density);
-   #pragma pop_macro("MAKE_EDIT");
+   #pragma pop_macro("MAKE_EDIT")
 
    this->load(); // this creates the working copy.
 }
@@ -477,7 +477,7 @@ void FormDialogReverbParameters::_load_impl() {
    ui::bind(this->ui.reverbAmpSpinbox, working.reverb_amp);
    ui::bind(this->ui.decayTimeSpinbox, working.decay_time);
    ui::bind(this->ui.reverbDelaySpinbox, working.decay_time);
-   #pragma push_macro("MAKE_EDIT");
+   #pragma push_macro("MAKE_EDIT")
    #define MAKE_EDIT(field, uiName) ui::bind(this->ui.uiName##Spinbox, working.field);
    MAKE_EDIT(reverb_amp, reverbAmp);
    MAKE_EDIT(decay_time, decayTime);
@@ -497,7 +497,7 @@ void FormDialogReverbParameters::_load_impl() {
    //MAKE_EDIT(reflect_delay, reflectDelay);
    MAKE_EDIT(diffusion, diffusion);
    MAKE_EDIT(density, density);
-   #pragma pop_macro("MAKE_EDIT");
+   #pragma pop_macro("MAKE_EDIT")
 }
 void FormDialogReverbParameters::_save_impl() {
    //
