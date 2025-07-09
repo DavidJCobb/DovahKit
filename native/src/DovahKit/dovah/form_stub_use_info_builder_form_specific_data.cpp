@@ -25,6 +25,8 @@ namespace dovah {
          }
          for (auto id : data.precomputed_paths.navmeshes)
             dst.add_outbound_reference(id);
+         for (auto id : data.deleted_navmeshes)
+            dst.add_outbound_reference(id);
       }
       //
       // Form structs:

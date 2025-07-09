@@ -33,9 +33,9 @@ namespace dovah::loaded_forms {
          };
 
       public:
-         navmesh_info_collection     navmesh_infos;     // NVMI[]
-         precomputed_path_collection precomputed_paths; // NVPP
-         std::vector<road_marker>    road_markers;      // NVPP
+         navmesh_info_collection       navmesh_infos;     // NVMI[]
+         precomputed_path_collection   precomputed_paths; // NVPP
+         std::vector<road_marker>      road_markers;      // NVPP
          struct {
             std::vector<form_reference_t> masters;
             std::vector<form_reference_t> active_file;

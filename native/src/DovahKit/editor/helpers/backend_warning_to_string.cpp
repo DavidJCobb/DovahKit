@@ -972,6 +972,25 @@ namespace editor_helpers {
                      disambig
                   ).arg(subject).arg(navmesh).arg(cell);
                }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::navmesh_info_map::navmesh_may_be_multiply_deleted*>(&warning)) {
+                  //
+                  // When I cite Bethesda as a source, I'm citing the specific warning message they emit for this 
+                  // situation.
+                  //
+                  // NOTE: We use "may" and "appears" because this error would also be raised (spuriously) by the 
+                  // Creation Kit and by DovahKIt if a single NavMeshInfoMap's NVSI subrecord listed the same 
+                  // navmesh multiple times. NVSI should never contain duplicates, and only could if (perhaps) 
+                  // improperly edited through third-party tools (or if we screw something up, I suppose).
+                  // 
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString navmesh = form_identifiers_to_string(&casted->navmesh);
+                  //
+                  return QObject::tr(
+                     "Navmesh %2 appears to have been deleted by multiple files in the load order. Per Bethesda, if multiple files touch "
+                     "the same cell's navmesh, the resulting behavior is undefined.",
+                     disambig
+                  ).arg(subject).arg(navmesh);
+               }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::navmesh_info_map::precomputed_path_has_gaps*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   QString format;

@@ -38,6 +38,7 @@
    #include "./by_form_type/navmesh_info_map/navmesh_info_pathing_cell_bad_crc.h"
    #include "./by_form_type/navmesh_info_map/navmesh_info_pathing_cell_is_improper_exterior.h"
    #include "./by_form_type/navmesh_info_map/navmesh_info_pathing_door_bad_crc.h"
+   #include "./by_form_type/navmesh_info_map/navmesh_may_be_multiply_deleted.h"
    #include "./by_form_type/navmesh_info_map/precomputed_path_has_gaps.h"
    #include "./by_form_type/navmesh_info_map/precomputed_path_is_empty.h"
    #include "./by_form_type/note/non_texture_note_includes_texture_path.h"
