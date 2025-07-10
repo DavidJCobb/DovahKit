@@ -10,6 +10,14 @@ namespace dovah {
    namespace loaded_forms::components {
       struct destruction_stage_data {
          public:
+            static constexpr const uint32_t subrecord_header       = 'DEST';
+            static constexpr const uint32_t subrecord_stage_data   = 'DSTD';
+            static constexpr const uint32_t subrecord_model_path   = 'DMDL';
+            static constexpr const uint32_t subrecord_model_hashes = 'DMDT';
+            static constexpr const uint32_t subrecord_model_swaps  = 'DMDS';
+            static constexpr const uint32_t subrecord_terminator   = 'DSTF';
+
+         public:
             struct data_flag {
                data_flag() = delete;
                enum type : uint8_t {

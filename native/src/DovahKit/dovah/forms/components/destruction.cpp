@@ -85,17 +85,17 @@ namespace dovah::loaded_forms::components {
 
       #if LOAD_NAIVELY_WHEN_THE_GAME_DOES == 1
          auto& record = subrecord.get_containing_record();
-         if (subrecord.signature() == 'DEST') {
+         if (subrecord.signature() == subrecord_header) {
             _handle_dest();
             return;
          }
-         if (subrecord.signature() == 'DSTD') {
+         if (subrecord.signature() == subrecord_stage_data) {
             _handle_dstd();
-            for (; subrecord.exists() && subrecord.signature() != 'DSTF'; record.next_subrecord()) {
+            for (; subrecord.exists() && subrecord.signature() != subrecord_terminator; record.next_subrecord()) {
                switch (subrecord.signature()) {
-                  case 'DMDL':
-                  case 'DMDT':
-                  case 'DMDS':
+                  case subrecord_model_path:
+                  case subrecord_model_hashes:
+                  case subrecord_model_swaps:
                      if (last_loaded_stage < this->stages.size()) {
                         auto& stage = this->stages[last_loaded_stage];
                         stage.replacementModel.load(subrecord, intfc);
@@ -107,21 +107,21 @@ namespace dovah::loaded_forms::components {
          }
       #else
          switch (subrecord.signature()) {
-            case 'DEST':
+            case subrecord_header:
                _handle_dest();
                break;
-            case 'DSTD':
+            case subrecord_stage_data:
                _handle_dstd();
                break;
-            case 'DMDL':
-            case 'DMDT':
-            case 'DMDS':
+            case subrecord_model_path:
+            case subrecord_model_hashes:
+            case subrecord_model_swaps:
                if (last_loaded_stage < this->stages.size()) {
                   auto& stage = this->stages[last_loaded_stage];
                   stage.replacementModel.load(subrecord, intfc);
                }
                break;
-            case 'DSTF': // end marker
+            case subrecord_terminator: // end marker
                last_loaded_stage = _not_in_a_stage;
                break;
          }
@@ -130,7 +130,7 @@ namespace dovah::loaded_forms::components {
    /*static*/ void destruction_stage_data::generate_use_info(tes_subrecord_reader& subrecord, use_info_builder& uib) {
       form_id_t formID;
       switch (subrecord.signature()) {
-         case 'DEST': // destruction stage header // details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/DEST_Field
+         case subrecord_header: // destruction stage header // details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/DEST_Field
             if (subrecord.size() != 8) {
                uib.per_stage.clear();
                break;
@@ -146,7 +146,7 @@ namespace dovah::loaded_forms::components {
             }
             // remaining bytes don't matter
             break;
-         case 'DSTD': // destruction stage data
+         case subrecord_stage_data: // destruction stage data
             {
                uint8_t stage_index;
                subrecord.skip_bytes(1);
@@ -165,12 +165,12 @@ namespace dovah::loaded_forms::components {
             }
             // remaining bytes don't matter
             break;
-         case 'DMDL': // destruction stage model
-         case 'DMDT': // 
-         case 'DMDS': // 
+         case subrecord_model_path: // destruction stage model
+         case subrecord_model_hashes: // 
+         case subrecord_model_swaps: // 
             model::generate_use_info(subrecord, uib.owner);
             break;
-         case 'DSTF': // destruction stage end marker
+         case subrecord_terminator: // destruction stage end marker
             break;
       }
    }
@@ -184,7 +184,7 @@ namespace dovah::loaded_forms::components {
          intfc.throw_save_error(notice);
          return;
       }
-      auto& DEST = record.open_next_subrecord('DEST');
+      auto& DEST = record.open_next_subrecord(subrecord_header);
       DEST.write(this->health);
       DEST.write(uint8_t(stage_count));
       DEST.write(this->flags);
@@ -194,7 +194,7 @@ namespace dovah::loaded_forms::components {
       for (size_t i = 0; i < this->stages.size(); ++i) {
          auto& stage = this->stages[i];
 
-         auto& DSTD = record.open_next_subrecord('DSTD');
+         auto& DSTD = record.open_next_subrecord(subrecord_stage_data);
          DSTD.write(stage.healthPercent);
          DSTD.write((uint8_t)i);
          DSTD.write(stage.damageStage);
@@ -206,10 +206,9 @@ namespace dovah::loaded_forms::components {
          DSTD.close();
          //
          auto& model = stage.replacementModel;
-         model.save(record, intfc, 'DMDL', 'DMDT', 'DMDS');
+         model.save(record, intfc, subrecord_model_path, subrecord_model_hashes, subrecord_model_swaps);
 
-         auto& DSTF = record.open_next_subrecord('DSTF');
-         DSTF.close();
+         record.open_next_subrecord(subrecord_terminator).close();
       }
    }
    void destruction_stage_data::clone_from(const destruction_stage_data& other, loaded_forms::Form& my_owner) noexcept {

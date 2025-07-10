@@ -23,7 +23,7 @@ namespace dovah::loaded_forms {
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
                break;
-            case 'OBND':
+            case components::object_bounds::subrecord:
                this->bounds.load(subrecord, intfc);
                break;
             case 'TX00':
@@ -78,7 +78,7 @@ namespace dovah::loaded_forms {
             case 'VMAD':
                components::papyrus_attachment_data::generate_use_info(subrecord, uib);
                break;
-            case 'OBND':
+            case components::object_bounds::subrecord:
                break;
             case 'TX00':
                break;
@@ -133,7 +133,7 @@ namespace dovah::loaded_forms {
    void TextureSet::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       {  // xEdit considers it an error if OBND is not present here (`wbOBNDReq` in its definitions)
-         auto& OBND = record.open_next_subrecord('OBND');
+         auto& OBND = record.open_next_subrecord(components::object_bounds::subrecord);
          this->bounds.save(OBND, intfc);
          OBND.close();
       }

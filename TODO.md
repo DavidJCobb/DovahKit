@@ -128,7 +128,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Character | SMEN | SM Event Node    | ⬛ | ⬛ | ⬛ | How do the game and CK cope with multiple forms for a single event type? |
 | Character | VTYP | Voicetype        | ✅ | ✅ | ✅ |
 | Items | AMMO | Ammo           | ✅ | ✅ | ⬛ |
-| Items | ARMO | Armor          | ⬛ | 🟨 | ⬛ |
+| Items | ARMO | Armor          | ✅ | 🟨 | ⬛ |
 | Items | ARMA | ArmorAddon     | ⬛ | ⬛ | ⬛ | Race has a checkbox list for equip types. Probably should make that a reusable widget, and use it here for Additional Races. |
 | Items | BOOK | Book           | ✅ | 🟨 | ⬛ |
 | Items | COBJ | Constructible Object | ⬛ | 🟨 | ⬛ |

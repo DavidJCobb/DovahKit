@@ -28,7 +28,7 @@ namespace dovah::loaded_forms {
             //
             case 'EDID': // already read by the FormStub
                break;
-            case 'OBND':
+            case components::object_bounds::subrecord:
                this->bounds.load(subrecord, intfc);
                break;
             case components::magic_effect_list::subrecord_signature_effect:
@@ -53,12 +53,12 @@ namespace dovah::loaded_forms {
                subrecord.read(this->value);
                subrecord.read(this->weight);
                break;
-            case 'DEST': // destruction stage header // details: https://en.uesp.net/wiki/Tes5Mod:Mod_File_Format/DEST_Field
-            case 'DSTD': // destruction stage data
-            case 'DMDL': // destruction stage model
-            case 'DMDT': // destruction stage model texture hashes
-            case 'DMDS': // destruction stage model texture swaps
-            case 'DSTF': // destruction stage end marker
+            case components::destruction_stage_data::subrecord_header:
+            case components::destruction_stage_data::subrecord_stage_data:
+            case components::destruction_stage_data::subrecord_model_path:
+            case components::destruction_stage_data::subrecord_model_hashes:
+            case components::destruction_stage_data::subrecord_model_swaps:
+            case components::destruction_stage_data::subrecord_terminator:
                if (!this->destruction_data.has_value())
                   this->destruction_data.emplace();
                this->destruction_data.value().load(subrecord, intfc);
@@ -123,7 +123,7 @@ namespace dovah::loaded_forms {
 
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
-            case 'OBND': // bounds
+            case components::object_bounds::subrecord: // bounds
                components::object_bounds::generate_use_info(subrecord, uib);
                break;
             case components::magic_effect_list::subrecord_signature_effect:
@@ -152,12 +152,12 @@ namespace dovah::loaded_forms {
             case 'MOSD':
                decltype(model)::generate_use_info(subrecord, uib); // redundant TESModel subrecords just append more texture replacement entries, without clearing those already in the list
                break;
-            case 'DEST': // destruction stage header
-            case 'DSTD': // destruction stage data
-            case 'DMDL': // destruction stage model
-            case 'DMDT': // destruction stage model texture hashes
-            case 'DMDS': // destruction stage model texture swaps
-            case 'DSTF': // destruction stage end marker
+            case components::destruction_stage_data::subrecord_header:
+            case components::destruction_stage_data::subrecord_stage_data:
+            case components::destruction_stage_data::subrecord_model_path:
+            case components::destruction_stage_data::subrecord_model_hashes:
+            case components::destruction_stage_data::subrecord_model_swaps:
+            case components::destruction_stage_data::subrecord_terminator:
                components::destruction_stage_data::generate_use_info(subrecord, destruction_uib);
                break;
             case 'YNAM':
@@ -213,7 +213,7 @@ namespace dovah::loaded_forms {
    }
    void Ingredient::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
-      auto& OBND = record.open_next_subrecord('OBND');
+      auto& OBND = record.open_next_subrecord(components::object_bounds::subrecord);
       this->bounds.save(OBND, intfc);
       OBND.close();
       if (!this->name.empty()) {

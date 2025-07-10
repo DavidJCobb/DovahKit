@@ -28,7 +28,7 @@ namespace dovah::loaded_forms {
             //
             case 'EDID': // already read by the FormStub
                break;
-            case 'OBND':
+            case components::object_bounds::subrecord:
                this->bounds.load(subrecord, intfc);
                break;
             case components::magic_effect_list::subrecord_signature_effect:
@@ -90,7 +90,7 @@ namespace dovah::loaded_forms {
 
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
-            case 'OBND': // bounds
+            case components::object_bounds::subrecord: // bounds
                components::object_bounds::generate_use_info(subrecord, uib);
                break;
             case components::magic_effect_list::subrecord_signature_effect:
@@ -146,7 +146,7 @@ namespace dovah::loaded_forms {
    }
    void Spell::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
-      auto& OBND = record.open_next_subrecord('OBND');
+      auto& OBND = record.open_next_subrecord(components::object_bounds::subrecord);
       this->bounds.save(OBND, intfc);
       OBND.close();
       if (!this->name.empty()) {

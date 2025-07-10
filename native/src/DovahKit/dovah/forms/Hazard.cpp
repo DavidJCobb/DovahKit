@@ -16,7 +16,7 @@ namespace dovah::loaded_forms {
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
                break;
-            case 'OBND':
+            case components::object_bounds::subrecord:
                this->bounds.load(subrecord, intfc);
                break;
             case 'FULL':
@@ -68,7 +68,7 @@ namespace dovah::loaded_forms {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
          switch (subrecord.signature()) {
-            case 'OBND':
+            case components::object_bounds::subrecord:
                components::object_bounds::generate_use_info(subrecord, uib);
                break;
             case 'VMAD':
@@ -121,7 +121,7 @@ namespace dovah::loaded_forms {
    }
    void Hazard::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
-      auto& OBND = record.open_next_subrecord('OBND');
+      auto& OBND = record.open_next_subrecord(components::object_bounds::subrecord);
       this->bounds.save(OBND, intfc);
       OBND.close();
       auto& FULL = record.open_next_subrecord('FULL');

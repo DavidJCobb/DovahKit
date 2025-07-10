@@ -39,7 +39,7 @@ namespace dovah::loaded_forms {
                   case 'VMAD':
                      this->script_data.load(subrecord, intfc);
                      break;
-                  case 'OBND':
+                  case components::object_bounds::subrecord:
                      this->bounds.load(subrecord, intfc);
                      break;
                   case 'FULL':
@@ -50,12 +50,12 @@ namespace dovah::loaded_forms {
                   case 'MODS':
                      this->model.load(subrecord, intfc);
                      break;
-                  case 'DEST': // destruction stage header
-                  case 'DSTD': // destruction stage data
-                  case 'DMDL': // destruction stage model
-                  case 'DMDT': // destruction stage model texture hashes
-                  case 'DMDS': // destruction stage model texture swaps
-                  case 'DSTF': // destruction stage end marker
+                  case components::destruction_stage_data::subrecord_header:
+                  case components::destruction_stage_data::subrecord_stage_data:
+                  case components::destruction_stage_data::subrecord_model_path:
+                  case components::destruction_stage_data::subrecord_model_hashes:
+                  case components::destruction_stage_data::subrecord_model_swaps:
+                  case components::destruction_stage_data::subrecord_terminator:
                      if (!this->destruction_data.has_value())
                         this->destruction_data.emplace();
                      this->destruction_data.value().load(subrecord, intfc);
@@ -192,19 +192,19 @@ namespace dovah::loaded_forms {
                case 'MODS':
                   decltype(model)::generate_use_info(subrecord, uib); // redundant TESModel subrecords just append more texture replacement entries, without clearing those already in the list
                   break;
-               case 'DEST': // destruction stage header
-               case 'DSTD': // destruction stage data
-               case 'DMDL': // destruction stage model
-               case 'DMDT': // destruction stage model texture hashes
-               case 'DMDS': // destruction stage model texture swaps
-               case 'DSTF': // destruction stage end marker
+               case components::destruction_stage_data::subrecord_header:
+               case components::destruction_stage_data::subrecord_stage_data:
+               case components::destruction_stage_data::subrecord_model_path:
+               case components::destruction_stage_data::subrecord_model_hashes:
+               case components::destruction_stage_data::subrecord_model_swaps:
+               case components::destruction_stage_data::subrecord_terminator:
                   components::destruction_stage_data::generate_use_info(subrecord, activator.destruction_uib);
                   break;
                case 'KSIZ':
                case 'KWDA':
                   components::keyword_list::generate_use_info(subrecord, uib);
                   break;
-               case 'OBND': // bounds
+               case components::object_bounds::subrecord: // bounds
                   components::object_bounds::generate_use_info(subrecord, uib);
                   break;
                case 'EDID': // editor ID
@@ -309,7 +309,7 @@ namespace dovah::loaded_forms {
    void Furniture::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       #pragma region FORM
          this->script_data.save(record, intfc);
-         auto& OBND = record.open_next_subrecord('OBND');
+         auto& OBND = record.open_next_subrecord(components::object_bounds::subrecord);
          this->bounds.save(OBND, intfc);
          OBND.close();
       #pragma endregion

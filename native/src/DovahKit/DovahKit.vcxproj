@@ -144,6 +144,7 @@
     <ClCompile Include="dovah\forms\Ammo.cpp" />
     <ClCompile Include="dovah\forms\AnimationProp.cpp" />
     <ClCompile Include="dovah\forms\Apparatus.cpp" />
+    <ClCompile Include="dovah\forms\Armor.cpp" />
     <ClCompile Include="dovah\forms\ArtObject.cpp" />
     <ClCompile Include="dovah\forms\AssociationType.cpp" />
     <ClCompile Include="dovah\forms\Book.cpp" />
@@ -1304,6 +1305,7 @@
     <ClInclude Include="dovah\forms\Ammo.h" />
     <ClInclude Include="dovah\forms\AnimationProp.h" />
     <ClInclude Include="dovah\forms\Apparatus.h" />
+    <ClInclude Include="dovah\forms\Armor.h" />
     <ClInclude Include="dovah\forms\ArtObject.h" />
     <ClInclude Include="dovah\forms\AssociationType.h" />
     <ClInclude Include="dovah\forms\Book.h" />

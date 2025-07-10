@@ -17,7 +17,7 @@ namespace dovah::loaded_forms {
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
                break;
-            case 'OBND':
+            case components::object_bounds::subrecord:
                this->bounds.load(subrecord, intfc);
                break;
             case 'MODL':
@@ -76,7 +76,7 @@ namespace dovah::loaded_forms {
    }
    void IdleMarker::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
-      auto& OBND = record.open_next_subrecord('OBND');
+      auto& OBND = record.open_next_subrecord(components::object_bounds::subrecord);
       this->bounds.save(OBND, intfc);
       OBND.close();
       this->data.save(record, intfc);

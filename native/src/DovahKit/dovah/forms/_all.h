@@ -15,6 +15,7 @@
    #include "Ammo.h"
    #include "AnimationProp.h"
    #include "Apparatus.h"
+   #include "Armor.h"
    #include "ArtObject.h"
    #include "AssociationType.h"
    #include "Book.h"
@@ -121,6 +122,7 @@ namespace dovah {
       loaded_forms::Ammo,
       loaded_forms::AnimationProp,
       loaded_forms::Apparatus,
+      loaded_forms::Armor,
       loaded_forms::ArtObject,
       loaded_forms::AssociationType,
       loaded_forms::Book,

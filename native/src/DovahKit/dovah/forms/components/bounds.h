@@ -1,10 +1,13 @@
 #pragma once
+#include <cstdint>
 #include <string>
 #include "../../../helpers/vector3.h"
 #include "../_common.h"
 
 namespace dovah::loaded_forms::components {
    struct object_bounds {
+      static constexpr const uint32_t subrecord = 'OBND';
+
       using point_type = cobb::vector3<int16_t>;
 
       point_type min;

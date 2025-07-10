@@ -31,7 +31,7 @@ namespace dovah::loaded_forms {
             case 'MODT':
                this->model.load(subrecord, intfc);
                break;
-            case 'OBND':
+            case components::object_bounds::subrecord:
                this->bounds.load(subrecord, intfc);
                break;
             case 'VMAD':
@@ -165,7 +165,7 @@ namespace dovah::loaded_forms {
             case 'MODS':
                decltype(model)::generate_use_info(subrecord, uib); // redundant TESModel subrecords just append more texture replacement entries, without clearing those already in the list
                break;
-            case 'OBND':
+            case components::object_bounds::subrecord:
                components::object_bounds::generate_use_info(subrecord, uib);
                break;
             case 'VMAD':
@@ -258,7 +258,7 @@ namespace dovah::loaded_forms {
    }
    void Note::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
-      auto& OBND = record.open_next_subrecord('OBND');
+      auto& OBND = record.open_next_subrecord(components::object_bounds::subrecord);
       this->bounds.save(OBND, intfc);
       OBND.close();
       auto& FULL = record.open_next_subrecord('FULL');
