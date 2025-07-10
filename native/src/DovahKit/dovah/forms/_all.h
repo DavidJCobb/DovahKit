@@ -17,6 +17,7 @@
    #include "Apparatus.h"
    #include "ArtObject.h"
    #include "AssociationType.h"
+   #include "Book.h"
    #include "CameraShot.h"
    #include "Cell.h"
    #include "Class.h"
@@ -40,6 +41,7 @@
    #include "Footstep.h"
    #include "FootstepSet.h"
    #include "FormList.h"
+   #include "Furniture.h"
    #include "Global.h"
    #include "Grass.h"
    #include "Hazard.h"
@@ -121,6 +123,7 @@ namespace dovah {
       loaded_forms::Apparatus,
       loaded_forms::ArtObject,
       loaded_forms::AssociationType,
+      loaded_forms::Book,
       loaded_forms::CameraShot,
       loaded_forms::Cell,
       loaded_forms::Class,
@@ -144,6 +147,7 @@ namespace dovah {
       loaded_forms::Footstep,
       loaded_forms::FootstepSet,
       loaded_forms::FormList,
+      loaded_forms::Furniture,
       loaded_forms::Global,
       loaded_forms::Grass,
       loaded_forms::Hazard,

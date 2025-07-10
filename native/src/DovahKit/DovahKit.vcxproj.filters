@@ -3270,6 +3270,12 @@
     <ClCompile Include="dovah\forms\structs\navmesh_info_map\road_marker_map.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\Furniture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\Book.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8175,6 +8181,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\form_id_t.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\Furniture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\Book.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

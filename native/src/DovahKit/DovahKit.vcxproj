@@ -146,6 +146,7 @@
     <ClCompile Include="dovah\forms\Apparatus.cpp" />
     <ClCompile Include="dovah\forms\ArtObject.cpp" />
     <ClCompile Include="dovah\forms\AssociationType.cpp" />
+    <ClCompile Include="dovah\forms\Book.cpp" />
     <ClCompile Include="dovah\forms\CameraShot.cpp" />
     <ClCompile Include="dovah\forms\Class.cpp" />
     <ClCompile Include="dovah\forms\CollisionLayer.cpp" />
@@ -157,6 +158,7 @@
     <ClCompile Include="dovah\forms\components\enchantable.cpp" />
     <ClCompile Include="dovah\forms\components\idle_collection.cpp" />
     <ClCompile Include="dovah\forms\EncounterZone.cpp" />
+    <ClCompile Include="dovah\forms\Furniture.cpp" />
     <ClCompile Include="dovah\forms\MenuIcon.cpp" />
     <ClCompile Include="dovah\forms\MovableStatic.cpp" />
     <ClCompile Include="dovah\forms\MusicTrack.cpp" />
@@ -1304,6 +1306,7 @@
     <ClInclude Include="dovah\forms\Apparatus.h" />
     <ClInclude Include="dovah\forms\ArtObject.h" />
     <ClInclude Include="dovah\forms\AssociationType.h" />
+    <ClInclude Include="dovah\forms\Book.h" />
     <ClInclude Include="dovah\forms\CameraShot.h" />
     <ClInclude Include="dovah\forms\Class.h" />
     <ClInclude Include="dovah\forms\CollisionLayer.h" />
@@ -1319,6 +1322,7 @@
     <ClInclude Include="dovah\forms\components\enchantable.h" />
     <ClInclude Include="dovah\forms\components\idle_collection.h" />
     <ClInclude Include="dovah\forms\EncounterZone.h" />
+    <ClInclude Include="dovah\forms\Furniture.h" />
     <ClInclude Include="dovah\forms\MenuIcon.h" />
     <ClInclude Include="dovah\forms\MovableStatic.h" />
     <ClInclude Include="dovah\forms\MusicTrack.h" />

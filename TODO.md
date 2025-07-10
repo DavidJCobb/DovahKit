@@ -130,7 +130,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Items | AMMO | Ammo           | ✅ | ✅ | ⬛ |
 | Items | ARMO | Armor          | ⬛ | 🟨 | ⬛ |
 | Items | ARMA | ArmorAddon     | ⬛ | ⬛ | ⬛ | Race has a checkbox list for equip types. Probably should make that a reusable widget, and use it here for Additional Races. |
-| Items | BOOK | Book           | ⬛ | 🟨 | ⬛ |
+| Items | BOOK | Book           | ✅ | 🟨 | ⬛ |
 | Items | COBJ | Constructible Object | ⬛ | 🟨 | ⬛ |
 | Items | INGR | Ingredient     | ✅ | ✅ | ⬛ |
 | Items | KEYM | Key            | ✅ | ✅ | ⬛ |
@@ -190,7 +190,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | WorldObjects | CONT | Container     | ✅ | ✅ | ⬛ |
 | WorldObjects | DOOR | Door          | ✅ | ✅ | ⬛ |
 | WorldObjects | FLOR | Flora         | ✅ | ✅ | ⬛ |
-| WorldObjects | FURN | Furniture     | ⬛ | 🟨 | ⬛ | Will need to be able to extract `FRN` data from the NIF |
+| WorldObjects | FURN | Furniture     | ✅ | 🟨 | ⬛ | Will need to be able to extract `FRN` data from the NIF |
 | WorldObjects | GRAS | Grass         | ✅ | ✅ | ⬛ |
 | WorldObjects | LIGH | Light         | ✅ | ✅ | ⬛ |
 | WorldObjects | MSTT | MovableStatic | ✅ | 🟨 | ⬛ |
