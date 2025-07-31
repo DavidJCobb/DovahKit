@@ -3,6 +3,7 @@
 
 namespace dovah {
    namespace tes_file_reading {
+      class record;
       class subrecord;
    }
    class form_reference_t;

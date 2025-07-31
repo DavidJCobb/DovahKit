@@ -140,7 +140,7 @@ namespace {
       > topic_is_sharedinfo_topic = {};
 
       if constexpr (data_consuming_whole_records_includes<FormType>()) {
-         data_consuming_whole_records::for_each([&cache, &record]<typename T>() {
+         data_consuming_whole_records::for_each([&cache, &record, &stub]<typename T>() {
             if constexpr (T::form_type_is_of_interest(FormType)) {
                T info;
                info.skim_record(record);
