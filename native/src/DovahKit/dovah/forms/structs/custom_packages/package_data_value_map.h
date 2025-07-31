@@ -27,8 +27,12 @@ namespace dovah::loaded_forms::structs::custom_packages {
          uint8_t next_unique_id = 0;
 
       public:
+         // these functions should be called just after opening the first subrecord relevant to this 
+         // struct. when these functions exit, the subrecord after this struct's data will have just 
+         // been opened.
          void load(tes_record_reader&, load_order_interfaces::form_load&, size_t count);
          static void generate_use_info(tes_record_reader&, size_t count, form_stub_use_info_builder&);
+
          void save(tes_record_writer&, load_order_interfaces::form_save&);
          void clone_from(const package_data_value_map& src, Form& my_owner) noexcept;
          void sever_outbound_references_to(form_stub&, loaded_forms::Form& my_containing_form) noexcept;

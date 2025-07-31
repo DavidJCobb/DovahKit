@@ -27,10 +27,12 @@ namespace dovah::loaded_forms::structs::custom_packages::procedure_node_data {
          std::vector<std::unique_ptr<procedure_node>> children;
          uint32_t flags = 0;
          
-         // The `load` function returns the declared child count.
-         //
-         size_t load(tes_record_reader&, load_order_interfaces::form_load&);
+         // these functions should be called just after the first subrecord constituting this struct's 
+         // data has been opened. when the functions exit, the subrecord after this struct's data will 
+         // have just been opened.
+         size_t load(tes_record_reader&, load_order_interfaces::form_load&); // returns the declared child count
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
-         void   save(tes_record_writer&, load_order_interfaces::form_save&);
+
+         void save(tes_record_writer&, load_order_interfaces::form_save&);
    };
 }
