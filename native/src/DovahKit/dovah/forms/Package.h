@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -107,5 +108,20 @@ namespace dovah::loaded_forms {
          virtual void _save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) override;
          virtual void _clear_impl() noexcept override;
          virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
+
+      public:
+         struct record_skimmers { // namespace
+            record_skimmers() = delete;
+
+            class legacy_type {
+               protected:
+                  bool custom_has_template = false;
+               public:
+                  std::optional<packages::legacy_type> result;
+
+                  void skim_subrecord(tes_subrecord_reader&);
+                  void finalize();
+            };
+         };
    };
 }

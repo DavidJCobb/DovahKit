@@ -126,6 +126,7 @@ namespace dovah {
             
             constexpr bool body_is_compressed() const noexcept { return this->header.body_is_compressed(); }
             
+            void return_to_start();
             subrecord& next_subrecord() const;
             uint32_t peek_next_subrecord_type();
             

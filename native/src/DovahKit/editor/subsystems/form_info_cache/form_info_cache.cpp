@@ -36,6 +36,7 @@ namespace {
       dovahkit::subsystems::form_info_cache::cached_data::by_form::faction,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::head_part,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::magic_effect,
+      dovahkit::subsystems::form_info_cache::cached_data::by_form::package,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::voicetype
    >;
 }
@@ -71,12 +72,23 @@ namespace {
 
 namespace {
    using data_with_multiple_subrecords = all_cacheable_form_data::filter_types<[]<typename Data>() -> bool {
-      return Data::subrecords_of_interest.size() > 1;
+      return Data::subrecords_of_interest.size() > 1 && !Data::read_entire_record;
+   }>;
+
+   using data_consuming_whole_records = all_cacheable_form_data::filter_types<[]<typename Data>() -> bool {
+      return Data::read_entire_record;
    }>;
 
    template<dovah::form_type FormType>
    constexpr bool data_with_multiple_subrecords_includes() {
       return data_with_multiple_subrecords::for_each_until_true<[]<typename T>() {
+         return T::form_type_is_of_interest(FormType);
+      }>();
+   }
+
+   template<dovah::form_type FormType>
+   constexpr bool data_consuming_whole_records_includes() {
+      return data_consuming_whole_records::for_each_until_true<[]<typename T>() {
          return T::form_type_is_of_interest(FormType);
       }>();
    }
@@ -126,6 +138,26 @@ namespace {
          bool,
          uint8_t // dummy type
       > topic_is_sharedinfo_topic = {};
+
+      if constexpr (data_consuming_whole_records_includes<FormType>()) {
+         data_consuming_whole_records::for_each([&cache, &record]<typename T>() {
+            if constexpr (T::form_type_is_of_interest(FormType)) {
+               T info;
+               info.skim_record(record);
+               //
+               // Return to the start of the record, so that cached data that isn't specific to 
+               // one form type (e.g. attached Papyrus scripts) can still access the record's 
+               // contents in the subrecord loop further below.
+               //
+               record.return_to_start();
+
+               if constexpr (FormType == dovah::form_type::package) {
+                  auto& dst = cache.by_form_type.packages;
+                  dst.threaded_insert(stub, std::move(info));
+               }
+            }
+         });
+      }
 
       while (auto& subrecord = record.next_subrecord()) {
          const auto signature = subrecord.signature();
@@ -310,6 +342,7 @@ namespace {
          _update_if_form(cache.by_form_type.factions,      &core::cachedFactionChanged);
          _update_if_form(cache.by_form_type.head_parts,    &core::cachedHeadPartChanged);
          _update_if_form(cache.by_form_type.magic_effects, &core::cachedMagicEffectChanged);
+         _update_if_form(cache.by_form_type.packages,      &core::cachedPackageChanged);
          _update_if_form(cache.by_form_type.voicetypes,    &core::cachedVoicetypeChanged);
       }
 
@@ -457,6 +490,7 @@ namespace dovahkit::subsystems::form_info_cache {
                _update_if_form(cache.by_form_type.actor_bases, &core::cachedActorBaseChanged);
                _update_if_form(cache.by_form_type.factions);
                _update_if_form(cache.by_form_type.head_parts,  &core::cachedHeadPartChanged);
+               _update_if_form(cache.by_form_type.packages,    &core::cachedPackageChanged);
                _update_if_form(cache.by_form_type.magic_effects);
                _update_if_form(cache.by_form_type.voicetypes);
             }
@@ -590,6 +624,11 @@ namespace dovahkit::subsystems::form_info_cache {
       if (stub.form_type != dovah::form_type::magic_effect)
          return nullptr;
       return this->_cache->by_form_type.magic_effects.get(stub);
+   }
+   const cached_data::by_form::package* core::get_package_info(const dovah::form_stub& stub) const {
+      if (stub.form_type != dovah::form_type::package)
+         return nullptr;
+      return this->_cache->by_form_type.packages.get(stub);
    }
    const cached_data::by_form::voicetype* core::get_voicetype_info(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::voicetype)

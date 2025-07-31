@@ -4,6 +4,7 @@
 
 #include "../notices/form_load_warnings/by_form_type/package/legacy_type_unrecognized.h"
 #include "../notices/form_load_warnings/by_form_type/package/package_changed_legacy_type_during_load.h"
+#include "../notices/form_load_warnings/by_form_type/package/package_with_a_template_cannot_itself_be_a_template.h"
 
 namespace {
    namespace specific_load_warnings {
@@ -199,7 +200,7 @@ namespace dovah::loaded_forms {
                legacy_target_1.emplace().load(subrecord, intfc, *this);
                break;
 
-            #pragma region Custom package data
+            #pragma region Typed package info
             case structs::typed_package_info::ambush::header_subrecord:
                this->_force_type_during_load(legacy_type::ambush, true, intfc);
                this->typed_info->load(record, intfc);
@@ -246,6 +247,15 @@ namespace dovah::loaded_forms {
             default:
                intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
+         }
+      }
+      if (this->type == packages::legacy_type::custom_template) {
+         if (auto* casted = dynamic_cast<structs::typed_package_info::custom*>(this->typed_info)) {
+            if (casted->template_package) {
+               this->type = packages::legacy_type::custom;
+               specific_load_warnings::package_with_a_template_cannot_itself_be_a_template notice(intfc.target_stub);
+               intfc.log_load_warning(notice);
+            }
          }
       }
    }
@@ -559,4 +569,78 @@ namespace dovah::loaded_forms {
       this->combat_style.clear_if(*this, other);
       this->owning_quest.clear_if(*this, other);
    }
+
+   #pragma region Record skimmers
+      #pragma region legacy_type
+         void Package::record_skimmers::legacy_type::skim_subrecord(tes_subrecord_reader& subrecord) {
+            using result_type = packages::legacy_type;
+
+            switch (subrecord.signature()) {
+               case 'PKDT':
+                  subrecord.skip_bytes(sizeof(Package::general_flags));
+                  {
+                     result_type prior = this->result.value_or(result_type::invalid);
+                     result_type after = result_type::invalid;
+                     subrecord.read(after);
+                     this->result = after;
+                     if (prior != after && this->custom_has_template)
+                        this->custom_has_template = false;
+                  }
+                  break;
+               #pragma region Typed package info
+               case structs::typed_package_info::ambush::header_subrecord:
+                  this->custom_has_template = false;
+                  this->result = result_type::ambush;
+                  break;
+               case 'PKCU':
+                  if (this->result != result_type::custom && this->result != result_type::custom_template) {
+                     this->result = result_type::custom;
+                  }
+                  {
+                     form_id_t template_package;
+                     subrecord.skip_bytes(sizeof(uint32_t)); // package data count
+                     subrecord.read(template_package);
+
+                     this->custom_has_template = !!template_package;
+                  }
+                  break;
+               case structs::typed_package_info::dialogue::header_subrecord:
+                  this->custom_has_template = false;
+                  this->result = result_type::dialogue;
+                  break;
+               case structs::typed_package_info::escort::header_subrecord:
+                  this->custom_has_template = false;
+                  this->result = result_type::escort;
+                  break;
+               case structs::typed_package_info::eat::header_subrecord:
+                  this->custom_has_template = false;
+                  this->result = result_type::eat;
+                  break;
+               case structs::typed_package_info::follow::header_subrecord:
+                  this->custom_has_template = false;
+                  this->result = result_type::follow;
+                  break;
+               case structs::typed_package_info::patrol::header_subrecord:
+                  this->custom_has_template = false;
+                  this->result = result_type::patrol;
+                  break;
+               case structs::typed_package_info::use_weapon::header_subrecord:
+                  this->custom_has_template = false;
+                  this->result = result_type::use_weapon;
+                  break;
+               case structs::typed_package_info::use_item_at::header_subrecord:
+                  this->custom_has_template = false;
+                  this->result = result_type::use_item_at;
+                  break;
+               #pragma endregion
+            }
+         }
+         void Package::record_skimmers::legacy_type::finalize() {
+            using result_type = packages::legacy_type;
+            if (this->custom_has_template && this->result == result_type::custom_template) {
+               this->result = result_type::custom;
+            }
+         }
+      #pragma endregion
+   #pragma endregion
 }

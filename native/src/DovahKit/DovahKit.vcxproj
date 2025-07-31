@@ -323,6 +323,7 @@
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\faction.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\head_part.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.cpp" />
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\package.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\voicetype.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\_base.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cache_containers\presence_cache.cpp" />
@@ -1547,6 +1548,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\_generic_crc_mismatch_notice.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\note\non_texture_note_includes_texture_path.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\faction\interrupt_override_target_not_in_a_package.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_with_a_template_cannot_itself_be_a_template.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\invalid_interrupt_override_target.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\legacy_type_unrecognized.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\package\package_changed_legacy_type_during_load.h" />
@@ -1676,6 +1678,7 @@
     <ClInclude Include="editor\localize\package_legacy_type.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\package.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\_base.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\_base_macros.define.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\_base_macros.undef.h" />

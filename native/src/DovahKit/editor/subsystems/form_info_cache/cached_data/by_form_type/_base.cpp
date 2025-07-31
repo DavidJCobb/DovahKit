@@ -8,7 +8,7 @@ namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {
       dovah::form_reference_t ref;
       if (subrecord.read(ref)) {
          auto* stub = dst = ref.get_form_stub();
-         if (stub && stub->form_type != dovah::form_type::formlist)
+         if (stub && stub->form_type != allowed_type)
             dst = nullptr;
       }
    }

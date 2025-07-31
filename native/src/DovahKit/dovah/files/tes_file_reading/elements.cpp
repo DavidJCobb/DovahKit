@@ -95,6 +95,10 @@ namespace dovah {
          this->offset += bytes;
          return true;
       }
+      void record::return_to_start() {
+         this->owner._subrecord.reset();
+         this->go_to_offset(0);
+      }
       subrecord& record::next_subrecord() const {
          this->owner.next_subrecord();
          return this->owner.get_current_subrecord();

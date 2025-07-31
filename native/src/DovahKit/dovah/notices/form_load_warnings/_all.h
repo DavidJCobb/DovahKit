@@ -50,6 +50,7 @@
    #include "./by_form_type/package/package_data_unexpected_value_subrecord.h"
    #include "./by_form_type/package/package_data_unrecognized_typename.h"
    #include "./by_form_type/package/package_data_wants_none_as_unique_id.h"
+   #include "./by_form_type/package/package_with_a_template_cannot_itself_be_a_template.h"
    #include "./by_form_type/package/procedure_has_extra_parameters.h"
    #include "./by_form_type/package/procedure_missing_required_parameter.h"
    #include "./by_form_type/package/procedure_node_unrecognized_typename.h"

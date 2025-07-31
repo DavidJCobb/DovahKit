@@ -1146,6 +1146,14 @@ namespace editor_helpers {
                      disambig
                   ).arg(subject).arg(casted->which).arg(data_type);
                }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::package_with_a_template_cannot_itself_be_a_template*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Package %1 lists itself as a Package Template, but it uses a Package Template and thus cannot, "
+                     "itself, be a template. Changing its type to Package.",
+                     disambig
+                  ).arg(subject);
+               }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::package::procedure_has_extra_parameters*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   return QObject::tr(

@@ -16,8 +16,15 @@ namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {
             static constexpr const std::array<dovah::form_type, 0> form_types_of_interest = {};
             static constexpr const std::array<uint32_t, 0>         subrecords_of_interest = {};
 
+            // If the cached info needs access to the entire record, then set this to `true`. 
+            // Otherwise, use `subrecords_of_interest` to indicate what subrecords the info 
+            // cares about.
+            static constexpr const bool read_entire_record = false;
+
             // If the cached info includes a form stub pointer, then list the expected type of 
-            // the pointed-to form in your override of this member.
+            // the pointed-to form in your override of this member. Your subclass should also 
+            // define member `bool sever_outbound_references_to(const dovah::form_stub*)`, a 
+            // function which should return true if any outbound pointers are severed.
             static constexpr const std::array<dovah::form_type, 0> form_types_we_refer_to = {};
          #pragma endregion
 
