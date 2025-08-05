@@ -111,6 +111,7 @@
    #include "Tree.h"
    #include "VisualEffect.h"
    #include "Voicetype.h"
+   #include "WaterType.h"
    #include "Weapon.h"
    #include "WordOfPower.h"
    #include "Worldspace.h"
@@ -226,6 +227,7 @@ namespace dovah {
       loaded_forms::Tree,
       loaded_forms::VisualEffect,
       loaded_forms::Voicetype,
+      loaded_forms::WaterType,
       loaded_forms::Weapon,
       loaded_forms::WordOfPower,
       loaded_forms::Worldspace//,

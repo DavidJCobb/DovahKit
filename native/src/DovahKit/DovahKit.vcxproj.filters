@@ -3306,6 +3306,9 @@
     <ClCompile Include="dovah\forms\ShaderParticleGeometry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\WaterType.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8250,6 +8253,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\ShaderParticleGeometry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\WaterType.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

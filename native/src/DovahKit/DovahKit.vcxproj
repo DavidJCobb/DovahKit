@@ -284,6 +284,7 @@
     <ClCompile Include="dovah\forms\TalkingActivator.cpp" />
     <ClCompile Include="dovah\forms\Tree.cpp" />
     <ClCompile Include="dovah\forms\VisualEffect.cpp" />
+    <ClCompile Include="dovah\forms\WaterType.cpp" />
     <ClCompile Include="dovah\forms\Weapon.cpp" />
     <ClCompile Include="dovah\form_reference_t.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_base_form.cpp" />
@@ -1454,6 +1455,7 @@
     <ClInclude Include="dovah\forms\TalkingActivator.h" />
     <ClInclude Include="dovah\forms\Tree.h" />
     <ClInclude Include="dovah\forms\VisualEffect.h" />
+    <ClInclude Include="dovah\forms\WaterType.h" />
     <ClInclude Include="dovah\forms\Weapon.h" />
     <ClInclude Include="dovah\form_id_t.h" />
     <ClInclude Include="dovah\form_reference_t.h" />
