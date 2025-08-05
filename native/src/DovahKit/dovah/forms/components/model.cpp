@@ -29,6 +29,59 @@ namespace dovah::loaded_forms::components {
    void model::load_model_path(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       subrecord.read(this->model_path);
    }
+   void model::load_precached_info(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+      auto& record = subrecord.get_containing_record();
+      if (record.version() < 0x26)
+         return;
+      if (record.version() >= 0x28) {
+         uint32_t number_of_counts = 0;
+         uint32_t edi = 0;
+         uint32_t ebx = 0;
+         uint32_t count_materials = 0;
+         subrecord.read(number_of_counts);
+         if (number_of_counts > 0) {
+            subrecord.read(edi);
+            if (number_of_counts > 1) {
+               subrecord.read(ebx);
+               if (subrecord.is_skyrim_special() && number_of_counts > 2) {
+                  subrecord.read(count_materials);
+               }
+            }
+         }
+         for (uint32_t i = 0; i < edi; ++i) {
+            auto& entry = this->precached_info.texture_hashes.emplace_back();
+            subrecord.read(entry.file_hash);
+            subrecord.read_signature(entry.extension);
+            subrecord.read(entry.folder_hash);
+         }
+         for (uint32_t i = 0; i < ebx; ++i) {
+            uint32_t value;
+            if (subrecord.read(value))
+               this->precached_info.addon_node_ids.push_back(value);
+         }
+         for (uint32_t i = 0; i < count_materials; ++i) {
+            auto& entry = this->precached_info.material_hashes.emplace_back();
+            subrecord.read(entry.file_hash);
+            subrecord.read_signature(entry.extension);
+            subrecord.read(entry.folder_hash);
+         }
+         return;
+      }
+      if (record.version() >= 0x26) {
+         //
+         // The game reads (subrecord.size() / 1.5 / 8 * 0xC) bytes. It's not the most intuitive 
+         // approach but it amounts to reading the nearest multiple of 0xC bytes available in the 
+         // subrecord, stuffing it all into a buffer, and then going over it 0xC bytes at a time.
+         //
+         while (subrecord.is_in_bounds(12)) {
+            auto& entry = this->precached_info.texture_hashes.emplace_back();
+            subrecord.read(entry.file_hash);
+            subrecord.read_signature(entry.extension);
+            subrecord.read(entry.folder_hash);
+         }
+         return;
+      }
+   }
 
    bool model::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       switch (subrecord.signature()) {
@@ -44,59 +97,7 @@ namespace dovah::loaded_forms::components {
          case 'MO3T':
          case 'MO4T':
          case 'DMDT': // for texture hashes
-            {
-               auto& record = subrecord.get_containing_record();
-               if (record.version() < 0x26)
-                  return true;
-               if (record.version() >= 0x28) {
-                  uint32_t number_of_counts = 0;
-                  uint32_t edi = 0;
-                  uint32_t ebx = 0;
-                  uint32_t count_materials = 0;
-                  subrecord.read(number_of_counts);
-                  if (number_of_counts > 0) {
-                     subrecord.read(edi);
-                     if (number_of_counts > 1) {
-                        subrecord.read(ebx);
-                        if (subrecord.is_skyrim_special() && number_of_counts > 2) {
-                           subrecord.read(count_materials);
-                        }
-                     }
-                  }
-                  for (uint32_t i = 0; i < edi; ++i) {
-                     auto& entry = this->precached_info.texture_hashes.emplace_back();
-                     subrecord.read(entry.file_hash);
-                     subrecord.read_signature(entry.extension);
-                     subrecord.read(entry.folder_hash);
-                  }
-                  for (uint32_t i = 0; i < ebx; ++i) {
-                     uint32_t value;
-                     if (subrecord.read(value))
-                        this->precached_info.addon_node_ids.push_back(value);
-                  }
-                  for (uint32_t i = 0; i < count_materials; ++i) {
-                     auto& entry = this->precached_info.material_hashes.emplace_back();
-                     subrecord.read(entry.file_hash);
-                     subrecord.read_signature(entry.extension);
-                     subrecord.read(entry.folder_hash);
-                  }
-                  return true;
-               }
-               if (record.version() >= 0x26) {
-                  //
-                  // The game reads (subrecord.size() / 1.5 / 8 * 0xC) bytes. It's not the most intuitive 
-                  // approach but it amounts to reading the nearest multiple of 0xC bytes available in the 
-                  // subrecord, stuffing it all into a buffer, and then going over it 0xC bytes at a time.
-                  //
-                  while (subrecord.is_in_bounds(12)) {
-                     auto& entry = this->precached_info.texture_hashes.emplace_back();
-                     subrecord.read(entry.file_hash);
-                     subrecord.read_signature(entry.extension);
-                     subrecord.read(entry.folder_hash);
-                  }
-                  return true;
-               }
-            }
+            this->load_precached_info(subrecord, intfc);
             return true;
          case 'MODD':
          case 'MOSD':

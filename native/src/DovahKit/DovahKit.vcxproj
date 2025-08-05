@@ -151,6 +151,7 @@
     <ClCompile Include="dovah\forms\Book.cpp" />
     <ClCompile Include="dovah\forms\CameraShot.cpp" />
     <ClCompile Include="dovah\forms\Class.cpp" />
+    <ClCompile Include="dovah\forms\Climate.cpp" />
     <ClCompile Include="dovah\forms\CollisionLayer.cpp" />
     <ClCompile Include="dovah\forms\CombatStyle.cpp" />
     <ClCompile Include="dovah\forms\components\biped_object.cpp" />
@@ -163,6 +164,7 @@
     <ClCompile Include="dovah\forms\EncounterZone.cpp" />
     <ClCompile Include="dovah\forms\Furniture.cpp" />
     <ClCompile Include="dovah\forms\ImagespaceModifier.cpp" />
+    <ClCompile Include="dovah\forms\LightingTemplate.cpp" />
     <ClCompile Include="dovah\forms\LoadingScreen.cpp" />
     <ClCompile Include="dovah\forms\MenuIcon.cpp" />
     <ClCompile Include="dovah\forms\MovableStatic.cpp" />
@@ -170,6 +172,8 @@
     <ClCompile Include="dovah\forms\NavMeshInfoMap.cpp" />
     <ClCompile Include="dovah\forms\Package.cpp" />
     <ClCompile Include="dovah\forms\Perk.cpp" />
+    <ClCompile Include="dovah\forms\Projectile.cpp" />
+    <ClCompile Include="dovah\forms\ShaderParticleGeometry.cpp" />
     <ClCompile Include="dovah\forms\StaticCollection.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data.cpp" />
     <ClCompile Include="dovah\forms\structs\custom_packages\package_data\boolean.cpp" />
@@ -1317,6 +1321,7 @@
     <ClInclude Include="dovah\forms\Book.h" />
     <ClInclude Include="dovah\forms\CameraShot.h" />
     <ClInclude Include="dovah\forms\Class.h" />
+    <ClInclude Include="dovah\forms\Climate.h" />
     <ClInclude Include="dovah\forms\CollisionLayer.h" />
     <ClInclude Include="dovah\forms\CombatStyle.h" />
     <ClInclude Include="dovah\forms\components\biped_object.h" />
@@ -1333,11 +1338,14 @@
     <ClInclude Include="dovah\forms\EncounterZone.h" />
     <ClInclude Include="dovah\forms\Furniture.h" />
     <ClInclude Include="dovah\forms\ImagespaceModifier.h" />
+    <ClInclude Include="dovah\forms\LightingTemplate.h" />
     <ClInclude Include="dovah\forms\LoadingScreen.h" />
     <ClInclude Include="dovah\forms\MenuIcon.h" />
     <ClInclude Include="dovah\forms\MovableStatic.h" />
     <ClInclude Include="dovah\forms\MusicTrack.h" />
     <ClInclude Include="dovah\forms\NavMeshInfoMap.h" />
+    <ClInclude Include="dovah\forms\Projectile.h" />
+    <ClInclude Include="dovah\forms\ShaderParticleGeometry.h" />
     <ClInclude Include="dovah\forms\StaticCollection.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\package_data.h" />
     <ClInclude Include="dovah\forms\structs\custom_packages\package_data\boolean.h" />

@@ -176,13 +176,13 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | SpecialEffect | IPCT | ImpactData      | ✅ | ✅ | ⬛ |
 | SpecialEffect | IPDS | ImpactDataSet   | ✅ | 🟨 | ⬛ |
 | SpecialEffect | MATT | Material Type   | ✅ | ✅ | ⬛ |
-| SpecialEffect | PROJ | Projectile      | ⬛ | 🟨 | ⬛ |
-| WorldData | CLMT | Climate                  | ⬛ | ⬛ | ⬛ |
+| SpecialEffect | PROJ | Projectile      | ✅ | 🟨 | ⬛ |
+| WorldData | CLMT | Climate                  | ✅ | ⬛ | ⬛ |
 | WorldData | ECZN | Encounter Zone           | ✅ | ⬛ | ⬛ |
-| WorldData | LGTM | Lighting Template        | ⬛ | ⬛ | ⬛ |
+| WorldData | LGTM | Lighting Template        | ✅ | ⬛ | ⬛ |
 | WorldData | LCTN | Location                 | 🟨 | ⬛ | ⬛ |
 | WorldData | LCRT | Location Ref Type        | ✅ | ✅ | ⬛ |
-| WorldData | SPGD | Shader Particle Geometry | ⬛ | 🟨 | ⬛ |
+| WorldData | SPGD | Shader Particle Geometry | ✅ | 🟨 | ⬛ |
 | WorldData | RFCT | Visual Effect            | ✅ | ✅ | ⬛ |
 | WorldData | WATR | WaterType                | ⬛ | ⬛ | ⬛ |
 | WorldData | WTHR | Weather                  | ⬛ | ⬛ | ⬛ |

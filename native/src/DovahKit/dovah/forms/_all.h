@@ -23,6 +23,7 @@
    #include "CameraShot.h"
    #include "Cell.h"
    #include "Class.h"
+   #include "Climate.h"
    #include "CollisionLayer.h"
    #include "Color.h"
    #include "CombatStyle.h"
@@ -64,6 +65,7 @@
    #include "LeveledItem.h"
    #include "LeveledSpell.h"
    #include "Light.h"
+   #include "LightingTemplate.h"
    #include "LoadingScreen.h"
    #include "Location.h"
    #include "LocationRefType.h"
@@ -84,6 +86,7 @@
    #include "Package.h"
    #include "Perk.h"
    #include "Potion.h"
+   #include "Projectile.h"
    #include "Quest.h"
    #include "Race.h"
    #include "Ragdoll.h"
@@ -91,6 +94,7 @@
    #include "ReverbParameters.h"
    #include "Scene.h"
    #include "Scroll.h"
+   #include "ShaderParticleGeometry.h"
    #include "Shout.h"
    #include "SoulGem.h"
    #include "Sound.h"
@@ -134,6 +138,7 @@ namespace dovah {
       loaded_forms::CameraShot,
       loaded_forms::Cell,
       loaded_forms::Class,
+      loaded_forms::Climate,
       loaded_forms::CollisionLayer,
       loaded_forms::Color,
       loaded_forms::CombatStyle,
@@ -172,6 +177,7 @@ namespace dovah {
       loaded_forms::Landscape,
       loaded_forms::LandTexture,
       loaded_forms::Light,
+      loaded_forms::LightingTemplate,
       loaded_forms::LeveledCharacter,
       loaded_forms::LeveledItem,
       loaded_forms::LeveledSpell,
@@ -195,6 +201,7 @@ namespace dovah {
       loaded_forms::Package,
       loaded_forms::Perk,
       loaded_forms::Potion,
+      loaded_forms::Projectile,
       loaded_forms::Quest,
       loaded_forms::Race,
       loaded_forms::Ragdoll,
@@ -202,6 +209,7 @@ namespace dovah {
       loaded_forms::ReverbParameters,
       loaded_forms::Scene,
       loaded_forms::Scroll,
+      loaded_forms::ShaderParticleGeometry,
       loaded_forms::Shout,
       loaded_forms::SoulGem,
       loaded_forms::Sound,
