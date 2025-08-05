@@ -21,7 +21,7 @@ namespace {
    using form_flag = dovah::loaded_forms::Cell::form_flag;
    using cell_flag = dovah::loaded_forms::Cell::cell_flag;
    using land_flag = dovah::loaded_forms::Cell::land_flag;
-   using inherit_flag = dovah::loaded_forms::components::interior_lighting::inherit_flag;
+   using inherit_flag = dovah::loaded_forms::structs::cell_lighting::inherit_flag;
 
    using extra_data_type = dovah::loaded_forms::components::extra_data_type;
    namespace extra {
@@ -257,19 +257,19 @@ void FormDialogCell::_load_impl() {
          this->ui.inheritFogPower->setChecked(lighting.inherit_flags & inherit_flag::fog_power);
          this->ui.inheritFogMax->setChecked(lighting.inherit_flags & inherit_flag::fog_max);
          //
-         this->ui.lightingColorAmbient->setColor(_form_color_to_q(lighting.ambient));
-         this->ui.lightingColorDirectional->setColor(_form_color_to_q(lighting.directional));
-         this->ui.lightingFogColorNear->setColor(_form_color_to_q(lighting.fog_color_near));
-         this->ui.lightingFogColorFar->setColor(_form_color_to_q(lighting.fog_color_far));
-         this->ui.lightingFogDistanceNear->setValue(lighting.fog_distance_near);
-         this->ui.lightingFogDistanceFar->setValue(lighting.fog_distance_far);
-         this->ui.lightingFogPower->setValue(lighting.fog_power);
-         this->ui.lightingFogMax->setValue(lighting.fog_max);
-         this->ui.lightingFogClipDistance->setValue(lighting.fog_distance_clip);
+         this->ui.lightingColorAmbient->setColor(_form_color_to_q(lighting.ambient.base));
+         this->ui.lightingColorDirectional->setColor(_form_color_to_q(lighting.directional.color));
+         this->ui.lightingFogColorNear->setColor(_form_color_to_q(lighting.fog.colors.near));
+         this->ui.lightingFogColorFar->setColor(_form_color_to_q(lighting.fog.colors.far));
+         this->ui.lightingFogDistanceNear->setValue(lighting.fog.near);
+         this->ui.lightingFogDistanceFar->setValue(lighting.fog.far);
+         this->ui.lightingFogPower->setValue(lighting.fog.power);
+         this->ui.lightingFogMax->setValue(lighting.fog.max);
+         this->ui.lightingFogClipDistance->setValue(lighting.fog.clip_distance);
          //
-         this->ui.lightingDirectionalFade->setValue(lighting.directional_fade);
-         this->ui.lightingDirectionalRotationXY->setValue(lighting.rotation.xy);
-         this->ui.lightingDirectionalRotationZ->setValue(lighting.rotation.z);
+         this->ui.lightingDirectionalFade->setValue(lighting.directional.fade);
+         this->ui.lightingDirectionalRotationXY->setValue(lighting.directional.rotation.xy);
+         this->ui.lightingDirectionalRotationZ->setValue(lighting.directional.rotation.z);
          //
          this->ui.skyVisible->setChecked(this->form->cell_flags & cell_flag::show_sky);
          this->ui.skyLighting->setChecked(this->form->cell_flags & cell_flag::use_sky_lighting);
@@ -279,12 +279,12 @@ void FormDialogCell::_load_impl() {
          this->ui.lightingFadeDistanceEnd->setValue(lighting.light_fade_distance.end);
       #pragma endregion
       #pragma region Directional Ambient Lighting
-         this->ui.directionalAmbColorXPos->setColor(_form_color_to_q(lighting.directional_ambient_colors.x_pos));
-         this->ui.directionalAmbColorYPos->setColor(_form_color_to_q(lighting.directional_ambient_colors.y_pos));
-         this->ui.directionalAmbColorZPos->setColor(_form_color_to_q(lighting.directional_ambient_colors.z_pos));
-         this->ui.directionalAmbColorXNeg->setColor(_form_color_to_q(lighting.directional_ambient_colors.x_neg));
-         this->ui.directionalAmbColorYNeg->setColor(_form_color_to_q(lighting.directional_ambient_colors.y_neg));
-         this->ui.directionalAmbColorZNeg->setColor(_form_color_to_q(lighting.directional_ambient_colors.z_neg));
+         this->ui.directionalAmbColorXPos->setColor(_form_color_to_q(lighting.ambient.directional.x.positive));
+         this->ui.directionalAmbColorYPos->setColor(_form_color_to_q(lighting.ambient.directional.y.positive));
+         this->ui.directionalAmbColorZPos->setColor(_form_color_to_q(lighting.ambient.directional.z.positive));
+         this->ui.directionalAmbColorXNeg->setColor(_form_color_to_q(lighting.ambient.directional.x.negative));
+         this->ui.directionalAmbColorYNeg->setColor(_form_color_to_q(lighting.ambient.directional.y.negative));
+         this->ui.directionalAmbColorZNeg->setColor(_form_color_to_q(lighting.ambient.directional.z.negative));
       #pragma endregion
       #pragma region Interior Data
          this->ui.name->setText(editor.convert_localized_string(this->form->name));
@@ -374,19 +374,19 @@ void FormDialogCell::_save_impl() {
          cobb::edit_bit(lighting.inherit_flags, inherit_flag::fog_power,            this->ui.inheritFogPower->isChecked());
          cobb::edit_bit(lighting.inherit_flags, inherit_flag::fog_max,              this->ui.inheritFogMax->isChecked());
          //
-         _q_color_to_form(lighting.ambient,        this->ui.lightingColorAmbient->color());
-         _q_color_to_form(lighting.directional,    this->ui.lightingColorDirectional->color());
-         _q_color_to_form(lighting.fog_color_near, this->ui.lightingFogColorNear->color());
-         _q_color_to_form(lighting.fog_color_far,  this->ui.lightingFogColorFar->color());
-         lighting.fog_distance_near = this->ui.lightingFogDistanceNear->value();
-         lighting.fog_distance_far  = this->ui.lightingFogDistanceFar->value();
-         lighting.fog_power         = this->ui.lightingFogPower->value();
-         lighting.fog_max           = this->ui.lightingFogMax->value();
-         lighting.fog_distance_clip = this->ui.lightingFogClipDistance->value();
+         _q_color_to_form(lighting.ambient.base,      this->ui.lightingColorAmbient->color());
+         _q_color_to_form(lighting.directional.color, this->ui.lightingColorDirectional->color());
+         _q_color_to_form(lighting.fog.colors.near,   this->ui.lightingFogColorNear->color());
+         _q_color_to_form(lighting.fog.colors.far,    this->ui.lightingFogColorFar->color());
+         lighting.fog.near          = this->ui.lightingFogDistanceNear->value();
+         lighting.fog.far           = this->ui.lightingFogDistanceFar->value();
+         lighting.fog.power         = this->ui.lightingFogPower->value();
+         lighting.fog.max           = this->ui.lightingFogMax->value();
+         lighting.fog.clip_distance = this->ui.lightingFogClipDistance->value();
          //
-         lighting.directional_fade = this->ui.lightingDirectionalFade->value();
-         lighting.rotation.xy = this->ui.lightingDirectionalRotationXY->value();
-         lighting.rotation.z  = this->ui.lightingDirectionalRotationZ->value();
+         lighting.directional.fade        = this->ui.lightingDirectionalFade->value();
+         lighting.directional.rotation.xy = this->ui.lightingDirectionalRotationXY->value();
+         lighting.directional.rotation.z  = this->ui.lightingDirectionalRotationZ->value();
          //
          cobb::edit_bit(this->form->cell_flags, cell_flag::show_sky,         this->ui.skyVisible->isChecked());
          cobb::edit_bit(this->form->cell_flags, cell_flag::use_sky_lighting, this->ui.skyLighting->isChecked());
@@ -396,12 +396,12 @@ void FormDialogCell::_save_impl() {
          lighting.light_fade_distance.end   = this->ui.lightingFadeDistanceEnd->value();
       #pragma endregion
       #pragma region Directional Ambient Lighting
-         _q_color_to_form(lighting.directional_ambient_colors.x_pos, this->ui.directionalAmbColorXPos->color());
-         _q_color_to_form(lighting.directional_ambient_colors.y_pos, this->ui.directionalAmbColorYPos->color());
-         _q_color_to_form(lighting.directional_ambient_colors.z_pos, this->ui.directionalAmbColorZPos->color());
-         _q_color_to_form(lighting.directional_ambient_colors.x_neg, this->ui.directionalAmbColorXNeg->color());
-         _q_color_to_form(lighting.directional_ambient_colors.y_neg, this->ui.directionalAmbColorYNeg->color());
-         _q_color_to_form(lighting.directional_ambient_colors.z_neg, this->ui.directionalAmbColorZNeg->color());
+         _q_color_to_form(lighting.ambient.directional.x.positive, this->ui.directionalAmbColorXPos->color());
+         _q_color_to_form(lighting.ambient.directional.y.positive, this->ui.directionalAmbColorYPos->color());
+         _q_color_to_form(lighting.ambient.directional.z.positive, this->ui.directionalAmbColorZPos->color());
+         _q_color_to_form(lighting.ambient.directional.x.negative, this->ui.directionalAmbColorXNeg->color());
+         _q_color_to_form(lighting.ambient.directional.y.negative, this->ui.directionalAmbColorYNeg->color());
+         _q_color_to_form(lighting.ambient.directional.z.negative, this->ui.directionalAmbColorZNeg->color());
       #pragma endregion
       #pragma region Interior Data
          editor.assign_localized_string(this->form->name, this->ui.name->text());

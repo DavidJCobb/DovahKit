@@ -8,8 +8,8 @@
 #include "./Form.h"
 #include "./_common.h"
 #include "./components/extra_data.h"
-#include "./components/interior_lighting.h"
 #include "./components/papyrus.h"
+#include "./structs/cell_lighting.h"
 
 namespace dovah::loaded_forms {
    class Cell : public Form {
@@ -92,7 +92,7 @@ namespace dovah::loaded_forms {
          uint32_t land_flags = 0; // XCLC
          components::extra_data_list extra_data;
          struct {
-            components::interior_lighting lighting; // XCLL (LNAM overrides the inherit flags specifically)
+            structs::cell_lighting lighting; // XCLL (LNAM overrides the inherit flags specifically)
             form_reference_t lighting_template; // LTMP
          } interior;
          struct {

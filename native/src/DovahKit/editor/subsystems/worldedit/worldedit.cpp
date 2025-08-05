@@ -900,17 +900,17 @@ namespace dovahkit::subsystems::worldedit {
                auto& sgs    = sr->scene.global_state;
                {
                   auto& lt = loaded->interior.lighting;
-                  sgs.ambient_light_color = _to_vec(lt.ambient);
-                  sgs.sun_color      = _to_vec(lt.directional);
+                  sgs.ambient_light_color = _to_vec(lt.ambient.base);
+                  sgs.sun_color      = _to_vec(lt.directional.color);
                   static_assert(!require_complete_implementation, "TODO: sgs.sun_dir");
                   // TODO: sgs.sun_dir
-                  sgs.fog_color_near = _to_vec(lt.fog_color_near);
-                  sgs.fog_color_far  = _to_vec(lt.fog_color_far);
-                  sgs.fog_plane_near = lt.fog_distance_near;
-                  sgs.fog_plane_far  = lt.fog_distance_far;
-                  sgs.fog_power      = lt.fog_power;
-                  sgs.fog_max        = lt.fog_max;
-                  sgs.interior_clip_distance = lt.fog_distance_clip;
+                  sgs.fog_color_near = _to_vec(lt.fog.colors.near);
+                  sgs.fog_color_far  = _to_vec(lt.fog.colors.far);
+                  sgs.fog_plane_near = lt.fog.near;
+                  sgs.fog_plane_far  = lt.fog.far;
+                  sgs.fog_power      = lt.fog.power;
+                  sgs.fog_max        = lt.fog.max;
+                  sgs.interior_clip_distance = lt.fog.clip_distance;
                }
                if (loaded->interior.lighting_template) {
                   static_assert(!require_complete_implementation, "TODO: Load the LTMP and use its parameters.");

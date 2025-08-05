@@ -104,5 +104,7 @@
    #include "./by_form_type/topic_info/response_ids_are_not_unique.h"
    #include "./by_form_type/weapon/invalid_resistance.h"
    #include "./by_form_type/weapon/invalid_skill.h"
+   #include "./by_form_type/weather/extra_directional_ambient_lighting_params.h"
+   #include "./by_form_type/weather/too_much_layer_data.h"
    #include "./by_form_type/worldspace/is_own_parent.h"
 #pragma endregion

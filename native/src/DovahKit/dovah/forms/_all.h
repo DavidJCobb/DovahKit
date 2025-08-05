@@ -113,6 +113,7 @@
    #include "Voicetype.h"
    #include "WaterType.h"
    #include "Weapon.h"
+   #include "Weather.h"
    #include "WordOfPower.h"
    #include "Worldspace.h"
 #pragma endregion
@@ -229,6 +230,7 @@ namespace dovah {
       loaded_forms::Voicetype,
       loaded_forms::WaterType,
       loaded_forms::Weapon,
+      loaded_forms::Weather,
       loaded_forms::WordOfPower,
       loaded_forms::Worldspace//,
    >;

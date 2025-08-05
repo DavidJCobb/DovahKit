@@ -3,8 +3,9 @@
 #include "./Form.h"
 #include "./_common.h"
 #include "./components/papyrus.h"
-#include "./components/interior_lighting.h"
 #include "./structs/color_dword.h"
+#include "./structs/cell_lighting.h"
+#include "./structs/directional_ambient_lighting_colors.h"
 
 namespace dovah::loaded_forms {
    class LightingTemplate : public Form {
@@ -12,45 +13,15 @@ namespace dovah::loaded_forms {
          static constexpr const enum form_type form_type = form_type::lighting_template;
          LightingTemplate(const constructor_params& c) : Form(form_type, c) {};
 
-         struct axis_colors {
-            color_t positive = { 255, 255, 255, 0 };
-            color_t negative = { 255, 255, 255, 0 };
-         };
-
       public:
          components::papyrus_attachment_data script_data; // VMAD
          //
-         struct {
-            color_t base_color;
-            axis_colors x; // DALC+0x00
-            axis_colors y; // DALC+0x08
-            axis_colors z; // DALC+0x10
-            color_t specular;
-            float   fresnel = 1.0F;
-         } ambient;
-         struct {
-            color_t color;
-            float fade = 1;
-            struct {
-               int32_t xy = 0;
-               int32_t z  = 0;
-            } rotation;
-         } directional;
-         struct {
-            struct {
-               color_t near;
-               color_t far;
-            } colors;
-            float clip_distance = 0;
-            float far   = 0;
-            float max   = 1;
-            float near  = 0;
-            float power = 1;
-         } fog;
-         struct {
-            float start = 0;
-            float end   = 0;
-         } light_fade_distance;
+         // The directional ambient parameters in `data` are not used. For whatever 
+         // reason, Bethesda preferred an alternate structure placed after it: the 
+         // `directional_ambient` field.
+         //
+         structs::cell_lighting data;
+         structs::directional_ambient_lighting_colors directional_ambient;
 
       public:
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);

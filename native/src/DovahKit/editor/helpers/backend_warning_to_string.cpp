@@ -1827,6 +1827,34 @@ namespace editor_helpers {
                   ).arg(subject).arg(casted->skill);
                }
             #pragma endregion
+            #pragma region weather
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::weather::extra_directional_ambient_lighting_params*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Weather %1 contains %2 sets of directional ambient lighting colors. The maximum allowed is %3.",
+                     disambig
+                  ).arg(subject).arg(casted->count_seen).arg(casted->max_count);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::weather::too_much_layer_data*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString data;
+                  switch (casted->type) {
+                     using enum form_load_warnings::by_type::weather::too_much_layer_data::data_type;
+                     case alpha:
+                        data = QObject::tr("alpha values", "form_load_warnings::by_type::weather::too_much_layer_data::data_type");
+                        break;
+                     case color:
+                        data = QObject::tr("colors", "form_load_warnings::by_type::weather::too_much_layer_data::data_type");
+                        break;
+                  }
+                  //
+                  return QObject::tr(
+                     "Weather %1 contains %2 for %3 layers, but the maximum number of layers is %4.",
+                     disambig
+                  ).arg(subject).arg(data).arg(casted->count_seen).arg(casted->max_count);
+               }
+            #pragma endregion
             #pragma region worldspace
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::worldspace::is_own_parent*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
