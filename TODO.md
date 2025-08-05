@@ -129,9 +129,9 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Character | VTYP | Voicetype        | ✅ | ✅ | ✅ |
 | Items | AMMO | Ammo           | ✅ | ✅ | ⬛ |
 | Items | ARMO | Armor          | ✅ | 🟨 | ⬛ |
-| Items | ARMA | ArmorAddon     | ⬛ | ⬛ | ⬛ | Race has a checkbox list for equip types. Probably should make that a reusable widget, and use it here for Additional Races. |
+| Items | ARMA | ArmorAddon     | ✅ | ⬛ | ⬛ | Race has a checkbox list for equip types. Probably should make that a reusable widget i.e. `DKFormsCheckboxList`, and use it here for Additional Races. |
 | Items | BOOK | Book           | ✅ | 🟨 | ⬛ |
-| Items | COBJ | Constructible Object | ⬛ | 🟨 | ⬛ |
+| Items | COBJ | Constructible Object | ✅ | 🟨 | ⬛ |
 | Items | INGR | Ingredient     | ✅ | ✅ | ⬛ |
 | Items | KEYM | Key            | ✅ | ✅ | ⬛ |
 | Items | LVLI | LeveledItem    | ✅ | ✅ | ⬛ |
@@ -159,7 +159,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Miscellaneous | IDLM | IdleMarker      | ✅ | 🟨 | ⬛ |
 | Miscellaneous | KYWD | Keyword         | ✅ | ✅ | ⬛ |
 | Miscellaneous | LTEX | LandTexture     | ✅ | ✅ | 🟨 |
-| Miscellaneous | LSCR | LoadScreen      | ⬛ | 🟨 | ⬛ |
+| Miscellaneous | LSCR | LoadScreen      | ✅ | 🟨 | ⬛ |
 | Miscellaneous | MATO | Material Object | 🟥 | 🟥 | ⬛ | Impossible to complete until we have the ability to save NIF files. We'll get to that during sustain. |
 | Miscellaneous | MESG | Message         | ✅ | 🟨 | ⬛ |
 | Miscellaneous | TXST | TextureSet      | ✅ | ✅ | ✅ |
@@ -172,7 +172,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | SpecialEffect | FSTS | Footstep Set    | ✅ | ⬛ | ⬛ |
 | SpecialEffect | HAZD | Hazard          | ✅ | ✅ | ⬛ |
 | SpecialEffect | IMGS | Imagespace      | ✅ | ⬛ | ⬛ |
-| SpecialEffect | IMAD | Imagespace Modifier | ⬛ | ⬛ | ⬛ |
+| SpecialEffect | IMAD | Imagespace Modifier | ✅ | ⬛ | ⬛ |
 | SpecialEffect | IPCT | ImpactData      | ✅ | ✅ | ⬛ |
 | SpecialEffect | IPDS | ImpactDataSet   | ✅ | 🟨 | ⬛ |
 | SpecialEffect | MATT | Material Type   | ✅ | ✅ | ⬛ |

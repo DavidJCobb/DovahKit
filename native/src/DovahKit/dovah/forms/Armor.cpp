@@ -197,9 +197,11 @@ namespace dovah::loaded_forms {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
          switch (subrecord.signature()) {
+            case 'FULL':
+               break;
             case components::biped_object::subrecord_signature_deprecated:
             case components::biped_object::subrecord_signature_modern:
-            case 'FULL':
+               components::biped_object::generate_use_info(subrecord, uib);
                break;
             case 'MOD2':
             case 'MO2T':

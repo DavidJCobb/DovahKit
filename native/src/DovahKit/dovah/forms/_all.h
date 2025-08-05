@@ -16,6 +16,7 @@
    #include "AnimationProp.h"
    #include "Apparatus.h"
    #include "Armor.h"
+   #include "ArmorAddon.h"
    #include "ArtObject.h"
    #include "AssociationType.h"
    #include "Book.h"
@@ -25,6 +26,7 @@
    #include "CollisionLayer.h"
    #include "Color.h"
    #include "CombatStyle.h"
+   #include "ConstructibleObject.h"
    #include "Container.h"
    #include "Debris.h"
    #include "DefaultObjectManager.h"
@@ -50,6 +52,7 @@
    #include "IdleAnimation.h"
    #include "IdleMarker.h"
    #include "Imagespace.h"
+   #include "ImagespaceModifier.h"
    #include "ImpactData.h"
    #include "ImpactDataSet.h"
    #include "Ingredient.h"
@@ -61,6 +64,7 @@
    #include "LeveledItem.h"
    #include "LeveledSpell.h"
    #include "Light.h"
+   #include "LoadingScreen.h"
    #include "Location.h"
    #include "LocationRefType.h"
    #include "MagicEffect.h"
@@ -123,6 +127,7 @@ namespace dovah {
       loaded_forms::AnimationProp,
       loaded_forms::Apparatus,
       loaded_forms::Armor,
+      loaded_forms::ArmorAddon,
       loaded_forms::ArtObject,
       loaded_forms::AssociationType,
       loaded_forms::Book,
@@ -132,6 +137,7 @@ namespace dovah {
       loaded_forms::CollisionLayer,
       loaded_forms::Color,
       loaded_forms::CombatStyle,
+      loaded_forms::ConstructibleObject,
       loaded_forms::Container,
       loaded_forms::Debris,
       loaded_forms::DefaultObjectManager,
@@ -157,6 +163,7 @@ namespace dovah {
       loaded_forms::IdleAnimation,
       loaded_forms::IdleMarker,
       loaded_forms::Imagespace,
+      loaded_forms::ImagespaceModifier,
       loaded_forms::ImpactData,
       loaded_forms::ImpactDataSet,
       loaded_forms::Ingredient,
@@ -168,6 +175,7 @@ namespace dovah {
       loaded_forms::LeveledCharacter,
       loaded_forms::LeveledItem,
       loaded_forms::LeveledSpell,
+      loaded_forms::LoadingScreen,
       loaded_forms::Location,
       loaded_forms::LocationRefType,
       loaded_forms::MagicEffect,

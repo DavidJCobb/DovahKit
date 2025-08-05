@@ -145,6 +145,7 @@
     <ClCompile Include="dovah\forms\AnimationProp.cpp" />
     <ClCompile Include="dovah\forms\Apparatus.cpp" />
     <ClCompile Include="dovah\forms\Armor.cpp" />
+    <ClCompile Include="dovah\forms\ArmorAddon.cpp" />
     <ClCompile Include="dovah\forms\ArtObject.cpp" />
     <ClCompile Include="dovah\forms\AssociationType.cpp" />
     <ClCompile Include="dovah\forms\Book.cpp" />
@@ -158,8 +159,11 @@
     <ClCompile Include="dovah\forms\components\conditions\working_condition.cpp" />
     <ClCompile Include="dovah\forms\components\enchantable.cpp" />
     <ClCompile Include="dovah\forms\components\idle_collection.cpp" />
+    <ClCompile Include="dovah\forms\ConstructibleObject.cpp" />
     <ClCompile Include="dovah\forms\EncounterZone.cpp" />
     <ClCompile Include="dovah\forms\Furniture.cpp" />
+    <ClCompile Include="dovah\forms\ImagespaceModifier.cpp" />
+    <ClCompile Include="dovah\forms\LoadingScreen.cpp" />
     <ClCompile Include="dovah\forms\MenuIcon.cpp" />
     <ClCompile Include="dovah\forms\MovableStatic.cpp" />
     <ClCompile Include="dovah\forms\MusicTrack.cpp" />
@@ -1307,6 +1311,7 @@
     <ClInclude Include="dovah\forms\AnimationProp.h" />
     <ClInclude Include="dovah\forms\Apparatus.h" />
     <ClInclude Include="dovah\forms\Armor.h" />
+    <ClInclude Include="dovah\forms\ArmorAddon.h" />
     <ClInclude Include="dovah\forms\ArtObject.h" />
     <ClInclude Include="dovah\forms\AssociationType.h" />
     <ClInclude Include="dovah\forms\Book.h" />
@@ -1324,8 +1329,11 @@
     <ClInclude Include="dovah\forms\components\conditions\working_parameter.h" />
     <ClInclude Include="dovah\forms\components\enchantable.h" />
     <ClInclude Include="dovah\forms\components\idle_collection.h" />
+    <ClInclude Include="dovah\forms\ConstructibleObject.h" />
     <ClInclude Include="dovah\forms\EncounterZone.h" />
     <ClInclude Include="dovah\forms\Furniture.h" />
+    <ClInclude Include="dovah\forms\ImagespaceModifier.h" />
+    <ClInclude Include="dovah\forms\LoadingScreen.h" />
     <ClInclude Include="dovah\forms\MenuIcon.h" />
     <ClInclude Include="dovah\forms\MovableStatic.h" />
     <ClInclude Include="dovah\forms\MusicTrack.h" />
