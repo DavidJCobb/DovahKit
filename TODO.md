@@ -184,7 +184,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | WorldData | LCRT | Location Ref Type        | ✅ | ✅ | ⬛ |
 | WorldData | SPGD | Shader Particle Geometry | ✅ | 🟨 | ⬛ |
 | WorldData | RFCT | Visual Effect            | ✅ | ✅ | ⬛ |
-| WorldData | WATR | WaterType                | ⬛ | ⬛ | ⬛ |
+| WorldData | WATR | WaterType                | ✅ | ⬛ | ⬛ |
 | WorldData | WTHR | Weather                  | ⬛ | ⬛ | ⬛ |
 | WorldObjects | ACTI | Activator     | ✅ | ✅ | ⬛ |
 | WorldObjects | CONT | Container     | ✅ | ✅ | ⬛ |
