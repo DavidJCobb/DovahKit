@@ -106,6 +106,9 @@
    #include "Spell.h"
    #include "Static.h"
    #include "StaticCollection.h"
+   #include "StoryManagerBranchNode.h"
+   #include "StoryManagerEventNode.h"
+   #include "StoryManagerQuestNode.h"
    #include "TalkingActivator.h"
    #include "TextureSet.h"
    #include "Topic.h"
@@ -225,6 +228,9 @@ namespace dovah {
       loaded_forms::Spell,
       loaded_forms::Static,
       loaded_forms::StaticCollection,
+      loaded_forms::StoryManagerBranchNode,
+      loaded_forms::StoryManagerEventNode,
+      loaded_forms::StoryManagerQuestNode,
       loaded_forms::TalkingActivator,
       loaded_forms::TextureSet,
       loaded_forms::Topic,

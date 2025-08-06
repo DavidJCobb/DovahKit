@@ -100,6 +100,7 @@
    #include "./by_form_type/sound_descriptor/sound_file_path_too_long.h"
    #include "./by_form_type/sound_descriptor/unexpected_subrecord_after_cnam.h"
    #include "./by_form_type/static_collection/orphaned_instances.h"
+   #include "./by_form_type/story_manager_quest_node/expected_quest_subrecord.h"
    #include "./by_form_type/topic_info/response_addendum_subrecord_too_early.h"
    #include "./by_form_type/topic_info/response_has_id_zero.h"
    #include "./by_form_type/topic_info/response_ids_are_not_unique.h"

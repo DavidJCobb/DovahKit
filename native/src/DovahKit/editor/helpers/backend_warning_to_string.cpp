@@ -1790,6 +1790,16 @@ namespace editor_helpers {
                   ).arg(subject).arg(casted->count);
                }
             #pragma endregion
+            #pragma region story manager quest node
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::story_manager_quest_node::expected_quest_subrecord*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  QString subrecord = cobb::qt::four_cc_to_string(casted->signature);
+                  return QObject::tr(
+                     "Story Manager Quest Node %1 had a %2 subrecord where quest #%3's NNAM subrecord was expected. The game, "
+                     "Creation Kit, and DovahKit will (mis)read this subrecord as if it were NNAM."
+                  ).arg(subject).arg(subrecord).arg(casted->which);
+               }
+            #pragma endregion
             #pragma region topic info
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::topic_info::response_addendum_subrecord_too_early*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);

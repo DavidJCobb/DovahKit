@@ -125,7 +125,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Character | QUST | Quest            | ✅ | 🟩 | 🟨 |
 | Character | RACE | Race             | ✅ | ✅ | ⬛ |
 | Character | RELA | Relationship     | ✅ | ✅ | ⬛ |
-| Character | SMEN | SM Event Node    | ⬛ | ⬛ | ⬛ | How do the game and CK cope with multiple forms for a single event type? |
+| Character | SMEN | SM Event Node    | ✅ | ⬛ | ⬛ | How do the game and CK cope with multiple forms for a single event type? |
 | Character | VTYP | Voicetype        | ✅ | ✅ | ✅ |
 | Items | AMMO | Ammo           | ✅ | ✅ | ⬛ |
 | Items | ARMO | Armor          | ✅ | 🟨 | ⬛ |
@@ -212,8 +212,8 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | | IDLE | Idle Animation | ✅ | 🟨 | ⬛ | Not a per-form dialog, but a shared dialog for all forms of this type. |
 | | REGN | Region | ⬛ | ⬛ | ⬛ |
 | | SCEN | Scene | ✅ | ✅ | ⬛ |
-| | SMBN | Story Manager Branch Node | ⬛ | ⬛ | ⬛ |
-| | SMQN | Story Manager Quest Node | ⬛ | ⬛ | ⬛ |
+| | SMBN | Story Manager Branch Node | ✅ | ⬛ | ⬛ |
+| | SMQN | Story Manager Quest Node | ✅ | ⬛ | ⬛ |
 | | WRLD | Worldspace | ✅ | ⬛ | 🟨 |
 | Deprecated | APPA | BGSApparatus | ✅ | ⬛ | ⬛ | CK32 has a loader for this; test in-game behavior |
 | Deprecated | EYES | TESEyes | ✅ | ⬛ | ⬛ | CK32 has a loader for this |

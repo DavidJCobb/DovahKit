@@ -159,7 +159,11 @@
     <ClCompile Include="dovah\forms\components\common_spell_data.cpp" />
     <ClCompile Include="dovah\forms\components\conditions\context.cpp" />
     <ClCompile Include="dovah\forms\components\conditions\working_condition.cpp" />
+    <ClCompile Include="dovah\forms\mixins\StoryManagerNode.cpp" />
     <ClCompile Include="dovah\forms\Navmesh.cpp" />
+    <ClCompile Include="dovah\forms\StoryManagerBranchNode.cpp" />
+    <ClCompile Include="dovah\forms\StoryManagerEventNode.cpp" />
+    <ClCompile Include="dovah\forms\StoryManagerQuestNode.cpp" />
     <ClCompile Include="dovah\forms\structs\cell_lighting.cpp" />
     <ClCompile Include="dovah\forms\structs\directional_ambient_lighting_colors.cpp" />
     <ClCompile Include="dovah\forms\components\enchantable.cpp" />
@@ -1339,7 +1343,11 @@
     <ClInclude Include="dovah\forms\components\conditions\parameter.h" />
     <ClInclude Include="dovah\forms\components\conditions\working_condition.h" />
     <ClInclude Include="dovah\forms\components\conditions\working_parameter.h" />
+    <ClInclude Include="dovah\forms\mixins\StoryManagerNode.h" />
     <ClInclude Include="dovah\forms\Navmesh.h" />
+    <ClInclude Include="dovah\forms\StoryManagerBranchNode.h" />
+    <ClInclude Include="dovah\forms\StoryManagerEventNode.h" />
+    <ClInclude Include="dovah\forms\StoryManagerQuestNode.h" />
     <ClInclude Include="dovah\forms\structs\cell_lighting.h" />
     <ClInclude Include="dovah\forms\structs\directional_ambient_lighting_colors.h" />
     <ClInclude Include="dovah\forms\components\enchantable.h" />
@@ -1635,6 +1643,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\unexpected_subrecord_after_cnam.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\sound_file_path_too_long.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\static_collection\orphaned_instances.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\story_manager_quest_node\expected_quest_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_addendum_subrecord_too_early.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_ids_are_not_unique.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_has_id_zero.h" />
