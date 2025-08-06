@@ -197,13 +197,13 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | WorldObjects | STAT | Static        | ✅ | ✅ | 🟨 |
 | WorldObjects | SCOL | Static Collection | ✅ | ⬛ | ⬛ |
 | WorldObjects | TREE | Tree          | ✅ | 🟨 | ⬛ |
-| Menu: Gameplay | CPTH | Camera Path | ⬛ | ⬛ | ⬛ |
+| Menu: Gameplay | CPTH | Camera Path | ✅ | ⬛ | ⬛ |
 | Dialogue | DLBR | Dialogue Branch | ✅ | ✅ | ⬛ |
 | Dialogue | DIAL | Dialogue Topic  | ✅ | ✅ | 🟨 |
 | Dialogue | DLVW | Dialogue View   |
 | Dialogue | INFO | TopicInfo       | ✅ | ✅ | 🟨 |
 | Cell Children | LAND | Landscape | ✅ | ⬛ | 🟨 |
-| Cell Children | NAVM | Navmesh | ⬛ | ⬛ | ⬛ |
+| Cell Children | NAVM | Navmesh | ✅ | ⬛ | ⬛ | Should add Dovahscript support, and then test the backend by drawing top-down and side views of navmeshes to a canvas. |
 | Cell Children | REFR | Reference | ✅ | 🟨 | 🟨 |
 | Singletons | DOBJ | Default Object Manager | ✅ | ✅ | ⬛ |
 | Singletons | NAVI | Navmesh Info Map | 🟩 |   | ⬛ | Can load and re-save; can't update/regenerate. |

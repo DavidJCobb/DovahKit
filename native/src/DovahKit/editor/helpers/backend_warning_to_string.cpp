@@ -645,6 +645,52 @@ namespace editor_helpers {
                   return format.arg(subject).arg(casted->effects_contained).arg(casted->effects_allowed).arg(casted->hard_maximum);
                }
             #pragma endregion
+            #pragma region navmesh_pathing_cell
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::navmesh_pathing_cell::bad_crc*>(&warning)) {
+                  QString subject      = form_identifiers_to_string(&casted->subject);
+                  QString crc_seen     = QString::number(casted->crc_seen, 16).rightJustified(8, '0').toUpper();
+                  QString crc_expected = QString::number(casted->crc_expected, 16).rightJustified(8, '0').toUpper();
+                  QString crc_is_of    = QString::fromStdString(casted->crc_expected_is_of);
+
+                  QString navmesh = form_identifiers_to_string(casted->navmesh);
+                  QString format;
+                  if (casted->subject.form_type == dovah::form_type::navmesh_info_map) {
+                     format = QObject::tr(
+                        "Info for Navmesh %5 in the Navmesh Info Map had a pathing cell with a bad CRC. The CRC seen was %2, but we expected %3 (%4).",
+                        disambig
+                     );
+                  } else {
+                     format = QObject::tr(
+                        "The pathing cell for Navmesh %1 had a pathing cell with a bad CRC. The CRC seen was %2, but we expected %3 (%4).",
+                        disambig
+                     );
+                  }
+                  return format.arg(subject).arg(crc_seen).arg(crc_expected).arg(crc_is_of).arg(navmesh);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::navmesh_pathing_cell::improper_exterior*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString navmesh = form_identifiers_to_string(casted->navmesh);
+                  QString cell    = form_identifiers_to_string(&casted->cell);
+                  //
+                  QString format;
+                  if (casted->subject.form_type == dovah::form_type::navmesh_info_map) {
+                     format = QObject::tr(
+                        "Info for Navmesh %2 in the Navmesh Info Map specifies exterior cell %3 as its pathing cell. However, the format used "
+                        "to specify this exterior cell is only valid for interior cells. (The cell is specified by record ID; exterior cells "
+                        "must be specified via the parent worldspace's record ID and the cell's grid position.)",
+                        disambig
+                     );
+                  } else {
+                     format = QObject::tr(
+                        "Navmesh %1 specifies exterior cell %3 as its pathing cell. However, the format used "
+                        "to specify this exterior cell is only valid for interior cells. (The cell is specified by record ID; exterior cells "
+                        "must be specified via the parent worldspace's record ID and the cell's grid position.)",
+                        disambig
+                     );
+                  }
+                  return format.arg(subject).arg(navmesh).arg(cell);
+               }
+            #pragma endregion
             #pragma region package event dialogue
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::package_event_dialogue::unrecognized_subrecord*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);
@@ -938,6 +984,14 @@ namespace editor_helpers {
                   ).arg(subject).arg(casted->seen_type);
                }
             #pragma endregion
+            #pragma region navmesh
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::navmesh::invalid_grid_size*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Navmesh %1 has an invalid navmesh grid size (%2)."
+                  ).arg(subject).arg(casted->size);
+               }
+            #pragma endregion
             #pragma region navmesh info map
                if (auto* casted_general = dynamic_cast<const form_load_warnings::by_type::navmesh_info_map::_generic_crc_mismatch_notice*>(&warning)) {
                   QString subject      = form_identifiers_to_string(&casted_general->subject);
@@ -945,13 +999,6 @@ namespace editor_helpers {
                   QString crc_expected = QString::number(casted_general->crc_expected, 16).rightJustified(8, '0').toUpper();
                   QString crc_is_of    = QString::fromStdString(casted_general->crc_expected_is_of);
 
-                  if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::navmesh_info_map::navmesh_info_pathing_cell_bad_crc*>(&warning)) {
-                     QString navmesh = form_identifiers_to_string(casted->navmesh);
-                     return QObject::tr(
-                        "Info for Navmesh %5 in the Navmesh Info Map had a pathing cell with a bad CRC. The CRC seen was %2, but we expected %3 (%4).",
-                        disambig
-                     ).arg(subject).arg(crc_seen).arg(crc_expected).arg(crc_is_of).arg(navmesh);
-                  }
                   if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::navmesh_info_map::navmesh_info_pathing_door_bad_crc*>(&warning)) {
                      QString navmesh = form_identifiers_to_string(casted->navmesh);
                      return QObject::tr(
@@ -959,18 +1006,6 @@ namespace editor_helpers {
                         disambig
                      ).arg(subject).arg(crc_seen).arg(crc_expected).arg(crc_is_of).arg(navmesh);
                   }
-               }
-               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::navmesh_info_map::navmesh_info_pathing_cell_is_improper_exterior*>(&warning)) {
-                  QString subject = form_identifiers_to_string(&casted->subject);
-                  QString navmesh = form_identifiers_to_string(casted->navmesh);
-                  QString cell    = form_identifiers_to_string(&casted->cell);
-                  //
-                  return QObject::tr(
-                     "Info for Navmesh %2 in the Navmesh Info Map specifies exterior cell %3 as its pathing cell. However, the format used "
-                     "to specify this exterior cell is only valid for interior cells. (The cell is specified by record ID; exterior cells "
-                     "must be specified via the parent worldspace's record ID and the cell's grid position.)",
-                     disambig
-                  ).arg(subject).arg(navmesh).arg(cell);
                }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::navmesh_info_map::navmesh_may_be_multiply_deleted*>(&warning)) {
                   //

@@ -5,6 +5,7 @@
 #include <vector>
 #include "helpers/vector3.h"
 #include "../../_common.h"
+#include "../navmesh_pathing_cell.h"
 
 namespace dovah::loaded_forms::structs::navmesh_info_map {
    struct navmesh_info {
@@ -49,13 +50,7 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
             std::vector<door_link> doors;
          } links;
          std::optional<island_data> island;
-         struct {
-            uint32_t crc = 0;
-            std::variant<
-               pathing_cell_exterior,
-               pathing_cell_interior
-            > data;
-         } pathing_cell;
+         navmesh_pathing_cell pathing_cell;
 
       public:
          void load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc);
@@ -73,10 +68,7 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
                std::vector<form_id_t> preferred_edges;
                std::vector<form_id_t> doors;
             } links;
-            struct {
-               form_id_t parent_world;
-               form_id_t interior_cell;
-            } pathing_cell;
+            navmesh_pathing_cell::use_info_state pathing_cell;
             //
             void generate_use_info(tes_subrecord_reader&);
             void commit_to(form_stub_use_info_builder&);

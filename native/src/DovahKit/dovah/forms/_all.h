@@ -20,6 +20,7 @@
    #include "ArtObject.h"
    #include "AssociationType.h"
    #include "Book.h"
+   #include "CameraPath.h"
    #include "CameraShot.h"
    #include "Cell.h"
    #include "Class.h"
@@ -79,6 +80,7 @@
    #include "MovementType.h"
    #include "MusicTrack.h"
    #include "MusicType.h"
+   #include "Navmesh.h"
    #include "NavMeshInfoMap.h"
    #include "Note.h"
    #include "ObjectReference.h"
@@ -137,6 +139,7 @@ namespace dovah {
       loaded_forms::ArtObject,
       loaded_forms::AssociationType,
       loaded_forms::Book,
+      loaded_forms::CameraPath,
       loaded_forms::CameraShot,
       loaded_forms::Cell,
       loaded_forms::Class,
@@ -196,6 +199,7 @@ namespace dovah {
       loaded_forms::MovementType,
       loaded_forms::MusicTrack,
       loaded_forms::MusicType,
+      loaded_forms::Navmesh,
       loaded_forms::NavMeshInfoMap,
       loaded_forms::Note,
       loaded_forms::ObjectReference,

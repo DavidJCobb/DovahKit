@@ -1,8 +1,6 @@
 #include "./navmesh_info.h"
 #include "../../_common_cpp.h"
 
-#include "../../../notices/form_load_warnings/by_form_type/navmesh_info_map/navmesh_info_pathing_cell_bad_crc.h"
-#include "../../../notices/form_load_warnings/by_form_type/navmesh_info_map/navmesh_info_pathing_cell_is_improper_exterior.h"
 #include "../../../notices/form_load_warnings/by_form_type/navmesh_info_map/navmesh_info_pathing_door_bad_crc.h"
 
 namespace {
@@ -102,35 +100,7 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
       }
 
 
-      subrecord.read(this->pathing_cell.crc);
-      _warn_on_bad_crc.operator()<specific_load_warnings::navmesh_info_pathing_cell_bad_crc>(0xA5E9A03C, "PathingCell", this->pathing_cell.crc);
-      //
-      form_reference_t world;
-      if (subrecord.read(world)) {
-         if (world) {
-            intfc.warn_if_ref_is_wrong_type(world, form_type::worldspace, subrecord.signature());
-
-            auto& data = this->pathing_cell.data.emplace<pathing_cell_exterior>();
-            data.parent_world.unmanaged_set(world.get_form_stub());
-            subrecord.read(data.grid_y); // NOT a mistake; Y comes before X here.
-            subrecord.read(data.grid_x);
-         } else {
-            auto& data = this->pathing_cell.data.emplace<pathing_cell_interior>();
-            if (auto& form = data.cell; subrecord.read(form)) {
-               intfc.warn_if_ref_is_wrong_type(form, form_type::cell, subrecord.signature());
-               if (auto* stub = form.get_form_stub(); stub && stub->form_type == form_type::cell) {
-                  if (stub->is_exterior_cell()) {
-                     specific_load_warnings::navmesh_info_pathing_cell_is_improper_exterior notice(
-                        intfc.target_stub,
-                        this->navmesh.get_form_stub(),
-                        *stub
-                     );
-                     intfc.log_load_warning(notice);
-                  }
-               }
-            }
-         }
-      }
+      this->pathing_cell.load(subrecord, intfc, this->navmesh.get_form_stub());
    }
    void navmesh_info::save(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
       subrecord.write(this->navmesh);
@@ -183,19 +153,7 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
             }
          }
       }
-      subrecord.write(this->pathing_cell.crc);
-      if (auto* casted = std::get_if<pathing_cell_exterior>(&this->pathing_cell.data)) {
-         subrecord.write(casted->parent_world);
-         subrecord.write(casted->grid_y); // NOT a mistake; Y comes before X here
-         subrecord.write(casted->grid_x);
-      } else if (auto* casted = std::get_if<pathing_cell_interior>(&this->pathing_cell.data)) {
-         subrecord.write((uint32_t)0);
-         subrecord.write(casted->cell);
-      } else {
-         subrecord.write((uint32_t)0);
-         subrecord.write((uint16_t)0);
-         subrecord.write((uint16_t)0);
-      }
+      this->pathing_cell.save(subrecord, intfc);
    }
 
    void navmesh_info::clone_from(const navmesh_info& src, Form& my_owner) noexcept {
@@ -219,21 +177,7 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
          }
       }
       this->island = src.island;
-      {
-         this->pathing_cell.crc = src.pathing_cell.crc;
-
-         auto& src_var = src.pathing_cell.data;
-         auto& dst_var = this->pathing_cell.data;
-         if (auto* casted = std::get_if<pathing_cell_exterior>(&src_var)) {
-            auto& casted_dst = dst_var.emplace<pathing_cell_exterior>();
-            casted_dst.parent_world.set(my_owner, casted->parent_world);
-            casted_dst.grid_x = casted->grid_x;
-            casted_dst.grid_y = casted->grid_y;
-         } else if (auto* casted = std::get_if<pathing_cell_interior>(&src_var)) {
-            auto& casted_dst = dst_var.emplace<pathing_cell_interior>();
-            casted_dst.cell.set(my_owner, casted->cell);
-         }
-      }
+      this->pathing_cell.clone_from(src.pathing_cell, my_owner);
    }
    void navmesh_info::clear(Form& my_owner) noexcept {
       this->navmesh.set(my_owner, nullptr);
@@ -333,12 +277,7 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
 
       subrecord.skip_bytes(4);
 
-      subrecord.read(this->pathing_cell.parent_world);
-      if (this->pathing_cell.parent_world) {
-         subrecord.skip_bytes(4);
-      } else {
-         subrecord.read(this->pathing_cell.interior_cell);
-      }
+      this->pathing_cell.generate_use_info(subrecord);
    }
    void navmesh_info::use_info_state::commit_to(form_stub_use_info_builder& uib) {
       if (this->navmesh)
@@ -349,8 +288,7 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
          uib.add_outbound_reference(id);
       for (auto& id : this->links.doors)
          uib.add_outbound_reference(id);
-      uib.add_outbound_reference(this->pathing_cell.parent_world);
-      uib.add_outbound_reference(this->pathing_cell.interior_cell);
+      this->pathing_cell.commit_to(uib);
    }
    std::vector<form_id_t> navmesh_info::use_info_state::as_combined_list() const {
       std::vector<form_id_t> out;

@@ -149,6 +149,7 @@
     <ClCompile Include="dovah\forms\ArtObject.cpp" />
     <ClCompile Include="dovah\forms\AssociationType.cpp" />
     <ClCompile Include="dovah\forms\Book.cpp" />
+    <ClCompile Include="dovah\forms\CameraPath.cpp" />
     <ClCompile Include="dovah\forms\CameraShot.cpp" />
     <ClCompile Include="dovah\forms\Class.cpp" />
     <ClCompile Include="dovah\forms\Climate.cpp" />
@@ -158,6 +159,8 @@
     <ClCompile Include="dovah\forms\components\common_spell_data.cpp" />
     <ClCompile Include="dovah\forms\components\conditions\context.cpp" />
     <ClCompile Include="dovah\forms\components\conditions\working_condition.cpp" />
+    <ClCompile Include="dovah\forms\Navmesh.cpp" />
+    <ClCompile Include="dovah\forms\structs\cell_lighting.cpp" />
     <ClCompile Include="dovah\forms\structs\directional_ambient_lighting_colors.cpp" />
     <ClCompile Include="dovah\forms\components\enchantable.cpp" />
     <ClCompile Include="dovah\forms\components\idle_collection.cpp" />
@@ -199,6 +202,7 @@
     <ClCompile Include="dovah\forms\structs\navmesh_info_map\precomputed_path.cpp" />
     <ClCompile Include="dovah\forms\structs\navmesh_info_map\precomputed_path_collection.cpp" />
     <ClCompile Include="dovah\forms\structs\navmesh_info_map\road_marker_map.cpp" />
+    <ClCompile Include="dovah\forms\structs\navmesh_pathing_cell.cpp" />
     <ClCompile Include="dovah\forms\structs\package_event_addon.cpp" />
     <ClCompile Include="dovah\forms\structs\package_location.cpp" />
     <ClCompile Include="dovah\forms\structs\package_schedule.cpp" />
@@ -642,7 +646,6 @@
     <ClCompile Include="dovah\forms\components\extra_data\water_data.cpp" />
     <ClCompile Include="dovah\forms\components\extra_data\_factory.cpp" />
     <ClCompile Include="dovah\forms\components\extra_data\_use_info.cpp" />
-    <ClCompile Include="dovah\forms\components\interior_lighting.cpp" />
     <ClCompile Include="dovah\forms\components\keyword_list.cpp" />
     <ClCompile Include="dovah\forms\components\legacy_script.cpp" />
     <ClCompile Include="dovah\forms\components\model.cpp" />
@@ -1322,6 +1325,7 @@
     <ClInclude Include="dovah\forms\ArtObject.h" />
     <ClInclude Include="dovah\forms\AssociationType.h" />
     <ClInclude Include="dovah\forms\Book.h" />
+    <ClInclude Include="dovah\forms\CameraPath.h" />
     <ClInclude Include="dovah\forms\CameraShot.h" />
     <ClInclude Include="dovah\forms\Class.h" />
     <ClInclude Include="dovah\forms\Climate.h" />
@@ -1335,6 +1339,8 @@
     <ClInclude Include="dovah\forms\components\conditions\parameter.h" />
     <ClInclude Include="dovah\forms\components\conditions\working_condition.h" />
     <ClInclude Include="dovah\forms\components\conditions\working_parameter.h" />
+    <ClInclude Include="dovah\forms\Navmesh.h" />
+    <ClInclude Include="dovah\forms\structs\cell_lighting.h" />
     <ClInclude Include="dovah\forms\structs\directional_ambient_lighting_colors.h" />
     <ClInclude Include="dovah\forms\components\enchantable.h" />
     <ClInclude Include="dovah\forms\components\idle_collection.h" />
@@ -1376,6 +1382,7 @@
     <ClInclude Include="dovah\forms\structs\navmesh_info_map\precomputed_path.h" />
     <ClInclude Include="dovah\forms\structs\navmesh_info_map\precomputed_path_collection.h" />
     <ClInclude Include="dovah\forms\structs\navmesh_info_map\road_marker_map.h" />
+    <ClInclude Include="dovah\forms\structs\navmesh_pathing_cell.h" />
     <ClInclude Include="dovah\forms\structs\package_event_addon.h" />
     <ClInclude Include="dovah\forms\structs\package_location.h" />
     <ClInclude Include="dovah\forms\structs\package_schedule.h" />
@@ -1541,6 +1548,8 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\magic_effect_list\expected_effect_item_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\magic_effect_list\misplaced_effect_item_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\magic_effect_list\too_many_effects.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\navmesh_pathing_cell\bad_crc.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\navmesh_pathing_cell\improper_exterior.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\package_event_dialogue\unrecognized_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\actor_value_info\unexpected_subrecord_in_perk_tree_node.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\actor_value_info\unterminated_perk_tree_node.h" />
@@ -1561,8 +1570,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\material_type\name_too_long.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\message\orphaned_conditions.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\music_track\invalid_track_type.h" />
-    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_info_pathing_cell_bad_crc.h" />
-    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_info_pathing_cell_is_improper_exterior.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh\invalid_grid_size.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_info_pathing_door_bad_crc.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_may_be_multiply_deleted.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\precomputed_path_has_gaps.h" />
@@ -2962,7 +2970,6 @@
     <ClInclude Include="dovah\forms\components\extra_data\_templates.h" />
     <ClInclude Include="dovah\forms\components\extra_data\_unknown.h" />
     <ClInclude Include="dovah\forms\components\extra_data\_use_info.h" />
-    <ClInclude Include="dovah\forms\components\interior_lighting.h" />
     <ClInclude Include="dovah\forms\components\keyword_list.h" />
     <ClInclude Include="dovah\forms\components\legacy_script.h" />
     <ClInclude Include="dovah\forms\components\package_event_dialogue.h" />
