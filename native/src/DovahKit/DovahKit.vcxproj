@@ -161,6 +161,7 @@
     <ClCompile Include="dovah\forms\components\conditions\working_condition.cpp" />
     <ClCompile Include="dovah\forms\mixins\StoryManagerNode.cpp" />
     <ClCompile Include="dovah\forms\Navmesh.cpp" />
+    <ClCompile Include="dovah\forms\Region.cpp" />
     <ClCompile Include="dovah\forms\StoryManagerBranchNode.cpp" />
     <ClCompile Include="dovah\forms\StoryManagerEventNode.cpp" />
     <ClCompile Include="dovah\forms\StoryManagerQuestNode.cpp" />
@@ -1293,6 +1294,7 @@
     <ClInclude Include="dovah\data\packages\package_data_type.h" />
     <ClInclude Include="dovah\data\package_type.h" />
     <ClInclude Include="dovah\data\perk_entry_points.h" />
+    <ClInclude Include="dovah\data\region_data_type.h" />
     <ClInclude Include="dovah\data\sex.h" />
     <ClInclude Include="dovah\data\skills.h" />
     <ClInclude Include="dovah\data\skill_level.h" />
@@ -1345,6 +1347,7 @@
     <ClInclude Include="dovah\forms\components\conditions\working_parameter.h" />
     <ClInclude Include="dovah\forms\mixins\StoryManagerNode.h" />
     <ClInclude Include="dovah\forms\Navmesh.h" />
+    <ClInclude Include="dovah\forms\Region.h" />
     <ClInclude Include="dovah\forms\StoryManagerBranchNode.h" />
     <ClInclude Include="dovah\forms\StoryManagerEventNode.h" />
     <ClInclude Include="dovah\forms\StoryManagerQuestNode.h" />
@@ -1630,6 +1633,12 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\too_many_biped_object_names.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\too_many_phonemes.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\race\wrong_weight_count_per_phoneme.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\bad_region_point_list_data_subrecord_size.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\mismatched_region_data_subrecord.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\orphaned_region_data_subrecord.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\region_data_object_has_invalid_parent.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\unknown_region_data_type.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\unused_region_data_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\invalid_scene_action_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\scene_action_base_layout_incorrect.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\scene_action_necessary_subrecord_missing.h" />

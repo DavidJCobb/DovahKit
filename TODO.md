@@ -210,7 +210,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | | AVIF | Actor Value | ✅ | 🟨 | ⬛ | We'll also need a custom widget and dialog for Perk Trees. |
 | | CELL | Cell | ✅ | ✅ | 🟨 |
 | | IDLE | Idle Animation | ✅ | 🟨 | ⬛ | Not a per-form dialog, but a shared dialog for all forms of this type. |
-| | REGN | Region | ⬛ | ⬛ | ⬛ |
+| | REGN | Region | ✅ | ⬛ | ⬛ |
 | | SCEN | Scene | ✅ | ✅ | ⬛ |
 | | SMBN | Story Manager Branch Node | ✅ | ⬛ | ⬛ |
 | | SMQN | Story Manager Quest Node | ✅ | ⬛ | ⬛ |

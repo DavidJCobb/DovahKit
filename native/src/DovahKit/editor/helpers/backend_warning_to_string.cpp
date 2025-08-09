@@ -1637,6 +1637,85 @@ namespace editor_helpers {
                   ).arg(subject).arg(phoneme).arg(casted->count).arg(casted->desired_count);
                }
             #pragma endregion
+            #pragma region region
+            {
+               const auto _region_data_type_to_string = [](dovah::region_data_type type) {
+                  switch (type) {
+                     case dovah::region_data_type::grass:
+                        return QObject::tr("Grass", "dovah::region_data_type");
+                     case dovah::region_data_type::landscape:
+                        return QObject::tr("Landscape", "dovah::region_data_type");
+                     case dovah::region_data_type::map:
+                        return QObject::tr("Map", "dovah::region_data_type");
+                     case dovah::region_data_type::objects:
+                        return QObject::tr("Objects", "dovah::region_data_type");
+                     case dovah::region_data_type::sound:
+                        return QObject::tr("Sound", "dovah::region_data_type");
+                     case dovah::region_data_type::weather:
+                        return QObject::tr("Weather", "dovah::region_data_type");
+                  }
+                  return QObject::tr("Unknown #%1", "dovah::region_data_type").arg((size_t)type);
+               };
+               
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::region::bad_region_point_list_data_subrecord_size*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  auto    signature = cobb::qt::four_cc_to_string(casted->subrecord);
+                  //
+                  return QObject::tr(
+                     "Region %1 contains a point list subrecord (%2) with an invalid size (%3 bytes). "
+                     "The game and CK reject these subrecords if the size isn't an exact multiple of 8, "
+                     "as that implies invalid subrecord data."
+                  ).arg(subject).arg(signature).arg(casted->size);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::region::mismatched_region_data_subrecord*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  auto    signature = cobb::qt::four_cc_to_string(casted->subrecord);
+                  QString seen      = _region_data_type_to_string(casted->type_seen);
+                  QString expected  = _region_data_type_to_string(casted->type_expected);
+                  //
+                  return QObject::tr(
+                     "Region %1 contains a misplaced %2 subrecord. This subrecord type, intended for "
+                     "%3 region data, was seen inside of %4 region data."
+                  ).arg(subject).arg(signature).arg(expected).arg(seen);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::region::orphaned_region_data_subrecord*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  auto    signature = cobb::qt::four_cc_to_string(casted->subrecord);
+                  QString type      = _region_data_type_to_string(casted->type);
+                  //
+                  return QObject::tr(
+                     "Region %1 contains a %2 subrecord (intended for %3 region data) outside of any "
+                     "region data."
+                  ).arg(subject).arg(signature).arg(type);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::region::region_data_object_has_invalid_parent*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Region %1 contains a list of Region Object Data, and Object %2 in that list has "
+                     "an invalid parent index (%3). Parents must be listed before their children."
+                  ).arg(subject).arg(casted->which).arg(casted->parent);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::region::unknown_region_data_type*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Region %1 contains a region data entry with unknown type %2."
+                  ).arg(subject).arg(casted->type);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::region::unused_region_data_subrecord*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  auto    signature = cobb::qt::four_cc_to_string(casted->subrecord);
+                  QString type      = _region_data_type_to_string(casted->type);
+                  //
+                  return QObject::tr(
+                     "Region %1 contains a %2 subrecord (intended for %3 region data). This subrecord "
+                     "is no longer used; the game and Creation Kit don't load it, and DovahKit doesn't "
+                     "know how to load it."
+                  ).arg(subject).arg(signature).arg(type);
+               }
+            }
+            #pragma endregion
             #pragma region scene
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::scene::invalid_scene_action_type*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);

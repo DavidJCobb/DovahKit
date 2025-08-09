@@ -92,6 +92,7 @@
    #include "Quest.h"
    #include "Race.h"
    #include "Ragdoll.h"
+   #include "Region.h"
    #include "Relationship.h"
    #include "ReverbParameters.h"
    #include "Scene.h"
@@ -214,6 +215,7 @@ namespace dovah {
       loaded_forms::Quest,
       loaded_forms::Race,
       loaded_forms::Ragdoll,
+      loaded_forms::Region,
       loaded_forms::Relationship,
       loaded_forms::ReverbParameters,
       loaded_forms::Scene,
