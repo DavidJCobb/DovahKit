@@ -169,7 +169,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | SpecialEffect | EFSH | EffectShader    | ✅ | ✅ | ⬛ |
 | SpecialEffect | EXPL | Explosion       | ✅ | ✅ | ⬛ |
 | SpecialEffect | FSTP | Footstep        | ✅ | ✅ | ⬛ |
-| SpecialEffect | FSTS | Footstep Set    | ✅ | ⬛ | ⬛ |
+| SpecialEffect | FSTS | Footstep Set    | ✅ | 🟨 | ⬛ |
 | SpecialEffect | HAZD | Hazard          | ✅ | ✅ | ⬛ |
 | SpecialEffect | IMGS | Imagespace      | ✅ | 🟨 | ⬛ |
 | SpecialEffect | IMAD | Imagespace Modifier | ✅ | ⬛ | ⬛ |
@@ -179,7 +179,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | SpecialEffect | PROJ | Projectile      | ✅ | 🟨 | ⬛ |
 | WorldData | CLMT | Climate                  | ✅ | 🟨 | ⬛ |
 | WorldData | ECZN | Encounter Zone           | ✅ | 🟨 | ⬛ |
-| WorldData | LGTM | Lighting Template        | ✅ | ⬛ | ⬛ |
+| WorldData | LGTM | Lighting Template        | ✅ | ⬛ | ⬛ | Might be a good idea to set up shared widgets (plural!) between this and cell data, especially since the ambient lighting struct (but not the rest!) is used elsewhere too (e.g. weather). |
 | WorldData | LCTN | Location                 | 🟨 | ⬛ | ⬛ |
 | WorldData | LCRT | Location Ref Type        | ✅ | ✅ | ⬛ |
 | WorldData | SPGD | Shader Particle Geometry | ✅ | 🟨 | ⬛ |
@@ -216,11 +216,11 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | | SMQN | Story Manager Quest Node | ✅ |   | ⬛ | These don't have their own UI. You edit them as part of the Event Node UI. |
 | | WRLD | Worldspace | ✅ | ⬛ | 🟨 |
 | Deprecated | APPA | BGSApparatus | ✅ | ⬛ | ⬛ | CK32 has a loader for this; test in-game behavior |
-| Deprecated | EYES | TESEyes | ✅ | ⬛ | ⬛ | CK32 has a loader for this |
-| Deprecated | MICO | BGSMenuIcon | ✅ | ⬛ | ⬛ | CK32 has a loader for this |
-| Deprecated | RGDL | BGSRagdoll | ✅ | ⬛ | ⬛ | CK32 has a loader for this |
-| Skyrim Special | LENS | Lens Flare | ✅ | ⬛ | ⬛ |
-| Skyrim Special | VOLI | Volumetric Lighting | ✅ | ⬛ | ⬛ |
+| Deprecated | EYES | TESEyes | ✅ | 🟨 | ⬛ | CK32 has a loader for this |
+| Deprecated | MICO | BGSMenuIcon | ✅ | 🟨 | ⬛ | CK32 has a loader for this |
+| Deprecated | RGDL | BGSRagdoll | ✅ |   | ⬛ | CK32 has a loader for this |
+| Skyrim Special | LENS | Lens Flare | ✅ | 🟨 | ⬛ |
+| Skyrim Special | VOLI | Volumetric Lighting | ✅ | 🟨 | ⬛ |
 
 Subclasses of `REFR`, such as `ACHR`, are not listed in the table above, as they should be loaded identically and have identical data. There are 9 such form types.
 

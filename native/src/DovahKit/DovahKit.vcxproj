@@ -3208,10 +3208,12 @@
     <QtUic Include="ui\form_windows\encounter_zone.ui" />
     <QtUic Include="ui\form_windows\equip_slot.ui" />
     <QtUic Include="ui\form_windows\explosion.ui" />
+    <QtUic Include="ui\form_windows\eyes.ui" />
     <QtUic Include="ui\form_windows\faction.ui" />
     <QtUic Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.ui" />
     <QtUic Include="ui\form_windows\flora.ui" />
     <QtUic Include="ui\form_windows\footstep.ui" />
+    <QtUic Include="ui\form_windows\footstep_set.ui" />
     <QtUic Include="ui\form_windows\formlist.ui" />
     <QtUic Include="ui\form_windows\furniture.ui" />
     <QtUic Include="ui\form_windows\global.ui" />
@@ -3225,6 +3227,8 @@
     <QtUic Include="ui\form_windows\ingredient.ui" />
     <QtUic Include="ui\form_windows\keyword.ui" />
     <QtUic Include="ui\form_windows\landtexture.ui" />
+    <QtUic Include="ui\form_windows\lens_flare.ui" />
+    <QtUic Include="ui\form_windows\lens_flare\FormSubdialogLensFlareSprite.ui" />
     <QtUic Include="ui\form_windows\leveled_character.ui" />
     <QtUic Include="ui\form_windows\leveled_item.ui" />
     <QtUic Include="ui\form_windows\leveled_spell.ui" />
@@ -3233,6 +3237,7 @@
     <QtUic Include="ui\form_windows\magic_effect.ui" />
     <QtUic Include="ui\form_windows\material_object.ui" />
     <QtUic Include="ui\form_windows\material_type.ui" />
+    <QtUic Include="ui\form_windows\menu_icon.ui" />
     <QtUic Include="ui\form_windows\message.ui" />
     <QtUic Include="ui\form_windows\misc_item.ui" />
     <QtUic Include="ui\form_windows\movable_static.ui" />
@@ -3280,6 +3285,7 @@
     <QtUic Include="ui\form_windows\tree.ui" />
     <QtUic Include="ui\form_windows\visual_effect.ui" />
     <QtUic Include="ui\form_windows\voicetype.ui" />
+    <QtUic Include="ui\form_windows\volumetric_lighting.ui" />
     <QtUic Include="ui\form_windows\weapon.ui" />
     <QtUic Include="ui\form_windows\word_of_power.ui" />
     <QtUic Include="ui\main_window.ui" />
