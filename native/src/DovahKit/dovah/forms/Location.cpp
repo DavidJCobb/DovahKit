@@ -2,9 +2,6 @@
 #include "_common_cpp.h"
 #include "../../helpers/vector.h"
 
-#include "../../incomplete_code_warnings.h"
-static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_forms, "The backend for Location is incomplete (missing everything except the loader).");
-
 namespace dovah::loaded_forms {
    void Location::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);

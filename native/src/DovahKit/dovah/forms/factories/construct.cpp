@@ -9,7 +9,6 @@ namespace {
    using _construct_t = loaded_forms::Form* (*)(const loaded_forms::Form::constructor_params&);
 
    template<typename T> concept can_construct = requires(tes_record_reader& record, form_stub_use_info_builder& uib) {
-      requires !std::is_base_of_v<loaded_forms::_IncompleteFormType, T>;
       { T::generate_use_info(record, uib) }; // can generate use info?
    };
 

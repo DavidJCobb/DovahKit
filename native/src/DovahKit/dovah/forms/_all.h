@@ -262,9 +262,4 @@ namespace dovah {
       impl::first_invalid_form_class == (size_t)-1,
       "All loaded-form classes must have a static `form_type` member of type `enum form_type`."
    );
-
-   static_assert(
-      incomplete_code_warnings::allow_compiling_despite_incomplete_forms || !all_loaded_form_types::contains_matching_type<[]<typename T>() { return std::is_base_of_v<loaded_forms::_IncompleteFormType, T>; }>,
-      "The backend for one or more form types is incomplete."
-   );
 }
