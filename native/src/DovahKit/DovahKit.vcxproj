@@ -3193,6 +3193,7 @@
     <QtUic Include="ui\form_windows\camera_shot.ui" />
     <QtUic Include="ui\form_windows\cell.ui" />
     <QtUic Include="ui\form_windows\class.ui" />
+    <QtUic Include="ui\form_windows\climate.ui" />
     <QtUic Include="ui\form_windows\collision_layer.ui" />
     <QtUic Include="ui\form_windows\color.ui" />
     <QtUic Include="ui\form_windows\combat_style.ui" />
@@ -3204,6 +3205,7 @@
     <QtUic Include="ui\form_windows\dual_cast_data.ui" />
     <QtUic Include="ui\form_windows\effectshader.ui" />
     <QtUic Include="ui\form_windows\enchantment.ui" />
+    <QtUic Include="ui\form_windows\encounter_zone.ui" />
     <QtUic Include="ui\form_windows\equip_slot.ui" />
     <QtUic Include="ui\form_windows\explosion.ui" />
     <QtUic Include="ui\form_windows\faction.ui" />
@@ -3217,6 +3219,7 @@
     <QtUic Include="ui\form_windows\hazard.ui" />
     <QtUic Include="ui\form_windows\head_part.ui" />
     <QtUic Include="ui\form_windows\idle_marker.ui" />
+    <QtUic Include="ui\form_windows\imagespace.ui" />
     <QtUic Include="ui\form_windows\impact_data.ui" />
     <QtUic Include="ui\form_windows\impact_data_set.ui" />
     <QtUic Include="ui\form_windows\ingredient.ui" />
@@ -3268,6 +3271,7 @@
     <QtUic Include="ui\form_windows\spell.ui" />
     <QtUic Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.ui" />
     <QtUic Include="ui\form_windows\static.ui" />
+    <QtUic Include="ui\form_windows\story_manager_event_node.ui" />
     <QtUic Include="ui\form_windows\talking_activator.ui" />
     <QtUic Include="ui\form_windows\textureset.ui" />
     <QtUic Include="ui\form_windows\topic.ui" />

@@ -8782,6 +8782,18 @@
     <QtUic Include="ui\form_windows\effectshader.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="ui\form_windows\imagespace.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\encounter_zone.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\climate.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\story_manager_event_node.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\main_window.h">

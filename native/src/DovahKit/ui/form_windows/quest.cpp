@@ -8,9 +8,6 @@
 
 #include "ui/utils/bind.h"
 
-#include "../../incomplete_code_warnings.h"
-static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_form_dialogs, "The form-editing dialog for Quests is incomplete.");
-
 #include "./quest/QuestAllDialogueDatastore.h"
 #include "./quest/QuestDialogueTabBody.h"
 

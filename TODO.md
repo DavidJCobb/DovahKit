@@ -125,7 +125,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Character | QUST | Quest            | ✅ | 🟩 | 🟨 |
 | Character | RACE | Race             | ✅ | ✅ | ⬛ |
 | Character | RELA | Relationship     | ✅ | ✅ | ⬛ |
-| Character | SMEN | SM Event Node    | ✅ | ⬛ | ⬛ | How do the game and CK cope with multiple forms for a single event type? |
+| Character | SMEN | SM Event Node    | ✅ | 🟨 | ⬛ | How do the game and CK cope with multiple forms for a single event type? |
 | Character | VTYP | Voicetype        | ✅ | ✅ | ✅ |
 | Items | AMMO | Ammo           | ✅ | ✅ | ⬛ |
 | Items | ARMO | Armor          | ✅ | 🟨 | ⬛ |
@@ -171,14 +171,14 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | SpecialEffect | FSTP | Footstep        | ✅ | ✅ | ⬛ |
 | SpecialEffect | FSTS | Footstep Set    | ✅ | ⬛ | ⬛ |
 | SpecialEffect | HAZD | Hazard          | ✅ | ✅ | ⬛ |
-| SpecialEffect | IMGS | Imagespace      | ✅ | ⬛ | ⬛ |
+| SpecialEffect | IMGS | Imagespace      | ✅ | 🟨 | ⬛ |
 | SpecialEffect | IMAD | Imagespace Modifier | ✅ | ⬛ | ⬛ |
 | SpecialEffect | IPCT | ImpactData      | ✅ | ✅ | ⬛ |
 | SpecialEffect | IPDS | ImpactDataSet   | ✅ | 🟨 | ⬛ |
 | SpecialEffect | MATT | Material Type   | ✅ | ✅ | ⬛ |
 | SpecialEffect | PROJ | Projectile      | ✅ | 🟨 | ⬛ |
-| WorldData | CLMT | Climate                  | ✅ | ⬛ | ⬛ |
-| WorldData | ECZN | Encounter Zone           | ✅ | ⬛ | ⬛ |
+| WorldData | CLMT | Climate                  | ✅ | 🟨 | ⬛ |
+| WorldData | ECZN | Encounter Zone           | ✅ | 🟨 | ⬛ |
 | WorldData | LGTM | Lighting Template        | ✅ | ⬛ | ⬛ |
 | WorldData | LCTN | Location                 | 🟨 | ⬛ | ⬛ |
 | WorldData | LCRT | Location Ref Type        | ✅ | ✅ | ⬛ |
@@ -197,23 +197,23 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | WorldObjects | STAT | Static        | ✅ | ✅ | 🟨 |
 | WorldObjects | SCOL | Static Collection | ✅ | ⬛ | ⬛ |
 | WorldObjects | TREE | Tree          | ✅ | 🟨 | ⬛ |
-| Menu: Gameplay | CPTH | Camera Path | ✅ | ⬛ | ⬛ |
+| Menu: Gameplay | CPTH | Camera Path | ✅ | ⬛ | ⬛ | Not a per-form dialog, but a shared dialog for all forms of this type. These forms are organized into a tree. |
+| Menu: Gameplay | IDLE | Idle Animation | ✅ | 🟨 | ⬛ | Not a per-form dialog, but a shared dialog for all forms of this type. These forms are organized into a tree. |
 | Dialogue | DLBR | Dialogue Branch | ✅ | ✅ | ⬛ |
 | Dialogue | DIAL | Dialogue Topic  | ✅ | ✅ | 🟨 |
 | Dialogue | DLVW | Dialogue View   |
 | Dialogue | INFO | TopicInfo       | ✅ | ✅ | 🟨 |
-| Cell Children | LAND | Landscape | ✅ | ⬛ | 🟨 |
+| Cell Children | LAND | Landscape | ✅ |   | 🟨 |
 | Cell Children | NAVM | Navmesh | ✅ | ⬛ | ⬛ | Should add Dovahscript support, and then test the backend by drawing top-down and side views of navmeshes to a canvas. |
 | Cell Children | REFR | Reference | ✅ | 🟨 | 🟨 |
 | Singletons | DOBJ | Default Object Manager | ✅ | ✅ | ⬛ |
 | Singletons | NAVI | Navmesh Info Map | 🟩 |   | ⬛ | Can load and re-save; can't update/regenerate. |
 | | AVIF | Actor Value | ✅ | 🟨 | ⬛ | We'll also need a custom widget and dialog for Perk Trees. |
 | | CELL | Cell | ✅ | ✅ | 🟨 |
-| | IDLE | Idle Animation | ✅ | 🟨 | ⬛ | Not a per-form dialog, but a shared dialog for all forms of this type. |
-| | REGN | Region | ✅ | ⬛ | ⬛ |
+| Menu: World | REGN | Region | ✅ | ⬛ | ⬛ |
 | | SCEN | Scene | ✅ | ✅ | ⬛ |
-| | SMBN | Story Manager Branch Node | ✅ | ⬛ | ⬛ |
-| | SMQN | Story Manager Quest Node | ✅ | ⬛ | ⬛ |
+| | SMBN | Story Manager Branch Node | ✅ |   | ⬛ | These don't have their own UI. You edit them as part of the Event Node UI. |
+| | SMQN | Story Manager Quest Node | ✅ |   | ⬛ | These don't have their own UI. You edit them as part of the Event Node UI. |
 | | WRLD | Worldspace | ✅ | ⬛ | 🟨 |
 | Deprecated | APPA | BGSApparatus | ✅ | ⬛ | ⬛ | CK32 has a loader for this; test in-game behavior |
 | Deprecated | EYES | TESEyes | ✅ | ⬛ | ⬛ | CK32 has a loader for this |
