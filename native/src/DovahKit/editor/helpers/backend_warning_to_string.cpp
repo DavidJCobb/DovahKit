@@ -881,6 +881,14 @@ namespace editor_helpers {
                   }
                }
             #pragma endregion
+            #pragma region lens flare
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::lens_flare::sprite_list_truncated*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Lens Flare %1 claims to have %2 sprites, but only has data for %3 sprites."
+                  ).arg(subject).arg(casted->count_expected).arg(casted->count_seen);
+               }
+            #pragma endregion
             #pragma region magic_effect
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::magic_effect::counters_itself*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);

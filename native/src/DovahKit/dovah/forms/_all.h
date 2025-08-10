@@ -62,6 +62,7 @@
    #include "Keyword.h"
    #include "Landscape.h"
    #include "LandTexture.h"
+   #include "LensFlare.h"
    #include "LeveledCharacter.h"
    #include "LeveledItem.h"
    #include "LeveledSpell.h"
@@ -117,6 +118,7 @@
    #include "Tree.h"
    #include "VisualEffect.h"
    #include "Voicetype.h"
+   #include "VolumetricLighting.h"
    #include "WaterType.h"
    #include "Weapon.h"
    #include "Weather.h"
@@ -185,11 +187,12 @@ namespace dovah {
       loaded_forms::Keyword,
       loaded_forms::Landscape,
       loaded_forms::LandTexture,
-      loaded_forms::Light,
-      loaded_forms::LightingTemplate,
+      loaded_forms::LensFlare,
       loaded_forms::LeveledCharacter,
       loaded_forms::LeveledItem,
       loaded_forms::LeveledSpell,
+      loaded_forms::Light,
+      loaded_forms::LightingTemplate,
       loaded_forms::LoadingScreen,
       loaded_forms::Location,
       loaded_forms::LocationRefType,
@@ -240,6 +243,7 @@ namespace dovah {
       loaded_forms::Tree,
       loaded_forms::VisualEffect,
       loaded_forms::Voicetype,
+      loaded_forms::VolumetricLighting,
       loaded_forms::WaterType,
       loaded_forms::Weapon,
       loaded_forms::Weather,

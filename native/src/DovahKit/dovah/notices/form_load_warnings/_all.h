@@ -31,6 +31,7 @@
    #include "./by_form_type/impact_data_set/mapping_missing_data.h"
    #include "./by_form_type/landscape/excess_layers_per_quad.h"
    #include "./by_form_type/landscape/invalid_quad_for_land_texture.h"
+   #include "./by_form_type/lens_flare/sprite_list_truncated.h"
    #include "./by_form_type/magic_effect/counters_itself.h"
    #include "./by_form_type/magic_effect/invalid_actor_value_index.h"
    #include "./by_form_type/magic_effect/redundant_sound.h"

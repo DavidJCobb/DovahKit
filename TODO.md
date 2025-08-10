@@ -219,8 +219,8 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Deprecated | EYES | TESEyes | ✅ | ⬛ | ⬛ | CK32 has a loader for this |
 | Deprecated | MICO | BGSMenuIcon | ✅ | ⬛ | ⬛ | CK32 has a loader for this |
 | Deprecated | RGDL | BGSRagdoll | ✅ | ⬛ | ⬛ | CK32 has a loader for this |
-| Skyrim Special | LENS | Lens Flare | ⬛ | ⬛ | ⬛ |
-| Skyrim Special | VOLI | Volumetric Lighting | ⬛ | ⬛ | ⬛ |
+| Skyrim Special | LENS | Lens Flare | ✅ | ⬛ | ⬛ |
+| Skyrim Special | VOLI | Volumetric Lighting | ✅ | ⬛ | ⬛ |
 
 Subclasses of `REFR`, such as `ACHR`, are not listed in the table above, as they should be loaded identically and have identical data. There are 9 such form types.
 

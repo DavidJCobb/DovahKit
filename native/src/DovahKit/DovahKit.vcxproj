@@ -159,6 +159,7 @@
     <ClCompile Include="dovah\forms\components\common_spell_data.cpp" />
     <ClCompile Include="dovah\forms\components\conditions\context.cpp" />
     <ClCompile Include="dovah\forms\components\conditions\working_condition.cpp" />
+    <ClCompile Include="dovah\forms\LensFlare.cpp" />
     <ClCompile Include="dovah\forms\mixins\StoryManagerNode.cpp" />
     <ClCompile Include="dovah\forms\Navmesh.cpp" />
     <ClCompile Include="dovah\forms\Region.cpp" />
@@ -294,6 +295,7 @@
     <ClCompile Include="dovah\forms\TalkingActivator.cpp" />
     <ClCompile Include="dovah\forms\Tree.cpp" />
     <ClCompile Include="dovah\forms\VisualEffect.cpp" />
+    <ClCompile Include="dovah\forms\VolumetricLighting.cpp" />
     <ClCompile Include="dovah\forms\WaterType.cpp" />
     <ClCompile Include="dovah\forms\Weapon.cpp" />
     <ClCompile Include="dovah\forms\Weather.cpp" />
@@ -1345,6 +1347,7 @@
     <ClInclude Include="dovah\forms\components\conditions\parameter.h" />
     <ClInclude Include="dovah\forms\components\conditions\working_condition.h" />
     <ClInclude Include="dovah\forms\components\conditions\working_parameter.h" />
+    <ClInclude Include="dovah\forms\LensFlare.h" />
     <ClInclude Include="dovah\forms\mixins\StoryManagerNode.h" />
     <ClInclude Include="dovah\forms\Navmesh.h" />
     <ClInclude Include="dovah\forms\Region.h" />
@@ -1476,6 +1479,7 @@
     <ClInclude Include="dovah\forms\TalkingActivator.h" />
     <ClInclude Include="dovah\forms\Tree.h" />
     <ClInclude Include="dovah\forms\VisualEffect.h" />
+    <ClInclude Include="dovah\forms\VolumetricLighting.h" />
     <ClInclude Include="dovah\forms\WaterType.h" />
     <ClInclude Include="dovah\forms\Weapon.h" />
     <ClInclude Include="dovah\forms\Weather.h" />
@@ -1575,6 +1579,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\impact_data_set\mapping_missing_data.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\excess_layers_per_quad.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\invalid_quad_for_land_texture.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\lens_flare\sprite_list_truncated.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\counters_itself.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\invalid_actor_value_index.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\redundant_sound.h" />
