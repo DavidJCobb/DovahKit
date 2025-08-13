@@ -28,7 +28,7 @@ namespace dovah::loaded_forms {
          #pragma region Region Data
             struct region_data_object { // RDOB (legacy) or RDOT (modern)
                form_reference_t form;                  // -> TREE|FLOR|STAT|LTEX|MSTT
-               int16_t          parent_index = 0xFFFF; // negative = None // index of a previous-sibling R.D.O. to use as a parent
+               int16_t          parent_index = -1; // negative = None // index of a previous-sibling R.D.O. to use as a parent
                float            density = 30.0F;
                uint8_t          clustering = 0;
                struct {

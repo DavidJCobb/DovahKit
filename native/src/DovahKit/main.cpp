@@ -30,13 +30,6 @@
 //    target form, we may fail to duplicate child or descendant forms. We should create 
 //    a custom dialog box that can show multiple sets of error details for this case.
 //
-//  - Audit and document every process that can return notice codes, along with a full 
-//    description of what notice codes can be returned and (in the case of any detailed 
-//    notices) what other information may be present.
-//
-//     - The (editor_helpers::warning_or_error_to_string) function is missing several 
-//       notice codes, presumably because they're handled in specific places. Fix this.
-//
 //  - Testing indicates that multithreading gives us diminishing returns. The "busiest" 
 //    threads by far are the worldspace sub block threads, which *each* tend to have 
 //    about 200 groups to process; however, doubling the number of threads didn't yield 
@@ -367,10 +360,6 @@
 //                                  the condition's containing form? Otherwise, editing 
 //                                  stages in one dialog can unexpectedly change conditions 
 //                                  in other dialogs.
-//
-//                                - RefPickerButton: when a REFR is used as a parameter 
-//                                  to a condition, does the CK make the REFR persistent? 
-//                                  Does this depend on where the condition is?
 //
 //                             - Run On: We should hide the "Package Data" option if there 
 //                               is no owning package. Alternatively, can we grey out 

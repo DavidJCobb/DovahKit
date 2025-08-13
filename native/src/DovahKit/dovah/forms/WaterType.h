@@ -93,9 +93,9 @@ namespace dovah::loaded_forms {
          } legacy; // TES4 leftovers
          form_reference_t material_type; // TNAM -> MATT
          struct {
-            float       falloff = 300.0F; // DNAM+0x60
-            std::string flowmap_texture; // NAM5 // SSE-only
-            float       flowmap_scale;   // DNAM+0xE4 // SSE-only
+            float       falloff = 300.0F;  // DNAM+0x60
+            std::string flowmap_texture;   // NAM5 // SSE-only
+            float       flowmap_scale = 1; // DNAM+0xE4 // SSE-only
             std::array<noise_layer, 3> layers;
          } noise;
          uint8_t opacity = 75; // ANAM

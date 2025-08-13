@@ -23,7 +23,7 @@ bool DovahKitAssetDataTextureSet::load(dovah::form_stub& stub) {
       auto* s = this->loaded->texture_by_index(i);
       if (s->empty())
          continue;
-      auto path = QLatin1Literal("textures/") + QString::fromStdString(*s);
+      auto path = QLatin1String("textures/") + QString::fromStdString(*s);
       this->textures[i] = am.requestAsset(path);
    }
    //
@@ -43,7 +43,7 @@ bool DovahKitAssetDataTextureSet::onFormModified() {
       //
       QString path;
       if (!s->empty()) {
-         path = DovahKitAssetManager::normalizeAssetPath(QLatin1Literal("textures/") + QString::fromStdString(*s));
+         path = DovahKitAssetManager::normalizeAssetPath(QLatin1String("textures/") + QString::fromStdString(*s));
       }
       if (receptor) {
          if (!receptor->samePathAs(path)) {

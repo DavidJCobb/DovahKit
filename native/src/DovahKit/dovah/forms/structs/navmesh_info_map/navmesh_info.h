@@ -28,15 +28,6 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
             std::vector<triangle> triangles;
             std::vector<cobb::vector3<float>> vertices;
          };
-         
-         struct pathing_cell_exterior {
-            form_reference_t parent_world;
-            int16_t grid_x = 0;
-            int16_t grid_y = 0;
-         };
-         struct pathing_cell_interior {
-            form_reference_t cell;
-         };
 
       public:
          bool is_active_file_data = false;

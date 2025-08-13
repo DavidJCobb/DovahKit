@@ -690,7 +690,7 @@ namespace dovahkit::subsystems::worldedit {
          if (value.userType() == QMetaType::QString) {
             diffuse_path = value.toString();
             if (!diffuse_path.isEmpty())
-               diffuse_path = QLatin1Literal("textures/Landscape/") + diffuse_path;
+               diffuse_path = QLatin1String("textures/Landscape/") + diffuse_path;
          }
       }
       if (auto* setting = ini.setting("Landscape", "sDefaultLandNormalTexture")) {
@@ -698,7 +698,7 @@ namespace dovahkit::subsystems::worldedit {
          if (value.userType() == QMetaType::QString) {
             normals_path = value.toString();
             if (!normals_path.isEmpty())
-               normals_path = QLatin1Literal("textures/Landscape/") + normals_path;
+               normals_path = QLatin1String("textures/Landscape/") + normals_path;
          }
       }
       //

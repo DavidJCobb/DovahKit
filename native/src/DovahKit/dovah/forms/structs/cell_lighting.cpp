@@ -13,7 +13,7 @@ namespace dovah::loaded_forms::structs {
       subrecord.read(this->directional.fade);
       subrecord.read(this->fog.clip_distance);
       subrecord.read(this->fog.power);
-      this->ambient.directional.load(subrecord);
+      this->ambient.directional.load(subrecord, intfc);
       if (!subrecord.is_in_bounds()) // per UESP, NavMeshGenCellDUPLICATE001 only has the first 0x40 bytes of this struct
          return;
       this->fog.colors.far.load(subrecord);
@@ -35,7 +35,7 @@ namespace dovah::loaded_forms::structs {
       subrecord.write(this->directional.fade);
       subrecord.write(this->fog.clip_distance);
       subrecord.write(this->fog.power);
-      this->ambient.directional.save(subrecord);
+      this->ambient.directional.save(subrecord, intfc);
       this->fog.colors.far.save(subrecord);
       subrecord.write(this->fog.max);
       subrecord.write(this->light_fade_distance.start);

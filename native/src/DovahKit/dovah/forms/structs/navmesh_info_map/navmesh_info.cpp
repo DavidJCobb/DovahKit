@@ -187,9 +187,9 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
          ld.door.set(my_owner, nullptr);
       this->links.doors.clear();
 
-      if (auto* casted = std::get_if<pathing_cell_exterior>(&this->pathing_cell.data)) {
+      if (auto* casted = std::get_if<navmesh_pathing_cell::pathing_cell_exterior>(&this->pathing_cell.data)) {
          casted->parent_world.set(my_owner, nullptr);
-      } else if (auto* casted = std::get_if<pathing_cell_interior>(&this->pathing_cell.data)) {
+      } else if (auto* casted = std::get_if<navmesh_pathing_cell::pathing_cell_interior>(&this->pathing_cell.data)) {
          casted->cell.set(my_owner, nullptr);
       }
    }
@@ -215,11 +215,7 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
             );
          }
       }
-      if (auto* casted = std::get_if<pathing_cell_exterior>(&this->pathing_cell.data)) {
-         casted->parent_world.clear_if(my_owner, other);
-      } else if (auto* casted = std::get_if<pathing_cell_interior>(&this->pathing_cell.data)) {
-         casted->cell.clear_if(my_owner, other);
-      }
+      this->pathing_cell.sever_outbound_references_to(other, my_owner);
    }
 
    #pragma region navmesh_info::use_info_state

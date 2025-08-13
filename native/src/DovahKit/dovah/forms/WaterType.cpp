@@ -168,7 +168,7 @@ namespace dovah::loaded_forms {
                if (record.is_skyrim_special()) {
                   subrecord.read(this->noise.flowmap_texture);
                }
-               [[fallthrough]]
+               [[fallthrough]];
             default:
                intfc.warn_on_unrecognized_subrecord(subrecord);
                break;

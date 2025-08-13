@@ -447,7 +447,7 @@ void MainWindow::updateStatusBarWarningsCount(size_t count, size_t count_unread)
    if (!count) {
       {  // Show the icon as greyscale when no warnings are present.
          auto image = QImage(":/icons/log-window-icons/warning-16.png");
-         auto alpha = image.alphaChannel();
+         auto alpha = image.convertToFormat(QImage::Format_Alpha8);
          image.convertTo(QImage::Format_Grayscale16);
          image.convertTo(QImage::Format_ARGB32);
          image.setAlphaChannel(alpha);

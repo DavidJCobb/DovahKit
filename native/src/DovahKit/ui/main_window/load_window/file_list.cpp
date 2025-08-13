@@ -261,7 +261,7 @@ void LoadOrderFileList::listFiles(dovah::game g) {
          fh.clear();
          continue;
       }
-      created  = info.created();
+      created  = info.birthTime();
       modified = info.lastModified();
       model->insert(fh, created, modified);
       fh.clear();

@@ -17,10 +17,10 @@ namespace dovah::loaded_forms {
 
          struct form_flag : public Form::form_flag {
             enum : uint32_t {
-               initially_disabled = 1 << 11,
-               compressed         = 1 << 18,
-               auto_generated     = 1 << 26,
-               navmesh_gen_cell   = 1 << 31,
+               initially_disabled = 1U << 11,
+               compressed         = 1U << 18,
+               auto_generated     = 1U << 26,
+               navmesh_gen_cell   = 1U << 31,
             };
          };
 
@@ -143,7 +143,7 @@ namespace dovah::loaded_forms {
                constexpr bool is_auto_generated() const noexcept {
                   return this->raw & (1 << 14);
                }
-               constexpr bool set_auto_generated(bool v) noexcept {
+               constexpr void set_auto_generated(bool v) noexcept {
                   if (v)
                      this->raw |= (1 << 14);
                   else

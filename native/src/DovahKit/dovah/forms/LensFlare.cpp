@@ -1,6 +1,14 @@
 #include "LensFlare.h"
 #include "_common_cpp.h"
 
+#include "../notices/form_load_warnings/by_form_type/lens_flare/sprite_list_truncated.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_type::lens_flare;
+   }
+}
+
 namespace dovah::loaded_forms {
    void LensFlare::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
@@ -30,7 +38,12 @@ namespace dovah::loaded_forms {
                   record.next_subrecord();
                   for (uint32_t i = 0; i < count; ++i) {
                      if (!record.get_current_subrecord()) {
-                        static_assert(false, "TODO: Warn");
+                        specific_load_warnings::sprite_list_truncated notice(
+                           this->stub,
+                           count,
+                           i
+                        );
+                        intfc.log_load_warning(notice);
                         break;
                      }
                      auto& item = this->sprites[i];

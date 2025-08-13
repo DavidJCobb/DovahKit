@@ -95,7 +95,7 @@ namespace dovah::loaded_forms {
          } associated_items;
          struct {
             std::vector<effect_sound> sounds; // SNDD
-            detection_loudness casting_loudness; // DATA+0x90 // uint32_t
+            detection_loudness casting_loudness = detection_loudness::normal; // DATA+0x90 // uint32_t
          } audio;
          struct {
             form_reference_t dual_cast_data; // DATA+0x70

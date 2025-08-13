@@ -154,7 +154,7 @@ namespace dovah::utils {
          return nullptr;
       return extra->form.get_form_stub();
    }
-   /*static*/ form_stub* _get_containing_world(form_stub& cell) {
+   /*static*/ form_stub* update_location_content::_get_containing_world(form_stub& cell) {
       if (cell.form_type != form_type::cell)
          return nullptr;
       auto* stub = cell.get_parent_form();
@@ -271,8 +271,8 @@ namespace dovah::utils {
             list.clear();
          };
 
-         clear_form_reference_list(loaded->contents.initially_disabled.additions, *loaded);
-         _clear_cep(loaded->contents.enable_parents.additions);
+         clear_form_reference_list(loaded->contents.initially_disabled.full, *loaded);
+         _clear_cep(loaded->contents.enable_parents.full);
          if (as_base_record) {
             clear_form_reference_list(loaded->contents.initially_disabled.base, *loaded);
             _clear_cep(loaded->contents.enable_parents.base);
@@ -330,7 +330,7 @@ namespace dovah::utils {
             item.flags = extra->flags;
          };
 
-         _clear(dataset.additions);
+         _clear(dataset.full);
          if (as_base_record) {
             _clear(dataset.base);
             for (auto* stub : gathered) {
@@ -343,11 +343,11 @@ namespace dovah::utils {
             }
          } else {
             for (auto* stub : gathered) {
-               _append(dataset.additions, *stub);
+               _append(dataset.full, *stub);
                //
                // ACPR shouldn't contain any entries that are identical to LCPR.
                //
-               auto& ACPR = dataset.additions.back();
+               auto& ACPR = dataset.full.back();
                bool  same = false;
                for (const auto& LCPR : dataset.base) {
                   if (LCPR == ACPR) {
@@ -356,13 +356,13 @@ namespace dovah::utils {
                   }
                }
                if (same) {
-                  dataset.additions.pop_back();
+                  dataset.full.pop_back();
                } else {
                   //
                   // Update "initially disabled" and "enable parents" lists.
                   //
-                  _process_initially_disabled(loaded->contents.initially_disabled.additions, *stub);
-                  _process_enable_parent(loaded->contents.enable_parents.additions, *stub);
+                  _process_initially_disabled(loaded->contents.initially_disabled.full, *stub);
+                  _process_enable_parent(loaded->contents.enable_parents.full, *stub);
                }
             }
          }
@@ -422,14 +422,14 @@ namespace dovah::utils {
             item.editor_location.set(*loaded, editor_loc);
          };
 
-         _clear(dataset.additions);
+         _clear(dataset.full);
          if (as_base_record) {
             _clear(dataset.base);
             for (auto* stub : gathered)
                _append(dataset.base, *stub);
          } else {
             for (auto* stub : gathered)
-               _append(dataset.additions, *stub);
+               _append(dataset.full, *stub);
          }
       }
       #pragma endregion
@@ -467,14 +467,14 @@ namespace dovah::utils {
             }
          };
 
-         _clear(dataset.additions);
+         _clear(dataset.full);
          if (as_base_record) {
             _clear(dataset.base);
             for (auto* stub : gathered)
                _append(dataset.base, *stub);
          } else {
             for (auto* stub : gathered)
-               _append(dataset.additions, *stub);
+               _append(dataset.full, *stub);
          }
       }
       #pragma endregion
@@ -503,14 +503,14 @@ namespace dovah::utils {
             }
          };
 
-         _clear(dataset.additions);
+         _clear(dataset.full);
          if (as_base_record) {
             _clear(dataset.base);
             for (auto& item : gathered)
                _append(dataset.base, item);
          } else {
             for (auto& item : gathered)
-               _append(dataset.additions, item);
+               _append(dataset.full, item);
          }
       }
       #pragma endregion
