@@ -270,9 +270,6 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
             }
          }
       }
-
-      subrecord.skip_bytes(4);
-
       this->pathing_cell.generate_use_info(subrecord);
    }
    void navmesh_info::use_info_state::commit_to(form_stub_use_info_builder& uib) {

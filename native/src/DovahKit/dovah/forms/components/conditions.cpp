@@ -243,24 +243,33 @@ namespace dovah::loaded_forms::components {
                      uib.add_outbound_reference(formID);
                   } else {
                      for (int i = 0; i < 2; ++i) {
-                        auto* type  = func->argument_types[i];
+                        auto* type = func->argument_types[i];
+                        bool  fail = false;
+                        assert(type != nullptr);
                         if (i == 1 && type->is_union()) { // resolve the union
-                           type = type->resolve_union_type(*type, firstValue);
+                           assert(func->argument_types[0] != nullptr);
+                           type = type->resolve_union_type(*func->argument_types[0], firstValue);
+                           if (!type) {
+                              fail = true;
+                           }
                         }
                         //
-                        auto under = type->underlying_type;
-                        if (type->allow_type_overrides) {
-                           if (uses_aliases)
-                              under = dovah::conditions::parameter_underlying_type::alias;
-                           if (uses_packdata)
-                              under = dovah::conditions::parameter_underlying_type::package_data;
-                        }
-                        //
-                        if (under == dovah::conditions::parameter_underlying_type::form) {
-                           subrecord.unchecked_read(formID);
-                           uib.add_outbound_reference(formID);
-                        } else {
+                        if (fail) {
                            subrecord.skip_bytes(4);
+                        } else {
+                           auto under = type->underlying_type;
+                           if (type->allow_type_overrides) {
+                              if (uses_aliases)
+                                 under = dovah::conditions::parameter_underlying_type::alias;
+                              if (uses_packdata)
+                                 under = dovah::conditions::parameter_underlying_type::package_data;
+                           }
+                           if (under == dovah::conditions::parameter_underlying_type::form) {
+                              subrecord.unchecked_read(formID);
+                              uib.add_outbound_reference(formID);
+                           } else {
+                              subrecord.skip_bytes(4);
+                           }
                         }
                      }
                   }

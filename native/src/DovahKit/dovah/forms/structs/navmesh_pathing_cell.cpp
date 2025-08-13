@@ -106,6 +106,7 @@ namespace dovah::loaded_forms::structs {
 
    #pragma region navmesh_info::use_info_state
    void navmesh_pathing_cell::use_info_state::generate_use_info(tes_subrecord_reader& subrecord) {
+      subrecord.skip_bytes(sizeof(crc));
       subrecord.read(this->parent_world);
       if (this->parent_world) {
          subrecord.skip_bytes(4);

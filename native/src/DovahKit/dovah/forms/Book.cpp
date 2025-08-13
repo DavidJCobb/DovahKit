@@ -135,7 +135,7 @@ namespace dovah::loaded_forms {
                {
                   book_flags_t flags = 0;
                   subrecord.read(flags);
-                  subrecord.skip_bytes(4);
+                  subrecord.skip_bytes(sizeof(book_type) + 2);
                   if (flags & book_flag::teaches_spell)
                      subrecord.read(teaches_spell);
                   else
