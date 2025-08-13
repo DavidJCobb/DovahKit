@@ -31,6 +31,7 @@ namespace dovah {
          
          form_stub& _stub;
          bool _is_active_file    = false;
+         bool _is_base_record    = false;
          bool _is_final_file     = false;
          bool _last_record_flags = 0;
          struct _pending_list {
@@ -74,6 +75,7 @@ namespace dovah {
          
          constexpr const form_stub* stub() const noexcept { return &this->_stub; }
          constexpr bool is_active_file() const noexcept { return this->_is_active_file; }
+         constexpr bool is_base_record() const noexcept { return this->_is_base_record; }
          constexpr bool is_final_file() const noexcept { return this->_is_final_file; }
          constexpr uint32_t last_record_flags() const noexcept { return this->_last_record_flags; }
          

@@ -889,6 +889,52 @@ namespace editor_helpers {
                   ).arg(subject).arg(casted->count_expected).arg(casted->count_seen);
                }
             #pragma endregion
+            #pragma region location
+               {
+                  using contents_type = form_load_warnings::by_type::location::base_contents_warning::contents_type;
+
+                  auto _contents_type_to_string = [](contents_type type) {
+                     switch (type) {
+                        case contents_type::enable_parent:
+                           return QObject::tr("Enable Parents", "location contents_type");
+                        case contents_type::exterior_cell_list:
+                           return QObject::tr("Exterior Cell Map", "location contents_type");
+                        case contents_type::initially_disabled_ref:
+                           return QObject::tr("Initially Disabled Refs", "location contents_type");
+                        case contents_type::persist_location_ref:
+                           return QObject::tr("Persist Location Refs", "location contents_type");
+                        case contents_type::special_ref:
+                           return QObject::tr("Special Refs", "location contents_type");
+                        case contents_type::unique_actor:
+                           return QObject::tr("Unique Actors", "location contents_type");
+                     }
+                     return QObject::tr("?", "location contents_type");
+                  };
+
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::location::base_record_should_not_have_content_removals*>(&warning)) {
+                     QString subject = form_identifiers_to_string(&casted->subject);
+                     QString type    = _contents_type_to_string(casted->type);
+                     return QObject::tr(
+                        "Location %1 contains %2 data removals in its base record."
+                     ).arg(subject).arg(type);
+                  }
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::location::record_and_contents_subrecord_not_equally_based*>(&warning)) {
+                     QString subject = form_identifiers_to_string(&casted->subject);
+                     QString type    = _contents_type_to_string(casted->type);
+                     QString format;
+                     if (casted->is_base_record) {
+                        format = QObject::tr(
+                           "The base record for Location %1 contains %2 data marked with the subrecord for additions."
+                        );
+                     } else {
+                        format = QObject::tr(
+                           "An override record for Location %1 contains %2 data marked with the subrecord for base records."
+                        );
+                     }
+                     return format.arg(subject).arg(type);
+                  }
+               }
+            #pragma endregion
             #pragma region magic_effect
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::magic_effect::counters_itself*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);

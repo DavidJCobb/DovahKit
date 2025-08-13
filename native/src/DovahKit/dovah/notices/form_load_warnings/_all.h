@@ -32,6 +32,8 @@
    #include "./by_form_type/landscape/excess_layers_per_quad.h"
    #include "./by_form_type/landscape/invalid_quad_for_land_texture.h"
    #include "./by_form_type/lens_flare/sprite_list_truncated.h"
+   #include "./by_form_type/location/base_record_should_not_have_content_removals.h"
+   #include "./by_form_type/location/record_and_contents_subrecord_not_equally_based.h"
    #include "./by_form_type/magic_effect/counters_itself.h"
    #include "./by_form_type/magic_effect/invalid_actor_value_index.h"
    #include "./by_form_type/magic_effect/redundant_sound.h"

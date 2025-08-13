@@ -180,7 +180,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | WorldData | CLMT | Climate                  | ✅ | 🟨 | ⬛ |
 | WorldData | ECZN | Encounter Zone           | ✅ | 🟨 | ⬛ |
 | WorldData | LGTM | Lighting Template        | ✅ | ⬛ | ⬛ | Might be a good idea to set up shared widgets (plural!) between this and cell data, especially since the ambient lighting struct (but not the rest!) is used elsewhere too (e.g. weather). |
-| WorldData | LCTN | Location                 | 🟨 | ⬛ | ⬛ |
+| WorldData | LCTN | Location                 | ✅ | ⬛ | ⬛ |
 | WorldData | LCRT | Location Ref Type        | ✅ | ✅ | ⬛ |
 | WorldData | SPGD | Shader Particle Geometry | ✅ | 🟨 | ⬛ |
 | WorldData | RFCT | Visual Effect            | ✅ | ✅ | ⬛ |

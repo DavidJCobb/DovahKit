@@ -320,6 +320,7 @@
     <ClCompile Include="dovah\load_order_requests\form_renumber_request.cpp" />
     <ClCompile Include="dovah\load_order_requests\game_setting_edit_request.cpp" />
     <ClCompile Include="dovah\load_order_requests\game_setting_renumber_request.cpp" />
+    <ClCompile Include="dovah\utils\update_location_content.cpp" />
     <ClCompile Include="dovah\utils\compute_classed_stat_points.cpp" />
     <ClCompile Include="dovah\utils\compute_voice_file_location.cpp" />
     <ClCompile Include="dovah\utils\form_list_contains.cpp" />
@@ -1580,6 +1581,9 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\excess_layers_per_quad.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\landscape\invalid_quad_for_land_texture.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\lens_flare\sprite_list_truncated.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\location\base_contents_warning.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\location\base_record_should_not_have_content_removals.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\location\record_and_contents_subrecord_not_equally_based.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\counters_itself.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\invalid_actor_value_index.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\magic_effect\redundant_sound.h" />
@@ -1707,6 +1711,7 @@
     <ClInclude Include="dovah\utils\leveled_list_preview.h" />
     <ClInclude Include="dovah\utils\text_replacers\do_text_replacement.h" />
     <ClInclude Include="dovah\utils\text_replacers\effect_item_handler.h" />
+    <ClInclude Include="dovah\utils\update_location_content.h" />
     <ClInclude Include="editor\helpers\backend_error_to_string.h" />
     <ClInclude Include="editor\helpers\face_fx_phoneme_name.h" />
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
@@ -3458,6 +3463,10 @@
     <None Include="dovah\_docs\common form flags.md" />
     <None Include="dovah\_docs\compiled script files.md" />
     <None Include="dovah\_docs\enchanting.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\locations.md">
       <SubType>
       </SubType>
     </None>

@@ -482,6 +482,7 @@ namespace dovah {
             use_interface._is_final_file = true;
          auto* file = arr[i].pointer;
          use_interface._is_active_file = lo.file_is_active(*file);
+         use_interface._is_base_record = i == 0;
          if (file->header.details & owner_file_t::detail_flag::is_hardcoded_dummy) {
             build_hardcoded_form_outbound_refs(use_interface);
             use_interface.commit();

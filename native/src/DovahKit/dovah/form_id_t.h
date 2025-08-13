@@ -31,13 +31,6 @@ namespace dovah {
          
          constexpr operator uint32_t() const noexcept { return this->value; };
          
-         constexpr bool operator>(const uint32_t& other) { return this->value > other; };
-         constexpr bool operator<(const uint32_t& other) { return this->value < other; };
-         constexpr bool operator>=(const uint32_t& other) { return this->value >= other; };
-         constexpr bool operator<=(const uint32_t& other) { return this->value <= other; };
-         constexpr bool operator==(const uint32_t& other) { return this->value == other; };
-         constexpr bool operator!=(const uint32_t& other) { return this->value != other; };
-         
          constexpr bool operator>(const form_id_t& other) { return this->value > other.value; };
          constexpr bool operator<(const form_id_t& other) { return this->value < other.value; };
          constexpr bool operator>=(const form_id_t& other) { return this->value >= other.value; };

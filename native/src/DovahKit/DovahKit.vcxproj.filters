@@ -3345,6 +3345,9 @@
     <ClCompile Include="dovah\forms\LensFlare.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\utils\update_location_content.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8366,6 +8369,18 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\lens_flare\sprite_list_truncated.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\utils\update_location_content.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\location\base_contents_warning.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\location\base_record_should_not_have_content_removals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\location\record_and_contents_subrecord_not_equally_based.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -10021,6 +10036,7 @@
     <None Include="dovah\_docs\magic effect archetypes.md" />
     <None Include="dovah\_docs\enchanting.md" />
     <None Include="dovah\_docs\packages.md" />
+    <None Include="dovah\_docs\locations.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
