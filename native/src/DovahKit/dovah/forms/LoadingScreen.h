@@ -22,7 +22,7 @@ namespace dovah::loaded_forms {
          components::condition_list conditions; // CTDA and friends
          components::papyrus_attachment_data script_data;
          //
-         localized_string description = localized_string(localized_string_type::description); // DESC
+         localized_string description = localized_string(localized_string_type::common); // DESC
          //
          std::string camera_path; // MOD2 // file path
          struct {

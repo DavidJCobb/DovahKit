@@ -10,6 +10,7 @@
 #include "editor/helpers/skill_name_to_string.h"
 #include "editor/subsystems/form_info_cache/core.h"
 #include "editor/subsystems/form_info_cache/cached_data/by_form_type/head_part.h"
+#include "ui/utils/enum_dropdown_configs/skill.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/get_selection.h"
 #include "ui/utils/set_range.h"
@@ -102,12 +103,7 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
             this->ui.skillBonus07Value,
          };
          for (auto* widget : this->_subwidgets.skills.which) {
-            widget->addItem(tr("None"), -1);
-            for (size_t i = 0; i < dovah::skill_count; ++i) {
-               auto skill = (dovah::skill)i;
-               auto name  = editor_helpers::skill_name_to_string(skill);
-               widget->addItem(name, (int)skill);
-            }
+            ui::enum_dropdown_configs::skill(widget, true, false);
          }
          for (auto* widget : this->_subwidgets.skills.boost) {
             ui::set_range<loaded_form_type::skill_boost_value_type>(widget);

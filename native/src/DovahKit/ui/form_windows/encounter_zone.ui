@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogEncounterZone</class>
  <widget class="QDialog" name="FormDialogEncounterZone">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>378</width>
+    <height>260</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Encounter Zone</string>
   </property>
@@ -32,6 +40,9 @@
        </item>
        <item>
         <widget class="QSpinBox" name="levelMin">
+         <property name="whatsThis">
+          <string>An encounter zone's level is the player's level, clamped to the minimum and maximum specified here.</string>
+         </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
@@ -68,6 +79,9 @@
        </item>
        <item>
         <widget class="QSpinBox" name="levelMax">
+         <property name="whatsThis">
+          <string>An encounter zone's level is the player's level, clamped to the minimum and maximum specified here. If the maximum level is set to 0, then there is no maximum.</string>
+         </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
@@ -130,6 +144,9 @@
      </item>
      <item row="1" column="0">
       <widget class="QCheckBox" name="flagDisableCombatBoundary">
+       <property name="whatsThis">
+        <string>Typically, actors that are in combat with the player will follow them through load doors, but only if those doors lead to the same encounter zone. If this option is enabled, then actors in combat will ignore that rule and follow the player into a different encounter zone.</string>
+       </property>
        <property name="text">
         <string>Disable combat boundary</string>
        </property>
@@ -181,7 +198,7 @@
         <item>
          <widget class="QLabel" name="label_6">
           <property name="text">
-           <string>Required Rank:</string>
+           <string>Rank:</string>
           </property>
           <property name="buddy">
            <cstring>ownerFactionRank</cstring>

@@ -99,6 +99,8 @@ Package UI would benefit from a system for the variable UIs that appear for diff
 
 ImpactData and TextureSet both have an optional decal data component; I think we'd benefit from abstracting the UI for them into a reusable widget. Said widget should support both a vertical layout (ImpactData) and a horizontal one (TextureSet), and should be able to store and return a whole component verbatim (since this form component doesn't have any outbound uses and so doesn't need to go through the use info management boilerplate).
 
+We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reusable widget for them. Currently, CELL, ECZN, and I believe the TESContainer widget all have their own copies of this, with varying layouts and behaviors.
+
 | CK Category | FourCC | Form type | Backend | UI | Dovahscript | Details |
 | :- | :- | :- | :-: | :-: | :-: | :- |
 | Actors | NPC_ | ActorBase        | ✅ | ✅ | ⬛ |
@@ -106,7 +108,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Actors | BPDT | BodyPartData     | ✅ | ✅ | ⬛ |
 | Actors | LVLN | LeveledCharacter | ✅ | ✅ | ⬛ |
 | Actors | PERK | Perk             | ✅ | ⬛ | ⬛ | UI for entry points needs special care |
-| Actors | TACT | TalkingActivator | ✅ | 🟨 | ⬛ |
+| Actors | TACT | TalkingActivator | ✅ | ✅ | ⬛ |
 | Audio | ACSP | Acoustic Space     | ✅ | ✅ | ⬛ |
 | Audio | MUST | Music Track        | ✅ | 🟨 | ⬛ |
 | Audio | MUSC | Music Type         | ✅ | ✅ | ⬛ |
@@ -130,7 +132,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Items | AMMO | Ammo           | ✅ | ✅ | ⬛ |
 | Items | ARMO | Armor          | ✅ | 🟨 | ⬛ |
 | Items | ARMA | ArmorAddon     | ✅ | ⬛ | ⬛ | Race has a checkbox list for equip types. Probably should make that a reusable widget i.e. `DKFormsCheckboxList`, and use it here for Additional Races. |
-| Items | BOOK | Book           | ✅ | 🟨 | ⬛ |
+| Items | BOOK | Book           | ✅ | ✅ | ⬛ |
 | Items | COBJ | Constructible Object | ✅ | 🟨 | ⬛ |
 | Items | INGR | Ingredient     | ✅ | ✅ | ⬛ |
 | Items | KEYM | Key            | ✅ | ✅ | ⬛ |
@@ -159,7 +161,7 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | Miscellaneous | IDLM | IdleMarker      | ✅ | 🟨 | ⬛ |
 | Miscellaneous | KYWD | Keyword         | ✅ | ✅ | ⬛ |
 | Miscellaneous | LTEX | LandTexture     | ✅ | ✅ | 🟨 |
-| Miscellaneous | LSCR | LoadScreen      | ✅ | 🟨 | ⬛ |
+| Miscellaneous | LSCR | LoadScreen      | ✅ | ✅ | ⬛ |
 | Miscellaneous | MATO | Material Object | 🟥 | 🟥 | ⬛ | Impossible to complete until we have the ability to save NIF files. We'll get to that during sustain. |
 | Miscellaneous | MESG | Message         | ✅ | 🟨 | ⬛ |
 | Miscellaneous | TXST | TextureSet      | ✅ | ✅ | ✅ |
@@ -177,8 +179,8 @@ ImpactData and TextureSet both have an optional decal data component; I think we
 | SpecialEffect | IPDS | ImpactDataSet   | ✅ | 🟨 | ⬛ |
 | SpecialEffect | MATT | Material Type   | ✅ | ✅ | ⬛ |
 | SpecialEffect | PROJ | Projectile      | ✅ | 🟨 | ⬛ |
-| WorldData | CLMT | Climate                  | ✅ | 🟨 | ⬛ |
-| WorldData | ECZN | Encounter Zone           | ✅ | 🟨 | ⬛ |
+| WorldData | CLMT | Climate                  | ✅ | ✅ | ⬛ |
+| WorldData | ECZN | Encounter Zone           | ✅ | ✅ | ⬛ |
 | WorldData | LGTM | Lighting Template        | ✅ | ⬛ | ⬛ | Might be a good idea to set up shared widgets (plural!) between this and cell data, especially since the ambient lighting struct (but not the rest!) is used elsewhere too (e.g. weather). |
 | WorldData | LCTN | Location                 | ✅ | ⬛ | ⬛ |
 | WorldData | LCRT | Location Ref Type        | ✅ | ✅ | ⬛ |

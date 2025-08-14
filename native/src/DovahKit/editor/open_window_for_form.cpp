@@ -14,9 +14,11 @@
 #include "../ui/form_windows/animation_prop.h"
 #include "../ui/form_windows/art_object.h"
 #include "../ui/form_windows/association_type.h"
+#include "../ui/form_windows/book.h"
 #include "../ui/form_windows/camera_shot.h"
 #include "../ui/form_windows/cell.h"
 #include "../ui/form_windows/class.h"
+#include "../ui/form_windows/climate.h"
 #include "../ui/form_windows/collision_layer.h"
 #include "../ui/form_windows/color.h"
 #include "../ui/form_windows/combat_style.h"
@@ -26,6 +28,7 @@
 #include "../ui/form_windows/dual_cast_data.h"
 #include "../ui/form_windows/effectshader.h"
 #include "../ui/form_windows/enchantment.h"
+#include "../ui/form_windows/encounter_zone.h"
 #include "../ui/form_windows/equip_slot.h"
 #include "../ui/form_windows/explosion.h"
 #include "../ui/form_windows/faction.h"
@@ -45,6 +48,7 @@
 #include "../ui/form_windows/leveled_item.h"
 #include "../ui/form_windows/leveled_spell.h"
 #include "../ui/form_windows/light.h"
+#include "../ui/form_windows/loading_screen.h"
 #include "../ui/form_windows/location_ref_type.h"
 #include "../ui/form_windows/magic_effect.h"
 #include "../ui/form_windows/material_object.h"
@@ -68,6 +72,7 @@
 #include "../ui/form_windows/sound_output_model.h"
 #include "../ui/form_windows/spell.h"
 #include "../ui/form_windows/static.h"
+#include "../ui/form_windows/talking_activator.h"
 #include "../ui/form_windows/textureset.h"
 #include "../ui/form_windows/topic.h"
 #include "../ui/form_windows/topic_info.h"
@@ -92,8 +97,10 @@ namespace {
       std::pair{ dovah::form_type::animation_prop,    _make<FormDialogAnimationProp> },
       std::pair{ dovah::form_type::art_object,        _make<FormDialogArtObject> },
       std::pair{ dovah::form_type::association_type,  _make<FormDialogAssociationType> },
+      std::pair{ dovah::form_type::book,              _make<FormDialogBook> },
       std::pair{ dovah::form_type::camera_shot,       _make<FormDialogCameraShot> },
       std::pair{ dovah::form_type::cell,              _make<FormDialogCell> },
+      std::pair{ dovah::form_type::climate,           _make<FormDialogClimate> },
       std::pair{ dovah::form_type::combat_class,      _make<FormDialogClass> },
       std::pair{ dovah::form_type::collision_layer,   _make<FormDialogCollisionLayer> },
       std::pair{ dovah::form_type::color,             _make<FormDialogColor> },
@@ -104,6 +111,7 @@ namespace {
       std::pair{ dovah::form_type::dual_cast_data,    _make<FormDialogDualCastData> },
       std::pair{ dovah::form_type::effect_shader,     _make<FormDialogEffectShader> },
       std::pair{ dovah::form_type::enchantment,       _make<FormDialogEnchantment> },
+      std::pair{ dovah::form_type::encounter_zone,    _make<FormDialogEncounterZone> },
       std::pair{ dovah::form_type::equip_slot,        _make<FormDialogEquipSlot> },
       std::pair{ dovah::form_type::explosion,         _make<FormDialogExplosion> },
       std::pair{ dovah::form_type::faction,           _make<FormDialogFaction> },
@@ -123,6 +131,7 @@ namespace {
       std::pair{ dovah::form_type::leveled_item,      _make<FormDialogLeveledItem> },
       std::pair{ dovah::form_type::leveled_spell,     _make<FormDialogLeveledSpell> },
       std::pair{ dovah::form_type::light,             _make<FormDialogLight> },
+      std::pair{ dovah::form_type::loading_screen,    _make<FormDialogLoadingScreen> },
       std::pair{ dovah::form_type::location_ref_type, _make<FormDialogLocationRefType> },
       std::pair{ dovah::form_type::magic_effect,      _make<FormDialogMagicEffect> },
       std::pair{ dovah::form_type::material_object,   _make<FormDialogMaterialObject> },
@@ -146,6 +155,7 @@ namespace {
       std::pair{ dovah::form_type::sound_output_model, _make<FormDialogSoundOutputModel> },
       std::pair{ dovah::form_type::spell,             _make<FormDialogSpell> },
       std::pair{ dovah::form_type::statik,            _make<FormDialogStatic> },
+      std::pair{ dovah::form_type::talking_activator, _make<FormDialogTalkingActivator> },
       std::pair{ dovah::form_type::texture_set,       _make<FormDialogTextureSet> },
       std::pair{ dovah::form_type::topic,             _make<FormDialogTopic> },
       std::pair{ dovah::form_type::topic_info,        _make<FormDialogTopicInfo> },

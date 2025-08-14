@@ -24,8 +24,17 @@ namespace dovah::loaded_forms {
       public:
          using activator_flag    = Activator::activator_flag;
          using activator_flags_t = Activator::activator_flags_t;
-         using form_flag         = Activator::form_flag;
          
+         struct form_flag : public Activator::form_flag {
+            enum : uint32_t {
+               no_voice_filter      = 1 << 13,
+               radio_station        = 1 << 17,
+               non_pip_boy          = 1 << 28, // requires "radio station" flag
+               continuous_broadcast = 1 << 30, // requires "radio station" flag
+            };
+         };
+
+      public:
          // Fields inherited from Activator:
          // 
          //  - Activator::looping_sound (ACTI/VNAM) cannot be defined in game data, because TACT/VNAM is 

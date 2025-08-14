@@ -51,6 +51,10 @@ namespace dovah::loaded_forms {
             case 'MICO':
                subrecord.read(this->icons.message);
                break;
+            case 'INAM':
+               if (auto& form = this->menu_display_object; subrecord.read(form))
+                  intfc.warn_if_ref_is_wrong_type(form, form_type::statik, subrecord.signature());
+               break;
             case 'DATA':
                subrecord.read(this->flags);
                subrecord.read(this->type);

@@ -896,9 +896,13 @@
     <ClCompile Include="ui\form_windows\animation_prop.cpp" />
     <ClCompile Include="ui\form_windows\art_object.cpp" />
     <ClCompile Include="ui\form_windows\association_type.cpp" />
+    <ClCompile Include="ui\form_windows\book.cpp" />
     <ClCompile Include="ui\form_windows\camera_shot.cpp" />
     <ClCompile Include="ui\form_windows\cell.cpp" />
     <ClCompile Include="ui\form_windows\class.cpp" />
+    <ClCompile Include="ui\form_windows\climate.cpp" />
+    <ClCompile Include="ui\form_windows\climate\ClimateWeathersModel.cpp" />
+    <ClCompile Include="ui\form_windows\climate\FormSubdialogClimateWeather.cpp" />
     <ClCompile Include="ui\form_windows\collision_layer.cpp" />
     <ClCompile Include="ui\form_windows\color.cpp" />
     <ClCompile Include="ui\form_windows\combat_style.cpp" />
@@ -909,6 +913,7 @@
     <ClCompile Include="ui\form_windows\dual_cast_data.cpp" />
     <ClCompile Include="ui\form_windows\effectshader.cpp" />
     <ClCompile Include="ui\form_windows\enchantment.cpp" />
+    <ClCompile Include="ui\form_windows\encounter_zone.cpp" />
     <ClCompile Include="ui\form_windows\equip_slot.cpp" />
     <ClCompile Include="ui\form_windows\explosion.cpp" />
     <ClCompile Include="ui\form_windows\faction.cpp" />
@@ -921,6 +926,7 @@
     <ClCompile Include="ui\form_windows\ingredient.cpp" />
     <ClCompile Include="ui\form_windows\key.cpp" />
     <ClCompile Include="ui\form_windows\keyword.cpp" />
+    <ClCompile Include="ui\form_windows\loading_screen.cpp" />
     <ClCompile Include="ui\form_windows\location_ref_type.cpp" />
     <ClCompile Include="ui\form_windows\magic_effect.cpp" />
     <ClCompile Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.cpp" />
@@ -990,6 +996,7 @@
     <ClCompile Include="ui\form_windows\spell.cpp" />
     <ClCompile Include="ui\form_windows\static.cpp" />
     <ClCompile Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.cpp" />
+    <ClCompile Include="ui\form_windows\talking_activator.cpp" />
     <ClCompile Include="ui\form_windows\textureset.cpp" />
     <ClCompile Include="ui\form_windows\topic.cpp" />
     <ClCompile Include="ui\form_windows\topic_info.cpp" />
@@ -1076,6 +1083,7 @@
     <ClCompile Include="ui\utils\bind.cpp" />
     <ClCompile Include="ui\utils\DKStyledItemDelegate.cpp" />
     <ClCompile Include="ui\utils\enable_inbound_drag_and_drop_insertions.cpp" />
+    <ClCompile Include="ui\utils\enum_dropdown_configs\skill.cpp" />
     <ClCompile Include="ui\utils\item_indices_to_data.cpp" />
     <ClCompile Include="ui\utils\pair_slider_to_spinbox.cpp" />
     <ClCompile Include="ui\utils\set_custom_context_menu.cpp" />
@@ -1746,6 +1754,12 @@
     <QtMoc Include="ui\form_windows\ingredient.h" />
     <QtMoc Include="ui\form_windows\effectshader.h" />
     <QtMoc Include="ui\form_windows\combat_style.h" />
+    <QtMoc Include="ui\form_windows\book.h" />
+    <QtMoc Include="ui\form_windows\loading_screen.h" />
+    <QtMoc Include="ui\form_windows\climate.h" />
+    <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h" />
+    <QtMoc Include="ui\form_windows\climate\FormSubdialogClimateWeather.h" />
+    <QtMoc Include="ui\form_windows\encounter_zone.h" />
     <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h" />
     <QtMoc Include="ui\form_windows\potion.h" />
     <QtMoc Include="ui\form_windows\material_type.h" />
@@ -1890,6 +1904,7 @@
     <ClInclude Include="ui\form_windows\sound_descriptor\SoundDescriptorSoundFilesModel.h" />
     <QtMoc Include="ui\form_windows\sound_output_model.h" />
     <QtMoc Include="ui\form_windows\spell.h" />
+    <QtMoc Include="ui\form_windows\talking_activator.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsFormFilter.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsModel.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoResponseTableviewModel.h" />
@@ -1925,6 +1940,7 @@
     <QtMoc Include="widgets\widget-dialogs\DKConditionEditDialog.h" />
     <QtMoc Include="widgets\DKNavmeshGenerationImportOptionPicker.h" />
     <ClInclude Include="ui\utils\enable_inbound_drag_and_drop_insertions.h" />
+    <ClInclude Include="ui\utils\enum_dropdown_configs\skill.h" />
     <ClInclude Include="ui\utils\get_selection.h" />
     <ClInclude Include="ui\utils\item_indices_to_data.h" />
     <ClInclude Include="ui\utils\pair_slider_to_spinbox.h" />
@@ -3199,6 +3215,7 @@
     <QtUic Include="ui\form_windows\cell.ui" />
     <QtUic Include="ui\form_windows\class.ui" />
     <QtUic Include="ui\form_windows\climate.ui" />
+    <QtUic Include="ui\form_windows\climate\FormSubdialogClimateWeather.ui" />
     <QtUic Include="ui\form_windows\collision_layer.ui" />
     <QtUic Include="ui\form_windows\color.ui" />
     <QtUic Include="ui\form_windows\combat_style.ui" />

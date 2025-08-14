@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogClimate</class>
  <widget class="QDialog" name="FormDialogClimate">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>783</width>
+    <height>515</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Climate</string>
   </property>
@@ -9,7 +17,7 @@
    <item row="2" column="2">
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
-      <string>Weather</string>
+      <string>Weather Types</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
@@ -44,14 +52,49 @@
        </widget>
       </item>
       <item>
-       <widget class="DKFormListPane" name="weathers">
-        <property name="showFormTypes">
-         <bool>false</bool>
-        </property>
-        <property name="showMoveButtons">
-         <bool>false</bool>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QTableView" name="weathers"/>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <item>
+           <widget class="QPushButton" name="buttonWeatherAdd">
+            <property name="text">
+             <string>Add</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="buttonWeatherEdit">
+            <property name="text">
+             <string>Edit</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="buttonWeatherRemove">
+            <property name="text">
+             <string>Remove</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
@@ -164,6 +207,9 @@
           <layout class="QGridLayout" name="gridLayout_5">
            <item row="0" column="1">
             <widget class="QSlider" name="moonPhaseLengthSlider">
+             <property name="minimum">
+              <number>1</number>
+             </property>
              <property name="maximum">
               <number>255</number>
              </property>
@@ -176,6 +222,9 @@
             <widget class="QSpinBox" name="moonPhaseLengthSpinbox">
              <property name="suffix">
               <string> day(s)</string>
+             </property>
+             <property name="minimum">
+              <number>1</number>
              </property>
              <property name="maximum">
               <number>255</number>
@@ -446,11 +495,6 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>DKFormListPane</class>
-   <extends>QWidget</extends>
-   <header>widgets/DKFormListPane.h</header>
-  </customwidget>
-  <customwidget>
    <class>DKGameFilePicker</class>
    <extends>QWidget</extends>
    <header>widgets/DKGameFilePicker.h</header>
@@ -480,7 +524,6 @@
   <tabstop>moonPhaseLengthSlider</tabstop>
   <tabstop>moonPhaseLengthSpinbox</tabstop>
   <tabstop>volatility</tabstop>
-  <tabstop>weathers</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
  </tabstops>

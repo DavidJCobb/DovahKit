@@ -57,7 +57,7 @@ namespace dovah::loaded_forms {
          int32_t          value  = 0;   // DATA+0x08
          float            weight = 0;   // DATA+0x0C
          form_reference_t menu_display_object; // INAM -> STAT
-         localized_string description = localized_string(localized_string_type::common); // CNAM // shown in the item card
+         localized_string description = localized_string(localized_string_type::description); // CNAM // shown in the item card
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
