@@ -44,7 +44,7 @@ namespace dovah::loaded_forms {
          form_reference_t art_object;     // ONAM -> ARTO
          form_reference_t footstep_sound; // SNDD -> FSTS
          data_by_sex<addon_data> graphics;
-         detection_loudness loudness = {}; // DATA+0x06
+         uint8_t loudness = 0; // DATA+0x06
          struct {
             form_reference_t primary; // RNAM -> RACE
             std::vector<form_reference_t> additional; // MODL[] -> RACE

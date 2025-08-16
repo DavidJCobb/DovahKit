@@ -11,13 +11,15 @@ namespace dovah {
    class form_stub;
 }
 
-class RaceEquipSlotsModel : public QAbstractItemModel {
+// copied andp asted from RaceEquipSlotsModel.
+// once we get to Sustain, we should unify the two.
+class ArmorAddonAdditionalRacesModel : public QAbstractItemModel {
    Q_OBJECT;
    public:
-      RaceEquipSlotsModel(QObject* parent = nullptr);
+      ArmorAddonAdditionalRacesModel(QObject* parent = nullptr);
 
       static constexpr const size_t ColumnCount = 1;
-      static constexpr const dovah::form_type desired_form_type = dovah::form_type::equip_slot;
+      static constexpr const dovah::form_type desired_form_type = dovah::form_type::race;
       
       #pragma region QAbstractItemModel overrides
          #pragma region Hierarchy

@@ -894,6 +894,9 @@
     <ClCompile Include="ui\form_windows\addon_node.cpp" />
     <ClCompile Include="ui\form_windows\ammo.cpp" />
     <ClCompile Include="ui\form_windows\animation_prop.cpp" />
+    <ClCompile Include="ui\form_windows\armor.cpp" />
+    <ClCompile Include="ui\form_windows\armor_addon.cpp" />
+    <ClCompile Include="ui\form_windows\armor_addon\ArmorAddonAdditionalRacesModel.cpp" />
     <ClCompile Include="ui\form_windows\art_object.cpp" />
     <ClCompile Include="ui\form_windows\association_type.cpp" />
     <ClCompile Include="ui\form_windows\book.cpp" />
@@ -981,6 +984,7 @@
     <ClCompile Include="ui\form_windows\scene\SceneActorParticipationModel.cpp" />
     <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\ScriptFragment.cpp" />
     <ClCompile Include="ui\form_windows\scroll.cpp" />
+    <ClCompile Include="ui\form_windows\shared\BipedObjectSlotsToggleModel.cpp" />
     <ClCompile Include="ui\form_windows\shared\DKFormPickerExcludeSingleFormFilter.cpp" />
     <ClCompile Include="ui\form_windows\shared\FaceBaseHeadPartsModel.cpp" />
     <ClCompile Include="ui\form_windows\shared\FaceExtraHeadPartsModel.cpp" />
@@ -1757,6 +1761,9 @@
     <QtMoc Include="ui\form_windows\book.h" />
     <QtMoc Include="ui\form_windows\loading_screen.h" />
     <QtMoc Include="ui\form_windows\climate.h" />
+    <QtMoc Include="ui\form_windows\armor.h" />
+    <QtMoc Include="ui\form_windows\armor_addon.h" />
+    <QtMoc Include="ui\form_windows\armor_addon\ArmorAddonAdditionalRacesModel.h" />
     <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h" />
     <QtMoc Include="ui\form_windows\climate\FormSubdialogClimateWeather.h" />
     <QtMoc Include="ui\form_windows\encounter_zone.h" />
@@ -1891,6 +1898,7 @@
     <ClInclude Include="ui\form_windows\race\RacePresetActorFormFilter.h" />
     <ClInclude Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.h" />
     <QtMoc Include="ui\form_windows\scroll.h" />
+    <QtMoc Include="ui\form_windows\shared\BipedObjectSlotsToggleModel.h" />
     <ClInclude Include="ui\form_windows\shared\DKFormPickerExcludeSingleFormFilter.h" />
     <ClInclude Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.h" />
     <ClInclude Include="ui\form_windows\shared\HeadPartPickerFilter.h" />
@@ -3208,6 +3216,7 @@
     <QtUic Include="ui\form_windows\ammo.ui" />
     <QtUic Include="ui\form_windows\animation_prop.ui" />
     <QtUic Include="ui\form_windows\armor.ui" />
+    <QtUic Include="ui\form_windows\armor_addon.ui" />
     <QtUic Include="ui\form_windows\art_object.ui" />
     <QtUic Include="ui\form_windows\association_type.ui" />
     <QtUic Include="ui\form_windows\book.ui" />

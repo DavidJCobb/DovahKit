@@ -130,8 +130,8 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | Character | SMEN | SM Event Node    | ✅ | 🟨 | ⬛ | How do the game and CK cope with multiple forms for a single event type? |
 | Character | VTYP | Voicetype        | ✅ | ✅ | ✅ |
 | Items | AMMO | Ammo           | ✅ | ✅ | ⬛ |
-| Items | ARMO | Armor          | ✅ | 🟨 | ⬛ |
-| Items | ARMA | ArmorAddon     | ✅ | ⬛ | ⬛ | Race has a checkbox list for equip types. Probably should make that a reusable widget i.e. `DKFormsCheckboxList`, and use it here for Additional Races. |
+| Items | ARMO | Armor          | ✅ | ✅ | ⬛ |
+| Items | ARMA | ArmorAddon     | ✅ | ✅ | ⬛ | Race has a checkbox list for equip types. Probably should make that a reusable widget i.e. `DKFormsCheckboxList`, and use it here for Additional Races. |
 | Items | BOOK | Book           | ✅ | ✅ | ⬛ |
 | Items | COBJ | Constructible Object | ✅ | 🟨 | ⬛ |
 | Items | INGR | Ingredient     | ✅ | ✅ | ⬛ |

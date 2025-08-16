@@ -12,6 +12,8 @@
 #include "../ui/form_windows/addon_node.h"
 #include "../ui/form_windows/ammo.h"
 #include "../ui/form_windows/animation_prop.h"
+#include "../ui/form_windows/armor.h"
+#include "../ui/form_windows/armor_addon.h"
 #include "../ui/form_windows/art_object.h"
 #include "../ui/form_windows/association_type.h"
 #include "../ui/form_windows/book.h"
@@ -95,6 +97,8 @@ namespace {
       std::pair{ dovah::form_type::addon_node,        _make<FormDialogAddOnNode> },
       std::pair{ dovah::form_type::ammo,              _make<FormDialogAmmo> },
       std::pair{ dovah::form_type::animation_prop,    _make<FormDialogAnimationProp> },
+      std::pair{ dovah::form_type::armor,             _make<FormDialogArmor> },
+      std::pair{ dovah::form_type::armor_addon,       _make<FormDialogArmorAddon> },
       std::pair{ dovah::form_type::art_object,        _make<FormDialogArtObject> },
       std::pair{ dovah::form_type::association_type,  _make<FormDialogAssociationType> },
       std::pair{ dovah::form_type::book,              _make<FormDialogBook> },
