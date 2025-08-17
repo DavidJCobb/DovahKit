@@ -3384,6 +3384,9 @@
     <ClCompile Include="ui\form_windows\armor_addon\ArmorAddonAdditionalRacesModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\constructible_object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8423,6 +8426,9 @@
     <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\data\all_item_form_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -9640,6 +9646,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\armor_addon\ArmorAddonAdditionalRacesModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\constructible_object.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

@@ -24,6 +24,7 @@
 #include "../ui/form_windows/collision_layer.h"
 #include "../ui/form_windows/color.h"
 #include "../ui/form_windows/combat_style.h"
+#include "../ui/form_windows/constructible_object.h"
 #include "../ui/form_windows/container.h"
 #include "../ui/form_windows/dialogue_branch.h"
 #include "../ui/form_windows/door.h"
@@ -109,6 +110,7 @@ namespace {
       std::pair{ dovah::form_type::collision_layer,   _make<FormDialogCollisionLayer> },
       std::pair{ dovah::form_type::color,             _make<FormDialogColor> },
       std::pair{ dovah::form_type::combat_style,      _make<FormDialogCombatStyle> },
+      std::pair{ dovah::form_type::constructible_object, _make<FormDialogConstructibleObject> },
       std::pair{ dovah::form_type::container,         _make<FormDialogContainer> },
       std::pair{ dovah::form_type::dialogue_branch,   _make<FormDialogDialogueBranch> },
       std::pair{ dovah::form_type::door,              _make<FormDialogDoor> },

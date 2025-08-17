@@ -1,19 +1,13 @@
 #include "./DKFormInventoryModel.h"
 #include <limits>
 #include "dovah/data/all_carryable_form_types.h"
+#include "dovah/data/all_item_form_types.h"
 #include "dovah/forms/components/container.h"
 #include "dovah/form_stub.h"
 #include "editor/core.h"
 
 namespace {
    static const QVector<int> typical_roles_to_notify_changes_for = { Qt::DisplayRole, Qt::ToolTipRole };
-
-   constexpr bool _form_type_is_carryable(dovah::form_type ft) {
-      for (auto e : dovah::all_carryable_form_types)
-         if (ft == e)
-            return true;
-      return false;
-   }
 }
 
 #include "dovah/forms/Light.h"
@@ -142,6 +136,8 @@ DKFormInventoryModel::~DKFormInventoryModel() {
          return this->_items.size();
       }
       /*virtual*/ int DKFormInventoryModel::columnCount(const QModelIndex& item) const /*override final*/ {
+         if (!this->_allow_extra_data)
+            return Column::_COUNT - Column::_COUNT_EXTRA;
          return Column::_COUNT;
       }
 
@@ -150,6 +146,10 @@ DKFormInventoryModel::~DKFormInventoryModel() {
             return {};
          if (role != Qt::DisplayRole && role != Qt::ToolTipRole)
             return {};
+         if (!this->_allow_extra_data) {
+            if (section >= Column::_FIRST_EXTRA)
+               section += Column::_COUNT_EXTRA;
+         }
          switch (section) {
             case Column::Count:
                return tr("Count", "column header");
@@ -171,6 +171,10 @@ DKFormInventoryModel::~DKFormInventoryModel() {
             return {};
          auto item   = (InventoryObject*)index.internalPointer();
          auto column = index.column();
+         if (!this->_allow_extra_data) {
+            if (column >= Column::_FIRST_EXTRA)
+               column += Column::_COUNT_EXTRA;
+         }
          switch (role) {
             case Qt::DisplayRole:
             case Qt::ToolTipRole:
@@ -255,7 +259,7 @@ void DKFormInventoryModel::importFrom(const backend_type& component) {
       // Strip out illegal entries.
       if (!src.item)
          continue;
-      if (!_form_type_is_carryable(src.item.get_form_stub()->form_type))
+      if (!this->_item_type_is_allowed(src.item.get_form_stub()->form_type))
          continue;
 
       auto* dst = new InventoryObject;
@@ -329,7 +333,7 @@ void DKFormInventoryModel::setData(size_t row, const InventoryObject& src) {
       _update_column_range(Column::Count);
    }
    if (src.form != dst.form) {
-      if (src.form && _form_type_is_carryable(src.form->form_type)) {
+      if (src.form && this->_item_type_is_allowed(src.form->form_type)) {
          dst.form = src.form;
          dst.cached.value    = _get_form_value(*src.form);
          dst.cached.editorID = QString::fromStdString(dst.form->editorID);
@@ -349,15 +353,92 @@ void DKFormInventoryModel::setData(size_t row, const InventoryObject& src) {
       _update_column_range(Column::Health);
    }
 
-   if (col_change_start > col_change_end)
+   if (col_change_start > col_change_end) {
       //
       // Nothing actually changed.
       //
       return;
+   }
+   if (!this->_allow_extra_data) {
+      if (col_change_start >= Column::_FIRST_EXTRA)
+         col_change_start -= Column::_COUNT_EXTRA;
+      if (col_change_end >= Column::_FIRST_EXTRA)
+         col_change_end -= Column::_COUNT_EXTRA;
+   }
 
    auto tl = this->index(row, col_change_start, {});
    auto br = this->index(row, col_change_end,   {});
    emit dataChanged(tl, br, typical_roles_to_notify_changes_for);
+}
+
+bool DKFormInventoryModel::allowsExtraData() const {
+   return this->_allow_extra_data;
+}
+void DKFormInventoryModel::setAllowsExtraData(bool v) {
+   if (v == this->_allow_extra_data)
+      return;
+   if (v) {
+      this->beginInsertColumns({}, Column::_FIRST_EXTRA, Column::_LAST_EXTRA);
+   } else {
+      this->beginRemoveColumns({}, Column::_FIRST_EXTRA, Column::_LAST_EXTRA);
+   }
+   this->_allow_extra_data = v;
+   if (v) {
+      this->endInsertColumns();
+   } else {
+      this->endRemoveColumns();
+   }
+}
+
+bool DKFormInventoryModel::allowsPseudoItems() const {
+   return this->_allow_pseudo_items;
+}
+void DKFormInventoryModel::setAllowsPseudoItems(bool v) {
+   if (v == this->_allow_pseudo_items)
+      return;
+   this->_allow_pseudo_items = v;
+   if (!v) {
+      constexpr auto pseudo_item_types = []() {
+         constexpr size_t count = dovah::all_carryable_form_types.size() - dovah::all_item_form_types.size();
+         std::array<dovah::form_type, count> types = {};
+
+         size_t i = 0;
+         for (auto a : dovah::all_carryable_form_types) {
+            bool found = false;
+            for (auto b : dovah::all_item_form_types) {
+               if (a == b) {
+                  found = true;
+                  break;
+               }
+            }
+            if (!found)
+               types[i++] = a;
+         }
+
+         return types;
+      }();
+
+      size_t size = this->_items.size();
+      for (size_t i = 0; i < size; ++i) {
+         auto* item = this->_items[i];
+         if (!item->form)
+            continue;
+         bool remove = false;
+         for (auto ft : pseudo_item_types) {
+            if (item->form->form_type == ft) {
+               remove = true;
+               break;
+            }
+         }
+         if (remove) {
+            this->beginRemoveRows({}, i, i);
+            this->_items.erase(this->_items.begin() + i);
+            this->endRemoveRows();
+            --i;
+            --size;
+         }
+      }
+   }
 }
 
 void DKFormInventoryModel::_clear() {
@@ -365,5 +446,18 @@ void DKFormInventoryModel::_clear() {
    for (auto* item : this->_items)
       delete item;
    this->_items.clear();
+   this->_allow_extra_data = true;
    this->endResetModel();
+}
+bool DKFormInventoryModel::_item_type_is_allowed(dovah::form_type ft) const {
+   if (this->_allow_pseudo_items) {
+      for (auto allowed : dovah::all_carryable_form_types)
+         if (ft == allowed)
+            return true;
+   } else {
+      for (auto allowed : dovah::all_item_form_types)
+         if (ft == allowed)
+            return true;
+   }
+   return false;
 }

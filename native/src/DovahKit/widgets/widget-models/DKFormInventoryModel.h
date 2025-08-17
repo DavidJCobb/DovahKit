@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include <QAbstractItemModel>
+#include "dovah/form_types.h"
 
 namespace dovah {
    namespace loaded_forms {
@@ -51,7 +52,10 @@ class DKFormInventoryModel : public QAbstractItemModel {
             Health,
             Value,
 
-            _COUNT
+            _COUNT,
+            _FIRST_EXTRA = Owner,
+            _LAST_EXTRA  = Health,
+            _COUNT_EXTRA = _LAST_EXTRA + 1 - _FIRST_EXTRA,
          };
       };
 
@@ -92,8 +96,17 @@ class DKFormInventoryModel : public QAbstractItemModel {
       // type to None.
       void setData(size_t row, const InventoryObject&);
 
+      bool allowsExtraData() const;
+      void setAllowsExtraData(bool);
+
+      bool allowsPseudoItems() const;
+      void setAllowsPseudoItems(bool);
+
    protected:
       std::vector<InventoryObject*> _items;
+      bool _allow_extra_data   = true;
+      bool _allow_pseudo_items = true; // e.g. leveled lists
 
+      bool _item_type_is_allowed(dovah::form_type) const;
       void _clear();
 };

@@ -13,6 +13,7 @@
    #include "editor/form_stub_meta_type.h"
 
    #include "./widget-models/DKFormPicker/DKFormPickerModel.h"
+   #include "./widget-data/DKCustomFormFilter.h"
 #endif
 #include "./DKComboBox.h"
 
@@ -181,7 +182,7 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
 }
 
 void DKFormPicker::addAllowedFormType(dovah::form_type ft) {
-   if (this->allowsFormType(ft))
+   if (!this->_properties.allowed_form_types.empty() && this->allowsFormType(ft))
       return;
    this->_properties.allowed_form_types.push_back(ft);
    if (this->_properties.allowed_form_types.empty()) {
@@ -502,21 +503,10 @@ void DKFormPicker::clear() {
 }
 
 #if !defined(QT_PLUGIN)
-DKFormPickerCustomFilter* DKFormPicker::customFilter() const {
-   return this->_rawModel()->customFilter();
+DKCustomFormFilter* DKFormPicker::customFilter() const {
+   return this->_rawModel()->get_custom_filter();
 }
-void DKFormPicker::setCustomFilter(DKFormPickerCustomFilter* v) {
-   auto* model = this->_rawModel();
-   auto* prior = model->customFilter();
-   if (prior == v) {
-      return;
-   }
-   model->setCustomFilter(v);
-   if (model->customFilter() == v) {
-      if (prior) {
-         prior->_unhookFromModel(model);
-      }
-      v->_hookToModel(model);
-   }
+void DKFormPicker::setCustomFilter(DKCustomFormFilter* v) {
+   this->_rawModel()->set_custom_filter(v);
 }
 #endif

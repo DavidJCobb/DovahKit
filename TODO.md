@@ -40,12 +40,6 @@ I was in the middle of working on scene editing at the time I switched to other 
   * Test editing phases' and actions' properties.
   * We need a better way to delete actors.
 
-## Immediate next steps
-
-* Rename the `shader_particle_geometry_data` form type to `shader_particle_geometry`. It's a noun: it's a geometry (a 3D cube) filled with particles drawn via a special shader.
-* Modify the DKFormInventoryWidget: Add the ability to hide ExtraData-related widgets (ownership, health). Add the ability to disallow leveled items, and hide the "Preview Calculated Result" widgets when leveled items are disallowed. We need these features for Constructible Object forms, which use TESContainer for their crafting ingredients but shouldn't allow leveled items.
-* Investigate adding a backend component, and a reusable UI widget and/or dialog, for editing the list of magic effects attached to a Spell/Potion/Enchantment/Ingredient. (The common base class used by the game engine for these forms is `MagicItem`. We'll... probably want a better name. Maybe it can literally just be `magic_effect_list` for the backend and `DKMagicEffectListWidget`/`DKMagicEffectEditDialog` for the UI.)
-
 ## Forms in general
 
 * Reportedly, ActorBases with no name can't be interacted with to initiate dialogue. Verify this, also test whether such actors become interactable if an alias renames them, test whether a Short Name but no Full Name is interactable, and update the What's This? text for the ActorBase name field accordingly.
@@ -133,7 +127,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | Items | ARMO | Armor          | ✅ | ✅ | ⬛ |
 | Items | ARMA | ArmorAddon     | ✅ | ✅ | ⬛ | Race has a checkbox list for equip types. Probably should make that a reusable widget i.e. `DKFormsCheckboxList`, and use it here for Additional Races. |
 | Items | BOOK | Book           | ✅ | ✅ | ⬛ |
-| Items | COBJ | Constructible Object | ✅ | 🟨 | ⬛ |
+| Items | COBJ | Constructible Object | ✅ | ✅ | ⬛ |
 | Items | INGR | Ingredient     | ✅ | ✅ | ⬛ |
 | Items | KEYM | Key            | ✅ | ✅ | ⬛ |
 | Items | LVLI | LeveledItem    | ✅ | ✅ | ⬛ |

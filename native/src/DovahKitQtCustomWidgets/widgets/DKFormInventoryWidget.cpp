@@ -8,10 +8,11 @@
 #include "./DKHeaderView.h"
 #if !defined(QT_PLUGIN)
    #include "dovah/data/all_carryable_form_types.h"
+   #include "dovah/data/all_item_form_types.h"
    #include "dovah/forms/components/leveled_list.h"
    #include "dovah/forms/LeveledItem.h"
    #include "dovah/utils/leveled_list_preview.h"
-   #include "./widget-dialogs/DKFormInventoryPreviewDialog.h"
+   #include "./widget-dialogs/DKLeveledListPreviewDialog.h"
    #include "./widget-models/DKFormInventoryModel.h"
 #endif
 
@@ -40,6 +41,9 @@
             return 0;
          }
          virtual int columnCount(const QModelIndex& item) const override {
+            if (!this->_allow_extra_data) {
+               return 3;
+            }
             return 5;
          }
          virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const override {
@@ -47,6 +51,10 @@
                return {};
             if (role != Qt::DisplayRole && role != Qt::ToolTipRole)
                return {};
+            if (!this->_allow_extra_data) {
+               if (section >= 2)
+                  section += 2;
+            }
             switch (section) {
                case 0:
                   return tr("Count", "column header");
@@ -61,6 +69,28 @@
             }
             return {};
          }
+
+         bool allowsExtraData() const {
+            return this->_allow_extra_data;
+         }
+         void setAllowsExtraData(bool v) {
+            if (v == this->_allow_extra_data)
+               return;
+            if (v) {
+               this->beginInsertColumns({}, 2, 3);
+            } else {
+               this->beginRemoveColumns({}, 2, 3);
+            }
+            this->_allow_extra_data = v;
+            if (v) {
+               this->endInsertColumns();
+            } else {
+               this->endRemoveColumns();
+            }
+         }
+
+      protected:
+         bool _allow_extra_data = true;
    };
 #endif
 
@@ -102,6 +132,7 @@ DKFormInventoryWidget::DKFormInventoryWidget(QWidget* parent) : QWidget(parent) 
          label->setBuddy(widget);
          layout->addWidget(label,  1, 2, Qt::AlignmentFlag::AlignRight);
          layout->addWidget(widget, 1, 3);
+         ui.labels.current_health = label;
       }
       layout->setColumnStretch(1, 1);
       layout->setColumnStretch(3, 1);
@@ -273,7 +304,9 @@ DKFormInventoryWidget::DKFormInventoryWidget(QWidget* parent) : QWidget(parent) 
       #endif
       {
          view->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
-         view->setSelectionMode(QAbstractItemView::SelectionMode::NoSelection);
+         view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         view->setHorizontalScrollMode(QAbstractItemView::ScrollMode::ScrollPerPixel);
+         view->setVerticalScrollMode(QAbstractItemView::ScrollMode::ScrollPerItem);
          view->setCornerButtonEnabled(false);
          view->setAcceptDrops(false);
 
@@ -289,7 +322,7 @@ DKFormInventoryWidget::DKFormInventoryWidget(QWidget* parent) : QWidget(parent) 
          auto metrics = QFontMetrics(view->font());
          header->setDefaultAlignment(Qt::AlignLeft | Qt::AlignBaseline);
          header->setMinimumSectionSize(2);
-         header->setColumnFlex(0, 0, 0, metrics.boundingRect("999").width() * 1.5F + 4);
+         header->setColumnFlex(0, 0, 0, metrics.boundingRect("99999").width() * 1.5F + 4);
          header->setColumnFlex(1, 2, 0);
          header->setColumnFlex(2, 1, 0);
          header->setColumnFlex(3, 0, 0, metrics.boundingRect("100%").width() * 1.5F + 4);
@@ -328,10 +361,72 @@ DKFormInventoryWidget::DKFormInventoryWidget(QWidget* parent) : QWidget(parent) 
    #endif
 }
 
+bool DKFormInventoryWidget::allowsExtraData() const noexcept {
+   #if defined(QT_PLUGIN)
+      return this->_state.allow_extra_data;
+   #else
+      if (!this->_model)
+         return true;
+      return this->_model->allowsExtraData();
+   #endif
+}
+void DKFormInventoryWidget::setAllowsExtraData(bool v) {
+   #if defined(QT_PLUGIN)
+      this->_state.allow_extra_data = v;
+      if (auto* model = dynamic_cast<_DummyModel*>(this->_subwidgets.view->model())) {
+         model->setAllowsExtraData(v);
+      }
+   #else
+      this->_model->setAllowsExtraData(v);
+   #endif
+   this->_rebuildLayout();
+}
+
+bool DKFormInventoryWidget::allowsPseudoItems() const noexcept {
+   #if defined(QT_PLUGIN)
+      return this->_state.allow_pseudo_Items;
+   #else
+      if (!this->_model)
+         return true;
+      return this->_model->allowsPseudoItems();
+   #endif
+
+}
+void DKFormInventoryWidget::setAllowsPseudoItems(bool v) {
+   #if defined(QT_PLUGIN)
+      this->_state.allow_pseudo_Items = v;
+   #else
+      this->_model->setAllowsPseudoItems(v);
+      #if !defined(QT_PLUGIN)
+      {
+         auto* widget = this->_subwidgets.current_item;
+         auto* form   = widget->formStub();
+         const auto blocker = QSignalBlocker(widget);
+         widget->setAllowedFormTypes({});
+         if (v) {
+            for (auto ft : dovah::all_carryable_form_types)
+               widget->addAllowedFormType(ft);
+         } else {
+            for (auto ft : dovah::all_item_form_types)
+               widget->addAllowedFormType(ft);
+         }
+         widget->setFormStub(form);
+      }
+      #endif
+   #endif
+}
+
 void DKFormInventoryWidget::setOrientation(Qt::Orientation v) {
    if (this->_state.orientation == v)
       return;
    this->_state.orientation = v;
+   this->_rebuildLayout();
+}
+
+void DKFormInventoryWidget::setShowPreviewWidgets(bool v) {
+   if (this->_state.show_preview_widgets == v)
+      return;
+   this->_state.show_preview_widgets = v;
    this->_rebuildLayout();
 }
 
@@ -400,8 +495,13 @@ void DKFormInventoryWidget::_preview() {
                   if (coalesced)
                      continue;
                   results.push_back(src);
+                  continue;
                }
+               continue;
             }
+            #if _DEBUG
+               __debugbreak(); // Why didn't this form load?
+            #endif
          }
          results.push_back(dovah::leveled_list_preview::entry{
             .form  = entry->form,
@@ -414,7 +514,7 @@ void DKFormInventoryWidget::_preview() {
       }
    }
 
-   auto* window = new DKFormInventoryPreviewDialog(this);
+   auto* window = new DKLeveledListPreviewDialog(this);
    window->setContents(results);
    window->show();
 }
@@ -548,4 +648,27 @@ void DKFormInventoryWidget::_rebuildLayout() {
    } else {
       layout->setDirection(QBoxLayout::Direction::TopToBottom);
    }
+
+   bool allows_extra_data = this->allowsExtraData();
+   //
+   auto& ui = this->_subwidgets;
+   ui.labels.current_health->setVisible(allows_extra_data);
+   ui.current_health->setVisible(allows_extra_data);
+   ui.current_owner->setVisible(allows_extra_data);
+   {
+      auto* layout = ui.current_count->parentWidget()->layout();
+      if (layout) {
+         auto* item = layout->itemAt(layout->indexOf(ui.current_count));
+         if (item) {
+            Qt::Alignment align = {};
+            if (!allows_extra_data) {
+               align = Qt::AlignmentFlag::AlignLeft;
+            }
+            item->setAlignment(align);
+         }
+      }
+   }
+
+   // show_preview_widgets
+   ui.preview_container->setVisible(this->_state.show_preview_widgets);
 }

@@ -25,12 +25,24 @@ class DKFormInventoryModel;
 
 class DKFormInventoryWidget : public QWidget {
    Q_OBJECT;
-   Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation DESIGNABLE true);
+   Q_PROPERTY(bool            allowsExtraData    READ allowsExtraData    WRITE setAllowsExtraData    DESIGNABLE true);
+   Q_PROPERTY(bool            allowsPseudoItems  READ allowsPseudoItems  WRITE setAllowsPseudoItems  DESIGNABLE true);
+   Q_PROPERTY(Qt::Orientation orientation        READ orientation        WRITE setOrientation        DESIGNABLE true USER true);
+   Q_PROPERTY(bool            showPreviewWidgets READ showPreviewWidgets WRITE setShowPreviewWidgets DESIGNABLE true);
    public:
       DKFormInventoryWidget(QWidget* parent = nullptr);
 
+      bool allowsExtraData() const noexcept;
+      void setAllowsExtraData(bool);
+
+      bool allowsPseudoItems() const noexcept;
+      void setAllowsPseudoItems(bool);
+
       constexpr Qt::Orientation orientation() const noexcept { return this->_state.orientation; }
       void setOrientation(Qt::Orientation);
+
+      constexpr bool showPreviewWidgets() const noexcept { return this->_state.show_preview_widgets; }
+      void setShowPreviewWidgets(bool);
 
       #if !defined(QT_PLUGIN)
       void initializeFrom(const dovah::loaded_forms::components::container_data&);
@@ -58,9 +70,17 @@ class DKFormInventoryWidget : public QWidget {
          QWidget*     preview_container = nullptr;
          QPushButton* preview_button    = nullptr;
          QSpinBox*    preview_level     = nullptr;
+         struct {
+            QLabel* current_health = nullptr;
+         } labels;
       } _subwidgets;
       struct {
+         #if defined(QT_PLUGIN)
+         bool allow_extra_data = true;
+         bool allow_pseudo_items = true;
+         #endif
          Qt::Orientation orientation = Qt::Orientation::Vertical;
+         bool show_preview_widgets = true;
       } _state;
       #if !defined(QT_PLUGIN)
       DKFormInventoryModel* _model = nullptr;

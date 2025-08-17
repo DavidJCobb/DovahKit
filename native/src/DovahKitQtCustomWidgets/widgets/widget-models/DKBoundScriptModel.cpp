@@ -217,6 +217,7 @@ void DKBoundScriptModel::_load_property_definitions_from(std::string_view script
       if (!file) {
          this->_load_results.failed = true;
          #if _DEBUG
+            #pragma warning(suppress:4996) // don't care that strerror isn't thread-safe, because this is only so I have something I can read in a debugger
             auto error_info = strerror(errno);
          #endif
          return;
