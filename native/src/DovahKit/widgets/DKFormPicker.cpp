@@ -182,7 +182,7 @@ DKFormPicker::DKFormPicker(QWidget* parent) : QWidget(parent) {
 }
 
 void DKFormPicker::addAllowedFormType(dovah::form_type ft) {
-   if (this->allowsFormType(ft))
+   if (!this->_properties.allowed_form_types.empty() && this->allowsFormType(ft))
       return;
    this->_properties.allowed_form_types.push_back(ft);
    if (this->_properties.allowed_form_types.empty()) {

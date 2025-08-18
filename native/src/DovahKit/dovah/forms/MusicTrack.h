@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <cstdint>
 #include <string>
 #include <optional>
@@ -8,12 +9,15 @@
 #include "_common.h"
 #include "components/conditions.h"
 #include "components/papyrus.h"
+#include "../data/music_track_type.h"
 
 namespace dovah::loaded_forms {
    class MusicTrack : public Form {
       public:
          static constexpr const enum form_type form_type = form_type::music_track;
          MusicTrack(const constructor_params& c) : Form(form_type, c) {};
+
+         static constexpr const size_t max_palette_layer_count = 3;
 
          struct loop_data {
             float    begin = 0;
@@ -24,7 +28,10 @@ namespace dovah::loaded_forms {
          struct palette_data {
             float duration = 0; // FLTV
             float fade_out = 0; // DNAM
-            std::vector<form_reference_t> tracks;     // SNAM[] -> MUST[]
+            std::array<std::vector<form_reference_t>, max_palette_layer_count> tracks_by_layer; // SNAM -> MUST[]
+
+            void set_all_tracks(MusicTrack& my_containing_form, const std::array<std::vector<form_reference_t>, max_palette_layer_count>&);
+            void set_all_tracks(MusicTrack& my_containing_form, const std::array<std::vector<form_stub*>, max_palette_layer_count>&);
          };
          struct single_data {
             struct {
@@ -48,9 +55,13 @@ namespace dovah::loaded_forms {
          > data;
          components::condition_list conditions; // CITC+CTDA[]
 
+      public:
+         music_track_type get_track_type() const;
+         void set_track_type(music_track_type);
+
+      public:
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
-         //
       protected:
          virtual void _clone_impl(Form* out) const noexcept override;
          virtual void _save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) override;

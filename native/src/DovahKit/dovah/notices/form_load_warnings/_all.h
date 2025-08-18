@@ -40,6 +40,7 @@
    #include "./by_form_type/material_type/name_too_long.h"
    #include "./by_form_type/message/orphaned_conditions.h"
    #include "./by_form_type/music_track/invalid_track_type.h"
+   #include "./by_form_type/music_track/too_many_palette_layers.h"
    #include "./by_form_type/navmesh/invalid_grid_size.h"
    #include "./by_form_type/navmesh_info_map/navmesh_info_pathing_door_bad_crc.h"
    #include "./by_form_type/navmesh_info_map/navmesh_may_be_multiply_deleted.h"

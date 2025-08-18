@@ -1,13 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>FormDialogMusicType</class>
- <widget class="QDialog" name="FormDialogMusicType">
+ <class>FormDialogMusicTrack</class>
+ <widget class="QDialog" name="FormDialogMusicTrack">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>688</width>
+    <height>496</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Music Track</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Track Type:</string>
+       </property>
+       <property name="buddy">
+        <cstring>trackType</cstring>
+       </property>
+      </widget>
+     </item>
      <item row="0" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
@@ -17,9 +38,6 @@
         <cstring>editorID</cstring>
        </property>
       </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="editorID"/>
      </item>
      <item row="1" column="1">
       <widget class="QComboBox" name="trackType">
@@ -50,23 +68,6 @@
          <string>Single Track</string>
         </property>
        </item>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Track Type:</string>
-       </property>
-       <property name="buddy">
-        <cstring>trackType</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0" colspan="2">
-      <widget class="QCheckBox" name="flagHasConditions">
-       <property name="text">
-        <string>Has Conditions</string>
-       </property>
       </widget>
      </item>
     </layout>
@@ -502,7 +503,6 @@
  <tabstops>
   <tabstop>editorID</tabstop>
   <tabstop>trackType</tabstop>
-  <tabstop>flagHasConditions</tabstop>
   <tabstop>tabview</tabstop>
   <tabstop>fileMain</tabstop>
   <tabstop>fileFinale</tabstop>

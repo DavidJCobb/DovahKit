@@ -937,6 +937,8 @@
     <ClCompile Include="ui\form_windows\material_object.cpp" />
     <ClCompile Include="ui\form_windows\material_type.cpp" />
     <ClCompile Include="ui\form_windows\movement_type.cpp" />
+    <ClCompile Include="ui\form_windows\music_track.cpp" />
+    <ClCompile Include="ui\form_windows\music_track\MusicTrackCuePointsModel.cpp" />
     <ClCompile Include="ui\form_windows\music_type.cpp" />
     <ClCompile Include="ui\form_windows\potion.cpp" />
     <ClCompile Include="ui\form_windows\quest\alias_subdialog_helpers.cpp" />
@@ -1299,6 +1301,7 @@
     <ClInclude Include="dovah\data\magic_casting_type.h" />
     <ClInclude Include="dovah\data\magic_delivery_type.h" />
     <ClInclude Include="dovah\data\magic_effect_archetypes.h" />
+    <ClInclude Include="dovah\data\music_track_type.h" />
     <ClInclude Include="dovah\data\packages\interrupt_override_target.h" />
     <ClInclude Include="dovah\data\packages\interrupt_override_type.h" />
     <ClInclude Include="dovah\data\packages\legacy_type.h" />
@@ -1604,6 +1607,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\material_type\name_too_long.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\message\orphaned_conditions.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\music_track\invalid_track_type.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\music_track\too_many_palette_layers.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh\invalid_grid_size.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_info_pathing_door_bad_crc.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\navmesh_info_map\navmesh_may_be_multiply_deleted.h" />
@@ -1774,6 +1778,8 @@
     <QtMoc Include="ui\form_windows\potion.h" />
     <QtMoc Include="ui\form_windows\material_type.h" />
     <QtMoc Include="ui\form_windows\material_object.h" />
+    <QtMoc Include="ui\form_windows\music_track.h" />
+    <QtMoc Include="ui\form_windows\music_track\MusicTrackCuePointsModel.h" />
     <ClInclude Include="ui\form_windows\quest\alias_subdialog_helpers.h" />
     <QtMoc Include="ui\form_windows\reverb_parameters.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Action.h" />

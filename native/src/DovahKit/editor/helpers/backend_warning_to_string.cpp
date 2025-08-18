@@ -1037,6 +1037,12 @@ namespace editor_helpers {
                      "Music track %1 specified an invalid type (%2)."
                   ).arg(subject).arg(casted->seen_type);
                }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::music_track::too_many_palette_layers*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Music track %1 contains %2 palette layers, but only %3 layers are allowed."
+                  ).arg(subject).arg(casted->count).arg(casted->max_count);
+               }
             #pragma endregion
             #pragma region navmesh
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::navmesh::invalid_grid_size*>(&warning)) {

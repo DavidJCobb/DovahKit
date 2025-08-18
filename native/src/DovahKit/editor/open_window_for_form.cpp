@@ -58,6 +58,7 @@
 #include "../ui/form_windows/material_type.h"
 #include "../ui/form_windows/misc_item.h"
 #include "../ui/form_windows/movement_type.h"
+#include "../ui/form_windows/music_track.h"
 #include "../ui/form_windows/music_type.h"
 #include "../ui/form_windows/note.h"
 #include "../ui/form_windows/outfit.h"
@@ -144,6 +145,7 @@ namespace {
       std::pair{ dovah::form_type::material_type,     _make<FormDialogMaterialType> },
       std::pair{ dovah::form_type::misc_item,         _make<FormDialogMiscItem> },
       std::pair{ dovah::form_type::movement_type,     _make<FormDialogMovementType> },
+      std::pair{ dovah::form_type::music_track,       _make<FormDialogMusicTrack> },
       std::pair{ dovah::form_type::music_type,        _make<FormDialogMusicType> },
       std::pair{ dovah::form_type::note,              _make<FormDialogNote> },
       std::pair{ dovah::form_type::outfit,            _make<FormDialogOutfit> },

@@ -104,7 +104,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | Actors | PERK | Perk             | ✅ | ⬛ | ⬛ | UI for entry points needs special care |
 | Actors | TACT | TalkingActivator | ✅ | ✅ | ⬛ |
 | Audio | ACSP | Acoustic Space     | ✅ | ✅ | ⬛ |
-| Audio | MUST | Music Track        | ✅ | 🟨 | ⬛ |
+| Audio | MUST | Music Track        | ✅ | ✅ | ⬛ |
 | Audio | MUSC | Music Type         | ✅ | ✅ | ⬛ |
 | Audio | REVB | Reverb Parameters  | ✅ | ✅ | ⬛ |
 | Audio | SNCT | Sound Category     | ✅ | ✅ | ⬛ |

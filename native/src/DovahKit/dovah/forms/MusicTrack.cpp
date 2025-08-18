@@ -2,6 +2,7 @@
 #include "_common_cpp.h"
 
 #include "../notices/form_load_warnings/by_form_type/music_track/invalid_track_type.h"
+#include "../notices/form_load_warnings/by_form_type/music_track/too_many_palette_layers.h"
 
 namespace {
    namespace specific_load_warnings {
@@ -18,11 +19,70 @@ namespace {
 }
 
 namespace dovah::loaded_forms {
+   #pragma region MusicTrack::palette_data
+      void MusicTrack::palette_data::set_all_tracks(MusicTrack& my_containing_form, const std::array<std::vector<form_reference_t>, max_palette_layer_count>& src_layers) {
+         auto& dst_layers = this->tracks_by_layer;
+         for (size_t i = 0; i < max_palette_layer_count; ++i) {
+            const auto& src_layer = src_layers[i];
+            auto&       dst_layer = dst_layers[i];
+            copy_form_reference_list(my_containing_form, dst_layer, src_layer);
+            //
+            // Palettes' track sets are serialized as a single flat list, with null form IDs 
+            // separating layers. This means that we can't allow nulls within a layer.
+            //
+            std::erase(dst_layer, nullptr);
+         }
+      }
+      void MusicTrack::palette_data::set_all_tracks(MusicTrack& my_containing_form, const std::array<std::vector<form_stub*>, max_palette_layer_count>& src_layers) {
+         auto& dst_layers = this->tracks_by_layer;
+         for (size_t i = 0; i < max_palette_layer_count; ++i) {
+            const auto& src_layer = src_layers[i];
+            auto&       dst_layer = dst_layers[i];
+            clear_form_reference_list(dst_layer, my_containing_form);
+            for (auto& form : src_layer) {
+               if (!form)
+                  //
+                  // Palettes' track sets are serialized as a single flat list, with null form 
+                  // IDs separating layers. This means that we can't allow nulls within a layer.
+                  //
+                  continue;
+               dst_layer.emplace_back().set(my_containing_form, form);
+            }
+            dst_layer.shrink_to_fit();
+         }
+      }
+   #pragma endregion
+
+   music_track_type MusicTrack::get_track_type() const {
+      return (music_track_type)this->data.index();
+   }
+   void MusicTrack::set_track_type(music_track_type t) {
+      if (this->get_track_type() == t)
+         return;
+      
+      if (auto* casted = std::get_if<palette_data>(&this->data)) {
+         for(auto& layer : casted->tracks_by_layer)
+            clear_form_reference_list(layer, *this);
+      }
+      switch (t) {
+         case music_track_type::palette:
+            this->data.emplace<palette_data>();
+            break;
+         case music_track_type::single:
+            this->data.emplace<single_data>();
+            break;
+         case music_track_type::silent:
+            this->data.emplace<silent_data>();
+            break;
+      }
+   }
+
    void MusicTrack::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       if (!intfc.is_winning_record)
          return;
 
+      size_t palette_layer_index = 0;
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
@@ -45,6 +105,7 @@ namespace dovah::loaded_forms {
                      switch ((serialized_track_type)type) {
                         case serialized_track_type::palette:
                            this->data.emplace<palette_data>();
+                           palette_layer_index = 0;
                            break;
                         case serialized_track_type::single:
                            this->data.emplace<single_data>();
@@ -95,10 +156,9 @@ namespace dovah::loaded_forms {
             case 'FNAM':
                if (std::holds_alternative<single_data>(this->data)) {
                   auto& casted = std::get<single_data>(this->data);
-
-                  float v;
-                  if (subrecord.read(v))
-                     casted.cue_points.push_back(v);
+                  casted.cue_points.resize(subrecord.size() / sizeof(float));
+                  for (auto& item : casted.cue_points)
+                     subrecord.unchecked_read(item);
                }
                break;
             case 'LNAM':
@@ -126,8 +186,21 @@ namespace dovah::loaded_forms {
             case 'SNAM':
                if (std::holds_alternative<palette_data>(this->data)) {
                   auto& casted = std::get<palette_data>(this->data);
-                  if (auto& form = casted.tracks.emplace_back(); subrecord.read(form))
-                     intfc.warn_if_ref_is_wrong_type(form, form_type::music_track, subrecord.signature());
+                  while (subrecord.is_in_bounds(4)) {
+                     form_reference_t ref;
+                     if (!subrecord.read(ref))
+                        break;
+                     if (!ref) {
+                        ++palette_layer_index;
+                        continue;
+                     }
+                     if (palette_layer_index >= max_palette_layer_count) {
+                        continue;
+                     }
+                     intfc.warn_if_ref_is_wrong_type(ref, form_type::music_track, subrecord.signature());
+                     auto& layer = casted.tracks_by_layer[palette_layer_index];
+                     layer.emplace_back().unmanaged_set(ref.get_form_stub());
+                  }
                }
                break;
 
@@ -135,6 +208,14 @@ namespace dovah::loaded_forms {
                intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
+      }
+      if (palette_layer_index >= max_palette_layer_count) {
+         specific_load_warnings::too_many_palette_layers notice(
+            this->stub,
+            palette_layer_index,
+            max_palette_layer_count
+         );
+         intfc.log_load_warning(notice);
       }
    }
    /*static*/ void MusicTrack::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
@@ -161,7 +242,11 @@ namespace dovah::loaded_forms {
                }
                break;
             case 'SNAM':
-               subrecord.read(palette_tracks.emplace_back());
+               do {
+                  auto& id = palette_tracks.emplace_back();
+                  if (!subrecord.read(id))
+                     break;
+               } while (true);
                break;
          }
       }
@@ -182,16 +267,18 @@ namespace dovah::loaded_forms {
       {
          auto& src = this->data;
          auto& dst = copy->data;
-         if (auto* casted = std::get_if<palette_data>(&dst)) {
-            clear_form_reference_list(casted->tracks, *copy);
-         }
-
          if (std::holds_alternative<palette_data>(src)) {
             auto& src_data = std::get<palette_data>(src);
             auto& dst_data = dst.emplace<palette_data>();
             dst_data.duration = src_data.duration;
             dst_data.fade_out = src_data.fade_out;
-            copy_form_reference_list(*copy, dst_data.tracks, src_data.tracks);
+            {
+               auto& src_layers = src_data.tracks_by_layer;
+               auto& dst_layers = dst_data.tracks_by_layer;
+               for (size_t i = 0; i < max_palette_layer_count; ++i) {
+                  copy_form_reference_list(*copy, dst_layers[i], src_layers[i]);
+               }
+            }
          } else {
             dst = src;
          }
@@ -231,10 +318,14 @@ namespace dovah::loaded_forms {
       } else if (auto* casted = std::get_if<single_data>(&this->data)) {
          record.write_string_subrecord('ANAM', casted->filenames.main);
          record.write_string_subrecord('BNAM', casted->filenames.finale);
-         for (auto v : casted->cue_points) {
-            auto& subrecord = record.open_next_subrecord('FNAM');
-            subrecord.write(v);
-            subrecord.close();
+         {
+            auto& list = casted->cue_points;
+            if (!list.empty()) {
+               auto& subrecord = record.open_next_subrecord('FNAM');
+               for (auto& item : list)
+                  subrecord.write(item);
+               subrecord.close();
+            }
          }
          if (casted->loop.has_value()) {
             auto& subrecord = record.open_next_subrecord('LNAM');
@@ -259,8 +350,26 @@ namespace dovah::loaded_forms {
             item.save(record, intfc);
       }
       if (auto* casted = std::get_if<palette_data>(&this->data)) {
-         for(auto& item : casted->tracks) {
-            record.write_formID_subrecord('SNAM', item);
+         const auto& layers      = casted->tracks_by_layer;
+         size_t      layer_count = 0;
+         for (size_t i = 0; i < layers.size(); ++i)
+            if (!layers.empty())
+               layer_count = i + 1;
+         if (layer_count > 0) {
+            auto& subrecord = record.open_next_subrecord('SNAM');
+            for (size_t i = 0; i < layer_count; ++i) {
+               //
+               // Palettes' track sets are serialized as a single flat list, with null 
+               // form IDs separating layers. This means that we can't allow nulls 
+               // within a layer, and it means we have to insert nulls between layers.
+               //
+               auto& layer = layers[i];
+               for (auto& form : layer)
+                  if (form)
+                     subrecord.write(form);
+               if (i + 1 < layer_count)
+                  subrecord.write((dovah::form_stub*)nullptr);
+            }
          }
       }
    }
@@ -269,7 +378,8 @@ namespace dovah::loaded_forms {
       this->conditions.clear(*this);
 
       if (auto* casted = std::get_if<palette_data>(&this->data)) {
-         clear_form_reference_list(casted->tracks, *this);
+         for(auto& layer : casted->tracks_by_layer)
+            clear_form_reference_list(layer, *this);
       }
       this->data.emplace<palette_data>();
    }
@@ -279,7 +389,8 @@ namespace dovah::loaded_forms {
          cnd.sever_outbound_references_to(other, *this);
 
       if (auto* casted = std::get_if<palette_data>(&this->data)) {
-         remove_form_from_reference_list(casted->tracks, other, *this);
+         for (auto& layer : casted->tracks_by_layer)
+            remove_form_from_reference_list(layer, other, *this);
       }
    }
 }
