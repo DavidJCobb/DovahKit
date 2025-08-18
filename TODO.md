@@ -51,32 +51,12 @@ I was in the middle of working on scene editing at the time I switched to other 
   * HAZD (Hazard)
   * WEAP (Weapon)
 * UI designs lacking an implementation:
-  * ARMO (Armor)
-  * BOOK (Book)
-  * CAMS (CameraShot)
-  * CSTY (CombatStyle)
-  * COBJ (ConstructibleObject)
   * FURN (Furniture)
-  * LSCR (Loading Screen)
   * MATO (Material Object)
   * MATT (Material Type)
-  * MUST (Music Track)
-  * MUSC (Music Type)
   * PROJ (Projectile)
   * REFR (Reference)
-  * REVB (Reverb Parameters)
-  * SPGD (Shader Particle Geometry Definition)
-  * SOUN (Sound Marker)
-  * SNCT (Sound Category)
-  * SNDR (Sound Descriptor)
-  * SOPM (Sound Output Model)
-  * SPEL (Spell)
-  * TACT (Talking Activator)
   * TREE (Tree)
-* Form types with incomplete/placeholder backends:
-  * LCTN (Location)
-  * MGEF (Magic Effect)
-  * PACK (Package)
 
 ### Table
 
@@ -229,8 +209,6 @@ Static Collections are `BGSStaticCollection` with form type 0x23. The CK has a f
 * PACK
   * Once we can load Package forms and package data, we'll need to go back and update the condition system. We currently handle all "package data" parameters as a single type, but the game actually defines multiple types: package data (possibly null); package data (numeric); and just "package data." We can check the condition/console command table to get parameter types for any functions that take a package data, in order to refine things further.
 * LCTN
-* MGEF
-* SPEL
 * WRLD form UI
 * REFR form UI
 * PROJ
