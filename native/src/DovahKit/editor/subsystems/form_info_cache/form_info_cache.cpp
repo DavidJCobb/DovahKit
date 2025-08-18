@@ -36,6 +36,7 @@ namespace {
       dovahkit::subsystems::form_info_cache::cached_data::by_form::faction,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::head_part,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::magic_effect,
+      dovahkit::subsystems::form_info_cache::cached_data::by_form::music_track,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::package,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::voicetype
    >;
@@ -233,6 +234,15 @@ namespace {
                info.skim_subrecord(subrecord);
                cache.by_form_type.magic_effects.threaded_insert(stub, info);
             }
+         } else if constexpr (cached_data::by_form::music_track::form_type_is_of_interest(FormType)) {
+            //
+            // Music Tracks: We only care about the CNAM subrecord.
+            //
+            if (signature == cached_data::by_form::music_track::subrecords_of_interest[0]) {
+               cached_data::by_form::music_track info;
+               info.skim_subrecord(subrecord);
+               cache.by_form_type.music_tracks.threaded_insert(stub, info);
+            }
          } else if constexpr (cached_data::by_form::voicetype::form_type_is_of_interest(FormType)) {
             //
             // Voicetypes: We only care about the DNAM subrecord.
@@ -342,6 +352,7 @@ namespace {
          _update_if_form(cache.by_form_type.factions,      &core::cachedFactionChanged);
          _update_if_form(cache.by_form_type.head_parts,    &core::cachedHeadPartChanged);
          _update_if_form(cache.by_form_type.magic_effects, &core::cachedMagicEffectChanged);
+         _update_if_form(cache.by_form_type.music_tracks,  &core::cachedMusicTrackChanged);
          _update_if_form(cache.by_form_type.packages,      &core::cachedPackageChanged);
          _update_if_form(cache.by_form_type.voicetypes,    &core::cachedVoicetypeChanged);
       }
@@ -624,6 +635,11 @@ namespace dovahkit::subsystems::form_info_cache {
       if (stub.form_type != dovah::form_type::magic_effect)
          return nullptr;
       return this->_cache->by_form_type.magic_effects.get(stub);
+   }
+   const cached_data::by_form::music_track* core::get_music_track_info(const dovah::form_stub& stub) const {
+      if (stub.form_type != dovah::form_type::music_track)
+         return nullptr;
+      return this->_cache->by_form_type.music_tracks.get(stub);
    }
    const cached_data::by_form::package* core::get_package_info(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::package)

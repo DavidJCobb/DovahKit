@@ -2,6 +2,7 @@
 #include "dovah/data/game.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
+#include "ui/utils/form_list_pane_columns/music_track_type.h"
 
 FormDialogMusicType::FormDialogMusicType(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
@@ -19,6 +20,9 @@ FormDialogMusicType::FormDialogMusicType(dovah::form_stub& stub, QWidget* parent
    QObject::connect(this->ui.ducking, qOverload<double>(&QDoubleSpinBox::valueChanged), this, [this](double v) {
       this->form->ducking_db = v / 100.0;
    });
+
+   this->ui.musicTracks->setAllowedFormTypes({ dovah::form_type::music_track });
+   ui::form_list_pane_columns::music_track_type(*this->ui.musicTracks);
 
    this->load(); // this creates the working copy.
 }

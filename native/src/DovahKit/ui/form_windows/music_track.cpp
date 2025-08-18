@@ -3,6 +3,7 @@
 #include "dovah/data/music_track_type.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
+#include "ui/utils/form_list_pane_columns/music_track_type.h"
 #include "./music_track/MusicTrackCuePointsModel.h"
 
 FormDialogMusicTrack::FormDialogMusicTrack(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
@@ -98,6 +99,7 @@ FormDialogMusicTrack::FormDialogMusicTrack(dovah::form_stub& stub, QWidget* pare
    ui::set_unsigned_range<float>(this->ui.paletteFadeOutTime);
    this->ui.paletteCurrentLayer->setRange(1, loaded_form_type::max_palette_layer_count);
    this->ui.paletteTrackList->setAllowedFormTypes({ dovah::form_type::music_track });
+   ui::form_list_pane_columns::music_track_type(*this->ui.paletteTrackList);
    QObject::connect(this->ui.paletteCurrentLayer, qOverload<int>(&QSpinBox::valueChanged), this, [this]() {
       this->_remember_displayed_palette_layer();
       this->_update_displayed_palette_layer();
@@ -227,7 +229,8 @@ void FormDialogMusicTrack::_remember_displayed_palette_layer() {
       return;
    }
    auto& layer = layer_set[layer_idx];
-   layer = this->ui.paletteTrackList->stubs().toStdVector();
+   auto  stubs = this->ui.paletteTrackList->stubs();
+   layer = { stubs.begin(), stubs.end() };
 }
 void FormDialogMusicTrack::_update_displayed_palette_layer() {
    auto& layer_set = this->_state.palette.tracks_by_layer;

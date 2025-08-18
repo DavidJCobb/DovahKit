@@ -346,6 +346,7 @@
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\faction.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\head_part.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.cpp" />
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\music_track.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\package.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\voicetype.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\_base.cpp" />
@@ -1091,6 +1092,7 @@
     <ClCompile Include="ui\utils\DKStyledItemDelegate.cpp" />
     <ClCompile Include="ui\utils\enable_inbound_drag_and_drop_insertions.cpp" />
     <ClCompile Include="ui\utils\enum_dropdown_configs\skill.cpp" />
+    <ClCompile Include="ui\utils\form_list_pane_columns\music_track_type.cpp" />
     <ClCompile Include="ui\utils\item_indices_to_data.cpp" />
     <ClCompile Include="ui\utils\pair_slider_to_spinbox.cpp" />
     <ClCompile Include="ui\utils\set_custom_context_menu.cpp" />
@@ -1756,6 +1758,7 @@
     <ClInclude Include="editor\localize\package_legacy_type.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\music_track.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\package.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\_base.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\_base_macros.define.h" />
@@ -1958,6 +1961,7 @@
     <QtMoc Include="widgets\DKNavmeshGenerationImportOptionPicker.h" />
     <ClInclude Include="ui\utils\enable_inbound_drag_and_drop_insertions.h" />
     <ClInclude Include="ui\utils\enum_dropdown_configs\skill.h" />
+    <ClInclude Include="ui\utils\form_list_pane_columns\music_track_type.h" />
     <ClInclude Include="ui\utils\get_selection.h" />
     <ClInclude Include="ui\utils\item_indices_to_data.h" />
     <ClInclude Include="ui\utils\pair_slider_to_spinbox.h" />
