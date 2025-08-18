@@ -253,7 +253,7 @@
            </layout>
           </item>
           <item row="0" column="0">
-           <widget class="QListWidget" name="cueList"/>
+           <widget class="QListView" name="cueList"/>
           </item>
          </layout>
         </widget>

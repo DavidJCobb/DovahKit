@@ -41,6 +41,7 @@ FormDialogMusicTrack::FormDialogMusicTrack(dovah::form_stub& stub, QWidget* pare
       auto* widget = this->ui.cueList;
       auto* model  = new MusicTrackCuePointsModel(this);
       this->_models.cue_points = model;
+      widget->setModel(model);
 
       widget->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
       widget->setHorizontalScrollMode(QAbstractItemView::ScrollMode::ScrollPerPixel);
@@ -111,6 +112,13 @@ void FormDialogMusicTrack::_load_impl() {
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
+   {
+      auto* widget = this->ui.trackType;
+      auto  i      = widget->findData((int)working.get_track_type());
+      if (i < 0)
+         i = 0;
+      widget->setCurrentIndex(i);
+   }
    switch (working.get_track_type()) {
       case dovah::music_track_type::palette:
          {
@@ -136,7 +144,7 @@ void FormDialogMusicTrack::_load_impl() {
       case dovah::music_track_type::silent:
          {
             auto& casted = std::get<loaded_form_type::silent_data>(working.data);
-            this->ui.paletteDuration->setValue(casted.duration);
+            this->ui.silentDuration->setValue(casted.duration);
          }
          break;
       case dovah::music_track_type::single:
@@ -219,7 +227,7 @@ void FormDialogMusicTrack::_remember_displayed_palette_layer() {
       return;
    }
    auto& layer = layer_set[layer_idx];
-   layer = this->ui.paletteTrackList->selectedForms();
+   layer = this->ui.paletteTrackList->stubs().toStdVector();
 }
 void FormDialogMusicTrack::_update_displayed_palette_layer() {
    auto& layer_set = this->_state.palette.tracks_by_layer;
