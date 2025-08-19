@@ -3420,6 +3420,9 @@
     <ClCompile Include="ui\types\perk_entries\entry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\helpers\is_form_type_legal_to_create.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8490,6 +8493,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\localize\entry_point_function.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\helpers\is_form_type_legal_to_create.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

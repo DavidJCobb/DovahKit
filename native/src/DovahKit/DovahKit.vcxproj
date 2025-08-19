@@ -333,6 +333,7 @@
     <ClCompile Include="editor\helpers\face_fx_phoneme_name.cpp" />
     <ClCompile Include="editor\helpers\form_stub_drag_drop.cpp" />
     <ClCompile Include="editor\helpers\backend_warning_to_string.cpp" />
+    <ClCompile Include="editor\helpers\is_form_type_legal_to_create.cpp" />
     <ClCompile Include="editor\localize\entry_point_function.cpp" />
     <ClCompile Include="editor\localize\magic_casting_type.cpp" />
     <ClCompile Include="editor\localize\magic_delivery_type.cpp" />
@@ -1754,6 +1755,7 @@
     <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneDialogueAction.h" />
     <QtMoc Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.h" />
     <QtMoc Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.h" />
+    <ClInclude Include="editor\helpers\is_form_type_legal_to_create.h" />
     <ClInclude Include="editor\localize\entry_point_function.h" />
     <ClInclude Include="editor\localize\magic_delivery_type.h" />
     <ClInclude Include="editor\helpers\story_event_name.h" />

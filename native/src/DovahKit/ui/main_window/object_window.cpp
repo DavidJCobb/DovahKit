@@ -6,6 +6,7 @@
 #include "dovah/exceptions/form_renumber_failed.h"
 #include "editor/core.h"
 #include "editor/open_window_for_form.h"
+#include "editor/helpers/is_form_type_legal_to_create.h"
 #include "editor/helpers/make_editor_id_for_duplicate.h"
 #include "./form_use_info.h"
 
@@ -59,6 +60,9 @@ namespace {
             break;
          case error_code::cannot_sever_references_to_none_stub:
             text = QObject::tr("DovahKit needed to select a form ID to use for the new form. The chosen form ID is the target of one or more dangling references, and DovahKit does not know how to sever those references, so the form creation process could not continue.");
+            break;
+         case error_code::form_type_unavailable_in_current_game:
+            text = QObject::tr("The desired form type doesn't exist in the version (e.g. Classic/Special) of Skyrim this file was created for. Try converting the file to the target Skyrim version first.");
             break;
       }
       QMessageBox::critical(
@@ -116,6 +120,7 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
    //
    this->ui.table->setSource(this->ui.tree);
    this->ui.table->setFilter(this->ui.filter);
+   this->ui.table->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
    QObject::connect(this->ui.table, &QTableView::doubleClicked, [this](const QModelIndex& index) {
       auto* stub = _get_selected_form(this->ui.table);
       if (stub && !stub->is_none_stub())
@@ -229,12 +234,24 @@ ObjectWindow::ObjectWindow(QWidget* parent) : QWidget(parent) {
       bool is_alterable = form_exists && !stub->is_none_stub();
       //
       this->_actionCreateForm->setEnabled(form_types.size() == 1 && form_types[0] != dovah::form_type::none);
+      this->_formActionDuplicate->setEnabled(true);
       this->_formActionEdit->setVisible(is_alterable);
       this->_formActionDuplicate->setVisible(is_alterable);
       this->_formActionShowUseInfo->setVisible(form_exists);
       this->_formActionRenumber->setVisible(is_alterable);
       this->_formActionRenumber->setEnabled(is_alterable && DovahKitCore::get().is_form_defined_in_active_file(stub));
       this->_formActionDelete->setVisible(is_alterable);
+      if (form_types.size() == 1) {
+         auto type = form_types[0];
+         if (!editor_helpers::is_form_type_legal_to_create(type)) {
+            this->_actionCreateForm->setEnabled(false);
+         }
+      }
+      if (stub) {
+         if (!editor_helpers::is_form_type_legal_to_create(stub->form_type)) {
+            this->_formActionDuplicate->setEnabled(false);
+         }
+      }
       //
       QMenu menu(opener);
       menu.addAction(this->_actionCreateForm);
