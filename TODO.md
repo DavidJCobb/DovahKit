@@ -81,7 +81,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | Actors | AACT | Action           | ✅ | ✅ | ⬛ |
 | Actors | BPDT | BodyPartData     | ✅ | ✅ | ⬛ |
 | Actors | LVLN | LeveledCharacter | ✅ | ✅ | ⬛ |
-| Actors | PERK | Perk             | ✅ | ⬛ | ⬛ | UI for entry points needs special care |
+| Actors | PERK | Perk             | ✅ | ✅ | ⬛ | UI for entry points needs special care |
 | Actors | TACT | TalkingActivator | ✅ | ✅ | ⬛ |
 | Audio | ACSP | Acoustic Space     | ✅ | ✅ | ⬛ |
 | Audio | MUST | Music Track        | ✅ | ✅ | ⬛ |

@@ -189,6 +189,7 @@ void ObjectWindowTreeItem::sort() {
       );
       this->_nodes.root->appendChild(
          item_type::make_top_level(tr("Miscellaneous", disambig))
+            .appendChild(item_type::make_form_type(tr("Actor Value", disambig), dovah::form_type::actor_value_info))
             .appendChild(item_type::make_form_type(tr("Animation Prop", disambig), dovah::form_type::animation_prop))
             .appendChild(item_type::make_form_type(tr("Art Object", disambig), dovah::form_type::art_object))
             .appendChild(item_type::make_form_type(tr("Collision Layer", disambig), dovah::form_type::collision_layer))
@@ -218,8 +219,10 @@ void ObjectWindowTreeItem::sort() {
             .appendChild(item_type::make_form_type(tr("Imagespace Modifier", disambig), dovah::form_type::imagespace_modifier))
             .appendChild(item_type::make_form_type(tr("Impact Data", disambig), dovah::form_type::impact_data))
             .appendChild(item_type::make_form_type(tr("Impact Data Set", disambig), dovah::form_type::impact_data_set))
+            .appendChild(item_type::make_form_type(tr("Lens Flare", disambig), dovah::form_type::lens_flare))
             .appendChild(item_type::make_form_type(tr("Material Type", disambig), dovah::form_type::material_type))
             .appendChild(item_type::make_form_type(tr("Projectile", disambig), dovah::form_type::projectile))
+            .appendChild(item_type::make_form_type(tr("Volumetric Lighting", disambig), dovah::form_type::volumetric_lighting))
       );
       this->_nodes.root->appendChild(
          item_type::make_top_level(tr("World Data", disambig))
