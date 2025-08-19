@@ -28,7 +28,7 @@ namespace dovah::loaded_forms {
                if (auto& form = this->races.primary; subrecord.read(form))
                   intfc.warn_if_ref_is_wrong_type(form, form_type::race, subrecord.signature());
                break;
-            case 'DATA':
+            case 'DNAM':
                subrecord.read(this->graphics[sex::male].priority);
                subrecord.read(this->graphics[sex::female].priority);
                subrecord.read(this->graphics[sex::male].flags);
@@ -215,7 +215,7 @@ namespace dovah::loaded_forms {
       this->biped_object.save(record, intfc);
       record.write_formID_subrecord('RNAM', this->races.primary);
       {
-         auto& subrecord = record.open_next_subrecord('DATA');
+         auto& subrecord = record.open_next_subrecord('DNAM');
          subrecord.write(this->graphics[sex::male].priority);
          subrecord.write(this->graphics[sex::female].priority);
          subrecord.write(this->graphics[sex::male].flags);
