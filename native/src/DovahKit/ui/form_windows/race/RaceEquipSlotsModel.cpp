@@ -1,4 +1,5 @@
 #include "./RaceEquipSlotsModel.h"
+#include "helpers/vectors/re_sort_item_within.h"
 #include "dovah/forms/EquipSlot.h"
 #include "dovah/form_stub.h"
 #include "dovah/form_reference_t.h"
@@ -270,13 +271,7 @@ decltype(RaceEquipSlotsModel::_data)::iterator RaceEquipSlotsModel::_insertion_p
       this->_data.begin(),
       this->_data.end(),
       item,
-      [](const KnownForm& a, const KnownForm& b) -> bool {
-         if (!a.stub && b.stub)
-            return true;
-         if (!b.stub && a.stub)
-            return false;
-         return a.cached_editor_id.compare(b.cached_editor_id, Qt::CaseInsensitive) < 0;
-      }
+      &KnownForm::sort
    );
 }
 void RaceEquipSlotsModel::_re_sort_item(const KnownForm& item, std::optional<QString> prior_name) {
@@ -286,36 +281,33 @@ void RaceEquipSlotsModel::_re_sort_item(const KnownForm& item, std::optional<QSt
    if (entry_it == list.end())
       return;
    size_t from = std::distance(list.begin(), entry_it);
-   size_t to;
-   bool   moving_upward_in_list;
-   {
-      auto dst_it = this->_insertion_point_for(item);
-      //
-      // Can't use the iterator directly because we'll be doing a removal first, which will 
-      // invalidate it.
-      //
-      to = std::distance(list.begin(), dst_it);
-      moving_upward_in_list = dst_it < entry_it;
-   }
-   if (from == to)
-      return;
-   this->beginMoveRows(
-      {},
-      from, // first to move
-      from, // last  to move
-      {},
-      to
+
+   bool moved = false;
+   cobb::vectors::re_sort_item_within(
+      list,
+      list.begin() + from,
+      &KnownForm::sort,
+      [&moved, this, &list](decltype(_data)::iterator from_it, decltype(_data)::iterator to_it) {
+         moved = true;
+         size_t from = std::distance(list.begin(), from_it);
+         size_t to = std::distance(list.begin(), to_it);
+         this->beginMoveRows(
+            {},
+            from, // first to move
+            from, // last  to move
+            {},
+            (to < from) ? to : to + 1 // Qt API design jank
+         );
+      }
    );
-   if (!moving_upward_in_list) {
-      //
-      // We move `entry` by first removing it from the list, and then inserting it into the 
-      // list at the desired index. If we're moving `entry` downward within the list, then 
-      // its removal will displace the intended destination by -1.
-      //
-      --to;
-   }
-   auto moved_item = std::move(item);
-   list.erase(entry_it);
-   list.insert(list.begin() + to, moved_item);
-   this->endMoveRows();
+   if (moved)
+      this->endMoveRows();
+}
+
+/*static*/ bool RaceEquipSlotsModel::KnownForm::sort(const KnownForm& a, const KnownForm& b) {
+   if (!a.stub && b.stub)
+      return true;
+   if (!b.stub && a.stub)
+      return false;
+   return a.cached_editor_id.compare(b.cached_editor_id, Qt::CaseInsensitive) < 0;
 }

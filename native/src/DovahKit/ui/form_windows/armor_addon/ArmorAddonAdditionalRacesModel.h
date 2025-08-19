@@ -62,6 +62,8 @@ class ArmorAddonAdditionalRacesModel : public QAbstractItemModel {
          dovah::form_stub* stub = nullptr;
          bool    checked = false;
          QString cached_editor_id;
+
+         static bool sort(const KnownForm&, const KnownForm&);
       };
 
       std::vector<KnownForm> _data;

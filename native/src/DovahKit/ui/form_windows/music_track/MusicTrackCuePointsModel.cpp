@@ -1,4 +1,5 @@
 #include "./MusicTrackCuePointsModel.h"
+#include "helpers/vectors/re_sort_item_within.h"
 
 MusicTrackCuePointsModel::MusicTrackCuePointsModel(QObject* parent) : QAbstractItemModel(parent) {
 }
@@ -108,36 +109,26 @@ void MusicTrackCuePointsModel::_re_sort_item(size_t from) {
    auto& list = this->_data;
    if (from >= list.size())
       return;
-   auto   item = list[from];
-   size_t to;
-   bool   moving_upward_in_list;
-   {
-      auto dst_it = this->_insertion_point_for(item);
-      //
-      // Can't use the iterator directly because we'll be doing a removal first, which will 
-      // invalidate it.
-      //
-      to = std::distance(list.begin(), dst_it);
-      moving_upward_in_list = to < from;
-   }
-   if (to == from)
-      return;
-   this->beginMoveRows(
-      {},
-      from, // first to move
-      from, // last  to move
-      {},
-      to
+   bool moved = false;
+   cobb::vectors::re_sort_item_within(
+      list,
+      list.begin() + from,
+      [](const float a, const float b) -> bool {
+         return a < b;
+      },
+      [&moved, this, &list](decltype(_data)::iterator from_it, decltype(_data)::iterator to_it) {
+         moved = true;
+         size_t from  = std::distance(list.begin(), from_it);
+         size_t to    = std::distance(list.begin(), to_it);
+         this->beginMoveRows(
+            {},
+            from, // first to move
+            from, // last  to move
+            {},
+            (to < from) ? to : to + 1 // Qt API design jank
+         );
+      }
    );
-   if (!moving_upward_in_list) {
-      //
-      // We move `entry` by first removing it from the list, and then inserting it into the 
-      // list at the desired index. If we're moving `entry` downward within the list, then 
-      // its removal will displace the intended destination by -1.
-      //
-      --to;
-   }
-   list.erase(list.begin() + from);
-   list.insert(list.begin() + to, item);
-   this->endMoveRows();
+   if (moved)
+      this->endMoveRows();
 }
