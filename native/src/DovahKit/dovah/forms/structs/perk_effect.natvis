@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::loaded_forms::structs::perk_effect">
+      <Intrinsic Name="variant_index" Expression="(dovah::loaded_forms::structs::perk_effect::type)data._Which"/>
+      <DisplayString Condition="data._Which == 0">{data._Head}</DisplayString>
+      <DisplayString Condition="data._Which == 1">{data._Tail._Head}</DisplayString>
+      <DisplayString Condition="data._Which == 2">{data._Tail._Tail._Head}</DisplayString>
+      <DisplayString>...</DisplayString>
+      <Expand>
+         <Item Name="priority">priority,u</Item>
+         <Item Name="rank">rank,u</Item>
+         <Item Name="[type]">variant_index(),en</Item>
+         <ExpandedItem Condition="data._Which == 0">data._Head</ExpandedItem>
+         <ExpandedItem Condition="data._Which == 1">data._Tail._Head</ExpandedItem>
+         <ExpandedItem Condition="data._Which == 2">data._Tail._Tail._Head</ExpandedItem>
+      </Expand>
+   </Type>
+   <Type Name="dovah::loaded_forms::structs::perk_effect::data_types::entry_point">
+      <Expand>
+         <Item Name="[entry point]">entry,en</Item>
+         <ExpandedItem>function</ExpandedItem>
+         <Item Name="[condition groups]">condition_groups</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

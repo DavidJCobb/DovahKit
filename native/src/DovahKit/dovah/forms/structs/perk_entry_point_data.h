@@ -34,7 +34,7 @@ namespace dovah::loaded_forms::structs {
                public:
                   struct flag {
                      flag() = delete;
-                     enum type : uint8_t {
+                     enum type : uint16_t {
                         run_immediately = 1 << 0,
                         replace_default = 1 << 1,
                      };
@@ -44,7 +44,7 @@ namespace dovah::loaded_forms::structs {
                public:
                   form_reference_t spell;
                   localized_string text;
-                  uint8_t          flags = 0;
+                  uint16_t         flags = 0;
                   uint16_t         fragment_index = no_fragment;
             };
             struct spell {

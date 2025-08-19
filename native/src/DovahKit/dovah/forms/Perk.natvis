@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="dovah::loaded_forms::Perk">
+      <Expand>
+         <Item Name="[conditions]">conditions</Item>
+         <Item Name="[description]">description</Item>
+         <Item Name="[name]">name</Item>
+         <Item Name="[papyrus]">script_data</Item>
+         <Item Name="[icon]">icon</Item>
+         <Item Name="[is hidden]">data.hidden</Item>
+         <Item Name="[is playable]">data.playable</Item>
+         <Item Name="[is trait]">data.is_trait</Item>
+         <Item Name="[level]">data.level</Item>
+         <Item Name="[ranks]">data.rank_count</Item>
+         <Item Name="[next perk]">next_perk</Item>
+         <Item Name="[effects]">effects</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

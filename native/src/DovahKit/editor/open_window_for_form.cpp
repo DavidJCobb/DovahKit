@@ -62,6 +62,7 @@
 #include "../ui/form_windows/music_type.h"
 #include "../ui/form_windows/note.h"
 #include "../ui/form_windows/outfit.h"
+#include "../ui/form_windows/perk.h"
 #include "../ui/form_windows/potion.h"
 #include "../ui/form_windows/quest.h"
 #include "../ui/form_windows/race.h"
@@ -149,6 +150,7 @@ namespace {
       std::pair{ dovah::form_type::music_type,        _make<FormDialogMusicType> },
       std::pair{ dovah::form_type::note,              _make<FormDialogNote> },
       std::pair{ dovah::form_type::outfit,            _make<FormDialogOutfit> },
+      std::pair{ dovah::form_type::perk,              _make<FormDialogPerk> },
       std::pair{ dovah::form_type::potion,            _make<FormDialogPotion> },
       std::pair{ dovah::form_type::quest,             _make<FormDialogQuest> },
       std::pair{ dovah::form_type::race,              _make<FormDialogRace> },

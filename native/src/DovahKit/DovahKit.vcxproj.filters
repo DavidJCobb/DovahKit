@@ -3399,6 +3399,27 @@
     <ClCompile Include="ui\utils\form_list_pane_columns\music_track_type.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\perk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\types\perk_entries\entry_point_entry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\perk\FormSubdialogPerkEntry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\perk\PerkEntriesModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\localize\perk_entry_point.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\localize\entry_point_function.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\types\perk_entries\entry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8453,6 +8474,24 @@
     <ClInclude Include="ui\utils\form_list_pane_columns\music_track_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\types\perk_entries\quest_entry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\perk_entries\spell_entry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\perk_entries\entry_point_entry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\perk_entries\entry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\localize\perk_entry_point.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\localize\entry_point_function.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -8903,6 +8942,12 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\armor_addon.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\perk.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\perk\FormSubdialogPerkEntry.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -9681,6 +9726,15 @@
     <QtMoc Include="ui\form_windows\music_track\MusicTrackCuePointsModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ui\form_windows\perk.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\perk\FormSubdialogPerkEntry.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\perk\PerkEntriesModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -10247,5 +10301,8 @@
     <Natvis Include="dovah\form_reference_t.natvis" />
     <Natvis Include="dovah\forms\structs\package_schedule.natvis" />
     <Natvis Include="dovah\forms\structs\navmesh_info_map\navmesh_info_collection.natvis" />
+    <Natvis Include="dovah\forms\Perk.natvis" />
+    <Natvis Include="dovah\forms\structs\perk_effect.natvis" />
+    <Natvis Include="dovah\forms\structs\perk_entry_point_data.natvis" />
   </ItemGroup>
 </Project>

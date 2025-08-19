@@ -227,7 +227,7 @@ namespace dovah::loaded_forms::structs {
                      subrecord.read(casted.flags);
                      casted.fragment_index = data_types::activate_choice::no_fragment;
                   } else {
-                     if (subrecord.size() != 8)
+                     if (subrecord.size() != 4)
                         break;
                      subrecord.read(casted.flags);
                      subrecord.read(casted.fragment_index);

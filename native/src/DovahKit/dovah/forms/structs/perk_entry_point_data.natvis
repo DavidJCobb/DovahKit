@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::loaded_forms::structs::perk_entry_point_data">
+      <Expand>
+         <Item Name="[function]">function,en</Item>
+         <Item Name="[parameters]" Condition="data._Which == 0">data._Head</Item>
+         <Item Name="[parameters: float]" Condition="data._Which == 1">data._Tail._Head</Item>
+         <Item Name="[parameters: float, float]" Condition="data._Which == 2">data._Tail._Tail._Head</Item>
+         <Item Name="[parameters: LVLI]" Condition="data._Which == 3">data._Tail._Tail._Tail._Head</Item>
+         <Item Name="[parameters: activate choice]" Condition="data._Which == 4">data._Tail._Tail._Tail._Tail._Head</Item>
+         <Item Name="[parameters: SPEL]" Condition="data._Which == 5">data._Tail._Tail._Tail._Tail._Tail._Head</Item>
+         <Item Name="[parameters: string]" Condition="data._Which == 6">data._Tail._Tail._Tail._Tail._Tail._Tail._Head</Item>
+         <Item Name="[parameters: localized string]" Condition="data._Which == 7">data._Tail._Tail._Tail._Tail._Tail._Tail._Tail._Head</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

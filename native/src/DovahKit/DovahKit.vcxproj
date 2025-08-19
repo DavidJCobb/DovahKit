@@ -333,6 +333,7 @@
     <ClCompile Include="editor\helpers\face_fx_phoneme_name.cpp" />
     <ClCompile Include="editor\helpers\form_stub_drag_drop.cpp" />
     <ClCompile Include="editor\helpers\backend_warning_to_string.cpp" />
+    <ClCompile Include="editor\localize\entry_point_function.cpp" />
     <ClCompile Include="editor\localize\magic_casting_type.cpp" />
     <ClCompile Include="editor\localize\magic_delivery_type.cpp" />
     <ClCompile Include="editor\helpers\nif_is_valid_master_particle_system.cpp" />
@@ -341,6 +342,7 @@
     <ClCompile Include="editor\ini\main.cpp" />
     <ClCompile Include="editor\localize\package_data_type.cpp" />
     <ClCompile Include="editor\localize\package_legacy_type.cpp" />
+    <ClCompile Include="editor\localize\perk_entry_point.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\faction.cpp" />
@@ -941,6 +943,9 @@
     <ClCompile Include="ui\form_windows\music_track.cpp" />
     <ClCompile Include="ui\form_windows\music_track\MusicTrackCuePointsModel.cpp" />
     <ClCompile Include="ui\form_windows\music_type.cpp" />
+    <ClCompile Include="ui\form_windows\perk.cpp" />
+    <ClCompile Include="ui\form_windows\perk\FormSubdialogPerkEntry.cpp" />
+    <ClCompile Include="ui\form_windows\perk\PerkEntriesModel.cpp" />
     <ClCompile Include="ui\form_windows\potion.cpp" />
     <ClCompile Include="ui\form_windows\quest\alias_subdialog_helpers.cpp" />
     <ClCompile Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.cpp" />
@@ -1088,6 +1093,8 @@
     <ClCompile Include="ui\types\logging\log_item.cpp" />
     <ClCompile Include="ui\types\nif_for_form.cpp" />
     <ClCompile Include="ui\types\papyrus\property_value.cpp" />
+    <ClCompile Include="ui\types\perk_entries\entry.cpp" />
+    <ClCompile Include="ui\types\perk_entries\entry_point_entry.cpp" />
     <ClCompile Include="ui\utils\bind.cpp" />
     <ClCompile Include="ui\utils\DKStyledItemDelegate.cpp" />
     <ClCompile Include="ui\utils\enable_inbound_drag_and_drop_insertions.cpp" />
@@ -1747,6 +1754,7 @@
     <QtMoc Include="ui\form_windows\scene\FormSubdialogSceneDialogueAction.h" />
     <QtMoc Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.h" />
     <QtMoc Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.h" />
+    <ClInclude Include="editor\localize\entry_point_function.h" />
     <ClInclude Include="editor\localize\magic_delivery_type.h" />
     <ClInclude Include="editor\helpers\story_event_name.h" />
     <QtMoc Include="ui\form_windows\music_type.h" />
@@ -1756,6 +1764,7 @@
     <ClInclude Include="editor\localize\magic_casting_type.h" />
     <ClInclude Include="editor\localize\package_data_type.h" />
     <ClInclude Include="editor\localize\package_legacy_type.h" />
+    <ClInclude Include="editor\localize\perk_entry_point.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\music_track.h" />
@@ -1783,6 +1792,9 @@
     <QtMoc Include="ui\form_windows\material_object.h" />
     <QtMoc Include="ui\form_windows\music_track.h" />
     <QtMoc Include="ui\form_windows\music_track\MusicTrackCuePointsModel.h" />
+    <QtMoc Include="ui\form_windows\perk.h" />
+    <QtMoc Include="ui\form_windows\perk\FormSubdialogPerkEntry.h" />
+    <QtMoc Include="ui\form_windows\perk\PerkEntriesModel.h" />
     <ClInclude Include="ui\form_windows\quest\alias_subdialog_helpers.h" />
     <QtMoc Include="ui\form_windows\reverb_parameters.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Action.h" />
@@ -1949,6 +1961,10 @@
     <ClInclude Include="ui\types\logging\log_item.h" />
     <ClInclude Include="ui\types\logging\log_item_context.h" />
     <ClInclude Include="ui\types\logging\log_item_type.h" />
+    <ClInclude Include="ui\types\perk_entries\entry.h" />
+    <ClInclude Include="ui\types\perk_entries\entry_point_entry.h" />
+    <ClInclude Include="ui\types\perk_entries\quest_entry.h" />
+    <ClInclude Include="ui\types\perk_entries\spell_entry.h" />
     <ClInclude Include="ui\utils\bind.h" />
     <ClInclude Include="ui\utils\DKStyledItemDelegate.h" />
     <QtMoc Include="widgets\DKDelayedEnableButton.h" />
@@ -3290,6 +3306,8 @@
     <QtUic Include="ui\form_windows\music_type.ui" />
     <QtUic Include="ui\form_windows\note.ui" />
     <QtUic Include="ui\form_windows\package.ui" />
+    <QtUic Include="ui\form_windows\perk.ui" />
+    <QtUic Include="ui\form_windows\perk\FormSubdialogPerkEntry.ui" />
     <QtUic Include="ui\form_windows\potion.ui" />
     <QtUic Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.ui" />
     <QtUic Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.ui" />
@@ -3738,6 +3756,7 @@
     <Natvis Include="dovah\forms\components\conditions\working_condition.natvis" />
     <Natvis Include="dovah\forms\Landscape.natvis" />
     <Natvis Include="dovah\forms\Package.natvis" />
+    <Natvis Include="dovah\forms\Perk.natvis" />
     <Natvis Include="dovah\forms\Scene.natvis" />
     <Natvis Include="dovah\forms\structs\custom_packages\package_data.natvis" />
     <Natvis Include="dovah\forms\structs\custom_packages\package_data_declaration_map.natvis" />
@@ -3751,6 +3770,8 @@
     <Natvis Include="dovah\forms\structs\package_schedule.natvis" />
     <Natvis Include="dovah\forms\structs\package_target.natvis" />
     <Natvis Include="dovah\forms\structs\package_topic.natvis" />
+    <Natvis Include="dovah\forms\structs\perk_effect.natvis" />
+    <Natvis Include="dovah\forms\structs\perk_entry_point_data.natvis" />
     <Natvis Include="dovah\forms\structs\typed_package_info\custom.natvis" />
     <Natvis Include="dovah\form_reference_t.natvis" />
     <Natvis Include="dovah\form_stub.natvis" />

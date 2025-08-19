@@ -4,7 +4,7 @@
 #include "./entry_point_functions.h"
 
 namespace dovah {
-   enum class perk_entry_point {
+   enum class perk_entry_point : uint8_t {
       calc_weapon_damage,
       calc_my_crit_chance,
       calc_my_crit_damage,
@@ -109,6 +109,10 @@ namespace dovah {
          struct condition_subject {
             const char*      name = "";
             dovah::form_type type = dovah::form_type::none;
+
+            constexpr explicit operator bool() const noexcept {
+               return (name && name[0]) || type != dovah::form_type::none;
+            }
          };
 
       public:
@@ -148,7 +152,15 @@ namespace dovah {
       public:
          perk_entry_point id;
          std::array<condition_subject, 3> args = { perk_owner_condition_subject };
-         entry_point_function_type function_type = entry_point_function_type::none;
+         entry_point_value_type value_type = entry_point_value_type::number;
+
+         constexpr size_t arg_count() const noexcept {
+            size_t i = 0;
+            for (; i < args.size(); ++i)
+               if (!args[i])
+                  break;
+            return i;
+         }
    };
 
    inline constexpr const auto all_perk_entry_points = std::array{
@@ -213,7 +225,7 @@ namespace dovah {
                .type = dovah::form_type::actor,
             },
          },
-         .function_type = entry_point_function_type::leveled_item,
+         .value_type = entry_point_value_type::leveled_item,
       },
       perk_entry_point_info{
          .id = perk_entry_point::get_max_carry_weight,
@@ -236,7 +248,7 @@ namespace dovah {
                .type = dovah::form_type::actor,
             },
          },
-         .function_type = entry_point_function_type::two_floats,
+         .value_type = entry_point_value_type::activate_choice,
       },
       perk_entry_point_info{
          .id = perk_entry_point::ignore_running_during_detection,
@@ -517,7 +529,7 @@ namespace dovah {
       perk_entry_point_info{
          .id   = perk_entry_point::apply_combat_hit_spell,
          .args = perk_entry_point_info::condition_subjects::for_outgoing_attack,
-         .function_type = entry_point_function_type::spell,
+         .value_type = entry_point_value_type::spell,
       },
       perk_entry_point_info{
          .id   = perk_entry_point::apply_bash_spell,
@@ -528,7 +540,7 @@ namespace dovah {
                .type = dovah::form_type::actor,
             },
          },
-         .function_type = entry_point_function_type::spell,
+         .value_type = entry_point_value_type::spell,
       },
       perk_entry_point_info{
          .id   = perk_entry_point::apply_reanimate_spell,
@@ -543,11 +555,11 @@ namespace dovah {
                .type = dovah::form_type::actor,
             },
          },
-         .function_type = entry_point_function_type::spell,
+         .value_type = entry_point_value_type::spell,
       },
       perk_entry_point_info{
          .id = perk_entry_point::set_boolean_graph_variable,
-         .function_type = entry_point_function_type::animation_graph_var,
+         .value_type = entry_point_value_type::raw_string,
       },
       perk_entry_point_info{
          .id   = perk_entry_point::mod_spell_casting_sound_event,
@@ -638,7 +650,7 @@ namespace dovah {
       perk_entry_point_info{
          .id = perk_entry_point::apply_weapon_swing_spell,
          .args = perk_entry_point_info::condition_subjects::for_incoming_attack,
-         .function_type = entry_point_function_type::spell,
+         .value_type = entry_point_value_type::spell,
       },
       perk_entry_point_info{
          .id   = perk_entry_point::mod_commanded_actor_limit,
@@ -652,7 +664,7 @@ namespace dovah {
       },
       perk_entry_point_info{
          .id = perk_entry_point::apply_sneak_spell,
-         .function_type = entry_point_function_type::spell,
+         .value_type = entry_point_value_type::spell,
       },
       perk_entry_point_info{
          .id   = perk_entry_point::mod_player_magic_slowdown,
@@ -771,7 +783,7 @@ namespace dovah {
                .type = dovah::form_type::reference,
             },
          },
-         .function_type = entry_point_function_type::localized_string,
+         .value_type = entry_point_value_type::localized_string,
       },
       perk_entry_point_info{
          .id = perk_entry_point::mod_shout_okay,

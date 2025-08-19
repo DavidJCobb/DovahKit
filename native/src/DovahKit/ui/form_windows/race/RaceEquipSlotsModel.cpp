@@ -297,6 +297,8 @@ void RaceEquipSlotsModel::_re_sort_item(const KnownForm& item, std::optional<QSt
       to = std::distance(list.begin(), dst_it);
       moving_upward_in_list = dst_it < entry_it;
    }
+   if (from == to)
+      return;
    this->beginMoveRows(
       {},
       from, // first to move
@@ -312,7 +314,8 @@ void RaceEquipSlotsModel::_re_sort_item(const KnownForm& item, std::optional<QSt
       //
       --to;
    }
+   auto moved_item = std::move(item);
    list.erase(entry_it);
-   list.insert(list.begin() + to, item);
+   list.insert(list.begin() + to, moved_item);
    this->endMoveRows();
 }
