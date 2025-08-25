@@ -4,12 +4,15 @@
 #include "dovah/forms/structs/typed_package_info/custom.h"
 #include "editor/localize/package_data_type.h"
 #include "editor/localize/package_interrupt_override_type.h"
+#include "editor/localize/package_procedure_tree_branch_type.h"
+#include "editor/localize/package_procedure_type.h"
 #include "widgets/DKFormNIFPicker.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/typical_tableview_config.h"
 #include "./package/FormSubdialogPackageLocation.h"
 #include "./package/FormSubdialogPackageTarget.h"
 #include "./package/PackageDataModel.h"
+#include "./package/PackageProcedureTreeModel.h"
 #include "./package/PackageTemplatePickerFilter.h"
 
 FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
@@ -97,7 +100,7 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
             }
          }
 
-         #pragma region Selected package Data
+         #pragma region Selected Package Data
             QObject::connect(this->ui.currentPackdataName, &QLineEdit::textChanged, this, &FormDialogPackage::_on_packdata_declaration_edited);
             QObject::connect(this->ui.currentPackdataIsPublic, &QCheckBox::toggled, this, &FormDialogPackage::_on_packdata_declaration_edited);
 
@@ -109,12 +112,142 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
             QObject::connect(this->ui.currentPackdataValue_LocationRadius, qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
             QObject::connect(this->ui.currentPackdataValue_TargetRadius, qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
             QObject::connect(this->ui.currentPackdataValue_Topic, &DKTopicOrSubtypePicker::valueChanged, this, &FormDialogPackage::_on_packdata_value_edited);
+
+            static_assert(false, "TODO: Button to edit the value of a Location (above only handles the radius)");
+            static_assert(false, "TODO: Button to edit the value of a Target (above only handles the radius)");
          #pragma endregion
       }
-      static_assert(false, "TODO: Set up models and widgets for procedure trees");
+      {  // Procedure tree
+         auto* model = this->_models.procedure_tree = new PackageProcedureTreeModel(this);
+         auto* view  = this->ui.procedures;
+         view->setModel(model);
+         view->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+         view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+
+         auto* sel_model = view->selectionModel();
+         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &FormDialogPackage::_on_procedure_tree_selection_changed);
+
+         static_assert(false, "TODO: Set up treeview context menu");
+
+         #pragma region Selected Procedure
+            #pragma region Base procedure (node) properties
+               static_assert(false, "TODO: Set up editing widgets: procedure parameter list");
+            #pragma endregion
+            #pragma region Flag Overrides
+            {
+               using general_flag   = loaded_form_type::general_flag;
+               using interrupt_flag = loaded_form_type::interrupt_flag;
+
+               {
+                  auto* widget = this->ui.procedureOverridePreferredSpeed;
+                  widget->clear();
+                  widget->addItem(tr("Walk", "preferred speed"), (int)dovah::packages::preferred_movement_speed::walk);
+                  widget->addItem(tr("Fast Walk", "preferred speed"), (int)dovah::packages::preferred_movement_speed::fast_walk);
+                  widget->addItem(tr("Jog", "preferred speed"), (int)dovah::packages::preferred_movement_speed::jog);
+                  widget->addItem(tr("Run", "preferred speed"), (int)dovah::packages::preferred_movement_speed::run);
+
+                  QObject::connect(this->ui.procedureOverrideFlagPreferredSpeed, &QCheckBox::toggled, widget, &QWidget::setEnabled);
+                  widget->setEnabled(this->ui.procedureOverrideFlagPreferredSpeed->isChecked());
+               }
+            
+               for (auto* widget : std::array{
+                  this->ui.procedureOverrideFlagAllowSwim,
+                  this->ui.procedureOverrideFlagAlwaysSneak,
+                  this->ui.procedureOverrideFlagContinueIfPCNear,
+                  this->ui.procedureOverrideFlagIgnoreCombat,
+                  this->ui.procedureOverrideFlagMaintainSpeedAtGoal,
+                  this->ui.procedureOverrideFlagMustComplete,
+                  this->ui.procedureOverrideFlagNoCombatAlert,
+                  this->ui.procedureOverrideFlagOffersServices,
+                  this->ui.procedureOverrideFlagOncePerDay,
+                  this->ui.procedureOverrideFlagWeaponDrawn,
+                  this->ui.procedureOverrideFlagWeaponsUnequipped,
+                  this->ui.procedureOverrideFlagWearSleepOutfit,
+               }) {
+                  widget->setProperty("is-interrupt-flag", false);
+               }
+               for (auto* widget : std::array{
+                  this->ui.procedureOverrideFlagAggroRadius,
+                  this->ui.procedureOverrideFlagAllowIdleChatter,
+                  this->ui.procedureOverrideFlagFriendlyFireComments,
+                  this->ui.procedureOverrideFlagHellosToPlayer,
+                  this->ui.procedureOverrideFlagObserveCombatBehavior,
+                  this->ui.procedureOverrideFlagRandomConversations,
+                  this->ui.procedureOverrideFlagReactionToPlayerActions,
+                  this->ui.procedureOverrideFlagWorldInteractions,
+               }) {
+                  widget->setProperty("is-interrupt-flag", true);
+               }
+               //
+               this->ui.procedureOverrideFlagAllowSwim              ->setProperty("flag", general_flag::allow_swimming);
+               this->ui.procedureOverrideFlagAlwaysSneak            ->setProperty("flag", general_flag::always_sneak);
+               this->ui.procedureOverrideFlagContinueIfPCNear       ->setProperty("flag", general_flag::continue_if_player_near);
+               this->ui.procedureOverrideFlagIgnoreCombat           ->setProperty("flag", general_flag::ignore_combat);
+               this->ui.procedureOverrideFlagMaintainSpeedAtGoal    ->setProperty("flag", general_flag::maintain_speed_at_goal);
+               this->ui.procedureOverrideFlagMustComplete           ->setProperty("flag", general_flag::must_complete);
+               this->ui.procedureOverrideFlagNoCombatAlert          ->setProperty("flag", general_flag::no_combat_alert);
+               this->ui.procedureOverrideFlagOffersServices         ->setProperty("flag", general_flag::offers_services);
+               this->ui.procedureOverrideFlagOncePerDay             ->setProperty("flag", general_flag::once_per_day);
+               this->ui.procedureOverrideFlagPreferredSpeed         ->setProperty("flag", general_flag::has_preferred_speed);
+               this->ui.procedureOverrideFlagWeaponDrawn            ->setProperty("flag", general_flag::weapon_drawn);
+               this->ui.procedureOverrideFlagWeaponsUnequipped      ->setProperty("flag", general_flag::weapons_unequipped);
+               this->ui.procedureOverrideFlagWearSleepOutfit        ->setProperty("flag", general_flag::wear_sleep_outfit);
+               //this->ui.procedureOverridePreferredSpeed->setProperty("flag", interrupt_flag::aggro_radius_behavior);
+               //
+               this->ui.procedureOverrideFlagAggroRadius            ->setProperty("flag", interrupt_flag::aggro_radius_behavior);
+               this->ui.procedureOverrideFlagAllowIdleChatter       ->setProperty("flag", interrupt_flag::allow_idle_chatter);
+               this->ui.procedureOverrideFlagFriendlyFireComments   ->setProperty("flag", interrupt_flag::friendly_fire_comments);
+               this->ui.procedureOverrideFlagHellosToPlayer         ->setProperty("flag", interrupt_flag::hellos_to_player);
+               this->ui.procedureOverrideFlagObserveCombatBehavior  ->setProperty("flag", interrupt_flag::observe_combat);
+               this->ui.procedureOverrideFlagRandomConversations    ->setProperty("flag", interrupt_flag::random_conversations);
+               this->ui.procedureOverrideFlagReactionToPlayerActions->setProperty("flag", interrupt_flag::react_to_player_actions);
+               this->ui.procedureOverrideFlagWorldInteractions      ->setProperty("flag", interrupt_flag::world_interactions);
+
+               for (auto* widget : std::array{
+                  this->ui.procedureOverrideFlagAggroRadius,
+                  this->ui.procedureOverrideFlagAllowIdleChatter,
+                  this->ui.procedureOverrideFlagAllowSwim,
+                  this->ui.procedureOverrideFlagAlwaysSneak,
+                  this->ui.procedureOverrideFlagContinueIfPCNear,
+                  this->ui.procedureOverrideFlagFriendlyFireComments,
+                  this->ui.procedureOverrideFlagHellosToPlayer,
+                  this->ui.procedureOverrideFlagIgnoreCombat,
+                  this->ui.procedureOverrideFlagMaintainSpeedAtGoal,
+                  this->ui.procedureOverrideFlagMustComplete,
+                  this->ui.procedureOverrideFlagNoCombatAlert,
+                  this->ui.procedureOverrideFlagObserveCombatBehavior,
+                  this->ui.procedureOverrideFlagOffersServices,
+                  this->ui.procedureOverrideFlagOncePerDay,
+                  this->ui.procedureOverrideFlagRandomConversations,
+                  this->ui.procedureOverrideFlagReactionToPlayerActions,
+                  this->ui.procedureOverrideFlagWeaponDrawn,
+                  this->ui.procedureOverrideFlagWeaponsUnequipped,
+                  this->ui.procedureOverrideFlagWearSleepOutfit,
+                  this->ui.procedureOverrideFlagWorldInteractions,
+               }) {
+                  QObject::connect(widget, &DKYesNoUnsetWidget::stateChanged, this, &FormDialogPackage::_push_procedure_flag_overrides_from_ui);
+               }
+               QObject::connect(this->ui.procedureOverrideFlagPreferredSpeed, &QCheckBox::toggled, this, &FormDialogPackage::_push_procedure_flag_overrides_from_ui);
+               QObject::connect(this->ui.procedureOverridePreferredSpeed, qOverload<int>(&QComboBox::currentIndexChanged), this, &FormDialogPackage::_push_procedure_flag_overrides_from_ui);
+            }
+            #pragma endregion
+         #pragma endregion
+      }
    #pragma endregion
    #pragma region Flags
    {
+      {
+         auto* widget = this->ui.preferredSpeed;
+         widget->clear();
+         widget->addItem(tr("Walk", "preferred speed"), (int)dovah::packages::preferred_movement_speed::walk);
+         widget->addItem(tr("Fast Walk", "preferred speed"), (int)dovah::packages::preferred_movement_speed::fast_walk);
+         widget->addItem(tr("Jog", "preferred speed"), (int)dovah::packages::preferred_movement_speed::jog);
+         widget->addItem(tr("Run", "preferred speed"), (int)dovah::packages::preferred_movement_speed::run);
+
+         QObject::connect(this->ui.flagPreferredSpeed, &QCheckBox::toggled, widget, &QWidget::setEnabled);
+         widget->setEnabled(this->ui.flagPreferredSpeed->isChecked());
+      }
+
       this->ui.buttonClearAllInterruptFlags->setProperty("operation", false);
       this->ui.buttonSetAllInterruptFlags->setProperty("operation", true);
       auto handler = [this]() {
@@ -278,10 +411,7 @@ void FormDialogPackage::_load_impl() {
          this->_models.package_data->importValues(custom->data.values);
       #pragma endregion
       #pragma region Procedure Tree
-         static_assert(false, "TODO");
-         #pragma region Selected Procedure
-            static_assert(false, "TODO");
-         #pragma endregion
+         this->_models.procedure_tree->import_tree(custom->procedures);
       #pragma endregion
    }
    #pragma endregion
@@ -412,6 +542,7 @@ void FormDialogPackage::_load_impl() {
    #pragma endregion
 
    this->_on_packdata_selection_changed();
+   this->_pull_procedure_node_to_ui();
 }
 void FormDialogPackage::_save_impl() {
    //
@@ -424,17 +555,18 @@ void FormDialogPackage::_save_impl() {
    auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
 
+   this->_push_procedure_node_from_ui();
+
    #pragma region Package
    {  // Package data
       auto* custom = _get_custom_package_data();
       assert(custom != nullptr);
+
       this->_models.package_data->exportValues(custom->data.values, working);
       if (!custom->template_package) {
          this->_models.package_data->exportDeclarations(custom->data.declarations, working);
+         this->_models.procedure_tree->export_tree(custom->procedures, working);
       }
-   }
-   {
-      static_assert(false, "TODO: Package procedure tree");
    }
    #pragma endregion
    #pragma region Schedule and Conditions
@@ -752,4 +884,313 @@ void FormDialogPackage::_on_packdata_value_edited() {
    }
 
    model->setRowValue(row, value);
+}
+
+void FormDialogPackage::_pull_procedure_node_to_ui() {
+   const auto* model = this->_models.procedure_tree;
+
+   QModelIndex qmi;
+   {
+      auto* view      = this->ui.procedures;
+      auto* sel_model = view->selectionModel();
+      auto  rows      = sel_model->selectedRows();
+      if (!rows.isEmpty())
+         qmi = rows[0];
+   }
+   if (!qmi.isValid()) {
+      this->ui.selectedProcedureGroupbox->setEnabled(false);
+      this->ui.currentProcedureStack->setCurrentWidget(this->ui.currentProcedurePageProcedure);
+      this->ui.currentProcedureConditions->clear();
+      return;
+   }
+
+   this->ui.selectedProcedureGroupbox->setEnabled(true);
+
+   const auto blockers = std::array{
+      QSignalBlocker(this->ui.currentProcedureType),
+      QSignalBlocker(this->ui.currentProcedureCompletesPackage),
+      QSignalBlocker(this->ui.currentProcedureConditions),
+      QSignalBlocker(this->ui.currentProcedureInputPackdata),
+      QSignalBlocker(this->ui.currentProcedureRepeatWhenComplete),
+      QSignalBlocker(this->ui.procedureOverrideFlagAggroRadius),
+      QSignalBlocker(this->ui.procedureOverrideFlagAllowIdleChatter),
+      QSignalBlocker(this->ui.procedureOverrideFlagAllowSwim),
+      QSignalBlocker(this->ui.procedureOverrideFlagAlwaysSneak),
+      QSignalBlocker(this->ui.procedureOverrideFlagContinueIfPCNear),
+      QSignalBlocker(this->ui.procedureOverrideFlagFriendlyFireComments),
+      QSignalBlocker(this->ui.procedureOverrideFlagHellosToPlayer),
+      QSignalBlocker(this->ui.procedureOverrideFlagIgnoreCombat),
+      QSignalBlocker(this->ui.procedureOverrideFlagMaintainSpeedAtGoal),
+      QSignalBlocker(this->ui.procedureOverrideFlagMustComplete),
+      QSignalBlocker(this->ui.procedureOverrideFlagNoCombatAlert),
+      QSignalBlocker(this->ui.procedureOverrideFlagObserveCombatBehavior),
+      QSignalBlocker(this->ui.procedureOverrideFlagOffersServices),
+      QSignalBlocker(this->ui.procedureOverrideFlagOncePerDay),
+      QSignalBlocker(this->ui.procedureOverrideFlagPreferredSpeed),
+      QSignalBlocker(this->ui.procedureOverrideFlagRandomConversations),
+      QSignalBlocker(this->ui.procedureOverrideFlagReactionToPlayerActions),
+      QSignalBlocker(this->ui.procedureOverrideFlagWeaponDrawn),
+      QSignalBlocker(this->ui.procedureOverrideFlagWeaponsUnequipped),
+      QSignalBlocker(this->ui.procedureOverrideFlagWearSleepOutfit),
+      QSignalBlocker(this->ui.procedureOverrideFlagWorldInteractions),
+      QSignalBlocker(this->ui.procedureOverridePreferredSpeed),
+   };
+
+   auto var_branch_type = model->data(qmi, PackageProcedureTreeModel::BranchTypeRole);
+   if (var_branch_type.isValid()) {
+      this->ui.currentProcedureStack->setCurrentWidget(this->ui.currentProcedurePageBranch);
+      {
+         auto* widget = this->ui.currentProcedureType;
+         widget->clear();
+         for (auto v : std::array{
+            dovah::packages::procedure_tree_branch_type::random,
+            dovah::packages::procedure_tree_branch_type::sequence,
+            dovah::packages::procedure_tree_branch_type::simultaneous,
+            dovah::packages::procedure_tree_branch_type::stacked,
+            }) {
+            widget->addItem(editor::localize::package_procedure_tree_branch_type(v), (int)v);
+         }
+         widget->model()->sort(0);
+         auto i = widget->findData(var_branch_type.toInt());
+         if (i >= 0)
+            widget->setCurrentIndex(i);
+      }
+
+      auto flags = model->data(qmi, PackageProcedureTreeModel::BranchFlagsRole).toInt();
+      {
+         auto* widget = this->ui.currentProcedureRepeatWhenComplete;
+         if ((dovah::packages::procedure_tree_branch_type)var_branch_type.toInt() == dovah::packages::procedure_tree_branch_type::simultaneous) {
+            widget->setText(tr("Repeat until all child procedures complete"));
+         } else {
+            widget->setText(tr("Repeat when complete"));
+         }
+         widget->setChecked(flags & ui::types::packages::procedure_tree_typed_data::branch::flag::repeat_when_complete);
+      }
+   } else {
+      this->ui.currentProcedureStack->setCurrentWidget(this->ui.currentProcedurePageProcedure);
+      {
+         auto* widget = this->ui.currentProcedureType;
+         widget->clear();
+         for (const auto& info : dovah::packages::all_procedure_type_info) {
+            widget->addItem(editor::localize::package_procedure_type(info.type), (int)info.type);
+         }
+         widget->model()->sort(0);
+
+         auto var_procedure_type = model->data(qmi, PackageProcedureTreeModel::ProcedureTypeRole);
+         auto i = widget->findData(var_procedure_type.toInt());
+         if (i >= 0)
+            widget->setCurrentIndex(i);
+      }
+
+      auto flags = model->data(qmi, PackageProcedureTreeModel::ProcedureFlagsRole).toInt();
+      this->ui.currentProcedureCompletesPackage->setChecked(flags & ui::types::packages::procedure_tree_typed_data::procedure::flag::success_completes_package);
+
+      {
+         const auto yes_no_widgets = std::array{
+            this->ui.procedureOverrideFlagAggroRadius,
+            this->ui.procedureOverrideFlagAllowIdleChatter,
+            this->ui.procedureOverrideFlagAllowSwim,
+            this->ui.procedureOverrideFlagAlwaysSneak,
+            this->ui.procedureOverrideFlagContinueIfPCNear,
+            this->ui.procedureOverrideFlagFriendlyFireComments,
+            this->ui.procedureOverrideFlagHellosToPlayer,
+            this->ui.procedureOverrideFlagIgnoreCombat,
+            this->ui.procedureOverrideFlagMaintainSpeedAtGoal,
+            this->ui.procedureOverrideFlagMustComplete,
+            this->ui.procedureOverrideFlagNoCombatAlert,
+            this->ui.procedureOverrideFlagObserveCombatBehavior,
+            this->ui.procedureOverrideFlagOffersServices,
+            this->ui.procedureOverrideFlagOncePerDay,
+            this->ui.procedureOverrideFlagRandomConversations,
+            this->ui.procedureOverrideFlagReactionToPlayerActions,
+            this->ui.procedureOverrideFlagWeaponDrawn,
+            this->ui.procedureOverrideFlagWeaponsUnequipped,
+            this->ui.procedureOverrideFlagWearSleepOutfit,
+            this->ui.procedureOverrideFlagWorldInteractions,
+         };
+
+         auto override_flags = model->data(qmi, PackageProcedureTreeModel::ProcedureOverrideFlagsRole);
+         if (override_flags.isValid()) {
+            auto data = override_flags.value<dovah::loaded_forms::structs::custom_packages::package_flag_overrides>();
+            for (DKYesNoUnsetWidget* widget : yes_no_widgets) {
+               const auto blocker = QSignalBlocker(widget);
+
+               auto flag  = widget->property("flag").toInt();
+               auto state = Qt::CheckState::PartiallyChecked; // "unchanged"
+
+               if (widget->property("is-interrupt-flag").toBool()) {
+                  if (data.interrupt.set & flag) {
+                     state = Qt::CheckState::Checked;
+                  } else if (data.interrupt.clear & flag) {
+                     state = Qt::CheckState::Unchecked;
+                  }
+               } else {
+                  if (data.general.set & flag) {
+                     state = Qt::CheckState::Checked;
+                  } else if (data.general.clear & flag) {
+                     state = Qt::CheckState::Unchecked;
+                  }
+               }
+
+               widget->setCheckState(state);
+            }
+
+            const auto blocker = QSignalBlocker(this->ui.procedureOverrideFlagPreferredSpeed);
+            this->ui.procedureOverrideFlagPreferredSpeed->setChecked(data.general.set & loaded_form_type::general_flag::has_preferred_speed);
+
+            {
+               auto*      widget  = this->ui.procedureOverridePreferredSpeed;
+               const auto blocker = QSignalBlocker(widget);
+
+               auto speed = data.preferred_speed;
+               auto i     = widget->findData((int)speed);
+               if (i >= 0)
+                  widget->setCurrentIndex(i);
+            }
+         } else {
+            for (DKYesNoUnsetWidget* widget : yes_no_widgets) {
+               const auto blocker = QSignalBlocker(widget);
+               widget->setCheckState(Qt::CheckState::PartiallyChecked);
+            }
+            const auto blocker = QSignalBlocker(this->ui.procedureOverrideFlagPreferredSpeed);
+            this->ui.procedureOverrideFlagPreferredSpeed->setChecked(false);
+         }
+      }
+
+      static_assert(false, "TODO: So, uh, we actually need to modify the tree-model to make the packdata params child nodes of the procedure nodes");
+      static_assert(false, "TODO: Or we could just make a separate model, and copy data across as needed");
+   }
+
+   auto conditions = model->nodeConditions(qmi);
+   this->ui.conditions->importFrom(*this->form, conditions);
+}
+void FormDialogPackage::_push_procedure_flag_overrides_from_ui(QModelIndex qmi) {
+   auto* model = this->_models.procedure_tree;
+
+   if (!qmi.isValid()) {
+      auto* view = this->ui.procedures;
+      auto* sel_model = view->selectionModel();
+      auto  rows = sel_model->selectedRows();
+      if (!rows.isEmpty())
+         qmi = rows[0];
+   }
+   if (!qmi.isValid()) {
+      return;
+   }
+
+   auto var_proc_type = model->data(qmi, PackageProcedureTreeModel::ProcedureTypeRole);
+   if (!var_proc_type.isValid())
+      return;
+   
+   const auto yes_no_widgets = std::array{
+      this->ui.procedureOverrideFlagAggroRadius,
+      this->ui.procedureOverrideFlagAllowIdleChatter,
+      this->ui.procedureOverrideFlagAllowSwim,
+      this->ui.procedureOverrideFlagAlwaysSneak,
+      this->ui.procedureOverrideFlagContinueIfPCNear,
+      this->ui.procedureOverrideFlagFriendlyFireComments,
+      this->ui.procedureOverrideFlagHellosToPlayer,
+      this->ui.procedureOverrideFlagIgnoreCombat,
+      this->ui.procedureOverrideFlagMaintainSpeedAtGoal,
+      this->ui.procedureOverrideFlagMustComplete,
+      this->ui.procedureOverrideFlagNoCombatAlert,
+      this->ui.procedureOverrideFlagObserveCombatBehavior,
+      this->ui.procedureOverrideFlagOffersServices,
+      this->ui.procedureOverrideFlagOncePerDay,
+      this->ui.procedureOverrideFlagRandomConversations,
+      this->ui.procedureOverrideFlagReactionToPlayerActions,
+      this->ui.procedureOverrideFlagWeaponDrawn,
+      this->ui.procedureOverrideFlagWeaponsUnequipped,
+      this->ui.procedureOverrideFlagWearSleepOutfit,
+      this->ui.procedureOverrideFlagWorldInteractions,
+   };
+
+   dovah::loaded_forms::structs::custom_packages::package_flag_overrides data;
+   bool any = false;
+   for (const auto* widget : yes_no_widgets) {
+      const auto flag  = widget->property("flag").toInt();
+      const auto state = widget->checkState();
+      if (widget->property("is-interrupt-flag").toBool()) {
+         switch (state) {
+            case Qt::CheckState::Checked:
+               any = true;
+               data.interrupt.set |= flag;
+               break;
+            case Qt::CheckState::Unchecked:
+               any = true;
+               data.interrupt.clear |= flag;
+               break;
+         }
+      } else {
+         switch (state) {
+            case Qt::CheckState::Checked:
+               any = true;
+               data.general.set |= flag;
+               break;
+            case Qt::CheckState::Unchecked:
+               any = true;
+               data.general.clear |= flag;
+               break;
+         }
+      }
+   }
+   if (this->ui.procedureOverrideFlagPreferredSpeed->isChecked()) {
+      any = true;
+      data.general.set |= loaded_form_type::general_flag::has_preferred_speed;
+      data.preferred_speed = (dovah::packages::preferred_movement_speed)this->ui.procedureOverridePreferredSpeed->currentData().toInt();
+   }
+
+   if (any) {
+      model->setData(qmi, QVariant::fromValue(data), PackageProcedureTreeModel::ProcedureOverrideFlagsRole);
+   } else {
+      model->setData(qmi, {}, PackageProcedureTreeModel::ProcedureOverrideFlagsRole);
+   }
+}
+void FormDialogPackage::_push_procedure_node_from_ui(QModelIndex qmi) {
+   auto* model = this->_models.procedure_tree;
+
+   if (!qmi.isValid()) {
+      auto* view = this->ui.procedures;
+      auto* sel_model = view->selectionModel();
+      auto  rows = sel_model->selectedRows();
+      if (!rows.isEmpty())
+         qmi = rows[0];
+   }
+   if (!qmi.isValid()) {
+      return;
+   }
+
+   auto var_branch_type = model->data(qmi, PackageProcedureTreeModel::BranchTypeRole);
+   if (var_branch_type.isValid()) {
+      model->setData(qmi, this->ui.currentProcedureType->currentData().toInt(), PackageProcedureTreeModel::BranchTypeRole);
+
+      int flags = 0;
+      if (this->ui.currentProcedureRepeatWhenComplete->isChecked())
+         flags |= ui::types::packages::procedure_tree_typed_data::branch::flag::repeat_when_complete;
+      model->setData(qmi, flags, PackageProcedureTreeModel::BranchFlagsRole);
+   } else {
+      model->setData(qmi, this->ui.currentProcedureType->currentData().toInt(), PackageProcedureTreeModel::ProcedureTypeRole);
+
+      int flags = 0;
+      if (this->ui.currentProcedureCompletesPackage->isChecked())
+         flags |= ui::types::packages::procedure_tree_typed_data::procedure::flag::success_completes_package;
+      model->setData(qmi, flags, PackageProcedureTreeModel::ProcedureFlagsRole);
+
+      this->_push_procedure_flag_overrides_from_ui(qmi);
+
+      static_assert(false, "TODO: So, uh, we actually need to modify the tree-model to make the packdata params child nodes of the procedure nodes");
+      static_assert(false, "TODO: Or we could just make a separate model, and copy data across as needed");
+   }
+
+   std::vector<ui::types::conditions::condition> conditions;
+   this->ui.conditions->exportTo(*this->form, conditions);
+   model->setNodeConditions(qmi, conditions);
+}
+void FormDialogPackage::_on_procedure_tree_selection_changed(const QItemSelection& selected, const QItemSelection& deselected) {
+   if (!deselected.empty()) {
+      auto range = deselected[0];
+      auto qmi   = range.topLeft();
+      this->_push_procedure_node_from_ui(qmi);
+   }
+   this->_pull_procedure_node_to_ui();
 }

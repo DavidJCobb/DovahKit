@@ -14,6 +14,7 @@ namespace ui::types::packages {
          using backend_type = dovah::loaded_forms::structs::custom_packages::procedure_node;
 
       public:
+         procedure_node* parent_node = nullptr; // unowned
          std::vector<conditions::condition> conditions;
          std::variant<
             std::monostate,
@@ -24,5 +25,7 @@ namespace ui::types::packages {
       public:
          void importData(const backend_type&);
          void exportData(backend_type&, dovah::loaded_forms::Form& dst_owner) const;
+
+         size_t index_of(const procedure_node&) const noexcept;
    };
 }

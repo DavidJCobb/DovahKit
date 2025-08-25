@@ -33,6 +33,7 @@ namespace ui::types::packages {
             dst_list.reserve(size);
             for (const auto& src_ptr : src_list) {
                auto& dst_ptr = dst_list.emplace_back(std::make_unique<procedure_node>());
+               dst_ptr->parent_node = this;
                dst_ptr->importData(*src_ptr);
             }
          } else if (auto* src_casted = std::get_if<typed_node_data::procedure>(&dst_variant)) {
@@ -78,5 +79,17 @@ namespace ui::types::packages {
             dst_casted.parameter_unique_ids = src_casted->parameter_unique_ids;
          }
       }
+   }
+
+   size_t procedure_node::index_of(const procedure_node& child) const noexcept {
+      if (child.parent_node != this)
+         return (size_t)-1;
+      auto* casted = std::get_if<procedure_tree_typed_data::branch>(&this->data);
+      if (!casted)
+         return (size_t)-1;
+      for (size_t i = 0; i < casted->children.size(); ++i)
+         if (casted->children[i].get() == &child)
+            return i;
+      return (size_t)-1;
    }
 }

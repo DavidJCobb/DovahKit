@@ -7,6 +7,7 @@ namespace dovah::loaded_forms::structs::typed_package_info {
    class custom;
 }
 class PackageDataModel;
+class PackageProcedureTreeModel;
 class PackageTemplatePickerFilter;
 
 class FormDialogPackage :
@@ -27,7 +28,8 @@ class FormDialogPackage :
          PackageTemplatePickerFilter* package_template = nullptr;
       } _filters;
       struct {
-         PackageDataModel* package_data = nullptr;
+         PackageDataModel*          package_data = nullptr;
+         PackageProcedureTreeModel* procedure_tree = nullptr;
       } _models;
       
       virtual void _load_impl() override;
@@ -41,4 +43,9 @@ class FormDialogPackage :
       void _on_packdata_declaration_edited();
       void _on_packdata_type_edited();
       void _on_packdata_value_edited();
+
+      void _pull_procedure_node_to_ui();
+      void _push_procedure_node_from_ui(QModelIndex dst = {}); // invalid index = "use selection"
+      void _push_procedure_flag_overrides_from_ui(QModelIndex dst = {});
+      void _on_procedure_tree_selection_changed(const QItemSelection& selected, const QItemSelection& deselected);
 };

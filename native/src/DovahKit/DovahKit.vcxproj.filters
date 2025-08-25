@@ -3486,6 +3486,15 @@
     <ClCompile Include="ui\form_windows\package\FormSubdialogPackageTarget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\package\PackageProcedureTreeModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\localize\package_procedure_tree_branch_type.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\localize\package_procedure_type.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8606,6 +8615,15 @@
     <ClInclude Include="ui\form_windows\shared\InteriorCellPickerFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\localize\package_procedure_tree_branch_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\localize\package_procedure_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\q_declare_metatype\package_flag_overrides.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -9874,6 +9892,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\package\FormSubdialogPackageTarget.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\package\PackageProcedureTreeModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

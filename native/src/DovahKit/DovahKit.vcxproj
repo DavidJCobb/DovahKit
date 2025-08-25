@@ -347,6 +347,8 @@
     <ClCompile Include="editor\localize\package_interrupt_override_type.cpp" />
     <ClCompile Include="editor\localize\package_legacy_type.cpp" />
     <ClCompile Include="editor\localize\package_object_type.cpp" />
+    <ClCompile Include="editor\localize\package_procedure_tree_branch_type.cpp" />
+    <ClCompile Include="editor\localize\package_procedure_type.cpp" />
     <ClCompile Include="editor\localize\perk_entry_point.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.cpp" />
@@ -952,6 +954,7 @@
     <ClCompile Include="ui\form_windows\package\FormSubdialogPackageLocation.cpp" />
     <ClCompile Include="ui\form_windows\package\FormSubdialogPackageTarget.cpp" />
     <ClCompile Include="ui\form_windows\package\PackageDataModel.cpp" />
+    <ClCompile Include="ui\form_windows\package\PackageProcedureTreeModel.cpp" />
     <ClCompile Include="ui\form_windows\package\PackageTemplatePickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\perk.cpp" />
     <ClCompile Include="ui\form_windows\perk\FormSubdialogPerkEntry.cpp" />
@@ -1792,7 +1795,10 @@
     <ClInclude Include="editor\localize\package_interrupt_override_type.h" />
     <ClInclude Include="editor\localize\package_legacy_type.h" />
     <ClInclude Include="editor\localize\package_object_type.h" />
+    <ClInclude Include="editor\localize\package_procedure_tree_branch_type.h" />
+    <ClInclude Include="editor\localize\package_procedure_type.h" />
     <ClInclude Include="editor\localize\perk_entry_point.h" />
+    <ClInclude Include="editor\q_declare_metatype\package_flag_overrides.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\music_track.h" />
@@ -1827,6 +1833,7 @@
     <QtMoc Include="ui\form_windows\package\PackageDataModel.h" />
     <QtMoc Include="ui\form_windows\package\FormSubdialogPackageLocation.h" />
     <QtMoc Include="ui\form_windows\package\FormSubdialogPackageTarget.h" />
+    <QtMoc Include="ui\form_windows\package\PackageProcedureTreeModel.h" />
     <ClInclude Include="ui\form_windows\package\PackageTemplatePickerFilter.h" />
     <ClInclude Include="ui\form_windows\quest\alias_subdialog_helpers.h" />
     <QtMoc Include="ui\form_windows\reverb_parameters.h" />
