@@ -14,7 +14,7 @@ namespace dovah::packages {
       reference_alias             =  8,
       location_alias              =  9,
       interrupt_override_target   = 10, // `interrupt_override_target` (containing PACK must have matching interrupt override type)
-      // unknown 11
+      package_data_target         = 11, // unique ID of a "target"-type package data on the same package
       self                        = 12,
    };
 }

@@ -1,6 +1,8 @@
 #pragma once
 #include "../core.h"
+#include <array>
 #include <atomic>
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <mutex>
@@ -14,11 +16,13 @@
 #include "../utils/file_prefix.h"
 #include "../form_stub.h"
 #include "../localized_strings.h"
+#include "../data/game.h"
 #include "../data/game_settings.h"
-#include "../exceptions/enums/form_creation_error_code.h"
-#include "../game_change_failure_reason.h"
 
 namespace dovah {
+   namespace exceptions {
+      enum class form_creation_error_code;
+   }
    namespace load_order_interfaces {
       class file_load;
       class form_load;
@@ -42,6 +46,7 @@ namespace dovah {
       class  write_results;
       class  file_writer;
    }
+   enum class game_change_failure_reason;
    class form_creation_request;
    class form_duplication_request;
    class form_deletion_request;

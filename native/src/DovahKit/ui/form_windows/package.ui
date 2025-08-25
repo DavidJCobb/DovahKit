@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogPackage</class>
  <widget class="QDialog" name="FormDialogPackage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>988</width>
+    <height>1052</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Package</string>
   </property>
@@ -252,27 +260,6 @@
              <item row="1" column="1">
               <widget class="QLineEdit" name="currentPackdataName"/>
              </item>
-             <item row="3" column="0" colspan="2">
-              <widget class="QWidget" name="currentPackdataValueHolder" native="true">
-               <property name="focusPolicy">
-                <enum>Qt::TabFocus</enum>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_15">
-                <property name="leftMargin">
-                 <number>0</number>
-                </property>
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>0</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-               </layout>
-              </widget>
-             </item>
              <item row="2" column="1">
               <widget class="QComboBox" name="currentPackdataType"/>
              </item>
@@ -285,6 +272,362 @@
                <property name="text">
                 <string>Allow packages based on this template to override this value</string>
                </property>
+              </widget>
+             </item>
+             <item row="3" column="0" colspan="2">
+              <widget class="QStackedWidget" name="currentPackdataValueHolder">
+               <property name="focusPolicy">
+                <enum>Qt::TabFocus</enum>
+               </property>
+               <widget class="QWidget" name="currentPackdataValuePage_None"/>
+               <widget class="QWidget" name="currentPackdataValuePage_Bool" native="true">
+                <layout class="QGridLayout" name="gridLayout_15">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item row="0" column="0">
+                  <widget class="QCheckBox" name="currentPackdataValue_Bool">
+                   <property name="text">
+                    <string>Value</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <spacer name="verticalSpacer_7">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </widget>
+               <widget class="QWidget" name="currentPackdataValuePage_Float">
+                <layout class="QGridLayout" name="gridLayout">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_17">
+                   <property name="text">
+                    <string>Value:</string>
+                   </property>
+                   <property name="buddy">
+                    <cstring>currentPackdataValue_Float</cstring>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1" alignment="Qt::AlignLeft">
+                  <widget class="QDoubleSpinBox" name="currentPackdataValue_Float">
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0" colspan="2">
+                  <spacer name="verticalSpacer_8">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="0" column="2">
+                  <spacer name="horizontalSpacer_5">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>0</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </widget>
+               <widget class="QWidget" name="currentPackdataValuePage_Int">
+                <layout class="QGridLayout" name="gridLayout_12">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_18">
+                   <property name="text">
+                    <string>Value:</string>
+                   </property>
+                   <property name="buddy">
+                    <cstring>currentPackdataValue_Int</cstring>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="QSpinBox" name="currentPackdataValue_Int">
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0" colspan="2">
+                  <spacer name="verticalSpacer_9">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="0" column="2">
+                  <spacer name="horizontalSpacer_8">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>0</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </widget>
+               <widget class="QWidget" name="currentPackdataValuePage_Location">
+                <layout class="QGridLayout" name="gridLayout_21">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label_25">
+                   <property name="text">
+                    <string>Radius:</string>
+                   </property>
+                   <property name="buddy">
+                    <cstring>currentPackdataValue_LocationRadius</cstring>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1" colspan="2">
+                  <widget class="QPushButton" name="currentPackdataValue_LocationButtonEdit">
+                   <property name="text">
+                    <string>...</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QSpinBox" name="currentPackdataValue_LocationRadius">
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="2">
+                  <spacer name="horizontalSpacer_9">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>0</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_24">
+                   <property name="text">
+                    <string>Location:</string>
+                   </property>
+                   <property name="buddy">
+                    <cstring>currentPackdataValue_LocationButtonEdit</cstring>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0" colspan="2">
+                  <spacer name="verticalSpacer_10">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </widget>
+               <widget class="QWidget" name="currentPackdataValuePage_Target">
+                <layout class="QGridLayout" name="gridLayout_22">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label_27">
+                   <property name="text">
+                    <string>Count:</string>
+                   </property>
+                   <property name="buddy">
+                    <cstring>currentPackdataValue_TargetRadius</cstring>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_26">
+                   <property name="text">
+                    <string>Target:</string>
+                   </property>
+                   <property name="buddy">
+                    <cstring>currentPackdataValue_TargetButtonEdit</cstring>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QSpinBox" name="currentPackdataValue_TargetRadius">
+                   <property name="alignment">
+                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <spacer name="verticalSpacer_11">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="1" column="2">
+                  <spacer name="horizontalSpacer_10">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>0</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="0" column="1" colspan="2">
+                  <widget class="QPushButton" name="currentPackdataValue_TargetButtonEdit">
+                   <property name="text">
+                    <string>...</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+               <widget class="QWidget" name="currentPackdataValuePage_Topic">
+                <layout class="QGridLayout" name="gridLayout_23" columnstretch="0,1">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_28">
+                   <property name="text">
+                    <string>Value:</string>
+                   </property>
+                   <property name="buddy">
+                    <cstring>currentPackdataValue_Topic</cstring>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="1">
+                  <widget class="DKTopicOrSubtypePicker" name="currentPackdataValue_Topic"/>
+                 </item>
+                 <item row="2" column="0" colspan="2">
+                  <spacer name="verticalSpacer_12">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </widget>
               </widget>
              </item>
             </layout>
@@ -313,7 +656,7 @@
             </property>
             <layout class="QGridLayout" name="gridLayout_19">
              <item row="0" column="0">
-              <layout class="QGridLayout" name="gridLayout_18">
+              <layout class="QGridLayout" name="gridLayout_18" columnstretch="0,1">
                <item row="0" column="0">
                 <widget class="QLabel" name="label_22">
                  <property name="text">
@@ -327,42 +670,127 @@
                <item row="0" column="1">
                 <widget class="QComboBox" name="currentProcedureType"/>
                </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="label_23">
-                 <property name="text">
-                  <string>Input Data:</string>
-                 </property>
-                 <property name="buddy">
-                  <cstring>currentProcedureInputPackdata</cstring>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0" colspan="2">
-                <widget class="Line" name="line">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="0" colspan="2">
-                <widget class="QCheckBox" name="currentProcedureCompletesPackage">
-                 <property name="text">
-                  <string>Success Completes Package</string>
-                 </property>
-                </widget>
-               </item>
                <item row="1" column="0" colspan="2">
-                <widget class="QTableView" name="currentProcedureInputs">
-                 <property name="whatsThis">
-                  <string>Different types of procedures take different inputs. You can use any of this package's Public Package Data (defined above) as inputs.</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QComboBox" name="currentProcedureInputPackdata">
-                 <property name="whatsThis">
-                  <string>Use this drop-down box to change which package data is fed into the selected input for this procedure.</string>
-                 </property>
+                <widget class="QStackedWidget" name="currentProcedureStack">
+                 <widget class="QWidget" name="currentProcedurePageProcedure">
+                  <layout class="QGridLayout" name="gridLayout_24" columnstretch="0,1">
+                   <property name="leftMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
+                   <item row="0" column="0" colspan="2">
+                    <widget class="QTableView" name="currentProcedureInputs">
+                     <property name="whatsThis">
+                      <string>Different types of procedures take different inputs. You can use any of this package's Public Package Data (defined above) as inputs.</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QLabel" name="label_23">
+                     <property name="text">
+                      <string>Input Data:</string>
+                     </property>
+                     <property name="buddy">
+                      <cstring>currentProcedureInputPackdata</cstring>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="1">
+                    <widget class="QComboBox" name="currentProcedureInputPackdata">
+                     <property name="whatsThis">
+                      <string>Use this drop-down box to change which package data is fed into the selected input for this procedure.</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="0" colspan="2">
+                    <widget class="QCheckBox" name="currentProcedureCompletesPackage">
+                     <property name="text">
+                      <string>Success Completes Package</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                 <widget class="QWidget" name="currentProcedurePageBranch">
+                  <layout class="QGridLayout" name="gridLayout_25">
+                   <property name="leftMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
+                   <item row="0" column="0">
+                    <spacer name="verticalSpacer_13">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>275</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QCheckBox" name="currentProcedureRepeatWhenComplete">
+                     <property name="text">
+                      <string>Repeat when complete</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                 <widget class="QWidget" name="currentProcedurePageBranchSimultaneous">
+                  <layout class="QGridLayout" name="gridLayout_26">
+                   <property name="leftMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
+                   <item row="0" column="0">
+                    <spacer name="verticalSpacer_14">
+                     <property name="orientation">
+                      <enum>Qt::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>275</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QCheckBox" name="currentProcedureRunUntilAllDone">
+                     <property name="text">
+                      <string>Run until all children complete</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
                 </widget>
                </item>
               </layout>
@@ -986,11 +1414,11 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="DKFormPicker" name="onBeginTopic"/>
-          </item>
           <item row="2" column="0" colspan="2">
            <widget class="DKPapyrusFragmentFunctionPicker" name="onBeginFragment"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="DKTopicOrSubtypePicker" name="onBeginTopic"/>
           </item>
          </layout>
         </widget>
@@ -1024,11 +1452,11 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="DKFormPicker" name="onEndTopic"/>
-          </item>
           <item row="2" column="0" colspan="2">
            <widget class="DKPapyrusFragmentFunctionPicker" name="onEndFragment"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="DKTopicOrSubtypePicker" name="onEndTopic"/>
           </item>
          </layout>
         </widget>
@@ -1062,11 +1490,11 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="DKFormPicker" name="onChangeTopic"/>
-          </item>
           <item row="2" column="0" colspan="2">
            <widget class="DKPapyrusFragmentFunctionPicker" name="onChangeFragment"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="DKTopicOrSubtypePicker" name="onChangeTopic"/>
           </item>
          </layout>
         </widget>
@@ -1102,86 +1530,9 @@
          <property name="title">
           <string>Use Specific Idles</string>
          </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
-           <widget class="DKFormListPane" name="idles"/>
-          </item>
-          <item>
-           <layout class="QGridLayout" name="gridLayout_12">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_17">
-              <property name="text">
-               <string>Order:</string>
-              </property>
-              <property name="buddy">
-               <cstring>idlesOrder</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
-             <widget class="QCheckBox" name="flagDoIdlesOnce">
-              <property name="whatsThis">
-               <string>If this is checked, then idles in this marker's animation list will each only be played once.</string>
-              </property>
-              <property name="text">
-               <string>Do Once</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="4">
-             <widget class="QLabel" name="label_18">
-              <property name="text">
-               <string>Idle Timer:</string>
-              </property>
-              <property name="buddy">
-               <cstring>idlesTimer</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="5">
-             <widget class="QDoubleSpinBox" name="idlesTimer">
-              <property name="whatsThis">
-               <string>If this marker plays animations in a random order, then this is the duration of each animation. If this marker plays all of its animations in sequence, then this is the delay between each time the sequence loops.</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QComboBox" name="idlesOrder">
-              <item>
-               <property name="text">
-                <string>Random</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Run in Sequence</string>
-               </property>
-              </item>
-             </widget>
-            </item>
-            <item row="0" column="3">
-             <spacer name="horizontalSpacer_5">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
+           <widget class="DKIdleCollectionWidget" name="idles"/>
           </item>
          </layout>
         </widget>
@@ -1274,11 +1625,6 @@
    <header>widgets/DKFormPicker.h</header>
   </customwidget>
   <customwidget>
-   <class>DKFormListPane</class>
-   <extends>QWidget</extends>
-   <header>widgets/DKFormListPane.h</header>
-  </customwidget>
-  <customwidget>
    <class>DKPapyrusBoundScriptListPane</class>
    <extends>QWidget</extends>
    <header>widgets/DKPapyrusBoundScriptListPane.h</header>
@@ -1292,6 +1638,16 @@
    <class>DKConditionList</class>
    <extends>QWidget</extends>
    <header>widgets/DKConditionList.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKIdleCollectionWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKIdleCollectionWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKTopicOrSubtypePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKTopicOrSubtypePicker.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
@@ -1311,12 +1667,17 @@
   <tabstop>currentPackdataName</tabstop>
   <tabstop>currentPackdataType</tabstop>
   <tabstop>currentPackdataValueHolder</tabstop>
+  <tabstop>currentPackdataValue_Bool</tabstop>
+  <tabstop>currentPackdataValue_Float</tabstop>
+  <tabstop>currentPackdataValue_Int</tabstop>
+  <tabstop>currentPackdataValue_LocationRadius</tabstop>
+  <tabstop>currentPackdataValue_LocationButtonEdit</tabstop>
+  <tabstop>currentPackdataValue_TargetButtonEdit</tabstop>
+  <tabstop>currentPackdataValue_TargetRadius</tabstop>
+  <tabstop>currentPackdataValue_Topic</tabstop>
   <tabstop>currentPackdataIsPublic</tabstop>
   <tabstop>procedures</tabstop>
   <tabstop>currentProcedureType</tabstop>
-  <tabstop>currentProcedureInputs</tabstop>
-  <tabstop>currentProcedureInputPackdata</tabstop>
-  <tabstop>currentProcedureCompletesPackage</tabstop>
   <tabstop>procedureOverrideFlagMustComplete</tabstop>
   <tabstop>procedureOverrideFlagContinueIfPCNear</tabstop>
   <tabstop>procedureOverrideFlagOncePerDay</tabstop>
@@ -1382,11 +1743,7 @@
   <tabstop>onChangeTopic</tabstop>
   <tabstop>onChangeFragment</tabstop>
   <tabstop>scriptListPane</tabstop>
-  <tabstop>flagUseSpecificIdles</tabstop>
   <tabstop>idles</tabstop>
-  <tabstop>idlesOrder</tabstop>
-  <tabstop>flagDoIdlesOnce</tabstop>
-  <tabstop>idlesTimer</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
  </tabstops>

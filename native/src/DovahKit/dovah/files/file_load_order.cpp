@@ -4,9 +4,11 @@
 #include "helpers/unordered_map.h"
 #include "../data/game/hardcoded_form_ids_ignore_record_id_prefix.h"
 #include "../data/form_id_constants.h"
+#include "../exceptions/enums/form_creation_error_code.h"
 #include "../form_stub.h"
 #include "../form_stub_addenda.h"
 #include "../form_stubs/helpers/get_worldspace_cell_by_grid.h"
+#include "../game_change_failure_reason.h"
 #include "./tes_file_reading/file_loader.h"
 #include "./tes_file_reading/file_header.h"
 #include "./tes_file_reading/threaded_load_order_use_info_builder.h"
@@ -1877,6 +1879,14 @@ namespace dovah {
          return error_code::no_form_id_available;
       if (!can_construct_form_data(request.form_type) || !can_load_form_data(request.form_type))
          return error_code::unimplemented_form_type;
+
+      {
+         const auto& info = form_type_info::lookup(request.form_type);
+         if (info.flags & form_type_info::flag::is_skyrim_special) {
+            if (this->current_game != game::skyrim_special)
+               return error_code::form_type_unavailable_in_current_game;
+         }
+      }
 
       // Can we destroy any occupying none-stub?
       if (form_stub* occupier = this->get_form(request.formID, false)) {

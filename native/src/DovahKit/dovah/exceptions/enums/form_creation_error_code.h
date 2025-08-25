@@ -45,5 +45,9 @@ namespace dovah::exceptions {
       // defined in the active file; however, a call to `form_stub::load` failed for at least one 
       // of them, so we were unable to sever the dangling reference(s).
       cannot_sever_references_to_none_stub,
+      
+      // This form type doesn't exist in the currently loaded game (e.g. Skyrim Special Edition-
+      // exclusive form types in Skyrim Classic).
+      form_type_unavailable_in_current_game,
    };
 }

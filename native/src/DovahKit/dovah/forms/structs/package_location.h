@@ -34,7 +34,7 @@ namespace dovah::loaded_forms::structs {
             int32_t,
             int32_t,
             interrupt_override_target,
-            std::monostate,
+            uint8_t, // package data unique ID
             std::monostate
          >;
 

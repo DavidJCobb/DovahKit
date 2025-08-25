@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormSubdialogPackageLocation</class>
+ <widget class="QDialog" name="FormSubdialogPackageLocation">
+  <property name="windowTitle">
+   <string>Package Location</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="7" column="1">
+      <widget class="QComboBox" name="locAlias"/>
+     </item>
+     <item row="6" column="0">
+      <widget class="QRadioButton" name="locationTypeRef">
+       <property name="text">
+        <string>Near Reference:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0" colspan="2">
+      <widget class="QRadioButton" name="locationTypePackStartLoc">
+       <property name="text">
+        <string>Near Package Start Location</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <widget class="QRadioButton" name="locationTypeSelf">
+       <property name="text">
+        <string>Near Self</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="0">
+      <widget class="QRadioButton" name="locationTypeInterruptTarget">
+       <property name="text">
+        <string>Near Interrupt Target:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QRadioButton" name="locationTypeInteriorCell">
+       <property name="text">
+        <string>In Interior Cell:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="DKFormPicker" name="interiorCell"/>
+     </item>
+     <item row="9" column="1">
+      <widget class="QComboBox" name="interruptTarget"/>
+     </item>
+     <item row="1" column="1">
+      <widget class="DKFormPicker" name="linkedRefKeyword">
+       <property name="minimumSize">
+        <size>
+         <width>200</width>
+         <height>0</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="1">
+      <widget class="QComboBox" name="packdataTarget"/>
+     </item>
+     <item row="8" column="1">
+      <widget class="QComboBox" name="refAlias"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QRadioButton" name="locationTypeLinkedRef">
+       <property name="text">
+        <string>Near Linked Reference with Keyword:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="DKCompactObjectReferencePicker" name="ref"/>
+     </item>
+     <item row="8" column="0">
+      <widget class="QRadioButton" name="locationTypeRefAlias">
+       <property name="text">
+        <string>Near Reference Alias:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QRadioButton" name="locationTypeLocAlias">
+       <property name="text">
+        <string>In Location Alias:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QRadioButton" name="locationTypeEditorLoc">
+       <property name="text">
+        <string>Near Editor Location</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" colspan="2">
+      <widget class="QRadioButton" name="locationTypeAtPackLoc">
+       <property name="text">
+        <string>At Package Location</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="0">
+      <widget class="QRadioButton" name="locationTypePackdataTarget">
+       <property name="text">
+        <string>Near Package Data Target:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="0" colspan="2">
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKCompactObjectReferencePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKCompactObjectReferencePicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>locationTypeAtPackLoc</tabstop>
+  <tabstop>locationTypeLinkedRef</tabstop>
+  <tabstop>linkedRefKeyword</tabstop>
+  <tabstop>locationTypeEditorLoc</tabstop>
+  <tabstop>locationTypeSelf</tabstop>
+  <tabstop>locationTypePackStartLoc</tabstop>
+  <tabstop>locationTypeInteriorCell</tabstop>
+  <tabstop>interiorCell</tabstop>
+  <tabstop>locationTypeRef</tabstop>
+  <tabstop>ref</tabstop>
+  <tabstop>locationTypeLocAlias</tabstop>
+  <tabstop>locAlias</tabstop>
+  <tabstop>locationTypeRefAlias</tabstop>
+  <tabstop>refAlias</tabstop>
+  <tabstop>locationTypeInterruptTarget</tabstop>
+  <tabstop>interruptTarget</tabstop>
+  <tabstop>locationTypePackdataTarget</tabstop>
+  <tabstop>packdataTarget</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

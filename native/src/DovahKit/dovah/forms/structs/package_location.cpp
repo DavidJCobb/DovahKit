@@ -183,11 +183,16 @@ namespace dovah::loaded_forms::structs {
                }
             }
             break;
+         case location_type::package_data_target:
+            {
+               auto& packdata_id = this->_as_type<location_type::package_data_target>();
+               subrecord.read(packdata_id);
+            }
+            break;
 
          case location_type::near_package_start_location:
          case location_type::near_editor_location:
          case location_type::at_package_location:
-         case (location_type)11:
          case location_type::self:
          default:
             subrecord.skip_bytes(4);
@@ -213,6 +218,13 @@ namespace dovah::loaded_forms::structs {
          CASE(location_type::location_alias);
          CASE(location_type::interrupt_override_target);
          #pragma pop_macro("CASE")
+
+         case location_type::package_data_target:
+            {
+               int32_t data = std::get<(size_t)location_type::package_data_target>(this->data);
+               subrecord.write(data);
+            }
+            break;
 
          default:
             subrecord.skip_bytes(4);

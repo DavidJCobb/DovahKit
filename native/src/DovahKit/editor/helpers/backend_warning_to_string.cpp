@@ -8,6 +8,7 @@
 #include "./form_identifiers_to_string.h"
 #include "./form_type_name_to_string.h"
 #include "../localize/package_data_type.h"
+#include "../localize/package_interrupt_override_type.h"
 #include "../localize/package_legacy_type.h"
 #include "helpers/qt/strings.h"
 
@@ -1389,24 +1390,8 @@ namespace editor_helpers {
                         break;
                   }
 
-                  auto _stringify_interrupt_override_type = [](dovah::packages::interrupt_override_type type) -> QString {
-                     switch (type) {
-                        using enum dovah::packages::interrupt_override_type;
-                        case none:
-                           return QObject::tr("None", disambig);
-                        case spectator:
-                           return QObject::tr("Spectator", disambig);
-                        case observe_dead:
-                           return QObject::tr("Observe Corpse", disambig);
-                        case guard_warn:
-                           return QObject::tr("Guard Warn", disambig);
-                        case combat:
-                           return QObject::tr("Combat", disambig);
-                     }
-                     return QObject::tr("?", disambig);
-                  };
-                  required_type = _stringify_interrupt_override_type(casted->required_type);
-                  actual_type   = _stringify_interrupt_override_type(casted->actual_type);
+                  required_type = editor::localize::package_interrupt_override_type(casted->required_type);
+                  actual_type   = editor::localize::package_interrupt_override_type(casted->actual_type);
                   //
                   if (casted->actual_type == dovah::packages::interrupt_override_type::none) {
                      return QObject::tr(

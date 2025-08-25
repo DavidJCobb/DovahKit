@@ -334,6 +334,7 @@
     <ClCompile Include="editor\helpers\form_stub_drag_drop.cpp" />
     <ClCompile Include="editor\helpers\backend_warning_to_string.cpp" />
     <ClCompile Include="editor\helpers\is_form_type_legal_to_create.cpp" />
+    <ClCompile Include="editor\localize\dialogue_topic_subtype.cpp" />
     <ClCompile Include="editor\localize\entry_point_function.cpp" />
     <ClCompile Include="editor\localize\magic_casting_type.cpp" />
     <ClCompile Include="editor\localize\magic_delivery_type.cpp" />
@@ -342,7 +343,10 @@
     <ClCompile Include="editor\helpers\story_event_name.cpp" />
     <ClCompile Include="editor\ini\main.cpp" />
     <ClCompile Include="editor\localize\package_data_type.cpp" />
+    <ClCompile Include="editor\localize\package_interrupt_override_target.cpp" />
+    <ClCompile Include="editor\localize\package_interrupt_override_type.cpp" />
     <ClCompile Include="editor\localize\package_legacy_type.cpp" />
+    <ClCompile Include="editor\localize\package_object_type.cpp" />
     <ClCompile Include="editor\localize\perk_entry_point.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.cpp" />
@@ -944,6 +948,11 @@
     <ClCompile Include="ui\form_windows\music_track.cpp" />
     <ClCompile Include="ui\form_windows\music_track\MusicTrackCuePointsModel.cpp" />
     <ClCompile Include="ui\form_windows\music_type.cpp" />
+    <ClCompile Include="ui\form_windows\package.cpp" />
+    <ClCompile Include="ui\form_windows\package\FormSubdialogPackageLocation.cpp" />
+    <ClCompile Include="ui\form_windows\package\FormSubdialogPackageTarget.cpp" />
+    <ClCompile Include="ui\form_windows\package\PackageDataModel.cpp" />
+    <ClCompile Include="ui\form_windows\package\PackageTemplatePickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\perk.cpp" />
     <ClCompile Include="ui\form_windows\perk\FormSubdialogPerkEntry.cpp" />
     <ClCompile Include="ui\form_windows\perk\PerkEntriesModel.cpp" />
@@ -1000,6 +1009,7 @@
     <ClCompile Include="ui\form_windows\shared\FaceExtraHeadPartsModel.cpp" />
     <ClCompile Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.cpp" />
     <ClCompile Include="ui\form_windows\shared\HeadPartPickerFilter.cpp" />
+    <ClCompile Include="ui\form_windows\shared\InteriorCellPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\shout.cpp" />
     <ClCompile Include="ui\form_windows\soul_gem.cpp" />
     <ClCompile Include="ui\form_windows\sound.cpp" />
@@ -1093,6 +1103,14 @@
     <ClCompile Include="ui\types\game_file_path.cpp" />
     <ClCompile Include="ui\types\logging\log_item.cpp" />
     <ClCompile Include="ui\types\nif_for_form.cpp" />
+    <ClCompile Include="ui\types\packages\package_data_value.cpp" />
+    <ClCompile Include="ui\types\packages\package_location.cpp" />
+    <ClCompile Include="ui\types\packages\package_target.cpp" />
+    <ClCompile Include="ui\types\packages\package_topic.cpp" />
+    <ClCompile Include="ui\types\packages\procedure_node.cpp" />
+    <ClCompile Include="ui\types\packages\procedure_tree.cpp" />
+    <ClCompile Include="ui\types\packages\procedure_tree_typed_data\branch.cpp" />
+    <ClCompile Include="ui\types\packages\procedure_tree_typed_data\procedure.cpp" />
     <ClCompile Include="ui\types\papyrus\property_value.cpp" />
     <ClCompile Include="ui\types\perk_entries\entry.cpp" />
     <ClCompile Include="ui\types\perk_entries\entry_point_entry.cpp" />
@@ -1225,6 +1243,7 @@
     <ClCompile Include="widgets\DKFormPickerDialog.cpp" />
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
+    <ClCompile Include="widgets\DKIdleCollectionWidget.cpp" />
     <ClCompile Include="widgets\DKKeyPickerWidget.cpp" />
     <ClCompile Include="widgets\DKMagicEffectListWidget.cpp" />
     <ClCompile Include="widgets\DKNavmeshGenerationImportOptionPicker.cpp" />
@@ -1236,6 +1255,7 @@
     <ClCompile Include="widgets\DKTabBar.cpp" />
     <ClCompile Include="widgets\DKTabWidget.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
+    <ClCompile Include="widgets\DKTopicOrSubtypePicker.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp" />
     <ClCompile Include="widgets\DKUnreadCountBadgePaneHeader.cpp" />
     <ClCompile Include="widgets\DKVulkanView.cpp" />
@@ -1281,6 +1301,7 @@
     <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\PackageAction.cpp" />
     <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Phase.cpp" />
     <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\TimerAction.cpp" />
+    <ClCompile Include="widgets\widget-models\DKTopicOrSubtypePicker\DKTopicOrSubtypePickerModel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\data\all_base_form_types.h" />
@@ -1744,6 +1765,7 @@
     <ClInclude Include="editor\helpers\face_fx_phoneme_name.h" />
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
+    <QtMoc Include="widgets\widget-models\DKTopicOrSubtypePicker\DKTopicOrSubtypePickerModel.h" />
     <QtMoc Include="widgets\widget-models\DKMagicEffectListModel.h" />
     <QtMoc Include="ui\form_windows\quest\QuestTabScenes.h" />
     <QtMoc Include="ui\form_windows\scene\SceneActorBehaviorModel.h" />
@@ -1756,6 +1778,7 @@
     <QtMoc Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.h" />
     <QtMoc Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.h" />
     <ClInclude Include="editor\helpers\is_form_type_legal_to_create.h" />
+    <ClInclude Include="editor\localize\dialogue_topic_subtype.h" />
     <ClInclude Include="editor\localize\entry_point_function.h" />
     <ClInclude Include="editor\localize\magic_delivery_type.h" />
     <ClInclude Include="editor\helpers\story_event_name.h" />
@@ -1765,7 +1788,10 @@
     <QtMoc Include="ui\form_windows\magic_effect.h" />
     <ClInclude Include="editor\localize\magic_casting_type.h" />
     <ClInclude Include="editor\localize\package_data_type.h" />
+    <ClInclude Include="editor\localize\package_interrupt_override_target.h" />
+    <ClInclude Include="editor\localize\package_interrupt_override_type.h" />
     <ClInclude Include="editor\localize\package_legacy_type.h" />
+    <ClInclude Include="editor\localize\package_object_type.h" />
     <ClInclude Include="editor\localize\perk_entry_point.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.h" />
@@ -1797,6 +1823,11 @@
     <QtMoc Include="ui\form_windows\perk.h" />
     <QtMoc Include="ui\form_windows\perk\FormSubdialogPerkEntry.h" />
     <QtMoc Include="ui\form_windows\perk\PerkEntriesModel.h" />
+    <QtMoc Include="ui\form_windows\package.h" />
+    <QtMoc Include="ui\form_windows\package\PackageDataModel.h" />
+    <QtMoc Include="ui\form_windows\package\FormSubdialogPackageLocation.h" />
+    <QtMoc Include="ui\form_windows\package\FormSubdialogPackageTarget.h" />
+    <ClInclude Include="ui\form_windows\package\PackageTemplatePickerFilter.h" />
     <ClInclude Include="ui\form_windows\quest\alias_subdialog_helpers.h" />
     <QtMoc Include="ui\form_windows\reverb_parameters.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Action.h" />
@@ -1935,6 +1966,7 @@
     <QtMoc Include="ui\form_windows\sound_descriptor.h" />
     <QtMoc Include="ui\form_windows\sound_category.h" />
     <QtMoc Include="ui\form_windows\sound.h" />
+    <ClInclude Include="ui\form_windows\shared\InteriorCellPickerFilter.h" />
     <ClInclude Include="ui\form_windows\sound_descriptor\SoundDescriptorSoundFilesModel.h" />
     <QtMoc Include="ui\form_windows\sound_output_model.h" />
     <QtMoc Include="ui\form_windows\spell.h" />
@@ -1963,6 +1995,15 @@
     <ClInclude Include="ui\types\logging\log_item.h" />
     <ClInclude Include="ui\types\logging\log_item_context.h" />
     <ClInclude Include="ui\types\logging\log_item_type.h" />
+    <ClInclude Include="ui\types\packages\package_data_declaration.h" />
+    <ClInclude Include="ui\types\packages\package_data_value.h" />
+    <ClInclude Include="ui\types\packages\package_location.h" />
+    <ClInclude Include="ui\types\packages\package_target.h" />
+    <ClInclude Include="ui\types\packages\package_topic.h" />
+    <ClInclude Include="ui\types\packages\procedure_node.h" />
+    <ClInclude Include="ui\types\packages\procedure_tree.h" />
+    <ClInclude Include="ui\types\packages\procedure_tree_typed_data\branch.h" />
+    <ClInclude Include="ui\types\packages\procedure_tree_typed_data\procedure.h" />
     <ClInclude Include="ui\types\perk_entries\entry.h" />
     <ClInclude Include="ui\types\perk_entries\entry_point_entry.h" />
     <ClInclude Include="ui\types\perk_entries\quest_entry.h" />
@@ -2001,6 +2042,8 @@
     <QtMoc Include="ui\form_windows\scene\SceneFormVisualEditor.h" />
     <QtMoc Include="widgets\DKYesNoUnsetWidget.h" />
     <QtMoc Include="widgets\DKMagicEffectListWidget.h" />
+    <QtMoc Include="widgets\DKIdleCollectionWidget.h" />
+    <QtMoc Include="widgets\DKTopicOrSubtypePicker.h" />
     <ClInclude Include="widgets\widget-data\DKCustomFormFilterableModelMixin.h" />
     <QtMoc Include="widgets\widget-dialogs\DKMagicEffectListItemDialog.h" />
     <ClInclude Include="widgets\widget-models\DKAttackDataModel.h" />
@@ -3308,6 +3351,8 @@
     <QtUic Include="ui\form_windows\music_type.ui" />
     <QtUic Include="ui\form_windows\note.ui" />
     <QtUic Include="ui\form_windows\package.ui" />
+    <QtUic Include="ui\form_windows\package\FormSubdialogPackageLocation.ui" />
+    <QtUic Include="ui\form_windows\package\FormSubdialogPackageTarget.ui" />
     <QtUic Include="ui\form_windows\perk.ui" />
     <QtUic Include="ui\form_windows\perk\FormSubdialogPerkEntry.ui" />
     <QtUic Include="ui\form_windows\potion.ui" />

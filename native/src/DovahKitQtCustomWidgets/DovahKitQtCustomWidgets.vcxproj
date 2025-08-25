@@ -124,6 +124,7 @@
     <ClCompile Include="interfaces\DKFormNIFPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKFormPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKGameFilePickerInterface.cpp" />
+    <ClCompile Include="interfaces\DKIdleCollectionWidgetInterface.cpp" />
     <ClCompile Include="interfaces\DKMagicEffectListWidgetInterface.cpp" />
     <ClCompile Include="interfaces\DKNavmeshGenerationImportOptionPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKObjectReferencePickerInterface.cpp" />
@@ -132,6 +133,7 @@
     <ClCompile Include="interfaces\DKQuestAliasPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKTabWidgetInterface.cpp" />
     <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp" />
+    <ClCompile Include="interfaces\DKTopicOrSubtypePickerInterface.cpp" />
     <ClCompile Include="interfaces\DKYesNoUnsetWidgetInterface.cpp" />
     <ClCompile Include="tools\in_place_text_editor\InPlaceTextEditor.cpp" />
     <ClCompile Include="ui\types\game_file_path.cpp" />
@@ -144,12 +146,18 @@
     <ClCompile Include="widgets\DKDelayedEnableButton.cpp" />
     <ClCompile Include="widgets\DKFloatSlider.cpp" />
     <ClCompile Include="widgets\DKFormDestructionDataButton.cpp" />
-    <ClCompile Include="widgets\DKFormInventoryWidget.cpp" />
+    <ClCompile Include="widgets\DKFormInventoryWidget.cpp">
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
+    </ClCompile>
     <ClCompile Include="widgets\DKFormListPane.cpp" />
     <ClCompile Include="widgets\DKFormNIFPicker.cpp" />
     <ClCompile Include="widgets\DKFormPicker.cpp" />
     <ClCompile Include="widgets\DKGameFilePicker.cpp" />
     <ClCompile Include="widgets\DKHeaderView.cpp" />
+    <ClCompile Include="widgets\DKIdleCollectionWidget.cpp" />
     <ClCompile Include="widgets\DKMagicEffectListWidget.cpp" />
     <ClCompile Include="widgets\DKNavmeshGenerationImportOptionPicker.cpp" />
     <ClCompile Include="widgets\DKObjectReferencePicker.cpp" />
@@ -159,6 +167,7 @@
     <ClCompile Include="widgets\DKTabBar.cpp" />
     <ClCompile Include="widgets\DKTabWidget.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
+    <ClCompile Include="widgets\DKTopicOrSubtypePicker.cpp" />
     <ClCompile Include="widgets\DKYesNoUnsetWidget.cpp" />
     <None Include="cpp.hint" />
     <None Include="README.md" />
@@ -209,6 +218,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\form_types.h" />
+    <QtMoc Include="interfaces\DKTopicOrSubtypePickerInterface.h" />
+    <QtMoc Include="widgets\DKTopicOrSubtypePicker.h" />
+    <QtMoc Include="interfaces\DKIdleCollectionWidgetInterface.h" />
+    <QtMoc Include="widgets\DKIdleCollectionWidget.h" />
     <QtMoc Include="interfaces\DKMagicEffectListWidgetInterface.h" />
     <QtMoc Include="widgets\DKMagicEffectListWidget.h" />
     <QtMoc Include="interfaces\DKYesNoUnsetWidgetInterface.h" />

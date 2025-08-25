@@ -384,7 +384,7 @@ void DKFormInventoryWidget::setAllowsExtraData(bool v) {
 
 bool DKFormInventoryWidget::allowsPseudoItems() const noexcept {
    #if defined(QT_PLUGIN)
-      return this->_state.allow_pseudo_Items;
+      return this->_state.allow_pseudo_items;
    #else
       if (!this->_model)
          return true;
@@ -394,7 +394,7 @@ bool DKFormInventoryWidget::allowsPseudoItems() const noexcept {
 }
 void DKFormInventoryWidget::setAllowsPseudoItems(bool v) {
    #if defined(QT_PLUGIN)
-      this->_state.allow_pseudo_Items = v;
+      this->_state.allow_pseudo_items = v;
    #else
       this->_model->setAllowsPseudoItems(v);
       #if !defined(QT_PLUGIN)
