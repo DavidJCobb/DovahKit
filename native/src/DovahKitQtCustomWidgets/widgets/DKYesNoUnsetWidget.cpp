@@ -4,6 +4,7 @@
 #include <QHBoxLayout>
 #include <QStyle>
 #include <QStyleOption>
+#include <QStylePainter>
 
 DKYesNoUnsetWidget::DKYesNoUnsetWidget(QWidget* parent) : QWidget(parent) {
    this->_subwidgets.checkbox   = new QCheckBox(this);
@@ -30,6 +31,8 @@ DKYesNoUnsetWidget::DKYesNoUnsetWidget(QWidget* parent) : QWidget(parent) {
    QObject::connect(this->_subwidgets.checkbox, &QCheckBox::toggled, this, [this](bool checked) {
       emit this->stateChanged(this->checkState());
    });
+
+   this->_subwidgets.checkbox->installEventFilter(this);
 }
 
 Qt::CheckState DKYesNoUnsetWidget::checkState() const {
@@ -116,14 +119,62 @@ void DKYesNoUnsetWidget::setText(QString t) {
       }
       return QWidget::event(event);
    }
+   /*virtual*/ bool DKYesNoUnsetWidget::eventFilter(QObject* watched, QEvent* event) /*override*/ {
+      //
+      // When we're in the "unset" state, we want the checkbox sub-widget to be disabled. 
+      // However, we want its *label text* to be drawn enabled, unless we ourselves are 
+      // disabled.
+      // 
+      // In essence, we're using the checkbox text as *our* text, and we want it drawn 
+      // accordingly.
+      //
+      if (watched == this->_subwidgets.checkbox && event->type() == QEvent::Type::Paint) {
+         auto* casted = (QPaintEvent*)event;
+         QStylePainter      painter(this->_subwidgets.checkbox);
+         QStyleOptionButton option;
+         this->_initCheckboxStyleOption(option);
+         {
+            const auto* widget = this->_subwidgets.checkbox;
+            const auto* style  = widget->style();
+            const auto* proxy  = style->proxy();
+            {
+               QStyleOptionButton part_option = option;
+
+               // The checkbox itself.
+               part_option.rect = style->subElementRect(QStyle::SE_CheckBoxIndicator, &option, widget);
+               proxy->drawPrimitive(QStyle::PE_IndicatorCheckBox, &part_option, &painter, widget);
+
+               // The label.
+               part_option.rect = style->subElementRect(QStyle::SE_CheckBoxContents, &option, widget);
+               if (this->isEnabled()) {
+                  part_option.state |= QStyle::StateFlag::State_Enabled;
+                  part_option.palette.setCurrentColorGroup(this->palette().currentColorGroup());
+               }
+               proxy->drawControl(QStyle::CE_CheckBoxLabel, &part_option, &painter, widget);
+            }
+
+            // The focus ring.
+            if (option.state & QStyle::State_HasFocus) {
+               QStyleOptionFocusRect focus_rect_option;
+               ((QStyleOption&)focus_rect_option) = (QStyleOption&)option;
+               focus_rect_option.rect = style->subElementRect(QStyle::SE_CheckBoxFocusRect, &option, widget);
+               proxy->drawPrimitive(QStyle::PE_FrameFocusRect, &focus_rect_option, &painter, widget);
+            }
+         }
+         //painter.drawControl(QStyle::CE_CheckBox, option);
+         return true;
+      }
+      return QObject::eventFilter(watched, event);
+   }
 #pragma endregion
 
 void DKYesNoUnsetWidget::_initCheckboxStyleOption(QStyleOptionButton& dst) const {
-   dst.initFrom(this->_subwidgets.checkbox);
+   const auto* widget = this->_subwidgets.checkbox;
+   dst.initFrom(widget);
    dst.text     = this->text();
-   dst.icon     = this->_subwidgets.checkbox->icon();
-   dst.iconSize = this->_subwidgets.checkbox->iconSize();
-   switch (this->_subwidgets.checkbox->checkState()) {
+   dst.icon     = widget->icon();
+   dst.iconSize = widget->iconSize();
+   switch (this->checkState()) {
       case Qt::CheckState::Checked:
          dst.state |= QStyle::State_On;
          break;

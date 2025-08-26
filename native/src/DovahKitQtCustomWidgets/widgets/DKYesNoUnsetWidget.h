@@ -36,6 +36,7 @@ class DKYesNoUnsetWidget : public QWidget
          virtual QSize minimumSizeHint() const override;
 
          virtual bool event(QEvent*) override;
+         virtual bool eventFilter(QObject* watched, QEvent*) override;
       #pragma endregion
 
    signals:
