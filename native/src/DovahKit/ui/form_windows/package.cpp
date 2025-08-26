@@ -50,6 +50,7 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
          ui::typical_tableview_config(view);
          view->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
          view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         view->setWordWrap(false);
 
          auto* sel_model = view->selectionModel();
          QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &FormDialogPackage::_on_packdata_selection_changed);
@@ -185,6 +186,7 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
          view->setModel(model);
          view->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
          view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         view->setWordWrap(false);
 
          auto* sel_model = view->selectionModel();
          QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &FormDialogPackage::_on_procedure_tree_selection_changed);
@@ -230,8 +232,10 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                   auto* model = this->_models.procedure_params = new PackageProcedureParamsModel(this);
                   auto* view  = this->ui.currentProcedureInputs;
                   view->setModel(model);
+                  ui::typical_tableview_config(view);
                   view->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
                   view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+                  view->setWordWrap(false);
 
                   model->setPackdataModel(this->_models.package_data);
 

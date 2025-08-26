@@ -49,10 +49,10 @@ PackageProcedureParamsModel::PackageProcedureParamsModel(QObject* parent) : QAbs
                      return src.cached.name;
                   case Column::Value:
                      return src.cached.value;
-                  case UniqueIDRole:
-                     return src.unique_id;
                }
                break;
+            case UniqueIDRole:
+               return src.unique_id;
          }
          return {};
       }

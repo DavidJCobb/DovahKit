@@ -46,7 +46,8 @@ PackageProcedureTreeModel::PackageProcedureTreeModel(QObject* parent) : QAbstrac
       return {};
    }
    bool PackageProcedureTreeModel::_is_model_qmi(const QModelIndex& qmi) const {
-      return qmi.model() == this && !qmi.isValid();
+      // QTreeView and friends use, as the root, an invalid QMI with no model set.
+      return !qmi.isValid();
    }
    const PackageProcedureTreeModel::node_type* PackageProcedureTreeModel::_node_for_qmi(const QModelIndex& qmi) const {
       if (qmi.model() != this)
@@ -87,12 +88,13 @@ PackageProcedureTreeModel::PackageProcedureTreeModel(QObject* parent) : QAbstrac
             //
             // Return the QMI for a top-level node, i.e. the root node or an orphan.
             // 
-            // The use of `>` rather than `>=` here is intentional, since for QMIs, 
+            // The use of `<=` rather than `<` here is intentional, since for QMIs, 
             // row 0 is the root, and rows [1, n] are the orphans; ergo the "end" 
             // row index (i.e. one past the last) is `1 + this->_orphans.size()`.
             //
-            if (row > this->_orphans.size())
+            if (row <= this->_orphans.size())
                return this->createIndex(row, col, (void*)this);
+            return {};
          }
          if (const auto* casted = std::get_if<ui::types::packages::procedure_tree_typed_data::branch>(&parent_node->data)) {
             if (row >= casted->children.size())
@@ -135,10 +137,10 @@ PackageProcedureTreeModel::PackageProcedureTreeModel(QObject* parent) : QAbstrac
          return _qmi_for_child(*parent, row, column);
       }
       /*virtual*/ int PackageProcedureTreeModel::rowCount(const QModelIndex& parent) const /*override*/ {
-         if (parent.model() != this)
-            return 0;
          if (_is_model_qmi(parent))
             return this->_orphans.size() + (this->_root ? 1 : 0);
+         if (parent.model() != this)
+            return 0;
          auto* node = _node_for_qmi(parent);
          if (!node)
             return 0;
