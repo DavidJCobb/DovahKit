@@ -308,7 +308,7 @@ void PackageProcedureTreeModel::export_tree(backend_type& dst, dovah::loaded_for
    }
    for (auto& src_orphan_ptr : this->_orphans) {
       assert(src_orphan_ptr != nullptr);
-      auto& dst_orphan_ptr = dst.orphans.emplace_back(std::make_unique<node_type>());
+      auto& dst_orphan_ptr = dst.orphans.emplace_back(std::make_unique<node_type::backend_type>());
       src_orphan_ptr->exportData(*dst_orphan_ptr, dst_containing_form);
    }
 }

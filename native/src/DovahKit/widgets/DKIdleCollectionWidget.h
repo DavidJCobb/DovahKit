@@ -8,7 +8,7 @@
 #if !defined(QT_PLUGIN)
 namespace dovah::loaded_forms {
    namespace components {
-      struct idle_collection;
+      class idle_collection;
    }
    class Form;
 }

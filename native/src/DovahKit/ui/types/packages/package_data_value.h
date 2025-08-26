@@ -45,8 +45,8 @@ namespace ui::types::packages {
          }
 
          template<dovah::packages::package_data_type Type>
-         constexpr auto emplace() {
-            return this->emplace<(size_t)Type>();
+         constexpr auto& emplace() {
+            return variant::emplace<(size_t)Type>();
          }
 
          template<dovah::packages::package_data_type Type>

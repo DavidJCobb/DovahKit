@@ -1,8 +1,11 @@
 #pragma once
 #include <memory>
 #include <vector>
-namespace dovah::loaded_forms::structs::custom_packages {
-   class procedure_tree;
+namespace dovah::loaded_forms {
+   namespace structs::custom_packages {
+      class procedure_tree;
+   }
+   class Form;
 }
 namespace ui::types::packages {
    class procedure_node;

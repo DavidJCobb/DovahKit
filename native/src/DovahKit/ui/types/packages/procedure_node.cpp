@@ -21,7 +21,7 @@ namespace ui::types::packages {
       {
          auto& src_variant = src.data;
          auto& dst_variant = this->data;
-         if (auto* src_casted = std::get_if<typed_node_data::branch>(&dst_variant)) {
+         if (auto* src_casted = std::get_if<typed_node_data::branch>(&src_variant)) {
             auto& dst_casted = dst_variant.emplace<procedure_tree_typed_data::branch>();
             dst_casted.flags = src_casted->flags;
             dst_casted.type  = src_casted->branch_type;
@@ -36,7 +36,7 @@ namespace ui::types::packages {
                dst_ptr->parent_node = this;
                dst_ptr->importData(*src_ptr);
             }
-         } else if (auto* src_casted = std::get_if<typed_node_data::procedure>(&dst_variant)) {
+         } else if (auto* src_casted = std::get_if<typed_node_data::procedure>(&src_variant)) {
             auto& dst_casted = dst_variant.emplace<procedure_tree_typed_data::procedure>();
             dst_casted.flags = src_casted->flags;
             dst_casted.type  = src_casted->type;
@@ -57,7 +57,7 @@ namespace ui::types::packages {
       {
          auto& src_variant = this->data;
          auto& dst_variant = dst.data;
-         if (auto* src_casted = std::get_if<procedure_tree_typed_data::branch>(&dst_variant)) {
+         if (auto* src_casted = std::get_if<procedure_tree_typed_data::branch>(&src_variant)) {
             auto& dst_casted = dst_variant.emplace<typed_node_data::branch>();
             dst_casted.branch_type = src_casted->type;
             dst_casted.flags       = src_casted->flags;
@@ -68,10 +68,10 @@ namespace ui::types::packages {
             dst_list.clear();
             dst_list.reserve(size);
             for (const auto& src_ptr : src_list) {
-               auto& dst_ptr = dst_list.emplace_back(std::make_unique<procedure_node>());
+               auto& dst_ptr = dst_list.emplace_back(std::make_unique<procedure_node::backend_type>());
                src_ptr->exportData(*dst_ptr, dst_owner);
             }
-         } else if (auto* src_casted = std::get_if<procedure_tree_typed_data::procedure>(&dst_variant)) {
+         } else if (auto* src_casted = std::get_if<procedure_tree_typed_data::procedure>(&src_variant)) {
             auto& dst_casted = dst_variant.emplace<typed_node_data::procedure>();
             dst_casted.flags = src_casted->flags;
             dst_casted.type  = src_casted->type;

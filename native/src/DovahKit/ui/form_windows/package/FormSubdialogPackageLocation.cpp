@@ -34,7 +34,7 @@ FormSubdialogPackageLocation::FormSubdialogPackageLocation(QWidget* parent) : QD
       std::pair<QRadioButton*, QWidget*>{ this->ui.locationTypeInterruptTarget, this->ui.interruptTarget },
       std::pair<QRadioButton*, QWidget*>{ this->ui.locationTypePackdataTarget,  this->ui.packdataTarget },
    }) {
-      QObject::connect(pair.first, &QRadioButton::toggled, pair.second, QWidget::setEnabled);
+      QObject::connect(pair.first, &QRadioButton::toggled, pair.second, &QWidget::setEnabled);
    }
 
    this->ui.locationTypeAtPackLoc->setChecked(true);

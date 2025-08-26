@@ -342,10 +342,16 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                   this->ui.procedureOverrideFlagWearSleepOutfit,
                   this->ui.procedureOverrideFlagWorldInteractions,
                }) {
-                  QObject::connect(widget, &DKYesNoUnsetWidget::stateChanged, this, &FormDialogPackage::_push_procedure_flag_overrides_from_ui);
+                  QObject::connect(widget, &DKYesNoUnsetWidget::stateChanged, this, [this]() {
+                     this->_push_procedure_flag_overrides_from_ui();
+                  });
                }
-               QObject::connect(this->ui.procedureOverrideFlagPreferredSpeed, &QCheckBox::toggled, this, &FormDialogPackage::_push_procedure_flag_overrides_from_ui);
-               QObject::connect(this->ui.procedureOverridePreferredSpeed, qOverload<int>(&QComboBox::currentIndexChanged), this, &FormDialogPackage::_push_procedure_flag_overrides_from_ui);
+               QObject::connect(this->ui.procedureOverrideFlagPreferredSpeed, &QCheckBox::toggled, this, [this]() {
+                  this->_push_procedure_flag_overrides_from_ui();
+               });
+               QObject::connect(this->ui.procedureOverridePreferredSpeed, qOverload<int>(&QComboBox::currentIndexChanged), this, [this]() {
+                  this->_push_procedure_flag_overrides_from_ui();
+               });
             }
             #pragma endregion
          #pragma endregion
@@ -505,7 +511,7 @@ void FormDialogPackage::_load_impl() {
       auto* template_data = _get_template_package_data();
       
       ui::bind(this->ui.templateForm, custom->template_package, working);
-      QObject::connect(this->ui.templateForm, DKFormPicker::formChanged, this, [this](dovah::form_stub* stub) {
+      QObject::connect(this->ui.templateForm, &DKFormPicker::formChanged, this, [this](dovah::form_stub* stub) {
          if (stub) {
             this->_models.package_data->clear();
             this->_models.package_data->setDeclarationsOwned(false);
@@ -519,7 +525,7 @@ void FormDialogPackage::_load_impl() {
       });
       #pragma region Public Package Data
          this->_models.package_data->setOwningQuest(working.owning_quest.get_form_stub());
-         QObject::connect(this->ui.owningQuest, DKFormPicker::formChanged, this->_models.package_data, &PackageDataModel::setOwningQuest);
+         QObject::connect(this->ui.owningQuest, &DKFormPicker::formChanged, this->_models.package_data, &PackageDataModel::setOwningQuest);
 
          if (custom->template_package) {
             if (template_data) {
@@ -970,13 +976,13 @@ void FormDialogPackage::_on_packdata_value_edited() {
       case dovah::packages::package_data_type::single_ref:
          {
             auto& dst = value.emplace<dovah::packages::package_data_type::single_ref>();
-            dst.radius = this->ui.currentPackdataValue_TargetRadius->value();
+            dst.distance = this->ui.currentPackdataValue_TargetRadius->value();
          }
          break;
       case dovah::packages::package_data_type::target_selector:
          {
             auto& dst = value.emplace<dovah::packages::package_data_type::target_selector>();
-            dst.radius = this->ui.currentPackdataValue_TargetRadius->value();
+            dst.distance = this->ui.currentPackdataValue_TargetRadius->value();
          }
          break;
       case dovah::packages::package_data_type::topic:
@@ -1328,7 +1334,7 @@ void FormDialogPackage::_update_procedure_params_picker() {
    if (prior.isValid())
       widget->setCurrentIndex(widget->findData(prior));
 }
-void FormDialogPackage::_update_procedure_params_list(QModelIndex qmi = {}) {
+void FormDialogPackage::_update_procedure_params_list(QModelIndex qmi) {
    if (!qmi.isValid()) {
       qmi = _selected_procedure_node_qmi();
       if (!qmi.isValid())

@@ -50,7 +50,7 @@ FormSubdialogPackageTarget::FormSubdialogPackageTarget(QWidget* parent) : QDialo
       std::pair<QRadioButton*, QWidget*>{ this->ui.targetTypeRefAlias,        this->ui.refAlias },
       std::pair<QRadioButton*, QWidget*>{ this->ui.targetTypeInterruptTarget, this->ui.interruptTarget },
    }) {
-      QObject::connect(pair.first, &QRadioButton::toggled, pair.second, QWidget::setEnabled);
+      QObject::connect(pair.first, &QRadioButton::toggled, pair.second, &QWidget::setEnabled);
    }
 
    {

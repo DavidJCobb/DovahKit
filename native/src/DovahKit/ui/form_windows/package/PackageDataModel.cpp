@@ -164,7 +164,6 @@ void PackageDataModel::importDeclarations(const dovah::loaded_forms::structs::cu
 }
 void PackageDataModel::importValues(const dovah::loaded_forms::structs::custom_packages::package_data_value_map& src) {
    using frontend_decl_type = ui::types::packages::package_data_declaration;
-   using frontend_decl_type = ui::types::packages::package_data_value;
    using backend_decl_type  = dovah::loaded_forms::structs::custom_packages::package_data_value_map::entry;
 
    for (auto& src_pair : src.entries) {

@@ -1,5 +1,6 @@
 #include "./branch.h"
 #include "dovah/forms/structs/custom_packages/procedure_nodes/branch.h"
+#include "dovah/forms/structs/custom_packages/procedure_node.h"
 #include "../procedure_node.h"
 
 namespace ui::types::packages::procedure_tree_typed_data {
