@@ -55,6 +55,9 @@ PackageProcedureTreeModel::PackageProcedureTreeModel(QObject* parent) : QAbstrac
       auto row = qmi.row();
       if (row < 0)
          return nullptr;
+      //
+      // The QMI for a given node has, as its internal pointer, the node's parent.
+      //
       if (qmi.internalPointer() == this) {
          if (row == 0)
             return this->_root.get();
@@ -99,7 +102,7 @@ PackageProcedureTreeModel::PackageProcedureTreeModel(QObject* parent) : QAbstrac
          if (const auto* casted = std::get_if<ui::types::packages::procedure_tree_typed_data::branch>(&parent_node->data)) {
             if (row >= casted->children.size())
                return {};
-            return this->createIndex(row, col, (void*)parent_node);
+            return _qmi_for_child(*parent_node, row, col);
          }
          return {};
       }
@@ -114,12 +117,19 @@ PackageProcedureTreeModel::PackageProcedureTreeModel(QObject* parent) : QAbstrac
          }
          auto* grandparent = parent->parent_node;
          if (!grandparent) {
-            auto row = index.row();
-            if (row == 0)
+            if (parent == this->_root.get())
                return _qmi_for_root();
-            return _qmi_for_orphan(row - 1);
+            for (size_t i = 0; i < this->_orphans.size(); ++i)
+               if (parent == this->_orphans[i].get())
+                  return _qmi_for_orphan(i);
+            qWarning("Huh? If X has no grandparent, then how is its parent not a top-level node?");
+            return {};
          }
          auto row = grandparent->index_of(*parent);
+         if (row == (size_t)-1) {
+            qWarning("Huh? How is X's parent not a child of X's grandparent?");
+            return {};
+         }
          return _qmi_for_child(*grandparent, row);
       }
       /*virtual*/ QModelIndex PackageProcedureTreeModel::sibling(int row, int column, const QModelIndex& index) const /*override*/ {
@@ -131,10 +141,15 @@ PackageProcedureTreeModel::PackageProcedureTreeModel(QObject* parent) : QAbstrac
          if (!node)
             return {};
          auto* parent = node->parent_node;
-         if (!parent) { // top-level node?
-            return this->index(row, column, {});
+         if (!parent) { // if top-level node
+            return this->index(row, column, _qmi_for_model());
          }
-         return _qmi_for_child(*parent, row, column);
+         if (const auto* casted = std::get_if<ui::types::packages::procedure_tree_typed_data::branch>(&parent->data)) {
+            if (row >= casted->children.size())
+               return {};
+            return _qmi_for_child(*parent, row, column);
+         }
+         return {};
       }
       /*virtual*/ int PackageProcedureTreeModel::rowCount(const QModelIndex& parent) const /*override*/ {
          if (_is_model_qmi(parent))

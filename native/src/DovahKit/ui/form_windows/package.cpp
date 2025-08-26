@@ -8,6 +8,7 @@
 #include "editor/localize/package_procedure_type.h"
 #include "widgets/DKFormNIFPicker.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/set_combobox_by_data.h"
 #include "ui/utils/set_custom_context_menu.h"
 #include "ui/utils/set_range.h"
 #include "ui/utils/typical_tableview_config.h"
@@ -64,19 +65,11 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                auto br = qmi.siblingAtColumn(PackageDataModel::Column::__COUNT - 1);
                sel_model->select({ tl, br }, QItemSelectionModel::SelectionFlag::ClearAndSelect);
             });
-            QObject::connect(this->ui.buttonPackdataMoveUp, &QPushButton::clicked, this, [this, model, sel_model]() {
-               auto rows = sel_model->selectedRows();
-               if (rows.isEmpty())
-                  return;
-               auto row = rows[0].row();
-               model->moveRow(row, -1);
+            QObject::connect(this->ui.buttonPackdataMoveUp, &QPushButton::clicked, this, [this]() {
+               this->_move_selected_packdata(-1);
             });
-            QObject::connect(this->ui.buttonPackdataMoveDown, &QPushButton::clicked, this, [this, model, sel_model]() {
-               auto rows = sel_model->selectedRows();
-               if (rows.isEmpty())
-                  return;
-               auto row = rows[0].row();
-               model->moveRow(row, 1);
+            QObject::connect(this->ui.buttonPackdataMoveDown, &QPushButton::clicked, this, [this]() {
+               this->_move_selected_packdata(1);
             });
             QObject::connect(this->ui.buttonPackdataDelete, &QPushButton::clicked, this, [this, model, sel_model]() {
                auto rows = sel_model->selectedRows();
@@ -87,27 +80,26 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
             });
          #pragma endregion
 
-         {  // Package Type
-            auto* widget = this->ui.currentPackdataType;
-            widget->clear();
-            for (auto t : std::array{
-               dovah::packages::package_data_type::boolean,         // BGSPackageDataBool:           "Bool"
-               dovah::packages::package_data_type::float32,         // BGSPackageDataFloat:          "Float"
-               dovah::packages::package_data_type::integer,         // BGSPackageDataInt:            "Int"
-               dovah::packages::package_data_type::location,        // BGSPackageDataLocation:       "Location"
-               dovah::packages::package_data_type::object_list,     // BGSPackageDataObjectList:     "ObjectList"
-               dovah::packages::package_data_type::single_ref,      // BGSPackageDataRef:            "SingleRef"
-               dovah::packages::package_data_type::target_selector, // BGSPackageDataTargetSelector: "TargetSelector"
-               dovah::packages::package_data_type::topic,           // BGSPackageDataTopic:          "Topic"
-            }) {
-               widget->addItem(editor::localize::package_data_type(t), (int)t);
-            }
-         }
-
          #pragma region Selected Package Data
             QObject::connect(this->ui.currentPackdataName, &QLineEdit::textChanged, this, &FormDialogPackage::_on_packdata_declaration_edited);
             QObject::connect(this->ui.currentPackdataIsPublic, &QCheckBox::toggled, this, &FormDialogPackage::_on_packdata_declaration_edited);
-
+            
+            {  // Package Type
+               auto* widget = this->ui.currentPackdataType;
+               widget->clear();
+               for (auto t : std::array{
+                  dovah::packages::package_data_type::boolean,         // BGSPackageDataBool:           "Bool"
+                  dovah::packages::package_data_type::float32,         // BGSPackageDataFloat:          "Float"
+                  dovah::packages::package_data_type::integer,         // BGSPackageDataInt:            "Int"
+                  dovah::packages::package_data_type::location,        // BGSPackageDataLocation:       "Location"
+                  dovah::packages::package_data_type::object_list,     // BGSPackageDataObjectList:     "ObjectList"
+                  dovah::packages::package_data_type::single_ref,      // BGSPackageDataRef:            "SingleRef"
+                  dovah::packages::package_data_type::target_selector, // BGSPackageDataTargetSelector: "TargetSelector"
+                  dovah::packages::package_data_type::topic,           // BGSPackageDataTopic:          "Topic"
+               }) {
+                  widget->addItem(editor::localize::package_data_type(t), (int)t);
+               }
+            }
             QObject::connect(this->ui.currentPackdataType, qOverload<int>(&QComboBox::currentIndexChanged), this, &FormDialogPackage::_on_packdata_type_edited);
 
             ui::set_range<float>(this->ui.currentPackdataValue_Float);
@@ -115,12 +107,12 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
             ui::set_range<int32_t>(this->ui.currentPackdataValue_LocationRadius);
             ui::set_range<int32_t>(this->ui.currentPackdataValue_TargetRadius);
 
-            QObject::connect(this->ui.currentPackdataValue_Bool, &QCheckBox::toggled, this, &FormDialogPackage::_on_packdata_value_edited);
-            QObject::connect(this->ui.currentPackdataValue_Float, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
-            QObject::connect(this->ui.currentPackdataValue_Int, qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
+            QObject::connect(this->ui.currentPackdataValue_Bool,           &QCheckBox::toggled, this, &FormDialogPackage::_on_packdata_value_edited);
+            QObject::connect(this->ui.currentPackdataValue_Float,          qOverload<double>(&QDoubleSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
+            QObject::connect(this->ui.currentPackdataValue_Int,            qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
             QObject::connect(this->ui.currentPackdataValue_LocationRadius, qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
-            QObject::connect(this->ui.currentPackdataValue_TargetRadius, qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
-            QObject::connect(this->ui.currentPackdataValue_Topic, &DKTopicOrSubtypePicker::valueChanged, this, &FormDialogPackage::_on_packdata_value_edited);
+            QObject::connect(this->ui.currentPackdataValue_TargetRadius,   qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
+            QObject::connect(this->ui.currentPackdataValue_Topic,          &DKTopicOrSubtypePicker::valueChanged, this, &FormDialogPackage::_on_packdata_value_edited);
 
             QObject::connect(this->ui.currentPackdataValue_LocationButtonEdit, &QPushButton::clicked, this, [this]() {
                const auto row_opt = this->_selected_packdata_row();
@@ -129,6 +121,8 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                const auto row = row_opt.value();
 
                FormSubdialogPackageLocation dialog;
+               dialog.setInterruptOverrideType((dovah::packages::interrupt_override_type)this->ui.interruptOverride->currentData().toInt());
+               dialog.setOwningPackage(this->stub);
                {
                   const auto value_opt = this->_models.package_data->rowValue(row);
                   if (value_opt.has_value()) {
@@ -149,6 +143,8 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                const auto row = row_opt.value();
 
                FormSubdialogPackageTarget dialog;
+               dialog.setInterruptOverrideType((dovah::packages::interrupt_override_type)this->ui.interruptOverride->currentData().toInt());
+               dialog.setOwningQuest(this->ui.owningQuest->formStub());
                auto type = dovah::packages::package_data_type::single_ref;
                {
                   const auto value_opt = this->_models.package_data->rowValue(row);
@@ -187,6 +183,7 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
          view->setModel(model);
          view->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
          view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+         view->setUniformRowHeights(true);
          view->setWordWrap(false);
 
          auto* sel_model = view->selectionModel();
@@ -250,12 +247,10 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                         return;
                      }
                      picker->setEnabled(true);
-                     const auto qmi     = rows[0];
-                     const auto blocker = QSignalBlocker(picker);
-
-                     auto unique_id = model->data(qmi, PackageProcedureParamsModel::UniqueIDRole).toInt();
-                     int  i = picker->findData(unique_id);
-                     picker->setCurrentIndex(i);
+                     const auto qmi       = rows[0];
+                     const auto blocker   = QSignalBlocker(picker);
+                     const auto unique_id = model->data(qmi, PackageProcedureParamsModel::UniqueIDRole).toInt();
+                     ui::set_combobox_by_data(*picker, unique_id);
                   });
                }
                QObject::connect(this->_models.package_data, &QAbstractItemModel::rowsInserted, this, &FormDialogPackage::_update_procedure_params_picker);
@@ -321,7 +316,7 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                this->ui.procedureOverrideFlagWeaponDrawn            ->setProperty("flag", general_flag::weapon_drawn);
                this->ui.procedureOverrideFlagWeaponsUnequipped      ->setProperty("flag", general_flag::weapons_unequipped);
                this->ui.procedureOverrideFlagWearSleepOutfit        ->setProperty("flag", general_flag::wear_sleep_outfit);
-               //this->ui.procedureOverridePreferredSpeed->setProperty("flag", interrupt_flag::aggro_radius_behavior);
+               //this->ui.procedureOverridePreferredSpeed->setProperty("flag", interrupt_flag::has_preferred_speed);
                //
                this->ui.procedureOverrideFlagAggroRadius            ->setProperty("flag", interrupt_flag::aggro_radius_behavior);
                this->ui.procedureOverrideFlagAllowIdleChatter       ->setProperty("flag", interrupt_flag::allow_idle_chatter);
@@ -382,27 +377,28 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
          QObject::connect(this->ui.flagPreferredSpeed, &QCheckBox::toggled, widget, &QWidget::setEnabled);
          widget->setEnabled(this->ui.flagPreferredSpeed->isChecked());
       }
-
-      this->ui.buttonClearAllInterruptFlags->setProperty("operation", false);
-      this->ui.buttonSetAllInterruptFlags->setProperty("operation", true);
-      auto handler = [this]() {
-         bool op = sender()->property("operation").toBool();
-         for (auto* widget : std::array{
-            this->ui.flagAllowIdleChatter,
-            this->ui.flagHellosToPlayer,
-            this->ui.flagRandomConversations,
-            this->ui.flagObserveCombatBehavior,
-            this->ui.flagObserveCorpseBehavior,
-            this->ui.flagReactionToPlayerActions,
-            this->ui.flagFriendlyFireComments,
-            this->ui.flagAggroRadius,
-            this->ui.flagWorldInteractions,
-         }) {
-            widget->setChecked(op);
-         }
-      };
-      QObject::connect(this->ui.buttonClearAllInterruptFlags, &QPushButton::clicked, this, handler);
-      QObject::connect(this->ui.buttonSetAllInterruptFlags, &QPushButton::clicked, this, handler);
+      #pragma region "Set/Clear All Interrupt Flags" buttons
+         this->ui.buttonClearAllInterruptFlags->setProperty("operation", false);
+         this->ui.buttonSetAllInterruptFlags->setProperty("operation", true);
+         auto handler = [this]() {
+            bool op = sender()->property("operation").toBool();
+            for (auto* widget : std::array{
+               this->ui.flagAllowIdleChatter,
+               this->ui.flagHellosToPlayer,
+               this->ui.flagRandomConversations,
+               this->ui.flagObserveCombatBehavior,
+               this->ui.flagObserveCorpseBehavior,
+               this->ui.flagReactionToPlayerActions,
+               this->ui.flagFriendlyFireComments,
+               this->ui.flagAggroRadius,
+               this->ui.flagWorldInteractions,
+            }) {
+               widget->setChecked(op);
+            }
+         };
+         QObject::connect(this->ui.buttonClearAllInterruptFlags, &QPushButton::clicked, this, handler);
+         QObject::connect(this->ui.buttonSetAllInterruptFlags, &QPushButton::clicked, this, handler);
+      #pragma endregion
    }
    #pragma endregion
    #pragma region Schedule and Conditions
@@ -520,7 +516,13 @@ void FormDialogPackage::_load_impl() {
       QObject::connect(widget, &QCheckBox::toggled, this, &FormDialogPackage::_set_is_package_template);
       widget->setChecked(checked);
    }
-   ui::bind(this->ui.owningQuest, working.owning_quest, working);
+   {
+      auto* picker = this->ui.owningQuest;
+      auto& target = working.owning_quest;
+      this->_models.package_data->setOwningQuest(target.get_form_stub());
+      QObject::connect(picker, &DKFormPicker::formChanged, this->_models.package_data, &PackageDataModel::setOwningQuest);
+      ui::bind(picker, target, working);
+   }
    ui::bind(this->ui.combatStyle, working.combat_style, working);
    ui::bind(this->ui.interruptOverride, working.interrupt_override);
 
@@ -531,24 +533,13 @@ void FormDialogPackage::_load_impl() {
       auto* template_data = _get_template_package_data();
       
       ui::bind(this->ui.templateForm, custom->template_package, working);
-      QObject::connect(this->ui.templateForm, &DKFormPicker::formChanged, this, [this](dovah::form_stub* stub) {
-         if (stub) {
-            this->ui.buttonPackdataNew->setEnabled(false);
-            this->_models.package_data->clear();
-            this->_models.package_data->setDeclarationsOwned(false);
-            this->_models.package_data->setOwningQuest(this->ui.owningQuest->formStub());
-            auto* template_data = _get_template_package_data();
-            if (template_data)
-               this->_models.package_data->importDeclarations(template_data->data.declarations, false);
-         } else {
-            this->ui.buttonPackdataNew->setEnabled(true);
-            this->_models.package_data->setDeclarationsOwned(true);
-         }
-      });
-      #pragma region Public Package Data
-         this->_models.package_data->setOwningQuest(working.owning_quest.get_form_stub());
-         QObject::connect(this->ui.owningQuest, &DKFormPicker::formChanged, this->_models.package_data, &PackageDataModel::setOwningQuest);
+      QObject::connect(this->ui.templateForm, &DKFormPicker::formChanged, this, &FormDialogPackage::_set_package_template);
+      if (template_data) {
+         this->ui.buttonPackdataNew->setEnabled(false);
+         this->ui.selectedProcedureGroupbox->setEnabled(false);
+      }
 
+      #pragma region Public Package Data
          if (custom->template_package) {
             if (template_data) {
                this->_models.package_data->importDeclarations(template_data->data.declarations, false);
@@ -559,7 +550,7 @@ void FormDialogPackage::_load_impl() {
          this->_models.package_data->importValues(custom->data.values);
       #pragma endregion
       #pragma region Procedure Tree
-         this->_models.procedure_tree->import_tree(custom->procedures);
+         this->_models.procedure_tree->import_tree((template_data ? template_data : custom)->procedures);
       #pragma endregion
    }
    #pragma endregion
@@ -798,540 +789,595 @@ void FormDialogPackage::_set_is_package_template(bool is) {
    this->ui.templateForm->setEnabled(is);
    this->ui.idles->setEnabled(!is);
 }
-
-std::optional<size_t> FormDialogPackage::_selected_packdata_row() const {
-   auto* view      = this->ui.packdata;
-   auto* sel_model = view->selectionModel();
-   auto  rows      = sel_model->selectedRows();
-   if (rows.isEmpty())
-      return {};
-   auto row = rows[0].row();
-   if (row < 0 || row >= this->_models.package_data->rowCount())
-      return {};
-   return row;
+void FormDialogPackage::_set_package_template(dovah::form_stub* stub) {
+   bool absent = stub == nullptr;
+   this->ui.buttonPackdataNew->setEnabled(absent);
+   this->_models.package_data->setDeclarationsOwned(absent);
+   this->ui.selectedProcedureGroupbox->setEnabled(absent);
+   if (stub) {
+      this->_models.package_data->clear();
+      this->_models.package_data->setOwningQuest(this->ui.owningQuest->formStub());
+      auto* template_data = _get_template_package_data();
+      if (template_data)
+         this->_models.package_data->importDeclarations(template_data->data.declarations, false);
+   }
 }
-void FormDialogPackage::_on_packdata_selection_changed() {
-   const auto* model = this->_models.package_data;
 
-   const auto row_opt = _selected_packdata_row();
-   if (!row_opt.has_value()) {
-      this->ui.buttonPackdataMoveUp->setEnabled(false);
-      this->ui.buttonPackdataMoveDown->setEnabled(false);
-      this->ui.buttonPackdataDelete->setEnabled(false);
-      this->ui.currentPackdataName->setEnabled(false);
-      this->ui.currentPackdataType->setEnabled(false);
-      this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_None);
-      this->ui.currentPackdataIsPublic->setEnabled(false);
-      return;
+bool FormDialogPackage::_uses_package_template() {
+   if (_get_template_package_data())
+      return true;
+   return this->ui.templateForm->formStub() != nullptr;
+}
+
+#pragma region Package Data UI
+   std::optional<size_t> FormDialogPackage::_selected_packdata_row() const {
+      auto* view      = this->ui.packdata;
+      auto* sel_model = view->selectionModel();
+      auto  rows      = sel_model->selectedRows();
+      if (rows.isEmpty())
+         return {};
+      auto row = rows[0].row();
+      if (row < 0 || row >= this->_models.package_data->rowCount())
+         return {};
+      return row;
    }
-   const auto row = row_opt.value();
-   this->ui.buttonPackdataMoveUp->setEnabled(true);
-   this->ui.buttonPackdataMoveDown->setEnabled(true);
-   this->_update_packdata_deleteable();
 
-   const auto blockers = std::array{
-      QSignalBlocker(this->ui.currentPackdataName),
-      QSignalBlocker(this->ui.currentPackdataType),
-      QSignalBlocker(this->ui.currentPackdataIsPublic),
-      QSignalBlocker(this->ui.currentPackdataValue_Bool),
-      QSignalBlocker(this->ui.currentPackdataValue_Float),
-      QSignalBlocker(this->ui.currentPackdataValue_Int),
-      QSignalBlocker(this->ui.currentPackdataValue_LocationRadius),
-      QSignalBlocker(this->ui.currentPackdataValue_TargetRadius),
-      QSignalBlocker(this->ui.currentPackdataValue_Topic),
-   };
-
-   const bool owned = model->declarationsOwned();
-
-   auto decl    = model->rowDeclaration(row);
-   auto val_opt = model->rowValue(row);
-
-   this->ui.currentPackdataName->setEnabled(owned);
-   this->ui.currentPackdataType->setEnabled(owned);
-   this->ui.currentPackdataIsPublic->setEnabled(owned);
-
-   this->ui.currentPackdataName->setText(decl.name);
-   this->ui.currentPackdataIsPublic->setChecked(decl.is_public);
-   if (!val_opt.has_value()) {
-      //
-      // Default to "bool."
-      //
-      this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Bool);
-      this->ui.currentPackdataValue_Bool->setChecked(false);
-      return;
+   void FormDialogPackage::_move_selected_packdata(int by) {
+      auto* sel_model = this->ui.packdata->selectionModel();
+      auto  rows      = sel_model->selectedRows();
+      if (rows.isEmpty())
+         return;
+      this->_models.package_data->moveRow(rows[0].row(), by);
    }
-   auto& val  = val_opt.value();
-   auto  type = val.type();
-   {
-      auto i = this->ui.currentPackdataType->findData((int)type);
-      if (i >= 0)
-         this->ui.currentPackdataType->setCurrentIndex(i);
+
+   void FormDialogPackage::_on_packdata_selection_changed() {
+      const auto* model = this->_models.package_data;
+
+      const auto row_opt = _selected_packdata_row();
+      if (!row_opt.has_value()) {
+         this->ui.buttonPackdataMoveUp->setEnabled(false);
+         this->ui.buttonPackdataMoveDown->setEnabled(false);
+         this->ui.buttonPackdataDelete->setEnabled(false);
+         this->ui.currentPackdataName->setEnabled(false);
+         this->ui.currentPackdataType->setEnabled(false);
+         this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_None);
+         this->ui.currentPackdataIsPublic->setEnabled(false);
+         return;
+      }
+      const auto row   = row_opt.value();
+      const bool owned = model->declarationsOwned();
+
+      this->ui.buttonPackdataMoveUp->setEnabled(owned);
+      this->ui.buttonPackdataMoveDown->setEnabled(owned);
+      this->_update_packdata_deleteable();
+      this->ui.currentPackdataName->setEnabled(owned);
+      this->ui.currentPackdataType->setEnabled(owned);
+      this->ui.currentPackdataIsPublic->setEnabled(owned);
+
+      this->_pull_packdata_to_ui(row);
    }
-   switch (type) {
-      case dovah::packages::package_data_type::invalid:
+   void FormDialogPackage::_pull_packdata_to_ui(size_t row) {
+      const auto* model = this->_models.package_data;
+
+      const auto blockers = std::array{
+         QSignalBlocker(this->ui.currentPackdataName),
+         QSignalBlocker(this->ui.currentPackdataType),
+         QSignalBlocker(this->ui.currentPackdataIsPublic),
+         QSignalBlocker(this->ui.currentPackdataValue_Bool),
+         QSignalBlocker(this->ui.currentPackdataValue_Float),
+         QSignalBlocker(this->ui.currentPackdataValue_Int),
+         QSignalBlocker(this->ui.currentPackdataValue_LocationRadius),
+         QSignalBlocker(this->ui.currentPackdataValue_TargetRadius),
+         QSignalBlocker(this->ui.currentPackdataValue_Topic),
+      };
+
+      auto decl    = model->rowDeclaration(row);
+      auto val_opt = model->rowValue(row);
+
+      this->ui.currentPackdataName->setText(decl.name);
+      this->ui.currentPackdataIsPublic->setChecked(decl.is_public);
+      if (!val_opt.has_value()) {
          //
          // Default to "bool."
          //
          this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Bool);
          this->ui.currentPackdataValue_Bool->setChecked(false);
-         break;
-      case dovah::packages::package_data_type::boolean:
-         this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Bool);
-         this->ui.currentPackdataValue_Bool->setChecked(val.as<dovah::packages::package_data_type::boolean>());
-         break;
-      case dovah::packages::package_data_type::float32:
-         this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Float);
-         this->ui.currentPackdataValue_Float->setValue(val.as<dovah::packages::package_data_type::float32>());
-         break;
-      case dovah::packages::package_data_type::integer:
-         this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Int);
-         this->ui.currentPackdataValue_Int->setValue(val.as<dovah::packages::package_data_type::integer>());
-         break;
-      case dovah::packages::package_data_type::location:
-         this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Location);
-         {
-            auto& src = val.as<dovah::packages::package_data_type::location>();
-            this->ui.currentPackdataValue_LocationRadius->setValue(src.radius);
-            this->ui.currentPackdataValue_LocationButtonEdit->setText(
-               model->data(model->index(row, PackageDataModel::Column::Value, {}), Qt::DisplayRole).toString()
-            );
-         }
-         break;
-      case dovah::packages::package_data_type::object_list:
-         this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Float);
-         this->ui.currentPackdataValue_Float->setValue(val.as<dovah::packages::package_data_type::object_list>());
-         break;
-      case dovah::packages::package_data_type::single_ref:
-         this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Target);
-         {
-            auto& src = val.as<dovah::packages::package_data_type::single_ref>();
-            this->ui.currentPackdataValue_TargetRadius->setValue(src.distance);
-            this->ui.currentPackdataValue_TargetButtonEdit->setText(
-               model->data(model->index(row, PackageDataModel::Column::Value, {}), Qt::DisplayRole).toString()
-            );
-         }
-         break;
-      case dovah::packages::package_data_type::target_selector:
-         this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Target);
-         {
-            auto& src = val.as<dovah::packages::package_data_type::target_selector>();
-            this->ui.currentPackdataValue_TargetRadius->setValue(src.distance);
-            this->ui.currentPackdataValue_TargetButtonEdit->setText(
-               model->data(model->index(row, PackageDataModel::Column::Value, {}), Qt::DisplayRole).toString()
-            );
-         }
-         break;
-      case dovah::packages::package_data_type::topic:
-         this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Topic);
-         {
-            auto& src = val.as<dovah::packages::package_data_type::topic>();
-            if (auto* topic = src.get_topic())
-               this->ui.currentPackdataValue_Topic->setTopic(topic);
-            else
-               this->ui.currentPackdataValue_Topic->setSubtype(src.get_subtype_signature());
-         }
-         break;
-   }
-}
-void FormDialogPackage::_on_packdata_declaration_edited() {
-   auto* model = this->_models.package_data;
-
-   const auto row_opt = _selected_packdata_row();
-   if (!row_opt.has_value())
-      return;
-   auto row = row_opt.value();
-
-   auto decl = model->rowDeclaration(row);
-   decl.name      = this->ui.currentPackdataName->text();
-   decl.is_public = this->ui.currentPackdataIsPublic->isChecked();
-   model->setRowDeclaration(row, decl);
-}
-void FormDialogPackage::_on_packdata_type_edited() {
-   auto* model = this->_models.package_data;
-
-   const auto row_opt = _selected_packdata_row();
-   if (!row_opt.has_value())
-      return;
-   auto row = row_opt.value();
-
-   auto type = (dovah::packages::package_data_type)this->ui.currentPackdataType->currentData().toInt();
-
-   ui::types::packages::package_data_value value;
-   {
-      auto opt = model->rowValue(row);
-      if (opt.has_value())
-         value = opt.value();
-   }
-   if (value.type() != type)
-      value.convert_to(type);
-
-   this->_on_packdata_selection_changed();
-}
-void FormDialogPackage::_on_packdata_value_edited() {
-   auto* model = this->_models.package_data;
-
-   const auto row_opt = _selected_packdata_row();
-   if (!row_opt.has_value())
-      return;
-   const auto row = row_opt.value();
-
-   auto type = (dovah::packages::package_data_type)this->ui.currentPackdataType->currentData().toInt();
-
-   ui::types::packages::package_data_value value;
-   switch (type) {
-      case dovah::packages::package_data_type::boolean:
-         value.emplace<dovah::packages::package_data_type::boolean>() = this->ui.currentPackdataValue_Bool->isChecked();
-         break;
-      case dovah::packages::package_data_type::float32:
-         value.emplace<dovah::packages::package_data_type::float32>() = this->ui.currentPackdataValue_Float->value();
-         break;
-      case dovah::packages::package_data_type::integer:
-         value.emplace<dovah::packages::package_data_type::integer>() = this->ui.currentPackdataValue_Int->value();
-         break;
-      case dovah::packages::package_data_type::location:
-         {
-            auto& dst = value.emplace<dovah::packages::package_data_type::location>();
-            dst.radius = this->ui.currentPackdataValue_LocationRadius->value();
-         }
-         break;
-      case dovah::packages::package_data_type::single_ref:
-         {
-            auto& dst = value.emplace<dovah::packages::package_data_type::single_ref>();
-            dst.distance = this->ui.currentPackdataValue_TargetRadius->value();
-         }
-         break;
-      case dovah::packages::package_data_type::target_selector:
-         {
-            auto& dst = value.emplace<dovah::packages::package_data_type::target_selector>();
-            dst.distance = this->ui.currentPackdataValue_TargetRadius->value();
-         }
-         break;
-      case dovah::packages::package_data_type::topic:
-         {
-            auto* src = this->ui.currentPackdataValue_Topic;
-            auto& dst = value.emplace<dovah::packages::package_data_type::topic>();
-            if (auto* topic = src->topic())
-               dst.data = topic;
-            else
-               dst.data = src->subtype();
-         }
-         break;
+         return;
+      }
+      auto& val  = val_opt.value();
+      auto  type = val.type();
+      ui::set_combobox_by_data(*this->ui.currentPackdataType, type);
+      switch (type) {
+         case dovah::packages::package_data_type::invalid:
+            //
+            // Default to "bool."
+            //
+            this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Bool);
+            this->ui.currentPackdataValue_Bool->setChecked(false);
+            break;
+         case dovah::packages::package_data_type::boolean:
+            this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Bool);
+            this->ui.currentPackdataValue_Bool->setChecked(val.as<dovah::packages::package_data_type::boolean>());
+            break;
+         case dovah::packages::package_data_type::float32:
+            this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Float);
+            this->ui.currentPackdataValue_Float->setValue(val.as<dovah::packages::package_data_type::float32>());
+            break;
+         case dovah::packages::package_data_type::integer:
+            this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Int);
+            this->ui.currentPackdataValue_Int->setValue(val.as<dovah::packages::package_data_type::integer>());
+            break;
+         case dovah::packages::package_data_type::location:
+            this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Location);
+            {
+               auto& src = val.as<dovah::packages::package_data_type::location>();
+               this->ui.currentPackdataValue_LocationRadius->setValue(src.radius);
+               this->ui.currentPackdataValue_LocationButtonEdit->setText(
+                  model->data(model->index(row, PackageDataModel::Column::Value, {}), Qt::DisplayRole).toString()
+               );
+            }
+            break;
+         case dovah::packages::package_data_type::object_list:
+            this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Float);
+            this->ui.currentPackdataValue_Float->setValue(val.as<dovah::packages::package_data_type::object_list>());
+            break;
+         case dovah::packages::package_data_type::single_ref:
+            this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Target);
+            {
+               auto& src = val.as<dovah::packages::package_data_type::single_ref>();
+               this->ui.currentPackdataValue_TargetRadius->setValue(src.distance);
+               this->ui.currentPackdataValue_TargetButtonEdit->setText(
+                  model->data(model->index(row, PackageDataModel::Column::Value, {}), Qt::DisplayRole).toString()
+               );
+            }
+            break;
+         case dovah::packages::package_data_type::target_selector:
+            this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Target);
+            {
+               auto& src = val.as<dovah::packages::package_data_type::target_selector>();
+               this->ui.currentPackdataValue_TargetRadius->setValue(src.distance);
+               this->ui.currentPackdataValue_TargetButtonEdit->setText(
+                  model->data(model->index(row, PackageDataModel::Column::Value, {}), Qt::DisplayRole).toString()
+               );
+            }
+            break;
+         case dovah::packages::package_data_type::topic:
+            this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Topic);
+            {
+               auto& src = val.as<dovah::packages::package_data_type::topic>();
+               if (auto* topic = src.get_topic())
+                  this->ui.currentPackdataValue_Topic->setTopic(topic);
+               else
+                  this->ui.currentPackdataValue_Topic->setSubtype(src.get_subtype_signature());
+            }
+            break;
+      }
    }
 
-   model->setRowValue(row, value);
-}
+   void FormDialogPackage::_update_packdata_deleteable() const {
+      if (!this->_models.package_data->declarationsOwned()) {
+         this->ui.buttonPackdataDelete->setEnabled(false);
+         return;
+      }
+      auto row_opt = _selected_packdata_row();
+      if (!row_opt.has_value())
+         return;
+      auto    row       = row_opt.value();
+      uint8_t unique_id = this->_models.package_data->data(this->_models.package_data->index(row, 0, {}), PackageDataModel::UniqueIDRole).toInt();
 
-QModelIndex FormDialogPackage::_selected_procedure_node_qmi() const {
-   auto* view      = this->ui.procedures;
-   auto* sel_model = view->selectionModel();
-   auto  rows      = sel_model->selectedRows();
-   if (!rows.isEmpty())
-      return rows[0];
-   return {};
-}
-void FormDialogPackage::_pull_procedure_node_to_ui() {
-   const auto* model = this->_models.procedure_tree;
-
-   QModelIndex qmi = _selected_procedure_node_qmi();
-   if (!qmi.isValid()) {
-      this->ui.selectedProcedureGroupbox->setEnabled(false);
-      this->ui.currentProcedureStack->setCurrentWidget(this->ui.currentProcedurePageProcedure);
-      this->ui.currentProcedureConditions->clear();
-      return;
+      auto usage = this->_models.procedure_tree->countUsesOfPackdata();
+      if (usage[unique_id] > 0) {
+         this->ui.buttonPackdataDelete->setEnabled(false);
+      } else {
+         this->ui.buttonPackdataDelete->setEnabled(true);
+      }
    }
 
-   this->ui.selectedProcedureGroupbox->setEnabled(true);
+   void FormDialogPackage::_on_packdata_declaration_edited() {
+      auto* model = this->_models.package_data;
 
-   const auto blockers = std::array{
-      QSignalBlocker(this->ui.currentProcedureType),
-      QSignalBlocker(this->ui.currentProcedureCompletesPackage),
-      QSignalBlocker(this->ui.currentProcedureConditions),
-      QSignalBlocker(this->ui.currentProcedureInputPackdata),
-      QSignalBlocker(this->ui.currentProcedureRepeatWhenComplete),
-      QSignalBlocker(this->ui.procedureOverrideFlagAggroRadius),
-      QSignalBlocker(this->ui.procedureOverrideFlagAllowIdleChatter),
-      QSignalBlocker(this->ui.procedureOverrideFlagAllowSwim),
-      QSignalBlocker(this->ui.procedureOverrideFlagAlwaysSneak),
-      QSignalBlocker(this->ui.procedureOverrideFlagContinueIfPCNear),
-      QSignalBlocker(this->ui.procedureOverrideFlagFriendlyFireComments),
-      QSignalBlocker(this->ui.procedureOverrideFlagHellosToPlayer),
-      QSignalBlocker(this->ui.procedureOverrideFlagIgnoreCombat),
-      QSignalBlocker(this->ui.procedureOverrideFlagMaintainSpeedAtGoal),
-      QSignalBlocker(this->ui.procedureOverrideFlagMustComplete),
-      QSignalBlocker(this->ui.procedureOverrideFlagNoCombatAlert),
-      QSignalBlocker(this->ui.procedureOverrideFlagObserveCombatBehavior),
-      QSignalBlocker(this->ui.procedureOverrideFlagOffersServices),
-      QSignalBlocker(this->ui.procedureOverrideFlagOncePerDay),
-      QSignalBlocker(this->ui.procedureOverrideFlagPreferredSpeed),
-      QSignalBlocker(this->ui.procedureOverrideFlagRandomConversations),
-      QSignalBlocker(this->ui.procedureOverrideFlagReactionToPlayerActions),
-      QSignalBlocker(this->ui.procedureOverrideFlagWeaponDrawn),
-      QSignalBlocker(this->ui.procedureOverrideFlagWeaponsUnequipped),
-      QSignalBlocker(this->ui.procedureOverrideFlagWearSleepOutfit),
-      QSignalBlocker(this->ui.procedureOverrideFlagWorldInteractions),
-      QSignalBlocker(this->ui.procedureOverridePreferredSpeed),
-   };
+      const auto row_opt = _selected_packdata_row();
+      if (!row_opt.has_value())
+         return;
+      auto row = row_opt.value();
 
-   auto var_branch_type = model->data(qmi, PackageProcedureTreeModel::BranchTypeRole);
-   if (var_branch_type.isValid()) {
-      this->ui.currentProcedureStack->setCurrentWidget(this->ui.currentProcedurePageBranch);
+      auto decl = model->rowDeclaration(row);
+      decl.name      = this->ui.currentPackdataName->text();
+      decl.is_public = this->ui.currentPackdataIsPublic->isChecked();
+      model->setRowDeclaration(row, decl);
+   }
+   void FormDialogPackage::_on_packdata_type_edited() {
+      auto* model = this->_models.package_data;
+
+      const auto row_opt = _selected_packdata_row();
+      if (!row_opt.has_value())
+         return;
+      auto row = row_opt.value();
+
+      auto type = (dovah::packages::package_data_type)this->ui.currentPackdataType->currentData().toInt();
+
+      ui::types::packages::package_data_value value;
       {
-         auto* widget = this->ui.currentProcedureType;
-         widget->clear();
-         for (auto v : std::array{
-            dovah::packages::procedure_tree_branch_type::random,
-            dovah::packages::procedure_tree_branch_type::sequence,
-            dovah::packages::procedure_tree_branch_type::simultaneous,
-            dovah::packages::procedure_tree_branch_type::stacked,
-            }) {
-            widget->addItem(editor::localize::package_procedure_tree_branch_type(v), (int)v);
-         }
-         widget->model()->sort(0);
-         auto i = widget->findData(var_branch_type.toInt());
-         if (i >= 0)
-            widget->setCurrentIndex(i);
+         auto opt = model->rowValue(row);
+         if (opt.has_value())
+            value = opt.value();
+      }
+      if (value.type() != type)
+         value.convert_to(type);
+
+      this->_pull_packdata_to_ui(row);
+   }
+   void FormDialogPackage::_on_packdata_value_edited() {
+      auto* model = this->_models.package_data;
+
+      const auto row_opt = _selected_packdata_row();
+      if (!row_opt.has_value())
+         return;
+      const auto row = row_opt.value();
+
+      auto type = (dovah::packages::package_data_type)this->ui.currentPackdataType->currentData().toInt();
+
+      ui::types::packages::package_data_value value;
+      switch (type) {
+         case dovah::packages::package_data_type::boolean:
+            value.emplace<dovah::packages::package_data_type::boolean>() = this->ui.currentPackdataValue_Bool->isChecked();
+            break;
+         case dovah::packages::package_data_type::float32:
+            value.emplace<dovah::packages::package_data_type::float32>() = this->ui.currentPackdataValue_Float->value();
+            break;
+         case dovah::packages::package_data_type::integer:
+            value.emplace<dovah::packages::package_data_type::integer>() = this->ui.currentPackdataValue_Int->value();
+            break;
+         case dovah::packages::package_data_type::location:
+            {
+               auto& dst = value.emplace<dovah::packages::package_data_type::location>();
+               dst.radius = this->ui.currentPackdataValue_LocationRadius->value();
+            }
+            break;
+         case dovah::packages::package_data_type::single_ref:
+            {
+               auto& dst = value.emplace<dovah::packages::package_data_type::single_ref>();
+               dst.distance = this->ui.currentPackdataValue_TargetRadius->value();
+            }
+            break;
+         case dovah::packages::package_data_type::target_selector:
+            {
+               auto& dst = value.emplace<dovah::packages::package_data_type::target_selector>();
+               dst.distance = this->ui.currentPackdataValue_TargetRadius->value();
+            }
+            break;
+         case dovah::packages::package_data_type::topic:
+            {
+               auto* src = this->ui.currentPackdataValue_Topic;
+               auto& dst = value.emplace<dovah::packages::package_data_type::topic>();
+               if (auto* topic = src->topic())
+                  dst.data = topic;
+               else
+                  dst.data = src->subtype();
+            }
+            break;
       }
 
-      auto flags = model->data(qmi, PackageProcedureTreeModel::BranchFlagsRole).toInt();
-      {
-         auto* widget = this->ui.currentProcedureRepeatWhenComplete;
-         if ((dovah::packages::procedure_tree_branch_type)var_branch_type.toInt() == dovah::packages::procedure_tree_branch_type::simultaneous) {
-            widget->setText(tr("Repeat until all child procedures complete"));
-         } else {
-            widget->setText(tr("Repeat when complete"));
-         }
-         widget->setChecked(flags & ui::types::packages::procedure_tree_typed_data::branch::flag::repeat_when_complete);
+      model->setRowValue(row, value);
+   }
+#pragma endregion
+
+#pragma region Procedure Tree node UI
+   void FormDialogPackage::_build_procedure_tree_branch_type_picker() {
+      auto* widget = this->ui.currentProcedureType;
+      widget->clear();
+      for (auto v : std::array{
+         dovah::packages::procedure_tree_branch_type::random,
+         dovah::packages::procedure_tree_branch_type::sequence,
+         dovah::packages::procedure_tree_branch_type::simultaneous,
+         dovah::packages::procedure_tree_branch_type::stacked,
+      }) {
+         widget->addItem(editor::localize::package_procedure_tree_branch_type(v), (int)v);
       }
-   } else {
-      this->ui.currentProcedureStack->setCurrentWidget(this->ui.currentProcedurePageProcedure);
-      {
-         auto* widget = this->ui.currentProcedureType;
-         widget->clear();
-         for (const auto& info : dovah::packages::all_procedure_type_info) {
-            widget->addItem(editor::localize::package_procedure_type(info.type), (int)info.type);
-         }
-         widget->model()->sort(0);
+      widget->model()->sort(0);
+   }
+   void FormDialogPackage::_build_procedure_type_picker() {
+      auto* widget = this->ui.currentProcedureType;
+      widget->clear();
+      for (const auto& info : dovah::packages::all_procedure_type_info) {
+         widget->addItem(editor::localize::package_procedure_type(info.type), (int)info.type);
+      }
+      widget->model()->sort(0);
+   }
 
-         auto var_procedure_type = model->data(qmi, PackageProcedureTreeModel::ProcedureTypeRole);
-         auto i = widget->findData(var_procedure_type.toInt());
-         if (i >= 0)
-            widget->setCurrentIndex(i);
+   QModelIndex FormDialogPackage::_selected_procedure_node_qmi() const {
+      auto* view      = this->ui.procedures;
+      auto* sel_model = view->selectionModel();
+      auto  rows      = sel_model->selectedRows();
+      if (!rows.isEmpty())
+         return rows[0];
+      return {};
+   }
+
+   void FormDialogPackage::_pull_procedure_node_to_ui() {
+      const auto* model = this->_models.procedure_tree;
+
+      QModelIndex qmi = _selected_procedure_node_qmi();
+      if (!qmi.isValid()) {
+         this->ui.selectedProcedureGroupbox->setEnabled(false);
+         this->ui.currentProcedureStack->setCurrentWidget(this->ui.currentProcedurePageProcedure);
+         this->ui.currentProcedureConditions->clear();
+         return;
       }
 
-      auto flags = model->data(qmi, PackageProcedureTreeModel::ProcedureFlagsRole).toInt();
-      this->ui.currentProcedureCompletesPackage->setChecked(flags & ui::types::packages::procedure_tree_typed_data::procedure::flag::success_completes_package);
+      if (!_uses_package_template())
+         this->ui.selectedProcedureGroupbox->setEnabled(true);
 
-      {
-         const auto yes_no_widgets = std::array{
-            this->ui.procedureOverrideFlagAggroRadius,
-            this->ui.procedureOverrideFlagAllowIdleChatter,
-            this->ui.procedureOverrideFlagAllowSwim,
-            this->ui.procedureOverrideFlagAlwaysSneak,
-            this->ui.procedureOverrideFlagContinueIfPCNear,
-            this->ui.procedureOverrideFlagFriendlyFireComments,
-            this->ui.procedureOverrideFlagHellosToPlayer,
-            this->ui.procedureOverrideFlagIgnoreCombat,
-            this->ui.procedureOverrideFlagMaintainSpeedAtGoal,
-            this->ui.procedureOverrideFlagMustComplete,
-            this->ui.procedureOverrideFlagNoCombatAlert,
-            this->ui.procedureOverrideFlagObserveCombatBehavior,
-            this->ui.procedureOverrideFlagOffersServices,
-            this->ui.procedureOverrideFlagOncePerDay,
-            this->ui.procedureOverrideFlagRandomConversations,
-            this->ui.procedureOverrideFlagReactionToPlayerActions,
-            this->ui.procedureOverrideFlagWeaponDrawn,
-            this->ui.procedureOverrideFlagWeaponsUnequipped,
-            this->ui.procedureOverrideFlagWearSleepOutfit,
-            this->ui.procedureOverrideFlagWorldInteractions,
-         };
+      const auto blockers = std::array{
+         QSignalBlocker(this->ui.currentProcedureType),
+         QSignalBlocker(this->ui.currentProcedureCompletesPackage),
+         QSignalBlocker(this->ui.currentProcedureConditions),
+         QSignalBlocker(this->ui.currentProcedureInputPackdata),
+         QSignalBlocker(this->ui.currentProcedureRepeatWhenComplete),
+         QSignalBlocker(this->ui.procedureOverrideFlagAggroRadius),
+         QSignalBlocker(this->ui.procedureOverrideFlagAllowIdleChatter),
+         QSignalBlocker(this->ui.procedureOverrideFlagAllowSwim),
+         QSignalBlocker(this->ui.procedureOverrideFlagAlwaysSneak),
+         QSignalBlocker(this->ui.procedureOverrideFlagContinueIfPCNear),
+         QSignalBlocker(this->ui.procedureOverrideFlagFriendlyFireComments),
+         QSignalBlocker(this->ui.procedureOverrideFlagHellosToPlayer),
+         QSignalBlocker(this->ui.procedureOverrideFlagIgnoreCombat),
+         QSignalBlocker(this->ui.procedureOverrideFlagMaintainSpeedAtGoal),
+         QSignalBlocker(this->ui.procedureOverrideFlagMustComplete),
+         QSignalBlocker(this->ui.procedureOverrideFlagNoCombatAlert),
+         QSignalBlocker(this->ui.procedureOverrideFlagObserveCombatBehavior),
+         QSignalBlocker(this->ui.procedureOverrideFlagOffersServices),
+         QSignalBlocker(this->ui.procedureOverrideFlagOncePerDay),
+         QSignalBlocker(this->ui.procedureOverrideFlagPreferredSpeed),
+         QSignalBlocker(this->ui.procedureOverrideFlagRandomConversations),
+         QSignalBlocker(this->ui.procedureOverrideFlagReactionToPlayerActions),
+         QSignalBlocker(this->ui.procedureOverrideFlagWeaponDrawn),
+         QSignalBlocker(this->ui.procedureOverrideFlagWeaponsUnequipped),
+         QSignalBlocker(this->ui.procedureOverrideFlagWearSleepOutfit),
+         QSignalBlocker(this->ui.procedureOverrideFlagWorldInteractions),
+         QSignalBlocker(this->ui.procedureOverridePreferredSpeed),
+      };
 
-         auto override_flags = model->data(qmi, PackageProcedureTreeModel::ProcedureOverrideFlagsRole);
-         if (override_flags.isValid()) {
-            auto data = override_flags.value<dovah::loaded_forms::structs::custom_packages::package_flag_overrides>();
-            for (DKYesNoUnsetWidget* widget : yes_no_widgets) {
-               const auto blocker = QSignalBlocker(widget);
+      auto var_branch_type = model->data(qmi, PackageProcedureTreeModel::BranchTypeRole);
+      if (var_branch_type.isValid()) {
+         this->ui.currentProcedureStack->setCurrentWidget(this->ui.currentProcedurePageBranch);
 
-               auto flag  = widget->property("flag").toInt();
-               auto state = Qt::CheckState::PartiallyChecked; // "unchanged"
+         const auto branch_type = (dovah::packages::procedure_tree_branch_type)var_branch_type.toInt();
 
-               if (widget->property("is-interrupt-flag").toBool()) {
-                  if (data.interrupt.set & flag) {
-                     state = Qt::CheckState::Checked;
-                  } else if (data.interrupt.clear & flag) {
-                     state = Qt::CheckState::Unchecked;
+         this->_build_procedure_tree_branch_type_picker();
+         ui::set_combobox_by_data(*this->ui.currentProcedureType, branch_type);
+
+         const auto flags = model->data(qmi, PackageProcedureTreeModel::BranchFlagsRole).toInt();
+         {
+            auto* widget = this->ui.currentProcedureRepeatWhenComplete;
+            if (branch_type == dovah::packages::procedure_tree_branch_type::simultaneous) {
+               widget->setText(tr("Repeat until all child procedures complete"));
+            } else {
+               widget->setText(tr("Repeat when complete"));
+            }
+            widget->setChecked(flags & ui::types::packages::procedure_tree_typed_data::branch::flag::repeat_when_complete);
+         }
+         this->ui.procedureOverrideFlagsLayout->setEnabled(false);
+      } else {
+         this->ui.currentProcedureStack->setCurrentWidget(this->ui.currentProcedurePageProcedure);
+
+         this->_build_procedure_type_picker();
+         ui::set_combobox_by_data(*this->ui.currentProcedureType, model->data(qmi, PackageProcedureTreeModel::ProcedureTypeRole).toInt());
+
+         const auto flags = model->data(qmi, PackageProcedureTreeModel::ProcedureFlagsRole).toInt();
+         this->ui.currentProcedureCompletesPackage->setChecked(flags & ui::types::packages::procedure_tree_typed_data::procedure::flag::success_completes_package);
+
+         this->ui.procedureOverrideFlagsLayout->setEnabled(true);
+         {
+            const auto yes_no_widgets = std::array{
+               this->ui.procedureOverrideFlagAggroRadius,
+               this->ui.procedureOverrideFlagAllowIdleChatter,
+               this->ui.procedureOverrideFlagAllowSwim,
+               this->ui.procedureOverrideFlagAlwaysSneak,
+               this->ui.procedureOverrideFlagContinueIfPCNear,
+               this->ui.procedureOverrideFlagFriendlyFireComments,
+               this->ui.procedureOverrideFlagHellosToPlayer,
+               this->ui.procedureOverrideFlagIgnoreCombat,
+               this->ui.procedureOverrideFlagMaintainSpeedAtGoal,
+               this->ui.procedureOverrideFlagMustComplete,
+               this->ui.procedureOverrideFlagNoCombatAlert,
+               this->ui.procedureOverrideFlagObserveCombatBehavior,
+               this->ui.procedureOverrideFlagOffersServices,
+               this->ui.procedureOverrideFlagOncePerDay,
+               this->ui.procedureOverrideFlagRandomConversations,
+               this->ui.procedureOverrideFlagReactionToPlayerActions,
+               this->ui.procedureOverrideFlagWeaponDrawn,
+               this->ui.procedureOverrideFlagWeaponsUnequipped,
+               this->ui.procedureOverrideFlagWearSleepOutfit,
+               this->ui.procedureOverrideFlagWorldInteractions,
+            };
+
+            auto override_flags = model->data(qmi, PackageProcedureTreeModel::ProcedureOverrideFlagsRole);
+            if (override_flags.isValid()) {
+               auto data = override_flags.value<dovah::loaded_forms::structs::custom_packages::package_flag_overrides>();
+               for (DKYesNoUnsetWidget* widget : yes_no_widgets) {
+                  const auto blocker = QSignalBlocker(widget);
+
+                  auto flag  = widget->property("flag").toInt();
+                  auto state = Qt::CheckState::PartiallyChecked; // "unchanged"
+
+                  if (widget->property("is-interrupt-flag").toBool()) {
+                     if (data.interrupt.set & flag) {
+                        state = Qt::CheckState::Checked;
+                     } else if (data.interrupt.clear & flag) {
+                        state = Qt::CheckState::Unchecked;
+                     }
+                  } else {
+                     if (data.general.set & flag) {
+                        state = Qt::CheckState::Checked;
+                     } else if (data.general.clear & flag) {
+                        state = Qt::CheckState::Unchecked;
+                     }
                   }
-               } else {
-                  if (data.general.set & flag) {
-                     state = Qt::CheckState::Checked;
-                  } else if (data.general.clear & flag) {
-                     state = Qt::CheckState::Unchecked;
-                  }
+
+                  widget->setCheckState(state);
                }
 
-               widget->setCheckState(state);
+               const auto blocker = QSignalBlocker(this->ui.procedureOverrideFlagPreferredSpeed);
+               this->ui.procedureOverrideFlagPreferredSpeed->setChecked(data.general.set & loaded_form_type::general_flag::has_preferred_speed);
+
+               {
+                  auto*      widget  = this->ui.procedureOverridePreferredSpeed;
+                  const auto blocker = QSignalBlocker(widget);
+                  ui::set_combobox_by_data(*widget, data.preferred_speed);
+               }
+            } else {
+               for (DKYesNoUnsetWidget* widget : yes_no_widgets) {
+                  const auto blocker = QSignalBlocker(widget);
+                  widget->setCheckState(Qt::CheckState::PartiallyChecked);
+               }
+               const auto blocker = QSignalBlocker(this->ui.procedureOverrideFlagPreferredSpeed);
+               this->ui.procedureOverrideFlagPreferredSpeed->setChecked(false);
             }
+         }
 
-            const auto blocker = QSignalBlocker(this->ui.procedureOverrideFlagPreferredSpeed);
-            this->ui.procedureOverrideFlagPreferredSpeed->setChecked(data.general.set & loaded_form_type::general_flag::has_preferred_speed);
+         this->_update_procedure_params_list(qmi);
+         this->_update_procedure_params_picker();
+      }
 
-            {
-               auto*      widget  = this->ui.procedureOverridePreferredSpeed;
-               const auto blocker = QSignalBlocker(widget);
+      auto conditions = model->nodeConditions(qmi);
+      this->ui.conditions->importFrom(*this->form, conditions);
+   }
 
-               auto speed = data.preferred_speed;
-               auto i     = widget->findData((int)speed);
-               if (i >= 0)
-                  widget->setCurrentIndex(i);
+   void FormDialogPackage::_push_procedure_flag_overrides_from_ui(QModelIndex qmi) {
+      auto* model = this->_models.procedure_tree;
+
+      if (!qmi.isValid()) {
+         qmi = _selected_procedure_node_qmi();
+         if (!qmi.isValid())
+            return;
+      }
+
+      auto var_proc_type = model->data(qmi, PackageProcedureTreeModel::ProcedureTypeRole);
+      if (!var_proc_type.isValid())
+         return;
+   
+      const auto yes_no_widgets = std::array{
+         this->ui.procedureOverrideFlagAggroRadius,
+         this->ui.procedureOverrideFlagAllowIdleChatter,
+         this->ui.procedureOverrideFlagAllowSwim,
+         this->ui.procedureOverrideFlagAlwaysSneak,
+         this->ui.procedureOverrideFlagContinueIfPCNear,
+         this->ui.procedureOverrideFlagFriendlyFireComments,
+         this->ui.procedureOverrideFlagHellosToPlayer,
+         this->ui.procedureOverrideFlagIgnoreCombat,
+         this->ui.procedureOverrideFlagMaintainSpeedAtGoal,
+         this->ui.procedureOverrideFlagMustComplete,
+         this->ui.procedureOverrideFlagNoCombatAlert,
+         this->ui.procedureOverrideFlagObserveCombatBehavior,
+         this->ui.procedureOverrideFlagOffersServices,
+         this->ui.procedureOverrideFlagOncePerDay,
+         this->ui.procedureOverrideFlagRandomConversations,
+         this->ui.procedureOverrideFlagReactionToPlayerActions,
+         this->ui.procedureOverrideFlagWeaponDrawn,
+         this->ui.procedureOverrideFlagWeaponsUnequipped,
+         this->ui.procedureOverrideFlagWearSleepOutfit,
+         this->ui.procedureOverrideFlagWorldInteractions,
+      };
+
+      dovah::loaded_forms::structs::custom_packages::package_flag_overrides data;
+      bool any = false;
+      for (const auto* widget : yes_no_widgets) {
+         const auto flag  = widget->property("flag").toInt();
+         const auto state = widget->checkState();
+         if (widget->property("is-interrupt-flag").toBool()) {
+            switch (state) {
+               case Qt::CheckState::Checked:
+                  any = true;
+                  data.interrupt.set |= flag;
+                  break;
+               case Qt::CheckState::Unchecked:
+                  any = true;
+                  data.interrupt.clear |= flag;
+                  break;
             }
          } else {
-            for (DKYesNoUnsetWidget* widget : yes_no_widgets) {
-               const auto blocker = QSignalBlocker(widget);
-               widget->setCheckState(Qt::CheckState::PartiallyChecked);
+            switch (state) {
+               case Qt::CheckState::Checked:
+                  any = true;
+                  data.general.set |= flag;
+                  break;
+               case Qt::CheckState::Unchecked:
+                  any = true;
+                  data.general.clear |= flag;
+                  break;
             }
-            const auto blocker = QSignalBlocker(this->ui.procedureOverrideFlagPreferredSpeed);
-            this->ui.procedureOverrideFlagPreferredSpeed->setChecked(false);
          }
       }
+      if (this->ui.procedureOverrideFlagPreferredSpeed->isChecked()) {
+         any = true;
+         data.general.set |= loaded_form_type::general_flag::has_preferred_speed;
+         data.preferred_speed = (dovah::packages::preferred_movement_speed)this->ui.procedureOverridePreferredSpeed->currentData().toInt();
+      }
 
-      this->_update_procedure_params_list(qmi);
-      this->_update_procedure_params_picker();
-   }
-
-   auto conditions = model->nodeConditions(qmi);
-   this->ui.conditions->importFrom(*this->form, conditions);
-}
-void FormDialogPackage::_push_procedure_flag_overrides_from_ui(QModelIndex qmi) {
-   auto* model = this->_models.procedure_tree;
-
-   if (!qmi.isValid()) {
-      qmi = _selected_procedure_node_qmi();
-      if (!qmi.isValid())
-         return;
-   }
-
-   auto var_proc_type = model->data(qmi, PackageProcedureTreeModel::ProcedureTypeRole);
-   if (!var_proc_type.isValid())
-      return;
-   
-   const auto yes_no_widgets = std::array{
-      this->ui.procedureOverrideFlagAggroRadius,
-      this->ui.procedureOverrideFlagAllowIdleChatter,
-      this->ui.procedureOverrideFlagAllowSwim,
-      this->ui.procedureOverrideFlagAlwaysSneak,
-      this->ui.procedureOverrideFlagContinueIfPCNear,
-      this->ui.procedureOverrideFlagFriendlyFireComments,
-      this->ui.procedureOverrideFlagHellosToPlayer,
-      this->ui.procedureOverrideFlagIgnoreCombat,
-      this->ui.procedureOverrideFlagMaintainSpeedAtGoal,
-      this->ui.procedureOverrideFlagMustComplete,
-      this->ui.procedureOverrideFlagNoCombatAlert,
-      this->ui.procedureOverrideFlagObserveCombatBehavior,
-      this->ui.procedureOverrideFlagOffersServices,
-      this->ui.procedureOverrideFlagOncePerDay,
-      this->ui.procedureOverrideFlagRandomConversations,
-      this->ui.procedureOverrideFlagReactionToPlayerActions,
-      this->ui.procedureOverrideFlagWeaponDrawn,
-      this->ui.procedureOverrideFlagWeaponsUnequipped,
-      this->ui.procedureOverrideFlagWearSleepOutfit,
-      this->ui.procedureOverrideFlagWorldInteractions,
-   };
-
-   dovah::loaded_forms::structs::custom_packages::package_flag_overrides data;
-   bool any = false;
-   for (const auto* widget : yes_no_widgets) {
-      const auto flag  = widget->property("flag").toInt();
-      const auto state = widget->checkState();
-      if (widget->property("is-interrupt-flag").toBool()) {
-         switch (state) {
-            case Qt::CheckState::Checked:
-               any = true;
-               data.interrupt.set |= flag;
-               break;
-            case Qt::CheckState::Unchecked:
-               any = true;
-               data.interrupt.clear |= flag;
-               break;
-         }
+      if (any) {
+         model->setData(qmi, QVariant::fromValue(data), PackageProcedureTreeModel::ProcedureOverrideFlagsRole);
       } else {
-         switch (state) {
-            case Qt::CheckState::Checked:
-               any = true;
-               data.general.set |= flag;
-               break;
-            case Qt::CheckState::Unchecked:
-               any = true;
-               data.general.clear |= flag;
-               break;
+         model->setData(qmi, {}, PackageProcedureTreeModel::ProcedureOverrideFlagsRole);
+      }
+   }
+   void FormDialogPackage::_push_procedure_node_from_ui(QModelIndex qmi) {
+      auto* model = this->_models.procedure_tree;
+
+      if (!qmi.isValid()) {
+         qmi = _selected_procedure_node_qmi();
+         if (!qmi.isValid())
+            return;
+      }
+
+      auto var_branch_type = model->data(qmi, PackageProcedureTreeModel::BranchTypeRole);
+      if (var_branch_type.isValid()) {
+         model->setData(qmi, this->ui.currentProcedureType->currentData().toInt(), PackageProcedureTreeModel::BranchTypeRole);
+
+         int flags = 0;
+         if (this->ui.currentProcedureRepeatWhenComplete->isChecked())
+            flags |= ui::types::packages::procedure_tree_typed_data::branch::flag::repeat_when_complete;
+         model->setData(qmi, flags, PackageProcedureTreeModel::BranchFlagsRole);
+      } else {
+         model->setData(qmi, this->ui.currentProcedureType->currentData().toInt(), PackageProcedureTreeModel::ProcedureTypeRole);
+
+         int flags = 0;
+         if (this->ui.currentProcedureCompletesPackage->isChecked())
+            flags |= ui::types::packages::procedure_tree_typed_data::procedure::flag::success_completes_package;
+         model->setData(qmi, flags, PackageProcedureTreeModel::ProcedureFlagsRole);
+
+         this->_push_procedure_flag_overrides_from_ui(qmi);
+      
+         {
+            auto param_ids = this->_models.procedure_params->exportData();
+            model->setProcedureParameterIDs(qmi, param_ids);
          }
       }
-   }
-   if (this->ui.procedureOverrideFlagPreferredSpeed->isChecked()) {
-      any = true;
-      data.general.set |= loaded_form_type::general_flag::has_preferred_speed;
-      data.preferred_speed = (dovah::packages::preferred_movement_speed)this->ui.procedureOverridePreferredSpeed->currentData().toInt();
-   }
 
-   if (any) {
-      model->setData(qmi, QVariant::fromValue(data), PackageProcedureTreeModel::ProcedureOverrideFlagsRole);
-   } else {
-      model->setData(qmi, {}, PackageProcedureTreeModel::ProcedureOverrideFlagsRole);
-   }
-}
-void FormDialogPackage::_push_procedure_node_from_ui(QModelIndex qmi) {
-   auto* model = this->_models.procedure_tree;
-
-   if (!qmi.isValid()) {
-      qmi = _selected_procedure_node_qmi();
-      if (!qmi.isValid())
-         return;
+      std::vector<ui::types::conditions::condition> conditions;
+      this->ui.conditions->exportTo(*this->form, conditions);
+      model->setNodeConditions(qmi, conditions);
    }
 
-   auto var_branch_type = model->data(qmi, PackageProcedureTreeModel::BranchTypeRole);
-   if (var_branch_type.isValid()) {
-      model->setData(qmi, this->ui.currentProcedureType->currentData().toInt(), PackageProcedureTreeModel::BranchTypeRole);
-
-      int flags = 0;
-      if (this->ui.currentProcedureRepeatWhenComplete->isChecked())
-         flags |= ui::types::packages::procedure_tree_typed_data::branch::flag::repeat_when_complete;
-      model->setData(qmi, flags, PackageProcedureTreeModel::BranchFlagsRole);
-   } else {
-      model->setData(qmi, this->ui.currentProcedureType->currentData().toInt(), PackageProcedureTreeModel::ProcedureTypeRole);
-
-      int flags = 0;
-      if (this->ui.currentProcedureCompletesPackage->isChecked())
-         flags |= ui::types::packages::procedure_tree_typed_data::procedure::flag::success_completes_package;
-      model->setData(qmi, flags, PackageProcedureTreeModel::ProcedureFlagsRole);
-
-      this->_push_procedure_flag_overrides_from_ui(qmi);
-      
-      {
-         auto param_ids = this->_models.procedure_params->exportData();
-         model->setProcedureParameterIDs(qmi, param_ids);
+   void FormDialogPackage::_on_procedure_tree_selection_changed(const QItemSelection& selected, const QItemSelection& deselected) {
+      if (!deselected.empty()) {
+         auto range = deselected[0];
+         auto qmi   = range.topLeft();
+         this->_push_procedure_node_from_ui(qmi);
       }
-   }
+      this->_pull_procedure_node_to_ui();
 
-   std::vector<ui::types::conditions::condition> conditions;
-   this->ui.conditions->exportTo(*this->form, conditions);
-   model->setNodeConditions(qmi, conditions);
-}
-void FormDialogPackage::_on_procedure_tree_selection_changed(const QItemSelection& selected, const QItemSelection& deselected) {
-   if (!deselected.empty()) {
-      auto range = deselected[0];
-      auto qmi   = range.topLeft();
-      this->_push_procedure_node_from_ui(qmi);
+      auto qmi      = _selected_procedure_node_qmi();
+      bool any      = qmi.isValid();
+      bool has_root = this->_models.procedure_tree->hasRoot();
+      this->_context_menus.procedure_tree.remove->setEnabled(any);
+      //
+      // Can only create children of a selected node, or create a root if the model is empty:
+      //
+      this->_context_menus.procedure_tree.create_branch->setEnabled(any || !has_root);
+      this->_context_menus.procedure_tree.create_procedure->setEnabled(any || !has_root);
    }
-   this->_pull_procedure_node_to_ui();
-
-   auto qmi      = _selected_procedure_node_qmi();
-   bool any      = qmi.isValid();
-   bool has_root = this->_models.procedure_tree->hasRoot();
-   this->_context_menus.procedure_tree.remove->setEnabled(any);
-   //
-   // Can only create children of a selected node, or create a root if the model is empty:
-   //
-   this->_context_menus.procedure_tree.create_branch->setEnabled(any || !has_root);
-   this->_context_menus.procedure_tree.create_procedure->setEnabled(any || !has_root);
-}
+#pragma endregion
 
 void FormDialogPackage::_update_procedure_params_picker() {
    const auto blocker = QSignalBlocker(this->ui.currentProcedureInputPackdata);
@@ -1366,22 +1412,4 @@ void FormDialogPackage::_update_procedure_params_list(QModelIndex qmi) {
       (dovah::packages::procedure_type)this->_models.procedure_tree->data(qmi, PackageProcedureTreeModel::ProcedureTypeRole).toInt(),
       this->_models.procedure_tree->getProcedureParameterIDs(qmi)
    );
-}
-void FormDialogPackage::_update_packdata_deleteable() const {
-   if (!this->_models.package_data->declarationsOwned()) {
-      this->ui.buttonPackdataDelete->setEnabled(false);
-      return;
-   }
-   auto row_opt = _selected_packdata_row();
-   if (!row_opt.has_value())
-      return;
-   auto    row       = row_opt.value();
-   uint8_t unique_id = this->_models.package_data->data(this->_models.package_data->index(row, 0, {}), PackageDataModel::UniqueIDRole).toInt();
-
-   auto usage = this->_models.procedure_tree->countUsesOfPackdata();
-   if (usage[unique_id] > 0) {
-      this->ui.buttonPackdataDelete->setEnabled(false);
-   } else {
-      this->ui.buttonPackdataDelete->setEnabled(true);
-   }
 }

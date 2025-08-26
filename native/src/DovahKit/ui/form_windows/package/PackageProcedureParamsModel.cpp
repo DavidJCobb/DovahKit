@@ -46,6 +46,8 @@ PackageProcedureParamsModel::PackageProcedureParamsModel(QObject* parent) : QAbs
                      return src.cached.description;
                   case Column::Name:
                      if (src.cached.name.isEmpty()) {
+                        if (src.unique_id == no_unique_id)
+                           return {};
                         return tr("Package Data ID #%1").arg(src.unique_id);
                      }
                      return src.cached.name;

@@ -2033,6 +2033,7 @@
     <ClInclude Include="ui\utils\get_selection.h" />
     <ClInclude Include="ui\utils\item_indices_to_data.h" />
     <ClInclude Include="ui\utils\pair_slider_to_spinbox.h" />
+    <ClInclude Include="ui\utils\set_combobox_by_data.h" />
     <ClInclude Include="ui\utils\set_custom_context_menu.h" />
     <ClInclude Include="ui\utils\set_range.h" />
     <QtMoc Include="widgets\DKComboBox.h" />

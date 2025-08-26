@@ -971,17 +971,17 @@
           <string>Miscellaneous flags</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_4">
-          <item row="2" column="0" colspan="2">
-           <widget class="QCheckBox" name="flagAlwaysSneak">
+          <item row="3" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagAllowSwim">
             <property name="text">
-             <string>Always Sneak</string>
+             <string>Allow Swimming</string>
             </property>
            </widget>
           </item>
-          <item row="5" column="0" colspan="2">
-           <widget class="QCheckBox" name="flagIgnoreCombat">
+          <item row="5" column="3">
+           <widget class="QCheckBox" name="flagRandomConversations">
             <property name="text">
-             <string>Ignore Combat</string>
+             <string>Random conversations</string>
             </property>
            </widget>
           </item>
@@ -1009,59 +1009,17 @@
             </item>
            </widget>
           </item>
-          <item row="8" column="0" colspan="2">
-           <widget class="QCheckBox" name="flagWeaponsUnequipped">
+          <item row="9" column="3">
+           <widget class="QCheckBox" name="flagFriendlyFireComments">
             <property name="text">
-             <string>Weapons Unequipped</string>
+             <string>Friendly fire comments</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="0" colspan="2">
-           <widget class="QCheckBox" name="flagOncePerDay">
+          <item row="0" column="3">
+           <widget class="QPushButton" name="buttonSetAllInterruptFlags">
             <property name="text">
-             <string>Once Per Day</string>
-            </property>
-           </widget>
-          </item>
-          <item row="11" column="0">
-           <widget class="QCheckBox" name="flagPreferredSpeed">
-            <property name="text">
-             <string>Preferred Speed:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="0" colspan="2">
-           <widget class="QCheckBox" name="flagWearSleepOutfit">
-            <property name="text">
-             <string>Wear Sleep Outfit</string>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="0" colspan="2">
-           <widget class="QCheckBox" name="flagMaintainSpeedAtGoal">
-            <property name="text">
-             <string>Maintain Speed at Goal</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0" colspan="2">
-           <widget class="QCheckBox" name="flagAllowSwim">
-            <property name="text">
-             <string>Allow Swimming</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="0" colspan="2">
-           <widget class="QCheckBox" name="flagWeaponDrawn">
-            <property name="text">
-             <string>Weapon Drawn</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="0" colspan="2">
-           <widget class="QCheckBox" name="flagNoCombatAlert">
-            <property name="text">
-             <string>No Combat Alert</string>
+             <string>Set all interrupt flags</string>
             </property>
            </widget>
           </item>
@@ -1072,82 +1030,140 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="2">
-           <widget class="QCheckBox" name="flagAllowIdleChatter">
+          <item row="2" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagAlwaysSneak">
             <property name="text">
-             <string>Allow Idle Chatter</string>
+             <string>Always Sneak</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="2">
-           <widget class="QPushButton" name="buttonSetAllInterruptFlags">
-            <property name="text">
-             <string>Set all interrupt flags</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QPushButton" name="buttonClearAllInterruptFlags">
-            <property name="text">
-             <string>Clear all interrupt flags</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="2">
-           <widget class="QCheckBox" name="flagHellosToPlayer">
-            <property name="text">
-             <string>Hellos to player</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="2">
-           <widget class="QCheckBox" name="flagRandomConversations">
-            <property name="text">
-             <string>Random conversations</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="2">
-           <widget class="QCheckBox" name="flagObserveCombatBehavior">
-            <property name="text">
-             <string>Observe combat behavior</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="2">
+          <item row="7" column="3">
            <widget class="QCheckBox" name="flagObserveCorpseBehavior">
             <property name="text">
              <string>Observe corpse behavior</string>
             </property>
            </widget>
           </item>
-          <item row="8" column="2">
+          <item row="8" column="3">
            <widget class="QCheckBox" name="flagReactionToPlayerActions">
             <property name="text">
              <string>Reaction to player actions</string>
             </property>
            </widget>
           </item>
-          <item row="9" column="2">
-           <widget class="QCheckBox" name="flagFriendlyFireComments">
+          <item row="9" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagWearSleepOutfit">
             <property name="text">
-             <string>Friendly fire comments</string>
+             <string>Wear Sleep Outfit</string>
             </property>
            </widget>
           </item>
-          <item row="10" column="2">
+          <item row="6" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagNoCombatAlert">
+            <property name="text">
+             <string>No Combat Alert</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagWeaponsUnequipped">
+            <property name="text">
+             <string>Weapons Unequipped</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagMaintainSpeedAtGoal">
+            <property name="text">
+             <string>Maintain Speed at Goal</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagWeaponDrawn">
+            <property name="text">
+             <string>Weapon Drawn</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="3">
+           <widget class="QCheckBox" name="flagObserveCombatBehavior">
+            <property name="text">
+             <string>Observe combat behavior</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QPushButton" name="buttonClearAllInterruptFlags">
+            <property name="text">
+             <string>Clear all interrupt flags</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="3">
            <widget class="QCheckBox" name="flagAggroRadius">
             <property name="text">
              <string>Aggro Radius behavior</string>
             </property>
            </widget>
           </item>
-          <item row="11" column="2">
+          <item row="11" column="0">
+           <widget class="QCheckBox" name="flagPreferredSpeed">
+            <property name="text">
+             <string>Preferred Speed:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="3">
+           <widget class="QCheckBox" name="flagHellosToPlayer">
+            <property name="text">
+             <string>Hellos to player</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagOncePerDay">
+            <property name="text">
+             <string>Once Per Day</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagIgnoreCombat">
+            <property name="text">
+             <string>Ignore Combat</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="3">
            <widget class="QCheckBox" name="flagWorldInteractions">
             <property name="text">
              <string>World interactions</string>
             </property>
            </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QCheckBox" name="flagAllowIdleChatter">
+            <property name="text">
+             <string>Allow Idle Chatter</string>
+            </property>
+           </widget>
+          </item>
+          <item row="11" column="2">
+           <spacer name="horizontalSpacer_11">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Fixed</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>8</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </widget>
@@ -1182,8 +1198,8 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>211</width>
-           <height>20</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
@@ -1195,21 +1211,21 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>20</width>
-           <height>389</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
        </item>
-       <item row="2" column="0">
+       <item row="2" column="0" colspan="3">
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>20</width>
-           <height>388</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
