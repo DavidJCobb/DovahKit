@@ -8,6 +8,7 @@
 #include "editor/localize/package_procedure_type.h"
 #include "widgets/DKFormNIFPicker.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/set_custom_context_menu.h"
 #include "ui/utils/set_range.h"
 #include "ui/utils/typical_tableview_config.h"
 #include "./package/FormSubdialogPackageLocation.h"
@@ -194,6 +195,7 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
          {
             auto& menu_ui = this->_context_menus.procedure_tree;
             auto& menu    = menu_ui.menu;
+            ui::set_custom_context_menu(*view, menu);
 
             {
                auto* action = menu_ui.create_branch = new QAction(tr("Add branch"), this);
@@ -456,7 +458,7 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
       {  // Day
          auto* widget = this->ui.scheduleDate;
          widget->clear();
-         widget->addItem(tr("Any", "date"), 0);
+         widget->addItem(tr("Any", "date"), schedule_type::any_day);
          for (int i = 1; i <= 31; ++i) {
             widget->addItem(QString::number(i), i);
          }
@@ -464,15 +466,23 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
       {  // Hour
          auto* widget = this->ui.scheduleHour;
          widget->clear();
-         widget->addItem(tr("Any", "hour"), -1);
+         widget->addItem(tr("Any", "hour"), schedule_type::any_hour);
          for (int i = 0; i < 24; ++i) {
             widget->addItem(QString::number(i), i);
          }
+         //
+         // You're only allowed to set the minute if you've also set the hour:
+         //
+         auto _update_minute_enable_state = [this]() {
+            this->ui.scheduleMinute->setEnabled(this->ui.scheduleHour->currentData().toInt() != schedule_type::any_hour);
+         };
+         QObject::connect(widget, qOverload<int>(&QComboBox::currentIndexChanged), this, _update_minute_enable_state);
+         _update_minute_enable_state();
       }
       {  // Minute
          auto* widget = this->ui.scheduleMinute;
          widget->clear();
-         widget->addItem(tr("Any", "minute"), -1);
+         widget->addItem(tr("Any", "minute"), schedule_type::any_minute);
          for (int i = 0; i < 59; ++i) {
             widget->addItem(tr("%1", "minute").arg(i, 2, QChar('0')), i);
          }
@@ -782,11 +792,11 @@ void FormDialogPackage::_set_is_package_template(bool is) {
    if (is) {
       working.type = dovah::packages::legacy_type::custom_template;
       this->ui.templateForm->setFormStub(nullptr);
-      this->ui.templateForm->setEnabled(false);
    } else {
       working.type = dovah::packages::legacy_type::custom;
-      this->ui.templateForm->setEnabled(true);
    }
+   this->ui.templateForm->setEnabled(is);
+   this->ui.idles->setEnabled(!is);
 }
 
 std::optional<size_t> FormDialogPackage::_selected_packdata_row() const {

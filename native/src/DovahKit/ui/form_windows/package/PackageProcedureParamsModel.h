@@ -10,10 +10,13 @@
 class PackageProcedureParamsModel : public QAbstractItemModel {
    Q_OBJECT;
    public:
+      static constexpr const uint8_t no_unique_id = 0xFF;
+
       using procedure_node_type = ui::types::packages::procedure_tree_typed_data::procedure;
       struct Item {
-         uint8_t unique_id = 0xFF;
+         uint8_t unique_id = no_unique_id;
          struct {
+            QString description;
             QString name;
             QString value;
          } cached;
@@ -25,6 +28,7 @@ class PackageProcedureParamsModel : public QAbstractItemModel {
       struct Column {
          Column() = delete;
          enum {
+            Desc,
             Name,
             Value,
 

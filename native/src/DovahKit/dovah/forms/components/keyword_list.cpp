@@ -38,8 +38,14 @@ namespace dovah::loaded_forms::components {
    }
    void keyword_list::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       uint32_t size = this->forms.size();
-      if (!size)
+      if (!size) {
+         //
+         // The game often (always?) assumes that the subrecord after KSIZ is KWDA; so 
+         // if we write KSIZ=0 without a KWDA, then things will break. The CK itself 
+         // prefers not writing anything when the list is empty.
+         //
          return;
+      }
       auto& KSIZ = record.open_next_subrecord(subrecord_signature_count);
       KSIZ.write(size);
       KSIZ.close();

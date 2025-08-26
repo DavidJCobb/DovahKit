@@ -42,6 +42,8 @@ PackageProcedureParamsModel::PackageProcedureParamsModel(QObject* parent) : QAbs
             case Qt::DisplayRole:
             case Qt::ToolTipRole:
                switch (index.column()) {
+                  case Column::Desc:
+                     return src.cached.description;
                   case Column::Name:
                      if (src.cached.name.isEmpty()) {
                         return tr("Package Data ID #%1").arg(src.unique_id);
@@ -67,6 +69,8 @@ PackageProcedureParamsModel::PackageProcedureParamsModel(QObject* parent) : QAbs
       if (role != Qt::DisplayRole && role != Qt::ToolTipRole)
          return {};
       switch (section) {
+         case Column::Desc:
+            return tr("Description");
          case Column::Name:
             return tr("Name");
          case Column::Value:
@@ -100,7 +104,7 @@ void PackageProcedureParamsModel::setPackdataModel(PackageDataModel* model) {
          for (auto& item : this->_params) {
             if (item.unique_id == unique_id) {
                qWarning("PackageProcedureParamsModel: detected removal of a packdata while that data is still in use!");
-               item.unique_id = 0xFF;
+               item.unique_id = no_unique_id;
             }
          }
       });
@@ -160,10 +164,12 @@ void PackageProcedureParamsModel::importData(dovah::packages::procedure_type typ
 
       size_t i = 0;
       for (; i < size; ++i) {
+         const auto& name = info.params[i].name;
+         this->_params[i].cached.description = QString(QByteArray(name.data(), name.size()));
          this->_params[i].unique_id = src[i];
       }
       for (; i < info.param_count; ++i) {
-         this->_params[i].unique_id = 0xFF;
+         this->_params[i].unique_id = no_unique_id;
       }
    }
    this->_pull_package_data_names(false);
@@ -185,10 +191,11 @@ void PackageProcedureParamsModel::_pull_package_data_names(bool emit_signals) {
          auto& item = this->_params[i];
          if (item.cached.name.isEmpty() && item.cached.value.isEmpty())
             continue;
-         item.cached = {};
+         item.cached.name.clear();
+         item.cached.value.clear();
 
-         auto tl = this->index(i, 0, {});
-         auto br = this->index(i, Column::__COUNT - 1, {});
+         auto tl = this->index(i, Column::Name,  {});
+         auto br = this->index(i, Column::Value, {});
          emit dataChanged(tl, br);
       }
       return;
@@ -197,12 +204,18 @@ void PackageProcedureParamsModel::_pull_package_data_names(bool emit_signals) {
    for (size_t i = 0; i < this->_params.size(); ++i) {
       auto& item      = this->_params[i];
       auto  unique_id = item.unique_id;
+      if (unique_id == no_unique_id) {
+         item.cached.name.clear();
+         item.cached.value.clear();
+         continue;
+      }
       auto  qmi       = this->_packdata_model->findUniqueID(unique_id);
       if (qmi.isValid()) {
          item.cached.name  = this->_packdata_model->data(qmi.siblingAtColumn(PackageDataModel::Column::Name), Qt::DisplayRole).toString();
          item.cached.value = this->_packdata_model->data(qmi.siblingAtColumn(PackageDataModel::Column::Value), Qt::DisplayRole).toString();
       } else {
-         item.cached = {};
+         item.cached.name.clear();
+         item.cached.value.clear();
       }
    }
    auto tl = this->index(0, 0, {});
