@@ -105,9 +105,10 @@ class PackageDataModel : public QAbstractItemModel {
       void _recache_quest_aliases();
       void _recache_item_values_using_aliases();
 
-      const Item* _item_by_unique_id(uint8_t) const;
-      Item* _item_by_unique_id(uint8_t id) {
-         return const_cast<Item*>(std::as_const(*this)._item_by_unique_id(id));
+      const int _row_for_unique_id(uint8_t) const;
+      const ItemWithCaching* _item_by_unique_id(uint8_t) const;
+      ItemWithCaching* _item_by_unique_id(uint8_t id) {
+         return const_cast<ItemWithCaching*>(std::as_const(*this)._item_by_unique_id(id));
       }
 
       void _on_form_modified(dovah::form_stub&);

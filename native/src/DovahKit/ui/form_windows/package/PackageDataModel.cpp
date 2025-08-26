@@ -150,16 +150,24 @@ void PackageDataModel::importDeclarations(const dovah::loaded_forms::structs::cu
    for (auto& src_decl : src.entries) {
       if (src_decl.unique_id == frontend_decl_type::no_unique_id)
          continue;
-      auto* prior = this->_item_by_unique_id(src_decl.unique_id);
-      if (prior) {
-         prior->declaration.name      = QString::fromStdString(src_decl.name);
-         prior->declaration.is_public = src_decl.is_public;
+      auto prior_row = this->_row_for_unique_id(src_decl.unique_id);
+      if (prior_row >= 0) {
+         auto& prior = this->_data.items[prior_row];
+         prior.declaration.name      = QString::fromStdString(src_decl.name);
+         prior.declaration.is_public = src_decl.is_public;
+         //
+         auto tl = this->index(prior_row, 0, {});
+         auto br = this->index(prior_row, Column::__COUNT - 1, {});
+         emit dataChanged(tl, br);
+         //
          continue;
       }
+      this->beginInsertRows({}, this->_data.items.size(), this->_data.items.size());
       auto& dst_decl = this->_data.items.emplace_back().declaration;
       dst_decl.name      = QString::fromStdString(src_decl.name);
       dst_decl.is_public = src_decl.is_public;
       dst_decl.unique_id = src_decl.unique_id;
+      this->endInsertRows();
    }
 }
 void PackageDataModel::importValues(const dovah::loaded_forms::structs::custom_packages::package_data_value_map& src) {
@@ -171,17 +179,28 @@ void PackageDataModel::importValues(const dovah::loaded_forms::structs::custom_p
          continue;
       if (!src_pair.value)
          continue;
-      auto* prior = this->_item_by_unique_id(src_pair.unique_id);
-      if (prior) {
-         prior->value.emplace().importData(*src_pair.value);
+      auto prior_row = this->_row_for_unique_id(src_pair.unique_id);
+      if (prior_row >= 0) {
+         auto& prior = this->_data.items[prior_row];
+         prior.value.emplace().importData(*src_pair.value);
+         _recache_item_value_string(prior);
+         //
+         auto qmi = this->index(prior_row, Column::Value, {});
+         emit dataChanged(qmi, qmi);
+         //
          continue;
       }
-
+      const auto row = this->_data.items.size();
+      this->beginInsertRows({}, row, row);
+      //
       auto& dst_item = this->_data.items.emplace_back();
       dst_item.declaration.unique_id = src_pair.unique_id;
       dst_item.declaration.is_public = false;
       //
       dst_item.value.emplace().importData(*src_pair.value);
+      _recache_item_value_string(dst_item);
+      //
+      this->endInsertRows();
    }
 
    this->_data.next_unique_id = src.next_unique_id;
@@ -676,10 +695,16 @@ void PackageDataModel::_recache_item_values_using_aliases() {
    }
 }
 
-const PackageDataModel::Item* PackageDataModel::_item_by_unique_id(uint8_t id) const {
-   for (auto& item : this->_data.items)
-      if (item.declaration.unique_id == id)
-         return &item;
+const int PackageDataModel::_row_for_unique_id(uint8_t id) const {
+   for (size_t i = 0; i < this->_data.items.size(); ++i)
+      if (this->_data.items[i].declaration.unique_id == id)
+         return i;
+   return -1;
+}
+const PackageDataModel::ItemWithCaching* PackageDataModel::_item_by_unique_id(uint8_t id) const {
+   auto i = this->_row_for_unique_id(id);
+   if (i >= 0)
+      return &this->_data.items[i];
    return nullptr;
 }
 

@@ -8,6 +8,7 @@
 #include "editor/localize/package_procedure_type.h"
 #include "widgets/DKFormNIFPicker.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/set_range.h"
 #include "ui/utils/typical_tableview_config.h"
 #include "./package/FormSubdialogPackageLocation.h"
 #include "./package/FormSubdialogPackageTarget.h"
@@ -106,6 +107,11 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
             QObject::connect(this->ui.currentPackdataIsPublic, &QCheckBox::toggled, this, &FormDialogPackage::_on_packdata_declaration_edited);
 
             QObject::connect(this->ui.currentPackdataType, qOverload<int>(&QComboBox::currentIndexChanged), this, &FormDialogPackage::_on_packdata_type_edited);
+
+            ui::set_range<float>(this->ui.currentPackdataValue_Float);
+            ui::set_range<int32_t>(this->ui.currentPackdataValue_Int);
+            ui::set_range<int32_t>(this->ui.currentPackdataValue_LocationRadius);
+            ui::set_range<int32_t>(this->ui.currentPackdataValue_TargetRadius);
 
             QObject::connect(this->ui.currentPackdataValue_Bool, &QCheckBox::toggled, this, &FormDialogPackage::_on_packdata_value_edited);
             QObject::connect(this->ui.currentPackdataValue_Float, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
@@ -513,6 +519,7 @@ void FormDialogPackage::_load_impl() {
       ui::bind(this->ui.templateForm, custom->template_package, working);
       QObject::connect(this->ui.templateForm, &DKFormPicker::formChanged, this, [this](dovah::form_stub* stub) {
          if (stub) {
+            this->ui.buttonPackdataNew->setEnabled(false);
             this->_models.package_data->clear();
             this->_models.package_data->setDeclarationsOwned(false);
             this->_models.package_data->setOwningQuest(this->ui.owningQuest->formStub());
@@ -520,6 +527,7 @@ void FormDialogPackage::_load_impl() {
             if (template_data)
                this->_models.package_data->importDeclarations(template_data->data.declarations, false);
          } else {
+            this->ui.buttonPackdataNew->setEnabled(true);
             this->_models.package_data->setDeclarationsOwned(true);
          }
       });
@@ -805,7 +813,6 @@ void FormDialogPackage::_on_packdata_selection_changed() {
    const auto row = row_opt.value();
    this->ui.buttonPackdataMoveUp->setEnabled(true);
    this->ui.buttonPackdataMoveDown->setEnabled(true);
-   //this->ui.buttonPackdataDelete->setEnabled(true);
    this->_update_packdata_deleteable();
 
    const auto blockers = std::array{
@@ -1347,6 +1354,10 @@ void FormDialogPackage::_update_procedure_params_list(QModelIndex qmi) {
    );
 }
 void FormDialogPackage::_update_packdata_deleteable() const {
+   if (!this->_models.package_data->declarationsOwned()) {
+      this->ui.buttonPackdataDelete->setEnabled(false);
+      return;
+   }
    auto row_opt = _selected_packdata_row();
    if (!row_opt.has_value())
       return;
