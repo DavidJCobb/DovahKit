@@ -6,6 +6,7 @@
 #include "editor/localize/package_interrupt_override_type.h"
 #include "editor/localize/package_procedure_tree_branch_type.h"
 #include "editor/localize/package_procedure_type.h"
+#include "editor/open_window_for_form.h"
 #include "widgets/DKFormNIFPicker.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_combobox_by_data.h"
@@ -44,6 +45,16 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
    #pragma region Package
       {
          this->ui.templateForm->setAllowedFormType(dovah::form_type::package);
+         this->ui.buttonEditTemplate->setEnabled(false);
+         QObject::connect(this->ui.templateForm, &DKFormPicker::formChanged, this, [this](dovah::form_stub* stub) {
+            this->ui.buttonEditTemplate->setEnabled(stub != nullptr);
+         });
+         QObject::connect(this->ui.buttonEditTemplate, &QPushButton::clicked, this, [this]() {
+            auto* stub = this->ui.templateForm->formStub();
+            if (!stub)
+               return;
+            open_edit_dialog_for_form(*stub);
+         });
       }
       {  // Package Data
          auto* model = this->_models.package_data = new PackageDataModel(this);
@@ -75,7 +86,15 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                auto rows = sel_model->selectedRows();
                if (rows.isEmpty())
                   return;
-               auto row = rows[0].row();
+               auto qmi = rows[0];
+               auto row = qmi.row();
+               if (!model->declarationsOwned()) {
+                  if (model->data(qmi, PackageDataModel::ValueIsLocalRole).toBool()) {
+                     model->resetRowValueToDefault(row);
+                     this->_update_packdata_deleteable();
+                     return;
+                  }
+               }
                model->deleteRow(row);
             });
          #pragma endregion
@@ -251,6 +270,10 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                      const auto blocker   = QSignalBlocker(picker);
                      const auto unique_id = model->data(qmi, PackageProcedureParamsModel::UniqueIDRole).toInt();
                      ui::set_combobox_by_data(*picker, unique_id);
+
+                     // Update whether the selected package data is deleteable, based on whether 
+                     // it's in use by any procedure.
+                     this->_update_packdata_deleteable();
                   });
                }
                QObject::connect(this->_models.package_data, &QAbstractItemModel::rowsInserted, this, &FormDialogPackage::_update_procedure_params_picker);
@@ -497,6 +520,8 @@ void FormDialogPackage::_load_impl() {
    auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
 
+   this->_filters.package_template->set_exclusion(this->stub);
+
    if (!_get_custom_package_data()) {
       if (working.typed_info) {
          working.convert_to_modern();
@@ -521,7 +546,10 @@ void FormDialogPackage::_load_impl() {
       auto& target = working.owning_quest;
       this->_models.package_data->setOwningQuest(target.get_form_stub());
       QObject::connect(picker, &DKFormPicker::formChanged, this->_models.package_data, &PackageDataModel::setOwningQuest);
+      // order of operations is significant: ui::bind updates the working-copy form; then the "feed" function 
+      // pings DovahKitCore.
       ui::bind(picker, target, working);
+      QObject::connect(picker, &DKFormPicker::formChanged, this, &FormDialogPackage::_feed_package_context_to_condition_list_editors);
    }
    ui::bind(this->ui.combatStyle, working.combat_style, working);
    ui::bind(this->ui.interruptOverride, working.interrupt_override);
@@ -540,14 +568,21 @@ void FormDialogPackage::_load_impl() {
       }
 
       #pragma region Public Package Data
+      {
+         auto* model = this->_models.package_data;
          if (custom->template_package) {
             if (template_data) {
-               this->_models.package_data->importDeclarations(template_data->data.declarations, false);
+               model->importDeclarations(template_data->data.declarations, false);
             }
          } else {
-            this->_models.package_data->importDeclarations(custom->data.declarations, true);
+            model->importDeclarations(custom->data.declarations, true);
          }
-         this->_models.package_data->importValues(custom->data.values);
+         model->importValues(custom->data.values);
+         if (template_data) {
+            model->importDefaultValues(template_data->data.values);
+         }
+         model->hideValuelessRows();
+      }
       #pragma endregion
       #pragma region Procedure Tree
          this->_models.procedure_tree->import_tree((template_data ? template_data : custom)->procedures);
@@ -872,10 +907,11 @@ bool FormDialogPackage::_uses_package_template() {
       };
 
       auto decl    = model->rowDeclaration(row);
-      auto val_opt = model->rowValue(row);
+      auto val_opt = model->rowValueOrDefault(row);
 
       this->ui.currentPackdataName->setText(decl.name);
       this->ui.currentPackdataIsPublic->setChecked(decl.is_public);
+      this->ui.currentPackdataValueHolder->setEnabled(decl.is_public || model->declarationsOwned());
       if (!val_opt.has_value()) {
          //
          // Default to "bool."
@@ -955,21 +991,33 @@ bool FormDialogPackage::_uses_package_template() {
    }
 
    void FormDialogPackage::_update_packdata_deleteable() const {
-      if (!this->_models.package_data->declarationsOwned()) {
-         this->ui.buttonPackdataDelete->setEnabled(false);
+      auto* button  = this->ui.buttonPackdataDelete;
+      auto* model   = this->_models.package_data;
+      auto  row_opt = _selected_packdata_row();
+      if (!row_opt.has_value()) {
+         button->setEnabled(false);
+         button->setText(tr("Delete"));
          return;
       }
-      auto row_opt = _selected_packdata_row();
-      if (!row_opt.has_value())
-         return;
-      auto    row       = row_opt.value();
-      uint8_t unique_id = this->_models.package_data->data(this->_models.package_data->index(row, 0, {}), PackageDataModel::UniqueIDRole).toInt();
 
+      auto    row       = row_opt.value();
+      auto    qmi       = model->index(row, 0, {});
+      uint8_t unique_id = model->data(qmi, PackageDataModel::UniqueIDRole).toInt();
+
+      if (!model->declarationsOwned()) {
+         if (model->data(qmi, PackageDataModel::ValueIsLocalRole).toBool()) {
+            button->setEnabled(true);
+            button->setText(tr("Reset"));
+            return;
+         }
+      }
+
+      button->setText(tr("Delete"));
       auto usage = this->_models.procedure_tree->countUsesOfPackdata();
       if (usage[unique_id] > 0) {
-         this->ui.buttonPackdataDelete->setEnabled(false);
+         button->setEnabled(false);
       } else {
-         this->ui.buttonPackdataDelete->setEnabled(true);
+         button->setEnabled(true);
       }
    }
 
@@ -1059,6 +1107,19 @@ bool FormDialogPackage::_uses_package_template() {
       }
 
       model->setRowValue(row, value);
+
+      // If we're using a template, and we've just assigned a value to a packdata that 
+      // was previously defaulted, then we'll want to re-enable the "Reset" button.
+      this->_update_packdata_deleteable();
+
+      this->_feed_packdata_changes_to_condition_list_editors();
+   }
+
+   void FormDialogPackage::_feed_packdata_changes_to_condition_list_editors() {
+      if (auto* custom = this->_get_custom_package_data()) {
+         this->_models.package_data->exportValues(custom->data.values, *this->form);
+         this->_feed_package_context_to_condition_list_editors();
+      }
    }
 #pragma endregion
 
@@ -1412,4 +1473,21 @@ void FormDialogPackage::_update_procedure_params_list(QModelIndex qmi) {
       (dovah::packages::procedure_type)this->_models.procedure_tree->data(qmi, PackageProcedureTreeModel::ProcedureTypeRole).toInt(),
       this->_models.procedure_tree->getProcedureParameterIDs(qmi)
    );
+}
+
+void FormDialogPackage::_feed_package_context_to_condition_list_editors() {
+   //
+   // Conditions have to be evaluated in their "context," e.g. a containing package, 
+   // owning quest, etc.. DKConditionListModel is capable of pulling from the context 
+   // forms' working copies, but it has to be notified of changes to those... and we 
+   // have to actually sync our changes to the working copy.
+   // 
+   // As a nasty hack, we use `packageWorkingCopyPackageDataAltered` not just for if 
+   // package data is altered, but also for when our owning quest changes. DovahKitCore 
+   // is a horrible god object, I plan on refactoring the hell out of it and everything 
+   // else during post-launch Sutain Phase 1, and in the meantime I don't want to have 
+   // to recompile the literal entire UI program-wide just to add one (1) signal for 
+   // when a package's owning quest changes.
+   //
+   emit DovahKitCore::get().packageWorkingCopyPackageDataAltered(this->stub);
 }

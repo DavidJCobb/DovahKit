@@ -57,6 +57,7 @@ class DKConditionListModel : public DKGenericListModel<DKConditionListModel, ui:
    protected slots:
       void formModified(const dovah::form_stub*);
       void formDeletionImminent(const dovah::form_stub*, bool is_just_flagged);
+      void handleContextChange();
       
    public slots:
       void clear();

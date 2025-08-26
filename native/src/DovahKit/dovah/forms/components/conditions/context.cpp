@@ -34,17 +34,7 @@ namespace dovah::loaded_forms::components::conditions {
       }
       //
       if (auto* s = this->package) {
-         if (s->form_type != form_type::package)
-            this->package = nullptr;
-         else
-            this->loaded.package = s->load().ptr_cast<loaded_forms::Package>();
-
-         if (this->loaded.package && !this->quest) {
-            auto* stub = this->loaded.package->owning_quest.get_form_stub();
-            if (stub && stub->form_type == form_type::quest) {
-               this->loaded.quest = stub->load().ptr_cast<loaded_forms::Quest>();
-            }
-         }
+         this->update_from_owning_package();
       }
       if (auto* s = this->quest) {
          if (s->form_type != form_type::quest)
@@ -73,5 +63,43 @@ namespace dovah::loaded_forms::components::conditions {
             return wc;
       }
       return this->loaded.quest.unwrap();
+   }
+
+   void context::update_from_owning_package() {
+      if (!this->package)
+         return;
+      if (this->package->form_type != dovah::form_type::package) {
+         this->package = nullptr;
+         this->loaded.package = {};
+         if (this->owner == this->package) {
+            this->quest = nullptr;
+            this->loaded.quest = {};
+         }
+         return;
+      }
+      if (!this->loaded.package || &this->loaded.package->stub != this->package) {
+         this->loaded.package = this->package->load().ptr_cast<loaded_forms::Package>();
+         if (!this->loaded.package) {
+            if (this->owner == this->package) {
+               this->quest = nullptr;
+               this->loaded.quest = nullptr;
+            }
+            return;
+         }
+      }
+      this->quest = this->loaded.package->owning_quest.get_form_stub();
+      if (this->prefer_working_copy) {
+         auto* wc = this->package->get_working_copy<loaded_forms::Package>();
+         if (wc)
+            this->quest = wc->owning_quest.get_form_stub();
+      }
+      if (this->quest) {
+         if (this->quest->form_type != dovah::form_type::quest) {
+            this->quest = nullptr;
+            this->loaded.quest = nullptr;
+            return;
+         }
+         this->loaded.quest = this->quest->load().ptr_cast<loaded_forms::Quest>();
+      }
    }
 }

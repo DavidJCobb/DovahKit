@@ -31,5 +31,7 @@ namespace dovah::loaded_forms::components::conditions {
       public:
          loaded_forms::Package* get_owning_package() const noexcept; // gets the working copy or, if there isn't one, the form
          loaded_forms::Quest*   get_owning_quest() const noexcept; // gets the working copy or, if there isn't one, the form
+
+         void update_from_owning_package();
    };
 }

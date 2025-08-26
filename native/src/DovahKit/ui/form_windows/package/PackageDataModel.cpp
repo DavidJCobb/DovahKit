@@ -1,5 +1,6 @@
 #include "./PackageDataModel.h"
 #include "helpers/bitset.h"
+#include "helpers/qt/strings.h"
 #include "helpers/vectors/move_item_within.h"
 #include "dovah/data/dialogue/topic_subtype.h"
 #include "dovah/forms/structs/custom_packages/package_data_declaration_map.h"
@@ -67,11 +68,14 @@ PackageDataModel::PackageDataModel(QObject* parent) : QAbstractItemModel(parent)
                   case Column::Name:
                      return src.declaration.name;
                   case Column::Type:
-                     if (src.value.has_value()) {
-                        return editor::localize::package_data_type(src.value.value().type());
-                     }
+                     if (auto& opt = src.value; opt.has_value())
+                        return editor::localize::package_data_type(opt.value().type());
+                     if (auto& opt = src.value_default; opt.has_value())
+                        return editor::localize::package_data_type(opt.value().type());
                      break;
                   case Column::Value:
+                     if (src.cached.value.isEmpty())
+                        return src.cached.value_default;
                      return src.cached.value;
                   case Column::IsPublic:
                      return src.declaration.is_public ? tr("Yes", "boolean") : tr("No", "boolean");
@@ -82,20 +86,40 @@ PackageDataModel::PackageDataModel(QObject* parent) : QAbstractItemModel(parent)
                   case Column::Name:
                      return src.declaration.name;
                   case Column::Type:
-                     return (int)src.value.value().type();
+                     if (auto& opt = src.value; opt.has_value())
+                        return (int)opt.value().type();
+                     if (auto& opt = src.value_default; opt.has_value())
+                        return (int)opt.value().type();
+                     break;
                   case Column::Value:
                      return {};
                   case Column::IsPublic:
                      return src.declaration.is_public;
                }
                break;
+            case Qt::FontRole:
+               switch (index.column()) {
+                  case Column::Value:
+                     if (src.value.has_value())
+                        break;
+                     if (src.value_default.has_value()) {
+                        QFont font;
+                        font.setItalic(true);
+                        return font;
+                     }
+                     break;
+               }
+               break;
             case UniqueIDRole:
                return src.declaration.unique_id;
             case TypeRole:
-               if (src.value.has_value()) {
-                  return (int)src.value.value().type();
-               }
+               if (auto& opt = src.value; opt.has_value())
+                  return (int)opt.value().type();
+               if (auto& opt = src.value_default; opt.has_value())
+                  return (int)opt.value().type();
                break;
+            case ValueIsLocalRole:
+               return src.value.has_value();
          }
          return {};
       }
@@ -126,8 +150,10 @@ PackageDataModel::PackageDataModel(QObject* parent) : QAbstractItemModel(parent)
 void PackageDataModel::clear() {
    this->beginResetModel();
    this->_data.items.clear();
+   this->_data.hidden.clear();
    this->_data.owning_quest = nullptr;
    this->_data.owns_declarations = false;
+   this->_data.next_unique_id = 0;
    this->endResetModel();
 }
 
@@ -170,6 +196,41 @@ void PackageDataModel::importDeclarations(const dovah::loaded_forms::structs::cu
       this->endInsertRows();
    }
 }
+void PackageDataModel::importDefaultValues(const dovah::loaded_forms::structs::custom_packages::package_data_value_map& src) {
+   using frontend_decl_type = ui::types::packages::package_data_declaration;
+   using backend_decl_type  = dovah::loaded_forms::structs::custom_packages::package_data_value_map::entry;
+
+   for (auto& src_pair : src.entries) {
+      if (src_pair.unique_id == frontend_decl_type::no_unique_id)
+         continue;
+      if (!src_pair.value)
+         continue;
+      auto prior_row = this->_row_for_unique_id(src_pair.unique_id);
+      if (prior_row >= 0) {
+         auto& prior = this->_data.items[prior_row];
+         prior.value_default.emplace().importData(*src_pair.value);
+         prior.cached.value_default = this->_value_to_string(prior.value_default);
+         //
+         auto qmi = this->index(prior_row, Column::Value, {});
+         emit dataChanged(qmi, qmi);
+         //
+         continue;
+      }
+      const auto row = this->_data.items.size();
+      this->beginInsertRows({}, row, row);
+      //
+      auto& dst_item = this->_data.items.emplace_back();
+      dst_item.declaration.unique_id = src_pair.unique_id;
+      dst_item.declaration.is_public = false;
+      //
+      dst_item.value_default.emplace().importData(*src_pair.value);
+      dst_item.cached.value_default = this->_value_to_string(dst_item.value_default);
+      //
+      this->endInsertRows();
+   }
+
+   this->_data.next_unique_id = std::max(this->_data.next_unique_id, src.next_unique_id);
+}
 void PackageDataModel::importValues(const dovah::loaded_forms::structs::custom_packages::package_data_value_map& src) {
    using frontend_decl_type = ui::types::packages::package_data_declaration;
    using backend_decl_type  = dovah::loaded_forms::structs::custom_packages::package_data_value_map::entry;
@@ -183,7 +244,7 @@ void PackageDataModel::importValues(const dovah::loaded_forms::structs::custom_p
       if (prior_row >= 0) {
          auto& prior = this->_data.items[prior_row];
          prior.value.emplace().importData(*src_pair.value);
-         _recache_item_value_string(prior);
+         prior.cached.value = this->_value_to_string(prior.value);
          //
          auto qmi = this->index(prior_row, Column::Value, {});
          emit dataChanged(qmi, qmi);
@@ -198,12 +259,32 @@ void PackageDataModel::importValues(const dovah::loaded_forms::structs::custom_p
       dst_item.declaration.is_public = false;
       //
       dst_item.value.emplace().importData(*src_pair.value);
-      _recache_item_value_string(dst_item);
+      dst_item.cached.value = this->_value_to_string(dst_item.value);
       //
       this->endInsertRows();
    }
 
-   this->_data.next_unique_id = src.next_unique_id;
+   this->_data.next_unique_id = std::max(this->_data.next_unique_id, src.next_unique_id);
+}
+
+void PackageDataModel::hideValuelessRows() {
+   auto&  src_list = this->_data.items;
+   auto&  dst_list = this->_data.hidden;
+   size_t src_size = src_list.size();
+   for (size_t i = 0; i < src_size; ++i) {
+      auto& src = src_list[i];
+      if (src.value.has_value())
+         continue;
+      if (src.value_default.has_value())
+         continue;
+      this->beginRemoveRows({}, i, i);
+      auto& dst = dst_list.emplace_back();
+      dst = std::move(src);
+      src_list.erase(src_list.begin() + i);
+      --i;
+      --src_size;
+      this->endRemoveRows();
+   }
 }
 
 void PackageDataModel::setDeclarationsOwned(bool v) {
@@ -217,6 +298,12 @@ void PackageDataModel::exportDeclarations(dovah::loaded_forms::structs::custom_p
    
    dst.entries.clear();
    for (auto& src_item : this->_data.items) {
+      auto& dst_item = dst.entries.emplace_back();
+      dst_item.unique_id = src_item.declaration.unique_id;
+      dst_item.name      = src_item.declaration.name.toStdString();
+      dst_item.is_public = src_item.declaration.is_public;
+   }
+   for (auto& src_item : this->_data.hidden) {
       auto& dst_item = dst.entries.emplace_back();
       dst_item.unique_id = src_item.declaration.unique_id;
       dst_item.name      = src_item.declaration.name.toStdString();
@@ -243,6 +330,14 @@ std::optional<ui::types::packages::package_data_value> PackageDataModel::rowValu
    if (row >= this->_data.items.size())
       throw std::out_of_range("PackageDataModel::rowValue argument out of range");
    return this->_data.items[row].value;
+}
+std::optional<ui::types::packages::package_data_value> PackageDataModel::rowValueOrDefault(size_t row) const {
+   if (row >= this->_data.items.size())
+      throw std::out_of_range("PackageDataModel::rowValue argument out of range");
+   const auto& item = this->_data.items[row];
+   if (item.value.has_value())
+      return item.value;
+   return item.value_default;
 }
 
 void PackageDataModel::setRowDeclaration(size_t row, const ui::types::packages::package_data_declaration& src) {
@@ -277,8 +372,18 @@ void PackageDataModel::setRowValue(size_t row, const ui::types::packages::packag
       throw std::out_of_range("PackageDataModel::setRowValue argument out of range");
    auto& item = this->_data.items[row];
    item.value = src;
+   item.cached.value = this->_value_to_string(item.value);
 
-   this->_recache_item_value_string(item);
+   auto qmi = this->index(row, Column::Value, {});
+   emit dataChanged(qmi, qmi);
+}
+void PackageDataModel::resetRowValueToDefault(size_t row) {
+   if (row >= this->_data.items.size())
+      throw std::out_of_range("PackageDataModel::setRowValue argument out of range");
+   auto& item = this->_data.items[row];
+   item.value.reset();
+   item.cached.value.clear();
+
    auto qmi = this->index(row, Column::Value, {});
    emit dataChanged(qmi, qmi);
 }
@@ -299,7 +404,12 @@ QModelIndex PackageDataModel::appendRow() {
       auto& val = item.value.emplace();
       val.emplace<dovah::packages::package_data_type::boolean>() = false;
    }
-   this->_recache_item_value_string(item);
+   {  // Default value: bool, false
+      auto& val = item.value_default.emplace();
+      val.emplace<dovah::packages::package_data_type::boolean>() = false;
+   }
+   item.cached.value         = this->_value_to_string(item.value);
+   item.cached.value_default = this->_value_to_string(item.value_default);
    this->endInsertRows();
    return this->index(row, 0, {});
 }
@@ -341,38 +451,23 @@ QModelIndex PackageDataModel::findUniqueID(uint8_t unique_id) const {
    return {};
 }
 
-void PackageDataModel::_recache_item_value_string(ItemWithCaching& item) {
-   auto& dst = item.cached.value;
-   dst.clear();
-   if (!item.value.has_value()) {
-      return;
+QString PackageDataModel::_value_to_string(std::optional<ui::types::packages::package_data_value>& value_opt) {
+   if (!value_opt.has_value()) {
+      return {};
    }
-   const auto& src = item.value.value();
+   const auto& src = value_opt.value();
    switch (src.type()) {
       case dovah::packages::package_data_type::boolean:
-         {
-            auto& casted = src.as<dovah::packages::package_data_type::boolean>();
-            if (casted)
-               dst = tr("True", "package data value (bool)");
-            else
-               dst = tr("False", "package data value (bool)");
-         }
-         break;
+         if (src.as<dovah::packages::package_data_type::boolean>())
+            return tr("True", "package data value (bool)");
+         return tr("False", "package data value (bool)");
       case dovah::packages::package_data_type::float32:
-         {
-            auto& casted = src.as<dovah::packages::package_data_type::float32>();
-            dst = QString::number(casted);
-         }
-         break;
+         return QString::number(src.as<dovah::packages::package_data_type::float32>());
       case dovah::packages::package_data_type::integer:
-         {
-            auto& casted = src.as<dovah::packages::package_data_type::integer>();
-            dst = QString::number(casted);
-         }
-         break;
+         return QString::number(src.as<dovah::packages::package_data_type::integer>());
       case dovah::packages::package_data_type::location:
          {
-            auto& casted = src.as<dovah::packages::package_data_type::location>();
+            auto&   casted     = src.as<dovah::packages::package_data_type::location>();
             QString elaborated;
             bool    use_radius = true;
             switch (casted.get_type()) {
@@ -512,17 +607,12 @@ void PackageDataModel::_recache_item_value_string(ItemWithCaching& item) {
                   break;
             }
             if (use_radius)
-               dst = tr("%1, radius %2").arg(elaborated).arg(casted.radius);
-            else
-               dst = elaborated;
+               return tr("%1, radius %2").arg(elaborated).arg(casted.radius);
+            return elaborated;
          }
          break;
       case dovah::packages::package_data_type::object_list:
-         {
-            auto& casted = src.as<dovah::packages::package_data_type::object_list>();
-            dst = QString::number(casted);
-         }
-         break;
+         return QString::number(src.as<dovah::packages::package_data_type::object_list>());
       case dovah::packages::package_data_type::single_ref:
       case dovah::packages::package_data_type::target_selector:
          {
@@ -536,61 +626,51 @@ void PackageDataModel::_recache_item_value_string(ItemWithCaching& item) {
                case dovah::packages::target_type::interrupt_override_target:
                   switch (std::get<dovah::packages::interrupt_override_target>(casted.data)) {
                      case dovah::packages::interrupt_override_target::combat_target:
-                        dst = tr("Combat target", "package data value (target) (interrupt override target)");
-                        break;
+                        return tr("Combat target", "package data value (target) (interrupt override target)");
                      case dovah::packages::interrupt_override_target::corpse_to_observe:
-                        dst = tr("Observed corpse", "package data value (target) (interrupt override target)");
-                        break;
+                        return tr("Observed corpse", "package data value (target) (interrupt override target)");
                      case dovah::packages::interrupt_override_target::ref_to_guard:
-                        dst = tr("Ref to guard", "package data value (target) (interrupt override target)");
-                        break;
+                        return tr("Ref to guard", "package data value (target) (interrupt override target)");
                      case dovah::packages::interrupt_override_target::threat_to_spectate:
-                        dst = tr("Threat to spectate", "package data value (target) (interrupt override target)");
-                        break;
+                        return tr("Threat to spectate", "package data value (target) (interrupt override target)");
                      case dovah::packages::interrupt_override_target::trespasser:
-                        dst = tr("Trespasser", "package data value (target) (interrupt override target)");
-                        break;
-                     default:
-                        dst = tr("Unknown interrupt override target", "package data value (target) (interrupt override target)");
-                        break;
+                        return tr("Trespasser", "package data value (target) (interrupt override target)");
                   }
-                  break;
+                  return tr("Unknown interrupt override target", "package data value (target) (interrupt override target)");
                case dovah::packages::target_type::linked_ref:
                   {
                      dovah::form_stub* kywd = *casted.as_type<dovah::packages::target_type::linked_ref>();
                      if (kywd) {
                         const auto& name = kywd->editorID;
+                        QString     dst;
                         if (name.empty()) {
                            dst = editor_helpers::form_identifiers_to_string(kywd);
                         } else {
                            dst = QString::fromStdString(name);
                         }
-                        dst = tr("Linked ref with keyword %1", "package data value (target) (linked_ref)").arg(dst);
-                     } else {
-                        dst = tr("Linked ref", "package data value (target) (linked_ref)");
+                        return tr("Linked ref with keyword %1", "package data value (target) (linked_ref)").arg(dst);
                      }
                   }
-                  break;
+                  return tr("Linked ref", "package data value (target) (linked_ref)");
                case dovah::packages::target_type::object:
                   {
                      dovah::form_stub* refr = *casted.as_type<dovah::packages::target_type::reference>();
                      if (refr) {
                         const auto& name = refr->editorID;
+                        QString     dst;
                         if (name.empty()) {
                            dst = editor_helpers::form_identifiers_to_string(refr);
                         } else {
                            dst = QString::fromStdString(name);
                         }
-                        dst = tr("Object of type %1", "package data value (location) (object)").arg(dst);
-                     } else {
-                        dst = tr("NONE", "package data value (location) (object)");
+                        return tr("Object of type %1", "package data value (location) (object)").arg(dst);
                      }
                   }
-                  break;
+                  return tr("NONE", "package data value (location) (object)");
                case dovah::packages::target_type::object_type:
                   {
-                     dst = editor::localize::package_object_type(std::get<dovah::packages::object_type>(casted.data));
-                     dst = tr("Object of type %1", "package data value (location) (object type)").arg(dst);
+                     auto dst = editor::localize::package_object_type(std::get<dovah::packages::object_type>(casted.data));
+                     return tr("Object of type %1", "package data value (location) (object type)").arg(dst);
                   }
                   break;
                case dovah::packages::target_type::reference:
@@ -599,31 +679,28 @@ void PackageDataModel::_recache_item_value_string(ItemWithCaching& item) {
                      if (refr) {
                         const auto& name = refr->editorID;
                         if (name.empty()) {
-                           dst = editor_helpers::form_identifiers_to_string(refr);
-                        } else {
-                           dst = QString::fromStdString(name);
+                           return editor_helpers::form_identifiers_to_string(refr);
                         }
-                     } else {
-                        dst = tr("NONE", "package data value (location) (reference)");
+                        return QString::fromStdString(name);
                      }
                   }
-                  break;
+                  return tr("NONE", "package data value (location) (reference)");
                case dovah::packages::target_type::reference_alias:
                   {
                      auto alias_id = *casted.as_type<dovah::packages::target_type::reference_alias>();
                      if (alias_id < 0) {
-                        dst = tr("No reference alias", "package data value (location) (reference alias)");
+                        return tr("No reference alias", "package data value (location) (reference alias)");
                      } else {
-                        dst = _reference_alias_name(alias_id);
+                        auto dst = _reference_alias_name(alias_id);
                         if (dst.isEmpty()) {
                            dst = tr("Reference alias ID #%1", "package data value (location) (reference alias)").arg(alias_id);
                         }
+                        return dst;
                      }
                   }
                   break;
                case dovah::packages::target_type::self:
-                  dst = tr("Self", "package data value (target)");
-                  break;
+                  return tr("Self", "package data value (target)");
             }
 
          }
@@ -634,24 +711,22 @@ void PackageDataModel::_recache_item_value_string(ItemWithCaching& item) {
             if (auto subtype = casted.get_subtype_signature()) {
                for (auto& info : dovah::dialogue::all_topic_subtypes) {
                   if (subtype == info.signature) {
-                     dst = editor::localize::dialogue_topic_subtype(info);
-                     dst = tr("(%1)", "package data value (topic) (subtype)").arg(dst);
-                     break;
+                     auto dst = editor::localize::dialogue_topic_subtype(info);
+                     return tr("(%1)", "package data value (topic) (subtype)").arg(dst);
                   }
                }
+               return tr("(topic subtype %1)", "package data value (topic) (subtype)").arg(cobb::qt::four_cc_to_string(subtype));
             } else if (auto* topic = casted.get_topic()) {
                const auto& name = topic->editorID;
                if (name.empty()) {
-                  dst = editor_helpers::form_identifiers_to_string(topic);
-               } else {
-                  dst = QString::fromStdString(name);
+                  return editor_helpers::form_identifiers_to_string(topic);
                }
-            } else {
-               dst = tr("NONE", "package data value (topic)");
+               return QString::fromStdString(name);
             }
          }
-         break;
+         return tr("NONE", "package data value (topic)");
    }
+   return {};
 }
 void PackageDataModel::_recache_quest_aliases() {
    if (!this->_data.owning_quest) {
@@ -676,21 +751,29 @@ void PackageDataModel::_recache_quest_aliases() {
 }
 void PackageDataModel::_recache_item_values_using_aliases() {
    for (size_t i = 0; i < this->_data.items.size(); ++i) {
-      auto& item = this->_data.items[i];
-      if (!item.value.has_value())
-         continue;
-      auto& value = item.value.value();
-      if (value.type() != dovah::packages::package_data_type::location)
-         continue;
-      switch (value.as<dovah::packages::package_data_type::location>().get_type()) {
-         case dovah::packages::location_type::location_alias:
-         case dovah::packages::location_type::reference_alias:
-            this->_recache_item_value_string(item);
-            {
-               auto qmi = this->index(i, Column::Value, {});
-               emit dataChanged(qmi, qmi);
-            }
-            break;
+      auto& item    = this->_data.items[i];
+      bool  changed = false;
+      
+      auto _check_and_update = [this, &changed](
+         std::optional<ui::types::packages::package_data_value>& value_opt,
+         QString& cached
+      ) {
+         if (!value_opt.has_value())
+            return;
+         auto& value = value_opt.value();
+         switch (value.as<dovah::packages::package_data_type::location>().get_type()) {
+            case dovah::packages::location_type::location_alias:
+            case dovah::packages::location_type::reference_alias:
+               changed = true;
+               cached  = this->_value_to_string(value_opt);
+               break;
+         }
+      };
+      _check_and_update(item.value,         item.cached.value);
+      _check_and_update(item.value_default, item.cached.value_default);
+      if (changed) {
+         auto qmi = this->index(i, Column::Value, {});
+         emit dataChanged(qmi, qmi);
       }
    }
 }
@@ -718,36 +801,57 @@ void PackageDataModel::_on_form_modified(dovah::form_stub& stub) {
    }
 
    for (size_t i = 0; i < this->_data.items.size(); ++i) {
-      auto& item = this->_data.items[i];
-      auto& value_opt = item.value;
-      if (!value_opt.has_value())
-         continue;
-      auto& value = value_opt.value();
-      switch (value.type()) {
-         case dovah::packages::package_data_type::boolean:
-         case dovah::packages::package_data_type::float32:
-         case dovah::packages::package_data_type::integer:
-         case dovah::packages::package_data_type::object_list:
-            continue;
+      auto& item    = this->_data.items[i];
+      bool  changed = false;
+
+      auto _check_and_update = [this, &stub, &changed](
+         std::optional<ui::types::packages::package_data_value>& value_opt,
+         QString& cached
+      ) {
+         if (!value_opt.has_value())
+            return;
+         auto& value = value_opt.value();
+         switch (value.type()) {
+            case dovah::packages::package_data_type::boolean:
+            case dovah::packages::package_data_type::float32:
+            case dovah::packages::package_data_type::integer:
+            case dovah::packages::package_data_type::object_list:
+               return;
+         }
+         //
+         // TODO: Only react if the item's value (or stringification thereof) 
+         // has actually changed.
+         //
+         cached = this->_value_to_string(value_opt);
+      };
+      _check_and_update(item.value,         item.cached.value);
+      _check_and_update(item.value_default, item.cached.value_default);
+      if (changed) {
+         auto qmi = this->index(i, Column::Value, {});
+         emit dataChanged(qmi, qmi);
       }
-      //
-      // TODO: Only react if the item's value (or stringification thereof) 
-      // has actually changed.
-      //
-      this->_recache_item_value_string(item);
-      auto qmi = this->index(i, Column::Value, {});
-      emit dataChanged(qmi, qmi);
    }
 }
 void PackageDataModel::_sever_uses_of_form(dovah::form_stub& stub) {
    for(size_t i = 0; i < this->_data.items.size(); ++i) {
-      auto& item      = this->_data.items[i];
-      auto& value_opt = item.value;
-      if (!value_opt.has_value())
-         continue;
-      auto& value = value_opt.value();
-      if (value.sever_uses_of_form(stub)) {
-         this->_recache_item_value_string(item);
+      auto& item    = this->_data.items[i];
+      bool  changed = false;
+
+      auto _check_and_update = [this, &stub, &changed](
+         std::optional<ui::types::packages::package_data_value>& value_opt,
+         QString& cached
+      ) {
+         if (!value_opt.has_value())
+            return;
+         auto& value = value_opt.value();
+         if (value.sever_uses_of_form(stub)) {
+            changed = true;
+            cached = this->_value_to_string(value_opt);
+         }
+      };
+      _check_and_update(item.value,         item.cached.value);
+      _check_and_update(item.value_default, item.cached.value_default);
+      if (changed) {
          auto qmi = this->index(i, Column::Value, {});
          emit dataChanged(qmi, qmi);
       }
@@ -761,6 +865,11 @@ uint8_t PackageDataModel::_get_available_unique_id() const {
 
    cobb::bitset<255> used;
    for (auto& item : this->_data.items) {
+      auto id = item.declaration.unique_id;
+      if (id < used.size())
+         used.set(id);
+   }
+   for (auto& item : this->_data.hidden) {
       auto id = item.declaration.unique_id;
       if (id < used.size())
          used.set(id);

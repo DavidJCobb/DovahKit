@@ -32,6 +32,33 @@ namespace {
       constexpr const auto IsPlayerActionActive  = _lookup_function_id_by_name("IsPlayerActionActive");
       constexpr const auto IsSceneActionComplete = _lookup_function_id_by_name("IsSceneActionComplete");
    }
+   
+   QString _packdata_name(dovah::loaded_forms::Package* package, uint8_t unique_id) {
+      using modern_package_info = dovah::loaded_forms::structs::typed_package_info::custom;
+      if (!package)
+         return {};
+
+      auto* custom = dynamic_cast<modern_package_info*>(package->typed_info);
+      if (!custom)
+         return {};
+
+      if (auto* tp_stub = custom->template_package.get_form_stub(); tp_stub) {
+         auto loaded = tp_stub->load().ptr_cast<dovah::loaded_forms::Package>();
+         if (!loaded)
+            return {};
+         auto* inherited = dynamic_cast<modern_package_info*>(loaded->typed_info);
+         if (!inherited)
+            return {};
+         for (auto& entry : inherited->data.declarations.entries)
+            if (entry.unique_id == unique_id)
+               return QString::fromStdString(entry.name);
+      } else {
+         for (auto& entry : custom->data.declarations.entries)
+            if (entry.unique_id == unique_id)
+               return QString::fromStdString(entry.name);
+      }
+      return {};
+   }
 }
 
 DKConditionListModel::DKConditionListModel(QObject* parent) : DKGenericListModel(parent) {
@@ -39,6 +66,8 @@ DKConditionListModel::DKConditionListModel(QObject* parent) : DKGenericListModel
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &DKConditionListModel::clear);
    QObject::connect(&editor, &DovahKitCore::formModified,         this, &DKConditionListModel::formModified);
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, &DKConditionListModel::formDeletionImminent);
+   QObject::connect(&editor, &DovahKitCore::questWorkingCopyAliasesAltered,       this, &DKConditionListModel::handleContextChange);
+   QObject::connect(&editor, &DovahKitCore::packageWorkingCopyPackageDataAltered, this, &DKConditionListModel::handleContextChange);
 }
 DKConditionListModel::~DKConditionListModel() {
    this->clear();
@@ -71,6 +100,14 @@ void DKConditionListModel::formDeletionImminent(const dovah::form_stub* stub, bo
          emit dataChanged(start, end);
       }
    }
+}
+void DKConditionListModel::handleContextChange() {
+   this->_context.update_from_owning_package();
+
+   auto size = this->_nodes.size();
+   auto tl = this->index(0, 0, {});
+   auto br = this->index(size - 1, Column::_COUNT - 1, {});
+   emit dataChanged(tl, br);
 }
 
 QString DKConditionListModel::_stringify_condition_parameter(const Condition& condition, size_t i) const {
@@ -228,10 +265,10 @@ QString DKConditionListModel::_stringify_condition_parameter(const Condition& co
                   // template.
                   //
                   if (auto* tp_stub = custom->template_package.get_form_stub(); tp_stub) {
-                     package = tp_stub->load().ptr_cast<dovah::loaded_forms::Package>();
-                     custom  = nullptr;
-                     if (package) {
-                        custom = dynamic_cast<modern_package_info*>(package->typed_info);
+                     auto loaded = tp_stub->load().ptr_cast<dovah::loaded_forms::Package>();
+                     custom = nullptr;
+                     if (loaded) {
+                        custom = dynamic_cast<modern_package_info*>(loaded->typed_info);
                      }
                   }
                   if (custom) {
@@ -305,9 +342,16 @@ QVariant DKConditionListModel::data_of(const node_type& node, Qt::ItemDataRole r
                   case run_on_type::linked_ref:
                      return tr("Linked Ref", "run on");
                   case run_on_type::package_data:
-                     //
-                     // TODO: check index; display which data
-                     //
+                     if (std::holds_alternative<uint32_t>(node.run_on.entity)) {
+                        auto unique_id = std::get<uint32_t>(node.run_on.entity);
+                        if (unique_id == 0xFF) {
+                           return tr("No Package Data", "run on");
+                        }
+                        auto name = _packdata_name(this->_context.loaded.package.unwrap(), unique_id);
+                        if (name.isEmpty())
+                           return tr("Package Data #%1", "run on").arg(unique_id);
+                        return name;
+                     }
                      return tr("Package Data", "run on");
                   case run_on_type::quest_alias:
                      if (!run_on_alias_name.isEmpty())

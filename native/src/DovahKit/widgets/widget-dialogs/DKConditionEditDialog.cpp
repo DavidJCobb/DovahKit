@@ -24,6 +24,10 @@
 #include "dovah/data/conditions/parameter_underlying_type.h"
 #include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/data/story_manager.h"
+#include "dovah/forms/structs/custom_packages/package_data/single_ref.h"
+#include "dovah/forms/structs/custom_packages/package_data.h"
+#include "dovah/forms/structs/custom_packages/package_data_declaration_map.h"
+#include "dovah/forms/structs/custom_packages/package_data_value_map.h"
 #include "dovah/forms/structs/typed_package_info/custom.h"
 #include "dovah/forms/Package.h"
 #include "dovah/forms/Quest.h"
@@ -61,27 +65,66 @@ namespace {
 }
 
 namespace {
-   dovah::loaded_forms::structs::custom_packages::package_data_declaration_map* _get_package_data_declaration_list(dovah::loaded_forms::Package* package) {
+   template<typename Functor>
+   void _for_each_packdata_declaration(
+      dovah::loaded_forms::Package* package,
+      Functor&& functor
+   ) {
       using modern_package_info = dovah::loaded_forms::structs::typed_package_info::custom;
       if (!package)
-         return nullptr;
+         return;
 
       auto* custom = dynamic_cast<modern_package_info*>(package->typed_info);
       if (!custom)
-         return nullptr;
-      //
-      // First, check if the package has a template. If so, redirect our checks to that 
-      // template.
-      //
+         return;
+
+      auto _exec = [&functor](
+         const dovah::loaded_forms::structs::custom_packages::package_data_declaration_map& decl_map,
+         const dovah::loaded_forms::structs::custom_packages::package_data_value_map& values,
+         const dovah::loaded_forms::structs::custom_packages::package_data_value_map* values_default
+      ) {
+         for (auto& entry : decl_map.entries) {
+            const dovah::loaded_forms::structs::custom_packages::package_data* value = nullptr;
+
+            auto unique_id = entry.unique_id;
+            for (auto& entry : values.entries) {
+               if (entry.unique_id == unique_id) {
+                  value = entry.value.get();
+                  break;
+               }
+            }
+            if (!value && values_default) {
+               for (auto& entry : values_default->entries) {
+                  if (entry.unique_id == unique_id) {
+                     value = entry.value.get();
+                     break;
+                  }
+               }
+            }
+
+            functor(entry, value);
+         }
+      };
+
       if (auto* tp_stub = custom->template_package.get_form_stub(); tp_stub) {
-         package = tp_stub->load().ptr_cast<dovah::loaded_forms::Package>();
-         if (!package)
-            return nullptr;
-         custom = dynamic_cast<modern_package_info*>(package->typed_info);
-         if (!custom)
-            return nullptr;
+         auto loaded = tp_stub->load().ptr_cast<dovah::loaded_forms::Package>();
+         if (!loaded)
+            return;
+         auto* inherited = dynamic_cast<modern_package_info*>(loaded->typed_info);
+         if (!inherited)
+            return;
+         _exec(
+            inherited->data.declarations,
+            custom->data.values,
+            &inherited->data.values
+         );
+      } else {
+         _exec(
+            custom->data.declarations,
+            custom->data.values,
+            nullptr
+         );
       }
-      return &custom->data.declarations;
    }
 }
 
@@ -249,7 +292,9 @@ DKConditionEditDialog::DKConditionEditDialog(dovah::form_stub& containing_form, 
       widget->addItem(tr("Player", "condition run on"), (int)run_on_type::reference);
       widget->setItemData(widget->count() - 1, uint32_t(dovah::hardcoded_form_ids::PlayerRef), RunOnFormIDRole);
       widget->setItemData(widget->count() - 1, true, RunOnPlayerSentinelRole);
-      
+
+      widget->setCurrentIndex(widget->findData((int)wc.run_on.type));
+
       this->_update_run_on_ui();
       
       QObject::connect(widget, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
@@ -612,15 +657,25 @@ void DKConditionEditDialog::_update_run_on_ui() {
          {
             bool valid = false;
             if (auto* package = this->_context.get_owning_package()) {
-               if (auto* decls = _get_package_data_declaration_list(package)) {
+               _for_each_packdata_declaration(package, [this, &valid](const auto& entry, const dovah::loaded_forms::structs::custom_packages::package_data* value) {
                   valid = true;
-                  for (auto& entry : decls->entries) {
-                     if (entry.unique_id == 0xFF)
-                        continue;
-                     auto name = QString::fromStdString(entry.name);
-                     this->ui.runOnDropdown->addItem(name, (int)entry.unique_id);
+                  if (entry.unique_id == 0xFF)
+                     return;
+                  if (!value)
+                     //
+                     // CK treats declarations sans values as deleted packdata, and omits them from display.
+                     //
+                     return;
+                  switch (value->get_type()) {
+                     case dovah::packages::package_data_type::object_list:
+                     case dovah::packages::package_data_type::single_ref:
+                        break;
+                     default:
+                        return;
                   }
-               }
+                  auto name = QString::fromStdString(entry.name);
+                  this->ui.runOnDropdown->addItem(name, (int)entry.unique_id);
+               });
             }
             this->ui.runOnDropdown->setEnabled(valid);
          }
@@ -1522,16 +1577,21 @@ void DKConditionEditDialog::_update_parameter_ui(size_t index) {
             widget->clear();
             widget->setEnabled(false);
             if (auto* package = this->_context.get_owning_package()) {
-               if (auto* decls = _get_package_data_declaration_list(package)) {
-                  bool empty = true;
-                  for (auto& entry : decls->entries) {
-                     if (entry.unique_id == 0xFF)
-                        continue;
-                     auto name = QString::fromStdString(entry.name);
-                     widget->addItem(name, (int)entry.unique_id);
-                     empty = false;
-                  }
-                  widget->setEnabled(!empty);
+               bool empty = true;
+               _for_each_packdata_declaration(package, [this, &empty, widget](const auto& entry, const dovah::loaded_forms::structs::custom_packages::package_data* value) {
+                  if (entry.unique_id == 0xFF)
+                     return;
+                  if (!value)
+                     //
+                     // CK treats declarations sans values as deleted packdata, and omits them from display.
+                     //
+                     return;
+                  auto name = QString::fromStdString(entry.name);
+                  widget->addItem(name, (int)entry.unique_id);
+                  empty = false;
+               });
+               if (!empty) {
+                  widget->setEnabled(true);
                   if (std::holds_alternative<uint32_t>(value)) {
                      auto i = widget->findData(std::get<uint32_t>(value));
                      if (i >= 0)

@@ -67,6 +67,8 @@ class FormDialogPackage :
          void _on_packdata_declaration_edited();
          void _on_packdata_type_edited();
          void _on_packdata_value_edited();
+
+         void _feed_packdata_changes_to_condition_list_editors();
       #pragma endregion
 
       #pragma region Procedure Tree node UI
@@ -85,4 +87,6 @@ class FormDialogPackage :
 
       void _update_procedure_params_picker();
       void _update_procedure_params_list(QModelIndex dst = {});
+
+      void _feed_package_context_to_condition_list_editors();
 };

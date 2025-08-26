@@ -349,10 +349,12 @@ Packdata identify their value types via a string in `PACK/ANAM`. The values are 
   * A single interior cell?
 * ObjectList
   * Value is CNAM?
+  * Functionally, this is a handle. Some package procedures will search for objects matching some criteria, storing their results in an Object List.
 * SingleRef
   * Value is PTDA. (Are there other possibilities or constraints? For example, is PTDA here constrained to package location types that produce a REFR, including reference aliases?)
 * TargetSelector
   * Value is PTDA.
+  * Functionally, this is a search criterion. Essentially, given the phrase "Find *X*, and store any matches in Object List *Y*," this is *X*. This means that TargetSelectors cannot be the run-on subjects of conditions.
 * Topic
   * Value is PDTO[] or TPIC.
 

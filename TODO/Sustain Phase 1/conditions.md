@@ -1,3 +1,6 @@
+
+## Refactor plans
+
 As of 5/10/2024, I've recently rewritten how conditions are handled both on the backend and in helper structs for the frontend. However, there are still improvements that can be made. First, some background and some terms:
 
 * The type system for condition parameters works as follows. We have first the `parameter_underlying_type`, an enum which describes the basic primitive value types: signed integer, unsigned integer, float, form, string, et cetera. Then, we have more detailed `parameter_typeinfo`s, which are full constexpr data structures that describe more specific information.
@@ -40,7 +43,7 @@ In other words, it's a "split variant," where you need to consult two pieces of 
 
 An alternative approach would be to use `std::variant` indices: you can have more than one of the same type in a `std::variant`, and then identify the variant variations by index rather than by type. If the indices match the `parameter_underlying_type` enum, then you can just cast it to `size_t`. Better still would be a custom type that wraps `std::variant` and offers more ergonomic access using the `parameter_underlying_type` enum rather than `size_t` or typenames.
 
-## Unifying the split variant
+### Unifying the split variant
 
 Once we're doing the above refactor for in-memory form data, it'll be more viable to unify all of these approaches, and to have them work consistently between the backend and the frontend. Consider:
 
@@ -151,7 +154,7 @@ param.set<parameter_underlying_type::int_signed>(5);
 
 One could potentially even add a `convert_or_clear` operator which, given a requested type, would convert the current value to that type if possible or reset the parameter to an empty/zero value of the requested type otherwise. This would mainly handle conversion between the various numeric types (`float`, `int_signed`, `int_unsigned`).
 
-## Enhancements
+### Enhancements
 
 Now, the exact class proposed above isn't perfect. We're still acting in terms of the `parameter_underlying_type`, so any two condition parameter types with the same underlying-type would be considered interconvertible. This is most problematic when dealing with enumerations and form stubs: two enumeration types will have different sets of values, and should not be considered interconvertible; and form stubs should be validated against the typeinfo's allowed form types.
 
@@ -186,7 +189,7 @@ We'd have to either include the "all typeinfos" array *or* make the setter (and 
 
 (Also, **to maintain data integrity**, any member functions that can change the parameter's type would have to be made private on the tracked-use-info `parameter` class, with the tracked-use-info `condition` class being a `friend` of the tracked-use-info `parameter` class. Arguably, `parameter` should have separate member functions for "set of same type" and "force type and set." Arguably we could even do the same for the "working" parameter type, but **it's especially critical for the tracked-use-info type** because any tracked `form_ref`s in the form data need to be, uh, existent. Like, say you manage to stuff a form-ref into a parameter that should (based on the containing condition's condition function ID) hold a float, *while use info is being tracked*, and then save the file: so we serialize the parameter (how we even do that doesn't matter for this problem), and then if the form unloads and reloads, now we expect a float to be there, so we don't read the parameter as a form, and now we've got a "phantom use" stuck in the form's use info.)
 
-## One last sketch...
+### One last sketch...
 
 ```c++
 template<form_data_config Config>
@@ -271,7 +274,22 @@ class parameter {
 };
 ```
 
-## Corresponding frontend changes
+### Corresponding frontend changes
 
 * Currently, form-editing dialogs are intrinsically tied to form stubs, even when they use a working copy. It'd be really, really nice if it were possible to invoke a form-editing dialog without a stub, such that we start with default data, and such that if the user clicks "OK" rather than "Cancel," we create a new form and write the user's entered data into that form. Use cases for this include things like the relationship list in ActorBase, where in the CK you can right-click and create a new form right from that spot.
   * Bonus points if it's possible for the caller to alter the form data (e.g. when creating a new ActorBase relationship, pre-fill the current actor as the referent in the new Relationship dialog).
+
+
+## Condition contexts
+
+We need finer-grained control over how we load the condition context. In particular, we need to be able to control what loaded-form-data a condition uses, and whether it prefers managed or unmanaged data.
+
+The use case is as follows. The word "working" refers to yet-to-be-committed changes to a form.
+
+* When editing a Package, conditions existing directly on the package or its procedure nodes should be able to reference "working" Package Data. However, condition lists elsewhere should only refer to committed Package Data. That way, canceling changes to the Package can't leave dangling references to never-created Package Data in other forms' conditions.
+
+* When editing a Quest, conditions existing directly on the quest or its aliases should be able to reference "working" aliases. Conditions existing directly on dialogue forms parented to the quest should be able to do the same.
+  
+  This case is more complicated, because you can commit changes to a Scene, Topic, or Topic Info without committing changes to the (pseudo-)parent Quest. If we make it so that these pseudo-child forms can reference "working" aliases, but other forms cannot, then the Quest UI can be responsible for checking for and warning about potential dangling references when the user clicks "Cancel." However, that feels like something that should be centrally done, rather than done by the quest UI dialog code. Maybe it'd be better to have a central system wherein if changes to Form A are committed, and the committed changes include conditions referring to "working" data in Form B, then we track that; and then the "Cancel" button on each form dialog can check whether that form is a "Form B" in this scenario and if so, warn and... well, let the user cancel cancelling.
+
+Really, this is also a nasty UX ambiguity: it'd be very inconvenient not to let you point dialogue conditions at "working" aliases on the containing quest; but then, it might feel inconsistent if we don't then let other forms point conditions at "working" package data.

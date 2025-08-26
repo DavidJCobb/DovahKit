@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>DKConditionEditDialog</class>
  <widget class="QDialog" name="DKConditionEditDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>891</width>
-    <height>167</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Condition</string>
   </property>
@@ -22,7 +14,7 @@
     </widget>
    </item>
    <item row="0" column="0" colspan="4">
-    <layout class="QGridLayout" name="layoutRunOn" columnstretch="1,1,1,4,1">
+    <layout class="QGridLayout" name="layoutRunOn" columnstretch="0,1,2,1,0">
      <item row="0" column="3">
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
@@ -105,6 +97,9 @@
      </item>
      <item row="0" column="2">
       <widget class="QStackedWidget" name="runOnStack">
+       <property name="currentIndex">
+        <number>1</number>
+       </property>
        <widget class="QWidget" name="runOnPageDropdown">
         <layout class="QGridLayout" name="gridLayout_5">
          <property name="leftMargin">
@@ -144,6 +139,19 @@
             <string>Select...</string>
            </property>
           </widget>
+         </item>
+         <item row="0" column="1">
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
          </item>
         </layout>
        </widget>
@@ -402,14 +410,14 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>DKCompactObjectReferencePicker</class>
-   <extends>QWidget</extends>
-   <header>widgets/DKCompactObjectReferencePicker.h</header>
-  </customwidget>
-  <customwidget>
    <class>DKFormPicker</class>
    <extends>QWidget</extends>
    <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKCompactObjectReferencePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKCompactObjectReferencePicker.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

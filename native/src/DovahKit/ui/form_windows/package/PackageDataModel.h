@@ -19,6 +19,7 @@ class PackageDataModel : public QAbstractItemModel {
       struct Item {
          ui::types::packages::package_data_declaration          declaration;
          std::optional<ui::types::packages::package_data_value> value;
+         std::optional<ui::types::packages::package_data_value> value_default;
       };
 
    public:
@@ -37,8 +38,9 @@ class PackageDataModel : public QAbstractItemModel {
       };
       static constexpr const size_t ColumnCount = Column::__COUNT;
 
-      static constexpr const Qt::ItemDataRole UniqueIDRole = (Qt::ItemDataRole)(Qt::UserRole + 1);
-      static constexpr const Qt::ItemDataRole TypeRole     = (Qt::ItemDataRole)(Qt::UserRole + 2);
+      static constexpr const Qt::ItemDataRole UniqueIDRole     = (Qt::ItemDataRole)(Qt::UserRole + 1);
+      static constexpr const Qt::ItemDataRole TypeRole         = (Qt::ItemDataRole)(Qt::UserRole + 2);
+      static constexpr const Qt::ItemDataRole ValueIsLocalRole = (Qt::ItemDataRole)(Qt::UserRole + 3);
 
       #pragma region QAbstractItemModel overrides
          #pragma region Hierarchy
@@ -60,7 +62,15 @@ class PackageDataModel : public QAbstractItemModel {
       void setOwningQuest(dovah::form_stub*);
 
       void importDeclarations(const dovah::loaded_forms::structs::custom_packages::package_data_declaration_map&, bool owned);
+      void importDefaultValues(const dovah::loaded_forms::structs::custom_packages::package_data_value_map&);
       void importValues(const dovah::loaded_forms::structs::custom_packages::package_data_value_map&);
+
+      // Deletes rows that have neither a value nor a default value.
+      // We do this because Skyrim.esm is... weird... about package data. Some common package 
+      // templates, like Sandbox, are filled with "DELETEME" package data declarations with no 
+      // corresponding value. They're hidden when editing both the template and any packages 
+      // that use it.
+      void hideValuelessRows();
 
       constexpr bool declarationsOwned() const noexcept { return this->_data.owns_declarations; }
       void setDeclarationsOwned(bool);
@@ -70,10 +80,12 @@ class PackageDataModel : public QAbstractItemModel {
 
       ui::types::packages::package_data_declaration rowDeclaration(size_t row) const;
       std::optional<ui::types::packages::package_data_value> rowValue(size_t row) const;
+      std::optional<ui::types::packages::package_data_value> rowValueOrDefault(size_t row) const;
 
       void setRowDeclaration(size_t row, const ui::types::packages::package_data_declaration&);
       void setRowValue(size_t row, const std::optional<ui::types::packages::package_data_value>&);
       void setRowValue(size_t row, const ui::types::packages::package_data_value&);
+      void resetRowValueToDefault(size_t row);
 
       QModelIndex appendRow();
       void moveRow(int row, int by);
@@ -85,6 +97,7 @@ class PackageDataModel : public QAbstractItemModel {
       struct ItemWithCaching : public Item {
          struct {
             QString value;
+            QString value_default;
          } cached;
       };
 
@@ -98,10 +111,11 @@ class PackageDataModel : public QAbstractItemModel {
          bool owns_declarations = false;
          dovah::form_stub* owning_quest = nullptr;
          std::vector<ItemWithCaching> items;
+         std::vector<ItemWithCaching> hidden;
          uint8_t next_unique_id = 0;
       } _data;
 
-      void _recache_item_value_string(ItemWithCaching& item);
+      QString _value_to_string(std::optional<ui::types::packages::package_data_value>& item);
       void _recache_quest_aliases();
       void _recache_item_values_using_aliases();
 
