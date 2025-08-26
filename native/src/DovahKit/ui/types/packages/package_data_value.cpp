@@ -68,27 +68,46 @@ namespace ui::types::packages {
          this->as<package_data_type::location>().exportData(dst_ptr->data, dst_owner);
          return dst_ptr;
       }
-      if (this->is<package_data_type::integer>()) {
+      if (this->is<package_data_type::object_list>()) {
          auto dst_ptr = std::make_unique<custom_packages::package_data_object_list>();
          dst_ptr->value = this->as<package_data_type::object_list>();
          return dst_ptr;
       }
-      if (this->is<package_data_type::location>()) {
+      if (this->is<package_data_type::single_ref>()) {
          auto dst_ptr = std::make_unique<custom_packages::package_data_single_ref>();
          this->as<package_data_type::single_ref>().exportData(dst_ptr->data, dst_owner);
          return dst_ptr;
       }
-      if (this->is<package_data_type::location>()) {
+      if (this->is<package_data_type::target_selector>()) {
          auto dst_ptr = std::make_unique<custom_packages::package_data_target_selector>();
          this->as<package_data_type::target_selector>().exportData(dst_ptr->data, dst_owner);
          return dst_ptr;
       }
-      if (this->is<package_data_type::location>()) {
+      if (this->is<package_data_type::topic>()) {
          auto dst_ptr = std::make_unique<custom_packages::package_data_topic>();
          this->as<package_data_type::topic>().exportData(dst_ptr->data, dst_owner);
          return dst_ptr;
       }
       assert(false && "unhandled variant permutation in ui::types::packages::package_data_value!");
+   }
+
+   void package_data_value::convert_to(dovah::packages::package_data_type t) {
+      if (this->type() == t)
+         return;
+      switch (t) {
+         #pragma push_macro("CASE")
+         #define CASE(v) case v: this->emplace<v>(); break;
+         CASE(dovah::packages::package_data_type::boolean);
+         CASE(dovah::packages::package_data_type::float32);
+         CASE(dovah::packages::package_data_type::integer);
+         CASE(dovah::packages::package_data_type::location);
+         CASE(dovah::packages::package_data_type::object_list);
+         CASE(dovah::packages::package_data_type::single_ref);
+         CASE(dovah::packages::package_data_type::target_selector);
+         CASE(dovah::packages::package_data_type::topic);
+         #undef CASE
+         #pragma pop_macro("CASE");
+      }
    }
 
    bool package_data_value::sever_uses_of_form(dovah::form_stub& stub) {

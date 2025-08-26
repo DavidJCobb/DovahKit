@@ -1,8 +1,10 @@
 #pragma once
 #include <cstdint>
 #include <optional>
+#include <unordered_map>
 #include <vector>
 #include <QAbstractItemModel>
+#include <QPointer>
 #include "dovah/data/packages/procedure_tree_branch_type.h"
 #include "dovah/data/packages/procedure_type.h"
 #include "dovah/forms/structs/custom_packages/package_flag_overrides.h"
@@ -10,6 +12,7 @@
 #include "ui/types/packages/procedure_tree_typed_data/branch.h"
 #include "ui/types/packages/procedure_tree_typed_data/procedure.h"
 #include "ui/types/packages/procedure_node.h"
+#include "./PackageDataModel.h"
 namespace dovah {
    namespace loaded_forms {
       namespace structs::custom_packages {
@@ -52,6 +55,7 @@ class PackageProcedureTreeModel : public QAbstractItemModel {
          QModelIndex _qmi_for_root() const;
          QModelIndex _qmi_for_orphan(size_t index) const;
          QModelIndex _qmi_for_child(const node_type&, int row, int col = 0) const;
+         QModelIndex _qmi_for_node(const node_type&) const;
          bool _is_model_qmi(const QModelIndex&) const;
          const node_type* _node_for_qmi(const QModelIndex&) const;
          node_type* _node_for_qmi(const QModelIndex& qmi) {
@@ -80,20 +84,39 @@ class PackageProcedureTreeModel : public QAbstractItemModel {
 
       void clear();
 
+      void setPackdataModel(PackageDataModel*);
+
       void import_tree(const backend_type& src);
       void export_tree(backend_type& dst, dovah::loaded_forms::Form& dst_containing_form) const;
 
+      bool hasRoot() const;
+
       size_t procedureParameterIDCount(const QModelIndex&) const;
       uint8_t getProcedureParameterID(const QModelIndex&, size_t index) const;
-      std::vector<uint8_t> getProcedureParameterIDs(const QModelIndex&, size_t index) const;
+      std::vector<uint8_t> getProcedureParameterIDs(const QModelIndex&) const;
       void setProcedureParameterID(const QModelIndex&, size_t index, uint8_t unique_id);
+      void setProcedureParameterIDs(const QModelIndex&, const std::vector<uint8_t>&);
 
       std::vector<ui::types::conditions::condition> nodeConditions(const QModelIndex&) const;
       void setNodeConditions(const QModelIndex&, const std::vector<ui::types::conditions::condition>& src);
 
+      std::unordered_map<uint8_t, size_t> countUsesOfPackdata() const;
+
+   protected:
+      QModelIndex _append_node(const QModelIndex& parent, std::unique_ptr<node_type>&&);
+   public:
+      QModelIndex appendBranch(const QModelIndex& parent);
+      QModelIndex appendProcedure(const QModelIndex& parent);
+      void removeItem(const QModelIndex&);
+
+   signals:
+      void procedureParametersDefaulted(const QModelIndex&);
+
    protected:
       std::unique_ptr<node_type>              _root;
       std::vector<std::unique_ptr<node_type>> _orphans;
+      QPointer<PackageDataModel> _packdata_model;
 
+      void _default_params_of(ui::types::packages::procedure_tree_typed_data::procedure&);
       void _sever_uses_of_form(dovah::form_stub&);
 };

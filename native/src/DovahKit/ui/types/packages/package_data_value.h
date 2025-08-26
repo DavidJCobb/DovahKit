@@ -63,6 +63,8 @@ namespace ui::types::packages {
          void importData(const backend_type&);
          std::unique_ptr<backend_type> exportData(dovah::loaded_forms::Form& dst_owner) const;
 
+         void convert_to(dovah::packages::package_data_type);
+
          // Returns `true` if anything changes.
          bool sever_uses_of_form(dovah::form_stub&);
    };

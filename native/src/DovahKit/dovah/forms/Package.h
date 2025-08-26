@@ -102,7 +102,6 @@ namespace dovah::loaded_forms {
       public:
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
-         //
       protected:
          virtual void _clone_impl(Form* out) const noexcept override;
          virtual void _save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) override;
@@ -110,6 +109,8 @@ namespace dovah::loaded_forms {
          virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
 
       public:
+         void convert_to_modern(bool use_existing_templates = false);
+
          struct record_skimmers { // namespace
             record_skimmers() = delete;
 

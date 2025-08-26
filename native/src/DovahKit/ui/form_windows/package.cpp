@@ -12,6 +12,7 @@
 #include "./package/FormSubdialogPackageLocation.h"
 #include "./package/FormSubdialogPackageTarget.h"
 #include "./package/PackageDataModel.h"
+#include "./package/PackageProcedureParamsModel.h"
 #include "./package/PackageProcedureTreeModel.h"
 #include "./package/PackageTemplatePickerFilter.h"
 
@@ -113,8 +114,63 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
             QObject::connect(this->ui.currentPackdataValue_TargetRadius, qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
             QObject::connect(this->ui.currentPackdataValue_Topic, &DKTopicOrSubtypePicker::valueChanged, this, &FormDialogPackage::_on_packdata_value_edited);
 
-            static_assert(false, "TODO: Button to edit the value of a Location (above only handles the radius)");
-            static_assert(false, "TODO: Button to edit the value of a Target (above only handles the radius)");
+            QObject::connect(this->ui.currentPackdataValue_LocationButtonEdit, &QPushButton::clicked, this, [this]() {
+               const auto row_opt = this->_selected_packdata_row();
+               if (!row_opt.has_value())
+                  return;
+               const auto row = row_opt.value();
+
+               FormSubdialogPackageLocation dialog;
+               {
+                  const auto value_opt = this->_models.package_data->rowValue(row);
+                  if (value_opt.has_value()) {
+                     auto& value = value_opt.value();
+                     if (value.is<dovah::packages::package_data_type::location>())
+                        dialog.setValue(value.as<dovah::packages::package_data_type::location>());
+                  }
+               }
+               if (dialog.exec() == QDialog::DialogCode::Accepted) {
+                  ui::types::packages::package_data_value value = dialog.value();
+                  this->_models.package_data->setRowValue(row, value);
+               }
+            });
+            QObject::connect(this->ui.currentPackdataValue_TargetButtonEdit, &QPushButton::clicked, this, [this]() {
+               const auto row_opt = this->_selected_packdata_row();
+               if (!row_opt.has_value())
+                  return;
+               const auto row = row_opt.value();
+
+               FormSubdialogPackageTarget dialog;
+               auto type = dovah::packages::package_data_type::single_ref;
+               {
+                  const auto value_opt = this->_models.package_data->rowValue(row);
+                  if (value_opt.has_value()) {
+                     auto& value = value_opt.value();
+                     switch (auto prior_type = value.type()) {
+                        case dovah::packages::package_data_type::single_ref:
+                           dialog.setValue(value.as< dovah::packages::package_data_type::single_ref>());
+                           type = prior_type;
+                           break;
+                        case dovah::packages::package_data_type::target_selector:
+                           dialog.setValue(value.as< dovah::packages::package_data_type::target_selector>());
+                           type = prior_type;
+                           break;
+                     }
+                  }
+               }
+               if (dialog.exec() == QDialog::DialogCode::Accepted) {
+                  ui::types::packages::package_data_value value;
+                  switch (type) {
+                     case dovah::packages::package_data_type::single_ref:
+                        value.emplace<dovah::packages::package_data_type::single_ref>() = dialog.value();
+                        break;
+                     case dovah::packages::package_data_type::target_selector:
+                        value.emplace<dovah::packages::package_data_type::target_selector>() = dialog.value();
+                        break;
+                  }
+                  this->_models.package_data->setRowValue(row, value);
+               }
+            });
          #pragma endregion
       }
       {  // Procedure tree
@@ -127,11 +183,72 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
          auto* sel_model = view->selectionModel();
          QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &FormDialogPackage::_on_procedure_tree_selection_changed);
 
-         static_assert(false, "TODO: Set up treeview context menu");
+         {
+            auto& menu_ui = this->_context_menus.procedure_tree;
+            auto& menu    = menu_ui.menu;
+
+            {
+               auto* action = menu_ui.create_branch = new QAction(tr("Add branch"), this);
+               menu.addAction(action);
+               QAction::connect(action, &QAction::triggered, this, [this, sel_model]() {
+                  auto parent = this->_selected_procedure_node_qmi();
+                  auto qmi    = this->_models.procedure_tree->appendBranch(parent);
+                  if (qmi.isValid())
+                     sel_model->select({ qmi, qmi }, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+               });
+            }
+            {
+               auto* action = menu_ui.create_procedure = new QAction(tr("Add procedure"), this);
+               menu.addAction(action);
+               QAction::connect(action, &QAction::triggered, this, [this, sel_model]() {
+                  auto parent = this->_selected_procedure_node_qmi();
+                  auto qmi    = this->_models.procedure_tree->appendProcedure(parent);
+                  if (qmi.isValid())
+                     sel_model->select({ qmi, qmi }, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+               });
+            }
+            {
+               auto* action = menu_ui.remove = new QAction(tr("Delete"), this);
+               menu.addAction(action);
+               QAction::connect(action, &QAction::triggered, this, [this]() {
+                  auto target = this->_selected_procedure_node_qmi();
+                  if (target.isValid())
+                     this->_models.procedure_tree->removeItem(target);
+               });
+            }
+         }
 
          #pragma region Selected Procedure
             #pragma region Base procedure (node) properties
-               static_assert(false, "TODO: Set up editing widgets: procedure parameter list");
+               {
+                  auto* model = this->_models.procedure_params = new PackageProcedureParamsModel(this);
+                  auto* view  = this->ui.currentProcedureInputs;
+                  view->setModel(model);
+                  view->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+                  view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
+
+                  model->setPackdataModel(this->_models.package_data);
+
+                  auto* sel_model = view->selectionModel();
+                  QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this, model, sel_model]() {
+                     const auto rows = sel_model->selectedRows();
+                     auto* picker = this->ui.currentProcedureInputPackdata;
+                     if (rows.isEmpty()) {
+                        picker->setEnabled(false);
+                        return;
+                     }
+                     picker->setEnabled(true);
+                     const auto qmi     = rows[0];
+                     const auto blocker = QSignalBlocker(picker);
+
+                     auto unique_id = model->data(qmi, PackageProcedureParamsModel::UniqueIDRole).toInt();
+                     int  i = picker->findData(unique_id);
+                     picker->setCurrentIndex(i);
+                  });
+               }
+               QObject::connect(this->_models.package_data, &QAbstractItemModel::rowsInserted, this, &FormDialogPackage::_update_procedure_params_picker);
+               QObject::connect(this->_models.package_data, &QAbstractItemModel::rowsRemoved, this, &FormDialogPackage::_update_procedure_params_picker);
+               QObject::connect(this->_models.package_data, &QAbstractItemModel::dataChanged, this, &FormDialogPackage::_update_procedure_params_picker);
             #pragma endregion
             #pragma region Flag Overrides
             {
@@ -360,7 +477,10 @@ void FormDialogPackage::_load_impl() {
 
    if (!_get_custom_package_data()) {
       if (working.typed_info) {
-         static_assert(false, "TODO: legacy data; convert to custom");
+         working.convert_to_modern();
+         if (!working.typed_info) {
+            working.typed_info = new dovah::loaded_forms::structs::typed_package_info::custom;
+         }
       } else {
          working.typed_info = new custom_package_data;
       }
@@ -651,18 +771,22 @@ void FormDialogPackage::_set_is_package_template(bool is) {
    }
 }
 
+std::optional<size_t> FormDialogPackage::_selected_packdata_row() const {
+   auto* view      = this->ui.packdata;
+   auto* sel_model = view->selectionModel();
+   auto  rows      = sel_model->selectedRows();
+   if (rows.isEmpty())
+      return {};
+   auto row = rows[0].row();
+   if (row < 0 || row >= this->_models.package_data->rowCount())
+      return {};
+   return row;
+}
 void FormDialogPackage::_on_packdata_selection_changed() {
    const auto* model = this->_models.package_data;
 
-   int row = -1;
-   {
-      auto* view      = this->ui.packdata;
-      auto* sel_model = view->selectionModel();
-      auto  rows      = sel_model->selectedRows();
-      if (!rows.isEmpty())
-         row = rows[0].row();
-   }
-   if (row < 0 || row >= model->rowCount()) {
+   const auto row_opt = _selected_packdata_row();
+   if (!row_opt.has_value()) {
       this->ui.buttonPackdataMoveUp->setEnabled(false);
       this->ui.buttonPackdataMoveDown->setEnabled(false);
       this->ui.buttonPackdataDelete->setEnabled(false);
@@ -672,9 +796,11 @@ void FormDialogPackage::_on_packdata_selection_changed() {
       this->ui.currentPackdataIsPublic->setEnabled(false);
       return;
    }
+   const auto row = row_opt.value();
    this->ui.buttonPackdataMoveUp->setEnabled(true);
    this->ui.buttonPackdataMoveDown->setEnabled(true);
-   this->ui.buttonPackdataDelete->setEnabled(true);
+   //this->ui.buttonPackdataDelete->setEnabled(true);
+   this->_update_packdata_deleteable();
 
    const auto blockers = std::array{
       QSignalBlocker(this->ui.currentPackdataName),
@@ -740,7 +866,7 @@ void FormDialogPackage::_on_packdata_selection_changed() {
             auto& src = val.as<dovah::packages::package_data_type::location>();
             this->ui.currentPackdataValue_LocationRadius->setValue(src.radius);
             this->ui.currentPackdataValue_LocationButtonEdit->setText(
-               model->data(model->index(row, PackageDataModel::Column::Value, {}), Qt::DisplayRole)
+               model->data(model->index(row, PackageDataModel::Column::Value, {}), Qt::DisplayRole).toString()
             );
          }
          break;
@@ -752,9 +878,9 @@ void FormDialogPackage::_on_packdata_selection_changed() {
          this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Target);
          {
             auto& src = val.as<dovah::packages::package_data_type::single_ref>();
-            this->ui.currentPackdataValue_TargetRadius->setValue(src.radius);
+            this->ui.currentPackdataValue_TargetRadius->setValue(src.distance);
             this->ui.currentPackdataValue_TargetButtonEdit->setText(
-               model->data(model->index(row, PackageDataModel::Column::Value, {}), Qt::DisplayRole)
+               model->data(model->index(row, PackageDataModel::Column::Value, {}), Qt::DisplayRole).toString()
             );
          }
          break;
@@ -762,9 +888,9 @@ void FormDialogPackage::_on_packdata_selection_changed() {
          this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Target);
          {
             auto& src = val.as<dovah::packages::package_data_type::target_selector>();
-            this->ui.currentPackdataValue_TargetRadius->setValue(src.radius);
+            this->ui.currentPackdataValue_TargetRadius->setValue(src.distance);
             this->ui.currentPackdataValue_TargetButtonEdit->setText(
-               model->data(model->index(row, PackageDataModel::Column::Value, {}), Qt::DisplayRole)
+               model->data(model->index(row, PackageDataModel::Column::Value, {}), Qt::DisplayRole).toString()
             );
          }
          break;
@@ -783,16 +909,10 @@ void FormDialogPackage::_on_packdata_selection_changed() {
 void FormDialogPackage::_on_packdata_declaration_edited() {
    auto* model = this->_models.package_data;
 
-   int row = -1;
-   {
-      auto* view = this->ui.packdata;
-      auto* sel_model = view->selectionModel();
-      auto  rows = sel_model->selectedRows();
-      if (!rows.isEmpty())
-         row = rows[0].row();
-   }
-   if (row < 0 || row >= model->rowCount())
+   const auto row_opt = _selected_packdata_row();
+   if (!row_opt.has_value())
       return;
+   auto row = row_opt.value();
 
    auto decl = model->rowDeclaration(row);
    decl.name      = this->ui.currentPackdataName->text();
@@ -802,16 +922,10 @@ void FormDialogPackage::_on_packdata_declaration_edited() {
 void FormDialogPackage::_on_packdata_type_edited() {
    auto* model = this->_models.package_data;
 
-   int row = -1;
-   {
-      auto* view = this->ui.packdata;
-      auto* sel_model = view->selectionModel();
-      auto  rows = sel_model->selectedRows();
-      if (!rows.isEmpty())
-         row = rows[0].row();
-   }
-   if (row < 0 || row >= model->rowCount())
+   const auto row_opt = _selected_packdata_row();
+   if (!row_opt.has_value())
       return;
+   auto row = row_opt.value();
 
    auto type = (dovah::packages::package_data_type)this->ui.currentPackdataType->currentData().toInt();
 
@@ -829,16 +943,10 @@ void FormDialogPackage::_on_packdata_type_edited() {
 void FormDialogPackage::_on_packdata_value_edited() {
    auto* model = this->_models.package_data;
 
-   int row = -1;
-   {
-      auto* view = this->ui.packdata;
-      auto* sel_model = view->selectionModel();
-      auto  rows = sel_model->selectedRows();
-      if (!rows.isEmpty())
-         row = rows[0].row();
-   }
-   if (row < 0 || row >= model->rowCount())
+   const auto row_opt = _selected_packdata_row();
+   if (!row_opt.has_value())
       return;
+   const auto row = row_opt.value();
 
    auto type = (dovah::packages::package_data_type)this->ui.currentPackdataType->currentData().toInt();
 
@@ -886,17 +994,18 @@ void FormDialogPackage::_on_packdata_value_edited() {
    model->setRowValue(row, value);
 }
 
+QModelIndex FormDialogPackage::_selected_procedure_node_qmi() const {
+   auto* view      = this->ui.procedures;
+   auto* sel_model = view->selectionModel();
+   auto  rows      = sel_model->selectedRows();
+   if (!rows.isEmpty())
+      return rows[0];
+   return {};
+}
 void FormDialogPackage::_pull_procedure_node_to_ui() {
    const auto* model = this->_models.procedure_tree;
 
-   QModelIndex qmi;
-   {
-      auto* view      = this->ui.procedures;
-      auto* sel_model = view->selectionModel();
-      auto  rows      = sel_model->selectedRows();
-      if (!rows.isEmpty())
-         qmi = rows[0];
-   }
+   QModelIndex qmi = _selected_procedure_node_qmi();
    if (!qmi.isValid()) {
       this->ui.selectedProcedureGroupbox->setEnabled(false);
       this->ui.currentProcedureStack->setCurrentWidget(this->ui.currentProcedurePageProcedure);
@@ -1057,8 +1166,8 @@ void FormDialogPackage::_pull_procedure_node_to_ui() {
          }
       }
 
-      static_assert(false, "TODO: So, uh, we actually need to modify the tree-model to make the packdata params child nodes of the procedure nodes");
-      static_assert(false, "TODO: Or we could just make a separate model, and copy data across as needed");
+      this->_update_procedure_params_list(qmi);
+      this->_update_procedure_params_picker();
    }
 
    auto conditions = model->nodeConditions(qmi);
@@ -1068,14 +1177,9 @@ void FormDialogPackage::_push_procedure_flag_overrides_from_ui(QModelIndex qmi) 
    auto* model = this->_models.procedure_tree;
 
    if (!qmi.isValid()) {
-      auto* view = this->ui.procedures;
-      auto* sel_model = view->selectionModel();
-      auto  rows = sel_model->selectedRows();
-      if (!rows.isEmpty())
-         qmi = rows[0];
-   }
-   if (!qmi.isValid()) {
-      return;
+      qmi = _selected_procedure_node_qmi();
+      if (!qmi.isValid())
+         return;
    }
 
    auto var_proc_type = model->data(qmi, PackageProcedureTreeModel::ProcedureTypeRole);
@@ -1150,14 +1254,9 @@ void FormDialogPackage::_push_procedure_node_from_ui(QModelIndex qmi) {
    auto* model = this->_models.procedure_tree;
 
    if (!qmi.isValid()) {
-      auto* view = this->ui.procedures;
-      auto* sel_model = view->selectionModel();
-      auto  rows = sel_model->selectedRows();
-      if (!rows.isEmpty())
-         qmi = rows[0];
-   }
-   if (!qmi.isValid()) {
-      return;
+      qmi = _selected_procedure_node_qmi();
+      if (!qmi.isValid())
+         return;
    }
 
    auto var_branch_type = model->data(qmi, PackageProcedureTreeModel::BranchTypeRole);
@@ -1177,9 +1276,11 @@ void FormDialogPackage::_push_procedure_node_from_ui(QModelIndex qmi) {
       model->setData(qmi, flags, PackageProcedureTreeModel::ProcedureFlagsRole);
 
       this->_push_procedure_flag_overrides_from_ui(qmi);
-
-      static_assert(false, "TODO: So, uh, we actually need to modify the tree-model to make the packdata params child nodes of the procedure nodes");
-      static_assert(false, "TODO: Or we could just make a separate model, and copy data across as needed");
+      
+      {
+         auto param_ids = this->_models.procedure_params->exportData();
+         model->setProcedureParameterIDs(qmi, param_ids);
+      }
    }
 
    std::vector<ui::types::conditions::condition> conditions;
@@ -1193,4 +1294,63 @@ void FormDialogPackage::_on_procedure_tree_selection_changed(const QItemSelectio
       this->_push_procedure_node_from_ui(qmi);
    }
    this->_pull_procedure_node_to_ui();
+
+   auto qmi      = _selected_procedure_node_qmi();
+   bool any      = qmi.isValid();
+   bool has_root = this->_models.procedure_tree->hasRoot();
+   this->_context_menus.procedure_tree.remove->setEnabled(any);
+   //
+   // Can only create children of a selected node, or create a root if the model is empty:
+   //
+   this->_context_menus.procedure_tree.create_branch->setEnabled(any || !has_root);
+   this->_context_menus.procedure_tree.create_procedure->setEnabled(any || !has_root);
+}
+
+void FormDialogPackage::_update_procedure_params_picker() {
+   const auto blocker = QSignalBlocker(this->ui.currentProcedureInputPackdata);
+   
+   auto* packdata_model = this->_models.package_data;
+   auto* widget         = this->ui.currentProcedureInputPackdata;
+   auto  prior          = widget->currentData();
+   widget->clear();
+   size_t rows = packdata_model->rowCount();
+   for (size_t i = 0; i < rows; ++i) {
+      auto qmi       = packdata_model->index(i, 0, {});
+      bool is_public = packdata_model->data(qmi, Qt::EditRole).toBool();
+      if (!is_public)
+         continue;
+      widget->addItem(
+         packdata_model->data(qmi.siblingAtColumn(PackageDataModel::Column::Name), Qt::DisplayRole).toString(),
+         packdata_model->data(qmi, PackageDataModel::UniqueIDRole).toInt()
+      );
+   }
+   widget->setEnabled(rows > 0 && !this->ui.currentProcedureInputs->selectionModel()->selectedRows().isEmpty());
+   if (prior.isValid())
+      widget->setCurrentIndex(widget->findData(prior));
+}
+void FormDialogPackage::_update_procedure_params_list(QModelIndex qmi = {}) {
+   if (!qmi.isValid()) {
+      qmi = _selected_procedure_node_qmi();
+      if (!qmi.isValid())
+         return;
+   }
+   const auto blocker = QSignalBlocker(this->ui.currentProcedureInputPackdata);
+   this->_models.procedure_params->importData(
+      (dovah::packages::procedure_type)this->_models.procedure_tree->data(qmi, PackageProcedureTreeModel::ProcedureTypeRole).toInt(),
+      this->_models.procedure_tree->getProcedureParameterIDs(qmi)
+   );
+}
+void FormDialogPackage::_update_packdata_deleteable() const {
+   auto row_opt = _selected_packdata_row();
+   if (!row_opt.has_value())
+      return;
+   auto    row       = row_opt.value();
+   uint8_t unique_id = this->_models.package_data->data(this->_models.package_data->index(row, 0, {}), PackageDataModel::UniqueIDRole).toInt();
+
+   auto usage = this->_models.procedure_tree->countUsesOfPackdata();
+   if (usage[unique_id] > 0) {
+      this->ui.buttonPackdataDelete->setEnabled(false);
+   } else {
+      this->ui.buttonPackdataDelete->setEnabled(true);
+   }
 }

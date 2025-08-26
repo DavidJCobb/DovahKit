@@ -77,6 +77,25 @@ PackageDataModel::PackageDataModel(QObject* parent) : QAbstractItemModel(parent)
                      return src.declaration.is_public ? tr("Yes", "boolean") : tr("No", "boolean");
                }
                break;
+            case Qt::EditRole:
+               switch (index.column()) {
+                  case Column::Name:
+                     return src.declaration.name;
+                  case Column::Type:
+                     return (int)src.value.value().type();
+                  case Column::Value:
+                     return {};
+                  case Column::IsPublic:
+                     return src.declaration.is_public;
+               }
+               break;
+            case UniqueIDRole:
+               return src.declaration.unique_id;
+            case TypeRole:
+               if (src.value.has_value()) {
+                  return (int)src.value.value().type();
+               }
+               break;
          }
          return {};
       }
@@ -293,6 +312,15 @@ void PackageDataModel::deleteRow(size_t row) {
    this->beginRemoveRows({}, row, row);
    this->_data.items.erase(this->_data.items.begin() + row);
    this->endRemoveRows();
+}
+
+QModelIndex PackageDataModel::findUniqueID(uint8_t unique_id) const {
+   for (size_t i = 0; i < this->_data.items.size(); ++i) {
+      auto& item = this->_data.items[i];
+      if (item.declaration.unique_id == unique_id)
+         return this->index(i, 0, {});
+   }
+   return {};
 }
 
 void PackageDataModel::_recache_item_value_string(ItemWithCaching& item) {

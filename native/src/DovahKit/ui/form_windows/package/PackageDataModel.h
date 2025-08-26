@@ -36,7 +36,10 @@ class PackageDataModel : public QAbstractItemModel {
          };
       };
       static constexpr const size_t ColumnCount = Column::__COUNT;
-      
+
+      static constexpr const Qt::ItemDataRole UniqueIDRole = (Qt::ItemDataRole)(Qt::UserRole + 1);
+      static constexpr const Qt::ItemDataRole TypeRole     = (Qt::ItemDataRole)(Qt::UserRole + 2);
+
       #pragma region QAbstractItemModel overrides
          #pragma region Hierarchy
             virtual QModelIndex index(int row, int column, const QModelIndex& parent) const override;
@@ -75,6 +78,8 @@ class PackageDataModel : public QAbstractItemModel {
       QModelIndex appendRow();
       void moveRow(int row, int by);
       void deleteRow(size_t row);
+
+      QModelIndex findUniqueID(uint8_t) const;
 
    protected:
       struct ItemWithCaching : public Item {

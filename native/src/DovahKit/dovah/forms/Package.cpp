@@ -570,6 +570,70 @@ namespace dovah::loaded_forms {
       this->owning_quest.clear_if(*this, other);
    }
 
+   void Package::convert_to_modern(bool use_existing_templates) {
+      if (!this->typed_info)
+         return;
+      if (dynamic_cast<structs::typed_package_info::custom*>(this->typed_info))
+         return;
+
+      auto& lo = this->stub.get_owning_load_order();
+      auto  _find_package_by_editor_id = [&lo](const std::string_view name) {
+         dovah::form_stub* result = nullptr;
+         lo.for_each_form_of_type(dovah::form_type::package, [&name, &result](dovah::form_stub* stub) -> bool {
+            if (stub->editorID == name) {
+               result = stub;
+               return true;
+            }
+            return false;
+         });
+         return result;
+      };
+
+      auto* custom = new structs::typed_package_info::custom;
+      /*//
+      if (dynamic_cast<structs::typed_package_info::ambush*>(this->typed_info)) {
+         dovah::form_stub* tmpl = nullptr;
+         if (use_existing_templates) {
+            tmpl = _find_package_by_editor_id("Ambush");
+         }
+         if (tmpl) {
+            custom->template_package.set(*this, tmpl);
+         } else {
+
+         }
+
+         static_assert(false, "TODO");
+      } else if (dynamic_cast<structs::typed_package_info::dialogue*>(this->typed_info)) {
+         static_assert(false, "TODO");
+      } else if (dynamic_cast<structs::typed_package_info::eat*>(this->typed_info)) {
+         static_assert(false, "TODO");
+      } else if (dynamic_cast<structs::typed_package_info::escort*>(this->typed_info)) {
+         static_assert(false, "TODO");
+      } else if (dynamic_cast<structs::typed_package_info::follow*>(this->typed_info)) {
+         static_assert(false, "TODO");
+      } else if (dynamic_cast<structs::typed_package_info::patrol*>(this->typed_info)) {
+         static_assert(false, "TODO");
+      } else if (dynamic_cast<structs::typed_package_info::use_item_at*>(this->typed_info)) {
+         static_assert(false, "TODO");
+      } else if (dynamic_cast<structs::typed_package_info::use_weapon*>(this->typed_info)) {
+         static_assert(false, "TODO");
+      } else if (dynamic_cast<structs::typed_package_info::generic::with_location*>(this->typed_info)) {
+         static_assert(false, "TODO");
+      } else if (dynamic_cast<structs::typed_package_info::generic::with_maybe_each*>(this->typed_info)) {
+         static_assert(false, "TODO");
+      } else if (dynamic_cast<structs::typed_package_info::generic::with_target*>(this->typed_info)) {
+         static_assert(false, "TODO");
+      } else if (dynamic_cast<structs::typed_package_info::generic::with_target_and_maybe_location*>(this->typed_info)) {
+         static_assert(false, "TODO");
+      }
+      //*/
+      if (this->typed_info) {
+         this->typed_info->clear(*this);
+         delete this->typed_info;
+      }
+      this->typed_info = custom;
+   }
+
    #pragma region Record skimmers
       #pragma region legacy_type
          void Package::record_skimmers::legacy_type::skim_subrecord(tes_subrecord_reader& subrecord) {

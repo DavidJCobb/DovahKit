@@ -954,6 +954,7 @@
     <ClCompile Include="ui\form_windows\package\FormSubdialogPackageLocation.cpp" />
     <ClCompile Include="ui\form_windows\package\FormSubdialogPackageTarget.cpp" />
     <ClCompile Include="ui\form_windows\package\PackageDataModel.cpp" />
+    <ClCompile Include="ui\form_windows\package\PackageProcedureParamsModel.cpp" />
     <ClCompile Include="ui\form_windows\package\PackageProcedureTreeModel.cpp" />
     <ClCompile Include="ui\form_windows\package\PackageTemplatePickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\perk.cpp" />
@@ -1834,6 +1835,7 @@
     <QtMoc Include="ui\form_windows\package\FormSubdialogPackageLocation.h" />
     <QtMoc Include="ui\form_windows\package\FormSubdialogPackageTarget.h" />
     <QtMoc Include="ui\form_windows\package\PackageProcedureTreeModel.h" />
+    <QtMoc Include="ui\form_windows\package\PackageProcedureParamsModel.h" />
     <ClInclude Include="ui\form_windows\package\PackageTemplatePickerFilter.h" />
     <ClInclude Include="ui\form_windows\quest\alias_subdialog_helpers.h" />
     <QtMoc Include="ui\form_windows\reverb_parameters.h" />
