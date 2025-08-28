@@ -19,10 +19,12 @@ namespace dovah::loaded_forms {
          struct form_flag : public Form::form_flag {
             enum : uint32_t {
                never_fades               = 0x00000004,
+               must_update_anims         = 0x00000008,
                has_tree_lod              = 0x00000040, // presumed; would be inherited from STAT
                addon_lod_object          = 0x00000080, // presumed; would be inherited from STAT
                hide_from_local_map       = 0x00000200,
                has_distant_lod           = 0x00008000,
+               random_anim_start         = 0x00010000,
                uses_hd_lod_texture       = 0x00020000, // presumed; would be inherited from STAT
                has_currents              = 0x00080000,
                is_marker                 = 0x00800000, // presumed; would be inherited from STAT

@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogTree</class>
  <widget class="QDialog" name="FormDialogTree">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>375</width>
+    <height>600</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Tree</string>
   </property>
@@ -208,12 +216,12 @@
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
            <property name="buddy">
-            <cstring>spinBox</cstring>
+            <cstring>harvestChanceSpring</cstring>
            </property>
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QSpinBox" name="spinBox">
+          <widget class="QSpinBox" name="harvestChanceSpring">
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
@@ -234,12 +242,12 @@
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
            <property name="buddy">
-            <cstring>spinBox_2</cstring>
+            <cstring>harvestChanceAutumn</cstring>
            </property>
           </widget>
          </item>
          <item row="0" column="3">
-          <widget class="QSpinBox" name="spinBox_2">
+          <widget class="QSpinBox" name="harvestChanceAutumn">
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
@@ -252,7 +260,7 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QSpinBox" name="spinBox_3">
+          <widget class="QSpinBox" name="harvestChanceSummer">
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
@@ -265,7 +273,7 @@
           </widget>
          </item>
          <item row="1" column="3">
-          <widget class="QSpinBox" name="spinBox_4">
+          <widget class="QSpinBox" name="harvestChanceWinter">
            <property name="alignment">
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
@@ -286,7 +294,7 @@
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
            <property name="buddy">
-            <cstring>spinBox_3</cstring>
+            <cstring>harvestChanceSummer</cstring>
            </property>
           </widget>
          </item>
@@ -299,7 +307,7 @@
             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
            </property>
            <property name="buddy">
-            <cstring>spinBox_4</cstring>
+            <cstring>harvestChanceWinter</cstring>
            </property>
           </widget>
          </item>
@@ -389,10 +397,10 @@
   <tabstop>leafFrequency</tabstop>
   <tabstop>ingredient</tabstop>
   <tabstop>harvestSound</tabstop>
-  <tabstop>spinBox</tabstop>
-  <tabstop>spinBox_3</tabstop>
-  <tabstop>spinBox_2</tabstop>
-  <tabstop>spinBox_4</tabstop>
+  <tabstop>harvestChanceSpring</tabstop>
+  <tabstop>harvestChanceSummer</tabstop>
+  <tabstop>harvestChanceAutumn</tabstop>
+  <tabstop>harvestChanceWinter</tabstop>
   <tabstop>scriptListPane</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>

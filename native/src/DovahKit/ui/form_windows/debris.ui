@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogDebris</class>
  <widget class="QDialog" name="FormDialogDebris">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>379</width>
+    <height>394</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Debris</string>
   </property>
@@ -68,7 +76,7 @@
        </layout>
       </item>
       <item>
-       <widget class="QGroupBox" name="groupBox_2">
+       <widget class="QGroupBox" name="current">
         <property name="title">
          <string>Selected variation</string>
         </property>

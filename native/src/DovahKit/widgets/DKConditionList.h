@@ -39,6 +39,8 @@ class DKConditionList : public QWidget {
          void exportTo(dovah::loaded_forms::Form& owner, std::vector<ui::types::conditions::condition>& target);
          void clear();
 
+         void overrideOwningForm(dovah::loaded_forms::Form&);
+
          // These exist to handle edge-cases with TopicInfo conditions.
          void importBifurcatedList(dovah::loaded_forms::Form& owner, const BackendConditionList& locked, const BackendConditionList& normal);
          void exportBifurcatedList(dovah::loaded_forms::Form& owner, BackendConditionList& locked, BackendConditionList& normal);

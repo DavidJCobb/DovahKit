@@ -82,6 +82,8 @@ class DKConditionListModel : public DKGenericListModel<DKConditionListModel, ui:
       size_t importFrom(dovah::loaded_forms::Form&, const BackendConditionList&);
       size_t importFrom(dovah::loaded_forms::Form&, const std::vector<Condition>&);
 
+      void overrideOwningForm(dovah::loaded_forms::Form&);
+
       size_t importBifurcatedList(dovah::loaded_forms::Form&, const BackendConditionList& locked, const BackendConditionList& normal);
       void exportBifurcatedList(dovah::loaded_forms::Form&, BackendConditionList& locked, BackendConditionList& normal);
 };

@@ -720,6 +720,15 @@ size_t DKConditionListModel::importFrom(dovah::loaded_forms::Form& src_form, con
    return invalid;
 }
 
+void DKConditionListModel::overrideOwningForm(dovah::loaded_forms::Form& form) {
+   this->_context = ui::types::conditions::context(form.stub, form.is_working_copy);
+   if (this->_nodes.empty())
+      return;
+   auto tl = this->index(0, 0, {});
+   auto br = this->index(this->_nodes.size() - 1, Column::_COUNT - 1, {});
+   emit dataChanged(tl, br);
+}
+
 size_t DKConditionListModel::importBifurcatedList(dovah::loaded_forms::Form& src_form, const BackendConditionList& locked, const BackendConditionList& normal) {
    size_t invalid = 0;
    this->performReset([this, &src_form, &invalid, &locked, &normal]() {

@@ -15,7 +15,7 @@ namespace ui::types {
          }
       }
    }
-   void nif_for_form::commitTo(dovah::loaded_forms::components::model& dst, dovah::loaded_forms::Form& dst_owner) {
+   void nif_for_form::commitTo(dovah::loaded_forms::components::model& dst, dovah::loaded_forms::Form& dst_owner) const {
       dst.model_path     = this->model_path;
       dst.precached_info = this->precached_nif_info;
       if (dst.supports_texture_swaps()) {

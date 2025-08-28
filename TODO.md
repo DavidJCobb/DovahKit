@@ -97,7 +97,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | Character | FACT | Faction          | ✅ | ✅ | ⬛ |
 | Character | HDPT | HeadPart         | ✅ | ✅ | ⬛ |
 | Character | MOVT | Movement Type    | ✅ | ✅ | ⬛ |
-| Character | PACK | Package          | ✅ | 🟨 | ⬛ | Once the UI's done, test editing conditions with packdata run-on/params. |
+| Character | PACK | Package          | ✅ | 🟨 | ⬛ | UI needs testing and fixing finished. |
 | Character | QUST | Quest            | ✅ | 🟩 | 🟨 |
 | Character | RACE | Race             | ✅ | ✅ | ⬛ |
 | Character | RELA | Relationship     | ✅ | ✅ | ⬛ |
@@ -132,16 +132,16 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | Miscellaneous | CSTY | CombatStyle     | ✅ | ✅ | ⬛ |
 | Miscellaneous | FLST | FormList        | ✅ | ✅ | ✅ |
 | Miscellaneous | GLOB | Global          | ✅ | ✅ | ⬛ |
-| Miscellaneous | IDLM | IdleMarker      | ✅ | 🟨 | ⬛ |
+| Miscellaneous | IDLM | IdleMarker      | ✅ | ✅ | ⬛ |
 | Miscellaneous | KYWD | Keyword         | ✅ | ✅ | ⬛ |
 | Miscellaneous | LTEX | LandTexture     | ✅ | ✅ | 🟨 |
 | Miscellaneous | LSCR | LoadScreen      | ✅ | ✅ | ⬛ |
 | Miscellaneous | MATO | Material Object | 🟥 | 🟥 | ⬛ | Impossible to complete until we have the ability to save NIF files. We'll get to that during sustain. |
-| Miscellaneous | MESG | Message         | ✅ | 🟨 | ⬛ |
+| Miscellaneous | MESG | Message         | ✅ | ✅ | ⬛ |
 | Miscellaneous | TXST | TextureSet      | ✅ | ✅ | ✅ |
 | SpecialEffect | ADDN | AddOnNode       | ✅ | ✅ | ⬛ |
 | SpecialEffect | CAMS | CameraShot      | ✅ | ✅ | ⬛ |
-| SpecialEffect | DEBR | Debris          | ✅ | 🟨 | ⬛ |
+| SpecialEffect | DEBR | Debris          | ✅ | ✅ | ⬛ |
 | SpecialEffect | EFSH | EffectShader    | ✅ | ✅ | ⬛ |
 | SpecialEffect | EXPL | Explosion       | ✅ | ✅ | ⬛ |
 | SpecialEffect | FSTP | Footstep        | ✅ | ✅ | ⬛ |
@@ -152,13 +152,13 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | SpecialEffect | IPCT | ImpactData      | ✅ | ✅ | ⬛ |
 | SpecialEffect | IPDS | ImpactDataSet   | ✅ | 🟨 | ⬛ |
 | SpecialEffect | MATT | Material Type   | ✅ | ✅ | ⬛ |
-| SpecialEffect | PROJ | Projectile      | ✅ | 🟨 | ⬛ |
+| SpecialEffect | PROJ | Projectile      | ✅ | ✅ | ⬛ |
 | WorldData | CLMT | Climate                  | ✅ | ✅ | ⬛ |
 | WorldData | ECZN | Encounter Zone           | ✅ | ✅ | ⬛ |
 | WorldData | LGTM | Lighting Template        | ✅ | ⬛ | ⬛ | Might be a good idea to set up shared widgets (plural!) between this and cell data, especially since the ambient lighting struct (but not the rest!) is used elsewhere too (e.g. weather). |
 | WorldData | LCTN | Location                 | ✅ | ⬛ | ⬛ |
 | WorldData | LCRT | Location Ref Type        | ✅ | ✅ | ⬛ |
-| WorldData | SPGD | Shader Particle Geometry | ✅ | 🟨 | ⬛ |
+| WorldData | SPGD | Shader Particle Geometry | ✅ | ✅ | ⬛ |
 | WorldData | RFCT | Visual Effect            | ✅ | ✅ | ⬛ |
 | WorldData | WATR | WaterType                | ✅ | ⬛ | ⬛ |
 | WorldData | WTHR | Weather                  | ✅ | ⬛ | ⬛ |
@@ -169,10 +169,10 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | WorldObjects | FURN | Furniture     | ✅ | 🟨 | ⬛ | Will need to be able to extract `FRN` data from the NIF |
 | WorldObjects | GRAS | Grass         | ✅ | ✅ | ⬛ |
 | WorldObjects | LIGH | Light         | ✅ | ✅ | ⬛ |
-| WorldObjects | MSTT | MovableStatic | ✅ | 🟨 | ⬛ |
+| WorldObjects | MSTT | MovableStatic | ✅ | ✅ | ⬛ |
 | WorldObjects | STAT | Static        | ✅ | ✅ | 🟨 |
 | WorldObjects | SCOL | Static Collection | ✅ | ⬛ | ⬛ |
-| WorldObjects | TREE | Tree          | ✅ | 🟨 | ⬛ |
+| WorldObjects | TREE | Tree          | ✅ | ✅ | ⬛ |
 | Menu: Gameplay | CPTH | Camera Path | ✅ | ⬛ | ⬛ | Not a per-form dialog, but a shared dialog for all forms of this type. These forms are organized into a tree. |
 | Menu: Gameplay | IDLE | Idle Animation | ✅ | 🟨 | ⬛ | Not a per-form dialog, but a shared dialog for all forms of this type. These forms are organized into a tree. |
 | Dialogue | DLBR | Dialogue Branch | ✅ | ✅ | ⬛ |

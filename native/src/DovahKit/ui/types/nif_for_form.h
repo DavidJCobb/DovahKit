@@ -26,6 +26,6 @@ namespace ui::types {
       std::vector<ui::types::nif_texture_swap> texture_swaps;
 
       void initializeFrom(const dovah::loaded_forms::components::model&);
-      void commitTo(dovah::loaded_forms::components::model&, dovah::loaded_forms::Form& owner);
+      void commitTo(dovah::loaded_forms::components::model&, dovah::loaded_forms::Form& owner) const;
    };
 }

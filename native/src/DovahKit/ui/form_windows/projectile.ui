@@ -1,15 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>502</width>
-    <height>631</height>
-   </rect>
-  </property>
+ <class>FormDialogProjectile</class>
+ <widget class="QDialog" name="FormDialogProjectile">
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
@@ -744,14 +736,14 @@
    <header>widgets/DKFormPicker.h</header>
   </customwidget>
   <customwidget>
-   <class>DKFormNIFPicker</class>
-   <extends>QWidget</extends>
-   <header>widgets/DKFormNIFPicker.h</header>
-  </customwidget>
-  <customwidget>
    <class>DKFormDestructionDataButton</class>
    <extends>QWidget</extends>
    <header>widgets/DKFormDestructionDataButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

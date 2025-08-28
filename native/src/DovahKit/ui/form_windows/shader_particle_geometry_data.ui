@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogShaderParticleGeometryData</class>
  <widget class="QDialog" name="FormDialogShaderParticleGeometryData">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>426</width>
+    <height>406</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Shader Particle Geometry</string>
   </property>
@@ -88,7 +96,11 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="DKGameFilePicker" name="texture"/>
+        <widget class="DKGameFilePicker" name="texture">
+         <property name="presetConfiguration">
+          <enum>DKGameFilePicker::Textures</enum>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -207,7 +219,7 @@
      <property name="title">
       <string>Number of Subtextures</string>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,1,0,1">
+     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0,0,0">
       <item>
        <widget class="QLabel" name="label_9">
         <property name="text">
@@ -219,7 +231,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="subtextureCountX">
+       <widget class="QSpinBox" name="subtextureCountX">
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -236,7 +248,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="subtextureCountY">
+       <widget class="QSpinBox" name="subtextureCountY">
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
