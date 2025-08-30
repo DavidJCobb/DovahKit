@@ -131,6 +131,8 @@
     <ClCompile Include="interfaces\DKPapyrusBoundScriptListPaneInterface.cpp" />
     <ClCompile Include="interfaces\DKPapyrusFragmentFunctionPickerInterface.cpp" />
     <ClCompile Include="interfaces\DKQuestAliasPickerInterface.cpp" />
+    <ClCompile Include="interfaces\DKSliderSpinboxFloatInterface.cpp" />
+    <ClCompile Include="interfaces\DKSliderSpinboxPairIntInterface.cpp" />
     <ClCompile Include="interfaces\DKTabWidgetInterface.cpp" />
     <ClCompile Include="interfaces\DKTextureAssetPaneInterface.cpp" />
     <ClCompile Include="interfaces\DKTopicOrSubtypePickerInterface.cpp" />
@@ -164,6 +166,8 @@
     <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp" />
     <ClCompile Include="widgets\DKPapyrusFragmentFunctionPicker.cpp" />
     <ClCompile Include="widgets\DKQuestAliasPicker.cpp" />
+    <ClCompile Include="widgets\DKSliderSpinboxPairFloat.cpp" />
+    <ClCompile Include="widgets\DKSliderSpinboxPairInt.cpp" />
     <ClCompile Include="widgets\DKTabBar.cpp" />
     <ClCompile Include="widgets\DKTabWidget.cpp" />
     <ClCompile Include="widgets\DKTextureAssetPane.cpp" />
@@ -218,6 +222,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\form_types.h" />
+    <QtMoc Include="widgets\DKSliderSpinboxPairFloat.h" />
+    <QtMoc Include="widgets\DKSliderSpinboxPairInt.h" />
     <QtMoc Include="interfaces\DKTopicOrSubtypePickerInterface.h" />
     <QtMoc Include="widgets\DKTopicOrSubtypePicker.h" />
     <QtMoc Include="interfaces\DKIdleCollectionWidgetInterface.h" />
@@ -254,6 +260,8 @@
     <QtMoc Include="tools\in_place_text_editor\InPlaceTextEditor.h" />
     <QtMoc Include="extension_factories\DKYesNoUnsetWidgetExtensionFactory.h" />
     <QtMoc Include="extensions\DKYesNoUnsetWidgetTaskMenuExtension.h" />
+    <QtMoc Include="interfaces\DKSliderSpinboxPairFloatInterface.h" />
+    <QtMoc Include="interfaces\DKSliderSpinboxPairIntInterface.h" />
     <ClInclude Include="tools\in_place_text_editor\InPlaceTextEditableWidget.h" />
     <ClInclude Include="ui\types\game_file_path.h" />
     <ClInclude Include="widgets\DKHeaderView.h" />

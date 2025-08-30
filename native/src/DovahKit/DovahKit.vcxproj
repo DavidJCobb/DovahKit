@@ -1045,6 +1045,7 @@
     <ClCompile Include="ui\form_windows\tree.cpp" />
     <ClCompile Include="ui\form_windows\visual_effect.cpp" />
     <ClCompile Include="ui\form_windows\voicetype.cpp" />
+    <ClCompile Include="ui\form_windows\water_type.cpp" />
     <ClCompile Include="ui\form_windows\weapon.cpp" />
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
@@ -1264,6 +1265,8 @@
     <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp" />
     <ClCompile Include="widgets\DKPapyrusFragmentFunctionPicker.cpp" />
     <ClCompile Include="widgets\DKQuestAliasPicker.cpp" />
+    <ClCompile Include="widgets\DKSliderSpinboxPairFloat.cpp" />
+    <ClCompile Include="widgets\DKSliderSpinboxPairInt.cpp" />
     <ClCompile Include="widgets\DKStatusBar.cpp" />
     <ClCompile Include="widgets\DKTabBar.cpp" />
     <ClCompile Include="widgets\DKTabWidget.cpp" />
@@ -2005,6 +2008,7 @@
     <QtMoc Include="ui\form_windows\topic_info\topic_info_response.h" />
     <QtMoc Include="ui\form_windows\weapon.h" />
     <QtMoc Include="ui\form_windows\tree.h" />
+    <QtMoc Include="ui\form_windows\water_type.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_float_slider.h" />
@@ -2072,6 +2076,8 @@
     <QtMoc Include="widgets\DKMagicEffectListWidget.h" />
     <QtMoc Include="widgets\DKIdleCollectionWidget.h" />
     <QtMoc Include="widgets\DKTopicOrSubtypePicker.h" />
+    <QtMoc Include="widgets\DKSliderSpinboxPairInt.h" />
+    <QtMoc Include="widgets\DKSliderSpinboxPairFloat.h" />
     <ClInclude Include="widgets\widget-data\DKCustomFormFilterableModelMixin.h" />
     <QtMoc Include="widgets\widget-dialogs\DKMagicEffectListItemDialog.h" />
     <ClInclude Include="widgets\widget-models\DKAttackDataModel.h" />
@@ -3423,6 +3429,7 @@
     <QtUic Include="ui\form_windows\visual_effect.ui" />
     <QtUic Include="ui\form_windows\voicetype.ui" />
     <QtUic Include="ui\form_windows\volumetric_lighting.ui" />
+    <QtUic Include="ui\form_windows\water_type.ui" />
     <QtUic Include="ui\form_windows\weapon.ui" />
     <QtUic Include="ui\form_windows\word_of_power.ui" />
     <QtUic Include="ui\main_window.ui" />

@@ -160,7 +160,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | WorldData | LCRT | Location Ref Type        | ✅ | ✅ | ⬛ |
 | WorldData | SPGD | Shader Particle Geometry | ✅ | ✅ | ⬛ |
 | WorldData | RFCT | Visual Effect            | ✅ | ✅ | ⬛ |
-| WorldData | WATR | WaterType                | ✅ | ⬛ | ⬛ |
+| WorldData | WATR | WaterType                | ✅ | ✅ | ⬛ |
 | WorldData | WTHR | Weather                  | ✅ | ⬛ | ⬛ |
 | WorldObjects | ACTI | Activator     | ✅ | ✅ | ⬛ |
 | WorldObjects | CONT | Container     | ✅ | ✅ | ⬛ |

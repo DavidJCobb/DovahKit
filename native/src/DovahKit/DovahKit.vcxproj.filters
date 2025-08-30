@@ -3525,6 +3525,15 @@
     <ClCompile Include="ui\form_windows\shader_particle_geometry_data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\DKSliderSpinboxPairInt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKSliderSpinboxPairFloat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\water_type.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9127,6 +9136,9 @@
     <QtUic Include="ui\form_windows\package\FormSubdialogPackageLocation.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="ui\form_windows\water_type.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\main_window.h">
@@ -9958,6 +9970,15 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\shader_particle_geometry_data.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKSliderSpinboxPairInt.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKSliderSpinboxPairFloat.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\water_type.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

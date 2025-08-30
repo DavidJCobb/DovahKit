@@ -25,9 +25,13 @@
 #include "interfaces/DKMagicEffectListWidgetInterface.h"
 #include "interfaces/DKIdleCollectionWidgetInterface.h"
 #include "interfaces/DKTopicOrSubtypePickerInterface.h"
+#include "interfaces/DKSliderSpinboxPairFloatInterface.h"
+#include "interfaces/DKSliderSpinboxPairIntInterface.h"
 
 DovahKitQtCustomWidgetsPlugin::DovahKitQtCustomWidgetsPlugin(QObject* parent) : QObject(parent) {
    widgets.append(new DKFloatSliderInterface(this));
+   widgets.append(new DKSliderSpinboxPairFloatInterface(this));
+   widgets.append(new DKSliderSpinboxPairIntInterface(this));
    widgets.append(new DKTabWidgetInterface(this));
    widgets.append(new DKYesNoUnsetWidgetInterface(this));
 
