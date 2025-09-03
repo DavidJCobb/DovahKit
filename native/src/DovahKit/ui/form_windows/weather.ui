@@ -1,0 +1,2448 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogWeather</class>
+ <widget class="QDialog" name="FormDialogWeather">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>908</width>
+    <height>655</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Weather</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="tabbox">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tabClouds">
+      <attribute name="title">
+       <string>General</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_6" rowstretch="1,0,0">
+       <item row="1" column="2">
+        <widget class="QGroupBox" name="groupBox_5">
+         <property name="title">
+          <string>Sun</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_9">
+          <item row="0" column="1">
+           <widget class="QSlider" name="sunGlareSlider">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <spacer name="verticalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="1" column="2">
+           <widget class="QDoubleSpinBox" name="sunDamageSpinbox">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="maximum">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSlider" name="sunDamageSlider">
+            <property name="maximum">
+             <number>1</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_41">
+            <property name="text">
+             <string>Damage:</string>
+            </property>
+            <property name="buddy">
+             <cstring>sunDamageSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_40">
+            <property name="text">
+             <string>Glare:</string>
+            </property>
+            <property name="buddy">
+             <cstring>sunGlareSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QDoubleSpinBox" name="sunGlareSpinbox">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="3">
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="currentCloudLayerIndex">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="maximum">
+            <number>31</number>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Select Cloud Layer to Edit:</string>
+           </property>
+           <property name="buddy">
+            <cstring>currentCloudLayerIndex</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <spacer name="horizontalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="1" column="0" colspan="3">
+          <widget class="QGroupBox" name="currentCloudLayerGroupbox">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="title">
+            <string>Selected layer</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_4">
+            <item row="3" column="1">
+             <widget class="DKFloatSlider" name="currentCloudLayerSpeedYSlider">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="decimals">
+               <number>4</number>
+              </property>
+              <property name="minimum">
+               <double>-0.100000001490116</double>
+              </property>
+              <property name="maximum">
+               <double>0.100000001490116</double>
+              </property>
+              <property name="tickInterval">
+               <double>0.000799999979790</double>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0" colspan="3">
+             <widget class="QGroupBox" name="currentCloudLayerColorsGroupbox">
+              <property name="title">
+               <string>Time-of-day parameters</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_5">
+               <item row="1" column="1">
+                <widget class="DKColorPickerButton" name="currentCloudLayerColorSunrise"/>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_11">
+                 <property name="text">
+                  <string>Alpha:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_10">
+                 <property name="text">
+                  <string>Color:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="3">
+                <widget class="QLabel" name="label_13">
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>Daytime</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="5">
+                <widget class="QLabel" name="label_14">
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>Sunset</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="7">
+                <widget class="QLabel" name="label_15">
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>Nighttime</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
+                <widget class="Line" name="line_8">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="4">
+                <widget class="Line" name="line_9">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLabel" name="label_12">
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>Sunrise</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="6">
+                <widget class="Line" name="line_10">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="3">
+                <widget class="DKColorPickerButton" name="currentCloudLayerColorDaytime"/>
+               </item>
+               <item row="1" column="5">
+                <widget class="DKColorPickerButton" name="currentCloudLayerColorSunset"/>
+               </item>
+               <item row="1" column="7">
+                <widget class="DKColorPickerButton" name="currentCloudLayerColorNighttime"/>
+               </item>
+               <item row="2" column="1">
+                <widget class="QDoubleSpinBox" name="currentCloudLayerAlphaSunrise">
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                 <property name="decimals">
+                  <number>4</number>
+                 </property>
+                 <property name="maximum">
+                  <double>1.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="3">
+                <widget class="QDoubleSpinBox" name="currentCloudLayerAlphaDaytime">
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                 <property name="decimals">
+                  <number>4</number>
+                 </property>
+                 <property name="maximum">
+                  <double>1.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="5">
+                <widget class="QDoubleSpinBox" name="currentCloudLayerAlphaSunset">
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                 <property name="decimals">
+                  <number>4</number>
+                 </property>
+                 <property name="maximum">
+                  <double>1.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="7">
+                <widget class="QDoubleSpinBox" name="currentCloudLayerAlphaNighttime">
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                 <property name="decimals">
+                  <number>4</number>
+                 </property>
+                 <property name="maximum">
+                  <double>1.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <spacer name="verticalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="1" column="1" colspan="2">
+             <widget class="DKGameFilePicker" name="currentCloudLayerTexture">
+              <property name="presetConfiguration">
+               <enum>DKGameFilePicker::Textures</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QDoubleSpinBox" name="currentCloudLayerSpeedYSpinbox">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="decimals">
+               <number>4</number>
+              </property>
+              <property name="minimum">
+               <double>-0.100000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>0.100000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.000800000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>Texture:</string>
+              </property>
+              <property name="buddy">
+               <cstring>currentCloudLayerTexture</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_9">
+              <property name="text">
+               <string>Cloud Speed Y:</string>
+              </property>
+              <property name="buddy">
+               <cstring>currentCloudLayerSpeedYSlider</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>Cloud Speed X:</string>
+              </property>
+              <property name="buddy">
+               <cstring>currentCloudLayerSpeedXSlider</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QDoubleSpinBox" name="currentCloudLayerSpeedXSpinbox">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+              <property name="decimals">
+               <number>4</number>
+              </property>
+              <property name="minimum">
+               <double>-0.100000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>0.100000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.000800000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="DKFloatSlider" name="currentCloudLayerSpeedXSlider">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="decimals">
+               <number>4</number>
+              </property>
+              <property name="minimum">
+               <double>-0.100000001490116</double>
+              </property>
+              <property name="maximum">
+               <double>0.100000001490116</double>
+              </property>
+              <property name="tickInterval">
+               <double>0.000799999979790</double>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0" colspan="3">
+             <widget class="QCheckBox" name="currentCloudLayerEnabled">
+              <property name="text">
+               <string>Enable this layer</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3" rowspan="6">
+             <widget class="DKTextureAssetPane" name="currentCloudLayerTexturePreview">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="2">
+        <widget class="QGroupBox" name="groupBox_7">
+         <property name="title">
+          <string>Other Parameters</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_14">
+          <item row="0" column="1">
+           <widget class="QSlider" name="transDeltaSlider">
+            <property name="whatsThis">
+             <string>&lt;p&gt;This is the number of in-game hours it takes to fully transition into this weather type, once a transition begins.&lt;/p&gt;
+
+&lt;p&gt;Under the hood, this value is saved as a percentage (basically) between the &lt;code&gt;fWeatherTransMin&lt;/code&gt; and &lt;code&gt;fWeatherTransMax&lt;/code&gt; game settings. If you change those game settings, then the values available here will change, and all weathers' previously-set values will be adapted to the settings' new values. (For example, a weather whose Transition Delta was halfway between the old values will become halfway between the new values.)&lt;/p&gt;</string>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_39">
+            <property name="text">
+             <string>Trans. Delta:</string>
+            </property>
+            <property name="buddy">
+             <cstring>transDeltaSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QDoubleSpinBox" name="transDeltaSpinbox">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="1" rowspan="2">
+        <widget class="QGroupBox" name="groupBox_4">
+         <property name="title">
+          <string>Wind</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_8">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_37">
+            <property name="text">
+             <string>Dir. Range:</string>
+            </property>
+            <property name="buddy">
+             <cstring>windDirRangeSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QDoubleSpinBox" name="windSpeedSpinbox">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QDoubleSpinBox" name="windDirSpinbox">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_22">
+            <property name="text">
+             <string>Direction:</string>
+            </property>
+            <property name="buddy">
+             <cstring>windDirSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QDoubleSpinBox" name="windDirRangeSpinbox">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSlider" name="windDirRangeSlider">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_38">
+            <property name="text">
+             <string>Speed:</string>
+            </property>
+            <property name="buddy">
+             <cstring>windSpeedSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSlider" name="windSpeedSlider">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSlider" name="windDirSlider">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <spacer name="verticalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0" rowspan="2">
+        <widget class="QGroupBox" name="groupBox_3">
+         <property name="title">
+          <string>Fog Distances</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_7">
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="fogDistNearDay">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="decimals">
+             <number>4</number>
+            </property>
+            <property name="maximum">
+             <double>100000.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_17">
+            <property name="text">
+             <string>Far:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="fogDistFarDay">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="decimals">
+             <number>4</number>
+            </property>
+            <property name="maximum">
+             <double>100000.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QDoubleSpinBox" name="fogDistPowerDay">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="decimals">
+             <number>4</number>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QDoubleSpinBox" name="fogDistPowerNight">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="decimals">
+             <number>4</number>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QDoubleSpinBox" name="fogDistNearNight">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="decimals">
+             <number>4</number>
+            </property>
+            <property name="maximum">
+             <double>100000.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_18">
+            <property name="text">
+             <string>Power:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QDoubleSpinBox" name="fogDistMaxNight">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="decimals">
+             <number>4</number>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QDoubleSpinBox" name="fogDistMaxDay">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="decimals">
+             <number>4</number>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_19">
+            <property name="text">
+             <string>Max:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_16">
+            <property name="text">
+             <string>Near:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QDoubleSpinBox" name="fogDistFarNight">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="decimals">
+             <number>4</number>
+            </property>
+            <property name="maximum">
+             <double>100000.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_20">
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Day</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_21">
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Night</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabColors">
+      <attribute name="title">
+       <string>Colors</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <layout class="QGridLayout" name="layoutColorsByDay">
+         <item row="1" column="10">
+          <widget class="QLabel" name="label_34">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Sunrise</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="colorLabelCloudLODDiffuse">
+           <property name="text">
+            <string>Cloud LOD Diffuse:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0">
+          <widget class="QLabel" name="colorLabelSkyUpper">
+           <property name="text">
+            <string>Sky, Upper:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="14">
+          <widget class="QDoubleSpinBox" name="dalcFresnelSunset">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="maximum">
+            <double>1000.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="12" column="0">
+          <widget class="QLabel" name="colorLabelGlareSun">
+           <property name="text">
+            <string>Glare, Sun:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="11">
+          <widget class="Line" name="line_5">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="16" column="0">
+          <widget class="QLabel" name="colorLabelStars">
+           <property name="text">
+            <string>Stars:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="11" column="0">
+          <widget class="QLabel" name="colorLabelHorizon">
+           <property name="text">
+            <string>Horizon:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="13">
+          <widget class="Line" name="line_6">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="6">
+          <widget class="Line" name="line_4">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="7">
+          <widget class="QLabel" name="label_6">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Nighttime</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="colorLabelFogNear">
+           <property name="text">
+            <string>Fog, Near:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="9">
+          <widget class="QLabel" name="label_28">
+           <property name="text">
+            <string>-Y</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="16">
+          <widget class="QLabel" name="label_36">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Nighttime</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="9">
+          <widget class="QLabel" name="label_25">
+           <property name="text">
+            <string>+X</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="9" colspan="8">
+          <widget class="QLabel" name="label_24">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+             <underline>true</underline>
+            </font>
+           </property>
+           <property name="text">
+            <string>Directional Ambient Colors</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="colorLabelFogFar">
+           <property name="text">
+            <string>Fog, Far:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="8" rowspan="19">
+          <widget class="Line" name="line">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="9">
+          <widget class="QLabel" name="label_27">
+           <property name="text">
+            <string>+Y</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="16">
+          <widget class="QDoubleSpinBox" name="dalcFresnelNighttime">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="maximum">
+            <double>1000.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="9">
+          <widget class="QLabel" name="label_31">
+           <property name="text">
+            <string>Specular:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="colorLabelCloudLODAmbient">
+           <property name="text">
+            <string>Cloud LOD Ambient:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="12">
+          <widget class="QDoubleSpinBox" name="dalcFresnelDaytime">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="maximum">
+            <double>1000.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="14">
+          <widget class="QLabel" name="label_35">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Sunset</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="Line" name="line_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="13" column="0">
+          <widget class="QLabel" name="colorLabelGlareMoon">
+           <property name="text">
+            <string>Glare, Moon:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="colorLabelAmbient">
+           <property name="text">
+            <string>Ambient:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="9">
+          <widget class="QLabel" name="label_30">
+           <property name="text">
+            <string>-Z</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="8">
+          <widget class="QLabel" name="label_23">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+             <underline>true</underline>
+            </font>
+           </property>
+           <property name="text">
+            <string>Basic Colors</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="9">
+          <widget class="QLabel" name="label_29">
+           <property name="text">
+            <string>+Z</string>
+           </property>
+          </widget>
+         </item>
+         <item row="18" column="0">
+          <widget class="QLabel" name="colorLabelUnused">
+           <property name="text">
+            <string>Unused:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="9">
+          <widget class="QLabel" name="label_32">
+           <property name="text">
+            <string>Fresnel:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_3">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Sunrise</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="5">
+          <widget class="QLabel" name="label_5">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Sunset</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="0">
+          <widget class="QLabel" name="colorLabelSkyLower">
+           <property name="text">
+            <string>Sky, Lower:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="colorLabelEffect">
+           <property name="text">
+            <string>Effect Lighting:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="10">
+          <widget class="QDoubleSpinBox" name="dalcFresnelSunrise">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="maximum">
+            <double>1000.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="15" column="0">
+          <widget class="QLabel" name="colorLabelSunlight">
+           <property name="text">
+            <string>Sunlight:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="12">
+          <widget class="QLabel" name="label_33">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Daytime</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="4">
+          <widget class="Line" name="line_3">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QLabel" name="label_4">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Daytime</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="17" column="0">
+          <widget class="QLabel" name="colorLabelWater">
+           <property name="text">
+            <string>Water Multiplier:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="14" column="0">
+          <widget class="QLabel" name="colorLabelSun">
+           <property name="text">
+            <string>Sun:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="0">
+          <widget class="QLabel" name="colorLabelSkyStatics">
+           <property name="text">
+            <string>Sky, Statics:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="9">
+          <widget class="QLabel" name="label_26">
+           <property name="text">
+            <string>-X</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="15">
+          <widget class="Line" name="line_7">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="DKColorPickerButton" name="colorAmbientSunrise">
+           <property name="accessibleName">
+            <string>Ambient Color at Sunrise</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="3">
+          <widget class="DKColorPickerButton" name="colorAmbientDaytime">
+           <property name="accessibleName">
+            <string>Ambient Color at Daytime</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="5">
+          <widget class="DKColorPickerButton" name="colorAmbientSunset">
+           <property name="accessibleName">
+            <string>Ambient Color at Sunset</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="7">
+          <widget class="DKColorPickerButton" name="colorAmbientNighttime">
+           <property name="accessibleName">
+            <string>Ambient Color at Nighttime</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="DKColorPickerButton" name="colorCloudLODAmbientSunrise"/>
+         </item>
+         <item row="3" column="3">
+          <widget class="DKColorPickerButton" name="colorCloudLODAmbientDaytime"/>
+         </item>
+         <item row="3" column="5">
+          <widget class="DKColorPickerButton" name="colorCloudLODAmbientSunset"/>
+         </item>
+         <item row="3" column="7">
+          <widget class="DKColorPickerButton" name="colorCloudLODAmbientNighttime"/>
+         </item>
+         <item row="4" column="1">
+          <widget class="DKColorPickerButton" name="colorCloudLODDiffuseSunrise"/>
+         </item>
+         <item row="4" column="3">
+          <widget class="DKColorPickerButton" name="colorCloudLODDiffuseDaytime"/>
+         </item>
+         <item row="4" column="5">
+          <widget class="DKColorPickerButton" name="colorCloudLODDiffuseSunset"/>
+         </item>
+         <item row="4" column="7">
+          <widget class="DKColorPickerButton" name="colorCloudLODDiffuseNighttime"/>
+         </item>
+         <item row="5" column="1">
+          <widget class="DKColorPickerButton" name="colorEffectSunrise"/>
+         </item>
+         <item row="5" column="3">
+          <widget class="DKColorPickerButton" name="colorEffectDaytime"/>
+         </item>
+         <item row="5" column="5">
+          <widget class="DKColorPickerButton" name="colorEffectSunset"/>
+         </item>
+         <item row="5" column="7">
+          <widget class="DKColorPickerButton" name="colorEffectNighttime"/>
+         </item>
+         <item row="6" column="1">
+          <widget class="DKColorPickerButton" name="colorFogNearSunrise"/>
+         </item>
+         <item row="6" column="3">
+          <widget class="DKColorPickerButton" name="colorFogNearDaytime"/>
+         </item>
+         <item row="6" column="5">
+          <widget class="DKColorPickerButton" name="colorFogNearSunset"/>
+         </item>
+         <item row="6" column="7">
+          <widget class="DKColorPickerButton" name="colorFogNearNighttime"/>
+         </item>
+         <item row="7" column="1">
+          <widget class="DKColorPickerButton" name="colorFogFarSunrise"/>
+         </item>
+         <item row="7" column="3">
+          <widget class="DKColorPickerButton" name="colorFogFarDaytime"/>
+         </item>
+         <item row="7" column="5">
+          <widget class="DKColorPickerButton" name="colorFogFarSunset"/>
+         </item>
+         <item row="7" column="7">
+          <widget class="DKColorPickerButton" name="colorFogFarNighttime"/>
+         </item>
+         <item row="8" column="1">
+          <widget class="DKColorPickerButton" name="colorSkyUpperSunrise"/>
+         </item>
+         <item row="8" column="3">
+          <widget class="DKColorPickerButton" name="colorSkyUpperDaytime"/>
+         </item>
+         <item row="8" column="5">
+          <widget class="DKColorPickerButton" name="colorSkyUpperSunset"/>
+         </item>
+         <item row="8" column="7">
+          <widget class="DKColorPickerButton" name="colorSkyUpperNighttime"/>
+         </item>
+         <item row="9" column="1">
+          <widget class="DKColorPickerButton" name="colorSkyLowerSunrise"/>
+         </item>
+         <item row="9" column="3">
+          <widget class="DKColorPickerButton" name="colorSkyLowerDaytime"/>
+         </item>
+         <item row="9" column="5">
+          <widget class="DKColorPickerButton" name="colorSkyLowerSunset"/>
+         </item>
+         <item row="9" column="7">
+          <widget class="DKColorPickerButton" name="colorSkyLowerNighttime"/>
+         </item>
+         <item row="10" column="1">
+          <widget class="DKColorPickerButton" name="colorSkyStaticsSunrise"/>
+         </item>
+         <item row="10" column="3">
+          <widget class="DKColorPickerButton" name="colorSkyStaticsDaytime"/>
+         </item>
+         <item row="10" column="5">
+          <widget class="DKColorPickerButton" name="colorSkyStaticsSunset"/>
+         </item>
+         <item row="10" column="7">
+          <widget class="DKColorPickerButton" name="colorSkyStaticsNighttime"/>
+         </item>
+         <item row="11" column="1">
+          <widget class="DKColorPickerButton" name="colorHorizonSunrise"/>
+         </item>
+         <item row="11" column="3">
+          <widget class="DKColorPickerButton" name="colorHorizonDaytime"/>
+         </item>
+         <item row="11" column="5">
+          <widget class="DKColorPickerButton" name="colorHorizonSunset"/>
+         </item>
+         <item row="11" column="7">
+          <widget class="DKColorPickerButton" name="colorHorizonNighttime"/>
+         </item>
+         <item row="12" column="1">
+          <widget class="DKColorPickerButton" name="colorGlareSunSunrise"/>
+         </item>
+         <item row="12" column="3">
+          <widget class="DKColorPickerButton" name="colorGlareSunDaytime"/>
+         </item>
+         <item row="12" column="5">
+          <widget class="DKColorPickerButton" name="colorGlareSunSunset"/>
+         </item>
+         <item row="12" column="7">
+          <widget class="DKColorPickerButton" name="colorGlareSunNighttime"/>
+         </item>
+         <item row="13" column="1">
+          <widget class="DKColorPickerButton" name="colorGlareMoonSunrise"/>
+         </item>
+         <item row="13" column="3">
+          <widget class="DKColorPickerButton" name="colorGlareMoonDaytime"/>
+         </item>
+         <item row="13" column="5">
+          <widget class="DKColorPickerButton" name="colorGlareMoonSunset"/>
+         </item>
+         <item row="13" column="7">
+          <widget class="DKColorPickerButton" name="colorGlareMoonNighttime"/>
+         </item>
+         <item row="14" column="1">
+          <widget class="DKColorPickerButton" name="colorSunSunrise"/>
+         </item>
+         <item row="14" column="3">
+          <widget class="DKColorPickerButton" name="colorSunDaytime"/>
+         </item>
+         <item row="14" column="5">
+          <widget class="DKColorPickerButton" name="colorSunSunset"/>
+         </item>
+         <item row="14" column="7">
+          <widget class="DKColorPickerButton" name="colorSunNighttime"/>
+         </item>
+         <item row="15" column="1">
+          <widget class="DKColorPickerButton" name="colorSunlightSunrise"/>
+         </item>
+         <item row="15" column="3">
+          <widget class="DKColorPickerButton" name="colorSunlightDaytime"/>
+         </item>
+         <item row="15" column="5">
+          <widget class="DKColorPickerButton" name="colorSunlightSunset"/>
+         </item>
+         <item row="15" column="7">
+          <widget class="DKColorPickerButton" name="colorSunlightNighttime"/>
+         </item>
+         <item row="16" column="1">
+          <widget class="DKColorPickerButton" name="colorStarsSunrise"/>
+         </item>
+         <item row="16" column="3">
+          <widget class="DKColorPickerButton" name="colorStarsDaytime"/>
+         </item>
+         <item row="16" column="5">
+          <widget class="DKColorPickerButton" name="colorStarsSunset"/>
+         </item>
+         <item row="16" column="7">
+          <widget class="DKColorPickerButton" name="colorStarsNighttime"/>
+         </item>
+         <item row="17" column="1">
+          <widget class="DKColorPickerButton" name="colorWaterSunrise"/>
+         </item>
+         <item row="17" column="3">
+          <widget class="DKColorPickerButton" name="colorWaterDaytime"/>
+         </item>
+         <item row="17" column="5">
+          <widget class="DKColorPickerButton" name="colorWaterSunset"/>
+         </item>
+         <item row="17" column="7">
+          <widget class="DKColorPickerButton" name="colorWaterNighttime"/>
+         </item>
+         <item row="18" column="1">
+          <widget class="DKColorPickerButton" name="colorUnusedSunrise"/>
+         </item>
+         <item row="18" column="3">
+          <widget class="DKColorPickerButton" name="colorUnusedDaytime"/>
+         </item>
+         <item row="18" column="5">
+          <widget class="DKColorPickerButton" name="colorUnusedSunset"/>
+         </item>
+         <item row="18" column="7">
+          <widget class="DKColorPickerButton" name="colorUnusedNighttime"/>
+         </item>
+         <item row="2" column="10">
+          <widget class="DKColorPickerButton" name="dalcXPosSunrise"/>
+         </item>
+         <item row="2" column="12">
+          <widget class="DKColorPickerButton" name="dalcXPosDaytime"/>
+         </item>
+         <item row="2" column="14">
+          <widget class="DKColorPickerButton" name="dalcXPosSunset"/>
+         </item>
+         <item row="2" column="16">
+          <widget class="DKColorPickerButton" name="dalcXPosNighttime"/>
+         </item>
+         <item row="3" column="10">
+          <widget class="DKColorPickerButton" name="dalcXNegSunrise"/>
+         </item>
+         <item row="3" column="12">
+          <widget class="DKColorPickerButton" name="dalcXNegDaytime"/>
+         </item>
+         <item row="3" column="14">
+          <widget class="DKColorPickerButton" name="dalcXNegSunset"/>
+         </item>
+         <item row="3" column="16">
+          <widget class="DKColorPickerButton" name="dalcXNegNighttime"/>
+         </item>
+         <item row="4" column="10">
+          <widget class="DKColorPickerButton" name="dalcYPosSunrise"/>
+         </item>
+         <item row="4" column="12">
+          <widget class="DKColorPickerButton" name="dalcYPosDaytime"/>
+         </item>
+         <item row="4" column="14">
+          <widget class="DKColorPickerButton" name="dalcYPosSunset"/>
+         </item>
+         <item row="4" column="16">
+          <widget class="DKColorPickerButton" name="dalcYPosNighttime"/>
+         </item>
+         <item row="5" column="10">
+          <widget class="DKColorPickerButton" name="dalcYNegSunrise"/>
+         </item>
+         <item row="5" column="12">
+          <widget class="DKColorPickerButton" name="dalcYNegDaytime"/>
+         </item>
+         <item row="5" column="14">
+          <widget class="DKColorPickerButton" name="dalcYNegSunset"/>
+         </item>
+         <item row="5" column="16">
+          <widget class="DKColorPickerButton" name="dalcYNegNighttime"/>
+         </item>
+         <item row="6" column="10">
+          <widget class="DKColorPickerButton" name="dalcZPosSunrise"/>
+         </item>
+         <item row="6" column="12">
+          <widget class="DKColorPickerButton" name="dalcZPosDaytime"/>
+         </item>
+         <item row="6" column="14">
+          <widget class="DKColorPickerButton" name="dalcZPosSunset"/>
+         </item>
+         <item row="6" column="16">
+          <widget class="DKColorPickerButton" name="dalcZPosNighttime"/>
+         </item>
+         <item row="7" column="10">
+          <widget class="DKColorPickerButton" name="dalcZNegSunrise"/>
+         </item>
+         <item row="7" column="12">
+          <widget class="DKColorPickerButton" name="dalcZNegDaytime"/>
+         </item>
+         <item row="7" column="14">
+          <widget class="DKColorPickerButton" name="dalcZNegSunset"/>
+         </item>
+         <item row="7" column="16">
+          <widget class="DKColorPickerButton" name="dalcZNegNighttime"/>
+         </item>
+         <item row="8" column="10">
+          <widget class="DKColorPickerButton" name="dalcSpecularSunrise"/>
+         </item>
+         <item row="8" column="12">
+          <widget class="DKColorPickerButton" name="dalcSpecularDaytime"/>
+         </item>
+         <item row="8" column="14">
+          <widget class="DKColorPickerButton" name="dalcSpecularSunset"/>
+         </item>
+         <item row="8" column="16">
+          <widget class="DKColorPickerButton" name="dalcSpecularNighttime"/>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="1">
+        <spacer name="horizontalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabPrecipitation">
+      <attribute name="title">
+       <string>Precipitation</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_13">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBox_6">
+         <property name="title">
+          <string>Metadata</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_12">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_49">
+            <property name="text">
+             <string>Classification:</string>
+            </property>
+            <property name="buddy">
+             <cstring>weatherClass</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="weatherClass"/>
+          </item>
+          <item row="0" column="2">
+           <spacer name="horizontalSpacer_6">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Precipitation</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_10">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_42">
+            <property name="text">
+             <string>Shader:</string>
+            </property>
+            <property name="buddy">
+             <cstring>precipitationForm</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSlider" name="precipitationBeginFadeSlider">
+            <property name="whatsThis">
+             <string>This is the weather transition threshold at which the precipitation particles should begin to appear. That is: particles should appear when this weather is &lt;var&gt;X&lt;/var&gt;% transitioned in.</string>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_44">
+            <property name="text">
+             <string>End Fade Out:</string>
+            </property>
+            <property name="buddy">
+             <cstring>precipitationEndFadeSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_43">
+            <property name="text">
+             <string>Begin Fade In:</string>
+            </property>
+            <property name="buddy">
+             <cstring>precipitationBeginFadeSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSlider" name="precipitationEndFadeSlider">
+            <property name="whatsThis">
+             <string>This is the weather transition threshold at which the precipitation particles should stop appearing. That is: you'll stop seeing this weather's particles when a transition out of this weather is &lt;var&gt;X&lt;/var&gt;% complete.</string>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QDoubleSpinBox" name="precipitationBeginFadeSpinbox">
+            <property name="whatsThis">
+             <string>This is the weather transition threshold at which the precipitation particles should begin to appear. That is: particles should appear when this weather is &lt;var&gt;X&lt;/var&gt;% transitioned in.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="decimals">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QDoubleSpinBox" name="precipitationEndFadeSpinbox">
+            <property name="whatsThis">
+             <string>This is the weather transition threshold at which the precipitation particles should stop appearing. That is: you'll stop seeing this weather's particles when a transition out of this weather is &lt;var&gt;X&lt;/var&gt;% complete.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="decimals">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" colspan="2">
+           <widget class="DKFormPicker" name="precipitationForm"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
+          <string>Thunder and Lightning</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_11">
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_47">
+            <property name="text">
+             <string>Frequency:</string>
+            </property>
+            <property name="buddy">
+             <cstring>thunderFrequencySlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_45">
+            <property name="text">
+             <string>Begin Fade In:</string>
+            </property>
+            <property name="buddy">
+             <cstring>thunderBeginFadeSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QDoubleSpinBox" name="thunderBeginFadeSpinbox">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="decimals">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_46">
+            <property name="text">
+             <string>End Fade Out:</string>
+            </property>
+            <property name="buddy">
+             <cstring>thunderEndFadeSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSlider" name="thunderFrequencySlider">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSlider" name="thunderBeginFadeSlider">
+            <property name="whatsThis">
+             <string>Control when thunder and lighting begins to appear, during a transition from some other weather into this one.</string>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSlider" name="thunderEndFadeSlider">
+            <property name="whatsThis">
+             <string>Control when thunder and lighting stops appearing, during a transition from this weather into some other weather.</string>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QDoubleSpinBox" name="thunderEndFadeSpinbox">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="decimals">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QDoubleSpinBox" name="thunderFrequencySpinbox">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="decimals">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_48">
+            <property name="text">
+             <string>Lightning Color:</string>
+            </property>
+            <property name="buddy">
+             <cstring>lightningColor</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1" alignment="Qt::AlignLeft">
+           <widget class="DKColorPickerButton" name="lightningColor"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <spacer name="horizontalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>427</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="3" column="0">
+        <spacer name="verticalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>211</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabSounds">
+      <attribute name="title">
+       <string>Sounds</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_15">
+       <item row="0" column="1">
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QPushButton" name="buttonSoundsAdd">
+           <property name="text">
+            <string>Add</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonSoundsRemove">
+           <property name="text">
+            <string>Remove</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_6">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QGroupBox" name="currentSoundGroupbox">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="title">
+          <string>Selected Sound</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_16">
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_50">
+            <property name="text">
+             <string>Type:</string>
+            </property>
+            <property name="buddy">
+             <cstring>currentSoundType</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="currentSoundType"/>
+          </item>
+          <item row="1" column="2">
+           <spacer name="horizontalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_51">
+            <property name="text">
+             <string>Form:</string>
+            </property>
+            <property name="buddy">
+             <cstring>currentSoundForm</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" colspan="2">
+           <widget class="DKFormPicker" name="currentSoundForm">
+            <property name="allowNone">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QTableView" name="sounds"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabEffects">
+      <attribute name="title">
+       <string>Effects</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_19" rowstretch="0,1">
+       <item row="0" column="1">
+        <widget class="QGroupBox" name="groupBox_8">
+         <property name="title">
+          <string>Aurora</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_18">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_54">
+            <property name="text">
+             <string>Model:</string>
+            </property>
+            <property name="buddy">
+             <cstring>aurora</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="DKFormNIFPicker" name="aurora"/>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagAuroraFollowsSun">
+            <property name="text">
+             <string>Follows Sun Position</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagAuroraAlwaysVisible">
+            <property name="text">
+             <string>Always Visible</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <spacer name="verticalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="vfxGroupbox">
+         <property name="title">
+          <string>Visual Effect</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_17">
+          <item row="1" column="1">
+           <widget class="QSlider" name="vfxBeginSlider">
+            <property name="whatsThis">
+             <string>Control when this visual effect begins to appear, during a transition from some other weather into this one.</string>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSlider" name="vfxEndSlider">
+            <property name="whatsThis">
+             <string>Control when this visual effect stops appearing, during a transition from this weather into some other weather.</string>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_53">
+            <property name="text">
+             <string>End:</string>
+            </property>
+            <property name="buddy">
+             <cstring>vfxEndSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_52">
+            <property name="text">
+             <string>Begin:</string>
+            </property>
+            <property name="buddy">
+             <cstring>vfxBeginSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QDoubleSpinBox" name="vfxBeginSpinbox">
+            <property name="whatsThis">
+             <string>Control when this visual effect begins to appear, during a transition from some other weather into this one.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="decimals">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QDoubleSpinBox" name="vfxEndSpinbox">
+            <property name="whatsThis">
+             <string>Control when this visual effect stops appearing, during a transition from this weather into some other weather.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="decimals">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <double>100.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0" colspan="3">
+           <widget class="DKFormPicker" name="vfxForm"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QGroupBox" name="groupBox_9">
+           <property name="title">
+            <string>Sky Statics</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_20">
+            <item row="0" column="0">
+             <widget class="DKFormListPane" name="skyStatics">
+              <property name="showFormTypes">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="volumetricGroupbox">
+           <property name="title">
+            <string>Volumetric Lighting</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_21">
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_58">
+              <property name="text">
+               <string>Nighttime:</string>
+              </property>
+              <property name="buddy">
+               <cstring>volumetricNighttime</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_55">
+              <property name="text">
+               <string>Sunrise:</string>
+              </property>
+              <property name="buddy">
+               <cstring>volumetricSunrise</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <spacer name="verticalSpacer_8">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_57">
+              <property name="text">
+               <string>Sunset:</string>
+              </property>
+              <property name="buddy">
+               <cstring>volumetricSunset</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_56">
+              <property name="text">
+               <string>Daytime:</string>
+              </property>
+              <property name="buddy">
+               <cstring>volumetricDaytime</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="DKFormPicker" name="volumetricSunrise"/>
+            </item>
+            <item row="1" column="1">
+             <widget class="DKFormPicker" name="volumetricDaytime"/>
+            </item>
+            <item row="2" column="1">
+             <widget class="DKFormPicker" name="volumetricSunset"/>
+            </item>
+            <item row="3" column="1">
+             <widget class="DKFormPicker" name="volumetricNighttime"/>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKFloatSlider</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFloatSlider.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKColorPickerButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKColorPickerButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormListPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormListPane.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKGameFilePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKGameFilePicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormNIFPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormNIFPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKTextureAssetPane</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKTextureAssetPane.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>tabbox</tabstop>
+  <tabstop>currentCloudLayerIndex</tabstop>
+  <tabstop>currentCloudLayerEnabled</tabstop>
+  <tabstop>currentCloudLayerTexture</tabstop>
+  <tabstop>currentCloudLayerSpeedXSlider</tabstop>
+  <tabstop>currentCloudLayerSpeedXSpinbox</tabstop>
+  <tabstop>currentCloudLayerSpeedYSlider</tabstop>
+  <tabstop>currentCloudLayerSpeedYSpinbox</tabstop>
+  <tabstop>currentCloudLayerColorSunrise</tabstop>
+  <tabstop>currentCloudLayerColorDaytime</tabstop>
+  <tabstop>currentCloudLayerColorSunset</tabstop>
+  <tabstop>currentCloudLayerColorNighttime</tabstop>
+  <tabstop>currentCloudLayerAlphaSunrise</tabstop>
+  <tabstop>currentCloudLayerAlphaDaytime</tabstop>
+  <tabstop>currentCloudLayerAlphaSunset</tabstop>
+  <tabstop>currentCloudLayerAlphaNighttime</tabstop>
+  <tabstop>fogDistNearDay</tabstop>
+  <tabstop>fogDistNearNight</tabstop>
+  <tabstop>fogDistFarDay</tabstop>
+  <tabstop>fogDistFarNight</tabstop>
+  <tabstop>fogDistPowerDay</tabstop>
+  <tabstop>fogDistPowerNight</tabstop>
+  <tabstop>fogDistMaxDay</tabstop>
+  <tabstop>fogDistMaxNight</tabstop>
+  <tabstop>windDirSlider</tabstop>
+  <tabstop>windDirSpinbox</tabstop>
+  <tabstop>windDirRangeSlider</tabstop>
+  <tabstop>windDirRangeSpinbox</tabstop>
+  <tabstop>windSpeedSlider</tabstop>
+  <tabstop>windSpeedSpinbox</tabstop>
+  <tabstop>sunGlareSlider</tabstop>
+  <tabstop>sunGlareSpinbox</tabstop>
+  <tabstop>sunDamageSlider</tabstop>
+  <tabstop>sunDamageSpinbox</tabstop>
+  <tabstop>transDeltaSlider</tabstop>
+  <tabstop>transDeltaSpinbox</tabstop>
+  <tabstop>colorAmbientSunrise</tabstop>
+  <tabstop>colorAmbientDaytime</tabstop>
+  <tabstop>colorAmbientSunset</tabstop>
+  <tabstop>colorAmbientNighttime</tabstop>
+  <tabstop>colorCloudLODAmbientSunrise</tabstop>
+  <tabstop>colorCloudLODAmbientDaytime</tabstop>
+  <tabstop>colorCloudLODAmbientSunset</tabstop>
+  <tabstop>colorCloudLODAmbientNighttime</tabstop>
+  <tabstop>colorCloudLODDiffuseSunrise</tabstop>
+  <tabstop>colorCloudLODDiffuseDaytime</tabstop>
+  <tabstop>colorCloudLODDiffuseSunset</tabstop>
+  <tabstop>colorCloudLODDiffuseNighttime</tabstop>
+  <tabstop>colorEffectSunrise</tabstop>
+  <tabstop>colorEffectDaytime</tabstop>
+  <tabstop>colorEffectSunset</tabstop>
+  <tabstop>colorEffectNighttime</tabstop>
+  <tabstop>colorFogNearSunrise</tabstop>
+  <tabstop>colorFogNearDaytime</tabstop>
+  <tabstop>colorFogNearSunset</tabstop>
+  <tabstop>colorFogNearNighttime</tabstop>
+  <tabstop>colorFogFarSunrise</tabstop>
+  <tabstop>colorFogFarDaytime</tabstop>
+  <tabstop>colorFogFarSunset</tabstop>
+  <tabstop>colorFogFarNighttime</tabstop>
+  <tabstop>colorSkyUpperSunrise</tabstop>
+  <tabstop>colorSkyUpperDaytime</tabstop>
+  <tabstop>colorSkyUpperSunset</tabstop>
+  <tabstop>colorSkyUpperNighttime</tabstop>
+  <tabstop>colorSkyLowerSunrise</tabstop>
+  <tabstop>colorSkyLowerDaytime</tabstop>
+  <tabstop>colorSkyLowerSunset</tabstop>
+  <tabstop>colorSkyLowerNighttime</tabstop>
+  <tabstop>colorSkyStaticsSunrise</tabstop>
+  <tabstop>colorSkyStaticsDaytime</tabstop>
+  <tabstop>colorSkyStaticsSunset</tabstop>
+  <tabstop>colorSkyStaticsNighttime</tabstop>
+  <tabstop>colorHorizonSunrise</tabstop>
+  <tabstop>colorHorizonDaytime</tabstop>
+  <tabstop>colorHorizonSunset</tabstop>
+  <tabstop>colorHorizonNighttime</tabstop>
+  <tabstop>colorGlareSunSunrise</tabstop>
+  <tabstop>colorGlareSunDaytime</tabstop>
+  <tabstop>colorGlareSunSunset</tabstop>
+  <tabstop>colorGlareSunNighttime</tabstop>
+  <tabstop>colorGlareMoonSunrise</tabstop>
+  <tabstop>colorGlareMoonDaytime</tabstop>
+  <tabstop>colorGlareMoonSunset</tabstop>
+  <tabstop>colorGlareMoonNighttime</tabstop>
+  <tabstop>colorSunSunrise</tabstop>
+  <tabstop>colorSunDaytime</tabstop>
+  <tabstop>colorSunSunset</tabstop>
+  <tabstop>colorSunNighttime</tabstop>
+  <tabstop>colorSunlightSunrise</tabstop>
+  <tabstop>colorSunlightDaytime</tabstop>
+  <tabstop>colorSunlightSunset</tabstop>
+  <tabstop>colorSunlightNighttime</tabstop>
+  <tabstop>colorStarsSunrise</tabstop>
+  <tabstop>colorStarsDaytime</tabstop>
+  <tabstop>colorStarsSunset</tabstop>
+  <tabstop>colorStarsNighttime</tabstop>
+  <tabstop>colorWaterSunrise</tabstop>
+  <tabstop>colorWaterDaytime</tabstop>
+  <tabstop>colorWaterSunset</tabstop>
+  <tabstop>colorWaterNighttime</tabstop>
+  <tabstop>colorUnusedSunrise</tabstop>
+  <tabstop>colorUnusedDaytime</tabstop>
+  <tabstop>colorUnusedSunset</tabstop>
+  <tabstop>colorUnusedNighttime</tabstop>
+  <tabstop>dalcXPosSunrise</tabstop>
+  <tabstop>dalcXPosDaytime</tabstop>
+  <tabstop>dalcXPosSunset</tabstop>
+  <tabstop>dalcXPosNighttime</tabstop>
+  <tabstop>dalcXNegSunrise</tabstop>
+  <tabstop>dalcXNegDaytime</tabstop>
+  <tabstop>dalcXNegSunset</tabstop>
+  <tabstop>dalcXNegNighttime</tabstop>
+  <tabstop>dalcYPosSunrise</tabstop>
+  <tabstop>dalcYPosDaytime</tabstop>
+  <tabstop>dalcYPosSunset</tabstop>
+  <tabstop>dalcYPosNighttime</tabstop>
+  <tabstop>dalcYNegSunrise</tabstop>
+  <tabstop>dalcYNegDaytime</tabstop>
+  <tabstop>dalcYNegSunset</tabstop>
+  <tabstop>dalcYNegNighttime</tabstop>
+  <tabstop>dalcZPosSunrise</tabstop>
+  <tabstop>dalcZPosDaytime</tabstop>
+  <tabstop>dalcZPosSunset</tabstop>
+  <tabstop>dalcZPosNighttime</tabstop>
+  <tabstop>dalcZNegSunrise</tabstop>
+  <tabstop>dalcZNegDaytime</tabstop>
+  <tabstop>dalcZNegSunset</tabstop>
+  <tabstop>dalcZNegNighttime</tabstop>
+  <tabstop>dalcSpecularSunrise</tabstop>
+  <tabstop>dalcSpecularDaytime</tabstop>
+  <tabstop>dalcSpecularSunset</tabstop>
+  <tabstop>dalcSpecularNighttime</tabstop>
+  <tabstop>dalcFresnelSunrise</tabstop>
+  <tabstop>dalcFresnelDaytime</tabstop>
+  <tabstop>dalcFresnelSunset</tabstop>
+  <tabstop>dalcFresnelNighttime</tabstop>
+  <tabstop>weatherClass</tabstop>
+  <tabstop>precipitationForm</tabstop>
+  <tabstop>precipitationBeginFadeSlider</tabstop>
+  <tabstop>precipitationBeginFadeSpinbox</tabstop>
+  <tabstop>precipitationEndFadeSlider</tabstop>
+  <tabstop>precipitationEndFadeSpinbox</tabstop>
+  <tabstop>thunderBeginFadeSlider</tabstop>
+  <tabstop>thunderBeginFadeSpinbox</tabstop>
+  <tabstop>thunderEndFadeSlider</tabstop>
+  <tabstop>thunderEndFadeSpinbox</tabstop>
+  <tabstop>thunderFrequencySlider</tabstop>
+  <tabstop>thunderFrequencySpinbox</tabstop>
+  <tabstop>lightningColor</tabstop>
+  <tabstop>sounds</tabstop>
+  <tabstop>buttonSoundsAdd</tabstop>
+  <tabstop>buttonSoundsRemove</tabstop>
+  <tabstop>currentSoundForm</tabstop>
+  <tabstop>currentSoundType</tabstop>
+  <tabstop>vfxForm</tabstop>
+  <tabstop>vfxBeginSlider</tabstop>
+  <tabstop>vfxBeginSpinbox</tabstop>
+  <tabstop>vfxEndSlider</tabstop>
+  <tabstop>vfxEndSpinbox</tabstop>
+  <tabstop>aurora</tabstop>
+  <tabstop>flagAuroraAlwaysVisible</tabstop>
+  <tabstop>flagAuroraFollowsSun</tabstop>
+  <tabstop>skyStatics</tabstop>
+  <tabstop>volumetricSunrise</tabstop>
+  <tabstop>volumetricDaytime</tabstop>
+  <tabstop>volumetricSunset</tabstop>
+  <tabstop>volumetricNighttime</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

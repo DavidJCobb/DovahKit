@@ -52,7 +52,7 @@ namespace dovah::loaded_forms {
          std::string icon; // ICON
          struct {
             float skill_use_mult       = 1; // AVSK+0x00
-            float skill_offset_mult    = 1; // AVSK+0x04
+            float skill_use_offset     = 0; // AVSK+0x04
             float skill_improve_mult   = 1; // AVSK+0x08
             float skill_improve_offset = 0; // AVSK+0x0C
             skill_category category = skill_category::none; // CNAM

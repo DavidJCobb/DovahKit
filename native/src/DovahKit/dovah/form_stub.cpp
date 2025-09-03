@@ -117,6 +117,7 @@ namespace dovah {
             // class a bit differently, since hardcoded forms don't come from a "real" file.
             //
             this->form = instantiate_hardcoded_form(*this);
+            assert(this->form != nullptr && "If this assertion fails, then we have an unimplemented hardcoded form!");
          } else {
             if (arr[0].offset == 0)
                return loaded_form_ptr<loaded_forms::Form>(this); // file has no actual data (unsaved new active file, etc.). skip it

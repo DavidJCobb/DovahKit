@@ -9,6 +9,8 @@
 #include "./components/papyrus.h"
 #include "./structs/color_dword.h"
 #include "./structs/directional_ambient_lighting_colors.h"
+#include "./structs/weather_wind_speed.h"
+#include "./structs/weather_transition_threshold.h"
 
 namespace dovah::loaded_forms {
    class Weather : public Form {
@@ -31,8 +33,15 @@ namespace dovah::loaded_forms {
                cloud_layer_time_params night;
             } time_of_day;
             struct {
-               uint8_t x = 0; // QNAM
-               uint8_t y = 0; // RNAM (or ONAM for legacy)
+               //
+               // To   serialized: v * 10 * 127 + 127
+               // From serialized: (v - 127) / 127 / 10
+               // 
+               // Range: [0, 255] serialized; [-0.1, 0.1]
+               // Step:  roughly 8e-4
+               //
+               structs::weather_wind_speed x = 0; // QNAM // to serialized: v * 10 * 127 + 127; ergo bounds are: 
+               structs::weather_wind_speed y = 0; // RNAM (or ONAM for legacy)
             } speed;
          };
 
@@ -60,6 +69,19 @@ namespace dovah::loaded_forms {
             form_reference_t   form; // SNAM+0x00 -> SNDR/SOUN
             weather_sound_type type = weather_sound_type::default_; // SNAM+0x04
          };
+
+         struct weather_flag {
+            weather_flag() = delete;
+            enum type : uint8_t {
+               class_pleasant = 1 << 0,
+               class_cloudy   = 1 << 1,
+               class_rainy    = 1 << 2,
+               class_snowy    = 1 << 3,
+               aurora_always_visible = 1 << 4,
+               aurora_follows_sun    = 1 << 5,
+            };
+         };
+         using weather_flags_t = std::underlying_type_t<weather_flag::type>;
 
       public:
          components::papyrus_attachment_data script_data; // VMAD
@@ -127,21 +149,19 @@ namespace dovah::loaded_forms {
          std::vector<weather_sound>    sounds;      // SNAM[]
          std::optional<volumetric_lighting> volumetric; // HNAM (SSE-only)
          //
-         uint8_t flags = 0; // DATA+0x0B
+         weather_flags_t flags = 0; // DATA+0x0B
          struct {
             form_reference_t form; // MNAM -> SPGD
-            uint8_t begin_fade_in; // DATA+0x06
-            uint8_t end_fade_out;  // DATA+0x07
+            structs::weather_transition_threshold_pair transition; // DATA+0x06, DATA+0x07
          } precipitation;
          struct {
             form_reference_t lens_flare; // GNAM -> LENS (SSE-only)
-            uint8_t glare; // DATA+0x04
-            uint8_t damage; // DATA+0x05
+            uint8_t glare;  // DATA+0x04 // exposed in CK as a float in the range [0, 1]
+            uint8_t damage; // DATA+0x05 // exposed in CK as a float in the range [0, 1]
          } sun;
          struct {
-            uint8_t begin_fade_in; // DATA+0x08
-            uint8_t end_fade_out; // DATA+0x09
-            uint8_t frequency; // DATA+0x0A
+            structs::weather_transition_threshold_pair transition; // DATA+0x08, DATA+0x09
+            uint8_t frequency; // DATA+0x0A // inverted: 255 = low; 0 = high
             struct {
                uint8_t r; // DATA+0x0C
                uint8_t g; // DATA+0x0D
@@ -150,17 +170,16 @@ namespace dovah::loaded_forms {
          } thunderstorm;
          struct {
             form_reference_t form; // NNAM -> RFCT
-            uint8_t begin_fade_in; // DATA+0x0F // [0, 1]
-            uint8_t end_fade_out;  // DATA+0x10 // [0, 1]
+            structs::weather_transition_threshold_pair transition; // DATA+0x0F, DATA+0x10
          } visual_effect;
          struct {
             struct {
                uint8_t base;     // DATA+0x11 // [0, 360]
-               uint8_t variance; // DATA+0x12 // [0, 100]
+               uint8_t variance; // DATA+0x12 // [0, 180]
             } direction;
             uint8_t speed; // DATA+0x00
          } wind;
-         uint8_t trans_delta; // DATA+0x03
+         uint8_t trans_delta; // DATA+0x03 // normalized to the range [fWeatherTransMin, fWeatherTransMax] (default: [0.01, 0.25])
 
       public:
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);

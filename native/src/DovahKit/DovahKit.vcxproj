@@ -289,6 +289,7 @@
     <ClCompile Include="dovah\forms\structs\typed_package_info\patrol.cpp" />
     <ClCompile Include="dovah\forms\structs\typed_package_info\use_item_at.cpp" />
     <ClCompile Include="dovah\forms\structs\typed_package_info\use_weapon.cpp" />
+    <ClCompile Include="dovah\forms\structs\weather_wind_speed.cpp" />
     <ClCompile Include="dovah\forms\structs\world_large_ref_data.cpp" />
     <ClCompile Include="dovah\forms\structs\movement_type_speeds.cpp" />
     <ClCompile Include="dovah\forms\structs\world_max_height_data.cpp" />
@@ -901,6 +902,9 @@
     <ClCompile Include="ui\form_windows\actor_base\FaceComplexionPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\FaceHairColorPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\actor_base\FaceTintColorPickerFilter.cpp" />
+    <ClCompile Include="ui\form_windows\actor_value_info.cpp" />
+    <ClCompile Include="ui\form_windows\actor_value_info\FormSubdialogActorValueInfoPerkTree.cpp" />
+    <ClCompile Include="ui\form_windows\actor_value_info\SkillTreeVisualEditor.cpp" />
     <ClCompile Include="ui\form_windows\addon_node.cpp" />
     <ClCompile Include="ui\form_windows\ammo.cpp" />
     <ClCompile Include="ui\form_windows\animation_prop.cpp" />
@@ -1047,6 +1051,9 @@
     <ClCompile Include="ui\form_windows\voicetype.cpp" />
     <ClCompile Include="ui\form_windows\water_type.cpp" />
     <ClCompile Include="ui\form_windows\weapon.cpp" />
+    <ClCompile Include="ui\form_windows\weather.cpp" />
+    <ClCompile Include="ui\form_windows\weather\WeatherIntpackedFloatEditor.cpp" />
+    <ClCompile Include="ui\form_windows\weather\WeatherSoundsModel.cpp" />
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
     <ClCompile Include="ui\generic\QItemSelectionModelEx.cpp" />
@@ -1537,6 +1544,8 @@
     <ClInclude Include="dovah\forms\structs\typed_package_info\use_item_at.h" />
     <ClInclude Include="dovah\forms\structs\typed_package_info\use_weapon.h" />
     <ClInclude Include="dovah\forms\structs\typed_package_info\_all.h" />
+    <ClInclude Include="dovah\forms\structs\weather_transition_threshold.h" />
+    <ClInclude Include="dovah\forms\structs\weather_wind_speed.h" />
     <ClInclude Include="dovah\forms\structs\world_large_ref_data.h" />
     <ClInclude Include="dovah\forms\structs\movement_type_speeds.h" />
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h" />
@@ -1829,6 +1838,9 @@
     <QtMoc Include="ui\form_windows\armor.h" />
     <QtMoc Include="ui\form_windows\armor_addon.h" />
     <QtMoc Include="ui\form_windows\armor_addon\ArmorAddonAdditionalRacesModel.h" />
+    <QtMoc Include="ui\form_windows\actor_value_info\SkillTreeVisualEditor.h" />
+    <QtMoc Include="ui\form_windows\actor_value_info\FormSubdialogActorValueInfoPerkTree.h" />
+    <QtMoc Include="ui\form_windows\actor_value_info.h" />
     <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h" />
     <QtMoc Include="ui\form_windows\climate\FormSubdialogClimateWeather.h" />
     <QtMoc Include="ui\form_windows\encounter_zone.h" />
@@ -2009,6 +2021,9 @@
     <QtMoc Include="ui\form_windows\weapon.h" />
     <QtMoc Include="ui\form_windows\tree.h" />
     <QtMoc Include="ui\form_windows\water_type.h" />
+    <QtMoc Include="ui\form_windows\weather.h" />
+    <ClInclude Include="ui\form_windows\weather\WeatherIntpackedFloatEditor.h" />
+    <ClInclude Include="ui\form_windows\weather\WeatherSoundsModel.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_float_slider.h" />
@@ -3320,6 +3335,7 @@
     <QtUic Include="ui\form_windows\actor_action.ui" />
     <QtUic Include="ui\form_windows\actor_base.ui" />
     <QtUic Include="ui\form_windows\actor_value_info.ui" />
+    <QtUic Include="ui\form_windows\actor_value_info\FormSubdialogActorValueInfoPerkTree.ui" />
     <QtUic Include="ui\form_windows\addon_node.ui" />
     <QtUic Include="ui\form_windows\ammo.ui" />
     <QtUic Include="ui\form_windows\animation_prop.ui" />
@@ -3431,6 +3447,7 @@
     <QtUic Include="ui\form_windows\volumetric_lighting.ui" />
     <QtUic Include="ui\form_windows\water_type.ui" />
     <QtUic Include="ui\form_windows\weapon.ui" />
+    <QtUic Include="ui\form_windows\weather.ui" />
     <QtUic Include="ui\form_windows\word_of_power.ui" />
     <QtUic Include="ui\main_window.ui" />
     <QtUic Include="ui\main_window\cell_view.ui" />

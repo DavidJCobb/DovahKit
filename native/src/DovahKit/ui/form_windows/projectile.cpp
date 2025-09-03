@@ -14,7 +14,7 @@ FormDialogProjectile::FormDialogProjectile(dovah::form_stub& stub, QWidget* pare
    }
 
    this->ui.light->setAllowedFormType(dovah::form_type::light);
-   this->ui.defaultSource->setAllowedFormType(dovah::form_type::weapon);
+   this->ui.defaultWeaponSource->setAllowedFormType(dovah::form_type::weapon);
    this->ui.decalData->setAllowedFormType(dovah::form_type::texture_set);
    this->ui.flybySound->setAllowedFormType(dovah::form_type::sound_descriptor);
    this->ui.muzzleFlashLight->setAllowedFormType(dovah::form_type::light);
@@ -54,7 +54,7 @@ void FormDialogProjectile::_load_impl() {
    this->ui.model->initializeFrom(working.model);
    this->ui.destructionData->initializeFrom(working.destruction_data);
    ui::bind(this->ui.light, working.light, working);
-   ui::bind(this->ui.defaultSource,  working.default_weapon_source, working);
+   ui::bind(this->ui.defaultWeaponSource,  working.default_weapon_source, working);
    ui::bind(this->ui.decalData, working.decal, working);
    ui::bind(this->ui.flagSupersonic, working.flags, loaded_form_type::flag::supersonic);
    ui::bind(this->ui.flybySound, working.sounds.flyby, working);
@@ -71,19 +71,19 @@ void FormDialogProjectile::_load_impl() {
 
    ui::bind(this->ui.muzzleFlash, working.flags, loaded_form_type::flag::muzzle_flash);
    ui::bind(this->ui.muzzleFlashLight, working.muzzle_flash.light, working);
-   ui::bind(this->ui.muzzleFlashEffect, working.muzzle_flash.model, working);
+   this->ui.muzzleFlashEffect->initializeFrom(working.muzzle_flash.model);
    ui::bind(this->ui.muzzleFlashDuration, working.muzzle_flash.duration);
    //
-   ui::bind(this->ui.explosion, working.flags, loaded_form_type::flag::explosion);
+   ui::bind(this->ui.explosionSettings, working.flags, loaded_form_type::flag::explosion);
    ui::bind(this->ui.explosionForm, working.explosion.form, working);
    ui::bind(this->ui.explosionTriggerAlt, working.flags, loaded_form_type::flag::alt_trigger);
    ui::bind(this->ui.explosionTimer, working.explosion.alt_trigger.timer);
    ui::bind(this->ui.explosionProximity, working.explosion.alt_trigger.proximity);
-   ui::bind(this->ui.countdownSound, working.sounds.countdown, working);
+   ui::bind(this->ui.explosionCountdownSound, working.sounds.countdown, working);
    //
    ui::bind(this->ui.collisionLayer, working.collision_layer, working);
    ui::bind(this->ui.flagHitscan, working.flags, loaded_form_type::flag::hitscan);
-   ui::bind(this->ui.flagCanDisarm, working.flags, loaded_form_type::flag::can_be_disabled);
+   ui::bind(this->ui.flagCanBeDisarmed, working.flags, loaded_form_type::flag::can_be_disabled);
    ui::bind(this->ui.disarmSound, working.sounds.disarm, working);
    ui::bind(this->ui.flagCanBePickedUp, working.flags, loaded_form_type::flag::can_be_taken);
    ui::bind(this->ui.flagCritPinsLimbs, working.flags, loaded_form_type::flag::pins_limbs);
@@ -105,4 +105,6 @@ void FormDialogProjectile::_save_impl() {
    editor.assign_localized_string(working.name, this->ui.name->text());
    this->ui.model->commitTo(working.model, working);
    this->ui.destructionData->commitTo(working.destruction_data, working);
+
+   this->ui.muzzleFlashEffect->commitTo(working.muzzle_flash.model, working);
 }

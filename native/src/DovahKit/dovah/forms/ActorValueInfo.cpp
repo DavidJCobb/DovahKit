@@ -37,7 +37,7 @@ namespace dovah::loaded_forms {
                break;
             case 'AVSK':
                subrecord.read(this->skill_info.skill_use_mult);
-               subrecord.read(this->skill_info.skill_offset_mult);
+               subrecord.read(this->skill_info.skill_use_offset);
                subrecord.read(this->skill_info.skill_improve_mult);
                subrecord.read(this->skill_info.skill_improve_offset);
                break;
@@ -213,7 +213,7 @@ namespace dovah::loaded_forms {
       {
          auto& subrecord = record.open_next_subrecord('AVSK');
          subrecord.write(this->skill_info.skill_use_mult);
-         subrecord.write(this->skill_info.skill_offset_mult);
+         subrecord.write(this->skill_info.skill_use_offset);
          subrecord.write(this->skill_info.skill_improve_mult);
          subrecord.write(this->skill_info.skill_improve_offset);
          subrecord.close();

@@ -30,12 +30,14 @@ void CLASS_NAME::_load_form_data() {
       return;
    if constexpr (uses_working_copy) {
       this->_destination_form = this->stub->load().ptr_cast<loaded_form_type>();
+      assert(this->_destination_form != nullptr);
       if (!this->form) {
          this->form = (loaded_form_type*) this->stub->create_working_copy();
          assert(this->form != nullptr);
       }
    } else {
       this->form = this->stub->load().ptr_cast<loaded_form_type>();
+      assert(this->form != nullptr);
    }
 }
 

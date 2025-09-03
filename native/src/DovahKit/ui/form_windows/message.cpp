@@ -9,7 +9,15 @@ FormDialogMessage::FormDialogMessage(dovah::form_stub& stub, QWidget* parent) : 
    this->initialize(stub);
 
    this->ui.owningQuest->setAllowedFormType(dovah::form_type::quest);
-   QObject::connect(this->ui.owningQuest, &DKFormPicker::formChanged, this->ui.buttonConditions, &DKConditionList::overrideOwningForm);
+   QObject::connect(this->ui.owningQuest, &DKFormPicker::formChanged, this->ui.buttonConditions, [this](dovah::form_stub* stub) {
+      auto* widget = this->ui.buttonConditions;
+      if (stub) {
+         auto loaded = stub->load();
+         widget->overrideOwningForm(*loaded);
+      } else {
+         widget->overrideOwningForm(*this->form);
+      }
+   });
 
    {
       auto* model = this->_models.buttons = new MessageButtonsModel(this);

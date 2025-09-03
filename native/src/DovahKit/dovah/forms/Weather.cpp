@@ -66,18 +66,18 @@ namespace dovah::loaded_forms {
                break;
             case 'ONAM': // legacy RNAM
                for(size_t i = 0; i < this->clouds.layers.size(); ++i) {
-                  auto& v = this->clouds.layers[i].speed.y;
+                  auto& v = this->clouds.layers[i].speed.y.raw;
                   subrecord.read(v);
                   v = (v >> 1) + 0x7F;
                }
                break;
             case 'QNAM':
                for (auto& layer : this->clouds.layers)
-                  subrecord.read(layer.speed.x);
+                  subrecord.read(layer.speed.x.raw);
                break;
             case 'RNAM':
                for (auto& layer : this->clouds.layers)
-                  subrecord.read(layer.speed.y);
+                  subrecord.read(layer.speed.y.raw);
                break;
             case 'PNAM':
                if (current_layer_color < max_cloud_layer_count) {
@@ -123,17 +123,17 @@ namespace dovah::loaded_forms {
                subrecord.read(this->trans_delta);
                subrecord.read(this->sun.glare);
                subrecord.read(this->sun.damage);
-               subrecord.read(this->precipitation.begin_fade_in);
-               subrecord.read(this->precipitation.end_fade_out);
-               subrecord.read(this->thunderstorm.begin_fade_in);
-               subrecord.read(this->thunderstorm.end_fade_out);
+               subrecord.read(this->precipitation.transition.intro.raw);
+               subrecord.read(this->precipitation.transition.outro.raw);
+               subrecord.read(this->thunderstorm.transition.intro.raw);
+               subrecord.read(this->thunderstorm.transition.outro.raw);
                subrecord.read(this->thunderstorm.frequency);
                subrecord.read(this->flags);
                subrecord.read(this->thunderstorm.lightning_color.r);
                subrecord.read(this->thunderstorm.lightning_color.g);
                subrecord.read(this->thunderstorm.lightning_color.b);
-               subrecord.read(this->visual_effect.begin_fade_in);
-               subrecord.read(this->visual_effect.end_fade_out);
+               subrecord.read(this->visual_effect.transition.intro.raw);
+               subrecord.read(this->visual_effect.transition.outro.raw);
                subrecord.read(this->wind.direction.base);
                subrecord.read(this->wind.direction.variance);
                break;
@@ -385,15 +385,13 @@ namespace dovah::loaded_forms {
 
       copy->flags = this->flags;
       copy->precipitation.form.set(*copy, this->precipitation.form);
-      copy->precipitation.begin_fade_in = this->precipitation.begin_fade_in;
-      copy->precipitation.end_fade_out  = this->precipitation.end_fade_out;
+      copy->precipitation.transition = this->precipitation.transition;
       copy->sun.lens_flare.set(*copy, this->sun.lens_flare);
       copy->sun.glare  = this->sun.glare;
       copy->sun.damage = this->sun.damage;
       copy->thunderstorm = this->thunderstorm;
       copy->visual_effect.form.set(*copy, this->visual_effect.form);
-      copy->visual_effect.begin_fade_in = this->visual_effect.begin_fade_in;
-      copy->visual_effect.end_fade_out  = this->visual_effect.end_fade_out;
+      copy->visual_effect.transition = this->visual_effect.transition;
       copy->wind = this->wind;
       copy->trans_delta = this->trans_delta;
    }
@@ -416,13 +414,13 @@ namespace dovah::loaded_forms {
       {
          auto& subrecord = record.open_next_subrecord('RNAM');
          for (auto& layer : this->clouds.layers)
-            subrecord.write(layer.speed.y);
+            subrecord.write(layer.speed.y.raw);
          subrecord.close();
       }
       {
          auto& subrecord = record.open_next_subrecord('QNAM');
          for (auto& layer : this->clouds.layers)
-            subrecord.write(layer.speed.x);
+            subrecord.write(layer.speed.x.raw);
          subrecord.close();
       }
       for (auto& layer : this->clouds.layers) {
@@ -470,17 +468,17 @@ namespace dovah::loaded_forms {
          subrecord.write(this->trans_delta);
          subrecord.write(this->sun.glare);
          subrecord.write(this->sun.damage);
-         subrecord.write(this->precipitation.begin_fade_in);
-         subrecord.write(this->precipitation.end_fade_out);
-         subrecord.write(this->thunderstorm.begin_fade_in);
-         subrecord.write(this->thunderstorm.end_fade_out);
+         subrecord.write(this->precipitation.transition.intro.raw);
+         subrecord.write(this->precipitation.transition.outro.raw);
+         subrecord.write(this->thunderstorm.transition.intro.raw);
+         subrecord.write(this->thunderstorm.transition.outro.raw);
          subrecord.write(this->thunderstorm.frequency);
          subrecord.write(this->flags);
          subrecord.write(this->thunderstorm.lightning_color.r);
          subrecord.write(this->thunderstorm.lightning_color.g);
          subrecord.write(this->thunderstorm.lightning_color.b);
-         subrecord.write(this->visual_effect.begin_fade_in);
-         subrecord.write(this->visual_effect.end_fade_out);
+         subrecord.write(this->visual_effect.transition.intro.raw);
+         subrecord.write(this->visual_effect.transition.outro.raw);
          subrecord.write(this->wind.direction.base);
          subrecord.write(this->wind.direction.variance);
          subrecord.close();

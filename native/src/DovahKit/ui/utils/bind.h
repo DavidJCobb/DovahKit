@@ -57,6 +57,19 @@ namespace ui {
             target &= ~mask;
       });
    }
+   //
+   // Only recommended when you have two radio buttons which together control the 
+   // presence or absence of a single flag.
+   template<typename Target, typename Mask>
+   void bind(QRadioButton* widget, Target& target, Mask mask) {
+      widget->setChecked((target & mask) != 0);
+      QObject::connect(widget, &QRadioButton::toggled, widget, [&target, mask](bool checked) {
+         if (checked)
+            target |= mask;
+         else
+            target &= ~mask;
+      });
+   }
 
    //
    // Bind the opposite of a checkbox's state to a given flag.

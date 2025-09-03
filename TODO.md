@@ -125,6 +125,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | Magic | SHOU | Shout          | ✅ | ✅ | ✅ |
 | Magic | SPEL | Spell          | ✅ | ✅ | ⬛ |
 | Magic | WOOP | Word of Power  | ✅ | ✅ | ✅ |
+| Miscellaneous | AVIF | Actor Value | ✅ | 🟨 | ⬛ | Perk Tree editor is a WIP.|
 | Miscellaneous | ANIO | AnimObject      | ✅ | ✅ | ⬛ |
 | Miscellaneous | ARTO | ArtObject       | ✅ | ✅ | ⬛ |
 | Miscellaneous | COLL | Collision Layer | ✅ | ✅ | ⬛ |
@@ -161,7 +162,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | WorldData | SPGD | Shader Particle Geometry | ✅ | ✅ | ⬛ |
 | WorldData | RFCT | Visual Effect            | ✅ | ✅ | ⬛ |
 | WorldData | WATR | WaterType                | ✅ | ✅ | ⬛ |
-| WorldData | WTHR | Weather                  | ✅ | ⬛ | ⬛ |
+| WorldData | WTHR | Weather                  | ✅ | ✅ | ⬛ |
 | WorldObjects | ACTI | Activator     | ✅ | ✅ | ⬛ |
 | WorldObjects | CONT | Container     | ✅ | ✅ | ⬛ |
 | WorldObjects | DOOR | Door          | ✅ | ✅ | ⬛ |
@@ -184,7 +185,6 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | Cell Children | REFR | Reference | ✅ | 🟨 | 🟨 |
 | Singletons | DOBJ | Default Object Manager | ✅ | ✅ | ⬛ |
 | Singletons | NAVI | Navmesh Info Map | 🟩 |   | ⬛ | Can load and re-save; can't update/regenerate. |
-| | AVIF | Actor Value | ✅ | 🟨 | ⬛ | We'll also need a custom widget and dialog for Perk Trees. |
 | | CELL | Cell | ✅ | ✅ | 🟨 |
 | Menu: World | REGN | Region | ✅ | ⬛ | ⬛ |
 | | SCEN | Scene | ✅ | ✅ | ⬛ |
@@ -212,6 +212,9 @@ Static Collections are `BGSStaticCollection` with form type 0x23. The CK has a f
 * WRLD form UI
 * REFR form UI
 * PROJ
+
+## Frontend
+* `editor\subsystems\options\dovahkit_options.cpp`: We should save settings in a subfolder of `%APPDATA%`, not the application folder. I implemented this for RVT; I can rip the code from there.
 
 ## Backend
 

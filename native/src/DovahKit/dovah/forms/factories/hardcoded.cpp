@@ -10,6 +10,7 @@
 #include "../Activator.h"
 #include "../Actor.h"
 #include "../ActorBase.h"
+#include "../ActorValueInfo.h"
 #include "../Container.h"
 #include "../DefaultObjectManager.h"
 #include "../Form.h"
@@ -47,8 +48,11 @@ namespace dovah {
       // Next, we'll check the form ID. First, we'll look into the actor values.
       //
       for (auto& item : all_actor_value_info) {
-         if (stub.formID == item.formID)
-            return nullptr; // TODO: we need a class for these, and we'd need to instantiate the loaded-form data and return it here
+         if (stub.formID == item.formID) {
+            auto* form = new loaded_forms::ActorValueInfo(fcp);
+            form->name = std::move(std::string(item.name));
+            return form;
+         }
       }
       //
       // Now, some of the other forms have relationships to each other, which we'll need to set 

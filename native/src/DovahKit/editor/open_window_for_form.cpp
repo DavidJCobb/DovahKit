@@ -9,6 +9,7 @@
 #include "../ui/form_windows/activator.h"
 #include "../ui/form_windows/actor_action.h"
 #include "../ui/form_windows/actor_base.h"
+#include "../ui/form_windows/actor_value_info.h"
 #include "../ui/form_windows/addon_node.h"
 #include "../ui/form_windows/ammo.h"
 #include "../ui/form_windows/animation_prop.h"
@@ -93,6 +94,7 @@
 #include "../ui/form_windows/voicetype.h"
 #include "../ui/form_windows/water_type.h"
 #include "../ui/form_windows/weapon.h"
+#include "../ui/form_windows/weather.h"
 #include "../ui/form_windows/word_of_power.h"
 #include "ui/main_window.h" // MainWindow::get
 
@@ -106,6 +108,7 @@ namespace {
       std::pair{ dovah::form_type::activator,         _make<FormDialogActivator> },
       std::pair{ dovah::form_type::action,            _make<FormDialogActorAction> },
       std::pair{ dovah::form_type::actor_base,        _make<FormDialogActorBase> },
+      std::pair{ dovah::form_type::actor_value_info,  _make<FormDialogActorValueInfo> },
       std::pair{ dovah::form_type::addon_node,        _make<FormDialogAddOnNode> },
       std::pair{ dovah::form_type::ammo,              _make<FormDialogAmmo> },
       std::pair{ dovah::form_type::animation_prop,    _make<FormDialogAnimationProp> },
@@ -190,6 +193,7 @@ namespace {
       std::pair{ dovah::form_type::voicetype,         _make<FormDialogVoicetype> },
       std::pair{ dovah::form_type::water_type,        _make<FormDialogWaterType> },
       std::pair{ dovah::form_type::weapon,            _make<FormDialogWeapon> },
+      std::pair{ dovah::form_type::weather,           _make<FormDialogWeather> },
       std::pair{ dovah::form_type::word_of_power,     _make<FormDialogWordOfPower> },
    };
 
