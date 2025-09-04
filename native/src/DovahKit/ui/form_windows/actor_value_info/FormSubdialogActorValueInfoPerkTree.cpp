@@ -8,6 +8,31 @@ FormSubdialogActorValueInfoPerkTree::FormSubdialogActorValueInfoPerkTree(QWidget
    this->ui.scrollbox->setWidget(editor);
    editor->setContainingScrollArea(this->ui.scrollbox);
 
+   #pragma region Zoom
+      QObject::connect(this->ui.buttonZoomIn, &QPushButton::clicked, this, [this]() {
+         auto* widget = this->_widgets.editor;
+         auto  zoom   = widget->zoom();
+         if (zoom >= 10.0F) {
+            return;
+         }
+         zoom += 0.10F;
+         widget->setZoom(zoom);
+         this->ui.buttonZoomIn->setEnabled(zoom < 10.0F);
+         this->ui.buttonZoomOut->setEnabled(zoom > 0.1F);
+      });
+      QObject::connect(this->ui.buttonZoomOut, &QPushButton::clicked, this, [this]() {
+         auto* widget = this->_widgets.editor;
+         auto  zoom   = widget->zoom();
+         if (zoom <= 0.1F) {
+            return;
+         }
+         zoom -= 0.1F;
+         widget->setZoom(zoom);
+         this->ui.buttonZoomIn->setEnabled(zoom < 10.0F);
+         this->ui.buttonZoomOut->setEnabled(zoom > 0.1F);
+      });
+   #pragma endregion
+
    this->ui.currentNodePerk->setAllowedFormType(dovah::form_type::perk);
    this->ui.currentNodeSkill->setAllowedFormType(dovah::form_type::actor_value_info);
 

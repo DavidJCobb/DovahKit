@@ -33,30 +33,29 @@ class SkillTreeVisualEditor : public QWidget {
          bool parent_required = true;
       };
 
+      struct LineStyle {
+         QColor color     = QColor(0, 0, 0);
+         size_t thickness = 1;
+      };
+
       struct ConnectorStyle {
          struct {
-            QBrush fill = QColor(255, 255, 255);
-            struct {
-               QColor color     = QColor(0, 0, 0);
-               size_t thickness = 1;
-            } line;
+            QBrush    fill = QColor(255, 255, 255);
+            LineStyle line;
          } head;
-         struct {
-            QColor color     = QColor(0, 0, 0);
-            size_t thickness = 1;
-         } stem;
+         LineStyle stem;
       };
       struct NodeStyle {
-         QBrush fill   = QColor(128, 128, 128);
-         float  radius = 5;
+         QBrush    fill   = QColor(128, 128, 128);
+         float     radius = 5;
+         LineStyle line;
          struct {
-            QColor color     = QColor(0, 0, 0);
-            size_t thickness = 1;
-         } line;
-         struct {
-            float  distance = 7; // vertical displacement from point
-            QColor color    = QColor(0, 0, 0);
-            QFont  font;
+            float     distance = 7; // vertical displacement from point
+            QColor    color    = QColor(0, 0, 0);
+            QFont     font;
+            LineStyle line = {
+               .color = QColor(255, 255, 255),
+            };
          } text;
       };
 
@@ -111,7 +110,8 @@ class SkillTreeVisualEditor : public QWidget {
          virtual QSize minimumSizeHint() const override;
          virtual QSize sizeHint() const override;
 
-         virtual void contextMenuEvent(QContextMenuEvent* event) override;
+         virtual void contextMenuEvent(QContextMenuEvent*) override;
+         virtual void focusOutEvent(QFocusEvent*) override;
          virtual void mousePressEvent(QMouseEvent*) override;
          virtual void mouseMoveEvent(QMouseEvent*) override;
          virtual void mouseReleaseEvent(QMouseEvent*) override;
@@ -130,39 +130,22 @@ class SkillTreeVisualEditor : public QWidget {
       dovah::form_stub* _actor_value = nullptr;
       std::vector<std::unique_ptr<PerkNode>> _nodes;
       optional_node_id _selected_node_id;
+      //
       QPointer<QScrollArea> _scroll_area;
       float _zoom = 1.0F;
+      //
       struct {
+         QColor background = QColor(255, 255, 255);
          struct {
-            ConnectorStyle optional = {
-               .head = {
-                  .line = {
-                     .color = QColor(0, 140, 255)
-                  }
-               },
-               .stem = {
-                  .color = QColor(0, 140, 255)
-               }
-            };
+            ConnectorStyle optional;
             ConnectorStyle required;
          } connectors;
-         struct {
-            QColor color     = QColor(160, 160, 160);
-            size_t thickness = 1;
-         } gridline;
+         LineStyle gridline;
          struct {
             NodeStyle general;
-            NodeStyle selected = {
-               .fill = QColor(255, 0, 0),
-               .line = {
-                  .color = QColor(255, 0, 0),
-               },
-               .text = {
-                  .color = QColor(255, 0, 0),
-               }
-            };
+            NodeStyle selected;
          } nodes;
-         QMarginsF margins = { 20, 20, 20, 20 };
+         QMarginsF margins;
       } _style;
       struct {
          uint32_t row_count = 0;
@@ -172,9 +155,11 @@ class SkillTreeVisualEditor : public QWidget {
       struct {
          QMenu menu;
 
-         QAction* new_perk     = nullptr;
-         QAction* snap_to_grid = nullptr;
-         QAction* remove_perk  = nullptr;
+         QAction* new_perk         = nullptr;
+         QAction* new_connection   = nullptr;
+         QAction* sever_connection = nullptr;
+         QAction* snap_to_grid     = nullptr;
+         QAction* remove_perk      = nullptr;
       } _context_menu;
       struct {
          QPoint    mousedown_at; // widget-relative
@@ -182,6 +167,10 @@ class SkillTreeVisualEditor : public QWidget {
          QPoint    mouse_prev_pos; // screen-relative
          bool      is_panning   = false;
       } _mouse;
+      struct {
+         optional_node_id source_node;
+         bool is_connecting = true; // false == severing a connection
+      } _connecting;
 
       #pragma region Data (protected)
          PerkNode* _create_node_at(const QPoint& global_pos);
@@ -192,6 +181,13 @@ class SkillTreeVisualEditor : public QWidget {
 
          // If there's an existing node too close to `mapped_pos`, then nudges `mapped_pos` away.
          void _find_available_node_position(QPoint& mapped_pos, optional_node_id node_id_to_ignore = {});
+      #pragma endregion
+      #pragma region Node interactions
+         void _select_node(const PerkNode*);
+         bool _is_in_node_connection_interaction() const;
+         void _start_node_connection_interaction(const PerkNode&, bool connecting);
+         void _cancel_node_connection_interaction();
+         void _complete_node_connection_interaction(const PerkNode* dst);
       #pragma endregion
 
       // Map a point from global to canvas-relative, i.e. accounting for the current zoom 
@@ -204,6 +200,4 @@ class SkillTreeVisualEditor : public QWidget {
 
       void _update_cursor(const QMouseEvent*);
       void _update_geometry();
-
-      void _select_node(const PerkNode*);
 };

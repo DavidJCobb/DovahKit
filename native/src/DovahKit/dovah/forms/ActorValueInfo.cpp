@@ -35,6 +35,9 @@ namespace dovah::loaded_forms {
             case 'ANAM':
                subrecord.read(this->abbreviation);
                break;
+            case 'CNAM':
+               subrecord.read(this->skill_info.category);
+               break;
             case 'AVSK':
                subrecord.read(this->skill_info.skill_use_mult);
                subrecord.read(this->skill_info.skill_use_offset);

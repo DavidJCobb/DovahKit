@@ -2,6 +2,7 @@
 #include <QContextMenuEvent>
 #include <QEvent>
 #include <QPainter>
+#include <QPainterPath>
 #include "helpers/bitset.h"
 #include "helpers/math/rotation/unit_conversion.h"
 #include "helpers/math/cosine.h"
@@ -30,6 +31,19 @@ SkillTreeVisualEditor::SkillTreeVisualEditor(QWidget* parent) : QWidget(parent) 
    this->setAcceptDrops(true);
    this->setMouseTracking(true); // to update the cursor depending on what drawn boxes it's over
 
+   #pragma region Styles
+      this->_style.background = QColor(255, 255, 255);
+      {
+         auto& style = this->_style.connectors.optional;
+         style.head.line.color = style.stem.color = QColor(0, 140, 255);
+      }
+      this->_style.gridline.color = QColor(160, 160, 160);
+      {
+         auto& style = this->_style.nodes.selected;
+         style.fill = style.line.color = style.text.color = QColor(255, 0, 0);
+      }
+      this->_style.margins = { 20, 20, 20, 20 };
+   #pragma endregion
    #pragma region Form data updates
       auto& editor = DovahKitCore::get();
       QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
@@ -95,6 +109,30 @@ SkillTreeVisualEditor::SkillTreeVisualEditor(QWidget* parent) : QWidget(parent) 
          // We need to know where the user clicked, so this has to be done in the context menu 
          // event handler, not here.
          //
+      }
+      {
+         auto* action = actions.new_connection = new QAction(tr("Connect to other perk..."));
+         menu.addAction(action);
+         QObject::connect(action, &QAction::triggered, this, [this]() {
+            if (!this->_selected_node_id.has_value())
+               return;
+            auto* node = this->_node_by_id(this->_selected_node_id.value());
+            if (!node)
+               return;
+            this->_start_node_connection_interaction(*node, true);
+         });
+      }
+      {
+         auto* action = actions.sever_connection = new QAction(tr("Disconnect from other perk..."));
+         menu.addAction(action);
+         QObject::connect(action, &QAction::triggered, this, [this]() {
+            if (!this->_selected_node_id.has_value())
+               return;
+            auto* node = this->_node_by_id(this->_selected_node_id.value());
+            if (!node)
+               return;
+            this->_start_node_connection_interaction(*node, false);
+         });
       }
       {
          auto* action = actions.snap_to_grid = new QAction(tr("Snap to grid"));
@@ -467,7 +505,7 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
       return this->sizeHint();
    }
    /*virtual*/ QSize SkillTreeVisualEditor::sizeHint() const /*override*/ {
-      return this->_cached.size;
+      return this->_cached.size * this->_zoom;
    }
 
    /*virtual*/ void SkillTreeVisualEditor::contextMenuEvent(QContextMenuEvent* event) /*override*/ {
@@ -488,16 +526,29 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
       }
    }
 
+   /*virtual*/ void SkillTreeVisualEditor::focusOutEvent(QFocusEvent* event) /*override*/ {
+      this->_cancel_node_connection_interaction();
+      QWidget::focusOutEvent(event);
+   }
+
    /*virtual*/ void SkillTreeVisualEditor::mousePressEvent(QMouseEvent* event) /*override*/ {
       if (event->button() != Qt::LeftButton && event->button() != Qt::RightButton)
          return;
-      event->setAccepted(true);
 
       this->_mouse.mousedown_at   = event->localPos().toPoint();
       this->_mouse.mouse_prev_pos = event->screenPos().toPoint();
-      this->_mouse.mousedown_on   = this->_get_node_at_point(_map_from_global(event->globalPos()));
 
-      this->_select_node(this->_mouse.mousedown_on);
+      if (this->_is_in_node_connection_interaction()) {
+         auto* dst = this->_get_node_at_point(_map_from_global(event->globalPos()));
+         this->_complete_node_connection_interaction(dst);
+         return;
+      }
+
+      event->setAccepted(true);
+
+      this->_mouse.mousedown_on = this->_get_node_at_point(_map_from_global(event->globalPos()));
+      if (this->_mouse.mousedown_on)
+         this->_select_node(this->_mouse.mousedown_on);
    }
    /*virtual*/ void SkillTreeVisualEditor::mouseMoveEvent(QMouseEvent* event) /*override*/ {
       bool lmb = event->buttons() & Qt::LeftButton;
@@ -664,27 +715,32 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
 
    /*virtual*/ void SkillTreeVisualEditor::paintEvent(QPaintEvent* event) /*override*/ {
       QPainter painter(this);
+      painter.fillRect(painter.window(), this->_style.background);
+
       painter.translate(this->_style.margins.left(), this->_style.margins.top());
       painter.scale(this->_zoom, this->_zoom);
 
       const auto canvas_w = this->_cached.row_count * grid_cell_w;
       const auto canvas_h = this->_cached.col_count * grid_cell_h;
 
+      auto _set_line = [this, &painter](const LineStyle& style) {
+         QPen pen;
+         pen.setColor(style.color);
+         pen.setWidth(style.thickness);
+         if (style.thickness == 1 && this->_zoom < 1)
+            pen.setCosmetic(true);
+         painter.setPen(pen);
+      };
+
       #pragma region Gridlines
          painter.save();
          painter.setBrush(QBrush{});
          {
-            const int top    = -(this->_style.margins.top() / 2);
-            const int bottom = canvas_h + (this->_style.margins.bottom() / 2);
-            const int left   = -(this->_style.margins.left() / 2);
-            const int right  = canvas_w + (this->_style.margins.right() / 2);
-            {
-               QPen pen;
-               pen.setWidth(this->_style.gridline.thickness);
-               if (this->_style.gridline.thickness == 1)
-                  pen.setCosmetic(true);
-               painter.setPen(pen);
-            }
+            const int top    = 0;
+            const int bottom = canvas_h;
+            const int left   = 0;
+            const int right  = canvas_w;
+            _set_line(this->_style.gridline);
             {
                painter.save();
                for (uint32_t i = 0; i < this->_cached.row_count; ++i) {
@@ -705,6 +761,7 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
          }
          painter.restore();
       #pragma endregion
+      painter.setRenderHint(QPainter::Antialiasing);
       #pragma region Connecting lines for perks
          painter.save();
          for (auto& src_ptr : this->_nodes) {
@@ -730,45 +787,39 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
                if (!found)
                   continue;
 
-               const auto  dst_point = dst_ptr->_cached.centerpoint;
-               const auto& style     = (dst_ptr->data.parent_required) ? this->_style.connectors.required : this->_style.connectors.optional;
-               {
-                  QPen pen;
-                  pen.setColor(style.stem.color);
-                  pen.setWidth(style.stem.thickness);
-                  if (style.stem.thickness == 1)
-                     pen.setCosmetic(true);
-                  painter.setPen(pen);
-               }
+               const auto  dst_point  = dst_ptr->_cached.centerpoint;
+               const auto& style      = (dst_ptr->data.parent_required) ? this->_style.connectors.required : this->_style.connectors.optional;
+               const auto& node_style = (this->_selected_node_id == dst_ptr->id) ? this->_style.nodes.selected : this->_style.nodes.general;
+               _set_line(style.stem);
                painter.drawLine(src_point, dst_point);
                painter.setBrush(style.head.fill);
+               _set_line(style.head.line);
                {
-                  QPen pen;
-                  pen.setColor(style.head.line.color);
-                  pen.setWidth(style.head.line.thickness);
-                  if (style.head.line.thickness == 1)
-                     pen.setCosmetic(true);
-                  painter.setPen(pen);
-               }
-               {
-                  constexpr const float arrow_angle = cobb::degrees_to_radians_mult * 22.5F;
-                  constexpr const float arrow_cos   = cobb::cosine(arrow_angle);
-                  constexpr const float arrow_sin   = cobb::sine(arrow_angle);
+                  constexpr const float arrow_angle       = cobb::degrees_to_radians_mult * 22.5F;
+                  constexpr const float arrow_cos         = cobb::cosine(arrow_angle);
+                  constexpr const float arrow_sin         = cobb::sine(arrow_angle);
+                  constexpr const float arrow_side_length = 12;
 
-                  float dx  = dst_point.x() - src_point.x();
-                  float dy  = dst_point.y() - src_point.y();
-                  if (dx && dy) {
-                     float mag = sqrt(dx * dx + dy * dy);
-                     dx /= mag;
-                     dy /= mag;
+                  auto difference = (dst_point - src_point);
+                  auto direction  = difference;
+
+                  if (difference.x() || difference.y()) {
+                     float mag = sqrt(difference.x()*difference.x() + difference.y()*difference.y());
+                     direction /= mag;
                   } else {
-                     dx = 0;
-                     dy = 1;
+                     direction = { 0, 1 };
                   }
+                  const auto x_cos = direction.x() * arrow_cos;
+                  const auto x_sin = direction.x() * arrow_sin;
+                  const auto y_cos = direction.y() * arrow_cos;
+                  const auto y_sin = direction.y() * arrow_sin;
+
+                  const auto arrow_head_pos = dst_point - (direction * node_style.radius);
+
                   const QPointF points[] = {
-                     dst_point,
-                     { dst_point.x() + (dx*arrow_cos - dy*arrow_sin), dst_point.y() + (dy*arrow_cos - dx*arrow_sin) },
-                     { dst_point.x() + (dx*arrow_cos + dy*arrow_sin), dst_point.y() + (dy*arrow_cos - dx*arrow_sin) },
+                     arrow_head_pos,
+                     { arrow_head_pos.x() - (x_cos - y_sin)*arrow_side_length, arrow_head_pos.y() - (y_cos + x_sin)*arrow_side_length },
+                     { arrow_head_pos.x() - (x_cos + y_sin)*arrow_side_length, arrow_head_pos.y() - (y_cos - x_sin)*arrow_side_length },
                   };
                   painter.drawPolygon(points, std::extent<decltype(points)>::value);
                }
@@ -779,35 +830,26 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
       #pragma region Points, with the selected point last
          painter.save();
          {
-            auto _set_painter_circle_style = [&painter](const NodeStyle& style) {
+            auto _set_painter_circle_style = [&painter, &_set_line](const NodeStyle& style) {
                painter.setBrush(style.fill);
-               {
-                  QPen pen;
-                  pen.setColor(style.line.color);
-                  pen.setWidth(style.line.thickness);
-                  if (style.line.thickness == 1)
-                     pen.setCosmetic(true);
-                  painter.setPen(pen);
-               }
+               _set_line(style.line);
             };
-            auto _set_painter_text_style = [this, &painter](const NodeStyle& style) {
+            auto _set_painter_text_style = [this, &painter, &_set_line](const NodeStyle& style) {
                QFont font = style.text.font;
                font = font.resolve(this->font());
                painter.setFont(font);
 
-               QPen pen;
-               pen.setColor(style.text.color);
-               painter.setPen(pen);
+               painter.setBrush(style.text.color);
+               _set_line(style.text.line);
             };
-
-            QTextOption text_option;
-            text_option.setAlignment(Qt::AlignmentFlag::AlignHCenter | Qt::AlignmentFlag::AlignTop);
 
             const PerkNode* selected = nullptr;
             {
                const auto& style = this->_style.nodes.general;
 
                _set_painter_text_style(style);
+               const auto font_metrics = QFontMetrics(painter.font());
+               const auto font_ascent  = font_metrics.ascent();
                for (auto& src_ptr : this->_nodes) {
                   if (node_is_invisible(*src_ptr))
                      continue;
@@ -817,7 +859,43 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
                   }
                   auto point = src_ptr->_cached.centerpoint;
                   point.ry() += style.text.distance;
-                  painter.drawText(point.x(), point.y(), src_ptr->_cached.perk_editor_id);
+
+                  //
+                  // ME:
+                  // 
+                  // "I'd like to draw some text, aligned so the top-center of the bounding box 
+                  // is at these coordinates."
+                  // 
+                  // QPAINTER:
+                  // 
+                  // "Sounds good! Here are half a dozen functions that don't even attempt to 
+                  // meet that use case. The closest one I've got is a function that takes a 
+                  // QPointF and a QString, with no documentation as to what that QPointF is 
+                  // the position of. Odds are, the X is the text lefthand edge, and the Y is 
+                  // probably the baseline or top."
+                  // 
+                  // ME:
+                  // 
+                  // "Also, I'd like this fill color and this stroke color."
+                  // 
+                  // QPAINTER:
+                  // 
+                  // "Unfortunately, all of those half-dozen functions work differently from 
+                  // every similarly-named function for every other shape, and in fact do not 
+                  // allow this. The QPen, used as the stroke for every other shape, is used 
+                  // as a fill for text, and you don't get a stroke. Also no one bothered to 
+                  // document any of this"
+                  //
+                  QRect        bounds = font_metrics.boundingRect(src_ptr->_cached.perk_editor_id);
+                  QPainterPath path;
+                  path.addText(
+                     point.x() - bounds.width() / 2,
+                     point.y() + font_ascent,
+                     painter.font(),
+                     src_ptr->_cached.perk_editor_id
+                  );
+                  painter.strokePath(path, painter.pen());
+                  painter.fillPath(path, painter.brush());
                }
 
                _set_painter_circle_style(style);
@@ -833,10 +911,22 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
                const auto& style = this->_style.nodes.selected;
 
                _set_painter_text_style(style);
+               const auto font_metrics = QFontMetrics(painter.font());
+               const auto font_ascent = font_metrics.ascent();
                {
                   auto point = selected->_cached.centerpoint;
                   point.ry() += style.text.distance;
-                  painter.drawText(point.x(), point.y(), selected->_cached.perk_editor_id);
+                  
+                  QRect        bounds = font_metrics.boundingRect(selected->_cached.perk_editor_id);
+                  QPainterPath path;
+                  path.addText(
+                     point.x() - bounds.width() / 2,
+                     point.y() + font_ascent,
+                     painter.font(),
+                     selected->_cached.perk_editor_id
+                  );
+                  painter.strokePath(path, painter.pen());
+                  painter.fillPath(path, painter.brush());
                }
 
                _set_painter_circle_style(style);
@@ -845,6 +935,52 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
          }
          painter.restore();
       #pragma endregion
+   }
+#pragma endregion
+#pragma region Node interactions
+   void SkillTreeVisualEditor::_select_node(const PerkNode* node) {
+      const optional_node_id prior = this->_selected_node_id;
+      bool selection_changed = false;
+      if (node) {
+         this->_selected_node_id = node->id;
+      } else {
+         this->_selected_node_id.reset();
+      }
+      if (prior != this->_selected_node_id) {
+         emit selectionChanged(this->_selected_node_id, prior);
+         this->repaint();
+      }
+   }
+   bool SkillTreeVisualEditor::_is_in_node_connection_interaction() const {
+      return this->_connecting.source_node.has_value();
+   }
+   void SkillTreeVisualEditor::_start_node_connection_interaction(const PerkNode& node, bool connecting) {
+      this->_connecting.source_node   = node.id;
+      this->_connecting.is_connecting = connecting;
+   }
+   void SkillTreeVisualEditor::_cancel_node_connection_interaction() {
+      this->_connecting.source_node.reset();
+   }
+   void SkillTreeVisualEditor::_complete_node_connection_interaction(const PerkNode* dst) {
+      if (!this->_is_in_node_connection_interaction())
+         return;
+      bool  changed = false;
+      auto* src     = this->_node_by_id(this->_connecting.source_node.value());
+      if (src && dst) {
+         if (this->_connecting.is_connecting) {
+            for (auto id : src->connects_to)
+               if (id == dst->id)
+                  return;
+            src->connects_to.push_back(dst->id);
+            changed = true;
+         } else {
+            changed = std::erase(src->connects_to, dst->id) != 0;
+         }
+      }
+      this->_connecting.source_node.reset();
+      if (changed) {
+         this->repaint();
+      }
    }
 #pragma endregion
 
@@ -887,6 +1023,32 @@ QPointF SkillTreeVisualEditor::_node_centerpoint(const PerkNode& node) const {
 }
 
 void SkillTreeVisualEditor::_update_cursor(const QMouseEvent* event) {
+   if (this->_is_in_node_connection_interaction()) {
+      this->setCursor(Qt::CursorShape::ForbiddenCursor);
+
+      auto  pos = _map_from_global(event->globalPos());
+      auto* dst = _get_node_at_point(pos);
+      if (dst && dst->id != this->_connecting.source_node) {
+         if (this->_connecting.is_connecting) {
+            this->setCursor(Qt::CursorShape::CrossCursor);
+         } else {
+            auto* src = this->_node_by_id(this->_connecting.source_node.value());
+            bool  connected = false;
+            if (src) {
+               for (auto id : src->connects_to) {
+                  if (id == dst->id) {
+                     connected = true;
+                     break;
+                  }
+               }
+            }
+            if (connected) {
+               this->setCursor(Qt::CursorShape::CrossCursor);
+            }
+         }
+      }
+      return;
+   }
    if (this->_mouse.is_panning) {
       this->setCursor(Qt::CursorShape::ClosedHandCursor);
       return;
@@ -952,19 +1114,9 @@ void SkillTreeVisualEditor::_update_geometry() {
       max_y + this->_style.margins.top() + this->_style.margins.bottom()
    );
 
-   this->updateGeometry();
-}
+   // Always draw at least five rows.
+   if (this->_cached.row_count < 5)
+      this->_cached.row_count = 5;
 
-void SkillTreeVisualEditor::_select_node(const PerkNode* node) {
-   const optional_node_id prior = this->_selected_node_id;
-   bool selection_changed = false;
-   if (node) {
-      this->_selected_node_id = node->id;
-   } else {
-      this->_selected_node_id.reset();
-   }
-   if (prior != this->_selected_node_id) {
-      emit selectionChanged(this->_selected_node_id, prior);
-      this->repaint();
-   }
+   this->updateGeometry();
 }
