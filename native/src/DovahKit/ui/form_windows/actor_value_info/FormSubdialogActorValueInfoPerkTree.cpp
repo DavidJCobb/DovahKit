@@ -1,5 +1,7 @@
 #include "./FormSubdialogActorValueInfoPerkTree.h"
 #include "./SkillTreeVisualEditor.h"
+#include "dovah/form_stub.h"
+#include "editor/form_stub_meta_type.h"
 
 FormSubdialogActorValueInfoPerkTree::FormSubdialogActorValueInfoPerkTree(QWidget* parent) : QDialog(parent) {
    this->ui.setupUi(this);
@@ -47,6 +49,30 @@ FormSubdialogActorValueInfoPerkTree::FormSubdialogActorValueInfoPerkTree(QWidget
          this->_pull_perk_node(selected);
       }
    );
+   QObject::connect(
+      editor,
+      &SkillTreeVisualEditor::nodePositionChanged,
+      this,
+      [this](SkillTreeVisualEditor::node_id id, const SkillTreeVisualEditor::PerkNodePosition& pos) {
+         if (id != this->_widgets.editor->selectedNodeID())
+            return;
+         this->ui.currentNodeGridX->setValue(pos.grid.x);
+         this->ui.currentNodeGridY->setValue(pos.grid.y);
+         this->ui.currentNodeOffsetX->setValue(pos.offset.x);
+         this->ui.currentNodeOffsetY->setValue(pos.offset.y);
+      }
+   );
+
+   auto _push_current = [this]() {
+      this->_push_perk_node();
+   };
+   QObject::connect(this->ui.currentNodePerk,  &DKFormPicker::formChanged, this, _push_current);
+   QObject::connect(this->ui.currentNodeSkill, &DKFormPicker::formChanged, this, _push_current);
+   QObject::connect(this->ui.currentNodeRequiresParent, &QCheckBox::toggled, this, _push_current);
+   QObject::connect(this->ui.currentNodeGridX, qOverload<int>(&QSpinBox::valueChanged), this, _push_current);
+   QObject::connect(this->ui.currentNodeGridY, qOverload<int>(&QSpinBox::valueChanged), this, _push_current);
+   QObject::connect(this->ui.currentNodeOffsetX, qOverload<double>(&QDoubleSpinBox::valueChanged), this, _push_current);
+   QObject::connect(this->ui.currentNodeOffsetY, qOverload<double>(&QDoubleSpinBox::valueChanged), this, _push_current);
 
    QObject::connect(this->ui.buttonOK, &QPushButton::clicked, this, [this]() {
       this->_push_perk_node();
@@ -57,8 +83,6 @@ FormSubdialogActorValueInfoPerkTree::FormSubdialogActorValueInfoPerkTree(QWidget
       this->_widgets.editor->clear();
       this->reject();
    });
-
-   static_assert(true, "TODO: Start testing before we worry about this, BUT: we need a way to connect and disconnect two perk nodes. Current UI doesn't have that.");
 }
 
 void FormSubdialogActorValueInfoPerkTree::setOwningActorValue(dovah::form_stub* av) {
@@ -73,6 +97,9 @@ void FormSubdialogActorValueInfoPerkTree::_push_perk_node(std::optional<uint32_t
       if (!node_id.has_value()) {
          return;
       }
+   }
+   if (this->_widgets.editor->nodeIsRoot(node_id.value())) {
+      return;
    }
    SkillTreeVisualEditor::PerkNodeData node;
    node.perk = this->ui.currentNodePerk->formStub();
@@ -98,11 +125,25 @@ void FormSubdialogActorValueInfoPerkTree::_pull_perk_node(std::optional<uint32_t
          return;
       }
    }
+   if (this->_widgets.editor->nodeIsRoot(node_id.value())) {
+      this->ui.groupboxCurrentNode->setEnabled(false);
+      return;
+   }
    const auto* node = this->_widgets.editor->nodeData(node_id.value());
    if (!node) {
       this->ui.groupboxCurrentNode->setEnabled(false);
       return;
    }
+
+   const auto blockers = std::array{
+      QSignalBlocker(this->ui.currentNodePerk),
+      QSignalBlocker(this->ui.currentNodeSkill),
+      QSignalBlocker(this->ui.currentNodeRequiresParent),
+      QSignalBlocker(this->ui.currentNodeGridX),
+      QSignalBlocker(this->ui.currentNodeGridY),
+      QSignalBlocker(this->ui.currentNodeOffsetX),
+      QSignalBlocker(this->ui.currentNodeOffsetY),
+   };
    this->ui.groupboxCurrentNode->setEnabled(true);
    this->ui.currentNodePerk->setFormStub(node->perk);
    this->ui.currentNodeSkill->setFormStub(node->skill);

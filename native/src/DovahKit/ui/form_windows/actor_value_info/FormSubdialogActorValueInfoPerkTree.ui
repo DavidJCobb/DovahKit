@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormSubdialogActorValueInfoPerkTree</class>
  <widget class="QDialog" name="FormSubdialogActorValueInfoPerkTree">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>548</width>
+    <height>382</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Perk Tree</string>
   </property>
@@ -222,10 +230,13 @@
                <number>6</number>
               </property>
               <property name="minimum">
-               <double>-49.999999000000003</double>
+               <double>-50.000000000000000</double>
               </property>
               <property name="maximum">
-               <double>49.999999000000003</double>
+               <double>50.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.001000000000000</double>
               </property>
              </widget>
             </item>
@@ -238,10 +249,13 @@
                <number>6</number>
               </property>
               <property name="minimum">
-               <double>-49.999999000000003</double>
+               <double>-50.000000000000000</double>
               </property>
               <property name="maximum">
-               <double>49.999999000000003</double>
+               <double>50.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.001000000000000</double>
               </property>
              </widget>
             </item>

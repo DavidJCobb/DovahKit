@@ -17,46 +17,16 @@
    <item>
     <layout class="QGridLayout" name="gridLayout">
      <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
+      <widget class="QLabel" name="label">
        <property name="text">
-        <string>Type:</string>
+        <string>Hardcoded Name:</string>
        </property>
        <property name="buddy">
-        <cstring>hardcodedType</cstring>
+        <cstring>hardcodedName</cstring>
        </property>
       </widget>
      </item>
-     <item row="5" column="0">
-      <widget class="QLabel" name="label_9">
-       <property name="text">
-        <string>Skill Category:</string>
-       </property>
-       <property name="buddy">
-        <cstring>skillCategory</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="hardcodedName">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QLineEdit" name="name"/>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>In-Game Name:</string>
-       </property>
-       <property name="buddy">
-        <cstring>name</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="1">
+     <item row="6" column="1">
       <widget class="QComboBox" name="skillCategory">
        <item>
         <property name="text">
@@ -80,7 +50,21 @@
        </item>
       </widget>
      </item>
-     <item row="3" column="0">
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="hardcodedType">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="hardcodedName">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
       <widget class="QLabel" name="label_4">
        <property name="text">
         <string>Abbreviation:</string>
@@ -90,27 +74,27 @@
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
-      <widget class="QLineEdit" name="abbreviation"/>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="hardcodedType">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label">
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Hardcoded Name:</string>
+        <string>Type:</string>
        </property>
        <property name="buddy">
-        <cstring>hardcodedName</cstring>
+        <cstring>hardcodedType</cstring>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>In-Game Name:</string>
+       </property>
+       <property name="buddy">
+        <cstring>name</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
       <widget class="QPushButton" name="buttonPerkTree">
        <property name="whatsThis">
         <string>Each skill can have a &quot;tree&quot; of perks that the player can unlock, based on their skill level and the number of perk points they've earned (and have yet to spend) by leveling up. Perks in the tree can be connected by lines; in order to unlock a perk, the player must meet its requirements and have unlocked a connected perk.</string>
@@ -120,7 +104,23 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="0">
+     <item row="4" column="1">
+      <widget class="QLineEdit" name="abbreviation"/>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>Skill Category:</string>
+       </property>
+       <property name="buddy">
+        <cstring>skillCategory</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="name"/>
+     </item>
+     <item row="5" column="0">
       <widget class="QLabel" name="label_11">
        <property name="text">
         <string>Perk Tree:</string>
@@ -129,6 +129,19 @@
         <cstring>buttonPerkTree</cstring>
        </property>
       </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_13">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
      </item>
     </layout>
    </item>
@@ -340,6 +353,7 @@
   </customwidget>
  </customwidgets>
  <tabstops>
+  <tabstop>editorID</tabstop>
   <tabstop>hardcodedName</tabstop>
   <tabstop>hardcodedType</tabstop>
   <tabstop>name</tabstop>

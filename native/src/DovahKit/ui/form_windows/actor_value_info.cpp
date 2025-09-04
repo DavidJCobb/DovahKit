@@ -59,6 +59,7 @@ void FormDialogActorValueInfo::_load_impl() {
    this->ui.skillUseGroupbox->setEnabled(is_skill);
    this->ui.skillImproveGroupbox->setEnabled(is_skill);
 
+   ui::bind(this->ui.editorID, this->editor_id());
    this->ui.name->setText(editor.convert_localized_string(working.name));
    this->ui.abbreviation->setText(QString::fromStdString(working.abbreviation));
    ui::bind(this->ui.skillCategory, working.skill_info.category);
