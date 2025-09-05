@@ -1,4 +1,5 @@
 #include "./impact_data.h"
+#include "ui/utils/enum_dropdown_configs/detection_loudness.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/item_indices_to_data.h"
 #include "ui/utils/set_range.h"
@@ -13,14 +14,7 @@ FormDialogImpactData::FormDialogImpactData(dovah::form_stub& stub, QWidget* pare
    this->ui.effectHazard->setAllowedFormType(dovah::form_type::hazard);
    this->ui.sound1->setAllowedFormTypes({ dovah::form_type::sound, dovah::form_type::sound_descriptor });
    this->ui.sound2->setAllowedFormTypes({ dovah::form_type::sound, dovah::form_type::sound_descriptor });
-   {
-      auto* widget = this->ui.detectionSoundLevel;
-      widget->clear();
-      widget->addItem(tr("Silent"), (int)dovah::detection_loudness::silent);
-      widget->addItem(tr("Normal"), (int)dovah::detection_loudness::normal);
-      widget->addItem(tr("Loud"), (int)dovah::detection_loudness::loud);
-      widget->addItem(tr("Very Loud"), (int)dovah::detection_loudness::very_loud);
-   }
+   ui::enum_dropdown_configs::detection_loudness(this->ui.detectionSoundLevel);
    {
       auto* widget = this->ui.effectOrientation;
       widget->clear();

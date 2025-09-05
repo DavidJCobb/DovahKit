@@ -19,7 +19,6 @@ FormDialogApparatus::FormDialogApparatus(dovah::form_stub& stub, QWidget* parent
    
    this->ui.soundTake->setAllowedFormType(dovah::form_type::sound_descriptor);
    this->ui.soundDrop->setAllowedFormType(dovah::form_type::sound_descriptor);
-   this->ui.keywords->setAllowedFormTypes({ dovah::form_type::keyword });
 
    this->ui.weight->setMaximum(std::numeric_limits<float>::max());
    this->ui.value->setMaximum(std::numeric_limits<int32_t>::max());

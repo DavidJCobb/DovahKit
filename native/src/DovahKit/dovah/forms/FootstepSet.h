@@ -23,8 +23,10 @@ namespace dovah::loaded_forms {
       public:
          components::papyrus_attachment_data script_data;
          //
-         union {
-            std::array<std::vector<form_reference_t>, 5> sublists;
+         union _ {
+            ~_() { sublists.~array(); }
+
+            std::array<std::vector<form_reference_t>, 5> sublists = {};
             struct {
                std::vector<form_reference_t> walk;
                std::vector<form_reference_t> run;

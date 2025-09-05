@@ -27,6 +27,9 @@ FormDialogMessage::FormDialogMessage(dovah::form_stub& stub, QWidget* parent) : 
       view->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
       view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
       view->setWordWrap(false);
+      if (auto* header = view->horizontalHeader()) {
+         header->setStretchLastSection(true);
+      }
 
       auto* sel_model = view->selectionModel();
       QObject::connect(
@@ -34,21 +37,27 @@ FormDialogMessage::FormDialogMessage(dovah::form_stub& stub, QWidget* parent) : 
          &QItemSelectionModel::selectionChanged,
          this,
          [this, sel_model, model](const QItemSelection& selected, const QItemSelection& deselected) {
-            auto*      widget  = this->ui.currentButtonText;
-            const auto blocker = QSignalBlocker(widget);
-
             auto rows = sel_model->selectedRows();
-            if (rows.empty()) {
-               widget->setEnabled(false);
-               widget->setText({});
+            if (selected.empty()) {
+               this->ui.currentButtonText->setEnabled(false);
+               this->ui.currentButtonText->setText({});
                this->ui.buttonConditions->setEnabled(false);
                this->ui.buttonConditions->clear();
+               this->ui.buttonMoveUp->setEnabled(false);
+               this->ui.buttonMoveDown->setEnabled(false);
+               this->ui.buttonRemove->setEnabled(false);
                return;
             }
-            auto* item = model->item(rows[0].row());
+            this->ui.buttonMoveUp->setEnabled(true);
+            this->ui.buttonMoveDown->setEnabled(true);
+            this->ui.buttonRemove->setEnabled(true);
 
-            widget->setEnabled(true);
-            widget->setText(item->text);
+            auto* item = model->item(selected[0].topLeft().row());
+
+            const auto blocker = QSignalBlocker(this->ui.currentButtonText);
+
+            this->ui.currentButtonText->setEnabled(true);
+            this->ui.currentButtonText->setText(item->text);
 
             this->ui.buttonConditions->setEnabled(true);
             if (!deselected.isEmpty()) {
@@ -58,8 +67,38 @@ FormDialogMessage::FormDialogMessage(dovah::form_stub& stub, QWidget* parent) : 
             this->ui.buttonConditions->importFrom(*this->form, item->conditions);
          }
       );
+      this->ui.buttonMoveUp->setEnabled(false);
+      this->ui.buttonMoveDown->setEnabled(false);
+      this->ui.buttonRemove->setEnabled(false);
       this->ui.currentButtonText->setEnabled(false);
       this->ui.buttonConditions->setEnabled(false);
+
+      #pragma region Buttons
+         QObject::connect(this->ui.buttonNew, &QPushButton::clicked, this, [this, model, sel_model]() {
+            auto qmi = model->create();
+            if (qmi.isValid()) {
+               auto tl = qmi.siblingAtColumn(0);
+               auto br = qmi.siblingAtColumn(model->columnCount({}) - 1);
+               sel_model->select({ tl, br }, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+            }
+         });
+         QObject::connect(this->ui.buttonMoveUp, &QPushButton::clicked, this, [this, model, sel_model]() {
+            auto rows = sel_model->selectedRows();
+            if (!rows.empty())
+               model->moveItem(rows[0], -1);
+         });
+         QObject::connect(this->ui.buttonMoveDown, &QPushButton::clicked, this, [this, model, sel_model]() {
+            auto rows = sel_model->selectedRows();
+            if (!rows.empty())
+               model->moveItem(rows[0], 1);
+         });
+         QObject::connect(this->ui.buttonRemove, &QPushButton::clicked, this, [this, model, sel_model]() {
+            auto rows = sel_model->selectedRows();
+            if (rows.empty())
+               return;
+            model->deleteItems(rows[0].row(), 1);
+         });
+      #pragma endregion
    }
 
    this->load(); // this creates the working copy.

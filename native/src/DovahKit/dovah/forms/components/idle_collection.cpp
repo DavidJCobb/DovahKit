@@ -27,11 +27,13 @@ namespace dovah::loaded_forms::components {
                intfc.log_load_warning(notice);
                break;
             }
-            this->idles.resize(this->_load_state.count);
+            this->idles.reserve(this->_load_state.count);
             for (uint8_t i = 0; i < this->_load_state.count; ++i) {
                auto& form = this->idles.emplace_back();
-               if (!subrecord.read(form))
+               if (!subrecord.read(form)) {
+                  this->idles.pop_back();
                   break;
+               }
                intfc.warn_if_ref_is_wrong_type(form, form_type::idle, subrecord.signature());
             }
             break;

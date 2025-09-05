@@ -2,6 +2,7 @@
 #include <limits>
 #include "dovah/core.h"
 #include "dovah/data/all_base_form_types.h"
+#include "ui/utils/enum_dropdown_configs/detection_loudness.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/item_indices_to_data.h"
 #include "ui/utils/set_range.h"
@@ -31,14 +32,7 @@ FormDialogExplosion::FormDialogExplosion(dovah::form_stub& stub, QWidget* parent
       widget->addItem(tr("NPCs Only"),  (int)loaded_form_type::knockdown_type::only_npcs);
       widget->addItem(tr("Always"),     (int)loaded_form_type::knockdown_type::always);
    }
-   {
-      auto* widget = this->ui.detectionSoundLevel;
-      widget->clear();
-      widget->addItem(tr("Silent"), (int)dovah::detection_loudness::silent);
-      widget->addItem(tr("Normal"), (int)dovah::detection_loudness::normal);
-      widget->addItem(tr("Loud"), (int)dovah::detection_loudness::loud);
-      widget->addItem(tr("Very Loud"), (int)dovah::detection_loudness::very_loud);
-   }
+   ui::enum_dropdown_configs::detection_loudness(this->ui.detectionSoundLevel);
 
    this->load(); // this creates the working copy.
 }

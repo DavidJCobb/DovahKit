@@ -29,6 +29,7 @@ class MessageButtonsModel : public DKGenericListModel<MessageButtonsModel, Messa
 
       using DKGenericListModel::clear;
       using DKGenericListModel::deleteItems;
+      using DKGenericListModel::moveItem;
 
       #pragma region Overrides
          QVariant data_of(const node_type& node, Qt::ItemDataRole role, size_t column) const;

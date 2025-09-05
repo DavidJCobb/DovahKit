@@ -17,4 +17,6 @@ class FormDialogProjectile :
       
       virtual void _load_impl() override;
       virtual void _save_impl() override;
+
+      void _update_type_related_enable_states();
 };

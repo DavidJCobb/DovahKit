@@ -40,7 +40,7 @@ void FormSubdialogLensFlareSprite::setValue(const value_type& src) {
    this->ui.width->setValue(src.data.width);
    this->ui.height->setValue(src.data.height);
    this->ui.position->setValue(src.data.position);
-   this->ui.angular_fade->setValue(src.data.angular_fade);
+   this->ui.angularFade->setValue(src.data.angular_fade);
    this->ui.opacity->setValue(src.data.opacity);
    {
       QColor c;

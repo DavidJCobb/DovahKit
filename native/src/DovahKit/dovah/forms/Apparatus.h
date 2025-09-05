@@ -16,6 +16,12 @@ namespace dovah::loaded_forms {
          static constexpr const enum form_type form_type = form_type::apparatus;
          Apparatus(const constructor_params& c) : Form(form_type, c) {};
 
+         //
+         // BGSApparatus is a subclass of TESObjectMISC, but doesn't load all of the 
+         // fields. For example, MiscItems have a keyword list, but Apparatus forms 
+         // never load it.
+         //
+
       public:
          components::object_bounds bounds; // OBND
          components::model_ts model; // MODL, MODT, MODS

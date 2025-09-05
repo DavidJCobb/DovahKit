@@ -14,8 +14,10 @@ class FormDialogFootstepSet :
       
    protected:
       Ui::FormDialogFootstepSet ui;
-      union {
-         std::array<std::vector<dovah::form_stub*>, 5> sublists;
+      union _ {
+         ~_() { sublists.~array(); }
+
+         std::array<std::vector<dovah::form_stub*>, 5> sublists = {};
          struct {
             std::vector<dovah::form_stub*> walk;
             std::vector<dovah::form_stub*> run;

@@ -3579,6 +3579,9 @@
     <ClCompile Include="ui\form_windows\volumetric_lighting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\utils\enum_dropdown_configs\detection_loudness.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8733,6 +8736,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\form_windows\lens_flare\LensFlareSpritesModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\enum_dropdown_configs\detection_loudness.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

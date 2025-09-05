@@ -2,6 +2,7 @@
 #include <array>
 #include "dovah/core.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/set_tableview_column_flex.h"
 #include "ui/utils/typical_tableview_config.h"
 #include "./debris/DebrisVariantsModel.h"
 
@@ -16,6 +17,23 @@ FormDialogDebris::FormDialogDebris(dovah::form_stub& stub, QWidget* parent) : QD
       view->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
       view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
       view->setWordWrap(false);
+      ui::set_tableview_column_flex(view, [model](DKHeaderView& header, const QFontMetrics& metrics) {
+         header.setColumnFlex(DebrisVariantsModel::Column::Path, 2, 0);
+         {
+            constexpr const auto column = DebrisVariantsModel::Column::Chance;
+            auto label_text = model->headerData(column, Qt::Orientation::Horizontal, Qt::DisplayRole).toString();
+            auto label_width = metrics.boundingRect(label_text).width();
+            auto value_width = metrics.boundingRect("99999").width();
+            header.setColumnFlex(column, 0, 0, std::max(label_width, value_width) * 1.5F + 4);
+         }
+         {
+            constexpr const auto column = DebrisVariantsModel::Column::HasCollision;
+            auto label_text = model->headerData(column, Qt::Orientation::Horizontal, Qt::DisplayRole).toString();
+            auto label_width = metrics.boundingRect(label_text).width();
+            auto value_width = metrics.boundingRect("Yes").width();
+            header.setColumnFlex(column, 0, 0, std::max(label_width, value_width) * 1.5F + 4);
+         }
+      });
 
       auto* sel_model = view->selectionModel();
       QObject::connect(
@@ -24,13 +42,12 @@ FormDialogDebris::FormDialogDebris(dovah::form_stub& stub, QWidget* parent) : QD
          this,
          [this, sel_model, model](const QItemSelection& selected, const QItemSelection& deselected) {
             const auto blockers = std::array{
-               (QWidget*)this->ui.currentModel,
-               (QWidget*)this->ui.currentPercent,
-               (QWidget*)this->ui.currentHasCollision,
+               QSignalBlocker(this->ui.currentModel),
+               QSignalBlocker(this->ui.currentPercent),
+               QSignalBlocker(this->ui.currentHasCollision),
             };
 
-            auto rows = sel_model->selectedRows();
-            if (rows.empty()) {
+            if (selected.empty()) {
                this->ui.buttonRemove->setEnabled(false);
                this->ui.current->setEnabled(false);
                this->ui.currentModel->setValue({});
@@ -38,7 +55,7 @@ FormDialogDebris::FormDialogDebris(dovah::form_stub& stub, QWidget* parent) : QD
                this->ui.currentHasCollision->setChecked(false);
                return;
             }
-            auto* item = model->item(rows[0].row());
+            auto* item = model->item(selected[0].topLeft().row());
 
             this->ui.buttonRemove->setEnabled(true);
             this->ui.current->setEnabled(true);

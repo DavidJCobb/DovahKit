@@ -1,8 +1,10 @@
 #include "./projectile.h"
 #include <array>
 #include "dovah/core.h"
+#include "ui/utils/enum_dropdown_configs/detection_loudness.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/item_indices_to_data.h"
+#include "ui/utils/set_range.h"
 
 FormDialogProjectile::FormDialogProjectile(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
@@ -13,6 +15,8 @@ FormDialogProjectile::FormDialogProjectile(dovah::form_stub& stub, QWidget* pare
          this->ui.type->setItemData(i, (int)(1 << i)); // loaded_form_type::projectile_type
    }
 
+   ui::enum_dropdown_configs::detection_loudness(this->ui.detectionLoudness);
+
    this->ui.light->setAllowedFormType(dovah::form_type::light);
    this->ui.defaultWeaponSource->setAllowedFormType(dovah::form_type::weapon);
    this->ui.decalData->setAllowedFormType(dovah::form_type::texture_set);
@@ -22,23 +26,26 @@ FormDialogProjectile::FormDialogProjectile(dovah::form_stub& stub, QWidget* pare
    this->ui.collisionLayer->setAllowedFormType(dovah::form_type::collision_layer);
    this->ui.disarmSound->setAllowedFormType(dovah::form_type::sound_descriptor);
 
-   for (auto* spinbox : std::array<QDoubleSpinBox*, 13>{
+   QObject::connect(this->ui.type, qOverload<int>(&QComboBox::currentIndexChanged), this, &FormDialogProjectile::_update_type_related_enable_states);
+   this->_update_type_related_enable_states();
+
+   for (auto* spinbox : std::array{
       this->ui.speed,
       this->ui.gravity,
       this->ui.range,
       this->ui.impactForce,
-      this->ui.tracerChance,
       this->ui.fadeDuration,
       this->ui.coneSpread,
       this->ui.collisionRadius,
       this->ui.lifetime,
-      this->ui.muzzleFlashDuration,
       this->ui.explosionTimer,
       this->ui.explosionProximity,
-      this->ui.relaunchInterval,
    }) {
-      spinbox->setRange(0, 10000);
+      ui::set_unsigned_range<float>(spinbox);
    }
+   this->ui.muzzleFlashDuration->setRange(0, 5);
+   this->ui.relaunchInterval->setRange(0, 5);
+   this->ui.tracerChance->setRange(0, 1);
 
    this->ui.explosionTriggerImpact->setChecked(true);
 
@@ -107,4 +114,72 @@ void FormDialogProjectile::_save_impl() {
    this->ui.destructionData->commitTo(working.destruction_data, working);
 
    this->ui.muzzleFlashEffect->commitTo(working.muzzle_flash.model, working);
+}
+
+void FormDialogProjectile::_update_type_related_enable_states() {
+   auto type = (loaded_form_type::projectile_type)this->ui.type->currentData().toInt();
+
+   switch (type) {
+      case loaded_form_type::projectile_type::barrier:
+      case loaded_form_type::projectile_type::beam:
+      case loaded_form_type::projectile_type::flame:
+         this->ui.collisionRadius->setEnabled(false);
+         break;
+      default:
+         this->ui.collisionRadius->setEnabled(true);
+         break;
+   }
+   switch (type) {
+      case loaded_form_type::projectile_type::beam:
+      case loaded_form_type::projectile_type::flame:
+      case loaded_form_type::projectile_type::lobber:
+         this->ui.gravity->setEnabled(false);
+         break;
+      default:
+         this->ui.gravity->setEnabled(true);
+         break;
+   }
+   switch (type) {
+      case loaded_form_type::projectile_type::arrow:
+      case loaded_form_type::projectile_type::cone:
+      case loaded_form_type::projectile_type::flame:
+      case loaded_form_type::projectile_type::missile:
+         this->ui.lifetime->setEnabled(false);
+         break;
+      default:
+         this->ui.lifetime->setEnabled(true);
+         break;
+   }
+   switch (type) {
+      case loaded_form_type::projectile_type::lobber:
+         this->ui.range->setEnabled(false);
+         this->ui.flagHitscan->setEnabled(false);
+         break;
+      default:
+         this->ui.range->setEnabled(true);
+         break;
+   }
+   switch (type) {
+      case loaded_form_type::projectile_type::lobber:
+         this->ui.tracerChance->setEnabled(false);
+         break;
+      default:
+         this->ui.tracerChance->setEnabled(true);
+         break;
+   }
+
+   switch (type) {
+      case loaded_form_type::projectile_type::beam:
+      case loaded_form_type::projectile_type::flame:
+         this->ui.flagCanBeDisarmed->setEnabled(false);
+         this->ui.flagCanBePickedUp->setEnabled(false);
+         this->ui.flagHitscan->setEnabled(false);
+         break;
+      case loaded_form_type::projectile_type::lobber:
+         this->ui.flagHitscan->setEnabled(false);
+         break;
+      default:
+         this->ui.flagHitscan->setEnabled(true);
+         break;
+   }
 }

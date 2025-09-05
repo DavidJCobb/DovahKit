@@ -111,7 +111,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
@@ -1146,6 +1146,7 @@
     <ClCompile Include="ui\utils\bind.cpp" />
     <ClCompile Include="ui\utils\DKStyledItemDelegate.cpp" />
     <ClCompile Include="ui\utils\enable_inbound_drag_and_drop_insertions.cpp" />
+    <ClCompile Include="ui\utils\enum_dropdown_configs\detection_loudness.cpp" />
     <ClCompile Include="ui\utils\enum_dropdown_configs\skill.cpp" />
     <ClCompile Include="ui\utils\form_list_pane_columns\music_track_type.cpp" />
     <ClCompile Include="ui\utils\item_indices_to_data.cpp" />
@@ -2082,6 +2083,7 @@
     <QtMoc Include="widgets\widget-dialogs\DKConditionEditDialog.h" />
     <QtMoc Include="widgets\DKNavmeshGenerationImportOptionPicker.h" />
     <ClInclude Include="ui\utils\enable_inbound_drag_and_drop_insertions.h" />
+    <ClInclude Include="ui\utils\enum_dropdown_configs\detection_loudness.h" />
     <ClInclude Include="ui\utils\enum_dropdown_configs\skill.h" />
     <ClInclude Include="ui\utils\form_list_pane_columns\music_track_type.h" />
     <ClInclude Include="ui\utils\get_selection.h" />

@@ -25,6 +25,20 @@ void FormDialogFootstepSet::_load_impl() {
 
    ui::bind(this->ui.editorID, this->editor_id());
 
+   static_assert(
+      std::tuple_size_v<decltype(this->_footsteps.sublists)> == std::tuple_size_v<decltype(working.footsteps.sublists)>
+   );
+   for (size_t i = 0; i < this->_footsteps.sublists.size(); ++i) {
+      auto&  src_list = working.footsteps.sublists[i];
+      auto&  dst_list = this->_footsteps.sublists[i];
+      size_t src_size = src_list.size();
+      dst_list.reserve(src_size);
+      for (auto& use : src_list) {
+         if (!use)
+            continue;
+         dst_list.push_back(use.get_form_stub());
+      }
+   }
    QObject::connect(this->ui.currentMovementState, qOverload<int>(&QComboBox::currentIndexChanged), this, [this]() {
       if (this->_last_shown_footstep_list != -1) {
          this->_push_footstep_list(this->_last_shown_footstep_list);

@@ -26,6 +26,7 @@ DKIdleCollectionWidget::DKIdleCollectionWidget(QWidget* parent) : QWidget(parent
 
    ui.idle_timer = new QDoubleSpinBox(this);
    ui.idle_timer->setRange(0, std::numeric_limits<float>::max());
+   ui.idle_timer->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
    //
    // Layout:
    //
@@ -47,7 +48,7 @@ DKIdleCollectionWidget::DKIdleCollectionWidget(QWidget* parent) : QWidget(parent
       sublayout->addWidget(ui.do_once);
       sublayout->addSpacerItem(new QSpacerItem(8, 0));
       {
-         auto* label = new QLabel(tr("Idle TImer:"), this);
+         auto* label = new QLabel(tr("Idle Timer:"), this);
          label->setBuddy(ui.idle_timer);
          sublayout->addWidget(label);
       }

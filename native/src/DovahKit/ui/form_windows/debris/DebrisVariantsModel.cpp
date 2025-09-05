@@ -14,7 +14,7 @@ QVariant DebrisVariantsModel::data_of(const node_type& node, Qt::ItemDataRole ro
             case Column::Path:
                return node.path.model_path.c_str();
             case Column::Chance:
-               return tr("%1%%").arg(node.chance);
+               return tr("%1%").arg(node.chance);
             case Column::HasCollision:
                return node.has_collision ? tr("Yes") : tr("No");
          }
@@ -31,7 +31,10 @@ QVariant DebrisVariantsModel::data_of(const node_type& node, Qt::ItemDataRole ro
          return {};
       case Qt::TextAlignmentRole:
          if (column == Column::Chance) {
-            return Qt::AlignmentFlag::AlignRight;
+            return (int)(Qt::AlignmentFlag::AlignRight | Qt::AlignVCenter);
+         }
+         if (column == Column::HasCollision) {
+            return (int)(Qt::AlignmentFlag::AlignHCenter | Qt::AlignVCenter);
          }
          break;
    }
