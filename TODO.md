@@ -191,12 +191,12 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 |                | SMBN | Story Manager Branch Node | ✅ |   | ⬛ | These don't have their own UI. You edit them as part of the Event Node UI. |
 |                | SMQN | Story Manager Quest Node  | ✅ |   | ⬛ | These don't have their own UI. You edit them as part of the Event Node UI. |
 |                | WRLD | Worldspace                | ✅ | ⬛ | 🟨 |
-| Deprecated     | APPA | BGSApparatus              | ✅ | ⬛ | ⬛ | CK32 has a loader for this; test in-game behavior |
+| Deprecated     | APPA | BGSApparatus              | ✅ | ✅ | ⬛ | CK32 has a loader for this; test in-game behavior |
 | Deprecated     | EYES | TESEyes                   | ✅ | ✅ | ⬛ | CK32 has a loader for this |
 | Deprecated     | MICO | BGSMenuIcon               | ✅ | ✅ | ⬛ | CK32 has a loader for this |
 | Deprecated     | RGDL | BGSRagdoll                | ✅ |   | ⬛ | CK32 has a loader for this |
 | Skyrim Special | LENS | Lens Flare                | ✅ | ✅ | ⬛ |
-| Skyrim Special | VOLI | Volumetric Lighting       | ✅ | 🟨 | ⬛ |
+| Skyrim Special | VOLI | Volumetric Lighting       | ✅ | ✅ | ⬛ |
 
 Subclasses of `REFR`, such as `ACHR`, are not listed in the table above, as they should be loaded identically and have identical data. There are 9 such form types.
 

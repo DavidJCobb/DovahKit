@@ -908,6 +908,7 @@
     <ClCompile Include="ui\form_windows\addon_node.cpp" />
     <ClCompile Include="ui\form_windows\ammo.cpp" />
     <ClCompile Include="ui\form_windows\animation_prop.cpp" />
+    <ClCompile Include="ui\form_windows\apparatus.cpp" />
     <ClCompile Include="ui\form_windows\armor.cpp" />
     <ClCompile Include="ui\form_windows\armor_addon.cpp" />
     <ClCompile Include="ui\form_windows\armor_addon\ArmorAddonAdditionalRacesModel.cpp" />
@@ -936,6 +937,7 @@
     <ClCompile Include="ui\form_windows\encounter_zone.cpp" />
     <ClCompile Include="ui\form_windows\equip_slot.cpp" />
     <ClCompile Include="ui\form_windows\explosion.cpp" />
+    <ClCompile Include="ui\form_windows\eyes.cpp" />
     <ClCompile Include="ui\form_windows\faction.cpp" />
     <ClCompile Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.cpp" />
     <ClCompile Include="ui\form_windows\flora.cpp" />
@@ -948,12 +950,16 @@
     <ClCompile Include="ui\form_windows\ingredient.cpp" />
     <ClCompile Include="ui\form_windows\key.cpp" />
     <ClCompile Include="ui\form_windows\keyword.cpp" />
+    <ClCompile Include="ui\form_windows\lens_flare.cpp" />
+    <ClCompile Include="ui\form_windows\lens_flare\FormSubdialogLensFlareSprite.cpp" />
+    <ClCompile Include="ui\form_windows\lens_flare\LensFlareSpritesModel.cpp" />
     <ClCompile Include="ui\form_windows\loading_screen.cpp" />
     <ClCompile Include="ui\form_windows\location_ref_type.cpp" />
     <ClCompile Include="ui\form_windows\magic_effect.cpp" />
     <ClCompile Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\material_object.cpp" />
     <ClCompile Include="ui\form_windows\material_type.cpp" />
+    <ClCompile Include="ui\form_windows\menu_icon.cpp" />
     <ClCompile Include="ui\form_windows\message.cpp" />
     <ClCompile Include="ui\form_windows\message\MessageButtonsModel.cpp" />
     <ClCompile Include="ui\form_windows\movable_static.cpp" />
@@ -1050,6 +1056,7 @@
     <ClCompile Include="ui\form_windows\tree.cpp" />
     <ClCompile Include="ui\form_windows\visual_effect.cpp" />
     <ClCompile Include="ui\form_windows\voicetype.cpp" />
+    <ClCompile Include="ui\form_windows\volumetric_lighting.cpp" />
     <ClCompile Include="ui\form_windows\water_type.cpp" />
     <ClCompile Include="ui\form_windows\weapon.cpp" />
     <ClCompile Include="ui\form_windows\weather.cpp" />
@@ -1843,6 +1850,7 @@
     <QtMoc Include="ui\form_windows\actor_value_info\FormSubdialogActorValueInfoPerkTree.h" />
     <QtMoc Include="ui\form_windows\actor_value_info.h" />
     <ClInclude Include="helpers\optionals\finite_float.h" />
+    <QtMoc Include="ui\form_windows\apparatus.h" />
     <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h" />
     <QtMoc Include="ui\form_windows\climate\FormSubdialogClimateWeather.h" />
     <QtMoc Include="ui\form_windows\encounter_zone.h" />
@@ -1851,6 +1859,10 @@
     <QtMoc Include="ui\form_windows\debris.h" />
     <ClInclude Include="ui\form_windows\debris\DebrisVariantsModel.h" />
     <QtMoc Include="ui\form_windows\footstep_set.h" />
+    <QtMoc Include="ui\form_windows\lens_flare\FormSubdialogLensFlareSprite.h" />
+    <QtMoc Include="ui\form_windows\lens_flare.h" />
+    <QtMoc Include="ui\form_windows\eyes.h" />
+    <ClInclude Include="ui\form_windows\lens_flare\LensFlareSpritesModel.h" />
     <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h" />
     <QtMoc Include="ui\form_windows\potion.h" />
     <QtMoc Include="ui\form_windows\material_type.h" />
@@ -1867,6 +1879,7 @@
     <QtMoc Include="ui\form_windows\package\PackageProcedureTreeModel.h" />
     <QtMoc Include="ui\form_windows\package\PackageProcedureParamsModel.h" />
     <QtMoc Include="ui\form_windows\message.h" />
+    <QtMoc Include="ui\form_windows\menu_icon.h" />
     <ClInclude Include="ui\form_windows\message\MessageButtonsModel.h" />
     <QtMoc Include="ui\form_windows\movable_static.h" />
     <ClInclude Include="ui\form_windows\package\PackageTemplatePickerFilter.h" />
@@ -2025,6 +2038,7 @@
     <QtMoc Include="ui\form_windows\tree.h" />
     <QtMoc Include="ui\form_windows\water_type.h" />
     <QtMoc Include="ui\form_windows\weather.h" />
+    <QtMoc Include="ui\form_windows\volumetric_lighting.h" />
     <ClInclude Include="ui\form_windows\weather\WeatherIntpackedFloatEditor.h" />
     <ClInclude Include="ui\form_windows\weather\WeatherSoundsModel.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.h" />
@@ -3342,6 +3356,7 @@
     <QtUic Include="ui\form_windows\addon_node.ui" />
     <QtUic Include="ui\form_windows\ammo.ui" />
     <QtUic Include="ui\form_windows\animation_prop.ui" />
+    <QtUic Include="ui\form_windows\apparatus.ui" />
     <QtUic Include="ui\form_windows\armor.ui" />
     <QtUic Include="ui\form_windows\armor_addon.ui" />
     <QtUic Include="ui\form_windows\art_object.ui" />

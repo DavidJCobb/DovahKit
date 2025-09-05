@@ -3555,6 +3555,30 @@
     <ClCompile Include="ui\form_windows\actor_value_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\footstep_set.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\lens_flare\FormSubdialogLensFlareSprite.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\lens_flare\LensFlareSpritesModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\lens_flare.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\eyes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\menu_icon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\apparatus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\volumetric_lighting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8705,6 +8729,12 @@
     <ClInclude Include="ui\form_windows\weather\WeatherIntpackedFloatEditor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\optionals\finite_float.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\lens_flare\LensFlareSpritesModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -9176,6 +9206,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_windows\actor_value_info\FormSubdialogActorValueInfoPerkTree.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\apparatus.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -10032,6 +10065,27 @@
     <QtMoc Include="ui\form_windows\actor_value_info.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ui\form_windows\footstep_set.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\lens_flare\FormSubdialogLensFlareSprite.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\lens_flare.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\eyes.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\menu_icon.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\apparatus.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\volumetric_lighting.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -10505,6 +10559,9 @@
     <None Include="dovah\_docs\enchanting.md" />
     <None Include="dovah\_docs\packages.md" />
     <None Include="dovah\_docs\locations.md" />
+    <None Include="helpers\optionals\finite_float.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

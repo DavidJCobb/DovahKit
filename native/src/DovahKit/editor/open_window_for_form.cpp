@@ -13,6 +13,7 @@
 #include "../ui/form_windows/addon_node.h"
 #include "../ui/form_windows/ammo.h"
 #include "../ui/form_windows/animation_prop.h"
+#include "../ui/form_windows/apparatus.h"
 #include "../ui/form_windows/armor.h"
 #include "../ui/form_windows/armor_addon.h"
 #include "../ui/form_windows/art_object.h"
@@ -36,9 +37,11 @@
 #include "../ui/form_windows/encounter_zone.h"
 #include "../ui/form_windows/equip_slot.h"
 #include "../ui/form_windows/explosion.h"
+#include "../ui/form_windows/eyes.h"
 #include "../ui/form_windows/faction.h"
 #include "../ui/form_windows/flora.h"
 #include "../ui/form_windows/footstep.h"
+#include "../ui/form_windows/footstep_set.h"
 #include "../ui/form_windows/formlist.h"
 #include "../ui/form_windows/global.h"
 #include "../ui/form_windows/grass.h"
@@ -50,6 +53,7 @@
 #include "../ui/form_windows/key.h"
 #include "../ui/form_windows/keyword.h"
 #include "../ui/form_windows/landtexture.h"
+#include "../ui/form_windows/lens_flare.h"
 #include "../ui/form_windows/leveled_character.h"
 #include "../ui/form_windows/leveled_item.h"
 #include "../ui/form_windows/leveled_spell.h"
@@ -59,6 +63,7 @@
 #include "../ui/form_windows/magic_effect.h"
 #include "../ui/form_windows/material_object.h"
 #include "../ui/form_windows/material_type.h"
+#include "../ui/form_windows/menu_icon.h"
 #include "../ui/form_windows/message.h"
 #include "../ui/form_windows/misc_item.h"
 #include "../ui/form_windows/movable_static.h"
@@ -92,6 +97,7 @@
 #include "../ui/form_windows/tree.h"
 #include "../ui/form_windows/visual_effect.h"
 #include "../ui/form_windows/voicetype.h"
+#include "../ui/form_windows/volumetric_lighting.h"
 #include "../ui/form_windows/water_type.h"
 #include "../ui/form_windows/weapon.h"
 #include "../ui/form_windows/weather.h"
@@ -112,6 +118,7 @@ namespace {
       std::pair{ dovah::form_type::addon_node,        _make<FormDialogAddOnNode> },
       std::pair{ dovah::form_type::ammo,              _make<FormDialogAmmo> },
       std::pair{ dovah::form_type::animation_prop,    _make<FormDialogAnimationProp> },
+      std::pair{ dovah::form_type::apparatus,         _make<FormDialogApparatus> },
       std::pair{ dovah::form_type::armor,             _make<FormDialogArmor> },
       std::pair{ dovah::form_type::armor_addon,       _make<FormDialogArmorAddon> },
       std::pair{ dovah::form_type::art_object,        _make<FormDialogArtObject> },
@@ -135,9 +142,11 @@ namespace {
       std::pair{ dovah::form_type::encounter_zone,    _make<FormDialogEncounterZone> },
       std::pair{ dovah::form_type::equip_slot,        _make<FormDialogEquipSlot> },
       std::pair{ dovah::form_type::explosion,         _make<FormDialogExplosion> },
+      std::pair{ dovah::form_type::eyes,              _make<FormDialogEyes> },
       std::pair{ dovah::form_type::faction,           _make<FormDialogFaction> },
       std::pair{ dovah::form_type::flora,             _make<FormDialogFlora> },
       std::pair{ dovah::form_type::footstep,          _make<FormDialogFootstep> },
+      std::pair{ dovah::form_type::footstep_set,      _make<FormDialogFootstepSet> },
       std::pair{ dovah::form_type::formlist,          _make<FormDialogFormList> },
       std::pair{ dovah::form_type::global,            _make<FormDialogGlobal> },
       std::pair{ dovah::form_type::grass,             _make<FormDialogGrass> },
@@ -149,6 +158,7 @@ namespace {
       std::pair{ dovah::form_type::key,               _make<FormDialogKey> },
       std::pair{ dovah::form_type::keyword,           _make<FormDialogKeyword> },
       std::pair{ dovah::form_type::land_texture,      _make<FormDialogLandTexture> },
+      std::pair{ dovah::form_type::lens_flare,        _make<FormDialogLensFlare> },
       std::pair{ dovah::form_type::leveled_character, _make<FormDialogLeveledCharacter> },
       std::pair{ dovah::form_type::leveled_item,      _make<FormDialogLeveledItem> },
       std::pair{ dovah::form_type::leveled_spell,     _make<FormDialogLeveledSpell> },
@@ -158,6 +168,7 @@ namespace {
       std::pair{ dovah::form_type::magic_effect,      _make<FormDialogMagicEffect> },
       std::pair{ dovah::form_type::material_object,   _make<FormDialogMaterialObject> },
       std::pair{ dovah::form_type::material_type,     _make<FormDialogMaterialType> },
+      std::pair{ dovah::form_type::menu_icon,         _make<FormDialogMenuIcon> },
       std::pair{ dovah::form_type::message,           _make<FormDialogMessage> },
       std::pair{ dovah::form_type::misc_item,         _make<FormDialogMiscItem> },
       std::pair{ dovah::form_type::movable_static,    _make<FormDialogMovableStatic> },
@@ -191,6 +202,7 @@ namespace {
       std::pair{ dovah::form_type::tree,              _make<FormDialogTree> },
       std::pair{ dovah::form_type::visual_effect,     _make<FormDialogVisualEffect> },
       std::pair{ dovah::form_type::voicetype,         _make<FormDialogVoicetype> },
+      std::pair{ dovah::form_type::volumetric_lighting, _make<FormDialogVolumetricLighting> },
       std::pair{ dovah::form_type::water_type,        _make<FormDialogWaterType> },
       std::pair{ dovah::form_type::weapon,            _make<FormDialogWeapon> },
       std::pair{ dovah::form_type::weather,           _make<FormDialogWeather> },
