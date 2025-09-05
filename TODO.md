@@ -146,7 +146,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | SpecialEffect  | EFSH | EffectShader              | ✅ | ✅ | ⬛ |
 | SpecialEffect  | EXPL | Explosion                 | ✅ | ✅ | ⬛ |
 | SpecialEffect  | FSTP | Footstep                  | ✅ | ✅ | ⬛ |
-| SpecialEffect  | FSTS | Footstep Set              | ✅ | 🟨 | ⬛ |
+| SpecialEffect  | FSTS | Footstep Set              | ✅ | ✅ | ⬛ |
 | SpecialEffect  | HAZD | Hazard                    | ✅ | ✅ | ⬛ |
 | SpecialEffect  | IMGS | Imagespace                | ✅ | 🟨 | ⬛ |
 | SpecialEffect  | IMAD | Imagespace Modifier       | ✅ | ⬛ | ⬛ |
@@ -195,7 +195,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | Deprecated     | EYES | TESEyes                   | ✅ | 🟨 | ⬛ | CK32 has a loader for this |
 | Deprecated     | MICO | BGSMenuIcon               | ✅ | 🟨 | ⬛ | CK32 has a loader for this |
 | Deprecated     | RGDL | BGSRagdoll                | ✅ |   | ⬛ | CK32 has a loader for this |
-| Skyrim Special | LENS | Lens Flare                | ✅ | 🟨 | ⬛ |
+| Skyrim Special | LENS | Lens Flare                | ✅ | ✅ | ⬛ |
 | Skyrim Special | VOLI | Volumetric Lighting       | ✅ | 🟨 | ⬛ |
 
 Subclasses of `REFR`, such as `ACHR`, are not listed in the table above, as they should be loaded identically and have identical data. There are 9 such form types.

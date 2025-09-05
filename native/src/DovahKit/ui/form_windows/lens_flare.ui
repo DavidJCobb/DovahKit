@@ -111,6 +111,13 @@
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="buttonSpriteEdit">
+          <property name="text">
+           <string>Edit</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="buttonSpriteMoveUp">
           <property name="text">
            <string>Move Up</string>
@@ -201,6 +208,7 @@
   <tabstop>fadeDistRadScale</tabstop>
   <tabstop>sprites</tabstop>
   <tabstop>buttonSpriteNew</tabstop>
+  <tabstop>buttonSpriteEdit</tabstop>
   <tabstop>buttonSpriteMoveUp</tabstop>
   <tabstop>buttonSpriteMoveDown</tabstop>
   <tabstop>buttonSpriteDelete</tabstop>

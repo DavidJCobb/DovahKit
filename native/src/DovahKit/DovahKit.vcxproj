@@ -940,6 +940,7 @@
     <ClCompile Include="ui\form_windows\faction\FormSubdialogFactionVendorLocation.cpp" />
     <ClCompile Include="ui\form_windows\flora.cpp" />
     <ClCompile Include="ui\form_windows\footstep.cpp" />
+    <ClCompile Include="ui\form_windows\footstep_set.cpp" />
     <ClCompile Include="ui\form_windows\grass.cpp" />
     <ClCompile Include="ui\form_windows\hazard.cpp" />
     <ClCompile Include="ui\form_windows\idle_marker.cpp" />
@@ -1841,6 +1842,7 @@
     <QtMoc Include="ui\form_windows\actor_value_info\SkillTreeVisualEditor.h" />
     <QtMoc Include="ui\form_windows\actor_value_info\FormSubdialogActorValueInfoPerkTree.h" />
     <QtMoc Include="ui\form_windows\actor_value_info.h" />
+    <ClInclude Include="helpers\optionals\finite_float.h" />
     <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h" />
     <QtMoc Include="ui\form_windows\climate\FormSubdialogClimateWeather.h" />
     <QtMoc Include="ui\form_windows\encounter_zone.h" />
@@ -1848,6 +1850,7 @@
     <QtMoc Include="ui\form_windows\idle_marker.h" />
     <QtMoc Include="ui\form_windows\debris.h" />
     <ClInclude Include="ui\form_windows\debris\DebrisVariantsModel.h" />
+    <QtMoc Include="ui\form_windows\footstep_set.h" />
     <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h" />
     <QtMoc Include="ui\form_windows\potion.h" />
     <QtMoc Include="ui\form_windows\material_type.h" />
@@ -3679,6 +3682,7 @@
     <None Include="helpers\math\_docs\cheatsheet.md" />
     <None Include="helpers\multiheap.inl" />
     <None Include="helpers\multiheap.md" />
+    <None Include="helpers\optionals\finite_float.inl" />
     <None Include="helpers\small_vector.inl" />
     <None Include="helpers\string\backslash_escape.inl" />
     <None Include="helpers\string\floating_point_literal.inl" />

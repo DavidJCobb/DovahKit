@@ -16,12 +16,15 @@ namespace dovah::loaded_forms {
       if (!intfc.is_winning_record)
          return;
       //
-      struct {
-         uint32_t walk_forward = 0;
-         uint32_t run_forward = 0;
-         uint32_t walk_forward_alt;
-         uint32_t run_forward_alt;
-         uint32_t walk_forward_alt_2;
+      union {
+         std::array<uint32_t, 5> list = {};
+         struct {
+            uint32_t walk;
+            uint32_t run;
+            uint32_t sprint;
+            uint32_t sneak;
+            uint32_t swim;
+         };
       } counts;
       //
       form_reference_t form_id;
@@ -43,11 +46,8 @@ namespace dovah::loaded_forms {
                //
                break;
             case 'XCNT':
-               subrecord.read(counts.walk_forward);
-               subrecord.read(counts.run_forward);
-               subrecord.read(counts.walk_forward_alt);
-               subrecord.read(counts.run_forward_alt);
-               subrecord.read(counts.walk_forward_alt_2);
+               for (auto& count : counts.list)
+                  subrecord.read(count);
                break;
             case 'DATA':
                if (subrecord.size() == 0)
@@ -55,27 +55,24 @@ namespace dovah::loaded_forms {
                {
                   // We may want to verify more closely whether they clear the arrays or 
                   // just resize them.
-                  this->walk_forward.clear();
-                  this->run_forward.clear();
-                  this->walk_forward_alt.clear();
-                  this->run_forward_alt.clear();
-                  this->walk_forward_alt_2.clear();
+                  for (auto& sublist : this->footsteps.sublists)
+                     sublist.clear();
 
                   if (subrecord.size() != (
-                     counts.walk_forward +
-                     counts.run_forward +
-                     counts.walk_forward_alt +
-                     counts.run_forward_alt +
-                     counts.walk_forward_alt_2
+                     counts.walk +
+                     counts.run +
+                     counts.sprint +
+                     counts.sneak +
+                     counts.swim
                   )) {
                      specific_load_warnings::footstep_count_mismatch notice(
                         this->stub,
                         {
-                           counts.walk_forward,
-                           counts.run_forward,
-                           counts.walk_forward_alt,
-                           counts.run_forward_alt,
-                           counts.walk_forward_alt_2,
+                           counts.walk,
+                           counts.run,
+                           counts.sprint,
+                           counts.sneak,
+                           counts.swim,
                         },
                         subrecord.size() / 4
                      );
@@ -90,11 +87,12 @@ namespace dovah::loaded_forms {
                         }
                      }
                   };
-                  _load_list(this->walk_forward, counts.walk_forward);
-                  _load_list(this->run_forward, counts.run_forward);
-                  _load_list(this->walk_forward_alt, counts.walk_forward_alt);
-                  _load_list(this->run_forward_alt, counts.run_forward_alt);
-                  _load_list(this->walk_forward_alt_2, counts.walk_forward_alt_2);
+                  //
+                  // The sub-lists are in reverse order.
+                  //
+                  for (int i = counts.list.size() - 1; i >= 0; --i) {
+                     _load_list(this->footsteps.sublists[i], counts.list[i]);
+                  }
                }
                break;
 
@@ -154,52 +152,33 @@ namespace dovah::loaded_forms {
       auto copy = (FootstepSet*)out;
       
       copy->script_data.clone_from(this->script_data, *copy);
-      copy_form_reference_list(*copy, copy->walk_forward, this->walk_forward);
-      copy_form_reference_list(*copy, copy->run_forward, this->run_forward);
-      copy_form_reference_list(*copy, copy->walk_forward_alt, this->walk_forward_alt);
-      copy_form_reference_list(*copy, copy->run_forward_alt, this->run_forward_alt);
-      copy_form_reference_list(*copy, copy->walk_forward_alt_2, this->walk_forward_alt_2);
+      for (size_t i = 0; i < this->footsteps.sublists.size(); ++i)
+         copy_form_reference_list(*copy, copy->footsteps.sublists[i], this->footsteps.sublists[i]);
    }
    void FootstepSet::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);
       {
          auto& subrecord = record.open_next_subrecord('XCNT');
-         subrecord.write((uint32_t)this->walk_forward.size());
-         subrecord.write((uint32_t)this->run_forward.size());
-         subrecord.write((uint32_t)this->walk_forward_alt.size());
-         subrecord.write((uint32_t)this->run_forward_alt.size());
-         subrecord.write((uint32_t)this->walk_forward_alt_2.size());
+         for (auto& sublist : this->footsteps.sublists)
+            subrecord.write((uint32_t)sublist.size());
          subrecord.close();
       }
       {
          auto& subrecord = record.open_next_subrecord('DATA');
-         for (auto& footstep : this->walk_forward)
-            subrecord.write(footstep);
-         for (auto& footstep : this->run_forward)
-            subrecord.write(footstep);
-         for (auto& footstep : this->walk_forward_alt)
-            subrecord.write(footstep);
-         for (auto& footstep : this->run_forward_alt)
-            subrecord.write(footstep);
-         for (auto& footstep : this->walk_forward_alt_2)
-            subrecord.write(footstep);
+         for(auto it = this->footsteps.sublists.rbegin(); it != this->footsteps.sublists.rend(); ++it)
+            for (auto& form : *it)
+               subrecord.write(form);
          subrecord.close();
       }
    }
    void FootstepSet::_clear_impl() noexcept {
       this->script_data.clear(*this);
-      clear_form_reference_list(this->walk_forward, *this);
-      clear_form_reference_list(this->run_forward, *this);
-      clear_form_reference_list(this->walk_forward_alt, *this);
-      clear_form_reference_list(this->run_forward_alt, *this);
-      clear_form_reference_list(this->walk_forward_alt_2, *this);
+      for(auto& sublist : this->footsteps.sublists)
+         clear_form_reference_list(sublist, *this);
    }
    void FootstepSet::_sever_outbound_references_impl(form_stub& other) noexcept {
       this->script_data.sever_outbound_references_to(other, *this);
-      remove_form_from_reference_list(this->walk_forward, other, *this);
-      remove_form_from_reference_list(this->run_forward, other, *this);
-      remove_form_from_reference_list(this->walk_forward_alt, other, *this);
-      remove_form_from_reference_list(this->run_forward_alt, other, *this);
-      remove_form_from_reference_list(this->walk_forward_alt_2, other, *this);
+      for (auto& sublist : this->footsteps.sublists)
+         remove_form_from_reference_list(sublist, other, *this);
    }
 }

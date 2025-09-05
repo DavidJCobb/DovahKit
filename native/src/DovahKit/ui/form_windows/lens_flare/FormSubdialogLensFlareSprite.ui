@@ -2,8 +2,16 @@
 <ui version="4.0">
  <class>FormSubdialogLensFlareSprite</class>
  <widget class="QDialog" name="FormSubdialogLensFlareSprite">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>458</width>
+    <height>327</height>
+   </rect>
+  </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Lens Flare Sprite</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_3">
    <item row="0" column="0" colspan="2">
@@ -39,7 +47,7 @@
              <string>Width:</string>
             </property>
             <property name="buddy">
-             <cstring>doubleSpinBox</cstring>
+             <cstring>width</cstring>
             </property>
            </widget>
           </item>
@@ -49,7 +57,7 @@
              <string>Position:</string>
             </property>
             <property name="buddy">
-             <cstring>doubleSpinBox_4</cstring>
+             <cstring>position</cstring>
             </property>
            </widget>
           </item>
@@ -59,12 +67,12 @@
              <string>Angular Fade:</string>
             </property>
             <property name="buddy">
-             <cstring>doubleSpinBox_3</cstring>
+             <cstring>angularFade</cstring>
             </property>
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QDoubleSpinBox" name="doubleSpinBox">
+           <widget class="QDoubleSpinBox" name="width">
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
@@ -79,12 +87,12 @@
              <string>Height:</string>
             </property>
             <property name="buddy">
-             <cstring>doubleSpinBox_2</cstring>
+             <cstring>height</cstring>
             </property>
            </widget>
           </item>
           <item row="0" column="3">
-           <widget class="QDoubleSpinBox" name="doubleSpinBox_2">
+           <widget class="QDoubleSpinBox" name="height">
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
@@ -94,7 +102,7 @@
            </widget>
           </item>
           <item row="1" column="3">
-           <widget class="QDoubleSpinBox" name="doubleSpinBox_3">
+           <widget class="QDoubleSpinBox" name="angularFade">
             <property name="whatsThis">
              <string>Controls how quickly the sprite fades away when the light is away from the center of the screen. A value of 0 means that there is no angular fade.</string>
             </property>
@@ -104,7 +112,7 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QDoubleSpinBox" name="doubleSpinBox_4">
+           <widget class="QDoubleSpinBox" name="position">
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
@@ -140,7 +148,7 @@
        </property>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="DKColorPickerButton" name="colorButton"/>
+         <widget class="DKColorPickerButton" name="color"/>
         </item>
         <item>
          <widget class="Line" name="line">
@@ -155,12 +163,12 @@
            <string>Opacity:</string>
           </property>
           <property name="buddy">
-           <cstring>doubleSpinBox_5</cstring>
+           <cstring>opacity</cstring>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QDoubleSpinBox" name="doubleSpinBox_5">
+         <widget class="QDoubleSpinBox" name="opacity">
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
@@ -285,12 +293,12 @@
  </customwidgets>
  <tabstops>
   <tabstop>editorID</tabstop>
-  <tabstop>doubleSpinBox</tabstop>
-  <tabstop>doubleSpinBox_2</tabstop>
-  <tabstop>doubleSpinBox_4</tabstop>
-  <tabstop>doubleSpinBox_3</tabstop>
-  <tabstop>colorButton</tabstop>
-  <tabstop>doubleSpinBox_5</tabstop>
+  <tabstop>width</tabstop>
+  <tabstop>height</tabstop>
+  <tabstop>position</tabstop>
+  <tabstop>angularFade</tabstop>
+  <tabstop>color</tabstop>
+  <tabstop>opacity</tabstop>
   <tabstop>texture</tabstop>
   <tabstop>flagRotates</tabstop>
   <tabstop>flagShrinkWhenOccluded</tabstop>
