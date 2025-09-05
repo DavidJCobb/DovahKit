@@ -2,6 +2,7 @@
 #include "dovah/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/item_indices_to_data.h"
+#include "ui/utils/set_range.h"
 
 FormDialogShaderParticleGeometryData::FormDialogShaderParticleGeometryData(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
@@ -9,6 +10,7 @@ FormDialogShaderParticleGeometryData::FormDialogShaderParticleGeometryData(dovah
    ui::bind(this->ui.texture, this->ui.texturePreview);
    ui::item_indices_to_data(this->ui.shaderType);
 
+   ui::set_unsigned_range<int32_t>(this->ui.boxSize);
    this->ui.particleSizeX->setRange(0, 9999);
    this->ui.particleSizeY->setRange(0, 9999);
    this->ui.centerOffsetMin->setRange(-9999, 9999);
