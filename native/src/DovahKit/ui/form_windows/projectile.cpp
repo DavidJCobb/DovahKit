@@ -17,6 +17,7 @@ FormDialogProjectile::FormDialogProjectile(dovah::form_stub& stub, QWidget* pare
 
    ui::enum_dropdown_configs::detection_loudness(this->ui.detectionLoudness);
 
+   this->ui.explosionForm->setAllowedFormType(dovah::form_type::explosion);
    this->ui.light->setAllowedFormType(dovah::form_type::light);
    this->ui.defaultWeaponSource->setAllowedFormType(dovah::form_type::weapon);
    this->ui.decalData->setAllowedFormType(dovah::form_type::texture_set);
@@ -119,6 +120,7 @@ void FormDialogProjectile::_save_impl() {
 void FormDialogProjectile::_update_type_related_enable_states() {
    auto type = (loaded_form_type::projectile_type)this->ui.type->currentData().toInt();
 
+   this->ui.coneSpread->setEnabled(type == loaded_form_type::projectile_type::cone);
    switch (type) {
       case loaded_form_type::projectile_type::barrier:
       case loaded_form_type::projectile_type::beam:
