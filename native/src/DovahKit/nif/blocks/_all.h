@@ -38,6 +38,7 @@
       #include "BSShaderTextureSet.h"
       #include "NiCollisionObject.h"
       #include "NiExtraData.h"
+         #include "BSFurnitureMarkerNode.h"
          #include "BSInvMarker.h"
          #include "NiIntegerExtraData.h"
             #include "BSXFlags.h"
@@ -131,6 +132,7 @@ namespace nifDK {
       block_types::BSDismemberSkinInstance,
       block_types::BSEffectShaderProperty,
       block_types::BSFadeNode,
+      block_types::BSFurnitureMarkerNode,
       block_types::BSInvMarker,
       block_types::BSLeafAnimNode,
       block_types::BSLightingShaderProperty,

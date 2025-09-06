@@ -3582,6 +3582,12 @@
     <ClCompile Include="ui\utils\enum_dropdown_configs\detection_loudness.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\furniture\FurnitureMarkersModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nif\blocks\BSFurnitureMarkerNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8741,6 +8747,15 @@
     <ClInclude Include="ui\utils\enum_dropdown_configs\detection_loudness.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="nif\blocks\BSFurnitureMarkerNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\furniture\animation_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\furniture\entry_point.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -10090,6 +10105,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\volumetric_lighting.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\furniture\FurnitureMarkersModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

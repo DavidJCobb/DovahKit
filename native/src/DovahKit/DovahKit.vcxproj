@@ -825,6 +825,7 @@
     <ClCompile Include="nif\blocks\bhkWorldObject.cpp" />
     <ClCompile Include="nif\blocks\BSDismemberSkinInstance.cpp" />
     <ClCompile Include="nif\blocks\BSEffectShaderProperty.cpp" />
+    <ClCompile Include="nif\blocks\BSFurnitureMarkerNode.cpp" />
     <ClCompile Include="nif\blocks\BSInvMarker.cpp" />
     <ClCompile Include="nif\blocks\BSLightingShaderProperty.cpp" />
     <ClCompile Include="nif\blocks\BSLightingShaderPropertyFloatController.cpp" />
@@ -943,6 +944,7 @@
     <ClCompile Include="ui\form_windows\flora.cpp" />
     <ClCompile Include="ui\form_windows\footstep.cpp" />
     <ClCompile Include="ui\form_windows\footstep_set.cpp" />
+    <ClCompile Include="ui\form_windows\furniture\FurnitureMarkersModel.cpp" />
     <ClCompile Include="ui\form_windows\grass.cpp" />
     <ClCompile Include="ui\form_windows\hazard.cpp" />
     <ClCompile Include="ui\form_windows\idle_marker.cpp" />
@@ -1357,6 +1359,8 @@
     <ClInclude Include="dovah\data\face_fx\phonemes.h" />
     <ClInclude Include="dovah\data\face_tints.h" />
     <ClInclude Include="dovah\data\form_id_constants.h" />
+    <ClInclude Include="dovah\data\furniture\animation_type.h" />
+    <ClInclude Include="dovah\data\furniture\entry_point.h" />
     <ClInclude Include="dovah\data\game.h" />
     <ClInclude Include="dovah\data\game\hardcoded_form_ids_ignore_record_id_prefix.h" />
     <ClInclude Include="dovah\data\hardcoded_form_ids.h" />
@@ -1852,6 +1856,7 @@
     <QtMoc Include="ui\form_windows\actor_value_info.h" />
     <ClInclude Include="helpers\optionals\finite_float.h" />
     <QtMoc Include="ui\form_windows\apparatus.h" />
+    <ClInclude Include="nif\blocks\BSFurnitureMarkerNode.h" />
     <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h" />
     <QtMoc Include="ui\form_windows\climate\FormSubdialogClimateWeather.h" />
     <QtMoc Include="ui\form_windows\encounter_zone.h" />
@@ -1863,6 +1868,7 @@
     <QtMoc Include="ui\form_windows\lens_flare\FormSubdialogLensFlareSprite.h" />
     <QtMoc Include="ui\form_windows\lens_flare.h" />
     <QtMoc Include="ui\form_windows\eyes.h" />
+    <QtMoc Include="ui\form_windows\furniture\FurnitureMarkersModel.h" />
     <ClInclude Include="ui\form_windows\lens_flare\LensFlareSpritesModel.h" />
     <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h" />
     <QtMoc Include="ui\form_windows\potion.h" />

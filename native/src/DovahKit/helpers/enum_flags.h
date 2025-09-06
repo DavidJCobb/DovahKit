@@ -118,6 +118,13 @@ namespace cobb {
          constexpr enum_flags(const enum_flags& o) {
             this->bytes = o.bytes;
          }
+         template<size_t OtherCount> requires (OtherCount < count)
+         constexpr enum_flags(const enum_flags<value_type, OtherCount>& o) {
+            for (size_t i = 0; i < OtherCount; ++i)
+               this->bytes[i] = o.data()[i];
+            for (size_t i = OtherCount; i < count; ++i)
+               this->bytes[i] = 0;
+         }
          constexpr enum_flags(value_type v) {
             (*this) |= v;
          }
@@ -125,6 +132,36 @@ namespace cobb {
          static constexpr bool can_store(value_type v) noexcept {
             auto uv = (underlying_type)v;
             return (uv >= 0) && (uv < count);
+         }
+
+         constexpr const uint8_t* data() const noexcept { return this->bytes.data(); }
+
+         explicit operator uint8_t() const noexcept {
+            return this->bytes[0];
+         }
+         explicit operator uint16_t() const noexcept {
+            return this->bytes[0] | ((uint16_t)this->bytes[1] << 8);
+         }
+         explicit operator uint32_t() const noexcept {
+            uint32_t v = (uint16_t)*this;
+            v |= (uint32_t)this->bytes[2] << 16;
+            v |= (uint32_t)this->bytes[3] << 24;
+            return v;
+         }
+         explicit operator uint64_t() const noexcept {
+            uint64_t v = (uint32_t)*this;
+            v |= (uint64_t)this->bytes[4] << 32;
+            v |= (uint64_t)this->bytes[5] << 40;
+            v |= (uint64_t)this->bytes[6] << 48;
+            v |= (uint64_t)this->bytes[7] << 56;
+            return v;
+         }
+
+         // Treats the least-significant bit in the input as bit index 0.
+         template<typename Integer> requires (std::is_integral_v<Integer> && !std::is_same_v<Integer, bool> && sizeof(Integer) <= bytecount)
+         constexpr void overwrite_with_raw_integer(Integer i) {
+            for (size_t i = 0; i < count; ++i)
+               this->bytes[i] = i >> (i * 8);
          }
 
          // Create and return a mask given values at compile-time. Validates those values.
