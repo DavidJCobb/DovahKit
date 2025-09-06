@@ -1,6 +1,7 @@
 #include "./weather.h"
 #include "dovah/core.h"
 #include "dovah/data/game_settings.h"
+#include "dovah/forms/Sound.h"
 #include "editor/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/enable_inbound_drag_and_drop_insertions.h"
@@ -36,7 +37,7 @@ FormDialogWeather::FormDialogWeather(dovah::form_stub& stub, QWidget* parent) : 
       QDoubleSpinBox* spinbox
    ) {
       handler.setWidgets(*slider, *spinbox);
-      handler.setRange(0, 0.999);
+      handler.setRange(0, 99.9);
    };
    auto _setup_fade_outro_editor = [](
       WeatherIntpackedFloatEditor& handler,
@@ -44,7 +45,7 @@ FormDialogWeather::FormDialogWeather(dovah::form_stub& stub, QWidget* parent) : 
       QDoubleSpinBox* spinbox
    ) {
       handler.setWidgets(*slider, *spinbox);
-      handler.setRange(0.001, 1);
+      handler.setRange(0.1, 100);
    };
 
    #pragma region General
@@ -118,6 +119,12 @@ FormDialogWeather::FormDialogWeather(dovah::form_stub& stub, QWidget* parent) : 
          }
       #pragma endregion
    #pragma endregion
+   #pragma region Colors
+      this->ui.imagespaceSunrise->setAllowedFormType(dovah::form_type::imagespace);
+      this->ui.imagespaceDaytime->setAllowedFormType(dovah::form_type::imagespace);
+      this->ui.imagespaceSunset->setAllowedFormType(dovah::form_type::imagespace);
+      this->ui.imagespaceNighttime->setAllowedFormType(dovah::form_type::imagespace);
+   #pragma endregion
    #pragma region Precipitation
       this->ui.precipitationForm->setAllowedFormType(dovah::form_type::shader_particle_geometry_data);
       _setup_fade_intro_editor(this->_handlers.precipitation.fade_intro, this->ui.precipitationBeginFadeSlider, this->ui.precipitationBeginFadeSpinbox);
@@ -134,6 +141,7 @@ FormDialogWeather::FormDialogWeather(dovah::form_stub& stub, QWidget* parent) : 
       }
    #pragma endregion
    #pragma region Sounds
+   this->ui.currentSoundForm->setAllowedFormType(dovah::form_type::sound_descriptor);
    {
       auto* widget = this->ui.currentSoundType;
       using enumeration = loaded_form_type::weather_sound_type;
@@ -336,6 +344,12 @@ void FormDialogWeather::_load_impl() {
          //
          #undef BIND
       #pragma endregion
+      #pragma region Imagespaces
+         ui::bind(this->ui.imagespaceSunrise, working.imagespaces.sunrise, working);
+         ui::bind(this->ui.imagespaceDaytime, working.imagespaces.day, working);
+         ui::bind(this->ui.imagespaceSunset, working.imagespaces.sunset, working);
+         ui::bind(this->ui.imagespaceNighttime, working.imagespaces.night, working);
+      #pragma endregion
       #pragma pop_macro("BIND")
    #pragma endregion
    #pragma region Precipitation
@@ -404,6 +418,11 @@ void FormDialogWeather::_load_impl() {
          auto& node = nodes.emplace_back();
          node.sound      = item.form.get_form_stub();
          node.sound_type = item.type;
+         if (node.sound && node.sound->form_type == dovah::form_type::sound) {
+            auto loaded = node.sound->load().ptr_cast<dovah::loaded_forms::Sound>();
+            if (loaded)
+               node.sound = loaded->descriptor.get_form_stub();
+         }
       }
       model->overwriteAllItems(nodes);
    }

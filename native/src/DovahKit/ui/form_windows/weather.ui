@@ -154,9 +154,6 @@
          </item>
          <item row="1" column="0" colspan="3">
           <widget class="QGroupBox" name="currentCloudLayerGroupbox">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
            <property name="title">
             <string>Selected layer</string>
            </property>
@@ -1525,6 +1522,82 @@
          <item row="8" column="16">
           <widget class="DKColorPickerButton" name="dalcSpecularNighttime"/>
          </item>
+         <item row="15" column="9">
+          <widget class="QLabel" name="label_59">
+           <property name="text">
+            <string>Sunrise:</string>
+           </property>
+           <property name="buddy">
+            <cstring>imagespaceSunrise</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="16" column="9">
+          <widget class="QLabel" name="label_60">
+           <property name="text">
+            <string>Daytime:</string>
+           </property>
+           <property name="buddy">
+            <cstring>imagespaceDaytime</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="17" column="9">
+          <widget class="QLabel" name="label_61">
+           <property name="text">
+            <string>Sunset:</string>
+           </property>
+           <property name="buddy">
+            <cstring>imagespaceSunset</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="18" column="9">
+          <widget class="QLabel" name="label_62">
+           <property name="text">
+            <string>Nighttime:</string>
+           </property>
+           <property name="buddy">
+            <cstring>imagespaceNighttime</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="15" column="10" colspan="7">
+          <widget class="DKFormPicker" name="imagespaceSunrise"/>
+         </item>
+         <item row="17" column="10" colspan="7">
+          <widget class="DKFormPicker" name="imagespaceSunset"/>
+         </item>
+         <item row="16" column="10" colspan="7">
+          <widget class="DKFormPicker" name="imagespaceDaytime"/>
+         </item>
+         <item row="18" column="10" colspan="7">
+          <widget class="DKFormPicker" name="imagespaceNighttime"/>
+         </item>
+         <item row="14" column="9" colspan="8">
+          <widget class="QLabel" name="label_63">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+             <underline>true</underline>
+            </font>
+           </property>
+           <property name="text">
+            <string>Imagespaces</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="13" column="9" colspan="8" alignment="Qt::AlignBottom">
+          <widget class="Line" name="line_11">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
        <item row="1" column="0">
@@ -2409,6 +2482,10 @@
   <tabstop>dalcFresnelDaytime</tabstop>
   <tabstop>dalcFresnelSunset</tabstop>
   <tabstop>dalcFresnelNighttime</tabstop>
+  <tabstop>imagespaceSunrise</tabstop>
+  <tabstop>imagespaceDaytime</tabstop>
+  <tabstop>imagespaceSunset</tabstop>
+  <tabstop>imagespaceNighttime</tabstop>
   <tabstop>weatherClass</tabstop>
   <tabstop>precipitationForm</tabstop>
   <tabstop>precipitationBeginFadeSlider</tabstop>

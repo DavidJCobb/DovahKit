@@ -217,6 +217,9 @@
          </item>
          <item row="0" column="1">
           <widget class="QSlider" name="opacitySlider">
+           <property name="maximum">
+            <number>100</number>
+           </property>
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -226,6 +229,9 @@
           <widget class="DKFloatSlider" name="refractionMagnitudeSlider">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="decimals">
+            <number>2</number>
            </property>
           </widget>
          </item>
@@ -264,6 +270,12 @@
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="maximum">
+            <double>1.000000000000000</double>
+           </property>
           </widget>
          </item>
          <item row="0" column="0">
@@ -281,12 +293,24 @@
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="maximum">
+            <double>1.000000000000000</double>
+           </property>
           </widget>
          </item>
          <item row="2" column="1">
           <widget class="DKFloatSlider" name="reflectionMagnitudeSlider">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="maximum">
+            <double>1.000000000000000</double>
            </property>
           </widget>
          </item>
@@ -571,6 +595,9 @@
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
+            <property name="decimals">
+             <number>4</number>
+            </property>
             <property name="minimum">
              <double>-999999.000000000000000</double>
             </property>
@@ -584,6 +611,9 @@
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
+            <property name="decimals">
+             <number>4</number>
+            </property>
             <property name="minimum">
              <double>-999999.000000000000000</double>
             </property>
@@ -596,6 +626,9 @@
            <widget class="QDoubleSpinBox" name="linearVelocityZ">
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="decimals">
+             <number>4</number>
             </property>
             <property name="minimum">
              <double>-999999.000000000000000</double>
@@ -649,6 +682,9 @@
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
+            <property name="decimals">
+             <number>4</number>
+            </property>
             <property name="minimum">
              <double>-999999.000000000000000</double>
             </property>
@@ -662,6 +698,9 @@
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
+            <property name="decimals">
+             <number>4</number>
+            </property>
             <property name="minimum">
              <double>-999999.000000000000000</double>
             </property>
@@ -674,6 +713,9 @@
            <widget class="QDoubleSpinBox" name="angularVelocityZ">
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+            <property name="decimals">
+             <number>4</number>
             </property>
             <property name="minimum">
              <double>-999999.000000000000000</double>
@@ -714,6 +756,12 @@
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
+         <property name="decimals">
+          <number>2</number>
+         </property>
+         <property name="maximum">
+          <double>10000.000000000000000</double>
+         </property>
         </widget>
        </item>
        <item row="1" column="1">
@@ -721,12 +769,24 @@
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
+         <property name="decimals">
+          <number>2</number>
+         </property>
+         <property name="maximum">
+          <double>10.000000000000000</double>
+         </property>
         </widget>
        </item>
        <item row="4" column="1">
         <widget class="DKFloatSlider" name="specRadiusSlider">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="decimals">
+          <number>2</number>
+         </property>
+         <property name="maximum">
+          <double>10000.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -745,10 +805,19 @@
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
+         <property name="decimals">
+          <number>2</number>
+         </property>
+         <property name="maximum">
+          <double>10.000000000000000</double>
+         </property>
         </widget>
        </item>
        <item row="2" column="1">
         <widget class="QSlider" name="sunSparklePowerSlider">
+         <property name="maximum">
+          <number>10000</number>
+         </property>
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -759,12 +828,21 @@
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
+         <property name="decimals">
+          <number>2</number>
+         </property>
+         <property name="maximum">
+          <double>10000.000000000000000</double>
+         </property>
         </widget>
        </item>
        <item row="5" column="1">
         <widget class="DKFloatSlider" name="specBrightnessSlider">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="decimals">
+          <number>2</number>
          </property>
         </widget>
        </item>
@@ -991,6 +1069,12 @@
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
+                <property name="decimals">
+                 <number>2</number>
+                </property>
+                <property name="maximum">
+                 <double>1.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="3" column="0">
@@ -1031,12 +1115,24 @@
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="maximum">
+                 <double>1.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="3" column="1">
                <widget class="DKFloatSlider" name="noise1UVScaleSlider">
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="decimals">
+                 <number>2</number>
+                </property>
+                <property name="maximum">
+                 <double>100.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -1065,12 +1161,21 @@
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
+                <property name="decimals">
+                 <number>2</number>
+                </property>
+                <property name="maximum">
+                 <double>360.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="2" column="2">
                <widget class="QDoubleSpinBox" name="noise1AmpScaleSpinbox">
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
                 </property>
                 <property name="maximum">
                  <double>1.000000000000000</double>
@@ -1083,7 +1188,7 @@
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                 </property>
                 <property name="maximum">
-                 <double>10000.000000000000000</double>
+                 <double>100.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -1157,6 +1262,12 @@
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
+                <property name="decimals">
+                 <number>2</number>
+                </property>
+                <property name="maximum">
+                 <double>1.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="3" column="0">
@@ -1175,7 +1286,7 @@
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                 </property>
                 <property name="maximum">
-                 <double>10000.000000000000000</double>
+                 <double>100.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -1183,6 +1294,9 @@
                <widget class="DKFloatSlider" name="noise2AmpScaleSlider">
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
                 </property>
                </widget>
               </item>
@@ -1224,6 +1338,12 @@
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
+                <property name="decimals">
+                 <number>2</number>
+                </property>
+                <property name="maximum">
+                 <double>1.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="3" column="1">
@@ -1231,12 +1351,21 @@
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
+                <property name="decimals">
+                 <number>2</number>
+                </property>
+                <property name="maximum">
+                 <double>100.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="2" column="2">
                <widget class="QDoubleSpinBox" name="noise2AmpScaleSpinbox">
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
                 </property>
                 <property name="maximum">
                  <double>1.000000000000000</double>
@@ -1274,7 +1403,7 @@
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                 </property>
                 <property name="maximum">
-                 <double>10000.000000000000000</double>
+                 <double>100.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -1292,6 +1421,12 @@
                <widget class="DKFloatSlider" name="noise3AmpScaleSlider">
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
+                <property name="maximum">
+                 <double>1.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -1320,12 +1455,18 @@
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
+                <property name="decimals">
+                 <number>2</number>
+                </property>
                </widget>
               </item>
               <item row="1" column="1">
                <widget class="DKFloatSlider" name="noise3WindSpeedSlider">
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="maximum">
+                 <double>1.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -1367,6 +1508,9 @@
                 <property name="orientation">
                  <enum>Qt::Horizontal</enum>
                 </property>
+                <property name="maximum">
+                 <double>360.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="1" column="2">
@@ -1394,6 +1538,9 @@
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                 </property>
+                <property name="decimals">
+                 <number>4</number>
+                </property>
                 <property name="maximum">
                  <double>1.000000000000000</double>
                 </property>
@@ -1412,6 +1559,12 @@
           <widget class="DKFloatSlider" name="noiseFalloffSlider">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="decimals">
+            <number>2</number>
+           </property>
+           <property name="maximum">
+            <double>8192.000000000000000</double>
            </property>
           </widget>
          </item>
@@ -1465,6 +1618,9 @@
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
+            <property name="maximum">
+             <double>1.000000000000000</double>
+            </property>
            </widget>
           </item>
           <item row="0" column="2">
@@ -1482,6 +1638,9 @@
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
+            <property name="maximum">
+             <double>10000.000000000000000</double>
+            </property>
            </widget>
           </item>
           <item row="1" column="2">
@@ -1498,6 +1657,9 @@
            <widget class="DKFloatSlider" name="fogAboveWaterDistFarSlider">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="maximum">
+             <double>10000.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -1555,6 +1717,9 @@
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
+            <property name="maximum">
+             <double>1.000000000000000</double>
+            </property>
            </widget>
           </item>
           <item row="0" column="2">
@@ -1572,6 +1737,9 @@
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
+            <property name="maximum">
+             <double>10000.000000000000000</double>
+            </property>
            </widget>
           </item>
           <item row="1" column="2">
@@ -1588,6 +1756,9 @@
            <widget class="DKFloatSlider" name="fogUnderwaterDistFarSlider">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="maximum">
+             <double>10000.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -1659,6 +1830,12 @@
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
+         <property name="decimals">
+          <number>4</number>
+         </property>
+         <property name="maximum">
+          <double>1.000000000000000</double>
+         </property>
         </widget>
        </item>
        <item row="0" column="2">
@@ -1678,6 +1855,12 @@
         <widget class="DKFloatSlider" name="depthRefractionSlider">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="decimals">
+          <number>4</number>
+         </property>
+         <property name="maximum">
+          <double>1.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -1699,6 +1882,12 @@
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
+         <property name="decimals">
+          <number>4</number>
+         </property>
+         <property name="maximum">
+          <double>1.000000000000000</double>
+         </property>
         </widget>
        </item>
        <item row="2" column="2">
@@ -1718,6 +1907,12 @@
         <widget class="DKFloatSlider" name="depthSpecularSlider">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="decimals">
+          <number>4</number>
+         </property>
+         <property name="maximum">
+          <double>1.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -1950,17 +2145,6 @@
   <tabstop>depthSpecularSpinbox</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
-  <tabstop>slider_7</tabstop>
-  <tabstop>doubleSpinBox_9</tabstop>
-  <tabstop>slider_10</tabstop>
-  <tabstop>slider_9</tabstop>
-  <tabstop>doubleSpinBox_10</tabstop>
-  <tabstop>doubleSpinBox_8</tabstop>
-  <tabstop>slider_8</tabstop>
-  <tabstop>filePicker_2</tabstop>
-  <tabstop>slider_6</tabstop>
-  <tabstop>doubleSpinBox_7</tabstop>
-  <tabstop>doubleSpinBox_6</tabstop>
  </tabstops>
  <resources/>
  <connections/>

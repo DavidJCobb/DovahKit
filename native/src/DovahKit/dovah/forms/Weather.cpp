@@ -144,7 +144,7 @@ namespace dovah::loaded_forms {
                {
                   auto& sound = this->sounds.emplace_back();
                   if (auto& form = sound.form; subrecord.read(form))
-                     intfc.warn_if_ref_is_wrong_type(form, form_type::sound_descriptor, subrecord.signature());
+                     intfc.warn_if_ref_is_wrong_type(form, std::array{ form_type::sound_descriptor, form_type::sound }, subrecord.signature());
                   subrecord.read(sound.type);
                }
                break;
@@ -213,7 +213,7 @@ namespace dovah::loaded_forms {
                break;
             default:
                {
-                  uint32_t index = signature - '00TX';
+                  uint32_t index = (signature - '00TX') >> 24;
                   if (index < max_cloud_layer_count) {
                      subrecord.read(this->clouds.layers[index].texture);
                      layers_with_textures |= (1 << index);

@@ -9,6 +9,10 @@ FormDialogTree::FormDialogTree(dovah::form_stub& stub, QWidget* parent) : QDialo
    this->ui.flexibilityTrunk->setRange(0, 1000);
    this->ui.leafAmplitude->setRange(0, 1000);
    this->ui.leafFrequency->setRange(0, 1000);
+   //
+   // NOTE: Other tree params are not exposed in the CK UI. I can't find 
+   // where or how they're set.
+   //
    
    this->ui.ingredient->setAllowedFormType(dovah::form_type::ingredient);
    this->ui.harvestSound->setAllowedFormType(dovah::form_type::sound_descriptor);

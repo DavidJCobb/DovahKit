@@ -22,6 +22,7 @@ void WeatherIntpackedFloatEditor::setWidgets(QSlider& slider, QDoubleSpinBox& sp
    this->spinbox = &spinbox;
 
    slider.setRange(0, 0xFF);
+   spinbox.setRange(this->_minimum, this->_maximum);
    QObject::connect(&slider, &QSlider::valueChanged, &spinbox, [this](int v) {
       const auto blocker = QSignalBlocker(this->spinbox);
       this->spinbox->setValue(this->byteToFloat(v));
