@@ -28,7 +28,8 @@ class FurnitureMarkersModel : public QAbstractItemModel {
 
    protected:
       struct Node {
-         AnimationType     animation_type = AnimationType::sit;
+         AnimationType animation_type = AnimationType::sit;
+         bool          enabled = false;
          struct {
             EntryPointFlags enabled;
             EntryPointFlags supported;
@@ -62,6 +63,10 @@ class FurnitureMarkersModel : public QAbstractItemModel {
       void importData(const dovah::loaded_forms::Furniture&);
       void exportData(dovah::loaded_forms::Furniture&) const;
 
+      // Sets the NIF and reloads marker info from it. If the markers in the NIF are different 
+      // from the markers we have right now, then resets the model to match the NIF.
+      void setNIF(const std::string& nif_path);
+
    protected:
       std::vector<Node> _nodes;
 
@@ -80,6 +85,8 @@ class FurnitureMarkerEntryPointsProxyModel : public QAbstractItemModel {
       static constexpr const size_t valid_entry_point_count = 5;
 
    public:
+      using QAbstractItemModel::QAbstractItemModel;
+
       #pragma region QAbstractItemModel overrides
          #pragma region Hierarchy
             virtual QModelIndex index(int row, int column, const QModelIndex& parent) const override;

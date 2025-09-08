@@ -95,7 +95,7 @@ namespace dovah::loaded_forms {
                case 'MNAM':
                   subrecord.read(this->active_markers_and_furn_flags);
                   break;
-               case 'WDBT':
+               case 'WBDT':
                   subrecord.read(this->workbench.type);
                   {
                      std::underlying_type_t<dovah::skill> value = -1;

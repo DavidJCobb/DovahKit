@@ -61,8 +61,6 @@ namespace cobb {
          static constexpr uint8_t _remainder_mask = ([]() {
             if (!_has_remainder)
                return 0;
-            if (_remainder == 7)
-               return 0xFF;
             return (1 << _remainder) - 1;
          })();
          
@@ -159,9 +157,9 @@ namespace cobb {
 
          // Treats the least-significant bit in the input as bit index 0.
          template<typename Integer> requires (std::is_integral_v<Integer> && !std::is_same_v<Integer, bool> && sizeof(Integer) <= bytecount)
-         constexpr void overwrite_with_raw_integer(Integer i) {
-            for (size_t i = 0; i < count; ++i)
-               this->bytes[i] = i >> (i * 8);
+         constexpr void overwrite_with_raw_integer(Integer v) {
+            for (size_t i = 0; i < bytes.size(); ++i)
+               this->bytes[i] = v >> (i * 8);
          }
 
          // Create and return a mask given values at compile-time. Validates those values.

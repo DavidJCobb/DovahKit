@@ -100,11 +100,21 @@
                      return tr("%1 %2").arg(type).arg(row);
                   }
                   break;
+               case Qt::CheckStateRole:
+                  if (row > 23) // only 24 flags in the form for this
+                     return {};
+                  if (node.enabled)
+                     return (int)Qt::CheckState::Checked;
+                  return Qt::CheckState::Unchecked;
             }
             return {};
          }
          /*virtual*/ Qt::ItemFlags FurnitureMarkersModel::flags(const QModelIndex& index) const /*override*/ {
-            return Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemNeverHasChildren;
+            auto flags = Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemNeverHasChildren;
+            if (index.isValid() && index.row() < 23) {
+               flags |= Qt::ItemFlag::ItemIsUserCheckable;
+            }
+            return flags;
          }
          #pragma region Write-access
             /*virtual*/ bool FurnitureMarkersModel::setData(const QModelIndex& index, const QVariant& value, int role) /*override*/ {
@@ -138,6 +148,17 @@
                         if (i < 0 || i > 2)
                            return false;
                         node.animation_type = (AnimationType)i;
+                     }
+                     break;
+                  case Qt::CheckStateRole:
+                     if (!value.canConvert<int>())
+                        return false;
+                     {
+                        auto state   = (Qt::CheckState)value.toInt();
+                        bool result  = (state == Qt::CheckState::Checked);
+                        if (node.enabled == result)
+                           return true;
+                        node.enabled = result;
                      }
                      break;
                }
@@ -184,6 +205,10 @@
          dst_item.entry_points.enabled.overwrite_with_raw_integer(~src_item.disabled_entry_points);
          dst_item.keyword = src_item.keyword.get_form_stub();
       }
+      for (size_t i = 0; i < this->_nodes.size(); ++i) {
+         if (src_form.active_markers_and_furn_flags & (1 << i))
+            this->_nodes[i].enabled = true;
+      }
       this->endResetModel();
    }
    void FurnitureMarkersModel::exportData(dovah::loaded_forms::Furniture& dst_form) const {
@@ -214,10 +239,42 @@
       }
    }
 
+   void FurnitureMarkersModel::setNIF(const std::string& nif_path) {
+      auto  nodes_prior = this->_nodes;
+      this->_pull_marker_info_from_nif(nif_path);
+      auto& nodes_after = this->_nodes;
+
+      bool   reset = false;
+      size_t size  = nodes_after.size();
+      if (nodes_prior.size() != size)
+         reset = true;
+      else {
+         for (size_t i = 0; i < size; ++i) {
+            if (nodes_prior[i].animation_type != nodes_after[i].animation_type) {
+               reset = true;
+               break;
+            }
+            if (nodes_prior[i].entry_points.supported != nodes_after[i].entry_points.supported) {
+               reset = true;
+               break;
+            }
+         }
+      }
+      if (reset) {
+         this->beginResetModel();
+         this->endResetModel();
+      } else {
+         //
+         // Restore states (e.g. what markers and entry points are enabled; what keywords are set).
+         //
+         nodes_after = std::move(nodes_prior);
+      }
+   }
+
    void FurnitureMarkersModel::_pull_marker_info_from_nif(const std::string& nif_path) {
       auto& assets = dovahkit::subsystems::assets::get();
       std::unique_ptr<dovah::bsa_archived_file> file;
-      file.reset(assets.lookup_game_asset(nif_path));
+      file.reset(assets.lookup_game_asset(std::string("meshes\\") + nif_path));
       if (!file)
          return;
 
@@ -313,7 +370,7 @@
             return {};
          }
          /*virtual*/ Qt::ItemFlags FurnitureMarkerEntryPointsProxyModel::flags(const QModelIndex& index) const /*override*/ {
-            return Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemNeverHasChildren;
+            return Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemNeverHasChildren | Qt::ItemFlag::ItemIsUserCheckable;
          }
          #pragma region Write-access
             /*virtual*/ bool FurnitureMarkerEntryPointsProxyModel::setData(const QModelIndex& index, const QVariant& value, int role) /*override*/ {
@@ -386,6 +443,7 @@
          auto* model = qmi.model();
          QObject::connect(model, &QAbstractItemModel::dataChanged, this, &FurnitureMarkerEntryPointsProxyModel::_recache);
       }
+      this->_recache();
       this->endResetModel();
    }
 

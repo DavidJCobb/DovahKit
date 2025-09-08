@@ -3588,6 +3588,9 @@
     <ClCompile Include="nif\blocks\BSFurnitureMarkerNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\furniture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10108,6 +10111,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\furniture\FurnitureMarkersModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\furniture.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
