@@ -70,6 +70,7 @@ class FurnitureMarkersModel : public QAbstractItemModel {
    protected:
       std::vector<Node> _nodes;
 
+      void _on_nif_load_failed();
       void _pull_marker_info_from_nif(const std::string& nif_path);
 };
 
@@ -118,5 +119,5 @@ class FurnitureMarkerEntryPointsProxyModel : public QAbstractItemModel {
       } _cache;
 
       std::optional<EntryPoint> _map_row_to_entry_point(int row) const;
-      void _recache();
+      void _recache(bool emit_signals);
 };

@@ -271,25 +271,51 @@
       }
    }
 
+   void FurnitureMarkersModel::_on_nif_load_failed() {
+      auto&      list = this->_nodes;
+      const auto size = list.size();
+      for (size_t i = 0; i < size; ++i) {
+         auto& node = list[i];
+         auto& mask = node.entry_points.supported;
+
+         EntryPointFlags bits_to_keep;
+         bits_to_keep.set<
+            EntryPoint::front,
+            EntryPoint::back,
+            EntryPoint::left,
+            EntryPoint::right,
+            EntryPoint::up
+         >();
+
+         mask &= bits_to_keep;
+      }
+   }
    void FurnitureMarkersModel::_pull_marker_info_from_nif(const std::string& nif_path) {
       auto& assets = dovahkit::subsystems::assets::get();
       std::unique_ptr<dovah::bsa_archived_file> file;
       file.reset(assets.lookup_game_asset(std::string("meshes\\") + nif_path));
-      if (!file)
+      if (!file) {
+         this->_on_nif_load_failed();
          return;
+      }
 
       nifDK::file nif;
       nif.read((void*)file->data(), file->size());
       if (nif.read_error().code != nifDK::default_notice_code) {
+         this->_on_nif_load_failed();
          return;
       }
 
       const auto* block = nif.block_by_name("FRN");
-      if (!block)
+      if (!block) {
+         this->_on_nif_load_failed();
          return;
+      }
       const auto* casted = dynamic_cast<const nifDK::block_types::BSFurnitureMarkerNode*>(block);
-      if (!casted)
+      if (!casted) {
+         this->_on_nif_load_failed();
          return;
+      }
       
       auto& src_list = casted->markers;
       auto& dst_list = this->_nodes;
@@ -441,9 +467,9 @@
       this->_source_qmi = qmi;
       if (qmi.isValid()) {
          auto* model = qmi.model();
-         QObject::connect(model, &QAbstractItemModel::dataChanged, this, &FurnitureMarkerEntryPointsProxyModel::_recache);
+         QObject::connect(model, &QAbstractItemModel::dataChanged, this, [this]() { this->_recache(true); });
       }
-      this->_recache();
+      this->_recache(false);
       this->endResetModel();
    }
 
@@ -454,41 +480,52 @@
       for (size_t i = 0; i < valid_entry_point_count; ++i) {
          if (!this->_cache.entry_points.supported.test((EntryPoint)i))
             continue;
-         ++which;
          if (which == row)
             return (EntryPoint)which;
+         ++which;
       }
       return {};
    }
-   void FurnitureMarkerEntryPointsProxyModel::_recache() {
+   void FurnitureMarkerEntryPointsProxyModel::_recache(bool emit_signals) {
       if (!this->_source_qmi.isValid()) {
-         this->beginRemoveRows({}, 0, this->rowCount());
+         if (emit_signals)
+            this->beginRemoveRows({}, 0, this->rowCount());
          this->_cache = {};
-         this->endRemoveRows();
+         if (emit_signals)
+            this->endRemoveRows();
          return;
       }
       auto* source_model = this->_source_qmi.model();
 
       size_t row_count_prior = this->_cache.entry_points.supported_count;
-      
-      this->_cache.entry_points.supported.overwrite_with_raw_integer((uint32_t)source_model->data(this->_source_qmi, source_model_type::EntryPointsSupportedRole).toInt());
-      this->_cache.entry_points.supported_count = this->_cache.entry_points.supported.number_set();
-      this->_cache.entry_points.enabled.overwrite_with_raw_integer((uint32_t)source_model->data(this->_source_qmi, source_model_type::EntryPointsEnabledRole).toInt());
 
-      size_t row_count_after = this->_cache.entry_points.supported_count;
+      decltype(this->_cache.entry_points) new_data;
+      new_data.supported.overwrite_with_raw_integer((uint32_t)source_model->data(this->_source_qmi, source_model_type::EntryPointsSupportedRole).toInt());
+      new_data.supported_count = new_data.supported.number_set();
+      new_data.enabled.overwrite_with_raw_integer((uint32_t)source_model->data(this->_source_qmi, source_model_type::EntryPointsEnabledRole).toInt());
 
-      if (row_count_after > 0) {
-         emit dataChanged(
-            this->index(0, 0, {}),
-            this->index(row_count_after - 1, 0, {})
-         );
+      size_t row_count_after = new_data.supported_count;
+
+      if (emit_signals) {
+         if (row_count_prior > row_count_after) {
+            this->beginRemoveRows({}, row_count_after, row_count_prior - 1);
+         } else if (row_count_prior < row_count_after) {
+            this->beginInsertRows({}, row_count_prior, row_count_after - 1);
+         }
       }
-      if (row_count_prior > row_count_after) {
-         this->beginRemoveRows({}, row_count_after, row_count_prior - 1);
-         this->endRemoveRows();
-      } else if (row_count_prior < row_count_after) {
-         this->beginInsertRows({}, row_count_prior, row_count_after - 1);
-         this->endInsertRows();
+      this->_cache.entry_points = new_data;
+      if (emit_signals) {
+         if (row_count_prior > row_count_after) {
+            this->endRemoveRows();
+         } else if (row_count_prior < row_count_after) {
+            this->endInsertRows();
+         }
+         if (row_count_after > 0) {
+            emit dataChanged(
+               this->index(0, 0, {}),
+               this->index(row_count_after - 1, 0, {})
+            );
+         }
       }
    }
 #pragma endregion
