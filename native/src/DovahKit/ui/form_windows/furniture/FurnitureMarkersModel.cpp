@@ -7,6 +7,7 @@
    #include "dovah/files/bsa/bsa_archived_file.h"
    #include "editor/subsystems/assets.h"
    #include "nif/blocks/BSFurnitureMarkerNode.h"
+   #include "nif/blocks/NiNode.h"
    #include "nif/blocks/NiObjectNET.h"
    #include "nif/file.h"
 #pragma endregion
@@ -306,7 +307,12 @@
          return;
       }
 
-      const auto* block = nif.block_by_name("FRN");
+      const auto* root = nif.root_node;
+      if (!root) {
+         this->_on_nif_load_failed();
+         return;
+      }
+      const auto* block = root->get_extra_data("FRN");
       if (!block) {
          this->_on_nif_load_failed();
          return;
@@ -319,7 +325,7 @@
       
       auto& src_list = casted->markers;
       auto& dst_list = this->_nodes;
-      const size_t size = src_list.size();
+      const size_t size = std::min(dovah::loaded_forms::Furniture::max_possible_markers, src_list.size()); // CK skips NIF data for markers past 25
       dst_list.resize(size);
       for (size_t i = 0; i < size; ++i) {
          auto& src_item = src_list[i];
@@ -332,6 +338,16 @@
          }
          dst_item.entry_points.supported = src_item.entry_points;
       }
+      //
+      // NOTE: CK warns if multiple markers in FRN have different animation types, but not 
+      //       if just one marker has multiple animation types. The lowest set bit in a 
+      //       marker's animation type is the type it's considered to have, as far as that 
+      //       particular check works.
+      // 
+      //       So for example, if the first marker is Sit|Sleep and the second is Sit, the 
+      //       CK won't warn; but if the first marker is Sit (on its own or with any other 
+      //       flags), and the second is Sleep or Lean, then the CK warns.
+      //
    }
 #pragma endregion
 

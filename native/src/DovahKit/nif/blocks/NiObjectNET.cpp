@@ -41,4 +41,17 @@ namespace nifDK::block_types {
       }
       reader.read_ref(this->controller);
    }
+
+   NiExtraData* NiObjectNET::get_extra_data(std::string_view name) {
+      return const_cast<NiExtraData*>(std::as_const(*this).get_extra_data(name));
+   }
+   const NiExtraData* NiObjectNET::get_extra_data(std::string_view name) const {
+      for (auto* extra : this->extra) {
+         if (!extra)
+            continue;
+         if (extra->name == name)
+            return extra;
+      }
+      return nullptr;
+   }
 }

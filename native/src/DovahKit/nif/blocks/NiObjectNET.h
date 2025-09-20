@@ -1,4 +1,5 @@
 #pragma once
+#include <string_view>
 #include "NiObject.h"
 #include "NiTimeController.h"
 
@@ -39,5 +40,8 @@ namespace nifDK::block_types {
          }
 
          virtual void parse(file_reader&) override;
+
+         NiExtraData* get_extra_data(std::string_view);
+         const NiExtraData* get_extra_data(std::string_view) const;
    };
 }

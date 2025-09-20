@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="cobb::enum_flags&lt;*,*&gt;">
+      <Intrinsic Name="_get_nth_bit" Expression="(bytes[i / 8] &gt;&gt; (i % 8)) &amp; 1">
+         <Parameter Name="i" Type="size_t" />
+      </Intrinsic>
+      
+      <Expand>
+         <Item Name="[size]">count,d</Item>
+         <CustomListItems Condition="count &gt; 0">
+            <Variable Name="i" InitialValue="(size_t)0"/>
+            
+            <Size>count</Size>
+            <Exec>i = 0</Exec>
+            <Loop Condition="i &lt; count">
+               <Item Name="[{i}] (possibly {($T1)i,en})">(bool)_get_nth_bit(i)</Item>
+               <Exec>++i</Exec>
+            </Loop>
+         </CustomListItems>
+      </Expand>
+   </Type>
+</AutoVisualizer>
