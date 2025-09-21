@@ -19,7 +19,7 @@ I have a `cobb::enum_flags` helper class, which is only used in a limited number
 
 * There's no direct way to clear a range of values, unless those values are valid enumeration members specified at compile-time (i.e. `my_flags.reset<E::a, E::b>()`). This is a problem when dealing with flags-masks loaded from a file somewhere, where the data may not be "strictly" valid. The solution for discarding upper bits ends up being to construct a flags-mask temporary and then AND with it.
 
-  * A member function like `clear_all_meaningless_flags()` would be nice to have, is what I'm saying.
+  * A member function like `clear_extra_bits()` would be nice to have, is what I'm saying.
 
 * I actually hate the naming convention used by the STL for bitsets (set/reset for individual bits; clear for the whole set). I feel like `clear_one` and `clear_some` are clearer names than `reset`; and we should perhaps avoid the name `clear` for the whole set in favor of `clear_all`.
 
