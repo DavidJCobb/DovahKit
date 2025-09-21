@@ -67,8 +67,11 @@ class FurnitureMarkersModel : public QAbstractItemModel {
       // from the markers we have right now, then resets the model to match the NIF.
       void setNIF(const std::string& nif_path);
 
+      constexpr bool wereMarkersLoadedFromNIF() const noexcept { return this->_loaded_from_nif; }
+
    protected:
       std::vector<Node> _nodes;
+      bool _loaded_from_nif = false;
 
       void _on_nif_load_failed();
       void _pull_marker_info_from_nif(const std::string& nif_path);

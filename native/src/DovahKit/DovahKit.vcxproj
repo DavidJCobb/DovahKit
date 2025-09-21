@@ -3909,6 +3909,7 @@
     <Natvis Include="editor\subsystems\worldinput\input_sequence.natvis" />
     <Natvis Include="helpers\bitfield_array.natvis" />
     <Natvis Include="helpers\eight_cc.natvis" />
+    <Natvis Include="helpers\enum_flags.natvis" />
     <Natvis Include="helpers\enum_in.natvis" />
     <Natvis Include="helpers\glm\mat.natvis" />
     <Natvis Include="helpers\glm\vec.natvis" />

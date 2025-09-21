@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogFurniture</class>
  <widget class="QDialog" name="FormDialogFurniture">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>756</width>
+    <height>720</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Furniture</string>
   </property>
@@ -77,6 +85,9 @@
        </item>
        <item row="2" column="0">
         <widget class="QCheckBox" name="flagIsMarker">
+         <property name="whatsThis">
+          <string>If this furniture is flagged as a marker, then its 3D model won't be loaded during play.</string>
+         </property>
          <property name="text">
           <string>Is Marker</string>
          </property>
@@ -84,6 +95,10 @@
        </item>
        <item row="0" column="1">
         <widget class="QCheckBox" name="flagMustExitToTalk">
+         <property name="whatsThis">
+          <string>&lt;p&gt;If this option is enabled, then NPCs can't talk to the player while using this furniture. If the player tries to strike up a conversation, they'll exit this furniture before responding.&lt;/p&gt;
+&lt;p&gt;The most common use cases for this are beds and resource harvesting furniture: you don't usually want actors to continue lying in bed, or chopping wood, while speaking to the player.&lt;/p&gt;</string>
+         </property>
          <property name="text">
           <string>Must Exit to Talk</string>
          </property>
@@ -92,7 +107,7 @@
        <item row="1" column="1">
         <widget class="QCheckBox" name="flagIsPerch">
          <property name="text">
-          <string>Is Perch</string>
+          <string>Is Dragon Perch</string>
          </property>
         </widget>
        </item>
@@ -128,10 +143,18 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="DKFormNIFPicker" name="markerModel"/>
+        <widget class="DKFormNIFPicker" name="markerModel">
+         <property name="whatsThis">
+          <string>Replace the 3D model(s) that the Creation Kit uses to render this furniture's markers.</string>
+         </property>
+        </widget>
        </item>
        <item row="1" column="1">
-        <widget class="DKFormPicker" name="interactionKeyword"/>
+        <widget class="DKFormPicker" name="interactionKeyword">
+         <property name="whatsThis">
+          <string>The interaction keyword, if set, limits what actors can interact with this furniture. Actors will only be allowed to use this furniture if they (or their race) possess the given keyword.</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -249,6 +272,10 @@
             <height>100</height>
            </size>
           </property>
+          <property name="whatsThis">
+           <string>&lt;p&gt;Control which markers are enabled for this furniture form. The available markers are defined in the 3D model file, via the FRN block.&lt;/p&gt;
+&lt;p&gt;When looking through Skyrim's furniture objects, you may notice that a lot of them have variants based on entry points, e.g. &lt;code&gt;CommonWritingChair01L&lt;/code&gt;, &lt;code&gt;CommonWritingChair01R&lt;/code&gt;, and &lt;code&gt;CommonWritingChair01LR&lt;/code&gt;. This is because the game doesn't use collision checks to block access to furniture markers: if a furniture is placed flush against an obstacle, actors can still enter and exit the furniture through the obstacle by interacting with it. Bethesda's solution to this problem is to create variants on each furniture object, with different entry directions enabled. If you're placing a &quot;common writing chair&quot; such that there's a solid object just to its right, then use the &lt;code&gt;CommonWritingChair01L&lt;/code&gt; variant, which can only be entered from and exited to the left.&lt;/p&gt;</string>
+          </property>
          </widget>
         </item>
        </layout>
@@ -257,7 +284,7 @@
      <item>
       <widget class="QGroupBox" name="groupBox_3">
        <property name="title">
-        <string>Marker Entry Points</string>
+        <string>Selected Marker</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_5">
         <item row="0" column="0">
@@ -268,14 +295,38 @@
             <height>100</height>
            </size>
           </property>
+          <property name="whatsThis">
+           <string>Control the directions that actors can enter and exit this marker from.</string>
+          </property>
          </widget>
+        </item>
+        <item row="1" column="0">
+         <layout class="QGridLayout" name="gridLayout_10">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Keyword:</string>
+            </property>
+            <property name="buddy">
+             <cstring>markerKeyword</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="DKFormPicker" name="markerKeyword">
+            <property name="whatsThis">
+             <string>Each of a furniture's markers can be associated with a different keyword.</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
      </item>
      <item>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="1" column="0">
+       <item row="0" column="0">
         <widget class="QLabel" name="label_5">
          <property name="text">
           <string>Associated Spell:</string>
@@ -285,21 +336,12 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>Marker Keyword:</string>
-         </property>
-         <property name="buddy">
-          <cstring>markerKeyword</cstring>
+       <item row="0" column="1">
+        <widget class="DKFormPicker" name="associatedSpell">
+         <property name="whatsThis">
+          <string>A spell that will be applied to actors while they use this furniture.</string>
          </property>
         </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="DKFormPicker" name="markerKeyword"/>
-       </item>
-       <item row="1" column="1">
-        <widget class="DKFormPicker" name="associatedSpell"/>
        </item>
       </layout>
      </item>

@@ -187,7 +187,8 @@
          for (size_t i = 0; i < src_form.marker_nif_infos.size(); ++i) {
             const auto& src_item = src_list[i];
             auto&       dst_item = this->_nodes.emplace_back();
-            dst_item.entry_points.supported.overwrite_with_raw_integer(~src_item.supported_entry);
+            dst_item.entry_points.supported.overwrite_with_raw_integer(src_item.supported_entry);
+            dst_item.entry_points.enabled = dst_item.entry_points.supported;
             for (size_t i = 0; i < 3; ++i) {
                if (src_item.supported_animations & (1 << i)) {
                   dst_item.animation_type = (AnimationType)i;
@@ -290,6 +291,7 @@
 
          mask &= bits_to_keep;
       }
+      this->_loaded_from_nif = false;
    }
    void FurnitureMarkersModel::_pull_marker_info_from_nif(const std::string& nif_path) {
       auto& assets = dovahkit::subsystems::assets::get();
@@ -338,6 +340,7 @@
          }
          dst_item.entry_points.supported = src_item.entry_points;
       }
+      this->_loaded_from_nif = true;
       //
       // NOTE: CK warns if multiple markers in FRN have different animation types, but not 
       //       if just one marker has multiple animation types. The lowest set bit in a 
@@ -418,7 +421,9 @@
             /*virtual*/ bool FurnitureMarkerEntryPointsProxyModel::setData(const QModelIndex& index, const QVariant& value, int role) /*override*/ {
                if (!index.isValid() || index.model() != this)
                   return false;
-               auto* source_model = (FurnitureMarkerEntryPointsProxyModel*) this->_source_qmi.model();
+               auto* source_model = (FurnitureMarkersModel*) this->_source_qmi.model();
+               if (!source_model)
+                  return false;
                int   row          = index.row();
 
                const auto which_opt = _map_row_to_entry_point(index.row());
@@ -426,30 +431,42 @@
                   return false;
                const auto which = which_opt.value();
 
+               auto _set_entry_point_enabled = [this, source_model, &value, which](bool enabled) {
+                  auto flags = this->_cache.entry_points.enabled;
+                  if (enabled)
+                     flags.set(which);
+                  else
+                     flags.reset(which);
+                  auto result = source_model->setData(this->_source_qmi, (unsigned int)flags, FurnitureMarkersModel::EntryPointsEnabledRole);
+                  if (!result)
+                     return false;
+                  this->_cache.entry_points.enabled = flags;
+                  return true;
+               };
+
                switch (role) {
                   case Qt::CheckStateRole:
                      switch ((Qt::CheckState)value.toInt()) {
                         default:
                            return false;
                         case Qt::CheckState::Checked:
-                           this->_cache.entry_points.enabled.set(which);
+                           if (!_set_entry_point_enabled(true))
+                              return false;
+                           break;
                         case Qt::CheckState::Unchecked:
-                           this->_cache.entry_points.enabled.reset(which);
+                           if (!_set_entry_point_enabled(false))
+                              return false;
                            break;
                      }
                      break;
                   case Qt::EditRole:
                      if (value.type() != QVariant::Type::Bool)
                         return false;
-                     if (value.toBool())
-                        this->_cache.entry_points.enabled.set(which);
-                     else
-                        this->_cache.entry_points.enabled.reset(which);
+                     if (!_set_entry_point_enabled(value.toBool()))
+                        return false;
                      role = Qt::CheckStateRole;
                      break;
                   case KeywordRole:
-                     if (!source_model)
-                        return false;
                      return source_model->setData(this->_source_qmi, value, role);
                   default:
                      return false;
@@ -497,7 +514,7 @@
          if (!this->_cache.entry_points.supported.test((EntryPoint)i))
             continue;
          if (which == row)
-            return (EntryPoint)which;
+            return (EntryPoint)i;
          ++which;
       }
       return {};

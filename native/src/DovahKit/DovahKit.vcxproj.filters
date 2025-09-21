@@ -10688,5 +10688,6 @@
     <Natvis Include="dovah\forms\Perk.natvis" />
     <Natvis Include="dovah\forms\structs\perk_effect.natvis" />
     <Natvis Include="dovah\forms\structs\perk_entry_point_data.natvis" />
+    <Natvis Include="helpers\enum_flags.natvis" />
   </ItemGroup>
 </Project>

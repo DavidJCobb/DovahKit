@@ -118,10 +118,10 @@ namespace cobb {
          }
          template<size_t OtherCount> requires (OtherCount < count)
          constexpr enum_flags(const enum_flags<value_type, OtherCount>& o) {
-            for (size_t i = 0; i < OtherCount; ++i)
-               this->bytes[i] = o.data()[i];
-            for (size_t i = OtherCount; i < count; ++i)
-               this->bytes[i] = 0;
+            for (size_t b = 0; b < OtherCount / 8; ++b)
+               this->bytes[b] = o.data()[b];
+            for (size_t b = OtherCount / 8; b < count / 8; ++b)
+               this->bytes[b] = 0;
          }
          constexpr enum_flags(value_type v) {
             (*this) |= v;

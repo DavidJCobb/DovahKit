@@ -24,4 +24,6 @@ class FormDialogFurniture :
       
       virtual void _load_impl() override;
       virtual void _save_impl() override;
+
+      void _update_nif_related_flags();
 };

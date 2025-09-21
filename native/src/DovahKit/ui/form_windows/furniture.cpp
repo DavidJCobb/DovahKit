@@ -31,6 +31,7 @@ FormDialogFurniture::FormDialogFurniture(dovah::form_stub& stub, QWidget* parent
          } else {
             auto qmi = selected[0].topLeft();
             this->_models.entry_points->setSource(qmi);
+            this->ui.markerKeyword->setEnabled(true);
             this->ui.markerKeyword->setFormStub(model->data(qmi, FurnitureMarkersModel::KeywordRole).value<dovah::form_stub*>());
          }
       });
@@ -73,9 +74,11 @@ void FormDialogFurniture::_load_impl() {
    ui::bind(this->ui.editorID, this->editor_id());
    this->ui.name->setText(editor.convert_localized_string(working.name));
    this->ui.model->initializeFrom(working.model);
+   this->_update_nif_related_flags();
    QObject::connect(this->ui.model, &DKFormNIFPicker::dataChanged, this, [this]() {
       auto path = this->ui.model->value().model_path;
       this->_models.markers->setNIF(path);
+      this->_update_nif_related_flags();
    });
    this->ui.destructionData->initializeFrom(working.destruction_data);
    this->ui.keywords->pullStubs(working.keywords.forms);
@@ -157,4 +160,49 @@ void FormDialogFurniture::_save_impl() {
       working.marker_model = v.model_path;
    }
    this->ui.scriptListPane->commit();
+}
+
+void FormDialogFurniture::_update_nif_related_flags() {
+   auto& working = *this->form;
+   auto* model   = this->_models.markers;
+   if (!model->wereMarkersLoadedFromNIF()) {
+      working.active_markers_and_furn_flags &= ~(
+         loaded_form_type::furniture_flag::nif_has_a_lean_marker |
+         loaded_form_type::furniture_flag::nif_has_a_sit_marker |
+         loaded_form_type::furniture_flag::nif_has_a_sleep_marker
+      );
+      return;
+   }
+   bool has_lean  = false;
+   bool has_sit   = false;
+   bool has_sleep = false;
+   const size_t size = model->rowCount();
+   for (size_t i = 0; i < size; ++i) {
+      auto data = model->data(model->index(i, 0, {}), FurnitureMarkersModel::AnimationTypeRole);
+      if (data.canConvert<int>()) {
+         switch ((FurnitureMarkersModel::AnimationType)data.value<int>()) {
+            case FurnitureMarkersModel::AnimationType::lean:
+               has_lean = true;
+               break;
+            case FurnitureMarkersModel::AnimationType::sit:
+               has_sit = true;
+               break;
+            case FurnitureMarkersModel::AnimationType::sleep:
+               has_sleep = true;
+               break;
+         }
+      }
+   }
+   if (has_lean)
+      working.active_markers_and_furn_flags |=  loaded_form_type::furniture_flag::nif_has_a_lean_marker;
+   else
+      working.active_markers_and_furn_flags &= ~loaded_form_type::furniture_flag::nif_has_a_lean_marker;
+   if (has_sit)
+      working.active_markers_and_furn_flags |=  loaded_form_type::furniture_flag::nif_has_a_sit_marker;
+   else
+      working.active_markers_and_furn_flags &= ~loaded_form_type::furniture_flag::nif_has_a_sit_marker;
+   if (has_sleep)
+      working.active_markers_and_furn_flags |=  loaded_form_type::furniture_flag::nif_has_a_sleep_marker;
+   else
+      working.active_markers_and_furn_flags &= ~loaded_form_type::furniture_flag::nif_has_a_sleep_marker;
 }
