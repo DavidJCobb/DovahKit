@@ -41,13 +41,13 @@ namespace dovah::loaded_forms {
                //
                // Bits [0, 23] indicate enabled markers
                //
-               disables_activation = 1 << 25,
-               is_perch = 1 << 26,
-               must_exit_to_talk = 1 << 27,
-               nif_has_a_lean_marker = 1 << 28,
+               disables_activation    = 1U << 25,
+               is_perch               = 1U << 26,
+               must_exit_to_talk      = 1U << 27,
+               nif_has_a_lean_marker  = 1U << 28,
                //
-               nif_has_a_sit_marker  = 1 << 30,
-               nif_has_a_sleep_marker = 1 << 31,
+               nif_has_a_sit_marker   = 1U << 30,
+               nif_has_a_sleep_marker = 1U << 31,
             };
          };
          using furniture_flags_t = std::underlying_type_t<furniture_flag::type>;

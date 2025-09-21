@@ -69,7 +69,7 @@ namespace dovah::loaded_forms::structs {
    }
    void package_topic::clone_from(const package_topic& other, loaded_forms::Form& my_owner) noexcept {
       if (std::holds_alternative<form_reference_t>(other.data)) {
-         this->data.emplace<form_reference_t>().set(my_owner, std::get<form_reference_t>(this->data));
+         this->data.emplace<form_reference_t>().set(my_owner, std::get<form_reference_t>(other.data));
       } else {
          this->data.emplace<uint32_t>() = std::get<uint32_t>(other.data);
       }

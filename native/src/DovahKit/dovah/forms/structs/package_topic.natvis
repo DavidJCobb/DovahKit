@@ -10,8 +10,8 @@
       <Intrinsic Name="_is_empty" Expression="(_is_subtype() &amp;&amp; _data_as_subtype() == 0) || (_is_form() &amp;&amp; _data_as_form().stub == nullptr)"/>
       
       <DisplayString Condition="_is_empty()">none</DisplayString>
-      <DisplayString Condition="_is_subtype()">_data_as_subtype()</DisplayString>
-      <DisplayString Condition="_is_form()">_data_as_form()</DisplayString>
+      <DisplayString Condition="_is_subtype()">{_data_as_subtype()}</DisplayString>
+      <DisplayString Condition="_is_form()">{_data_as_form()}</DisplayString>
       <Expand>
          <Item Condition="_is_subtype()" Name="[topic subtype]">_data_as_subtype()</Item>
          <Item Condition="_is_form()" Name="[topic]">_data_as_form()</Item>
