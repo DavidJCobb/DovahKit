@@ -100,7 +100,7 @@ class DKFormPicker : public QWidget {
       } _properties;
       struct {
          bool is_splitting_types = true;
-         bool needs_initial_fill = false;
+         bool needs_initial_fill = true;
 
          // DKFormPickers choose not to list certain forms, e.g. unnamed exterior cells. 
          // However, there are some cases where we need to be able to programmatically 
@@ -127,7 +127,7 @@ class DKFormPicker : public QWidget {
 
          bool _wouldAllowFormStub(const dovah::form_stub&) const;
 
-         virtual void changeEvent(QEvent* event) override;
+         virtual void showEvent(QShowEvent* event) override;
       #endif
 
       void _setIsSplittingTypes(bool) noexcept;

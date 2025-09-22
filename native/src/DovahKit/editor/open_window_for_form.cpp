@@ -43,6 +43,7 @@
 #include "../ui/form_windows/footstep.h"
 #include "../ui/form_windows/footstep_set.h"
 #include "../ui/form_windows/formlist.h"
+#include "../ui/form_windows/furniture.h"
 #include "../ui/form_windows/global.h"
 #include "../ui/form_windows/grass.h"
 #include "../ui/form_windows/hazard.h"
@@ -148,6 +149,7 @@ namespace {
       std::pair{ dovah::form_type::footstep,          _make<FormDialogFootstep> },
       std::pair{ dovah::form_type::footstep_set,      _make<FormDialogFootstepSet> },
       std::pair{ dovah::form_type::formlist,          _make<FormDialogFormList> },
+      std::pair{ dovah::form_type::furniture,         _make<FormDialogFurniture> },
       std::pair{ dovah::form_type::global,            _make<FormDialogGlobal> },
       std::pair{ dovah::form_type::grass,             _make<FormDialogGrass> },
       std::pair{ dovah::form_type::hazard,            _make<FormDialogHazard> },

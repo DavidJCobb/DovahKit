@@ -26,6 +26,10 @@ namespace ui::impl::DKTopicOrSubtypePicker {
       Q_OBJECT;
       protected:
          using item_type = typename shared_datastore::item_type;
+         struct cached_subtype {
+            QString  name;
+            uint32_t signature = 0;
+         };
 
          enum class _fill_stage {
             inactive,
@@ -46,6 +50,7 @@ namespace ui::impl::DKTopicOrSubtypePicker {
 
       protected:
          std::vector<const item_type*>        _forms;
+         std::vector<cached_subtype>          _subtypes;
          std::vector<const dovah::form_stub*> _force_included_forms;
          filter_parameters _last_completed_fill_params;
          struct {
@@ -79,7 +84,7 @@ namespace ui::impl::DKTopicOrSubtypePicker {
          size_t _map_form_index_to_row(size_t i) const;
          size_t _map_row_to_form_index(size_t r) const;
          const item_type* _map_row_to_item(size_t r) const;
-         const dovah::dialogue::topic_subtype* _map_row_to_subtype(size_t r) const;
+         const cached_subtype* _map_row_to_subtype(size_t r) const;
          bool _row_is_none(size_t r) const;
 
          #pragma region QAbstractItemModel boilerplate

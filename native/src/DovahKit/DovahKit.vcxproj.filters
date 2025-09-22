@@ -3591,6 +3591,9 @@
     <ClCompile Include="ui\form_windows\furniture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\topic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8759,6 +8762,9 @@
     <ClInclude Include="dovah\data\furniture\entry_point.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\topic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -10592,6 +10598,7 @@
     <None Include="helpers\optionals\finite_float.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="helpers\cpuinfo.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

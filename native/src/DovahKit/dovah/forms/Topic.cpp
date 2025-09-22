@@ -192,4 +192,37 @@ namespace dovah::loaded_forms {
       this->subtype = 0;
       this->script_data.clear(*this);
    }
+   
+
+   #pragma region Record skimmers
+      #pragma region subtype
+         void Topic::record_skimmers::subtype::skim_subrecord(tes_subrecord_reader& subrecord) {
+            switch (subrecord.signature()) {
+               case 'DATA':
+                  subrecord.skip_bytes(
+                     sizeof(decltype(Topic::data)::flags) +
+                     sizeof(decltype(Topic::data)::category)
+                  );
+                  subrecord.read(this->index);
+                  break;
+               case 'SNAM':
+                  this->has_snam = true;
+                  subrecord.read_signature(this->signature);
+                  break;
+            }
+         }
+         void Topic::record_skimmers::subtype::finalize() {
+            if (this->has_snam) {
+               this->result = signature;
+            } else {
+               //
+               // Hope and pray this form wasn't made pre-Dragonborn lol.
+               //
+               const auto& list = dialogue::all_topic_subtypes;
+               if (this->index < list.size())
+                  this->result = list[this->index].signature;
+            }
+         }
+      #pragma endregion
+   #pragma endregion
 }

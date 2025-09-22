@@ -358,6 +358,7 @@
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\music_track.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\package.cpp" />
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\topic.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\voicetype.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\_base.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cache_containers\presence_cache.cpp" />
@@ -1839,6 +1840,7 @@
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\music_track.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\package.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\topic.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\_base.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\_base_macros.define.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\_base_macros.undef.h" />
@@ -3697,6 +3699,10 @@
     <None Include="helpers\bitstreams\reader.inl" />
     <None Include="helpers\bitstreams\writer.inl" />
     <None Include="helpers\color\rgb.inl" />
+    <None Include="helpers\cpuinfo.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="helpers\ini\category.inl" />
     <None Include="helpers\ini\file.inl" />
     <None Include="helpers\ini\file_line_parser.inl" />

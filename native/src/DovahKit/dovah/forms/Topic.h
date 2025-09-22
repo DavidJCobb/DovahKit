@@ -47,13 +47,30 @@ namespace dovah::loaded_forms {
          uint32_t subtype  = 'CUST'; // SNAM // in-game, the game uses whichever subtype between DATA and SNAM was loaded last
          components::papyrus_attachment_data script_data; // VMAD
 
+      public:
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
-         //
       protected:
          virtual void _clone_impl(Form* out) const noexcept override;
          virtual void _save_impl(tes_file_writing::record& record, load_order_interfaces::form_save& intfc) override;
          virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
          virtual void _clear_impl() noexcept override;
+
+      public:
+         struct record_skimmers { // namespace
+            record_skimmers() = delete;
+
+            class subtype {
+               protected:
+                  bool     has_snam  = false;
+                  uint8_t  index     = 0;
+                  uint32_t signature = 0;
+               public:
+                  std::optional<uint32_t> result;
+
+                  void skim_subrecord(tes_subrecord_reader&);
+                  void finalize();
+            };
+         };
    };
 }

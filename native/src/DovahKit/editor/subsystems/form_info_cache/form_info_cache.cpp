@@ -38,6 +38,7 @@ namespace {
       dovahkit::subsystems::form_info_cache::cached_data::by_form::magic_effect,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::music_track,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::package,
+      dovahkit::subsystems::form_info_cache::cached_data::by_form::topic,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::voicetype
    >;
 }
@@ -154,6 +155,10 @@ namespace {
 
                if constexpr (FormType == dovah::form_type::package) {
                   auto& dst = cache.by_form_type.packages;
+                  dst.threaded_insert(stub, std::move(info));
+               }
+               if constexpr (FormType == dovah::form_type::topic) {
+                  auto& dst = cache.by_form_type.topics;
                   dst.threaded_insert(stub, std::move(info));
                }
             }
@@ -354,6 +359,7 @@ namespace {
          _update_if_form(cache.by_form_type.magic_effects, &core::cachedMagicEffectChanged);
          _update_if_form(cache.by_form_type.music_tracks,  &core::cachedMusicTrackChanged);
          _update_if_form(cache.by_form_type.packages,      &core::cachedPackageChanged);
+         _update_if_form(cache.by_form_type.topics,        &core::cachedTopicChanged);
          _update_if_form(cache.by_form_type.voicetypes,    &core::cachedVoicetypeChanged);
       }
 
@@ -616,6 +622,7 @@ namespace dovahkit::subsystems::form_info_cache {
          return *item;
       return {};
    }
+
    const cached_data::by_form::actor_base* core::get_actor_base_info(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::actor_base)
          return nullptr;
@@ -645,6 +652,11 @@ namespace dovahkit::subsystems::form_info_cache {
       if (stub.form_type != dovah::form_type::package)
          return nullptr;
       return this->_cache->by_form_type.packages.get(stub);
+   }
+   const cached_data::by_form::topic* core::get_topic_info(const dovah::form_stub& stub) const {
+      if (stub.form_type != dovah::form_type::topic)
+         return nullptr;
+      return this->_cache->by_form_type.topics.get(stub);
    }
    const cached_data::by_form::voicetype* core::get_voicetype_info(const dovah::form_stub& stub) const {
       if (stub.form_type != dovah::form_type::voicetype)

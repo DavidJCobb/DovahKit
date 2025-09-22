@@ -340,15 +340,13 @@ bool DKFormPicker::_wouldAllowFormStub(const dovah::form_stub& stub) const {
    return true;
 }
 
-/*virtual*/ void DKFormPicker::changeEvent(QEvent* event) /*override*/ {
+/*virtual*/ void DKFormPicker::showEvent(QShowEvent* event) /*override*/ {
    //
    // If the widget is attached to the UI without ever having parameters configured 
    // on it (i.e. the stock defaults), then we need to populate the widget at that 
    // time.
    //
    if (!this->_state.needs_initial_fill)
-      return;
-   if (event->type() != QEvent::ParentChange)
       return;
    this->_state.needs_initial_fill = false;
    this->_updateTypePicker();

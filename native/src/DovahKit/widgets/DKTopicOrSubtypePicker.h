@@ -63,7 +63,7 @@ class DKTopicOrSubtypePicker : public QWidget {
          #endif
       } _properties;
       struct {
-         bool needs_initial_fill = false;
+         bool needs_initial_fill = true;
 
          // DKTopicOrSubtypePickers choose not to list certain forms, e.g. unnamed exterior cells. 
          // However, there are some cases where we need to be able to programmatically 
@@ -80,7 +80,7 @@ class DKTopicOrSubtypePicker : public QWidget {
 
          bool _wouldAllowFormStub(const dovah::form_stub&) const;
 
-         virtual void changeEvent(QEvent* event) override;
+         virtual void showEvent(QShowEvent* event) override;
       #endif
 
       void _setSubwidgetEnableState(bool);

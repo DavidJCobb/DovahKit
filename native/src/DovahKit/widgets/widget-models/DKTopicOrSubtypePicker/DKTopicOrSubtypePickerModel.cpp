@@ -1,5 +1,7 @@
 #include "./DKTopicOrSubtypePickerModel.h"
 #include "dovah/form_stub.h"
+#include "editor/subsystems/form_info_cache/cached_data/by_form_type/topic.h"
+#include "editor/subsystems/form_info_cache/core.h"
 #include "editor/subsystems/papyrus/core.h"
 #include "editor/localize/dialogue_topic_subtype.h"
 #include "editor/core.h"
@@ -15,12 +17,61 @@ namespace {
       constexpr int  estimated_items_possible_in_one_tick = 2000; // budget for less-async fills. per control, and some windows have several FormPickers, so keep it low.
    #endif
 
-   constexpr const size_t topic_subtype_count = dovah::dialogue::all_topic_subtypes.size();
+   constexpr const auto topic_subtypes_to_exclude = std::array{
+      (uint32_t)'SCEN',
+   };
+
+   constexpr const auto permitted_subtypes = []() {
+      std::array<
+         const dovah::dialogue::topic_subtype*,
+         dovah::dialogue::all_topic_subtypes.size() - topic_subtypes_to_exclude.size()
+      > out = {};
+      size_t i = 0;
+      for (auto& info : dovah::dialogue::all_topic_subtypes) {
+         bool allowed = true;
+         for (const auto signature : topic_subtypes_to_exclude) {
+            if (signature == info.signature) {
+               allowed = false;
+               break;
+            }
+         }
+         if (allowed) {
+            out[i] = &info;
+            ++i;
+         }
+      }
+      return out;
+   }();
 }
 
 namespace ui::impl::DKTopicOrSubtypePicker {
    #pragma region Model
       Model::Model(QObject* parent) : QAbstractItemModel(parent) {
+         //
+         // Build the subtype list in advance. Strictly speaking, this should be 
+         // constexpr or in a "datastore" object, but the use of translatable 
+         // QStrings locks us out of the first option, and this widget won't 
+         // appear in large enough numbers to justify the second option; building 
+         // and sorting this list is *far* faster than chugging through every 
+         // loaded form in Skyrim.esm.
+         //
+         this->_subtypes.reserve(permitted_subtypes.size());
+         for (const auto* info : permitted_subtypes) {
+            auto& dst = this->_subtypes.emplace_back();
+            dst.name      = tr("(%1)").arg(editor::localize::dialogue_topic_subtype(*info));
+            dst.signature = info->signature;
+         }
+         std::sort(
+            this->_subtypes.begin(),
+            this->_subtypes.end(),
+            [](const cached_subtype& a, const cached_subtype& b) -> bool {
+               return a.name.compare(b.name, Qt::CaseInsensitive) < 0;
+            }
+         );
+
+         //
+         // Form datastore-related functionality.
+         //
          QObject::connect(&this->_ongoing_fill.timer, &QTimer::timeout, this, [this]() {
             this->fetchMore({});
          });
@@ -184,13 +235,18 @@ namespace ui::impl::DKTopicOrSubtypePicker {
          QObject::connect(&source, &shared_datastore::itemExclusionStateChanged, this, [this](const item_type& entry, bool exclude_now) {
             this->_on_item_exclusion_state_changed(entry, exclude_now);
          });
+
+         auto& fic = dovahkit::subsystems::form_info_cache::core::get();
+         QObject::connect(&fic, &std::decay_t<decltype(fic)>::cachedTopicChanged, this, [this](dovah::form_stub& stub) {
+            this->_force_recheck_filter(stub);
+         });
       }
 
       bool Model::_is_showing_none_item() const {
          return this->_last_completed_fill_params.allow_none;
       }
       size_t Model::_map_form_index_to_row(size_t i) const {
-         return (_is_showing_none_item() ? 1 : 0) + i + topic_subtype_count;
+         return (_is_showing_none_item() ? 1 : 0) + i + this->_subtypes.size();
       }
       size_t Model::_map_row_to_form_index(size_t r) const {
          if (_is_showing_none_item()) {
@@ -198,8 +254,9 @@ namespace ui::impl::DKTopicOrSubtypePicker {
                return (size_t)-1;
             --r;
          }
-         if (r >= topic_subtype_count)
-            return r - topic_subtype_count;
+         const auto subtype_count = this->_subtypes.size();
+         if (r >= subtype_count)
+            return r - subtype_count;
          return (size_t)-1;
       }
       const Model::item_type* Model::_map_row_to_item(size_t r) const {
@@ -210,22 +267,23 @@ namespace ui::impl::DKTopicOrSubtypePicker {
                return nullptr;
             --r;
          }
-         if (r < topic_subtype_count)
+         const auto subtype_count = this->_subtypes.size();
+         if (r < subtype_count)
             return nullptr;
-         r -= topic_subtype_count;
+         r -= subtype_count;
          if (r >= this->_forms.size())
             return nullptr;
          return this->_forms[r];
       }
-      const dovah::dialogue::topic_subtype* Model::_map_row_to_subtype(size_t r) const {
+      const Model::cached_subtype* Model::_map_row_to_subtype(size_t r) const {
          if (_is_showing_none_item()) {
             if (r == 0)
                return nullptr;
             --r;
          }
-         if (r >= topic_subtype_count)
+         if (r >= this->_subtypes.size())
             return nullptr;
-         return &dovah::dialogue::all_topic_subtypes[r];
+         return &this->_subtypes[r];
       }
       bool Model::_row_is_none(size_t r) const {
          return _is_showing_none_item() && r == 0;
@@ -270,7 +328,7 @@ namespace ui::impl::DKTopicOrSubtypePicker {
                   case _fill_stage::currently_sorting:
                      return 0;
                }
-               size_t row = this->_forms.size() + topic_subtype_count;
+               size_t row = this->_forms.size() + this->_subtypes.size();
                if (_is_showing_none_item())
                   ++row;
                return row;
@@ -325,7 +383,7 @@ namespace ui::impl::DKTopicOrSubtypePicker {
                         return subtype->signature;
                      case Qt::DisplayRole:
                      case Qt::ToolTipRole:
-                        return editor::localize::dialogue_topic_subtype(*subtype);
+                        return subtype->name;
                   }
                   return {};
                }
@@ -354,6 +412,11 @@ namespace ui::impl::DKTopicOrSubtypePicker {
          if (item.stub) {
             if (this->_custom_filter) {
                if (!this->_custom_filter->form_matches(*item.stub))
+                  return false;
+            }
+            auto& fic = dovahkit::subsystems::form_info_cache::core::get();
+            if (auto* info = fic.get_topic_info(*item.stub)) {
+               if (info->subtype_signature != 'CUST')
                   return false;
             }
          }
