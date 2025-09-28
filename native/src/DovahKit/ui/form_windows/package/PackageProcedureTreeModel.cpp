@@ -1,10 +1,19 @@
 #include "./PackageProcedureTreeModel.h"
+#pragma region Drag and drop
+   #include <QByteArray>
+   #include <QDataStream>
+   #include <QMimeData>
+#pragma endregion
 #include "helpers/bitset.h"
 #include "helpers/vectors/move_item_within.h"
 #include "dovah/forms/structs/custom_packages/procedure_tree.h"
 #include "editor/core.h"
 #include "editor/localize/package_procedure_tree_branch_type.h"
 #include "editor/localize/package_procedure_type.h"
+
+namespace {
+   constexpr const char* const mime_type = "application/dovah-kit.package.procedure-tree-nodes";
+}
 
 PackageProcedureTreeModel::PackageProcedureTreeModel(QObject* parent) : QAbstractItemModel(parent) {
    auto& editor = DovahKitCore::get();
@@ -283,12 +292,160 @@ PackageProcedureTreeModel::PackageProcedureTreeModel(QObject* parent) : QAbstrac
          return tr("Procedure tree");
       return {};
    }
+   #pragma region Drag and drop
+      //
+      // QAbstractItemModel provides *some* default behaviors for drag-and-drop, but not 
+      // in the way we need. It'd be easier for us to just reimplement drags within our 
+      // own local model.
+      //
+      #pragma region Whole-model queries
+         /*virtual*/ QStringList PackageProcedureTreeModel::mimeTypes() const /*override*/ {
+            return { QString::fromLatin1(mime_type) };
+         }
+         /*virtual*/ Qt::DropActions PackageProcedureTreeModel::supportedDropActions() const /*override*/ {
+            return Qt::DropAction::MoveAction;
+         }
+      #pragma endregion
+      /*virtual*/ QMimeData* PackageProcedureTreeModel::mimeData(const QModelIndexList& indices) const /*override*/ {
+         if (indices.count() <= 0)
+            return nullptr;
+         QByteArray  data;
+         QDataStream stream(&data, QIODevice::WriteOnly);
+         //
+         // Stream begins with our `this` pointer. The pointer is used only for equality 
+         // checks on drop (i.e. no moving/copying procedure data across packages) and is 
+         // never dereferenced.
+         //
+         stream << (intptr_t)this;
+         //
+         for (const QModelIndex& qmi : indices) {
+            const auto* node = _node_for_qmi(qmi);
+            if (!node)
+               continue;
+            //
+            // QAbstractItemModel's default implementation serializes all itemData for the 
+            // node into the stream. We can't do that because some things, like conditions, 
+            // are both not serializable *and* require references to objects held elsewhere. 
+            // If QAbstractItemModel's implementation is designed to avoid the possibility 
+            // of referenced objects being deleted during the drag operation, then trying 
+            // to serialize conditions fails that requirement.
+            // 
+            // We also can't track the lifetime of the drag operation, so we can't, for 
+            // example, store a map of unique IDs to QPersistentModelIndexes, because we 
+            // wouldn't know when to destroy the QPMIs.
+            // 
+            // Our solution is to create IDs on demand for nodes that are being dragged, 
+            // and serialize those. We never expose direct access to nodes (and thus to the 
+            // unique_ptr list of child nodes), so all node removals go through us; we can 
+            // invalidate unique IDs properly.
+            // 
+            // Of course, since we can't track the lifetime of a drag operation, we have to 
+            // assume that a request for a node's MIME data is the start of a drag, and we 
+            // have to create the ID then. Since the mimeData() getter is const, this is... 
+            // a complication.
+            //
+            stream << this->_drag_and_drop.track(*const_cast<node_type*>(node));
+         }
+      }
+      /*virtual*/ bool PackageProcedureTreeModel::canDropMimeData(const QMimeData* mime, Qt::DropAction action, int row, int column, const QModelIndex& parent) const /*override*/ {
+         QByteArray  data = mime->data(mime_type);
+         QDataStream stream(&data, QIODevice::ReadOnly);
+         {  // Verify that this is an internal move.
+            std::intptr_t this_pointer;
+            stream >> this_pointer;
+            if ((PackageProcedureTreeModel*)this_pointer != this)
+               return false;
+         }
+         if (parent == _qmi_for_model())
+            //
+            // Don't allow movement of a non-top-level node to the top level.
+            //
+            return false;
+
+         const auto* parent_node = _node_for_qmi(parent);
+         if (!parent_node) // sanity
+            return false;
+         if (!std::holds_alternative<ui::types::packages::procedure_tree_typed_data::branch>(parent_node->data)) {
+            //
+            // Don't allow drops onto leaf nodes.
+            //
+            return false;
+         }
+
+         std::vector<node_type*> dragged_nodes;
+         while (!stream.atEnd()) {
+            DragDropTracking::uid_t id;
+            stream >> id;
+            auto* node = this->_drag_and_drop.get_by_id(id);
+            if (node)
+               dragged_nodes.push_back(node);
+         }
+         if (!dragged_nodes.size())
+            return true;
+
+         //
+         // Don't allow dragging an ancestor node into itself or any of its own descendants.
+         //
+         for (auto* node : dragged_nodes) {
+            if (node == parent_node)
+               return false;
+            if (node->contains(*parent_node))
+               return false;
+         }
+
+         return true;
+      }
+      /*virtual*/ bool PackageProcedureTreeModel::dropMimeData(const QMimeData* mime, Qt::DropAction action, int row, int column, const QModelIndex& parent) /*override*/ {
+         if (!this->canDropMimeData(mime, action, row, column, parent))
+            return false;
+
+         QByteArray  data = mime->data(mime_type);
+         QDataStream stream(&data, QIODevice::ReadOnly);
+         {  // Verify that this is an internal move.
+            std::intptr_t this_pointer;
+            stream >> this_pointer;
+            if ((PackageProcedureTreeModel*)this_pointer != this)
+               return false;
+         }
+         std::vector<node_type*> nodes;
+         while (!stream.atEnd()) {
+            DragDropTracking::uid_t id;
+            stream >> id;
+            auto* node = this->_drag_and_drop.get_by_id(id);
+            if (node)
+               nodes.push_back(node);
+         }
+         if (!nodes.size())
+            return false;
+
+         static_assert(
+            false,
+            "TODO: Move the dragged node(s) so that they are direct children of the drop-target node."
+                 " Be sure to handle the case of dragging the root node (e.g. into an orphan) by"
+                 " updating which node in the model is the root. (`removeItem` logic promotes an orphan"
+                 " to the root node; maybe we can split that into a function like `promoteFirstOrphan`?)"
+         );
+         static_assert(false, "TODO: Be sure to emit all appropriate signals for moving the nodes in question, i.e. beginMoveRows and endMoveRows.");
+         //
+         // But do we want to use beginMoveRows and endMoveRows, or an insert/remove pattern? Either way, 
+         // we can only deal with contiguous spans of rows at a time...
+         // 
+         // QAbstractItemData does a single insertRows() and then fills the rows with data(), but this 
+         // is because it just handles insertions, counting on the source widget to do removals. We need 
+         // to handle dragging a potentially discontiguous selection... So I think we need to handle it 
+         // as a series of beginMoveRows/endMoveRows operations, incrementing the destination row counter 
+         // as we go. Maybe we need to pre-sort the to-be-dragged items by source row index when we build 
+         // the mimeData(). We'll see, I guess.
+         //
+      }
+   #pragma endregion
 #pragma endregion
 
 void PackageProcedureTreeModel::clear() {
    this->beginResetModel();
    this->_root.reset();
    this->_orphans.clear();
+   this->_drag_and_drop.clear();
    this->endResetModel();
 }
 
@@ -334,106 +491,108 @@ bool PackageProcedureTreeModel::hasRoot() const {
    return this->_root != nullptr;
 }
 
-size_t PackageProcedureTreeModel::procedureParameterIDCount(const QModelIndex& qmi) const {
-   auto* node = _node_for_qmi(qmi);
-   if (!node)
-      return 0;
-   auto* procedure_data = std::get_if<ui::types::packages::procedure_tree_typed_data::procedure>(&node->data);
-   if (!procedure_data)
-      return 0;
-   auto  type   = procedure_data->type;
-   auto& params = procedure_data->parameter_unique_ids;
-   if ((size_t)type >= dovah::packages::all_procedure_type_info.size()) {
-      return 0;
+#pragma region Node contents accessors (besides data())
+   size_t PackageProcedureTreeModel::procedureParameterIDCount(const QModelIndex& qmi) const {
+      auto* node = _node_for_qmi(qmi);
+      if (!node)
+         return 0;
+      auto* procedure_data = std::get_if<ui::types::packages::procedure_tree_typed_data::procedure>(&node->data);
+      if (!procedure_data)
+         return 0;
+      auto  type   = procedure_data->type;
+      auto& params = procedure_data->parameter_unique_ids;
+      if ((size_t)type >= dovah::packages::all_procedure_type_info.size()) {
+         return 0;
+      }
+      return dovah::packages::all_procedure_type_info[(size_t)type].param_count;
    }
-   return dovah::packages::all_procedure_type_info[(size_t)type].param_count;
-}
-uint8_t PackageProcedureTreeModel::getProcedureParameterID(const QModelIndex& qmi, size_t index) const {
-   auto* node = _node_for_qmi(qmi);
-   if (!node)
-      return no_unique_id;
-   auto* procedure_data = std::get_if<ui::types::packages::procedure_tree_typed_data::procedure>(&node->data);
-   if (!procedure_data)
-      return no_unique_id;
-   auto type = procedure_data->type;
-   if ((size_t)type >= dovah::packages::all_procedure_type_info.size())
-      return no_unique_id;
-   if (index >= procedure_data->parameter_unique_ids.size())
-      return no_unique_id;
-   if (index >= dovah::packages::all_procedure_type_info[(size_t)type].param_count)
-      return no_unique_id;
-   return procedure_data->parameter_unique_ids[index];
-}
-std::vector<uint8_t> PackageProcedureTreeModel::getProcedureParameterIDs(const QModelIndex& qmi) const {
-   auto* node = _node_for_qmi(qmi);
-   if (!node)
-      return {};
-   auto* procedure_data = std::get_if<ui::types::packages::procedure_tree_typed_data::procedure>(&node->data);
-   if (!procedure_data)
-      return {};
-   auto type = procedure_data->type;
-   if ((size_t)type >= dovah::packages::all_procedure_type_info.size()) {
-      return {};
+   uint8_t PackageProcedureTreeModel::getProcedureParameterID(const QModelIndex& qmi, size_t index) const {
+      auto* node = _node_for_qmi(qmi);
+      if (!node)
+         return no_unique_id;
+      auto* procedure_data = std::get_if<ui::types::packages::procedure_tree_typed_data::procedure>(&node->data);
+      if (!procedure_data)
+         return no_unique_id;
+      auto type = procedure_data->type;
+      if ((size_t)type >= dovah::packages::all_procedure_type_info.size())
+         return no_unique_id;
+      if (index >= procedure_data->parameter_unique_ids.size())
+         return no_unique_id;
+      if (index >= dovah::packages::all_procedure_type_info[(size_t)type].param_count)
+         return no_unique_id;
+      return procedure_data->parameter_unique_ids[index];
+   }
+   std::vector<uint8_t> PackageProcedureTreeModel::getProcedureParameterIDs(const QModelIndex& qmi) const {
+      auto* node = _node_for_qmi(qmi);
+      if (!node)
+         return {};
+      auto* procedure_data = std::get_if<ui::types::packages::procedure_tree_typed_data::procedure>(&node->data);
+      if (!procedure_data)
+         return {};
+      auto type = procedure_data->type;
+      if ((size_t)type >= dovah::packages::all_procedure_type_info.size()) {
+         return {};
+      }
+
+      const auto&          src_list = procedure_data->parameter_unique_ids;
+      std::vector<uint8_t> dst_list;
+      dst_list.resize(dovah::packages::all_procedure_type_info[(size_t)type].param_count, no_unique_id);
+      for (size_t i = 0; i < src_list.size(); ++i) {
+         dst_list[i] = src_list[i];
+      }
+      return dst_list;
+   }
+   void PackageProcedureTreeModel::setProcedureParameterID(const QModelIndex& qmi, size_t index, uint8_t unique_id) {
+      auto* node = _node_for_qmi(qmi);
+      if (!node)
+         return;
+      auto* procedure_data = std::get_if<ui::types::packages::procedure_tree_typed_data::procedure>(&node->data);
+      if (!procedure_data)
+         return;
+
+      auto  type   = procedure_data->type;
+      auto& params = procedure_data->parameter_unique_ids;
+      if ((size_t)type >= dovah::packages::all_procedure_type_info.size()) {
+         return;
+      }
+      size_t count = dovah::packages::all_procedure_type_info[(size_t)type].param_count;
+      if (params.size() != count)
+         params.resize(count, no_unique_id);
+      if (index >= count)
+         return;
+      params[index] = unique_id;
+   }
+   void PackageProcedureTreeModel::setProcedureParameterIDs(const QModelIndex& qmi, const std::vector<uint8_t>& src) {
+      auto* node = _node_for_qmi(qmi);
+      if (!node)
+         return;
+      auto* procedure_data = std::get_if<ui::types::packages::procedure_tree_typed_data::procedure>(&node->data);
+      if (!procedure_data)
+         return;
+
+      auto type = procedure_data->type;
+      procedure_data->parameter_unique_ids = src;
+      if ((size_t)type < dovah::packages::all_procedure_type_info.size()) {
+         procedure_data->parameter_unique_ids.resize(
+            dovah::packages::all_procedure_type_info[(size_t)type].param_count,
+            no_unique_id
+         );
+      }
    }
 
-   const auto&          src_list = procedure_data->parameter_unique_ids;
-   std::vector<uint8_t> dst_list;
-   dst_list.resize(dovah::packages::all_procedure_type_info[(size_t)type].param_count, no_unique_id);
-   for (size_t i = 0; i < src_list.size(); ++i) {
-      dst_list[i] = src_list[i];
+   std::vector<ui::types::conditions::condition> PackageProcedureTreeModel::nodeConditions(const QModelIndex& qmi) const {
+      auto* node = _node_for_qmi(qmi);
+      if (!node)
+         return {};
+      return node->conditions;
    }
-   return dst_list;
-}
-void PackageProcedureTreeModel::setProcedureParameterID(const QModelIndex& qmi, size_t index, uint8_t unique_id) {
-   auto* node = _node_for_qmi(qmi);
-   if (!node)
-      return;
-   auto* procedure_data = std::get_if<ui::types::packages::procedure_tree_typed_data::procedure>(&node->data);
-   if (!procedure_data)
-      return;
-
-   auto  type   = procedure_data->type;
-   auto& params = procedure_data->parameter_unique_ids;
-   if ((size_t)type >= dovah::packages::all_procedure_type_info.size()) {
-      return;
-   }
-   size_t count = dovah::packages::all_procedure_type_info[(size_t)type].param_count;
-   if (params.size() != count)
-      params.resize(count, no_unique_id);
-   if (index >= count)
-      return;
-   params[index] = unique_id;
-}
-void PackageProcedureTreeModel::setProcedureParameterIDs(const QModelIndex& qmi, const std::vector<uint8_t>& src) {
-   auto* node = _node_for_qmi(qmi);
-   if (!node)
-      return;
-   auto* procedure_data = std::get_if<ui::types::packages::procedure_tree_typed_data::procedure>(&node->data);
-   if (!procedure_data)
-      return;
-
-   auto type = procedure_data->type;
-   procedure_data->parameter_unique_ids = src;
-   if ((size_t)type < dovah::packages::all_procedure_type_info.size()) {
-      procedure_data->parameter_unique_ids.resize(
-         dovah::packages::all_procedure_type_info[(size_t)type].param_count,
-         no_unique_id
-      );
-   }
-}
-
-std::vector<ui::types::conditions::condition> PackageProcedureTreeModel::nodeConditions(const QModelIndex& qmi) const {
-   auto* node = _node_for_qmi(qmi);
-   if (!node)
-      return {};
-   return node->conditions;
-}
-void PackageProcedureTreeModel::setNodeConditions(const QModelIndex& qmi, const std::vector<ui::types::conditions::condition>& src) {
+   void PackageProcedureTreeModel::setNodeConditions(const QModelIndex& qmi, const std::vector<ui::types::conditions::condition>& src) {
    auto* node = _node_for_qmi(qmi);
    if (!node)
       return;
    node->conditions = src;
 }
+#pragma endregion
 
 std::unordered_map<uint8_t, size_t> PackageProcedureTreeModel::countUsesOfPackdata() const {
    std::unordered_map<uint8_t, size_t> map;
@@ -501,6 +660,7 @@ void PackageProcedureTreeModel::removeItem(const QModelIndex& qmi) {
    auto* node = _node_for_qmi(qmi);
    if (!node)
       return;
+   this->_drag_and_drop.untrack(*node);
    if (!node->parent_node) {
       if (node == this->_root.get()) {
          this->beginRemoveRows(_qmi_for_model(), 0, 0);
@@ -658,3 +818,33 @@ void PackageProcedureTreeModel::_sever_uses_of_form(dovah::form_stub& stub) {
       if (ptr)
          traverse(*ptr);
 }
+
+#pragma region PackageProcedureTreeModel::DragDropTracking
+   PackageProcedureTreeModel::DragDropTracking::uid_t PackageProcedureTreeModel::DragDropTracking::track(node_type& node) {
+      for (const auto& pair : this->nodes)
+         if (pair.second == &node)
+            return pair.first;
+      auto id = this->next_id;
+      this->next_id++;
+      this->nodes[id] = &node;
+      return id;
+   }
+   void PackageProcedureTreeModel::DragDropTracking::untrack(node_type& node) {
+      auto& map = this->nodes;
+      auto  it  = std::find_if(map.begin(), map.end(), [&node](const auto& pair) {
+         return pair.second == &node;
+      });
+      if (it != map.end())
+         map.erase(it);
+   }
+   void PackageProcedureTreeModel::DragDropTracking::clear() {
+      this->nodes.clear();
+   }
+   PackageProcedureTreeModel::node_type* PackageProcedureTreeModel::DragDropTracking::get_by_id(uid_t id) {
+      auto& map = this->nodes;
+      auto  it  = map.find(id);
+      if (it != map.end())
+         return it->second;
+      return nullptr;
+   }
+#pragma endregion

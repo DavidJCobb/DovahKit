@@ -26,6 +26,7 @@ namespace ui::types::packages {
          void importData(const backend_type&);
          void exportData(backend_type&, dovah::loaded_forms::Form& dst_owner) const;
 
+         bool contains(const procedure_node&) const noexcept;
          size_t index_of(const procedure_node&) const noexcept;
    };
 }

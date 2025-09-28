@@ -81,6 +81,12 @@ namespace ui::types::packages {
       }
    }
 
+   bool procedure_node::contains(const procedure_node& descendant) const noexcept {
+      for (const auto* parent = descendant.parent_node; parent; parent = parent->parent_node)
+         if (parent == this)
+            return true;
+      return false;
+   }
    size_t procedure_node::index_of(const procedure_node& child) const noexcept {
       if (child.parent_node != this)
          return (size_t)-1;

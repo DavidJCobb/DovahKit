@@ -80,6 +80,15 @@ class PackageProcedureTreeModel : public QAbstractItemModel {
             #pragma endregion
          #pragma endregion
          virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+         #pragma region Drag and drop
+            #pragma region Whole-model queries
+               virtual QStringList mimeTypes() const override;
+               virtual Qt::DropActions supportedDropActions() const override;
+            #pragma endregion
+            virtual QMimeData* mimeData(const QModelIndexList&) const override;
+            virtual bool canDropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) const override;
+            virtual bool dropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) override;
+         #pragma endregion
       #pragma endregion
 
       void clear();
@@ -91,14 +100,16 @@ class PackageProcedureTreeModel : public QAbstractItemModel {
 
       bool hasRoot() const;
 
-      size_t procedureParameterIDCount(const QModelIndex&) const;
-      uint8_t getProcedureParameterID(const QModelIndex&, size_t index) const;
-      std::vector<uint8_t> getProcedureParameterIDs(const QModelIndex&) const;
-      void setProcedureParameterID(const QModelIndex&, size_t index, uint8_t unique_id);
-      void setProcedureParameterIDs(const QModelIndex&, const std::vector<uint8_t>&);
+      #pragma region Node contents accessors (besides data())
+         size_t procedureParameterIDCount(const QModelIndex&) const;
+         uint8_t getProcedureParameterID(const QModelIndex&, size_t index) const;
+         std::vector<uint8_t> getProcedureParameterIDs(const QModelIndex&) const;
+         void setProcedureParameterID(const QModelIndex&, size_t index, uint8_t unique_id);
+         void setProcedureParameterIDs(const QModelIndex&, const std::vector<uint8_t>&);
 
-      std::vector<ui::types::conditions::condition> nodeConditions(const QModelIndex&) const;
-      void setNodeConditions(const QModelIndex&, const std::vector<ui::types::conditions::condition>& src);
+         std::vector<ui::types::conditions::condition> nodeConditions(const QModelIndex&) const;
+         void setNodeConditions(const QModelIndex&, const std::vector<ui::types::conditions::condition>& src);
+      #pragma endregion
 
       std::unordered_map<uint8_t, size_t> countUsesOfPackdata() const;
 
@@ -119,4 +130,19 @@ class PackageProcedureTreeModel : public QAbstractItemModel {
 
       void _default_params_of(ui::types::packages::procedure_tree_typed_data::procedure&);
       void _sever_uses_of_form(dovah::form_stub&);
+
+      struct DragDropTracking {
+         public:
+            using uid_t = uint64_t;
+
+         public:
+            uid_t next_id = 0;
+            std::unordered_map<uid_t, node_type*> nodes;
+
+            uid_t track(node_type&);
+            void untrack(node_type&);
+            void clear();
+            node_type* get_by_id(uid_t);
+      };
+      mutable DragDropTracking _drag_and_drop; // mutable because QAbstractItemModel::mimeData is const
 };
