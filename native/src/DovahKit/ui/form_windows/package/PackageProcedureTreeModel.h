@@ -62,6 +62,10 @@ class PackageProcedureTreeModel : public QAbstractItemModel {
             return const_cast<node_type*>(std::as_const(*this)._node_for_qmi(qmi));
          }
       #pragma endregion
+         
+      bool _can_move_node_into(const node_type& subject, const node_type& destination) const;
+      bool _can_move_nodes_into(const std::vector<node_type*>& subjects, const node_type& destination) const;
+      void _unchecked_move_node(node_type& subject, node_type& destination, int row = -1);
 
    public:
       #pragma region QAbstractItemModel overrides

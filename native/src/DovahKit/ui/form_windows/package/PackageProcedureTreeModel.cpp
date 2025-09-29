@@ -86,6 +86,82 @@ PackageProcedureTreeModel::PackageProcedureTreeModel(QObject* parent) : QAbstrac
       return nullptr;
    }
 #pragma endregion
+
+bool PackageProcedureTreeModel::_can_move_node_into(const node_type& subject, const node_type& destination) const {
+   //
+   // Don't allow moving any node into a leaf node:
+   //
+   if (!std::holds_alternative<ui::types::packages::procedure_tree_typed_data::branch>(destination.data))
+      return false;
+   //
+   // Don't allow moving an ancestor node into itself or its own descendants:
+   //
+   if (&subject == &destination)
+      return false;
+   if (subject.contains(destination))
+      return false;
+   //
+   return true;
+}
+bool PackageProcedureTreeModel::_can_move_nodes_into(const std::vector<node_type*>& subjects, const node_type& destination) const {
+   //
+   // Don't allow moving any node into a leaf node:
+   //
+   if (!std::holds_alternative<ui::types::packages::procedure_tree_typed_data::branch>(destination.data))
+      return false;
+   //
+   // Don't allow moving an ancestor node into itself or its own descendants:
+   //
+   for (auto* node : subjects) {
+      if (node == &destination)
+         return false;
+      if (node->contains(destination))
+         return false;
+   }
+   //
+   return true;
+}
+void PackageProcedureTreeModel::_unchecked_move_node(node_type& subject, node_type& destination, int row) {
+   assert(_can_move_node_into(subject, destination));
+   auto subject_qmi     = _qmi_for_node(subject);
+   auto destination_qmi = _qmi_for_node(destination);
+   if (row < 0)
+      row = std::get<ui::types::packages::procedure_tree_typed_data::branch>(destination.data).children.size();
+   if (!this->beginMoveRows(this->parent(subject_qmi), subject_qmi.row(), subject_qmi.row(), destination_qmi, row))
+      return;
+
+   std::unique_ptr<node_type> subject_ptr;
+   if (auto* prior_parent = subject.parent_node) {
+      size_t index = prior_parent->index_of(subject);
+      assert(index != (size_t)-1 && "Asymmetrical parent/child relationship between nodes!");
+      subject_ptr = prior_parent->take_child(index);
+      if (prior_parent == &destination) {
+         if (index < row)
+            --row;
+      }
+   } else if (&subject == this->_root.get()) {
+      subject_ptr = std::move(this->_root);
+      //
+      // Shift the first orphan up to become the new root.
+      //
+      assert(!this->_orphans.empty() && "The only place it's legal to move the root into is an orphan!");
+      this->_root = std::move(this->_orphans[0]);
+      this->_orphans.erase(this->_orphans.begin());
+   } else {
+      bool found = false;
+      for (size_t i = 0; i < this->_orphans.size(); ++i) {
+         auto& o_ptr = this->_orphans[i];
+         if (&subject == o_ptr.get()) {
+            found = true;
+            subject_ptr = std::move(o_ptr);
+            this->_orphans.erase(this->_orphans.begin() + i);
+         }
+      }
+      assert(found && "Can't find this node in our model!");
+   }
+   destination.insert_child(std::move(subject_ptr), row);
+   this->endMoveRows();
+}
    
 #pragma region QAbstractItemModel overrides
    #pragma region Hierarchy
@@ -226,8 +302,11 @@ PackageProcedureTreeModel::PackageProcedureTreeModel(QObject* parent) : QAbstrac
          if (!node) {
             return flags;
          }
+         flags |= Qt::ItemIsDragEnabled;
          if (!std::holds_alternative<ui::types::packages::procedure_tree_typed_data::branch>(node->data)) {
             flags |= Qt::ItemNeverHasChildren;
+         } else {
+            flags |= Qt::ItemIsDropEnabled;
          }
          return flags;
       }
@@ -346,6 +425,10 @@ PackageProcedureTreeModel::PackageProcedureTreeModel(QObject* parent) : QAbstrac
             //
             stream << this->_drag_and_drop.track(*const_cast<node_type*>(node));
          }
+         //
+         QMimeData* mime = new QMimeData();
+         mime->setData(mime_type, data);
+         return mime;
       }
       /*virtual*/ bool PackageProcedureTreeModel::canDropMimeData(const QMimeData* mime, Qt::DropAction action, int row, int column, const QModelIndex& parent) const /*override*/ {
          QByteArray  data = mime->data(mime_type);
@@ -418,25 +501,11 @@ PackageProcedureTreeModel::PackageProcedureTreeModel(QObject* parent) : QAbstrac
          if (!nodes.size())
             return false;
 
-         static_assert(
-            false,
-            "TODO: Move the dragged node(s) so that they are direct children of the drop-target node."
-                 " Be sure to handle the case of dragging the root node (e.g. into an orphan) by"
-                 " updating which node in the model is the root. (`removeItem` logic promotes an orphan"
-                 " to the root node; maybe we can split that into a function like `promoteFirstOrphan`?)"
-         );
-         static_assert(false, "TODO: Be sure to emit all appropriate signals for moving the nodes in question, i.e. beginMoveRows and endMoveRows.");
-         //
-         // But do we want to use beginMoveRows and endMoveRows, or an insert/remove pattern? Either way, 
-         // we can only deal with contiguous spans of rows at a time...
-         // 
-         // QAbstractItemData does a single insertRows() and then fills the rows with data(), but this 
-         // is because it just handles insertions, counting on the source widget to do removals. We need 
-         // to handle dragging a potentially discontiguous selection... So I think we need to handle it 
-         // as a series of beginMoveRows/endMoveRows operations, incrementing the destination row counter 
-         // as we go. Maybe we need to pre-sort the to-be-dragged items by source row index when we build 
-         // the mimeData(). We'll see, I guess.
-         //
+         auto* destination_parent = _node_for_qmi(parent);
+         assert(destination_parent != nullptr);
+         for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
+            this->_unchecked_move_node(**it, *destination_parent, row);
+         return true;
       }
    #pragma endregion
 #pragma endregion

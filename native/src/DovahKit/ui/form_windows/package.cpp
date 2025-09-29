@@ -204,6 +204,11 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
          view->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
          view->setUniformRowHeights(true);
          view->setWordWrap(false);
+         view->setDragDropMode(QAbstractItemView::DragDropMode::InternalMove);
+         view->setDragDropOverwriteMode(false);
+         view->setDragEnabled(true);
+         view->setAcceptDrops(true);
+         view->setDropIndicatorShown(true);
 
          auto* sel_model = view->selectionModel();
          QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &FormDialogPackage::_on_procedure_tree_selection_changed);
@@ -1302,7 +1307,7 @@ bool FormDialogPackage::_uses_package_template() {
       }
 
       auto conditions = model->nodeConditions(qmi);
-      this->ui.conditions->importFrom(*this->form, conditions);
+      this->ui.currentProcedureConditions->importFrom(*this->form, conditions);
    }
 
    void FormDialogPackage::_push_procedure_flag_overrides_from_ui(QModelIndex qmi) {
@@ -1416,7 +1421,7 @@ bool FormDialogPackage::_uses_package_template() {
       }
 
       std::vector<ui::types::conditions::condition> conditions;
-      this->ui.conditions->exportTo(*this->form, conditions);
+      this->ui.currentProcedureConditions->exportTo(*this->form, conditions);
       model->setNodeConditions(qmi, conditions);
    }
 

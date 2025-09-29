@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <variant>
 #include <vector>
 #include "./procedure_tree_typed_data/branch.h"
@@ -28,5 +29,9 @@ namespace ui::types::packages {
 
          bool contains(const procedure_node&) const noexcept;
          size_t index_of(const procedure_node&) const noexcept;
+
+         void append_child(std::unique_ptr<procedure_node>&&);
+         void insert_child(std::unique_ptr<procedure_node>&&, size_t at_index);
+         std::unique_ptr<procedure_node> take_child(size_t);
    };
 }

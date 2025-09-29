@@ -1,5 +1,6 @@
 #include "./procedure_node.h"
 #include <memory>
+#include "helpers/vectors/move_item_within.h"
 #include "dovah/forms/structs/custom_packages/procedure_node.h"
 namespace {
    namespace typed_node_data {
@@ -97,5 +98,47 @@ namespace ui::types::packages {
          if (casted->children[i].get() == &child)
             return i;
       return (size_t)-1;
+   }
+
+   void procedure_node::append_child(std::unique_ptr<procedure_node>&& node_ptr) {
+      assert(std::holds_alternative<procedure_tree_typed_data::branch>(this->data));
+      if (node_ptr->parent_node == this)
+         return;
+      assert(node_ptr->parent_node == nullptr && "Don't std::move a parent's children directly! Call take_child to prep them for move!");
+      auto& list    = std::get<procedure_tree_typed_data::branch>(this->data).children;
+      auto& dst_ptr = list.emplace_back(); // ensure that if we can't realloc, we throw before making changes
+      node_ptr->parent_node = this;
+      dst_ptr = std::move(node_ptr);
+   }
+   void procedure_node::insert_child(std::unique_ptr<procedure_node>&& node_ptr, size_t at_index) {
+      auto& node = *node_ptr;
+      auto& list = std::get<procedure_tree_typed_data::branch>(this->data).children;
+      if (node.parent_node == this) {
+         auto i = this->index_of(node);
+         if (at_index == i)
+            return;
+         cobb::vectors::move_item_within(
+            list,
+            i,
+            (ptrdiff_t)at_index - i
+         );
+      } else {
+         //
+         // We could get rid of the need for this assertion by making the child list private...
+         //
+         assert(node.parent_node == nullptr && "Don't std::move a parent's children directly! Call take_child to prep them for move!");
+         list.reserve(list.size() + 1); // ensure that if we can't realloc, we throw before making changes
+         node.parent_node = this;
+         list.insert(list.begin() + at_index, std::move(node_ptr));
+      }
+   }
+   std::unique_ptr<procedure_node> procedure_node::take_child(size_t i) {
+      assert(std::holds_alternative<procedure_tree_typed_data::branch>(this->data));
+      auto& list = std::get<procedure_tree_typed_data::branch>(this->data).children;
+      assert(i < list.size());
+      auto node_ptr = std::move(list[i]);
+      node_ptr->parent_node = nullptr;
+      list.erase(list.begin() + i);
+      return node_ptr;
    }
 }
