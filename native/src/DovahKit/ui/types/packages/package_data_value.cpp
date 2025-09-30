@@ -89,6 +89,7 @@ namespace ui::types::packages {
          return dst_ptr;
       }
       assert(false && "unhandled variant permutation in ui::types::packages::package_data_value!");
+      return nullptr;
    }
 
    void package_data_value::convert_to(dovah::packages::package_data_type t) {

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="ui::types::packages::procedure_node">
+      <Intrinsic Name="_is_branch" Expression="data.index() == 1" />
+      <Intrinsic Name="_is_procedure" Expression="data.index() == 2" />
+      
+      <DisplayString Condition="_is_branch()">{data._Tail._Head}</DisplayString>
+      <DisplayString Condition="_is_procedure()">{data._Tail._Tail._Head}</DisplayString>
+      <Expand>
+         <Item Name="[parent]">parent_node</Item>
+         <ExpandedItem Condition="data.index() == 1">data._Tail._Head</ExpandedItem>
+         <ExpandedItem Condition="data.index() == 2">data._Tail._Tail._Head</ExpandedItem>
+         <Item Name="[conditions]">conditions</Item>
+      </Expand>
+   </Type>
+   
+   <Type Name="ui::types::packages::procedure_tree_typed_data::branch">
+      <DisplayString Condition="children.size() == 1">{{ branch: {type,en} with 1 child }}</DisplayString>
+      <DisplayString>{{ branch: {type,en} with {children.size()} children }}</DisplayString>
+      <Expand>
+         <Item Name="[branch type]">type,en</Item>
+         <Synthetic Name="[branch flags]">
+            <DisplayString>{flags}</DisplayString>
+            <Expand>
+               <Item Name="repeat_when_complete">(flags &amp; flag::repeat_when_complete) != 0</Item>
+               <Item Name="[Raw View]">flags</Item>
+            </Expand>
+         </Synthetic>
+         <Item Name="[children]">children</Item>
+      </Expand>
+   </Type>
+   
+   <Type Name="ui::types::packages::procedure_tree_typed_data::procedure">
+      <DisplayString>{{ procedure: {type,en} }}</DisplayString>
+      <Expand>
+         <Item Name="[procedure type]">type,en</Item>
+         <Synthetic Name="[procedure flags]">
+            <DisplayString>{flags}</DisplayString>
+            <Expand>
+               <Item Name="success_completes_package">(flags &amp; flag::success_completes_package) != 0</Item>
+               <Item Name="[Raw View]">flags</Item>
+            </Expand>
+         </Synthetic>
+         <Item Name="[package flag overrides]">flag_overrides</Item>
+         <Item Name="[procedure parameter IDs]">parameter_unique_ids</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

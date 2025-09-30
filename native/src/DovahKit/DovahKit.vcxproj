@@ -59,6 +59,7 @@
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
       <BuildStlModules>false</BuildStlModules>
       <EnableModules>false</EnableModules>
+      <TreatSpecificWarningsAsErrors>4715</TreatSpecificWarningsAsErrors>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.189.2\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -74,6 +75,7 @@
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
       <BuildStlModules>false</BuildStlModules>
       <EnableModules>false</EnableModules>
+      <TreatSpecificWarningsAsErrors>4715</TreatSpecificWarningsAsErrors>
     </ClCompile>
     <Link>
       <Profile>true</Profile>
@@ -3934,6 +3936,7 @@
     <Natvis Include="nif\blocks\NiProperty.natvis" />
     <Natvis Include="nif\blocks\unknown.natvis" />
     <Natvis Include="ui\models\DKGenericTreeModel.natvis" />
+    <Natvis Include="ui\types\packages\procedure_node.natvis" />
     <Natvis Include="vulkan\dds\header.natvis" />
     <Natvis Include="vulkan\dds\pixel_format.natvis" />
     <Natvis Include="vulkan\helpers\vertex_index_list.natvis" />
