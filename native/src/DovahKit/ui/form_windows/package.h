@@ -32,6 +32,7 @@ class FormDialogPackage :
             QMenu    menu;
             QAction* create_branch    = nullptr;
             QAction* create_procedure = nullptr;
+            QAction* wrap_in_branch   = nullptr;
             QAction* remove = nullptr;
          } procedure_tree;
       } _context_menus;

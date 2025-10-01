@@ -124,6 +124,8 @@ class PackageProcedureTreeModel : public QAbstractItemModel {
       QModelIndex appendProcedure(const QModelIndex& parent);
       void removeItem(const QModelIndex&);
 
+      QModelIndex wrapInBranch(const QModelIndex& subject);
+
    signals:
       void procedureParametersDefaulted(const QModelIndex&);
 

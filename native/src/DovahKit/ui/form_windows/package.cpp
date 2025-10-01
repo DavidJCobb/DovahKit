@@ -239,6 +239,16 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                });
             }
             {
+               auto* action = menu_ui.wrap_in_branch = new QAction(tr("Wrap in new branch"), this);
+               menu.addAction(action);
+               QAction::connect(action, &QAction::triggered, this, [this, view, sel_model]() {
+                  auto subject = this->_selected_procedure_node_qmi();
+                  auto wrapper = this->_models.procedure_tree->wrapInBranch(subject);
+                  if (wrapper.isValid())
+                     view->setExpanded(wrapper, true);
+               });
+            }
+            {
                auto* action = menu_ui.remove = new QAction(tr("Delete"), this);
                menu.addAction(action);
                QAction::connect(action, &QAction::triggered, this, [this]() {
@@ -591,6 +601,7 @@ void FormDialogPackage::_load_impl() {
       #pragma endregion
       #pragma region Procedure Tree
          this->_models.procedure_tree->import_tree((template_data ? template_data : custom)->procedures);
+         this->ui.procedures->expandAll();
       #pragma endregion
    }
    #pragma endregion

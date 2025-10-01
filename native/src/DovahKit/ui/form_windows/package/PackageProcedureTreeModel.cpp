@@ -130,6 +130,8 @@ void PackageProcedureTreeModel::_unchecked_move_node(node_type& subject, node_ty
    if (!this->beginMoveRows(this->parent(subject_qmi), subject_qmi.row(), subject_qmi.row(), destination_qmi, row))
       return;
 
+   bool moved_root = false;
+
    std::unique_ptr<node_type> subject_ptr;
    if (auto* prior_parent = subject.parent_node) {
       size_t index = prior_parent->index_of(subject);
@@ -147,6 +149,7 @@ void PackageProcedureTreeModel::_unchecked_move_node(node_type& subject, node_ty
       assert(!this->_orphans.empty() && "The only place it's legal to move the root into is an orphan!");
       this->_root = std::move(this->_orphans[0]);
       this->_orphans.erase(this->_orphans.begin());
+      moved_root = true;
    } else {
       bool found = false;
       for (size_t i = 0; i < this->_orphans.size(); ++i) {
@@ -161,6 +164,15 @@ void PackageProcedureTreeModel::_unchecked_move_node(node_type& subject, node_ty
    }
    destination.insert_child(std::move(subject_ptr), row);
    this->endMoveRows();
+
+   if (moved_root && this->_root) {
+      //
+      // An orphan was promoted to the root node. It should no longer be shown 
+      // in red text.
+      //
+      auto qmi = _qmi_for_root();
+      emit dataChanged(qmi, qmi, { Qt::ForegroundRole });
+   }
 }
    
 #pragma region QAbstractItemModel overrides
@@ -291,6 +303,16 @@ void PackageProcedureTreeModel::_unchecked_move_node(node_type& subject, node_ty
                   return editor::localize::package_procedure_tree_branch_type(branch_data->type);
                } else if (procedure_data) {
                   return tr("Procedure: %1").arg(editor::localize::package_procedure_type(procedure_data->type));
+               }
+               break;
+            case Qt::ForegroundRole:
+               //
+               // Show orphans (but not their descendants) in red.
+               //
+               for (const auto& orphan_ptr : this->_orphans) {
+                  if (node == orphan_ptr.get()) {
+                     return QBrush(QColor(255, 0, 0));
+                  }
                }
                break;
          }
@@ -739,6 +761,14 @@ void PackageProcedureTreeModel::removeItem(const QModelIndex& qmi) {
             this->_orphans.erase(this->_orphans.begin());
          }
          this->endRemoveRows();
+         if (this->_root) {
+            //
+            // An orphan was promoted to the root node. It should no longer be shown 
+            // in red text.
+            //
+            auto qmi = _qmi_for_root();
+            emit dataChanged(qmi, qmi, { Qt::ForegroundRole });
+         }
          return;
       }
       for (size_t i = 0; i < this->_orphans.size(); ++i) {
@@ -763,6 +793,60 @@ void PackageProcedureTreeModel::removeItem(const QModelIndex& qmi) {
          break;
       }
    }
+}
+
+QModelIndex PackageProcedureTreeModel::wrapInBranch(const QModelIndex& subject_qmi_prior) {
+   auto* subject_node = _node_for_qmi(subject_qmi_prior);
+   if (!subject_node)
+      return {};
+
+   QModelIndex parent_qmi;
+   node_type*  parent_node = nullptr;
+   std::unique_ptr<node_type>* subject_ptr_p = nullptr;
+   bool subject_was_orphan = false;
+
+   if (subject_node == this->_root.get()) {
+      subject_ptr_p = &this->_root;
+      parent_qmi    = _qmi_for_model();
+   } else if (parent_node = subject_node->parent_node) {
+      size_t i = parent_node->index_of(*subject_node);
+      if (i == (size_t)-1)
+         return {};
+      parent_qmi    = _qmi_for_node(*parent_node);
+      subject_ptr_p = &std::get<ui::types::packages::procedure_tree_typed_data::branch>(parent_node->data).children[i];
+   } else {
+      parent_qmi = _qmi_for_model();
+      for (auto& orphan_ptr : this->_orphans) {
+         if (orphan_ptr.get() == subject_node) {
+            subject_ptr_p      = &orphan_ptr;
+            subject_was_orphan = true;
+            break;
+         }
+      }
+   }
+   assert(subject_ptr_p != nullptr);
+
+   emit layoutAboutToBeChanged({ parent_qmi });
+   auto subject_ptr = std::move(*subject_ptr_p);
+   *subject_ptr_p = std::make_unique<node_type>();
+   node_type& wrapper_node = *(subject_ptr_p->get());
+   wrapper_node.parent_node = parent_node;
+   wrapper_node.data.emplace<ui::types::packages::procedure_tree_typed_data::branch>();
+   subject_ptr->parent_node = nullptr;
+   wrapper_node.append_child(std::move(subject_ptr));
+
+   QModelIndex subject_qmi_after = this->_qmi_for_node(*subject_node);
+   this->changePersistentIndex(subject_qmi_prior, subject_qmi_after);
+   emit layoutChanged({ _qmi_for_model() });
+   if (subject_was_orphan) {
+      //
+      // Subject is no longer an orphan node (the wrapper now is), so ensure its text 
+      // color updates.
+      //
+      emit dataChanged(subject_qmi_after, subject_qmi_after, { Qt::ForegroundRole });
+   }
+
+   return _qmi_for_node(wrapper_node);
 }
 
 void PackageProcedureTreeModel::_default_params_of(ui::types::packages::procedure_tree_typed_data::procedure& dst) {
