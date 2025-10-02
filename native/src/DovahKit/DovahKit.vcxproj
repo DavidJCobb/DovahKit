@@ -1652,6 +1652,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\destruction\stage_serialized_index_out_of_bounds.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data_insufficient_rooms.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data_swallowed_subrecord.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\keyword_list\expected_array_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\leveled_list\leading_coed_bleedthrough.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\magic_effect_list\expected_effect_item_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\magic_effect_list\misplaced_effect_item_subrecord.h" />

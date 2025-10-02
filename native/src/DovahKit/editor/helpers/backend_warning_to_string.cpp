@@ -585,6 +585,18 @@ namespace editor_helpers {
                   ).arg(subject).arg(casted->count_expected).arg(casted->count_seen);
                }
             #pragma endregion
+            #pragma region keyword list
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::keyword_list::expected_array_subrecord*>(&warning)) {
+                  QString subject   = form_identifiers_to_string(&casted->subject);
+                  QString subrecord = cobb::qt::four_cc_to_string(casted->subrecord_signature);
+                  //
+                  return QObject::tr(
+                     "A KSIZ subrecord in form %1 was followed by a subrecord with signature %2, instead of the "
+                     "expected KWDA subrecord. That subrecord will be misinterpreted as a KWDA subrecord.",
+                     disambig
+                  ).arg(subject).arg(subrecord);
+               }
+            #pragma endregion
             #pragma region leveled list
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::leveled_list::leading_coed_bleedthrough*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);

@@ -8765,6 +8765,9 @@
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\topic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\keyword_list\expected_array_subrecord.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

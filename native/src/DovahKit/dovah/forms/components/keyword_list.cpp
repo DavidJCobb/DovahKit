@@ -1,14 +1,33 @@
 #include "keyword_list.h"
 #include "../_common_cpp.h"
 
+#include "../../notices/form_load_warnings/by_form_component/keyword_list/expected_array_subrecord.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_component::keyword_list;
+   }
+}
+
 namespace dovah::loaded_forms::components {
    void keyword_list::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       uint32_t keywordSize = 0;
       form_reference_t formID;
       switch (subrecord.signature()) {
          case subrecord_signature_count:
-            if (subrecord.read(keywordSize))
+            if (subrecord.read(keywordSize)) {
                this->forms.reserve(keywordSize);
+            }
+            {
+               auto next_signature = subrecord.get_containing_record().peek_next_subrecord_type();
+               if (next_signature != subrecord_signature_array) {
+                  specific_load_warnings::expected_array_subrecord notice(
+                     intfc.target_stub,
+                     next_signature
+                  );
+                  intfc.log_load_warning(notice);
+               }
+            }
             break;
          case subrecord_signature_array:
             if (!keywordSize)
