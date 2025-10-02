@@ -124,14 +124,16 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
             ui::set_range<float>(this->ui.currentPackdataValue_Float);
             ui::set_range<int32_t>(this->ui.currentPackdataValue_Int);
             ui::set_range<int32_t>(this->ui.currentPackdataValue_LocationRadius);
+            ui::set_range<int32_t>(this->ui.currentPackdataValue_ObjectListRadius);
             ui::set_range<int32_t>(this->ui.currentPackdataValue_TargetRadius);
 
-            QObject::connect(this->ui.currentPackdataValue_Bool,           &QCheckBox::toggled, this, &FormDialogPackage::_on_packdata_value_edited);
-            QObject::connect(this->ui.currentPackdataValue_Float,          qOverload<double>(&QDoubleSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
-            QObject::connect(this->ui.currentPackdataValue_Int,            qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
-            QObject::connect(this->ui.currentPackdataValue_LocationRadius, qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
-            QObject::connect(this->ui.currentPackdataValue_TargetRadius,   qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
-            QObject::connect(this->ui.currentPackdataValue_Topic,          &DKTopicOrSubtypePicker::valueChanged, this, &FormDialogPackage::_on_packdata_value_edited);
+            QObject::connect(this->ui.currentPackdataValue_Bool,             &QCheckBox::toggled, this, &FormDialogPackage::_on_packdata_value_edited);
+            QObject::connect(this->ui.currentPackdataValue_Float,            qOverload<double>(&QDoubleSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
+            QObject::connect(this->ui.currentPackdataValue_Int,              qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
+            QObject::connect(this->ui.currentPackdataValue_LocationRadius,   qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
+            QObject::connect(this->ui.currentPackdataValue_ObjectListRadius, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
+            QObject::connect(this->ui.currentPackdataValue_TargetRadius,     qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogPackage::_on_packdata_value_edited);
+            QObject::connect(this->ui.currentPackdataValue_Topic,            &DKTopicOrSubtypePicker::valueChanged, this, &FormDialogPackage::_on_packdata_value_edited);
 
             QObject::connect(this->ui.currentPackdataValue_LocationButtonEdit, &QPushButton::clicked, this, [this]() {
                const auto row_opt = this->_selected_packdata_row();
@@ -152,7 +154,12 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                }
                if (dialog.exec() == QDialog::DialogCode::Accepted) {
                   ui::types::packages::package_data_value value = dialog.value();
-                  this->_models.package_data->setRowValue(row, value);
+                  value.as<dovah::packages::package_data_type::location>().radius = this->ui.currentPackdataValue_LocationRadius->value();
+                  auto* const model = this->_models.package_data;
+                  model->setRowValue(row, value);
+                  this->ui.currentPackdataValue_LocationButtonEdit->setText(
+                     model->data(model->index(row, PackageDataModel::Column::Value, {}), Qt::DisplayRole).toString()
+                  );
                }
             });
             QObject::connect(this->ui.currentPackdataValue_TargetButtonEdit, &QPushButton::clicked, this, [this]() {
@@ -171,11 +178,11 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                      auto& value = value_opt.value();
                      switch (auto prior_type = value.type()) {
                         case dovah::packages::package_data_type::single_ref:
-                           dialog.setValue(value.as< dovah::packages::package_data_type::single_ref>());
+                           dialog.setValue(value.as<dovah::packages::package_data_type::single_ref>());
                            type = prior_type;
                            break;
                         case dovah::packages::package_data_type::target_selector:
-                           dialog.setValue(value.as< dovah::packages::package_data_type::target_selector>());
+                           dialog.setValue(value.as<dovah::packages::package_data_type::target_selector>());
                            type = prior_type;
                            break;
                      }
@@ -185,13 +192,25 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                   ui::types::packages::package_data_value value;
                   switch (type) {
                      case dovah::packages::package_data_type::single_ref:
-                        value.emplace<dovah::packages::package_data_type::single_ref>() = dialog.value();
+                        {
+                           auto& dst = value.emplace<dovah::packages::package_data_type::single_ref>();
+                           dst = dialog.value();
+                           dst.count = this->ui.currentPackdataValue_TargetRadius->value();
+                        }
                         break;
                      case dovah::packages::package_data_type::target_selector:
-                        value.emplace<dovah::packages::package_data_type::target_selector>() = dialog.value();
+                        {
+                           auto& dst = value.emplace<dovah::packages::package_data_type::target_selector>();
+                           dst = dialog.value();
+                           dst.count = this->ui.currentPackdataValue_TargetRadius->value();
+                        }
                         break;
                   }
-                  this->_models.package_data->setRowValue(row, value);
+                  auto* const model = this->_models.package_data;
+                  model->setRowValue(row, value);
+                  this->ui.currentPackdataValue_TargetButtonEdit->setText(
+                     model->data(model->index(row, PackageDataModel::Column::Value, {}), Qt::DisplayRole).toString()
+                  );
                }
             });
          #pragma endregion
@@ -933,6 +952,7 @@ bool FormDialogPackage::_uses_package_template() {
          QSignalBlocker(this->ui.currentPackdataValue_Float),
          QSignalBlocker(this->ui.currentPackdataValue_Int),
          QSignalBlocker(this->ui.currentPackdataValue_LocationRadius),
+         QSignalBlocker(this->ui.currentPackdataValue_ObjectListRadius),
          QSignalBlocker(this->ui.currentPackdataValue_TargetRadius),
          QSignalBlocker(this->ui.currentPackdataValue_Topic),
       };
@@ -985,8 +1005,8 @@ bool FormDialogPackage::_uses_package_template() {
             }
             break;
          case dovah::packages::package_data_type::object_list:
-            this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Float);
-            this->ui.currentPackdataValue_Float->setValue(val.as<dovah::packages::package_data_type::object_list>());
+            this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_ObjectList);
+            this->ui.currentPackdataValue_ObjectListRadius->setValue(val.as<dovah::packages::package_data_type::object_list>());
             break;
          case dovah::packages::package_data_type::single_ref:
             this->ui.currentPackdataValueHolder->setCurrentWidget(this->ui.currentPackdataValuePage_Target);
@@ -1096,7 +1116,7 @@ bool FormDialogPackage::_uses_package_template() {
 
       auto type = (dovah::packages::package_data_type)this->ui.currentPackdataType->currentData().toInt();
 
-      ui::types::packages::package_data_value value;
+      ui::types::packages::package_data_value value = model->rowValueOrDefault(row).value_or({});
       switch (type) {
          case dovah::packages::package_data_type::boolean:
             value.emplace<dovah::packages::package_data_type::boolean>() = this->ui.currentPackdataValue_Bool->isChecked();
@@ -1109,19 +1129,25 @@ bool FormDialogPackage::_uses_package_template() {
             break;
          case dovah::packages::package_data_type::location:
             {
-               auto& dst = value.emplace<dovah::packages::package_data_type::location>();
+               auto& dst = value.get_or_emplace_as<dovah::packages::package_data_type::location>();
                dst.radius = this->ui.currentPackdataValue_LocationRadius->value();
+            }
+            break;
+         case dovah::packages::package_data_type::object_list:
+            {
+               auto& dst = value.emplace<dovah::packages::package_data_type::object_list>();
+               dst = this->ui.currentPackdataValue_ObjectListRadius->value();
             }
             break;
          case dovah::packages::package_data_type::single_ref:
             {
-               auto& dst = value.emplace<dovah::packages::package_data_type::single_ref>();
+               auto& dst = value.get_or_emplace_as<dovah::packages::package_data_type::single_ref>();
                dst.distance = this->ui.currentPackdataValue_TargetRadius->value();
             }
             break;
          case dovah::packages::package_data_type::target_selector:
             {
-               auto& dst = value.emplace<dovah::packages::package_data_type::target_selector>();
+               auto& dst = value.get_or_emplace_as<dovah::packages::package_data_type::target_selector>();
                dst.distance = this->ui.currentPackdataValue_TargetRadius->value();
             }
             break;

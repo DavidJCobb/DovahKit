@@ -654,7 +654,7 @@ QString PackageDataModel::_value_to_string(std::optional<ui::types::packages::pa
                   return tr("Linked ref", "package data value (target) (linked_ref)");
                case dovah::packages::target_type::object:
                   {
-                     dovah::form_stub* refr = *casted.as_type<dovah::packages::target_type::reference>();
+                     dovah::form_stub* refr = *casted.as_type<dovah::packages::target_type::object>();
                      if (refr) {
                         const auto& name = refr->editorID;
                         QString     dst;
@@ -663,14 +663,14 @@ QString PackageDataModel::_value_to_string(std::optional<ui::types::packages::pa
                         } else {
                            dst = QString::fromStdString(name);
                         }
-                        return tr("Object of type %1", "package data value (location) (object)").arg(dst);
+                        return tr("Object of type %1", "package data value (target) (object)").arg(dst);
                      }
                   }
-                  return tr("NONE", "package data value (location) (object)");
+                  return tr("any object", "package data value (target) (object)");
                case dovah::packages::target_type::object_type:
                   {
                      auto dst = editor::localize::package_object_type(std::get<dovah::packages::object_type>(casted.data));
-                     return tr("Object of type %1", "package data value (location) (object type)").arg(dst);
+                     return tr("Object of type %1", "package data value (target) (object type)").arg(dst);
                   }
                   break;
                case dovah::packages::target_type::reference:
@@ -684,16 +684,16 @@ QString PackageDataModel::_value_to_string(std::optional<ui::types::packages::pa
                         return QString::fromStdString(name);
                      }
                   }
-                  return tr("NONE", "package data value (location) (reference)");
+                  return tr("NONE", "package data value (target) (reference)");
                case dovah::packages::target_type::reference_alias:
                   {
                      auto alias_id = *casted.as_type<dovah::packages::target_type::reference_alias>();
                      if (alias_id < 0) {
-                        return tr("No reference alias", "package data value (location) (reference alias)");
+                        return tr("No reference alias", "package data value (target) (reference alias)");
                      } else {
                         auto dst = _reference_alias_name(alias_id);
                         if (dst.isEmpty()) {
-                           dst = tr("Reference alias ID #%1", "package data value (location) (reference alias)").arg(alias_id);
+                           dst = tr("Reference alias ID #%1", "package data value (target) (reference alias)").arg(alias_id);
                         }
                         return dst;
                      }
