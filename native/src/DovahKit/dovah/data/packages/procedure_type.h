@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <string_view>
+#include "./package_data_type.h"
 
 namespace dovah::packages {
    enum class procedure_type {
@@ -58,6 +59,34 @@ namespace dovah::packages {
             std::string_view name;
             bool             required = false;
             param_type       type     = param_type::none;
+
+            // based on manual testing within the CK UI
+            constexpr bool accepts(const package_data_type pdt) const noexcept {
+               switch (this->type) {
+                  case param_type::boolean: return pdt == package_data_type::boolean;
+                  case param_type::float32: return pdt == package_data_type::float32;
+                  case param_type::integer: return pdt == package_data_type::integer;
+                  case param_type::location:
+                     switch (pdt) {
+                        case package_data_type::location:
+                        case package_data_type::object_list:
+                        case package_data_type::single_ref:
+                           return true;
+                     }
+                     break;
+                  case param_type::object_list: return pdt == package_data_type::object_list;
+                  case param_type::target:
+                     switch (pdt) {
+                        case package_data_type::object_list:
+                        case package_data_type::single_ref:
+                           return true;
+                     }
+                     break;
+                  case param_type::target_selector: return pdt == package_data_type::target_selector;
+                  case param_type::topic:           return pdt == package_data_type::topic;
+               }
+               return false;
+            }
          };
 
       public:

@@ -280,7 +280,8 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                         picker->setEnabled(false);
                         return;
                      }
-                     picker->setEnabled(true);
+                     //picker->setEnabled(true);
+                     this->_update_procedure_params_picker();
                      const auto qmi       = rows[0];
                      const auto blocker   = QSignalBlocker(picker);
                      const auto unique_id = model->data(qmi, PackageProcedureParamsModel::UniqueIDRole).toInt();
@@ -1560,37 +1561,7 @@ bool FormDialogPackage::_uses_package_template() {
                const auto value_opt = packdata_model->rowValueOrDefault(j);
                if (value_opt.has_value()) {
                   const auto& value = value_opt.value();
-                  bool type_matches = false;
-                  switch (value.type()) {
-                     using package_data_type    = dovah::packages::package_data_type;
-                     using procedure_param_type = dovah::packages::procedure_type_info::param_type;
-                     //
-                     case package_data_type::boolean:
-                        type_matches = param.type == procedure_param_type::boolean;
-                        break;
-                     case package_data_type::float32:
-                        type_matches = param.type == procedure_param_type::float32;
-                        break;
-                     case package_data_type::integer:
-                        type_matches = param.type == procedure_param_type::integer;
-                        break;
-                     case package_data_type::location:
-                        type_matches = param.type == procedure_param_type::location;
-                        break;
-                     case package_data_type::object_list:
-                        type_matches = param.type == procedure_param_type::object_list;
-                        break;
-                     case package_data_type::single_ref:
-                        type_matches = param.type == procedure_param_type::target;
-                        break;
-                     case package_data_type::target_selector:
-                        type_matches = param.type == procedure_param_type::target_selector;
-                        break;
-                     case package_data_type::topic:
-                        type_matches = param.type == procedure_param_type::topic;
-                        break;
-                  }
-                  if (type_matches) {
+                  if (param.accepts(value.type())) {
                      auto uid = packdata_model->rowDeclaration(j).unique_id;
                      params_after[i] = uid;
                      params_newly_referenced.push_back(uid);
@@ -1708,17 +1679,37 @@ bool FormDialogPackage::_uses_package_template() {
 
 void FormDialogPackage::_update_procedure_params_picker() {
    const auto blocker = QSignalBlocker(this->ui.currentProcedureInputPackdata);
-   
+
+   const auto   current_procedure_type  = (dovah::packages::procedure_type)this->_models.procedure_tree->data(_selected_procedure_node_qmi(), PackageProcedureTreeModel::ProcedureTypeRole).toInt();
+   const size_t current_parameter_index = [this]() -> size_t {
+      const auto rows = this->ui.currentProcedureInputs->selectionModel()->selectedRows();
+      if (rows.empty())
+         return (size_t)-1;
+      return rows[0].row();
+   }();
+
    auto* packdata_model = this->_models.package_data;
    auto* widget         = this->ui.currentProcedureInputPackdata;
    auto  prior          = widget->currentData();
    widget->clear();
+   if (current_parameter_index == (size_t)-1) {
+      widget->setEnabled(false);
+      return;
+   }
    size_t rows = packdata_model->rowCount();
    for (size_t i = 0; i < rows; ++i) {
       auto qmi       = packdata_model->index(i, 0, {});
       bool is_public = packdata_model->data(qmi, Qt::EditRole).toBool();
       if (!is_public)
          continue;
+      if ((size_t)current_procedure_type < dovah::packages::all_procedure_type_info.size()) {
+         const auto  type = (dovah::packages::package_data_type) packdata_model->data(qmi, PackageDataModel::TypeRole).toInt();
+         const auto& info = dovah::packages::all_procedure_type_info[(size_t)current_procedure_type];
+         if (current_parameter_index < info.param_count) {
+            if (!info.params[current_parameter_index].accepts(type))
+               continue;
+         }
+      }
       widget->addItem(
          packdata_model->data(qmi.siblingAtColumn(PackageDataModel::Column::Name), Qt::DisplayRole).toString(),
          packdata_model->data(qmi, PackageDataModel::UniqueIDRole).toInt()
