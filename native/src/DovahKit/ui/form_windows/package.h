@@ -1,5 +1,8 @@
 #pragma once
+#include <cstdint>
 #include <optional>
+#include <string>
+#include <unordered_map>
 #include <QMenu>
 #include "./_base.h"
 #include "dovah/forms/Package.h"
@@ -44,6 +47,7 @@ class FormDialogPackage :
          PackageProcedureTreeModel*   procedure_tree = nullptr;
          PackageProcedureParamsModel* procedure_params = nullptr;
       } _models;
+      std::unordered_map<std::string, uint8_t> _recent_procedure_params;
       
       virtual void _load_impl() override;
       virtual void _save_impl() override;
@@ -82,6 +86,14 @@ class FormDialogPackage :
 
          void _push_procedure_node_from_ui(QModelIndex dst = {}); // invalid index = "use selection"
          void _push_procedure_flag_overrides_from_ui(QModelIndex dst = {});
+
+         void _clear_recent_procedure_params();
+         void _refill_recent_procedure_params();
+         void _on_procedure_param_changed();
+         void _on_procedure_type_changed(QModelIndex dst = {});
+         void _on_branch_type_changed(QModelIndex dst = {});
+
+         void _update_branch_flag_labels(QModelIndex dst = {});
 
          void _on_procedure_tree_selection_changed(const QItemSelection& selected, const QItemSelection& deselected);
       #pragma endregion

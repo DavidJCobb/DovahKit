@@ -290,10 +290,24 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                      // it's in use by any procedure.
                      this->_update_packdata_deleteable();
                   });
+                  QObject::connect(this->ui.currentProcedureInputPackdata, qOverload<int>(&QComboBox::currentIndexChanged), this, [this]() {
+                     this->_on_procedure_param_changed();
+                  });
                }
                QObject::connect(this->_models.package_data, &QAbstractItemModel::rowsInserted, this, &FormDialogPackage::_update_procedure_params_picker);
                QObject::connect(this->_models.package_data, &QAbstractItemModel::rowsRemoved, this, &FormDialogPackage::_update_procedure_params_picker);
                QObject::connect(this->_models.package_data, &QAbstractItemModel::dataChanged, this, &FormDialogPackage::_update_procedure_params_picker);
+
+               QObject::connect(this->ui.currentProcedureType, qOverload<int>(&QComboBox::currentIndexChanged), this, [this]() {
+                  //
+                  // Changes to a procedure's type need to appear instantly in the treeview, and 
+                  // need to cause corresponding changes to the procedure's parameters.
+                  // 
+                  // Changes to a branch's type need to appear instantly in the treeview.
+                  //
+                  this->_on_procedure_type_changed();
+                  this->_on_branch_type_changed();
+               });
             #pragma endregion
             #pragma region Flag Overrides
             {
@@ -1225,14 +1239,10 @@ bool FormDialogPackage::_uses_package_template() {
          ui::set_combobox_by_data(*this->ui.currentProcedureType, branch_type);
 
          const auto flags = model->data(qmi, PackageProcedureTreeModel::BranchFlagsRole).toInt();
+         this->_update_branch_flag_labels(qmi);
          {
-            auto* widget = this->ui.currentProcedureRepeatWhenComplete;
-            if (branch_type == dovah::packages::procedure_tree_branch_type::simultaneous) {
-               widget->setText(tr("Repeat until all child procedures complete"));
-            } else {
-               widget->setText(tr("Repeat when complete"));
-            }
-            widget->setChecked(flags & ui::types::packages::procedure_tree_typed_data::branch::flag::repeat_when_complete);
+            using flag = ui::types::packages::procedure_tree_typed_data::branch::flag;
+            this->ui.currentProcedureRepeatWhenComplete->setChecked(flags & flag::repeat_when_complete);
          }
          this->ui.procedureOverrideFlagsLayout->setEnabled(false);
       } else {
@@ -1315,6 +1325,7 @@ bool FormDialogPackage::_uses_package_template() {
 
          this->_update_procedure_params_list(qmi);
          this->_update_procedure_params_picker();
+         this->_refill_recent_procedure_params();
       }
 
       auto conditions = model->nodeConditions(qmi);
@@ -1436,7 +1447,246 @@ bool FormDialogPackage::_uses_package_template() {
       model->setNodeConditions(qmi, conditions);
    }
 
+   void FormDialogPackage::_clear_recent_procedure_params() {
+      this->_recent_procedure_params.clear();
+   }
+   void FormDialogPackage::_refill_recent_procedure_params() {
+      const auto procedure_type = (dovah::packages::procedure_type) this->_models.procedure_tree->data(_selected_procedure_node_qmi(), PackageProcedureTreeModel::ProcedureTypeRole).toInt();
+      if ((size_t)procedure_type < dovah::packages::all_procedure_type_info.size()) {
+         const auto* params_model = this->_models.procedure_params;
+         const auto& info         = dovah::packages::all_procedure_type_info[(size_t)procedure_type];
+         for (size_t i = 0; i < info.param_count; ++i) {
+            const auto name = info.params[i].name;
+            if (name.empty())
+               continue;
+            const uint8_t uid  = params_model->data(params_model->index(i, 0, {}), PackageProcedureParamsModel::UniqueIDRole).toInt();
+            if (uid != PackageProcedureParamsModel::no_unique_id)
+               this->_recent_procedure_params[std::string(name)] = uid;
+         }
+      }
+   }
+   void FormDialogPackage::_on_procedure_param_changed() {
+      this->_update_packdata_deleteable();
+
+      //
+      // Update recently used parameters.
+      //
+      const auto procedure_qmi  = _selected_procedure_node_qmi();
+      const auto procedure_type = (dovah::packages::procedure_type) this->_models.procedure_tree->data(procedure_qmi, PackageProcedureTreeModel::ProcedureTypeRole).toInt();
+      if ((size_t)procedure_type < dovah::packages::all_procedure_type_info.size()) {
+         const auto& info       = dovah::packages::all_procedure_type_info[(size_t)procedure_type];
+         const auto  param_name = [&info, this]() -> std::string {
+            auto rows = this->ui.currentProcedureInputs->selectionModel()->selectedRows();
+            if (rows.empty())
+               return {};
+            auto i = rows[0].row();
+            if (i < 0 || i >= info.param_count)
+               return {};
+            return std::string(info.params[i].name);
+         }();
+         if (!param_name.empty()) {
+            const uint8_t current_uid = this->ui.currentProcedureInputPackdata->currentData().toInt();
+            this->_recent_procedure_params[param_name] = current_uid;
+         }
+      }
+   }
+   void FormDialogPackage::_on_procedure_type_changed(QModelIndex qmi) {
+      if (!qmi.isValid()) {
+         qmi = _selected_procedure_node_qmi();
+         if (!qmi.isValid())
+            return;
+      }
+      auto* const procedure_model = this->_models.procedure_tree;
+      auto* const packdata_model  = this->_models.package_data;
+      if (procedure_model->data(qmi, PackageProcedureTreeModel::BranchTypeRole).isValid()) {
+         return;
+      }
+      const auto type_prior = (dovah::packages::procedure_type) procedure_model->data(qmi, PackageProcedureTreeModel::ProcedureTypeRole).toInt();
+      const auto type_after = (dovah::packages::procedure_type) this->ui.currentProcedureType->currentData().toInt();
+
+      const dovah::packages::procedure_type_info* typeinfo_prior = nullptr;
+      if ((size_t)type_prior < dovah::packages::all_procedure_type_info.size())
+         typeinfo_prior = &dovah::packages::all_procedure_type_info[(size_t)type_prior];
+
+      size_t packdata_count = packdata_model->rowCount();
+
+      std::vector<uint8_t> params_prior = procedure_model->getProcedureParameterIDs(qmi);
+      std::vector<uint8_t> params_after;
+      std::vector<uint8_t> params_newly_referenced;
+      if ((size_t)type_after < dovah::packages::all_procedure_type_info.size()) {
+         const auto& typeinfo_after = dovah::packages::all_procedure_type_info[(size_t)type_after];
+         params_after.resize(typeinfo_after.param_count, PackageProcedureTreeModel::no_unique_id);
+         for (size_t i = 0; i < typeinfo_after.param_count; ++i) {
+            const auto& param      = typeinfo_after.params[i];
+            const auto  param_name = std::string(param.name);
+            //
+            // First, try preserving any parameters the procedure is currently using.
+            //
+            if (typeinfo_prior) {
+               bool   found = false;
+               size_t j     = 0;
+               for (; j < typeinfo_prior->param_count; ++j) {
+                  auto& param_prior = typeinfo_prior->params[j];
+                  if (param_prior.name == param_name && param_prior.type == param.type) {
+                     found = true;
+                     break;
+                  }
+               }
+               if (found) {
+                  params_after[i] = params_prior[j];
+                  params_prior[j] = PackageProcedureTreeModel::no_unique_id;
+                  continue;
+               }
+            }
+            //
+            // Next, check recently-used procedure parameters, which are indexed by 
+            // name.
+            //
+            {
+               auto it = this->_recent_procedure_params.find(param_name);
+               if (it != this->_recent_procedure_params.end()) {
+                  params_after[i] = it->second;
+                  params_newly_referenced.push_back(it->second);
+                  continue;
+               }
+            }
+            //
+            // Finally, default any unfilled procedure params to the first suitable 
+            // packdata of the given type. If we don't find any, then create a new 
+            // packdata.
+            //
+            bool found_a_default = false;
+            for (size_t j = 0; j < packdata_count; ++j) {
+               const auto value_opt = packdata_model->rowValueOrDefault(j);
+               if (value_opt.has_value()) {
+                  const auto& value = value_opt.value();
+                  bool type_matches = false;
+                  switch (value.type()) {
+                     using package_data_type    = dovah::packages::package_data_type;
+                     using procedure_param_type = dovah::packages::procedure_type_info::param_type;
+                     //
+                     case package_data_type::boolean:
+                        type_matches = param.type == procedure_param_type::boolean;
+                        break;
+                     case package_data_type::float32:
+                        type_matches = param.type == procedure_param_type::float32;
+                        break;
+                     case package_data_type::integer:
+                        type_matches = param.type == procedure_param_type::integer;
+                        break;
+                     case package_data_type::location:
+                        type_matches = param.type == procedure_param_type::location;
+                        break;
+                     case package_data_type::object_list:
+                        type_matches = param.type == procedure_param_type::object_list;
+                        break;
+                     case package_data_type::single_ref:
+                        type_matches = param.type == procedure_param_type::target;
+                        break;
+                     case package_data_type::target_selector:
+                        type_matches = param.type == procedure_param_type::target_selector;
+                        break;
+                     case package_data_type::topic:
+                        type_matches = param.type == procedure_param_type::topic;
+                        break;
+                  }
+                  if (type_matches) {
+                     auto uid = packdata_model->rowDeclaration(j).unique_id;
+                     params_after[i] = uid;
+                     params_newly_referenced.push_back(uid);
+                     this->_recent_procedure_params[param_name] = uid;
+                     found_a_default = true;
+                     break;
+                  }
+               }
+            }
+            if (found_a_default) {
+               continue;
+            } else {
+               auto new_param_qmi = packdata_model->appendRow();
+               if (!new_param_qmi.isValid())
+                  return;
+               {
+                  auto decl = packdata_model->rowDeclaration(new_param_qmi.row());
+                  decl.name = QString::fromStdString(param_name);
+                  packdata_model->setRowDeclaration(new_param_qmi.row(), decl);
+                  params_after[i] = decl.unique_id;
+                  this->_recent_procedure_params[param_name] = decl.unique_id;
+               }
+               {
+                  ui::types::packages::package_data_value value;
+                  switch (param.type) {
+                     case dovah::packages::procedure_type_info::param_type::boolean:
+                        value.emplace<dovah::packages::package_data_type::boolean>();
+                        break;
+                     case dovah::packages::procedure_type_info::param_type::float32:
+                        value.emplace<dovah::packages::package_data_type::float32>();
+                        break;
+                     case dovah::packages::procedure_type_info::param_type::integer:
+                        value.emplace<dovah::packages::package_data_type::integer>();
+                        break;
+                     case dovah::packages::procedure_type_info::param_type::location:
+                        value.emplace<dovah::packages::package_data_type::location>();
+                        break;
+                     case dovah::packages::procedure_type_info::param_type::object_list:
+                        value.emplace<dovah::packages::package_data_type::object_list>();
+                        break;
+                     case dovah::packages::procedure_type_info::param_type::target:
+                        value.emplace<dovah::packages::package_data_type::single_ref>();
+                        break;
+                     case dovah::packages::procedure_type_info::param_type::target_selector:
+                        value.emplace<dovah::packages::package_data_type::target_selector>();
+                        break;
+                     case dovah::packages::procedure_type_info::param_type::topic:
+                        value.emplace<dovah::packages::package_data_type::topic>();
+                        break;
+                  }
+                  packdata_model->setRowValue(new_param_qmi.row(), value);
+               }
+            }
+         }
+      }
+
+      procedure_model->setData(qmi, (int)type_after, PackageProcedureTreeModel::ProcedureTypeRole);
+      procedure_model->setProcedureParameterIDs(qmi, params_after);
+      this->_update_procedure_params_list(qmi);
+      this->_update_procedure_params_picker();
+
+      this->_update_packdata_deleteable();
+   }
+   void FormDialogPackage::_on_branch_type_changed(QModelIndex qmi) {
+      if (!qmi.isValid()) {
+         qmi = _selected_procedure_node_qmi();
+         if (!qmi.isValid())
+            return;
+      }
+      auto* const procedure_model = this->_models.procedure_tree;
+      if (!procedure_model->data(qmi, PackageProcedureTreeModel::BranchTypeRole).isValid()) {
+         return;
+      }
+      procedure_model->setData(qmi, this->ui.currentProcedureType->currentData().toInt(), PackageProcedureTreeModel::BranchTypeRole);
+      this->_update_branch_flag_labels(qmi);
+   }
+
+   void FormDialogPackage::_update_branch_flag_labels(QModelIndex qmi) {
+      auto* const procedure_model = this->_models.procedure_tree;
+      const auto  var_branch_type = procedure_model->data(qmi, PackageProcedureTreeModel::BranchTypeRole);
+      if (!var_branch_type.isValid()) {
+         return;
+      }
+      const auto branch_type = (dovah::packages::procedure_tree_branch_type)var_branch_type.toInt();
+      {
+         auto* widget = this->ui.currentProcedureRepeatWhenComplete;
+         if (branch_type == dovah::packages::procedure_tree_branch_type::simultaneous) {
+            widget->setText(tr("Repeat until all child procedures complete"));
+         } else {
+            widget->setText(tr("Repeat when complete"));
+         }
+      }
+   }
+
    void FormDialogPackage::_on_procedure_tree_selection_changed(const QItemSelection& selected, const QItemSelection& deselected) {
+      this->_clear_recent_procedure_params();
       if (!deselected.empty()) {
          auto range = deselected[0];
          auto qmi   = range.topLeft();
