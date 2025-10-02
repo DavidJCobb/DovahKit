@@ -109,7 +109,7 @@ namespace dovah::loaded_forms {
          virtual void _sever_outbound_references_impl(form_stub& other) noexcept override;
 
       public:
-         void convert_to_modern(bool use_existing_templates = false);
+         void force_to_modern();
 
          struct record_skimmers { // namespace
             record_skimmers() = delete;

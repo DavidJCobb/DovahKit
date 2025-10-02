@@ -573,7 +573,7 @@ void FormDialogPackage::_load_impl() {
 
    if (!_get_custom_package_data()) {
       if (working.typed_info) {
-         working.convert_to_modern();
+         working.force_to_modern();
          if (!working.typed_info) {
             working.typed_info = new dovah::loaded_forms::structs::typed_package_info::custom;
          }
