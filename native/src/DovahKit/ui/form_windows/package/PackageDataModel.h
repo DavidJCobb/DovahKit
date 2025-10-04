@@ -38,9 +38,10 @@ class PackageDataModel : public QAbstractItemModel {
       };
       static constexpr const size_t ColumnCount = Column::__COUNT;
 
-      static constexpr const Qt::ItemDataRole UniqueIDRole     = (Qt::ItemDataRole)(Qt::UserRole + 1);
-      static constexpr const Qt::ItemDataRole TypeRole         = (Qt::ItemDataRole)(Qt::UserRole + 2);
-      static constexpr const Qt::ItemDataRole ValueIsLocalRole = (Qt::ItemDataRole)(Qt::UserRole + 3);
+      static constexpr const Qt::ItemDataRole UniqueIDRole         = (Qt::ItemDataRole)(Qt::UserRole + 1);
+      static constexpr const Qt::ItemDataRole TypeRole             = (Qt::ItemDataRole)(Qt::UserRole + 2);
+      static constexpr const Qt::ItemDataRole ValueIsLocalRole     = (Qt::ItemDataRole)(Qt::UserRole + 3);
+      static constexpr const Qt::ItemDataRole ValueHasADefaultRole = (Qt::ItemDataRole)(Qt::UserRole + 4);
 
       #pragma region QAbstractItemModel overrides
          #pragma region Hierarchy

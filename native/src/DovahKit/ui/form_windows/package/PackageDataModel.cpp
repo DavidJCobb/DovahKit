@@ -120,6 +120,8 @@ PackageDataModel::PackageDataModel(QObject* parent) : QAbstractItemModel(parent)
                break;
             case ValueIsLocalRole:
                return src.value.has_value();
+            case ValueHasADefaultRole:
+               return src.value_default.has_value();
          }
          return {};
       }

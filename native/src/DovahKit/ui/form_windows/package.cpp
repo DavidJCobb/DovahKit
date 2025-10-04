@@ -610,6 +610,7 @@ void FormDialogPackage::_load_impl() {
       auto* template_data = _get_template_package_data();
       
       ui::bind(this->ui.templateForm, custom->template_package, working);
+      this->ui.flagIsTemplate->setEnabled(custom->template_package == nullptr);
       QObject::connect(this->ui.templateForm, &DKFormPicker::formChanged, this, &FormDialogPackage::_set_package_template);
       if (template_data) {
          this->ui.buttonPackdataNew->setEnabled(false);
@@ -871,20 +872,53 @@ void FormDialogPackage::_set_is_package_template(bool is) {
    } else {
       working.type = dovah::packages::legacy_type::custom;
    }
-   this->ui.templateForm->setEnabled(is);
+   this->ui.templateForm->setEnabled(!is);
    this->ui.idles->setEnabled(!is);
 }
 void FormDialogPackage::_set_package_template(dovah::form_stub* stub) {
    bool absent = stub == nullptr;
+
+   auto* const packdata_model  = this->_models.package_data;
+   auto* const procedure_model = this->_models.procedure_tree;
+
+   this->ui.flagIsTemplate->setEnabled(absent);
    this->ui.buttonPackdataNew->setEnabled(absent);
-   this->_models.package_data->setDeclarationsOwned(absent);
+   packdata_model->setDeclarationsOwned(absent);
    this->ui.selectedProcedureGroupbox->setEnabled(absent);
    if (stub) {
-      this->_models.package_data->clear();
-      this->_models.package_data->setOwningQuest(this->ui.owningQuest->formStub());
+      packdata_model->clear();
+      packdata_model->setOwningQuest(this->ui.owningQuest->formStub());
       auto* template_data = _get_template_package_data();
-      if (template_data)
-         this->_models.package_data->importDeclarations(template_data->data.declarations, false);
+      if (template_data) {
+         packdata_model->importDeclarations(template_data->data.declarations, false);
+         packdata_model->importDefaultValues(template_data->data.values);
+         procedure_model->import_tree(template_data->procedures);
+         this->ui.procedures->expandAll();
+         //
+         // Delete any "leftover" packdata from our previous template or lack thereof 
+         // (i.e. if a packdata is defined by the inheriting package but isn't used in 
+         // the new template, then ditch it).
+         //
+         auto usage = procedure_model->countUsesOfPackdata();
+         {
+            size_t count = packdata_model->rowCount({});
+            for (size_t i = 0; i < count; ++i) {
+               auto    qmi = packdata_model->index(i, 0, {});
+               uint8_t uid = packdata_model->data(qmi, PackageDataModel::UniqueIDRole).toInt();
+               {
+                  auto it = usage.find(uid);
+                  if (it != usage.end() && it->second > 0)
+                     continue;
+               }
+               auto is_defined_in_template = packdata_model->data(qmi, PackageDataModel::ValueHasADefaultRole).toBool();
+               if (!is_defined_in_template) {
+                  packdata_model->deleteRow(i);
+                  --count;
+                  --i;
+               }
+            }
+         }
+      }
    }
 }
 
