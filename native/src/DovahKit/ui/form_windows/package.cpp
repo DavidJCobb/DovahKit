@@ -630,6 +630,7 @@ void FormDialogPackage::_load_impl() {
          model->importValues(custom->data.values);
          if (template_data) {
             model->importDefaultValues(template_data->data.values);
+            model->reSortDeclarations(template_data->data.declarations);
          }
          model->hideValuelessRows();
       }
@@ -873,6 +874,9 @@ void FormDialogPackage::_set_is_package_template(bool is) {
       working.type = dovah::packages::legacy_type::custom;
    }
    this->ui.templateForm->setEnabled(!is);
+   this->ui.tabFlags->setEnabled(!is);
+   this->ui.scheduleGroupbox->setEnabled(!is);
+   this->ui.tabBeginEndChange->setEnabled(!is);
    this->ui.idles->setEnabled(!is);
 }
 void FormDialogPackage::_set_package_template(dovah::form_stub* stub) {
@@ -892,6 +896,7 @@ void FormDialogPackage::_set_package_template(dovah::form_stub* stub) {
       if (template_data) {
          packdata_model->importDeclarations(template_data->data.declarations, false);
          packdata_model->importDefaultValues(template_data->data.values);
+         packdata_model->reSortDeclarations(template_data->data.declarations);
          procedure_model->import_tree(template_data->procedures);
          this->ui.procedures->expandAll();
          //

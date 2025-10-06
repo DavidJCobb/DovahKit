@@ -1,5 +1,6 @@
 #include "./PackageDataModel.h"
 #include "helpers/bitset.h"
+#include "helpers/sort_and_remember.h"
 #include "helpers/qt/strings.h"
 #include "helpers/vectors/move_item_within.h"
 #include "dovah/data/dialogue/topic_subtype.h"
@@ -267,6 +268,57 @@ void PackageDataModel::importValues(const dovah::loaded_forms::structs::custom_p
    }
 
    this->_data.next_unique_id = std::max(this->_data.next_unique_id, src.next_unique_id);
+}
+
+void PackageDataModel::reSortDeclarations(const dovah::loaded_forms::structs::custom_packages::package_data_declaration_map& src) {
+   emit layoutAboutToBeChanged({ QModelIndex{} }, LayoutChangeHint::VerticalSortHint);
+
+   auto indices = cobb::sort_and_remember(
+      this->_data.items,
+      [&src](const auto& a, const auto& b) {
+         auto uid_a = a.declaration.unique_id;
+         auto uid_b = b.declaration.unique_id;
+
+         size_t src_idx_a;
+         size_t src_idx_b;
+         bool   found_a = false;
+         bool   found_b = false;
+         for (size_t i = 0; i < src.entries.size(); ++i) {
+            auto uid_i = src.entries[i].unique_id;
+            if (uid_i == uid_a || uid_i == uid_b) {
+               if (uid_i == uid_a) {
+                  src_idx_a = i;
+                  found_a   = true;
+               } else if (uid_i == uid_b) {
+                  src_idx_b = i;
+                  found_b   = true;
+               }
+               if (found_a && found_b)
+                  break;
+            }
+         }
+         if (found_a && found_b) {
+            return src_idx_a < src_idx_b;
+         } else if (found_a) {
+            return true;
+         } else {
+            return false;
+         }
+      }
+   );
+
+   for (size_t index_prior = 0; index_prior < indices.size(); ++index_prior) {
+      size_t index_after = indices[index_prior];
+      if (index_prior == index_after)
+         continue;
+      for (size_t col = 0; col < ColumnCount; ++col) {
+         QModelIndex qmi_prior = this->index(index_prior, col, {});
+         QModelIndex qmi_after = this->index(index_after, col, {});
+         this->changePersistentIndex(qmi_prior, qmi_after);
+      }
+   }
+
+   emit layoutChanged({ QModelIndex{} }, LayoutChangeHint::VerticalSortHint);
 }
 
 void PackageDataModel::hideValuelessRows() {

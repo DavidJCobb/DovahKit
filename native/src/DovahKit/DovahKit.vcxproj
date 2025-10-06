@@ -1864,6 +1864,7 @@
     <QtMoc Include="ui\form_windows\actor_value_info.h" />
     <ClInclude Include="helpers\optionals\finite_float.h" />
     <QtMoc Include="ui\form_windows\apparatus.h" />
+    <ClInclude Include="helpers\sort_and_remember.h" />
     <ClInclude Include="nif\blocks\BSFurnitureMarkerNode.h" />
     <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h" />
     <QtMoc Include="ui\form_windows\climate\FormSubdialogClimateWeather.h" />

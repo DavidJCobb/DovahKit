@@ -66,6 +66,8 @@ class PackageDataModel : public QAbstractItemModel {
       void importDefaultValues(const dovah::loaded_forms::structs::custom_packages::package_data_value_map&);
       void importValues(const dovah::loaded_forms::structs::custom_packages::package_data_value_map&);
 
+      void reSortDeclarations(const dovah::loaded_forms::structs::custom_packages::package_data_declaration_map&);
+
       // Deletes rows that have neither a value nor a default value.
       // We do this because Skyrim.esm is... weird... about package data. Some common package 
       // templates, like Sandbox, are filled with "DELETEME" package data declarations with no 
