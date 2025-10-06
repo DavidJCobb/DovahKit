@@ -4,6 +4,11 @@
 #include <vector>
 
 namespace cobb {
+   //
+   // Sort a container, and remember items' indices before and after the sort. 
+   // Returns a vector of indices, such that given an item that was at index 
+   // I and was moved to index J, vec[I] == J.
+   //
    template<typename Container, typename Functor>
       requires requires {
          typename Container::value_type;
@@ -31,10 +36,9 @@ namespace cobb {
 
       Container sorted;
       sorted.resize(size);
-      for (size_t i = 0; i < size; ++i) {
-         auto& item = list[i];
-         auto  dst  = indices[i];
-         sorted[dst] = std::move(item);
+      for (size_t index_prior = 0; index_prior < size; ++index_prior) {
+         size_t index_after = indices[index_prior];
+         sorted[index_after] = std::move(list[index_prior]);
       }
       
       std::swap(list, sorted);
