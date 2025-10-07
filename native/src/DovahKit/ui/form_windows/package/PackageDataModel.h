@@ -84,8 +84,10 @@ class PackageDataModel : public QAbstractItemModel {
       ui::types::packages::package_data_declaration rowDeclaration(size_t row) const;
       std::optional<ui::types::packages::package_data_value> rowValue(size_t row) const;
       std::optional<ui::types::packages::package_data_value> rowValueOrDefault(size_t row) const;
+      std::optional<ui::types::packages::package_data_value> rowDefaultValue(size_t row) const;
 
       void setRowDeclaration(size_t row, const ui::types::packages::package_data_declaration&);
+      void clearRowValue(size_t row);
       void setRowValue(size_t row, const std::optional<ui::types::packages::package_data_value>&);
       void setRowValue(size_t row, const ui::types::packages::package_data_value&);
       void resetRowValueToDefault(size_t row);

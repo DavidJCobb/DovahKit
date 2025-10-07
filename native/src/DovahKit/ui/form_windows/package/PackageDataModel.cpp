@@ -393,6 +393,12 @@ std::optional<ui::types::packages::package_data_value> PackageDataModel::rowValu
       return item.value;
    return item.value_default;
 }
+std::optional<ui::types::packages::package_data_value> PackageDataModel::rowDefaultValue(size_t row) const {
+   if (row >= this->_data.items.size())
+      throw std::out_of_range("PackageDataModel::rowDefaultValue argument out of range");
+   const auto& item = this->_data.items[row];
+   return item.value_default;
+}
 
 void PackageDataModel::setRowDeclaration(size_t row, const ui::types::packages::package_data_declaration& src) {
    if (!this->_data.owns_declarations) {
@@ -408,16 +414,25 @@ void PackageDataModel::setRowDeclaration(size_t row, const ui::types::packages::
    auto br = this->index(row, Column::IsPublic, {});
    emit dataChanged(tl, br);
 }
+void PackageDataModel::clearRowValue(size_t row) {
+   if (row >= this->_data.items.size())
+      throw std::out_of_range("PackageDataModel::clearRowValue argument out of range");
+   auto& item = this->_data.items[row];
+   item.value.reset();
+   item.cached.value.clear();
+   auto qmi = this->index(row, Column::Value, {});
+   emit dataChanged(qmi, qmi);
+}
 void PackageDataModel::setRowValue(size_t row, const std::optional<ui::types::packages::package_data_value>& src) {
    if (row >= this->_data.items.size())
       throw std::out_of_range("PackageDataModel::setRowValue argument out of range");
    if (src.has_value()) {
       this->setRowValue(row, src.value());
-      return;
+   } else {
+      auto& item = this->_data.items[row];
+      item.value.reset();
+      item.cached.value.clear();
    }
-   auto& item = this->_data.items[row];
-   item.value.reset();
-   item.cached.value.clear();
    auto qmi = this->index(row, Column::Value, {});
    emit dataChanged(qmi, qmi);
 }

@@ -880,6 +880,10 @@ void FormDialogPackage::_set_is_package_template(bool is) {
    this->ui.idles->setEnabled(!is);
 }
 void FormDialogPackage::_set_package_template(dovah::form_stub* stub) {
+   using package_data_value = ui::types::packages::package_data_value;
+   //
+   constexpr const bool preserve_values_by_name = true;
+
    bool absent = stub == nullptr;
 
    auto* const packdata_model  = this->_models.package_data;
@@ -890,24 +894,120 @@ void FormDialogPackage::_set_package_template(dovah::form_stub* stub) {
    packdata_model->setDeclarationsOwned(absent);
    this->ui.selectedProcedureGroupbox->setEnabled(absent);
    if (stub) {
+      std::conditional_t<
+         preserve_values_by_name,
+         std::unordered_map<QString, package_data_value>,
+         std::monostate
+      > local_values_by_name;
+      if constexpr (preserve_values_by_name) {
+         constexpr const bool retain_only_local_values = true;
+
+         size_t size = packdata_model->rowCount({});
+         for (size_t i = 0; i < size; ++i) {
+            if constexpr (retain_only_local_values) {
+               const auto qmi = packdata_model->index(i, 0, {});
+               if (!packdata_model->data(qmi, PackageDataModel::ValueIsLocalRole).toBool())
+                  continue;
+            }
+            const auto value_opt = packdata_model->rowValueOrDefault(i);
+            if (!value_opt.has_value())
+               continue;
+            const auto decl = packdata_model->rowDeclaration(i);
+            local_values_by_name[decl.name] = value_opt.value();
+         }
+      }
+
       packdata_model->clear();
       packdata_model->setOwningQuest(this->ui.owningQuest->formStub());
       auto* template_data = _get_template_package_data();
       if (template_data) {
          packdata_model->importDeclarations(template_data->data.declarations, false);
          packdata_model->importDefaultValues(template_data->data.values);
+         packdata_model->hideValuelessRows();
          packdata_model->reSortDeclarations(template_data->data.declarations);
          procedure_model->import_tree(template_data->procedures);
          this->ui.procedures->expandAll();
          //
-         // Delete any "leftover" packdata from our previous template or lack thereof 
-         // (i.e. if a packdata is defined by the inheriting package but isn't used in 
-         // the new template, then ditch it).
+         // Ensure consistency between local packdata and new template.
          //
-         auto usage = procedure_model->countUsesOfPackdata();
-         {
-            size_t count = packdata_model->rowCount({});
-            for (size_t i = 0; i < count; ++i) {
+         if constexpr (preserve_values_by_name) {
+            //
+            // We cleared all the local values out as part of the above loop, transferring 
+            // them to a map indexed by the declaration names. We must now restore the values 
+            // into any packdata that, in the new template, has the same name and type.
+            //
+            auto   usage = procedure_model->countUsesOfPackdata();
+            size_t size  = packdata_model->rowCount({});
+            for (size_t i = 0; i < size; ++i) {
+               auto    qmi = packdata_model->index(i, 0, {});
+               uint8_t uid = packdata_model->data(qmi, PackageDataModel::UniqueIDRole).toInt();
+
+               auto _remove_this_row = [&i, &size, packdata_model]() {
+                  packdata_model->deleteRow(i);
+                  --i;
+                  --size;
+               };
+
+               std::optional<package_data_value> value_local_opt;
+               std::optional<package_data_value> value_templ_opt = packdata_model->rowDefaultValue(i);
+               {
+                  auto decl = packdata_model->rowDeclaration(i);
+                  auto it   = local_values_by_name.find(decl.name);
+                  if (it != local_values_by_name.end()) {
+                     value_local_opt = it->second;
+                  }
+               }
+               if (!value_templ_opt.has_value()) {
+                  //
+                  // Leftover value from previous template (or lack thereof) not present in 
+                  // the new template.
+                  //
+                  _remove_this_row();
+                  continue;
+               }
+               if (!value_local_opt.has_value()) {
+                  continue;
+               }
+               auto& value_local = value_local_opt.value();
+               auto& value_templ = value_templ_opt.value();
+               if (value_local.type() != value_templ.type()) {
+                  //
+                  // Leftover value from previous template (or lack thereof) with a type that 
+                  // doesn't match the new template.
+                  //
+                  _remove_this_row();
+                  continue;
+               }
+               packdata_model->setRowValue(i, value_local);
+            }
+         } else {
+            //
+            // Delete any packdata whose types don't match the new template.
+            //
+            size_t size = packdata_model->rowCount({});
+            for (size_t i = 0; i < size; ++i) {
+               std::optional<package_data_value> value_templ_opt = packdata_model->rowDefaultValue(i);
+               if (!value_templ_opt.has_value())
+                  continue;
+               std::optional<package_data_value> value_local_opt = packdata_model->rowValue(i);
+               if (!value_local_opt.has_value())
+                  continue;
+               if (value_local_opt.value().type() != value_templ_opt.value().type()) {
+                  //
+                  // Type mismatch!
+                  //
+                  packdata_model->deleteRow(i);
+                  --i;
+                  --size;
+               }
+            }
+            //
+            // Delete any "leftover" packdata from our previous template or lack thereof 
+            // (i.e. if a packdata is defined by the inheriting package but isn't used in 
+            // the new template, then ditch it).
+            //
+            auto usage = procedure_model->countUsesOfPackdata();
+            for (size_t i = 0; i < size; ++i) {
                auto    qmi = packdata_model->index(i, 0, {});
                uint8_t uid = packdata_model->data(qmi, PackageDataModel::UniqueIDRole).toInt();
                {
@@ -918,11 +1018,14 @@ void FormDialogPackage::_set_package_template(dovah::form_stub* stub) {
                auto is_defined_in_template = packdata_model->data(qmi, PackageDataModel::ValueHasADefaultRole).toBool();
                if (!is_defined_in_template) {
                   packdata_model->deleteRow(i);
-                  --count;
+                  --size;
                   --i;
                }
             }
          }
+         //
+         // Done changing the template.
+         //
       }
    }
 }
