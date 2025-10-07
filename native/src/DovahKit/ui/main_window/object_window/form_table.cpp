@@ -16,6 +16,45 @@
 //    files are loaded
 //
 
+namespace {
+   // Qt's implementation of QSortFilterProxyModel filters always goes through QRegExp and 
+   // friends, even when you just filter by a fixed string. QRegExp objects can wrap a fixed 
+   // string rather than a real regex, but even in that case, it still incurs the overhead 
+   // of regex matching, including locking to access a global cache of regex results.
+   constexpr const bool replace_qt_filter_string_handling = false;
+
+   // Ignores QSortFilterProxyModel's parameters for filtering, and uses hardcoded ones.
+   constexpr const bool replace_qt_filter_string_params = false;
+
+   //
+   // The above options don't really help much. I think the only solution to the lag we're 
+   // seeing in Debug would be to build a custom sort/filter proxy model with cheaper mappings. 
+   // QSortFilterProxyModel is designed to support recursive filtering if you enable it (it's 
+   // disabled by default, and we obviously don't use it here), and as a result, its design 
+   // incurs overhead for that:
+   // 
+   //  - The proxy stores its mappings as a vector of source-to-proxy row indices, a vector of 
+   //    the reverse, and another pair of vectors for column indices. However, the proxy is 
+   //    capable of storing multiple mappings keyed to different parent QModelIndexes, and it 
+   //    has to find the appropriate index before it can update any mapping.
+   // 
+   //  - Added branching at every filter step, for features we don't use, e.g. checking whether 
+   //    recursive filtering is enabled for each individual row.
+   // 
+   //  - Filter code per-column, even though we don't filter the columns.
+   // 
+   //  - We can only filter rows based on the contents of one column, or every column. What we 
+   //    really want is to filter just specific columns (currently indices 0 and 1).
+   // 
+   // Additionally, everything is done via virtual member functions, rather than via functions 
+   // that can be inlined. This includes the per-row checks. Hard to measure the overhead that 
+   // that adds without something to compare it to, though.
+   // 
+   // Ideally we'd make a model that stores only mappings for the root node's top-level children, 
+   // with compile-time options rather than run-time ones.
+   //
+}
+
 FormTableModelItem::FormTableModelItem(dovah::form_stub* stub) {
    this->stub = stub;
    this->update();
@@ -226,14 +265,14 @@ QVariant FormTableModel::data(const QModelIndex& index, int role) const {
          if (column == 1 && item->is_injected) // show injected forms' IDs in color
             return QColor::fromRgb(0x309000);
          break;
-      case Qt::UserRole:
+      case RawDataRole:
          switch (column) {
             case 0: return item->editorID;
             case 1: return item->formID;
             case 2: return item->userCount;
          }
          break;
-      case Qt::UserRole + 1: // used for filtering
+      case FilterableTextRole: // used for filtering
          switch (column) {
             case 0:
                if (none)
@@ -398,29 +437,86 @@ const FormTableModel::item_type* FormTableModel::dataAtRow(int row) const noexce
 #pragma endregion
 
 #pragma region FormTableModelProxy
+void FormTableModelProxy::setSourceModel(QAbstractItemModel* source_model) {
+   if (source_model && !qobject_cast<FormTableModel*>(source_model))
+      source_model = nullptr;
+   QSortFilterProxyModel::setSourceModel(source_model);
+}
+
 void FormTableModelProxy::setFilterInfo(const ui::object_window::filter_info& fi) {
+   #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+      this->beginFilterChange();
+   #endif
    auto& prior = this->form_filter_info;
    if (prior == fi)
       return;
    prior = fi;
-   this->invalidateFilter();
+   #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+      this->endFilterChange(QSortFilterProxyModel::Direction::Rows);
+   #else
+      this->invalidateFilter();
+   #endif
 }
 
 bool FormTableModelProxy::filterAcceptsStub(const dovah::form_stub* stub) const noexcept {
-   if (!stub)
-      return false;
    return this->form_filter_info.form_matches_filters(*stub);
 }
 bool FormTableModelProxy::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const {
+   auto* model = (FormTableModel*)this->sourceModel();
    if (!this->form_filter_info.empty()) {
-      if (auto* model = qobject_cast<FormTableModel*>(this->sourceModel())) {
-         if (auto* item = model->dataAtRow(source_row)) {
-            if (!this->filterAcceptsStub(item->stub))
-               return false;
-         }
+      if (auto* item = model->dataAtRow(source_row)) {
+         if (!this->filterAcceptsStub(item->stub))
+            return false;
       }
    }
-   return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
+   if constexpr (replace_qt_filter_string_handling) {
+      QString filter_string;
+      {
+         //
+         // Qt stores a fixed-string pattern as QRegExp, not QRegularExpression, and 
+         // the former is accessible only via an undocumented getter.
+         // 
+         // I... think the API they designed for this may be a bit poorly thought out.
+         //
+         auto regex = this->filterRegExp();
+         if (regex.patternSyntax() == QRegExp::PatternSyntax::FixedString) {
+            filter_string = regex.pattern();
+         }
+      }
+      if (!filter_string.isEmpty()) {
+         if constexpr (replace_qt_filter_string_params) {
+            for (size_t i = 0; i < 2; ++i) {
+               auto qmi  = model->index(source_row, i, source_parent);
+               auto data = model->data(qmi, FormTableModel::FilterableTextRole).toString();
+               if (data.contains(filter_string, Qt::CaseInsensitive))
+                  return true;
+            }
+            return false;
+         } else {
+            const auto case_sensitivity = this->filterCaseSensitivity();
+            const auto filter_role = this->filterRole();
+
+            const auto col = this->filterKeyColumn();
+            const auto col_count = model->columnCount(source_parent);
+            if (col == -1) {
+               for (int i = 0; i < col_count; ++i) {
+                  auto qmi = model->index(source_row, i, source_parent);
+                  auto subject = model->data(qmi, filter_role).toString();
+                  if (subject.contains(filter_string, case_sensitivity))
+                     return true;
+               }
+               return false;
+            } else {
+               auto qmi = model->index(source_row, col, source_parent);
+               auto subject = model->data(qmi, filter_role).toString();
+               return subject.contains(filter_string, case_sensitivity);
+            }
+         }
+      }
+      return true;
+   } else {
+      return QSortFilterProxyModel::filterAcceptsRow(source_row, source_parent);
+   }
 }
 #pragma endregion
 

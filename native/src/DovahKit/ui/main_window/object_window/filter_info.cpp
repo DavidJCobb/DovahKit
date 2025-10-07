@@ -76,18 +76,18 @@ namespace ui::object_window {
          return stub.is_none_stub();
 
       if (stub.form_type == dovah::form_type::quest) {
-         auto& filter = this->filters.quest_filter_prefix;
+         const auto& filter = this->filters.quest_filter_prefix;
          if (filter.isEmpty())
             return true;
-         auto data = normalize_pathlike_string(form_info_cache::get().get_quest_filter(stub));
+         const auto data = normalize_pathlike_string(form_info_cache::get().get_quest_filter(stub));
          return data.startsWith(filter);
       }
 
       if (dovahkit::subsystems::form_info_cache::cacheable_traits::model_path::form_type_is_of_interest(stub.form_type)) {
-         auto& filter = this->filters.model_path_prefix;
+         const auto& filter = this->filters.model_path_prefix;
          if (filter.isEmpty())
             return true;
-         auto data = normalize_pathlike_string(form_info_cache::get().get_form_model_path(stub));
+         const auto data = normalize_pathlike_string(form_info_cache::get().get_form_model_path(stub));
          return data.startsWith(filter);
       }
 

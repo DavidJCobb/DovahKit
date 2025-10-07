@@ -40,12 +40,15 @@ class FormTableModelItem {
       bool updateUserCount(); // returns true if any changes were made
 };
 
-class FormTableModel : public QAbstractTableModel {
+class FormTableModel final : public QAbstractTableModel {
    Q_OBJECT
    public:
       using item_type = FormTableModelItem;
       using form_stub = dovah::form_stub;
       using form_type_set = QVector<dovah::form_type>;
+      //
+      static constexpr const Qt::ItemDataRole RawDataRole        = (Qt::ItemDataRole)(Qt::ItemDataRole::UserRole);
+      static constexpr const Qt::ItemDataRole FilterableTextRole = (Qt::ItemDataRole)(Qt::ItemDataRole::UserRole + 1);
       //
    protected:
       form_type_set       form_types; // list of all form types that the Object Window should be capable of displaying under any circumstance
@@ -95,11 +98,13 @@ class FormTableModelProxy : public QSortFilterProxyModel {
    public:
       FormTableModelProxy(QObject* parent = nullptr) : QSortFilterProxyModel(parent) {
          this->setFilterCaseSensitivity(Qt::CaseInsensitive);
-         this->setFilterRole(Qt::UserRole + 1);
+         this->setFilterRole(FormTableModel::FilterableTextRole);
          this->setFilterKeyColumn(-1);
          this->setSortCaseSensitivity(Qt::CaseInsensitive);
          this->setSortRole(Qt::UserRole);
       }
+
+      virtual void setSourceModel(QAbstractItemModel* sourceModel) override;
 
       constexpr const ui::object_window::filter_info& filterInfo() const noexcept { return this->form_filter_info; }
       void setFilterInfo(const ui::object_window::filter_info&);
