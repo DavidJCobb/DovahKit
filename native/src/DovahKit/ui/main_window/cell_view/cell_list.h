@@ -128,6 +128,8 @@ class CellList : public QTableView {
       dovah::form_stub* formStub() const noexcept;
 
       void setLoadedCellsAtTop(bool);
+
+      void selectCell(dovah::form_stub*);
       
    public slots:
       void rebuildModel();

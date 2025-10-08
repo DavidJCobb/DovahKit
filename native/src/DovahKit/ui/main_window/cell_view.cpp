@@ -1,7 +1,9 @@
 #include "cell_view.h"
 #include <type_traits>
 #include <QMenu>
+#include <QMessageBox>
 #include "helpers/qt/strings.h"
+#include "dovah/files/file_header.h"
 #include "dovah/form_stub.h"
 #include "editor/core.h"
 #include "editor/open_window_for_form.h"
@@ -94,6 +96,8 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
    QObject::connect(this->ui.worldspace, &FormsOfTypeCombobox::formChanged, this, [this](dovah::form_stub* stub) {
       if (!DovahKitCore::get().has_data())
          return;
+      this->cellContextMenu.create->setEnabled(stub == nullptr);
+      this->cellContextMenu.duplicate->setEnabled(stub == nullptr);
       this->ui.jumpToGrid->setEnabled(stub != nullptr);
    });
    QObject::connect(this->ui.jumpToGrid, &QPushButton::clicked, this, [this]() {
@@ -109,17 +113,31 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
    //
    #pragma region Context menus
       #pragma region Cell
+         this->cellContextMenu.create      = new QAction(tr("New...",      "cell view cell actions"), this->ui.cellList);
          this->cellContextMenu.edit        = new QAction(tr("Edit...",     "cell view cell actions"), this->ui.cellList);
          this->cellContextMenu.duplicate   = new QAction(tr("Duplicate",   "cell view cell actions"), this->ui.cellList);
          this->cellContextMenu.showUseInfo = new QAction(tr("Use Info...", "cell view cell actions"), this->ui.cellList);
          this->cellContextMenu.deleteForm  = new QAction(tr("Delete",      "cell view cell actions"), this->ui.cellList);
+         QObject::connect(this->cellContextMenu.create, &QAction::triggered, [this]() {
+            if (!this->_verify_cell_creation())
+               return;
+            auto* stub = DovahKitCore::get().create_form_of_type(dovah::form_type::cell);
+            if (!stub)
+               return;
+            this->ui.cellList->selectCell(stub);
+            open_edit_dialog_for_form(*stub, this->parentWidget());
+         });
          QObject::connect(this->cellContextMenu.edit, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.cellList->formStub())
                open_edit_dialog_for_form(*stub, this->parentWidget());
          });
          QObject::connect(this->cellContextMenu.duplicate, &QAction::triggered, [this]() {
-            if (auto* stub = this->ui.cellList->formStub())
-               DovahKitCore::get().duplicate_form(*stub, this);
+            auto* stub = this->ui.cellList->formStub();
+            if (!stub)
+               return;
+            if (!this->_verify_cell_creation())
+               return;
+            DovahKitCore::get().duplicate_form(*stub, this);
          });
          QObject::connect(this->cellContextMenu.showUseInfo, &QAction::triggered, [this]() {
             if (auto* stub = this->ui.cellList->formStub())
@@ -138,6 +156,7 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
                return;
             //
             QMenu menu(opener);
+            menu.addAction(items.create);
             menu.addAction(items.edit);
             menu.addAction(items.duplicate);
             menu.addAction(items.showUseInfo);
@@ -389,4 +408,39 @@ void CellViewWindow::setAllEnableStates(bool state) {
    this->ui.loadedCellsAtTop->setEnabled(state);
    this->ui.cellList->setEnabled(state);
    this->ui.referenceList->setEnabled(state);
+}
+
+bool CellViewWindow::_verify_cell_creation() {
+   auto& editor = DovahKitCore::get();
+   auto* header = editor.get_active_file_header();
+   if (header) {
+      if (header->is_light()) {
+         auto message = QMessageBox(
+            QMessageBox::Warning,
+            tr("Warning"),
+            tr(
+               "<p>The current active file is an ESL. Creating new interior cells via an ESL file can cause "
+               "Skyrim Special Edition to behave unstably:</p>"
+               "<ul>"
+               "<li><p>If you reload a save, Skyrim Special Edition won't reload references in an interior "
+               "cell created by an ESM.</p></li>"
+               "<li><p>If an interior cell is defined by an ESL and then patched by another mod, the cell "
+               "will break completely.</p></li>"
+               "</ul>"
+               "<p>The \"SSE Engine Fixes\" mod (from version 7.0.14 onward) fixes these issues and makes "
+               "ESL-defined interior cells safe. If that's acceptable, you will need to remember to inform "
+               "your users that it's a requirement for your mod.</p>"
+               "<p>Are you sure you want to proceed and create a new interior cell in this ESL file?</p>"
+            ),
+            QMessageBox::StandardButtons(QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No),
+            this
+         );
+         message.setDefaultButton(QMessageBox::StandardButton::No);
+
+         message.exec();
+         if (message.clickedButton() != message.button(QMessageBox::StandardButton::Yes))
+            return false;
+      }
+   }
+   return true;
 }

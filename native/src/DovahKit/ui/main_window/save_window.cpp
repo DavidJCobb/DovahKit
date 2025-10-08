@@ -2,6 +2,7 @@
 #include <QMessageBox>
 #include "helpers/filesystem.h"
 #include "helpers/miscellaneous.h"
+#include "dovah/data/game/max_file_version.h"
 #include "dovah/data/game.h"
 #include "dovah/files/file_header.h"
 #include "dovah/files/tes_file_writing/config.h"
@@ -34,7 +35,10 @@ ActiveFileSaveDialog::ActiveFileSaveDialog(QWidget* parent) : QDialog(parent) {
    this->ui.compressionThreshold->setEnabled(this->ui.compressionPolicy->currentIndex() == 1);
    //
    QObject::connect(this->ui.game, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
-      this->ui.flagLight->setDisabled(index == 0);
+      const auto game = (dovah::game)this->ui.game->currentData().toInt();
+
+      this->ui.flagLight->setDisabled(game == dovah::game::skyrim_classic);
+      this->ui.flagUse1Point71FormIDSpace->setVisible(game == dovah::game::skyrim_special);
    });
    //
    auto& editor = DovahKitCore::get();
@@ -175,8 +179,15 @@ void ActiveFileSaveDialog::commit() {
    //
 
    auto config = dovah::tes_file_writing::write_config::for_game(game);
-   cobb::edit_bit(config.file_flags, dovah::tes_file_flag::light,  this->ui.flagLight->isChecked());
+   cobb::edit_bit(config.file_flags, dovah::tes_file_flag::light,  game != dovah::game::skyrim_classic && this->ui.flagLight->isChecked());
    cobb::edit_bit(config.file_flags, dovah::tes_file_flag::master, this->ui.flagMaster->isChecked());
+   if (game == dovah::game::skyrim_special) {
+      if (this->ui.flagUse1Point71FormIDSpace->isChecked()) {
+         config.use_file_version = dovah::game_feature_support::max_file_version(game);
+      } else {
+         config.use_file_version = 1.70F;
+      }
+   }
    {
       using namespace dovahkit::ini::main;
 
@@ -212,6 +223,44 @@ void ActiveFileSaveDialog::commit() {
       );
       if (choice == QMessageBox::Cancel) {
          return;
+      }
+   }
+
+   if (config.file_flags & dovah::tes_file_flag::light) {
+      size_t defined_cell_count = 0;
+      editor.for_each_form_of_type(dovah::form_type::cell, [&editor, &defined_cell_count](dovah::form_stub* stub) -> bool {
+         if (stub->get_parent_form())
+            return false;
+         if (!editor.is_form_defined_in_active_file(stub))
+            return false;
+         ++defined_cell_count;
+         return false;
+      });
+      if (defined_cell_count > 0) {
+         auto message = QMessageBox(
+            QMessageBox::Warning,
+            tr("Warning"),
+            tr(
+               "<p>This file defines %1 interior cell(s). Saving it as an ESL may cause game instability:</p>"
+               "<ul>"
+               "<li><p>If you reload a save, Skyrim Special Edition won't reload references in an interior "
+               "cell created by an ESL.</p></li>"
+               "<li><p>If an interior cell is defined by an ESL and then patched by another mod, the cell "
+               "will break completely.</p></li>"
+               "</ul>"
+               "<p>The \"SSE Engine Fixes\" mod (from version 7.0.14 onward) fixes these issues and makes "
+               "ESL-defined interior cells safe. If that's acceptable, you will need to remember to inform "
+               "your users that it's a requirement for your mod.</p>"
+               "<p>Are you sure you want to proceed and save this file as an ESL?</p>"
+            ).arg(defined_cell_count),
+            QMessageBox::StandardButtons(QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No),
+            this
+         );
+         message.setDefaultButton(QMessageBox::StandardButton::No);
+
+         message.exec();
+         if (message.clickedButton() != message.button(QMessageBox::StandardButton::Yes))
+            return;
       }
    }
 

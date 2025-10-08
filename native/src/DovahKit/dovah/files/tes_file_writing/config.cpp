@@ -9,8 +9,9 @@ namespace dovah::tes_file_writing {
    }
    /*static*/ write_config write_config::for_skyrim_special() {
       write_config out;
-      out.output_game    = game::skyrim_special;
-      out.record_version = 44;
+      out.output_game      = game::skyrim_special;
+      out.record_version   = 44;
+      out.use_file_version = 1.71F;
       return out;
    }
    /*static*/ write_config write_config::for_game(dovah::game g) {

@@ -91,6 +91,7 @@ namespace dovah::packages {
 
       public:
          procedure_type type;
+         bool can_success_complete_package = true;
 
          size_t param_count = 0;
          std::array<param_info, 19> params;
@@ -205,6 +206,7 @@ namespace dovah::packages {
          },
          procedure_type_info{
             .type = procedure_type::eat,
+            .can_success_complete_package = false,
             .param_count = 2,
             .params = {
                param_info{
@@ -375,6 +377,7 @@ namespace dovah::packages {
          },
          procedure_type_info{
             .type = procedure_type::follow,
+            .can_success_complete_package = false,
             .param_count = 6,
             .params = {
                param_info{

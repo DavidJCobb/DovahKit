@@ -1,6 +1,7 @@
 #pragma once
 #include <optional>
 #include "../game.h"
+#include "./max_file_version.h"
 
 namespace dovah::game_feature_support {
    constexpr std::optional<float> hardcoded_form_ids_ignore_record_id_prefix_until_file_version(game g) {
@@ -19,4 +20,22 @@ namespace dovah::game_feature_support {
          return file_version < min_ver_opt.value();
       return true;
    }
+
+   static_assert(
+      []() -> bool {
+         auto all_games = std::array{
+            game::skyrim_classic,
+            game::skyrim_special,
+         };
+         for (const auto g : all_games) {
+            auto v = hardcoded_form_ids_ignore_record_id_prefix_until_file_version(g);
+            if (!v.has_value())
+               continue;
+            if (v.value() > max_file_version(g))
+               return false;
+         }
+         return true;
+      }(),
+      "Ensure that each game's max file version is up to date!"
+   );
 }

@@ -31,6 +31,29 @@ namespace editor_helpers {
       constexpr const char* disambig = "backend warnings";
 
       #pragma region file load warnings
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::esl_defined_an_interior_cell*>(&warning)) {
+            auto form = QString("[CELL:%2]")
+               .arg(editor_helpers::form_id_to_string(casted->form_ids.global));
+            auto file = QString::fromStdString(casted->source_file);
+
+            return QObject::tr(
+               "ESL file %1 has defined interior cell %2. Interior cells cannot be safely defined in ESL "
+               "files, as Skyrim Special Edition will mishandle them when loading. If you reload a save, "
+               "references inside of the interior won't reload; and if another mod attempts to patch the "
+               "cell, the cell will break completely."
+            ).arg(file).arg(form);
+         }
+         if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::esl_defined_interior_cell_is_overridden*>(&warning)) {
+            auto overridden_form = form_identifiers_to_string(&casted->overridden_form.stub);
+            auto overridden_file = QString::fromStdString(casted->overridden_form.source_file);
+            auto overriding_file = QString::fromStdString(casted->overriding_form.source_file);
+
+            return QObject::tr(
+               "File %3 is attempting to override interior cell %1 (defined in ESL file %2). Interior cells "
+               "defined by an ESL file cannot be safely overridden, and will cause major malfunctions when "
+               "loaded by Skyrim Special Edition."
+            ).arg(overridden_form).arg(overridden_file).arg(overriding_file);
+         }
          if (auto* casted = cobb::dynamic_fast_cast<const file_load_warnings::form_initial_record_is_partial*>(&warning)) {
             auto subject = QString("[%1:%2]")
                .arg(editor_helpers::form_type_name_to_string(casted->record.form_type))

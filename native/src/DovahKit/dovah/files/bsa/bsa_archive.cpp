@@ -68,6 +68,51 @@ namespace dovah {
             c = '\\';
       }
    }
+   /*static*/ void bsa_archive::normalize_path_component(std::string& out) {
+      static_assert(sizeof(char) == 1);
+      if (out.empty())
+         return;
+      auto*  data = out.data();
+      size_t size = out.size();
+      size_t i = 0;
+      //
+      if (auto& cpu = cobb::cpuinfo::get(); cpu.extension_support.sse_2 && cpu.extension_support.sse_3) {
+         auto mb_a = _mm_set1_epi8('A' - 1);
+         auto mb_z = _mm_set1_epi8('Z' + 1);
+         for (; i + 15 < size; i += 16) {
+            auto ma = _mm_loadu_si128((const __m128i*)(data + i));
+            //
+            //
+            // Goal: for each active byte in (mask_a), OR the byte in (ma) by 0x20
+            //
+            auto mask_a = _mm_cmpgt_epi8(ma, mb_a); // per byte: (a >= 'A') ? 0xFF : 0
+            auto mask_z = _mm_cmplt_epi8(ma, mb_z); // per byte: (a <= 'Z') ? 0xFF : 0
+            mask_a = _mm_and_si128(mask_a, mask_z); // bitwise-AND
+            mask_a = _mm_and_si128(_mm_set1_epi8(0x20), mask_a); // per byte: (a >= 'A' && a <= 'Z') ? 0x20 : 0
+            ma = _mm_or_si128(ma, mask_a); // bitwise-OR
+            //
+            _mm_storeu_si128((__m128i*)(data + i), ma);
+         }
+         if (i + 7 < size) {
+            auto ma = _mm_loadl_epi64((const __m128i*)(data + i));
+            //
+            auto mask_a = _mm_cmpgt_epi8(ma, mb_a); // per byte: (a >= 'A') ? 0xFF : 0
+            auto mask_z = _mm_cmplt_epi8(ma, mb_z); // per byte: (a <= 'Z') ? 0xFF : 0
+            mask_a = _mm_and_si128(mask_a, mask_z); // bitwise-AND
+            mask_a = _mm_and_si128(_mm_set1_epi8(0x20), mask_a); // per byte: (a >= 'A' && a <= 'Z') ? 0x20 : 0
+            ma = _mm_or_si128(ma, mask_a); // bitwise-OR
+            //
+            _mm_storel_epi64((__m128i*)(data + i), ma);
+            //
+            i += 8;
+         }
+      }
+      for (; i < size; ++i) {
+         auto c = data[i];
+         if (c >= 'A' && c <= 'Z')
+            data[i] = c | 0x20;
+      }
+   }
 
    #pragma region File reading and loading
    void bsa_archive::_unchecked_read(void* target, size_t size) noexcept {
@@ -75,13 +120,11 @@ namespace dovah {
       this->stream_position += size;
    }
    void bsa_archive::_read(void* target, size_t size) {
-      assert(this->mapping);
       if (this->stream_position + size >= this->mapping.size())
          this->_throw_load_exception<bsa_unexpected_eof_exception>();
       this->_unchecked_read(target, size);
    }
    void bsa_archive::_read_at(void* target, size_t size, uint64_t offset) const {
-      assert(this->mapping);
       if (offset + size >= this->mapping.size()) {
          bsa_unexpected_eof_exception e;
          e.bsa_path        = this->path;
@@ -91,14 +134,13 @@ namespace dovah {
       memcpy(target, (const uint8_t*)this->mapping.data() + offset, size);
    }
    void bsa_archive::_read(std::string& out) {
-      char c = 0;
-      do {
-         if (!this->is_in_bounds(1))
-            break;
-         this->_unchecked_read(c);
-         if (c)
-            out += c;
-      } while (c);
+      this->_read(out, this->mapping.size() - this->stream_position);
+   }
+   void bsa_archive::_read(std::string& out, size_t max_length) {
+      auto*  src  = (const char*)((const uint8_t*)this->mapping.data() + this->stream_position);
+      size_t size = strnlen_s(src, max_length);
+      out.assign(src, size);
+      this->stream_position += size;
    }
    void bsa_archive::_read_non_null_terminated_string(std::string& out, size_t length) {
       out.resize(length);
@@ -148,32 +190,49 @@ namespace dovah {
       this->_unchecked_read(file.size_and_flags);
       this->_unchecked_read(file.offset);
       //
-      auto pos = this->stream_position;
-      if (this->header.flags & bsa::archive_header::flag::embed_filenames) {
-         this->stream_position = file.offset;
-         //
-         uint8_t     length;
-         std::string full_path;
-         this->_read(length);
-         this->_read_non_null_terminated_string(full_path, length);
+      // The null-terminated filenames produced by "include filenames" are significantly faster 
+      // than the length-prefixed full file paths produced by "embed filenames." I'm not entirely 
+      // sure why, because for the latter, Visual Studio's performance profiler blames almost the 
+      // entirety of the slowdown on reading the `length` byte, as if that can explain a 45-second 
+      // difference...
+      // 
+      // For "include filenames," we have to scan each filename for a null terminator. However, 
+      // all filenames are grouped in a big blob, so we're doing sequential reads from two parts 
+      // of the file rather than jumping all over the place. Moreover, we don't have to skim each 
+      // filename for a directory separator, to shear off the full file path. The speedup probably 
+      // comes from one of those factors.
+      //
+      if (this->header.flags & bsa::archive_header::flag::include_filenames) {
+         uint64_t start = this->filename_blob_offset + this->last_filename_offset;
+         auto pos = this->stream_position;
+         this->stream_position = start;
+         this->_read(file.name);
+         this->last_filename_offset += (this->stream_position - start);
+         this->stream_position = pos;
+      } else if (this->header.flags & bsa::archive_header::flag::embed_filenames) {
+         const size_t size = this->mapping.size();
+         const char*  src  = (const char*)this->mapping.data() + file.offset;
+         const char*  end  = (const char*)this->mapping.data() + this->mapping.size();
+         if (src >= end) [[unlikely]] {
+            this->_throw_load_exception<bsa_unexpected_eof_exception>();
+         }
+         const uint8_t length = *(uint8_t*)src;
+         ++src;
+         if (src + length >= end) [[unlikely]] {
+            this->_throw_load_exception<bsa_unexpected_eof_exception>();
+         }
+         const auto full_path = std::string_view(src, length);
          //
          // The path we've just read is a full filepath and name. We need to trim it down to just 
          // the filename.
          //
-         file.name.reserve(length);
          auto index = full_path.find_last_of("/\\");
          if (index == std::string::npos)
             file.name = full_path;
          else
             file.name = full_path.substr(index + 1);
-      } else if (this->header.flags & bsa::archive_header::flag::include_filenames) {
-         uint64_t start = this->filename_blob_offset + this->last_filename_offset;
-         this->stream_position = start;
-         this->_read(file.name);
-         this->last_filename_offset += (this->stream_position - start);
       }
-      normalize_path_or_path_component(file.name);
-      this->stream_position = pos;
+      normalize_path_component(file.name);
       //
       if (file.size() + file.offset > this->mapping.size()) {
          file.corrupt = true;

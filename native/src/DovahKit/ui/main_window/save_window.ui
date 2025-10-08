@@ -16,60 +16,7 @@
   <layout class="QGridLayout" name="gridLayout_3" columnstretch="1,1">
    <item row="0" column="0">
     <layout class="QGridLayout" name="gridLayout">
-     <item row="4" column="0" colspan="2">
-      <widget class="QCheckBox" name="flagLight">
-       <property name="whatsThis">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Files with the &amp;quot;ESL&amp;quot; flag are &amp;quot;light plug-ins&amp;quot; intended for use with Skyrim Special Edition. Instead of taking up an entire load order slot, all light plug-ins in a load order will share the 0xFE slot. This is very useful when designing very simple mods that make only minor changes to existing game data.&lt;/p&gt;&lt;p&gt;Light plug-ins have a number of limitations. A load order cannot have more than 4096 light plug-ins. Each light plug-in can only have 2048 forms, which must be &amp;quot;compacted&amp;quot; into the form ID range [xx000800, xx000FFF]. Light plug-ins also cannot be dependencies for other files.&lt;/p&gt;&lt;p&gt;The game will always treat files that have the *.ESL extension as if they are both light plug-ins and master files (ESMs). Among other things, this means that if an *.ESL file has any *.ESP dependencies, it will force those dependencies to load out-of-order with the master files.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="text">
-        <string>ESL</string>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="1">
-      <widget class="QSpinBox" name="compressionThreshold">
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-       <property name="suffix">
-        <string> bytes</string>
-       </property>
-       <property name="minimum">
-        <number>64</number>
-       </property>
-       <property name="maximum">
-        <number>65535</number>
-       </property>
-       <property name="value">
-        <number>640</number>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0" colspan="2">
-      <widget class="QCheckBox" name="flagMaster">
-       <property name="whatsThis">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Files with the &amp;quot;ESM&amp;quot; flag are &amp;quot;masters.&amp;quot; The game will always move them to the top of the load order, and will handle various pieces of game data differently.&lt;/p&gt;&lt;p&gt;One of the most notable differences is that if a file &lt;span style=&quot; font-style:italic;&quot;&gt;isn't&lt;/span&gt; a master, then any physical objects that it places in the game world will remain in the game's memory at all times. The game can only keep track of about a million such objects at a time, so mods that define large numbers of objects (e.g. new lands mods) should always be ESMs.&lt;/p&gt;&lt;p&gt;If a file has the *.ESM file extension, then the game will always act as if this flag is set.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-       </property>
-       <property name="text">
-        <string>ESM</string>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Compression</string>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Compression Threshold</string>
-       </property>
-      </widget>
-     </item>
-     <item row="7" column="1">
+     <item row="4" column="1">
       <widget class="QComboBox" name="compressionPolicy">
        <item>
         <property name="text">
@@ -88,7 +35,65 @@
        </item>
       </widget>
      </item>
-     <item row="1" column="0" colspan="2">
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Game</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagLight">
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Files with the &amp;quot;ESL&amp;quot; flag are &amp;quot;light plug-ins&amp;quot; intended for use with Skyrim Special Edition. Instead of taking up an entire load order slot, all light plug-ins in a load order will share the 0xFE slot. This is very useful when designing very simple mods that make only minor changes to existing game data.&lt;/p&gt;&lt;p&gt;Light plug-ins have a number of limitations. A load order cannot have more than 4096 light plug-ins. Each light plug-in can only have 2048 forms, which must be &amp;quot;compacted&amp;quot; into the form ID range [xx000800, xx000FFF]. Light plug-ins also cannot be dependencies for other files.&lt;/p&gt;&lt;p&gt;The game will always treat files that have the *.ESL extension as if they are both light plug-ins and master files (ESMs). Among other things, this means that if an *.ESL file has any *.ESP dependencies, it will force those dependencies to load out-of-order with the master files.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>ESL</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0" colspan="2">
+      <spacer name="spacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="game">
+       <item>
+        <property name="text">
+         <string>Skyrim Classic</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Skyrim Special</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Compression</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Compression Threshold</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" colspan="2">
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QLabel" name="label">
@@ -105,38 +110,47 @@
        </item>
       </layout>
      </item>
-     <item row="9" column="0" colspan="2">
-      <spacer name="spacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
+     <item row="5" column="1">
+      <widget class="QSpinBox" name="compressionThreshold">
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
+       <property name="suffix">
+        <string> bytes</string>
        </property>
-      </spacer>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>Game</string>
+       <property name="minimum">
+        <number>64</number>
+       </property>
+       <property name="maximum">
+        <number>65535</number>
+       </property>
+       <property name="value">
+        <number>640</number>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QComboBox" name="game">
-       <item>
-        <property name="text">
-         <string>Skyrim Classic</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Skyrim Special</string>
-        </property>
-       </item>
+     <item row="2" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagMaster">
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Files with the &amp;quot;ESM&amp;quot; flag are &amp;quot;masters.&amp;quot; The game will always move them to the top of the load order, and will handle various pieces of game data differently.&lt;/p&gt;&lt;p&gt;One of the most notable differences is that if a file &lt;span style=&quot; font-style:italic;&quot;&gt;isn't&lt;/span&gt; a master, then any physical objects that it places in the game world will remain in the game's memory at all times. The game can only keep track of about a million such objects at a time, so mods that define large numbers of objects (e.g. new lands mods) should always be ESMs.&lt;/p&gt;&lt;p&gt;If a file has the *.ESM file extension, then the game will always act as if this flag is set.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>ESM</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0" colspan="2">
+      <widget class="QCheckBox" name="flagUse1Point71FormIDSpace">
+       <property name="whatsThis">
+        <string>&lt;p&gt;Skyrim Special Edition version 1.6.1130 fixed an internal loading bug, making it possible for game data files to use form IDs in the range [xx000000, xx0007FF] as long as they have at least one master. This update also incremented the internal version number for game files from v1.70 to v1.71.&lt;/p&gt;
+&lt;p&gt;The update isn't exclusive to ESL files, but it affects them the most, by doubling the number of forms they can contain. However, v1.71 data files can cause older versions of Skyrim Special Edition to crash, unless they install the Backported Extended ESL Support mod.&lt;/p&gt;</string>
+       </property>
+       <property name="text">
+        <string>Use extended ESL form ID space</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
     </layout>

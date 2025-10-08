@@ -1,4 +1,6 @@
 #pragma once
+#include "./esl_defined_an_interior_cell.h"
+#include "./esl_defined_interior_cell_is_overridden.h"
 #include "./form_initial_record_is_partial.h"
 #include "./form_override_has_armo_arma_mismatch.h"
 #include "./game_setting_has_multiple_records_in_a_file.h"

@@ -1,6 +1,8 @@
 #include "./file_writer.h"
 #include "../file_load_order.h"
 #include "../tes_file_reading/file_loader.h"
+#include "../../data/game/max_file_version.h"
+#include "../../data/game/min_file_version.h"
 #include "../../load_order_interfaces/form_save.h"
 #include "../../core.h"
 #include "../../form_stub.h"
@@ -129,7 +131,14 @@ namespace dovah::tes_file_writing {
          if (this->config.use_file_version.has_value()) {
             subrecord.write(this->config.use_file_version.value());
          } else {
-            subrecord.write(std::max(1.7F, this->source.header.file_version));
+            subrecord.write(
+               std::min(
+                  game_feature_support::max_file_version(this->config.output_game),
+                  std::max(
+                     game_feature_support::min_file_version(this->config.output_game), this->source.header.file_version
+                  )
+               )
+            );
          }
          //
          this->fixup_data.record_and_group_count.offset = this->get_output_position();

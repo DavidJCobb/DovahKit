@@ -318,6 +318,13 @@ FormDialogPackage::FormDialogPackage(dovah::form_stub& stub, QWidget* parent) : 
                QObject::connect(this->_models.package_data, &QAbstractItemModel::rowsRemoved, this, &FormDialogPackage::_update_procedure_params_picker);
                QObject::connect(this->_models.package_data, &QAbstractItemModel::dataChanged, this, &FormDialogPackage::_update_procedure_params_picker);
 
+               {
+                  auto* widget = this->ui.currentProcedureCompletesPackage;
+                  auto  policy = widget->sizePolicy();
+                  policy.setRetainSizeWhenHidden(true);
+                  widget->setSizePolicy(policy);
+               }
+
                QObject::connect(this->ui.currentProcedureType, qOverload<int>(&QComboBox::currentIndexChanged), this, [this]() {
                   //
                   // Changes to a procedure's type need to appear instantly in the treeview, and 
@@ -1028,6 +1035,9 @@ void FormDialogPackage::_set_package_template(dovah::form_stub* stub) {
          //
       }
    }
+
+   // Ensure updates to enable states and whatnot.
+   this->_on_packdata_selection_changed();
 }
 
 bool FormDialogPackage::_uses_package_template() {
@@ -1684,6 +1694,9 @@ bool FormDialogPackage::_uses_package_template() {
       std::vector<uint8_t> params_newly_referenced;
       if ((size_t)type_after < dovah::packages::all_procedure_type_info.size()) {
          const auto& typeinfo_after = dovah::packages::all_procedure_type_info[(size_t)type_after];
+
+         this->ui.currentProcedureCompletesPackage->setVisible(typeinfo_after.can_success_complete_package);
+
          params_after.resize(typeinfo_after.param_count, PackageProcedureTreeModel::no_unique_id);
          for (size_t i = 0; i < typeinfo_after.param_count; ++i) {
             const auto& param      = typeinfo_after.params[i];
@@ -1784,6 +1797,8 @@ bool FormDialogPackage::_uses_package_template() {
                }
             }
          }
+      } else {
+         this->ui.currentProcedureCompletesPackage->setVisible(true);
       }
 
       procedure_model->setData(qmi, (int)type_after, PackageProcedureTreeModel::ProcedureTypeRole);

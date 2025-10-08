@@ -3,6 +3,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include "helpers/performance.h"
 
 namespace dovah {
    class bsa_archive; // a single BSA file
@@ -79,7 +80,7 @@ namespace dovah {
          load_options_t        working_load_options; // copy of (load_options) created at the start of the load process, so that other threads can't screw with the options mid-load
          //
          std::vector<bsa_threaded_reader*> threads;
-         std::mutex completion_check_lock;
+         std::mutex      completion_check_lock;
          bool loading = false;
          bool aborted = false; // gets set to (true) if the load process is aborted; threaded readers will need to check this periodically
          //
@@ -89,6 +90,10 @@ namespace dovah {
          ~bsa_load_order(); // TODO: should assert if a load is still in progress; should delete archives
          
          load_options_t load_options;
+         struct {
+            cobb::benchmark loading  = { 0 };
+            cobb::benchmark blocking = { 0 };
+         } benchmarks;
          
          bsa_archived_file* lookup_file(const std::string& path_and_name, bool check_for_loose_file = true) const;
          

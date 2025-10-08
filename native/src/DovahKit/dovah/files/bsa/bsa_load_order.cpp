@@ -91,15 +91,18 @@ namespace dovah {
          if (++i >= this->threads.size())
             i = 0;
       }
+      this->benchmarks.loading.begin();
       for (auto* loader : this->threads)
          loader->start();
    }
    void bsa_load_order::wait_for_archive_load_to_finish() {
       if (!this->loading)
          return;
+      this->benchmarks.blocking.begin();
       for (auto* loader : this->threads)
          if (loader)
             loader->wait_for();
+      this->benchmarks.blocking.end();
    }
    void bsa_load_order::abort_archive_load() {
       this->aborted = true;
@@ -117,6 +120,7 @@ namespace dovah {
       for (auto* loader : this->threads)
          if (!loader->is_complete())
             return;
+      this->benchmarks.loading.end();
       this->loading = false;
    }
 

@@ -37,6 +37,10 @@ Complicating things is the fact that some data is specific to legacy package typ
 * The Package form loader has to retain the primary location and primary target as locals during load. When we've finished reading all subrecords, we can check if we have any typed package info and if so, feed the primary location and target into said info via its polymorphic accessors.
 
 
+## Notes
+
+* The Creation Kit allows you to reorder a package's packdata, if that package does not use a template. The ordering is based on the order the values appear within the record; the order of the declarations has no effect.
+
 
 # Research
 

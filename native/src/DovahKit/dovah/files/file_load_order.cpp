@@ -44,6 +44,8 @@
 #include "../load_order_requests/game_setting_renumber_request.h"
 #include "../notices/file_load_errors/form_id_is_invalid.h"
 #include "../notices/file_load_errors/form_override_has_type_mismatch.h"
+#include "../notices/file_load_warnings/esl_defined_an_interior_cell.h"
+#include "../notices/file_load_warnings/esl_defined_interior_cell_is_overridden.h"
 #include "../notices/file_load_warnings/form_initial_record_is_partial.h"
 #include "../notices/file_load_warnings/form_override_has_armo_arma_mismatch.h"
 #include "../notices/file_load_warnings/game_setting_has_multiple_records_in_a_file.h"
@@ -687,6 +689,22 @@ namespace dovah {
                      addenda->persistent_cell = nullptr;
                }
             }
+            if (!existing_form->get_parent_form()) {
+               auto* file_a = existing_form->get_file_at_index(0);
+               auto* file_b = stub->get_file_at_index(-1);
+               if (file_a && file_a->is_light()) {
+                  notices::file_load_warnings::esl_defined_interior_cell_is_overridden notice(*existing_form);
+                  if (file_b)
+                     notice.source_file = file_b->get_filename();
+                  notice.overridden_form.source_file = file_a->get_filename();
+                  notice.overriding_form.source_file = notice.source_file;
+                  notice.overriding_form.form_ids = {
+                     .local  = stub->formID,
+                     .global = formID,
+                  };
+                  this->_log_warning(notice);
+               }
+            }
          }
          assert(!stub->has_multiple_source_files()); // the input stub should've been read by ONE file
          existing_form->_add_file(*stub->file.pointer, stub->file.offset, stub->file.flags);
@@ -735,6 +753,17 @@ namespace dovah {
                // Strip the flag for a non-injected non-override, as the game would.
                //
                stub->file.flags &= ~tes_file_record_header::flag::partial;
+            }
+            if (stub->form_type == form_type::cell && !stub->get_parent_form()) {
+               if (auto* file = stub->get_file_at_index(-1); file && file->is_light()) {
+                  notices::file_load_warnings::esl_defined_an_interior_cell notice;
+                  notice.source_file = file->get_filename();
+                  notice.form_ids    = {
+                     .local  = stub->formID,
+                     .global = formID,
+                  };
+                  this->_log_warning(notice);
+               }
             }
          }
          //

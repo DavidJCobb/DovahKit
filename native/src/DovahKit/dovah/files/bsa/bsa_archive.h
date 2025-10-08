@@ -41,6 +41,7 @@ namespace dovah {
          static constexpr const char path_separator = '\\';
 
          static void normalize_path_or_path_component(std::string&);
+         static void normalize_path_component(std::string&); // ignores path separators
          static constexpr void split_path_and_filename(const std::string& full_path, std::string& out_folder, std::string& out_file);
          
       protected:
@@ -78,18 +79,26 @@ namespace dovah {
 
          void _unchecked_read(void* target, size_t size) noexcept;
          template<typename T> void _unchecked_read(T& out) noexcept {
-            this->_unchecked_read(&out, sizeof(T));
-            if (this->needs_endianness_flip)
-               out = cobb::byteswap(out);
+            if constexpr (sizeof(T) <= 8 && std::is_trivially_copyable_v<T>) { // fits in a single register and is trivial?
+               out = *(T*)((uint8_t*)this->mapping.data() + this->stream_position);
+               this->stream_position += sizeof(T);
+            } else {
+               this->_unchecked_read(&out, sizeof(T)); // else fall back to memcpy
+            }
+            if constexpr (sizeof(T) > 1) {
+               if (this->needs_endianness_flip)
+                  out = cobb::byteswap(out);
+            }
          }
          
          void _read(void* target, size_t size);
          template<typename T> void _read(T& out) {
-            this->_read(&out, sizeof(T));
-            if (this->needs_endianness_flip)
-               out = cobb::byteswap(out);
+            if (this->stream_position + sizeof(T) >= this->mapping.size())
+               this->_throw_load_exception<bsa_unexpected_eof_exception>();
+            this->_unchecked_read(out);
          }
          void _read(std::string&);
+         void _read(std::string&, size_t max_length);
          void _read(folder_entry&);
          void _read(file_entry&);
 

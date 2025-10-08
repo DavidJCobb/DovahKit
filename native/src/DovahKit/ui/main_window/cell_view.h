@@ -16,6 +16,7 @@ class CellViewWindow : public QWidget {
    private:
       Ui::CellViewWindow ui;
       struct {
+         QAction* create      = nullptr;
          QAction* edit        = nullptr;
          QAction* duplicate   = nullptr;
          QAction* showUseInfo = nullptr;
@@ -27,6 +28,6 @@ class CellViewWindow : public QWidget {
          QAction* showUseInfo = nullptr;
          QAction* deleteForm  = nullptr;
       } refContextMenu;
-      
-      void _setupContextMenu(QTableView*);
+
+      bool _verify_cell_creation();
 };

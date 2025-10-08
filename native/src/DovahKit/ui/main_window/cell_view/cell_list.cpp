@@ -465,6 +465,35 @@ void CellList::setLoadedCellsAtTop(bool v) {
    proxy->setLoadedCellsAtTop(v);
 }
 
+void CellList::selectCell(dovah::form_stub* stub) {
+   if (stub && stub->form_type != dovah::form_type::cell)
+      return;
+   auto* proxy     = (proxy_type*)this->model();
+   auto* sel_model = this->selectionModel();
+   if (!stub) {
+      sel_model->select(QModelIndex{}, QItemSelectionModel::SelectionFlag::Clear);
+      return;
+   }
+   size_t count = proxy->rowCount({});
+   for (size_t i = 0; i < count; ++i) {
+      const auto  proxy_qmi  = proxy->index(i, 0, {});
+      const auto  source_qmi = proxy->mapToSource(proxy_qmi);
+      const auto* item       = (model_item_type*)source_qmi.internalPointer();
+      if (!item)
+         continue;
+      if (item->stub == stub) {
+         sel_model->select(
+            QItemSelection{
+               proxy_qmi,
+               proxy_qmi.siblingAtColumn(proxy->columnCount({}) - 1)
+            },
+            QItemSelectionModel::SelectionFlag::ClearAndSelect
+         );
+         return;
+      }
+   }
+}
+
 void CellList::rebuildModel() {
    auto m = this->unwrappedModel();
    if (!m)
