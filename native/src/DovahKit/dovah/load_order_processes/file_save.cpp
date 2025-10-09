@@ -140,7 +140,7 @@ namespace dovah::load_order_processes {
          // The file was reopened successfully, so let's update our in-memory state to match the data 
          // that was saved out.
          //
-         this->_post_save_form_id_remap();
+         this->_post_save_form_id_remap(writer);
          writer.update_source_file_header();
          //
          // The last two steps, before editing can resume, involve updating all form stubs in memory. 
@@ -168,7 +168,7 @@ namespace dovah::load_order_processes {
       }
    }
 
-   void file_save::_post_save_form_id_remap() {
+   void file_save::_post_save_form_id_remap(writer_type& writer) {
       if (this->_was_originally_light != this->_save_as_light_plugin) {
          //
          // We have changed whether the active file is a light plug-in, so we need to change all 
@@ -185,6 +185,7 @@ namespace dovah::load_order_processes {
             if (this->_old_active_file_prefix.contains_form_id(id))
                stubs.push_back(stub);
          }
+         //
          for (auto* stub : stubs) {
             if (stub->formID < 0x800) // don't renumber hardcoded form IDs
                continue;
@@ -202,6 +203,20 @@ namespace dovah::load_order_processes {
                   continue;
                entry.formID = new_prefix.coerce_form_id(entry.formID);
             }
+         }
+         //
+         // And the file-writer's state, since that gets used to deal with forms that 
+         // weren't saved and thus need to be deleted.
+         //
+         {
+            std::unordered_map<bare_form_id_t, writer_type::form_stub_write_info> remapped_write_info;
+            for (auto& pair : writer.fixup_data.form_stubs) {
+               auto* stub = pair.second.stub;
+               if (stub) {
+                  remapped_write_info[stub->formID] = std::move(pair.second);
+               }
+            }
+            writer.fixup_data.form_stubs = std::move(remapped_write_info);
          }
       }
    }
