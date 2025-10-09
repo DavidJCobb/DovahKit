@@ -2117,6 +2117,12 @@ namespace dovah {
             throw exception(error_code::form_id_is_in_hardcoded_range, stub);
          }
       }
+      {
+         auto dst_prefix = file_prefix::from_form_id(desiredID, this->current_game == game::skyrim_classic);
+         if (this->index_of_prefix(dst_prefix) < 0) {
+            throw exception(error_code::form_id_is_out_of_bounds, stub);
+         }
+      }
       //
       auto guard1 = std::lock_guard(this->forms.lock);
       auto guard2 = std::lock_guard(this->form_creation_request_info.lock);
