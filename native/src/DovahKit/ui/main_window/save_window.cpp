@@ -206,9 +206,11 @@ bool ActiveFileSaveDialog::_enforce_form_id_ranges(bool allow_bees, bool allow_n
    });
 
    if (!allow_non_esl) {
-      size_t maximum_total_count = 0xFFF;
+      size_t maximum_total_count = 0xFFF + 1;
       if (!allow_bees)
-         maximum_total_count -= dovah::max_hardcoded_form_id;
+         maximum_total_count -= dovah::max_hardcoded_form_id + 1;
+      if (editor.get_loaded_files().size() == 1)
+         maximum_total_count -= 1; // Can't use xxyyy000 if no masters, as that works out to record ID 00000000.
       if (forms_total > maximum_total_count) {
          QString format;
          if (allow_bees) {

@@ -683,7 +683,7 @@ namespace {
          const dovah::exceptions::form_renumber_failed& exception
       ) {
          { decide(stub) } -> std::same_as<bool>;
-         { verify(form_id) } -> std::same_as<bool>;
+         { verify(stub, form_id) } -> std::same_as<bool>;
          { on_fail(exception) };
       }
    bool _bulk_renumber_active_file_forms(
@@ -704,27 +704,27 @@ namespace {
             &insufficient_ids,
             &pending
          ](dovah::form_stub* stub) {
-         if (stub->is_hardcoded())
-            return false;
-         if (!lo.is_defined_in_active_file(*stub))
-            return false;
+            if (stub->is_hardcoded())
+               return false;
+            if (!lo.is_defined_in_active_file(*stub))
+               return false;
 
-         if (!decide_to_move_functor(*stub))
-            return false;
+            if (!decide_to_move_functor(*stub))
+               return false;
 
-         uint32_t dst_id = [&]() {
-            uint32_t search_from = min_form_id;
-            if (!pending.empty())
-               search_from = pending.back().first + 1;
-            return lo.find_first_free_form_id_in_active_file(search_from);
-         }();
-         if (dst_id == 0 || !verify_dst_id_functor(dst_id)) {
-            insufficient_ids = true;
-            return true;
+            uint32_t dst_id = [&]() {
+               uint32_t search_from = min_form_id;
+               if (!pending.empty())
+                  search_from = pending.back().first + 1;
+               return lo.find_first_free_form_id_in_active_file(search_from);
+            }();
+            if (dst_id == 0 || !verify_dst_id_functor(*stub, dst_id)) {
+               insufficient_ids = true;
+               return true;
+            }
+            pending.push_back(std::pair{ dst_id, stub });
+            return false;
          }
-         pending.push_back(std::pair{ dst_id, stub });
-         return false;
-      }
       );
       if (insufficient_ids) {
          return false;
@@ -743,25 +743,41 @@ namespace {
    }
 }
 bool DovahKitCore::try_compact_form_ids(bool only_move_if_out_of_range, bool allow_bees, bool require_in_esl_range) {
+   bool active_is_light = false;
+   if (auto* file = this->get_active_file_header())
+      active_is_light = file->is_light();
+
+   uint32_t form_id_to_record_id_mask = active_is_light ? 0x00000FFF : 0x00FFFFFF;
+
    return _bulk_renumber_active_file_forms(
       *this->load_order,
       allow_bees ? 0 : dovah::max_hardcoded_form_id + 1,
 
       // decide whether to move:
-      [only_move_if_out_of_range, allow_bees](const dovah::form_stub& stub) {
+      [only_move_if_out_of_range, allow_bees, form_id_to_record_id_mask](const dovah::form_stub& stub) {
          if (only_move_if_out_of_range) {
-            if (stub.formID <= 0xFFF)
-               if (allow_bees || stub.formID > dovah::max_hardcoded_form_id)
+            uint32_t masked = stub.formID & form_id_to_record_id_mask;
+            if (masked <= 0xFFF)
+               if (allow_bees || masked > dovah::max_hardcoded_form_id)
                   return false;
          }
          return true;
       },
 
       // verify chosen form ID:
-      [allow_bees, require_in_esl_range](uint32_t dst_id) {
-         if (require_in_esl_range && dst_id > 0xFFF)
-            return false;
-         if (allow_bees && (dst_id & 0x00FFFFFF) <= dovah::max_hardcoded_form_id)
+      [allow_bees, require_in_esl_range, active_is_light, form_id_to_record_id_mask](const dovah::form_stub& stub, uint32_t dst_id) {
+         if (require_in_esl_range) {
+            if (active_is_light) {
+               //
+               // The backend will not have chosen a form ID that is wholly outside the 
+               // range of form IDs available in the active file [as it currently exists].
+               //
+            } else {
+               if ((dst_id & 0x00FFFFFF) > 0xFFF)
+                  return false;
+            }
+         }
+         if (!allow_bees && (dst_id & form_id_to_record_id_mask) <= dovah::max_hardcoded_form_id)
             return false;
          return true;
       },
@@ -780,17 +796,24 @@ bool DovahKitCore::try_compact_form_ids(bool only_move_if_out_of_range, bool all
    );
 }
 bool DovahKitCore::try_move_form_ids_out_of_hardcoded_ambiguous_range() {
+   bool active_is_light = false;
+   if (auto* file = this->get_active_file_header())
+      active_is_light = file->is_light();
+
+   uint32_t form_id_to_record_id_mask = active_is_light ? 0x00000FFF : 0x00FFFFFF;
+
    return _bulk_renumber_active_file_forms(
       *this->load_order,
       dovah::max_hardcoded_form_id + 1,
 
       // decide whether to move:
-      [](const dovah::form_stub& stub) {
-         return stub.formID <= dovah::max_hardcoded_form_id;
+      [form_id_to_record_id_mask](const dovah::form_stub& stub) {
+         return (stub.formID & form_id_to_record_id_mask) <= dovah::max_hardcoded_form_id;
       },
 
       // verify chosen form ID:
-      [](uint32_t dst_id) {
+      [form_id_to_record_id_mask](const dovah::form_stub& stub, uint32_t dst_id) {
+         uint32_t masked = stub.formID & form_id_to_record_id_mask;
          return dst_id > dovah::max_hardcoded_form_id;
       },
 
