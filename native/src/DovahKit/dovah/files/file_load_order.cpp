@@ -2104,23 +2104,17 @@ namespace dovah {
       if (!this->active_file) {
          throw exception(error_code::no_active_file, stub);
       }
-      if (game_feature_support::hardcoded_form_ids_always_ignore_record_id_prefix(this->current_game)) {
-         if (desiredID < 0x800) {
-            throw exception(error_code::form_id_is_in_hardcoded_range, stub);
-         }
-      } else {
-         if ((desiredID & 0x00FFFFFF) < 0x800) {
-            throw exception(error_code::form_id_is_in_hardcoded_range, stub);
-         }
-      }
       if (!this->is_defined_in_active_file(stub)) {
          throw exception(error_code::form_is_not_from_active_file, stub);
       }
-      if (!this->files.empty()) {
-         auto prefix = this->expected_active_file_prefix_post_save();
-         auto max    = prefix.max_form_id();
-         if (desiredID > max) {
+      assert(!this->files.empty());
+      {
+         const auto prefix = this->expected_active_file_prefix_post_save();
+         if (desiredID > prefix.max_form_id()) {
             throw exception(error_code::form_id_is_out_of_bounds, stub);
+         }
+         if (!prefix.can_co_opt_hardcoded_range() && (desiredID & 0x00FFFFFF) <= dovah::max_hardcoded_form_id) {
+            throw exception(error_code::form_id_is_in_hardcoded_range, stub);
          }
       }
       //

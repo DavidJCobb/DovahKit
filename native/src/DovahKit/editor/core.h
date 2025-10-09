@@ -178,7 +178,7 @@ class DovahKitCore : public QObject {
       dovah::form_stub* create_form_of_type(dovah::form_type);
       dovah::form_creation_request request_form_creation(dovah::form_type) noexcept;
       dovah::form_duplication_request request_form_duplication() noexcept;
-      dovah::form_renumber_request request_form_renumber(dovah::form_stub& stub, bare_form_id_t desiredID) noexcept;
+      dovah::form_renumber_request request_form_renumber(dovah::form_stub& stub, bare_form_id_t desiredID);
 
       dovah::form_stub* duplicate_form(dovah::form_stub& original, QWidget* dialog_parent = nullptr); // handles UI, error reporting, etc., for you
 

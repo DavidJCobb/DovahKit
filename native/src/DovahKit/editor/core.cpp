@@ -489,7 +489,7 @@ dovah::form_creation_request DovahKitCore::request_form_creation(dovah::form_typ
 dovah::form_duplication_request DovahKitCore::request_form_duplication() noexcept {
    return this->load_order->request_form_duplication();
 }
-dovah::form_renumber_request DovahKitCore::request_form_renumber(dovah::form_stub& stub, bare_form_id_t desiredID) noexcept {
+dovah::form_renumber_request DovahKitCore::request_form_renumber(dovah::form_stub& stub, bare_form_id_t desiredID) {
    return this->load_order->request_form_renumber(stub, desiredID);
 }
 
