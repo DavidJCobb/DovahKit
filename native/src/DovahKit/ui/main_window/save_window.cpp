@@ -109,9 +109,9 @@ namespace {
    }
 }
 
-void ActiveFileSaveDialog::commit() {
+std::filesystem::path ActiveFileSaveDialog::_get_target_filename() {
    auto& editor = DovahKitCore::get();
-   //
+
    QString filename_text = this->ui.filename->text();
    std::filesystem::path filename = filename_text.toStdWString();
    if (!editor.active_file_has_name()) {
@@ -121,7 +121,7 @@ void ActiveFileSaveDialog::commit() {
             tr("Error", "save error"),
             tr("You must specify a filename.", "save error")
          );
-         return;
+         return {};
       }
    }
    if (editor.load_order_has_file(filename, true)) {
@@ -130,7 +130,7 @@ void ActiveFileSaveDialog::commit() {
          tr("Error", "save error"),
          tr("The name \"%1\" is already in use by one of this file's dependencies.", "save error").arg(filename_text)
       );
-      return;
+      return {};
    }
    auto code = cobb::validate_filename(filename);
    if (code != cobb::filename_validation_result::valid) {
@@ -157,7 +157,7 @@ void ActiveFileSaveDialog::commit() {
          tr("Error", "save error"),
          tr("The filename you entered is invalid. %1", "save error").arg(error)
       );
-      return;
+      return {};
    }
    if (!cobb::filename_has_extension(filename, { ".esl", ".esm", ".esp" })) {
       QMessageBox::critical(
@@ -165,18 +165,196 @@ void ActiveFileSaveDialog::commit() {
          tr("Error", "save error"),
          tr("The filename you entered is invalid. You must use one of the supported file extensions: ESL ESM ESP.", "save error")
       );
-      return;
+      return {};
    }
-   //
-   dovah::game game = (dovah::game)this->ui.game->currentData().toInt();
-   std::filesystem::path install_path;
-   editor.get_game_path(install_path, game);
-   install_path.append("Data");
-   editor.set_load_order_folder(install_path); // in case the user never actually loaded a file and is making a file with no masters
 
    //
    // TODO: if a file with this name exists, pop a confirmation prompt before just overwriting it
    //
+
+   return filename;
+}
+
+void ActiveFileSaveDialog::_force_current_editor_base_path(dovah::game game) {
+   auto& editor = DovahKitCore::get();
+
+   std::filesystem::path install_path;
+   editor.get_game_path(install_path, game);
+   install_path.append("Data");
+   editor.set_load_order_folder(install_path);
+}
+
+bool ActiveFileSaveDialog::_enforce_form_id_ranges(bool allow_bees, bool allow_non_esl) {
+   auto& editor = DovahKitCore::get();
+
+   size_t forms_total            = 0;
+   size_t forms_in_bees_range    = 0;
+   size_t forms_not_in_esl_range = 0;
+   editor.for_each_form([&editor, &forms_total , &forms_in_bees_range, &forms_not_in_esl_range](dovah::form_stub* stub) -> bool {
+      if (!editor.is_form_defined_in_active_file(stub))
+         return false;
+      ++forms_total;
+
+      uint32_t form_id = stub->formID & 0x00FFFFFF;
+      if (form_id & 0x00FFF000) {
+         ++forms_not_in_esl_range;
+      }
+      if ((form_id & 0x00000FFF) <= dovah::max_hardcoded_form_id) {
+         ++forms_in_bees_range;
+      }
+      return false;
+   });
+
+   if (!allow_non_esl) {
+      size_t maximum_total_count = 0xFFF;
+      if (!allow_bees)
+         maximum_total_count -= dovah::max_hardcoded_form_id;
+      if (forms_total > maximum_total_count) {
+         QString format;
+         if (allow_bees) {
+            format = tr("This file contains %1 forms. An ESL file that doesn't use extended form IDs can only contain %2 forms.");
+         } else {
+            format = tr("This file contains %1 forms. An ESL file using extended form IDs can only contain %2 forms.");
+         }
+         QMessageBox::critical(
+            this,
+            tr("Error", "save error"),
+            format.arg(forms_total).arg(maximum_total_count)
+         );
+         return false;
+      }
+      if (forms_not_in_esl_range > 0) {
+         auto message = QMessageBox(
+            QMessageBox::Warning,
+            tr("Warning"),
+            tr(
+               "This file contains %1 forms out of %3 allowed, of which %2 are outside the range of form IDs allowed in "
+               "an ESL file. Would you like to try compacting form IDs before saving?"
+            ).arg(forms_total).arg(forms_not_in_esl_range).arg(maximum_total_count),
+            QMessageBox::StandardButtons(QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No),
+            this
+         );
+         message.exec();
+         if (message.clickedButton() != message.button(QMessageBox::StandardButton::Yes))
+            return false;
+
+         if (!editor.try_compact_form_ids(true, allow_bees, true)) {
+            // should be impossible
+            QMessageBox::critical(this,
+               tr("Error", "saving"),
+               tr("Unable to compact form IDs. Please report this to DovahKit's developer, and provide a saved copy of your current file.\n\nYour file has not been saved."),
+               QMessageBox::Ok
+            );
+            return false;
+         }
+         forms_in_bees_range    = 0;
+         forms_not_in_esl_range = 0;
+      }
+   }
+   if (!allow_bees && forms_in_bees_range > 0) {
+      auto message = QMessageBox(
+         QMessageBox::Warning,
+         tr("Warning"),
+         tr(
+            "This file contains %1 forms whose IDs are in the extended form ID range. Would you like to try renumbering "
+            "those forms in bulk before saving?"
+         ).arg(forms_in_bees_range),
+         QMessageBox::StandardButtons(QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No),
+         this
+      );
+      message.exec();
+      if (message.clickedButton() != message.button(QMessageBox::StandardButton::Yes))
+         return false;
+
+      if (!editor.try_move_form_ids_out_of_hardcoded_ambiguous_range()) {
+         // should be impossible
+         QMessageBox::critical(this,
+            tr("Error", "saving"),
+            tr("Unable to move form IDs out of the range [xxyyy000, xxyyy7FF]. Please report this to DovahKit's developer, and provide a saved copy of your current file.\n\nYour file has not been saved."),
+            QMessageBox::Ok
+         );
+         return false;
+      }
+      forms_in_bees_range = 0;
+   }
+   return true;
+}
+bool ActiveFileSaveDialog::_enforce_cross_game_form_loss_is_deliberate(dovah::game game) {
+   auto& editor = DovahKitCore::get();
+
+   std::vector<dovah::form_stub*> forms_we_cant_save;
+   editor.for_each_impossible_to_save_form(game, [&forms_we_cant_save](dovah::form_stub* stub) {
+      forms_we_cant_save.push_back(stub);
+      return false;
+   });
+   if (forms_we_cant_save.size()) {
+      //
+      // TODO: Show detailed information on the relevant forms
+      //
+      auto choice = QMessageBox::critical(
+         this,
+         tr("Warning", "save error"),
+         tr("The active file currently contains %1 forms that are not supported in the target game. Not only will these forms not be saved; they will also be deleted from memory if the save operation completes successfully.<br/><br/>Are you sure you still want to convert this file to the selected game?")
+            .arg(forms_we_cant_save.size()),
+         QMessageBox::YesToAll | QMessageBox::Cancel
+      );
+      if (choice == QMessageBox::Cancel) {
+         return false;
+      }
+   }
+   return true;
+}
+bool ActiveFileSaveDialog::_enforce_esl_interiors_are_deliberate() {
+   auto& editor = DovahKitCore::get();
+
+   size_t defined_cell_count = 0;
+   editor.for_each_form_of_type(dovah::form_type::cell, [&editor, &defined_cell_count](dovah::form_stub* stub) -> bool {
+      if (stub->get_parent_form())
+         return false;
+      if (!editor.is_form_defined_in_active_file(stub))
+         return false;
+      ++defined_cell_count;
+      return false;
+   });
+   if (defined_cell_count > 0) {
+      auto message = QMessageBox(
+         QMessageBox::Warning,
+         tr("Warning"),
+         tr(
+            "<p>This file defines %1 interior cell(s). Saving it as an ESL may cause game instability:</p>"
+            "<ul>"
+            "<li><p>If you reload a save, Skyrim Special Edition won't reload references in an interior "
+            "cell created by an ESL.</p></li>"
+            "<li><p>If an interior cell is defined by an ESL and then patched by another mod, the cell "
+            "will break completely.</p></li>"
+            "</ul>"
+            "<p>The \"SSE Engine Fixes\" mod (from version 7.0.14 onward) fixes these issues and makes "
+            "ESL-defined interior cells safe. If that's acceptable, you will need to remember to inform "
+            "your users that it's a requirement for your mod.</p>"
+            "<p>Are you sure you want to proceed and save this file as an ESL?</p>"
+         ).arg(defined_cell_count),
+         QMessageBox::StandardButtons(QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No),
+         this
+      );
+      message.setDefaultButton(QMessageBox::StandardButton::No);
+
+      message.exec();
+      if (message.clickedButton() != message.button(QMessageBox::StandardButton::Yes))
+         return false;
+   }
+   return true;
+}
+
+void ActiveFileSaveDialog::commit() {
+   auto& editor = DovahKitCore::get();
+   //
+   auto filename = this->_get_target_filename();
+   if (filename.empty())
+      return;
+
+   dovah::game game_prior = editor.get_current_game();
+   dovah::game game       = (dovah::game)this->ui.game->currentData().toInt();
+   this->_force_current_editor_base_path(game);
 
    auto config = dovah::tes_file_writing::write_config::for_game(game);
    cobb::edit_bit(config.file_flags, dovah::tes_file_flag::light,  game != dovah::game::skyrim_classic && this->ui.flagLight->isChecked());
@@ -187,6 +365,12 @@ void ActiveFileSaveDialog::commit() {
       } else {
          config.use_file_version = 1.70F;
       }
+   }
+   if (!this->_enforce_form_id_ranges(
+      this->ui.flagUse1Point71FormIDSpace->isChecked(),
+      (config.file_flags & dovah::tes_file_flag::light) == 0
+   )) {
+      return;
    }
    {
       using namespace dovahkit::ini::main;
@@ -204,64 +388,13 @@ void ActiveFileSaveDialog::commit() {
       case 2: config.record_compression = dovah::tes_file_writing::record_compression_policy::bethesda;  break;
    }
    config.record_compress_threshold = this->ui.compressionThreshold->value();
-   //
-   std::vector<dovah::form_stub*> forms_we_cant_save;
-   editor.for_each_impossible_to_save_form(config.output_game, [&forms_we_cant_save](dovah::form_stub* stub) {
-      forms_we_cant_save.push_back(stub);
-      return false;
-   });
-   if (forms_we_cant_save.size()) {
-      //
-      // TODO: Show detailed information on the relevant forms
-      //
-      auto choice = QMessageBox::critical(
-         this,
-         tr("Warning", "save error"),
-         tr("The active file currently contains %1 forms that are not supported in the target game. Not only will these forms not be saved; they will also be deleted from memory if the save operation completes successfully.<br/><br/>Are you sure you still want to convert this file to the selected game?")
-            .arg(forms_we_cant_save.size()),
-         QMessageBox::YesToAll | QMessageBox::Cancel
-      );
-      if (choice == QMessageBox::Cancel) {
-         return;
-      }
-   }
+   
+   if (!this->_enforce_cross_game_form_loss_is_deliberate(config.output_game))
+      return;
 
    if (config.file_flags & dovah::tes_file_flag::light) {
-      size_t defined_cell_count = 0;
-      editor.for_each_form_of_type(dovah::form_type::cell, [&editor, &defined_cell_count](dovah::form_stub* stub) -> bool {
-         if (stub->get_parent_form())
-            return false;
-         if (!editor.is_form_defined_in_active_file(stub))
-            return false;
-         ++defined_cell_count;
-         return false;
-      });
-      if (defined_cell_count > 0) {
-         auto message = QMessageBox(
-            QMessageBox::Warning,
-            tr("Warning"),
-            tr(
-               "<p>This file defines %1 interior cell(s). Saving it as an ESL may cause game instability:</p>"
-               "<ul>"
-               "<li><p>If you reload a save, Skyrim Special Edition won't reload references in an interior "
-               "cell created by an ESL.</p></li>"
-               "<li><p>If an interior cell is defined by an ESL and then patched by another mod, the cell "
-               "will break completely.</p></li>"
-               "</ul>"
-               "<p>The \"SSE Engine Fixes\" mod (from version 7.0.14 onward) fixes these issues and makes "
-               "ESL-defined interior cells safe. If that's acceptable, you will need to remember to inform "
-               "your users that it's a requirement for your mod.</p>"
-               "<p>Are you sure you want to proceed and save this file as an ESL?</p>"
-            ).arg(defined_cell_count),
-            QMessageBox::StandardButtons(QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No),
-            this
-         );
-         message.setDefaultButton(QMessageBox::StandardButton::No);
-
-         message.exec();
-         if (message.clickedButton() != message.button(QMessageBox::StandardButton::Yes))
-            return;
-      }
+      if (!this->_enforce_esl_interiors_are_deliberate())
+         return;
    }
 
    auto& logging = dovahkit::subsystems::message_log::core::get_or_create();
@@ -270,6 +403,8 @@ void ActiveFileSaveDialog::commit() {
    try {
       editor.save_active_file(filename, config, results);
    } catch (const dovah::exceptions::game_change_failed& ex) {
+      this->_force_current_editor_base_path(game_prior);
+
       using exception  = std::decay_t<decltype(ex)>;
       using error_code = exception::error_code;
 
@@ -318,6 +453,8 @@ void ActiveFileSaveDialog::commit() {
       this->reject();
       return;
    } catch (const dovah::exceptions::file_save_failed& ex) {
+      this->_force_current_editor_base_path(game_prior);
+
       using exception  = std::decay_t<decltype(ex)>;
       using error_code = exception::error_code;
 

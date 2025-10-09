@@ -21,6 +21,8 @@ namespace dovah {
          
       public:
          ~form_renumber_request();
+
+         constexpr bare_form_id_t get_queued_form_id() const noexcept { return this->desiredID; }
          
          void commit();
    };

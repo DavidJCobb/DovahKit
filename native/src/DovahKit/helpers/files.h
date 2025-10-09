@@ -31,8 +31,8 @@ namespace cobb {
          mapped_file(wchar_t const* path) noexcept { this->open(path); }
          ~mapped_file();
          //
-         const void* data() const noexcept { return this->_view; }
-         uint64_t size() const noexcept { return this->_size; }
+         constexpr const void* data() const noexcept { return this->_view; }
+         constexpr uint64_t size() const noexcept { return this->_size; }
          const void* data_at(std::ptrdiff_t offset) const noexcept { return (const uint8_t*)this->_view + offset; }
          //
          void open(wchar_t const* path) noexcept;
@@ -60,7 +60,7 @@ namespace cobb {
             return sizeof(field);
          }
          //
-         inline bool is_in_bounds(uint32_t offset, uint32_t bytes) const noexcept {
+         constexpr bool is_in_bounds(uint32_t offset, uint32_t bytes) const noexcept {
             return ((uint64_t)offset + bytes) < this->_size;
          }
    };

@@ -77,9 +77,18 @@
      <addaction name="actionSetEncodingWin1256"/>
      <addaction name="actionSetEncodingUTF8"/>
     </widget>
+    <widget class="QMenu" name="menuManageFormIDs">
+     <property name="title">
+      <string>Manage form IDs</string>
+     </property>
+     <addaction name="actionCompactFormIDs"/>
+     <addaction name="actionMoveFormIDsOutOfBEES"/>
+    </widget>
     <addaction name="menuTextEncoding"/>
     <addaction name="actionDefaultObjects"/>
     <addaction name="actionGameSettings"/>
+    <addaction name="separator"/>
+    <addaction name="menuManageFormIDs"/>
     <addaction name="separator"/>
     <addaction name="actionRunScriptSingle"/>
     <addaction name="actionRunScriptPackage"/>
@@ -185,6 +194,16 @@
   <action name="actionOptions">
    <property name="text">
     <string>Options...</string>
+   </property>
+  </action>
+  <action name="actionCompactFormIDs">
+   <property name="text">
+    <string>Compact form IDs</string>
+   </property>
+  </action>
+  <action name="actionMoveFormIDsOutOfBEES">
+   <property name="text">
+    <string>Move form IDs out of extended ESL range</string>
    </property>
   </action>
  </widget>

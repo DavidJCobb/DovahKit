@@ -864,7 +864,11 @@ namespace dovah {
             return 0;
          return this->addenda->grid_position.value().to_cell_block();
       }
-      return (this->formID % 10);
+      uint32_t masked = this->formID & 0x00FFFFFF;
+      if (auto* file = this->get_file_at_index(0))
+         if (file->is_light())
+            masked &= 0x00000FFF;
+      return masked % 10;
    }
    [[nodiscard]] uint32_t form_stub::get_cell_sub_block() const noexcept {
       if (this->form_type != form_type::cell)
@@ -874,7 +878,11 @@ namespace dovah {
             return 0;
          return this->addenda->grid_position.value().to_cell_sub_block();
       }
-      return (this->formID % 100) / 10;
+      uint32_t masked = this->formID & 0x00FFFFFF;
+      if (auto* file = this->get_file_at_index(0))
+         if (file->is_light())
+            masked &= 0x00000FFF;
+      return (masked % 100) / 10;
    }
    [[nodiscard]] form_stub* form_stub::get_outbound_use_with_flag(use_info_entry::flags_t f) const noexcept {
       assert(f && "This function is meaningless without a flag specified.");

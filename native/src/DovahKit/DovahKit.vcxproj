@@ -1369,6 +1369,8 @@
     <ClInclude Include="dovah\data\furniture\entry_point.h" />
     <ClInclude Include="dovah\data\game.h" />
     <ClInclude Include="dovah\data\game\hardcoded_form_ids_ignore_record_id_prefix.h" />
+    <ClInclude Include="dovah\data\game\max_file_version.h" />
+    <ClInclude Include="dovah\data\game\min_file_version.h" />
     <ClInclude Include="dovah\data\hardcoded_form_ids.h" />
     <ClInclude Include="dovah\data\headparts.h" />
     <ClInclude Include="dovah\data\magic_casting_type.h" />
@@ -1866,6 +1868,9 @@
     <QtMoc Include="ui\form_windows\actor_value_info.h" />
     <ClInclude Include="helpers\optionals\finite_float.h" />
     <QtMoc Include="ui\form_windows\apparatus.h" />
+    <ClInclude Include="helpers\scope_guards\exit.h" />
+    <ClInclude Include="helpers\scope_guards\fail.h" />
+    <ClInclude Include="helpers\scope_guards\success.h" />
     <ClInclude Include="helpers\sort_and_remember.h" />
     <ClInclude Include="nif\blocks\BSFurnitureMarkerNode.h" />
     <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h" />

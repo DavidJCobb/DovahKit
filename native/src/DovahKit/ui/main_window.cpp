@@ -9,7 +9,9 @@
 #include "editor/core.h"
 #include "editor/subsystems/message_log/core.h"
 #include "editor/open_window_for_form.h"
+#include "dovah/data/game/hardcoded_form_ids_ignore_record_id_prefix.h"
 #include "dovah/data/game.h"
+#include "dovah/files/file_header.h"
 #include "dovah/files/file_load_order.h"
 #pragma region subwindows
    #include "./main_window/cell_view.h"
@@ -79,6 +81,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    });
    QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, [this]() {
       this->ui.actionEditFileMetadata->setDisabled(false);
+      this->ui.menuManageFormIDs->setDisabled(false);
       this->ui.actionSave->setDisabled(false);
    });
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
@@ -196,6 +199,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    #pragma endregion
    
    this->ui.actionEditFileMetadata->setDisabled(true);
+   this->ui.menuManageFormIDs->setDisabled(true);
    this->ui.actionSave->setDisabled(true);
    //
    this->ui.actionLoadDataClassic->setData((int)dovah::game::skyrim_classic);
@@ -291,6 +295,70 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
          }
       });
    #pragma endregion
+
+   QObject::connect(this->ui.actionCompactFormIDs, &QAction::triggered, this, [this]() {
+      auto& editor = DovahKitCore::get();
+      const auto current_game = editor.get_current_game();
+
+      //
+      // TODO: Make this a dialog, where the user can pick the BEES setting, with 
+      // it defaulted based on the current file's attributes.
+      // 
+      // Additionally, the dialog should allow the user to only run the operation 
+      // if the number of forms present can fit in the ESL's allowed range (BEES 
+      // or no BEES).
+      //
+
+      bool allow_bees = false;
+      if (current_game != dovah::game::skyrim_classic) {
+         //
+         // The active file can use the extended ESL form ID range if it has at least one master.
+         //
+         if (editor.get_loaded_files().size() > 1) {
+            allow_bees = true;
+            auto min_version = dovah::game_feature_support::hardcoded_form_ids_ignore_record_id_prefix_until_file_version(current_game);
+            if (min_version.has_value()) { // else they always ignore them
+               if (auto* header = editor.get_active_file_header()) {
+                  if (header->file_version < min_version.value())
+                     allow_bees = false;
+               }
+            }
+         }
+      }
+
+      bool  success = editor.try_compact_form_ids(true, allow_bees, false);
+      if (success) {
+         QMessageBox::information(this,
+            tr("Success", "saving"),
+            tr("Form IDs have been compacted. Forms whose IDs were already in the valid range for an ESL were not moved."),
+            QMessageBox::Ok
+         );
+      } else {
+         // should be impossible
+         QMessageBox::critical(this,
+            tr("Error", "saving"),
+            tr("Unable to compact form IDs. Please report this to DovahKit's developer, and provide a saved copy of your current file."),
+            QMessageBox::Ok
+         );
+      }
+   });
+   QObject::connect(this->ui.actionMoveFormIDsOutOfBEES, &QAction::triggered, this, [this]() {
+      bool success = DovahKitCore::get().try_move_form_ids_out_of_hardcoded_ambiguous_range();
+      if (success) {
+         QMessageBox::information(this,
+            tr("Success", "saving"),
+            tr("Form IDs have been moved out of the range [xxyyy000, xxyyy7FF]."),
+            QMessageBox::Ok
+         );
+      } else {
+         // should be impossible
+         QMessageBox::critical(this,
+            tr("Error", "saving"),
+            tr("Unable to move form IDs out of the range [xxyyy000, xxyyy7FF]. Please report this to DovahKit's developer, and provide a saved copy of your current file."),
+            QMessageBox::Ok
+         );
+      }
+   });
       
    QObject::connect(this->ui.actionRunScriptSingle, &QAction::triggered, this, [this]() {
       auto* modal = new EditorSingleScriptWindow(this);

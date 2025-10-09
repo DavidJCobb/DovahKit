@@ -44,6 +44,7 @@
 #include "dovah/exceptions/file_load_failed.h"
 #include "dovah/exceptions/form_creation_failed.h"
 #include "dovah/exceptions/form_deletion_failed.h"
+#include "dovah/exceptions/form_renumber_failed.h"
 #include "dovah/exceptions/game_change_failed.h"
 #include "dovah/exceptions/game_setting_renumber_failed.h"
 #include "dovah/exceptions/invalid_load_order.h"
@@ -665,6 +666,146 @@ void DovahKitCore::delete_form(
    } catch (const dovah::exceptions::form_deletion_failed& ex) {
       on_gather_error(ex);
    }
+}
+
+namespace {
+   template<
+      typename DecideToMoveFunctor,
+      typename VerifyDestinationIDFunctor,
+      typename FailureHandlerFunctor
+   >
+      requires requires(
+         DecideToMoveFunctor&& decide,
+         VerifyDestinationIDFunctor&& verify,
+         FailureHandlerFunctor&& on_fail,
+         const dovah::form_stub& stub,
+         uint32_t form_id,
+         const dovah::exceptions::form_renumber_failed& exception
+      ) {
+         { decide(stub) } -> std::same_as<bool>;
+         { verify(form_id) } -> std::same_as<bool>;
+         { on_fail(exception) };
+      }
+   bool _bulk_renumber_active_file_forms(
+      dovah::file_load_order& lo,
+      uint32_t min_form_id,
+      DecideToMoveFunctor&& decide_to_move_functor,
+      VerifyDestinationIDFunctor&& verify_dst_id_functor,
+      FailureHandlerFunctor&& failure_handler_functor
+   ) {
+      std::vector<std::pair<uint32_t, dovah::form_stub*>> pending;
+      bool insufficient_ids = false;
+      lo.for_each_active_file_form(
+         [
+            &lo,
+            min_form_id,
+            &decide_to_move_functor,
+            &verify_dst_id_functor,
+            &insufficient_ids,
+            &pending
+         ](dovah::form_stub* stub) {
+         if (stub->is_hardcoded())
+            return false;
+         if (!lo.is_defined_in_active_file(*stub))
+            return false;
+
+         if (!decide_to_move_functor(*stub))
+            return false;
+
+         uint32_t dst_id = [&]() {
+            uint32_t search_from = min_form_id;
+            if (!pending.empty())
+               search_from = pending.back().first + 1;
+            return lo.find_first_free_form_id_in_active_file(search_from);
+         }();
+         if (dst_id == 0 || !verify_dst_id_functor(dst_id)) {
+            insufficient_ids = true;
+            return true;
+         }
+         pending.push_back(std::pair{ dst_id, stub });
+         return false;
+      }
+      );
+      if (insufficient_ids) {
+         return false;
+      }
+
+      try {
+         for (auto& pair : pending) {
+            auto request = lo.request_form_renumber(*pair.second, pair.first);
+            request.commit();
+         }
+      } catch (const dovah::exceptions::form_renumber_failed& ex) {
+         failure_handler_functor(ex);
+         return false;
+      }
+      return true;
+   }
+}
+bool DovahKitCore::try_compact_form_ids(bool only_move_if_out_of_range, bool allow_bees, bool require_in_esl_range) {
+   return _bulk_renumber_active_file_forms(
+      *this->load_order,
+      allow_bees ? 0 : dovah::max_hardcoded_form_id + 1,
+
+      // decide whether to move:
+      [only_move_if_out_of_range, allow_bees](const dovah::form_stub& stub) {
+         if (only_move_if_out_of_range) {
+            if (stub.formID <= 0xFFF)
+               if (allow_bees || stub.formID > dovah::max_hardcoded_form_id)
+                  return false;
+         }
+         return true;
+      },
+
+      // verify chosen form ID:
+      [allow_bees, require_in_esl_range](uint32_t dst_id) {
+         if (require_in_esl_range && dst_id > 0xFFF)
+            return false;
+         if (allow_bees && (dst_id & 0x00FFFFFF) <= dovah::max_hardcoded_form_id)
+            return false;
+         return true;
+      },
+
+      // handle failure:
+      [](const dovah::exceptions::form_renumber_failed& ex) {
+         //
+         // Recent code changes *should* make this impossible; we're not injecting forms, 
+         // and none-stubs' form IDs should no longer be treated as available if those 
+         // none-stubs can't be deleted. Still, I'm keeping this catch-block here until 
+         // I refactor and clean up the broader file_load_order internals during sustain.
+         //
+         // As of this writing, there are no other failure cases for non-hardcoded forms.
+         //
+      }
+   );
+}
+bool DovahKitCore::try_move_form_ids_out_of_hardcoded_ambiguous_range() {
+   return _bulk_renumber_active_file_forms(
+      *this->load_order,
+      dovah::max_hardcoded_form_id + 1,
+
+      // decide whether to move:
+      [](const dovah::form_stub& stub) {
+         return stub.formID <= dovah::max_hardcoded_form_id;
+      },
+
+      // verify chosen form ID:
+      [](uint32_t dst_id) {
+         return dst_id > dovah::max_hardcoded_form_id;
+      },
+
+      // handle failure:
+      [](const dovah::exceptions::form_renumber_failed& ex) {
+         //
+         // Recent code changes *should* make this impossible; we're not injecting forms, 
+         // and none-stubs' form IDs should no longer be treated as available if those 
+         // none-stubs can't be deleted. Still, I'm keeping this catch-block here until 
+         // I refactor and clean up the broader file_load_order internals during sustain.
+         //
+         // As of this writing, there are no other failure cases for non-hardcoded forms.
+         //
+      }
+   );
 }
 
 bool DovahKitCore::get_loaded_game_setting(const char* name, dovah::loaded_game_setting& out) {

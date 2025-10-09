@@ -190,6 +190,9 @@ class DovahKitCore : public QObject {
          std::function<void(const dovah::form_deletion_request&)> after_complete
       );
 
+      bool try_compact_form_ids(bool only_move_if_out_of_range, bool allow_bees, bool require_in_esl_range);
+      bool try_move_form_ids_out_of_hardcoded_ambiguous_range();
+
       bool get_loaded_game_setting(const char* name, dovah::loaded_game_setting& out);
       bool for_each_loaded_game_setting(std::function<bool(const dovah::loaded_game_setting&)>);
       void edit_game_setting(const char* name, const dovah::game_setting_value&); // may throw dovah::exceptions::game_setting_value_change_failed

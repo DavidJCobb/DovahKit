@@ -1689,12 +1689,47 @@ namespace dovah {
       //
       for (; id < max_id; ++id) {
          form_stub* stub = cobb::unordered_map_get_if_present(map, id);
-         if (!stub || stub->is_none_stub()) {
-            auto it = std::find(reservations.begin(), reservations.end(), id);
-            if (it != reservations.end())
+         if (stub && !stub->is_none_stub())
+            continue;
+         auto it = std::find(reservations.begin(), reservations.end(), id);
+         if (it != reservations.end())
+            continue;
+         if (stub && stub->is_none_stub()) {
+            //
+            // If we're capable of destroying this none-stub, then treat its form ID as available.
+            // 
+            // None-stubs can be destroyed if they come solely from the active file, and if all 
+            // of the forms that reference them can be loaded.
+            //
+            bool available = false;
+            for (auto& pair : stub->inbound) {
+               auto& entry = pair.second;
+               if (!entry.other)
+                  continue;
+               auto& other = *entry.other;
+               if (!this->is_defined_in_active_file(other)) {
+                  available = false;
+                  break;
+               }
+               //
+               // Test if we can load the form that references this none-stub. (TODO: These checks 
+               // are duplicated from `form_stub::_load` and various functions it calls. We here skip 
+               // some checks that really should've been assertions in the form-stub internals, e.g. 
+               // checks that a record actually exists at the file offset that a non-hardcoded stub 
+               // says it has. When we refactor form stubs during sustain, we really must replace 
+               // some checks with assertions and, in general, make it easier to check whether a 
+               // stub *can* be loaded without just going and loading it, as the function we usually 
+               // use, `file_load_order::_can_destroy_none_stub`, does.)
+               //
+               if (!get_form_loader_function(other.form_type) || !can_construct_form_data(other.form_type)) {
+                  available = false;
+                  break;
+               }
+            }
+            if (!available)
                continue;
-            return id;
          }
+         return id;
       }
       return 0;
    }

@@ -186,7 +186,7 @@ namespace dovah::load_order_processes {
                stubs.push_back(stub);
          }
          for (auto* stub : stubs) {
-            if (stub->formID < 0x800)
+            if (stub->formID < 0x800) // don't renumber hardcoded form IDs
                continue;
             active_load_order._renumber_form(*stub, new_prefix.coerce_form_id(stub->formID), false);
          }
@@ -198,7 +198,7 @@ namespace dovah::load_order_processes {
             for (auto& entry : list) {
                if (entry.source_file != active_load_order.active_file)
                   continue;
-               if (entry.formID < 0x800)
+               if (entry.formID < 0x800) // don't renumber hardcoded form IDs
                   continue;
                entry.formID = new_prefix.coerce_form_id(entry.formID);
             }

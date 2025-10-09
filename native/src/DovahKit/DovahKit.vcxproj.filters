@@ -8777,6 +8777,21 @@
     <ClInclude Include="dovah\notices\file_load_warnings\esl_defined_interior_cell_is_overridden.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\data\game\max_file_version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\data\game\min_file_version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\scope_guards\exit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\scope_guards\fail.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\scope_guards\success.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
