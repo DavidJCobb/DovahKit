@@ -704,7 +704,7 @@ namespace {
             &insufficient_ids,
             &pending
          ](dovah::form_stub* stub) {
-            if (stub->is_hardcoded())
+            if (stub->is_hardcoded() || stub->is_injected())
                return false;
             if (!lo.is_defined_in_active_file(*stub))
                return false;

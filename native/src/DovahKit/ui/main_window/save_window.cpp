@@ -193,6 +193,8 @@ bool ActiveFileSaveDialog::_enforce_form_id_ranges(bool allow_bees, bool allow_n
    editor.for_each_form([&editor, &forms_total , &forms_in_bees_range, &forms_not_in_esl_range](dovah::form_stub* stub) -> bool {
       if (!editor.is_form_defined_in_active_file(stub))
          return false;
+      if (stub->is_injected())
+         return false;
       ++forms_total;
 
       uint32_t form_id = stub->formID & 0x00FFFFFF;

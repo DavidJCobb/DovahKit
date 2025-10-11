@@ -91,7 +91,7 @@ namespace dovah::loaded_forms {
                break;
             case 'JNAM':
                if (current_layer_alpha < max_cloud_layer_count) {
-                  auto& layer = this->clouds.layers[current_layer_color];
+                  auto& layer = this->clouds.layers[current_layer_alpha];
                   subrecord.read(layer.time_of_day.sunrise.alpha);
                   subrecord.read(layer.time_of_day.day.alpha);
                   subrecord.read(layer.time_of_day.sunset.alpha);
@@ -505,7 +505,7 @@ namespace dovah::loaded_forms {
          subrecord.close();
       }
       if (record.is_skyrim_special() && this->volumetric.has_value()) {
-         auto& subrecord = record.open_next_subrecord('GNAM');
+         auto& subrecord = record.open_next_subrecord('HNAM');
          auto& data      = this->volumetric.value();
          subrecord.write(data.sunrise);
          subrecord.write(data.day);
