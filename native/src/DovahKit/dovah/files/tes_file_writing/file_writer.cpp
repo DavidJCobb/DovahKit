@@ -192,6 +192,8 @@ namespace dovah::tes_file_writing {
             }
             //
             this->owner.for_each_active_file_override_of_type(typeinfo.form_type, [&opened, &record](const form_stub* stub) {
+               if (stub->test_record_flags(tes_file_record_header::flag::persistent))
+                  return false;
                if (!opened) {
                   record.open_next_subrecord('ONAM');
                   opened = true;

@@ -1760,22 +1760,16 @@ namespace dovah {
    bool file_load_order::for_each_active_file_override_of_type(form_type form_type, std::function<bool(form_stub*)> functor) {
       if (!decltype(this->forms_by_type)::supports_form_type(form_type))
          return false;
-      //
-      auto active_prefix = this->expected_active_file_prefix_post_save();
-      if (active_prefix.is_undefined())
-         return false;
-      auto min_id = active_prefix.min_form_id();
-      auto max_id = active_prefix.max_form_id();
-      //
+      if (!this->active_file)
+         return;
+
       auto& list = this->active_file_forms_by_type[form_type].forms;
       for (auto& pair : list) {
          auto  id   = pair.first;
          auto* stub = pair.second;
          if (!stub)
             continue;
-         if (id < min_id || id > max_id)
-            continue;
-         if (stub->is_injected())
+         if (stub->get_file_at_index(0) == this->active_file)
             continue;
          if (functor(stub))
             return true;
