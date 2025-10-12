@@ -152,15 +152,15 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
          QObject::connect(this->ui.cellList, &QWidget::customContextMenuRequested, [this](const QPoint& pos) {
             auto  opener = this->ui.cellList;
             auto& items  = this->cellContextMenu;
-            if (!opener->formStub())
-               return;
             //
             QMenu menu(opener);
             menu.addAction(items.create);
-            menu.addAction(items.edit);
-            menu.addAction(items.duplicate);
-            menu.addAction(items.showUseInfo);
-            menu.addAction(items.deleteForm);
+            if (opener->formStub()) {
+               menu.addAction(items.edit);
+               menu.addAction(items.duplicate);
+               menu.addAction(items.showUseInfo);
+               menu.addAction(items.deleteForm);
+            }
             menu.exec(opener->mapToGlobal(pos));
          });
       #pragma endregion
