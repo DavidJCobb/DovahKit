@@ -7,6 +7,9 @@
 
 namespace dovah::load_order_interfaces {
    void form_load::log_load_warning(notices::base_form_load_warning& notice) {
+      if (this->is_during_file_save_cleanup) {
+         return;
+      }
       notice.record_info.is_winning_record = this->is_winning_record;
       if (this->current_file && notice.record_info.source_file.empty()) {
          notice.record_info.source_file = this->current_file->get_filename();

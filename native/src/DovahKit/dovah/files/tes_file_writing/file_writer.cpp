@@ -787,7 +787,13 @@ namespace dovah::tes_file_writing {
             this->_write_game_settings();
             continue;
          }
-         if (form_type_info::lookup(form_type).flags & form_type_info::flag::is_singleton) { // special case
+         const auto& type_info = form_type_info::lookup(form_type);
+         if (this->config.output_game != game::skyrim_special) {
+            if (type_info.flags & form_type_info::flag::is_skyrim_special) {
+               continue;
+            }
+         }
+         if (type_info.flags & form_type_info::flag::is_singleton) { // special case
             //
             // Singleton forms need special handling. We should only write out the "canonical" form stub, 
             // and none of the others.

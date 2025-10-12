@@ -293,7 +293,19 @@ namespace dovah::load_order_processes {
          //
          bool is_none_stub = stub->is_none_stub();
          try {
-            auto request = active_load_order.request_form_deletion(*stub); // this will also sever any uses of the form, which will prevent dangling stub pointers in any already-loaded "user" forms
+            //
+            // We reuse `form_deletion_request` to both delete the unsaved form and sever any inbound uses of 
+            // the form, which will prevent dangling stub pointers in any already-loaded "user" forms.
+            // 
+            // By default, form stubs don't let you load them mid-load or mid-save. Through the passkey idiom, 
+            // they make special exemptions to that rule for certain internal processes related to loading and 
+            // saving; so we have to construct a form deletion request which takes advantage of that, by using 
+            // a passkey dedicated to that specific purpose (so WE use a passkey to make a REQUEST that uses a 
+            // passkey to be able to load forms' data mid-save, so we can update it as part of deleting a form).
+            // 
+            //auto request = active_load_order.request_form_deletion(*stub);
+            form_deletion_request request(form_deletion_request::file_save_passkey{}, *this, *stub);
+            request.set_is_mid_save_cleanup({});
             request.commit();
          } catch (const exceptions::form_deletion_failed& ex) {
             if (is_none_stub)

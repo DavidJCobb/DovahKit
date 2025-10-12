@@ -5,15 +5,42 @@
 #include "../form_stub.h"
 #include "../form_stub_addenda.h"
 #include "../exceptions/form_deletion_failed.h"
+#include "../load_order_processes/file_save.h"
+#include "../forms/factories/construct.h" // can_load_form_data
 
 namespace {
    using exception  = dovah::exceptions::form_deletion_failed;
    using error_code = exception::error_code;
 }
 
+// We could define a template function on `form_deletion_request` which returns a `loaded_form_ptr` 
+// based on this expression, but then we'd either have to include `form_stub.h` or forward-declare 
+// the loaded-form-pointer template, and I just... don't much feel like doing either right now. The 
+// former makes the form stub header more viral, and the latter is brittle (because I want to take 
+// the loaded-form-pointer template and refactor it in the future (because it sucks right now)).
+#define LOAD_FORM_FROM_STUB(stub) (this->is_mid_save_cleanup ? (stub)->load_even_if_unsafe({}) : (stub)->load())
+
 namespace dovah {
+   form_deletion_request::form_deletion_request(file_save_passkey, load_order_processes::file_save& process, form_stub& t)
+      : owner(process.active_load_order), target(t)
+   {
+      this->is_mid_save_cleanup = true;
+      this->_common_init();
+   }
    form_deletion_request::form_deletion_request(file_load_order& o, form_stub& t) : owner(o), target(t) {
-      if (!owner.active_file)
+      this->_common_init();
+   }
+   form_deletion_request::form_deletion_request(form_deletion_request&& other) noexcept : owner(other.owner), target(other.target) {
+      std::swap(this->forms_needing_delete, other.forms_needing_delete);
+      std::swap(this->seen_stubs, other.seen_stubs);
+      //
+      this->force_delete_overrides = other.force_delete_overrides;
+      this->is_mid_save_cleanup    = other.is_mid_save_cleanup;
+      //
+      this->active_file_prefix = this->owner.expected_active_file_prefix_post_save();
+   }
+   void form_deletion_request::_common_init() {
+      if (!this->owner.active_file)
          throw exception(error_code::no_active_file, this->target);
       if (this->target.is_hardcoded() || this->target.formID < minimum_plugin_form_id)
          throw exception(error_code::form_is_hardcoded, this->target);
@@ -28,21 +55,13 @@ namespace dovah {
       this->seen_stubs.insert(&this->target);
       this->_gather_others(&this->target);
    }
-   form_deletion_request::form_deletion_request(form_deletion_request&& other) : owner(other.owner), target(other.target) {
-      std::swap(this->forms_needing_delete, other.forms_needing_delete);
-      std::swap(this->seen_stubs, other.seen_stubs);
-      //
-      this->force_delete_overrides = other.force_delete_overrides;
-      //
-      this->active_file_prefix = this->owner.expected_active_file_prefix_post_save();
-   }
    bool form_deletion_request::_form_should_be_flagged(form_stub& stub) noexcept {
       if (this->force_delete_overrides)
          return false;
       if (stub.is_hardcoded()) // we don't currently allow any kind of deletion of hardcoded forms, but it never hurts to be prepared for what might change
          return true;
       if (!this->active_file_prefix.contains_form_id(stub.formID)) {
-         if (stub.file_list_includes(this->owner.active_file))
+         if (stub.get_file_at_index(0) == this->owner.active_file)
             //
             // A form can be defined in the active file yet stored outside of the active 
             // file's ID range if it's an injected record.
@@ -61,7 +80,8 @@ namespace dovah {
       if (!start)
          start = &this->target;
       //
-      if (!start->load()) {
+
+      if (!can_load_form_data(start->form_type)) {
          auto ex = exception(error_code::unimplemented_form_type, this->target);
          ex.details.referent = start;
          throw ex;
@@ -74,7 +94,7 @@ namespace dovah {
             continue;
          this->seen_stubs.insert(entry.other);
          //
-         if (!entry.other->load()) { // Check to ensure we can load all users.
+         if (!LOAD_FORM_FROM_STUB(entry.other)) { // Check to ensure we can load all users.
             auto ex = exception(error_code::cannot_load_all_users_of_this_form, this->target);
             ex.details.referent = start;
             ex.details.referrer = entry.other;
@@ -131,17 +151,22 @@ namespace dovah {
       for (auto& pair : stub.inbound) {
          auto& entry = pair.second;
          auto* other = entry.other;
-         auto  form = other->load();
          pending.push_back(other); // gather forms to process later. we don't want to sever refs now, as that will change use info and potentially invalidate iterators during the loop
          if (other->addenda)
             other->addenda->sever_references_to_deleted_form(stub, flag);
          other->set_edited(true);
       }
       for (auto* user : pending) {
-         auto form = user->load();
+         auto form = LOAD_FORM_FROM_STUB(user);
+         assert(!!form); // our caller, form_deletion_request::commit, is not allowed to fail
          form->sever_outbound_references_to(stub);
       }
    }
+
+   void form_deletion_request::set_is_mid_save_cleanup(file_save_passkey) {
+      this->is_mid_save_cleanup = true;
+   }
+
    std::vector<form_stub*> form_deletion_request::get_forms_pending_delete(bool include_flagged) const noexcept {
       std::vector<form_stub*> out;
       if (include_flagged)
@@ -191,7 +216,7 @@ namespace dovah {
       for (auto* stub : this->forms_needing_flag) {
          this->_prep_for_delete(*stub, true);
          //
-         stub->load()->friendly_delete_override(this->owner);
+         LOAD_FORM_FROM_STUB(stub)->friendly_delete_override(this->owner);
          stub->set_edited(true);
       }
    }

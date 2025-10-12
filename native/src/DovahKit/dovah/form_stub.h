@@ -14,6 +14,7 @@
 #include "./files/common.h"
 
 #include "./form_stubs/passkeys/build_use_info_during_load.h"
+#include "./form_stubs/passkeys/do_custom_parse_during_load.h"
 #include "./form_stubs/passkeys/force_form_load.h"
 
 namespace dovah {
@@ -172,8 +173,8 @@ namespace dovah {
 
          loaded_form_ptr<loaded_forms::Form> load_even_if_unsafe(form_stub_passkeys::force_form_load);
 
-         void do_custom_parse_during_serialization(
-            form_stub_passkeys::force_form_load,
+         void do_custom_parse_during_load(
+            form_stub_passkeys::do_custom_parse_during_load,
             tes_file_reading::basic_reader* reader,
             custom_parse_functor_type loader
          ) noexcept;

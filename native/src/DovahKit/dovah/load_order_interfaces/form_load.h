@@ -32,6 +32,15 @@ namespace dovah::load_order_interfaces {
          bool     is_partial_record = false; // you could also check the record flags, but there are certain cases where the flag should be ignored, and this bool better reflects those
          uint32_t last_record_flags = 0;
 
+      protected:
+         // Is this load occurring during the cleanup phase of a file-save operation? If 
+         // so, we shouldn't log anything. The main case here is during the cleanup phase 
+         // of a file-save operation, wherein form data is loaded so that we can delete 
+         // unsaved forms from memory. We want to avoid actually logging any warnings 
+         // because those warnings may include pointers to the to-be-deleted form, which 
+         // will be left dangling.
+         bool is_during_file_save_cleanup = false;
+
       public:
          void log_load_warning(notices::base_form_load_warning&);
          

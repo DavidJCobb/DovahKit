@@ -70,7 +70,7 @@ namespace dovah::tes_file_reading {
       const auto& cells = this->owner.cells_for_current_world;
       for (size_t i = this->range.start; i < this->range.end; ++i) {
          auto& item = list[i];
-         item.refr->do_custom_parse_during_serialization({}, this, [&item, &cells](form_stub& refr, record& record, dovah::load_order_interfaces::form_load& intfc) {
+         item.refr->do_custom_parse_during_load({}, this, [&item, &cells](form_stub& refr, record& record, dovah::load_order_interfaces::form_load& intfc) {
             if (!intfc.is_winning_record)
                return;
             float x = 0.0;

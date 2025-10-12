@@ -106,6 +106,9 @@ namespace dovah {
          return loaded_form_ptr<loaded_forms::Form>(this); // no source files (this should never occur; it is only possible while the stub is being built)
       //
       auto  intfc  = load_order_interfaces::form_load(lo, *this);
+      if (force) {
+         intfc.is_during_file_save_cleanup = true;
+      }
       auto* loader = get_form_loader_function(this->form_type);
       if (!loader)
          return loaded_form_ptr<loaded_forms::Form>(this); // load failed
@@ -236,8 +239,8 @@ namespace dovah {
       this->_do_custom_parse_impl(reader, loader);
    }
 
-   void form_stub::do_custom_parse_during_serialization(
-      form_stub_passkeys::force_form_load,
+   void form_stub::do_custom_parse_during_load(
+      form_stub_passkeys::do_custom_parse_during_load,
       tes_file_reading::basic_reader* reader,
       custom_parse_functor_type loader
    ) noexcept {

@@ -8792,6 +8792,24 @@
     <ClInclude Include="helpers\scope_guards\success.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_base_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\graph_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\action_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\idle_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\loose_container_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_stubs\passkeys\do_custom_parse_during_load.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
