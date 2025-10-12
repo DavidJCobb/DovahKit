@@ -546,6 +546,10 @@ namespace dovahkit::subsystems::worldedit {
    }
 
    void core::_center_camera_on_cell(dovah::form_stub& stub) {
+      if (!this->target_view) {
+         return;
+      }
+
       auto* loaded = this->_get_loaded_cell_info(stub);
 
       glm::vec3 centroid = { 0, 0, 0 };
