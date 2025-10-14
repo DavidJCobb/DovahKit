@@ -12,6 +12,10 @@ namespace IdleAnimationFormsModel_impl {
       public:
          idle_node() : node(node_type::idle) {}
 
+         virtual size_t index_of_child(const node&) const override;
+         virtual const node* nth_child(size_t) const override;
+         virtual void update_cached_form_data() override;
+
       public:
          dovah::form_stub* stub = nullptr;
          struct {
