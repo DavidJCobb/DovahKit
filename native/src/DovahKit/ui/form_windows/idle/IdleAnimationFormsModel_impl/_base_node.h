@@ -11,19 +11,13 @@ namespace IdleAnimationFormsModel_impl {
          constexpr node(node_type t) : type(t) {}
       public:
          virtual ~node() {}
-         virtual size_t index_of_child(const node&) const = 0;
-         virtual const node* nth_child(size_t) const = 0;
-         virtual void update_cached_form_data() = 0;
+         virtual void update_cached_form_data() {}
 
          const node_type type;
-         node* parent = nullptr;
-
-         node* nth_child(size_t n) {
-            return const_cast<node*>(std::as_const(*this).nth_child(n));
-         }
 
          template<node_type Enum>
          const utils::node_type_from_enum<Enum>* as() const noexcept;
+
          template<node_type Enum>
          utils::node_type_from_enum<Enum>* as() noexcept;
    };

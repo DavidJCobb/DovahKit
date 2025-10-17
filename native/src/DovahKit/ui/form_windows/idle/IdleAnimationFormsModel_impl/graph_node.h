@@ -1,25 +1,22 @@
 #pragma once
 #include <memory>
-#include <vector>
 #include <QString>
-#include "./_base_node.h"
-#include "./action_node.h"
-#include "./loose_container_node.h"
+#include "./action_parent_node.h"
 
 namespace IdleAnimationFormsModel_impl {
-   class graph_node : public node {
+   class graph_node final : public action_parent_node {
       public:
          graph_node();
+         ~graph_node();
 
-         virtual size_t index_of_child(const node&) const override;
-         virtual const node* nth_child(size_t) const override;
          virtual void update_cached_form_data() override;
+
+         void insert_loose_idle(node_unique_ptr<idle_node>&&);
 
       public:
          QString path; // behavior graph file path
          struct {
-            std::vector<std::unique_ptr<action_node>> actions;
-            std::unique_ptr<loose_container_node> loose;
-         } children;
+            node_unique_ptr<loose_idle_parent_node> idles;
+         } loose;
    };
 }

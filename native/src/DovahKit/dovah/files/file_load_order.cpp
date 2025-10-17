@@ -1761,7 +1761,7 @@ namespace dovah {
       if (!decltype(this->forms_by_type)::supports_form_type(form_type))
          return false;
       if (!this->active_file)
-         return;
+         return false;
 
       auto& list = this->active_file_forms_by_type[form_type].forms;
       for (auto& pair : list) {

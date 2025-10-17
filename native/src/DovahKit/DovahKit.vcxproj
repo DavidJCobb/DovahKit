@@ -953,6 +953,13 @@
     <ClCompile Include="ui\form_windows\furniture\FurnitureMarkersModel.cpp" />
     <ClCompile Include="ui\form_windows\grass.cpp" />
     <ClCompile Include="ui\form_windows\hazard.cpp" />
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel.cpp" />
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\action_node.cpp" />
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\action_parent_node.cpp" />
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\graph_node.cpp" />
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\idle_node.cpp" />
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\idle_parent_node.cpp" />
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_unique_ptr_utils.cpp" />
     <ClCompile Include="ui\form_windows\idle_marker.cpp" />
     <ClCompile Include="ui\form_windows\impact_data.cpp" />
     <ClCompile Include="ui\form_windows\ingredient.cpp" />
@@ -1078,6 +1085,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\filter_object_selection_by_scriptname.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\form_info_cache.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\idle_animations_model.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\load_nif.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\papyrus_subsystem.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\pex_parsing_benchmarks.cpp" />
@@ -1887,11 +1895,19 @@
     <QtMoc Include="ui\form_windows\eyes.h" />
     <QtMoc Include="ui\form_windows\furniture\FurnitureMarkersModel.h" />
     <QtMoc Include="ui\form_windows\furniture.h" />
+    <QtMoc Include="ui\form_windows\idle\IdleAnimationFormsModel.h" />
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\action_node.h" />
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\action_parent_node.h" />
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\graph_node.h" />
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\idle_node.h" />
-    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\loose_container_node.h" />
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\idle_parent_node.h" />
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\node_type.h" />
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\node_type_x_macro.define.h" />
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\node_type_x_macro.undef.h" />
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\utils\node_type_from_enum.h" />
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_base_node.h" />
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_unique_ptr_utils.h" />
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_parent_node_mixin.h" />
     <ClInclude Include="ui\form_windows\lens_flare\LensFlareSpritesModel.h" />
     <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h" />
     <QtMoc Include="ui\form_windows\potion.h" />
@@ -2071,6 +2087,7 @@
     <QtMoc Include="ui\form_windows\volumetric_lighting.h" />
     <ClInclude Include="ui\form_windows\weather\WeatherIntpackedFloatEditor.h" />
     <ClInclude Include="ui\form_windows\weather\WeatherSoundsModel.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\idle_animations_model.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_float_slider.h" />
@@ -3671,6 +3688,10 @@
       <SubType>
       </SubType>
     </None>
+    <None Include="dovah\_docs\game data file format\file header.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovah\_docs\locations.md">
       <SubType>
       </SubType>
@@ -3863,6 +3884,8 @@
     <None Include="shaders\util\oit-composite.frag.spv" />
     <None Include="shaders\util\scene-fog-color-far.frag" />
     <None Include="shaders\util\scene-fog-color-far.frag.spv" />
+    <None Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_base_node.inl" />
+    <None Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_parent_node_mixin.inl" />
     <None Include="ui\form_windows\quest\QuestAllDialogueDatastore.inl" />
     <None Include="ui\form_windows\quest\QuestAllDialogueModel.md" />
     <None Include="ui\form_windows\_base.inl" />

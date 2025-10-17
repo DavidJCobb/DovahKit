@@ -5,8 +5,7 @@ namespace IdleAnimationFormsModel_impl {
       action,
       idle,
 
-      // Container node for Idles whose parents are either an 
-      // Action, or non-existent.
-      loose_container,
+      loose_action_container,
+      loose_idle_container,
    };
 }

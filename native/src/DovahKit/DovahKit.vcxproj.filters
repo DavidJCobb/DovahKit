@@ -3594,6 +3594,30 @@
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\topic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\action_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\action_parent_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\graph_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\idle_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\idle_parent_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\idle_animations_model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_unique_ptr_utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8804,10 +8828,34 @@
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\idle_node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\loose_container_node.h">
+    <ClInclude Include="dovah\form_stubs\passkeys\do_custom_parse_during_load.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\form_stubs\passkeys\do_custom_parse_during_load.h">
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\action_parent_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\idle_parent_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\node_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\node_type_x_macro.define.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\node_type_x_macro.undef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\utils\node_type_from_enum.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_parent_node_mixin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\idle_animations_model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_unique_ptr_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -10167,6 +10215,9 @@
     <QtMoc Include="ui\form_windows\furniture.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ui\form_windows\idle\IdleAnimationFormsModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -10644,6 +10695,13 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="helpers\cpuinfo.md" />
+    <None Include="dovah\_docs\game data file format\file header.md" />
+    <None Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_base_node.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_parent_node_mixin.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
