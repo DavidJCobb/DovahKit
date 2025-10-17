@@ -23,6 +23,9 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
    QObject::connect(&editor, &DovahKitCore::formCreated,          this, [this](dovah::form_stub* stub) { this->_on_form_created(*stub); });
    QObject::connect(&editor, &DovahKitCore::formModified,         this, [this](dovah::form_stub* stub) { this->_on_form_modified(*stub); });
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool flag) { this->_on_form_deletion_imminent(*stub, flag); });
+   if (editor.has_data()) {
+      this->import_all_idles();
+   }
 }
 
 #pragma region Node utils
@@ -308,6 +311,8 @@ void IdleAnimationFormsModel::_update_idle_node_parent(idle_node& node) {
 #pragma endregion
 
 IdleAnimationFormsModel::graph_node* IdleAnimationFormsModel::_get_or_emplace_graph(QString path, bool emit_signals_for_emplace) {
+   if (path.isEmpty())
+      return nullptr;
    auto* node = _node_for_graph_path(path);
    if (node)
       return node;
@@ -399,7 +404,9 @@ void IdleAnimationFormsModel::import_idle(dovah::form_stub& idle, bool emit_sign
 
    auto  node_for_idle_ptr = make_unique<idle_node>();
    auto& node_for_idle     = *node_for_idle_ptr.get();
+   node_for_idle.stub = &idle;
    this->idle_forms_to_nodes[&idle] = &node_for_idle;
+   node_for_idle.update_cached_form_data();
 
    if (loaded->parent) {
       auto* parent_form = loaded->parent.get_form_stub();
@@ -464,6 +471,7 @@ void IdleAnimationFormsModel::import_idle(dovah::form_stub& idle, bool emit_sign
             this->endInsertRows();
          }
       }
+      loose_parent = loose_ptr.get();
    }
    this->_insert_idle_into(std::move(node_for_idle_ptr), *loose_parent, emit_signals);
 }
@@ -560,8 +568,13 @@ void IdleAnimationFormsModel::import_all_idles() {
       }
       /*virtual*/ int IdleAnimationFormsModel::rowCount(const QModelIndex& parent) const /*override*/ {
          const auto* node = _node_for_qmi(parent);
-         if (!node)
-            return 0;
+         if (!node) {
+            return (
+               this->nodes.graphs.size() +
+               (!!this->nodes.loose.actions ? 1 : 0) +
+               (!!this->nodes.loose.idles   ? 1 : 0)
+            );
+         }
          size_t size = 0;
          if (auto* casted = dynamic_cast<const action_parent_node*>(node)) {
             size = casted->children.size();
@@ -630,6 +643,13 @@ void IdleAnimationFormsModel::import_all_idles() {
       }
    #pragma endregion
    /*virtual*/ QVariant IdleAnimationFormsModel::headerData(int section, Qt::Orientation orientation, int role) const /*override*/ {
+      if (orientation == Qt::Orientation::Horizontal && section == 0) {
+         switch (role) {
+            case Qt::DisplayRole:
+            case Qt::ToolTipRole:
+               return tr("Animations");
+         }
+      }
       return {};
    }
    #pragma region Drag and drop
