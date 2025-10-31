@@ -3618,6 +3618,18 @@
     <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_unique_ptr_utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\datastores\idles\graph_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\datastores\idles\action_parent_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\datastores\idles.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\datastores\idles\idle_parent_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8858,6 +8870,66 @@
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_unique_ptr_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\utils\idle_tree_builder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\idle_parent_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\idle_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\action_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\action_parent_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\graph_node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\config\sort_during_initial_insertion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\passkeys\idle_sorting.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\warnings\cyclical_parent_relationships.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\warnings\_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\warnings\cyclical_sibling_relationships.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\warnings\orphaned_idle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\warnings\siblings_have_mismatched_parents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\warnings\sibling_is_an_ancestor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\warnings\inconsistent_parentage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\warnings\previous_sibling_is_not_as_expected.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\warnings\idle_has_multiple_next_siblings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -10282,6 +10354,7 @@
     <Text Include="helpers\ini\INI file grammar win32.txt" />
     <Text Include="dovah\_docs\interior cell coordinate limits.md" />
     <Text Include="dovah\_docs\engine code transliterations\how TESModelTextureSwaps are applied.txt" />
+    <Text Include="dovah\_docs\engine code transliterations\how the idle tree is constructed.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
@@ -10702,6 +10775,16 @@
     <None Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_parent_node_mixin.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="dovah\utils\idle_tree_builder.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\datastores\idles\action_parent_node.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\datastores\idles\idle_parent_node.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\_docs\idle animations\idle tree construction.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

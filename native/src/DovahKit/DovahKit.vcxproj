@@ -137,6 +137,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovah\datastores\idles.cpp" />
+    <ClCompile Include="dovah\datastores\idles\action_parent_node.cpp" />
+    <ClCompile Include="dovah\datastores\idles\graph_node.cpp" />
+    <ClCompile Include="dovah\datastores\idles\idle_parent_node.cpp" />
     <ClCompile Include="dovah\exceptions\form_creation_failed.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.tests.cpp" />
@@ -1352,6 +1356,25 @@
     <ClCompile Include="widgets\widget-models\DKTopicOrSubtypePicker\DKTopicOrSubtypePickerModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovah\datastores\idles.h" />
+    <ClInclude Include="dovah\datastores\idles\action_node.h" />
+    <ClInclude Include="dovah\datastores\idles\action_parent_node.h" />
+    <ClInclude Include="dovah\datastores\idles\config\sort_during_initial_insertion.h" />
+    <ClInclude Include="dovah\datastores\idles\graph_node.h" />
+    <ClInclude Include="dovah\datastores\idles\idle_node.h" />
+    <ClInclude Include="dovah\datastores\idles\idle_parent_node.h" />
+    <ClInclude Include="dovah\datastores\idles\node.h" />
+    <ClInclude Include="dovah\datastores\idles\passkeys\idle_sorting.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\cyclical_sibling_relationships.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\idle_has_multiple_next_siblings.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\inconsistent_parentage.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\orphaned_idle.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\previous_sibling_is_not_as_expected.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\siblings_have_mismatched_parents.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\sibling_is_an_ancestor.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\_base.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\cyclical_parent_relationships.h" />
+    <ClInclude Include="dovah\datastores\idles\_all.h" />
     <ClInclude Include="dovah\data\all_base_form_types.h" />
     <ClInclude Include="dovah\data\all_carryable_form_types.h" />
     <ClInclude Include="dovah\data\all_item_form_types.h" />
@@ -1806,6 +1829,7 @@
     <ClInclude Include="dovah\notices\_util.define.h" />
     <ClInclude Include="dovah\notices\_util.undef.h" />
     <ClInclude Include="dovah\use_info_entry.h" />
+    <ClInclude Include="dovah\utils\idle_tree_builder.h" />
     <ClInclude Include="dovah\utils\magic_effect_list_item_cost_calculator.h" />
     <ClInclude Include="dovah\utils\cell_grid_position.h" />
     <ClInclude Include="dovah\utils\compute_classed_stat_points.h" />
@@ -3586,6 +3610,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="dovah\_docs\engine code transliterations\how TESModelTextureSwaps are applied.txt" />
+    <Text Include="dovah\_docs\engine code transliterations\how the idle tree is constructed.txt" />
     <Text Include="dovah\_docs\interior cell coordinate limits.md" />
     <Text Include="editor\subsystems\worldinput\_docs\bind tree.txt" />
     <Text Include="dovah\_docs\form stub addenda.txt" />
@@ -3642,6 +3667,8 @@
     <None Include="cpp.hint" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\bs_hash.inl" />
+    <None Include="dovah\datastores\idles\action_parent_node.inl" />
+    <None Include="dovah\datastores\idles\idle_parent_node.inl" />
     <None Include="dovah\data\conditions\all_function_info.md" />
     <None Include="dovah\data\conditions\all_parameter_types.md" />
     <None Include="dovah\data\dialogue\category.inl" />
@@ -3682,6 +3709,7 @@
     <None Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.md" />
     <None Include="dovah\utils\cell_grid_position.inl" />
     <None Include="dovah\utils\file_prefix.inl" />
+    <None Include="dovah\utils\idle_tree_builder.inl" />
     <None Include="dovah\_docs\common form flags.md" />
     <None Include="dovah\_docs\compiled script files.md" />
     <None Include="dovah\_docs\enchanting.md">
@@ -3689,6 +3717,10 @@
       </SubType>
     </None>
     <None Include="dovah\_docs\game data file format\file header.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\idle animations\idle tree construction.md">
       <SubType>
       </SubType>
     </None>

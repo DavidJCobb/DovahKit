@@ -1,0 +1,282 @@
+
+
+void GlobalIdleManager::post_load_build() {
+   //
+   // Ensure all idles are initialized. (DovahKit doesn't need this.)
+   //
+   {
+      const auto size = pending_idles.size();
+      for(size_t i = 0; i < size; ++i) {
+         auto* idle = pending_idles[i];
+         if (idle && !idle->is_initialized()) {
+            idle->initialize();
+            continue;
+         }
+         pending_idles.erase(pending_idles.begin() + i);
+         --i;
+         --size;
+      }
+   }
+   //
+   // Build hierarchy.  Retain idles that fail, so we can retry them 
+   // later. (But this runs after all files load? When would we ever 
+   // retry?)
+   //
+   {
+      const auto size = pending_idles.size();
+      for(size_t i = 0; i < size; ++i) {
+         auto* idle = pending_idles[i];
+         if (idle && idle->insert_into_parent()) {
+            continue;
+         }
+         pending_idles.erase(pending_idles.begin() + i);
+         --i;
+         --size;
+      }
+   }
+   //
+   // Validate hierarchy.
+   //
+   for(std::pair<BSFixedString, BehaviorGraphNode*>& pair : this->graphs) {
+      if (!pair.second)
+         continue;
+      for(auto* idle : pair.action_roots) {
+         if (!idle)
+            continue;
+         if (idle->parent_idle) {
+            warn("Invalid parent idle on root idle %s", idle);
+         }
+         idle->check_parentage(&pair.action_roots);
+      }
+   }
+}
+
+NiFormArray* GlobalIdleManager::get_loose_idle_list(TESIdleForm* idle) {
+   if (!idle)
+      return nullptr;
+   auto* graph = this->GetLooseIdleParent(idle);
+   if (!graph)
+      return nullptr;
+   return &graph->loose_idles;
+}
+NiFormArray* GlobalIdleManager::get_or_create_loose_idle_list(TESIdleForm* idle) {
+   auto* loose = this->get_loose_idle_parent(idle);
+   if (!loose) {
+      this->get_or_create_behavior_graph_info(idle);
+      loose = this->get_loose_idle_parent(idle);
+   }
+   return loose;
+}
+
+bool TESIdleForm::insert_into_parent() {
+   if (this->unk26 & 1) { // handle loose idles?
+      auto* loose = ptrGlobalIdleManager->get_or_create_loose_idle_list(idle);
+      if (!loose) {
+         error("Failed to find loose idle array for '%s' (%08X)", this, this->formID);
+         return false;
+      }
+      loose->push_back(this);
+      return true;
+   }
+   
+   NiFormArray* sibling_list = nullptr;
+   
+   std::set<TESIdleForm*> seen;
+   for(auto* current = this->parent_idle; current; current = current->parent_idle) {
+      if (seen.contains(current)) {
+         error("Infinite loop detected in init for %s.", this);
+         this->parent_idle      = nullptr;
+         this->previous_sibling = nullptr;
+         goto after_validate_hierarchy;
+      }
+      seen.insert(current);
+   }
+   for(auto* current = this->previous_sibling; current; current = current->previous_sibling) {
+      bool infinite_loop = seen.contains(current);
+      bool mismatched    = current->parent_idle != this->parent_idle;
+      if (infinite_loop || mismatched) {
+         if (infinite_loop) {
+            error("Infinite loop detected in init for %s.", this);
+         } else if (mismatched) {
+            error("Invalid prev idle '%s' (%08X) detected in init for %s.", current, current->formID, this);
+         }
+         sibling_list = ptrGlobalIdleManager->get_or_create_loose_idle_list(this);
+         if (!sibling_list) {
+            sibling_list = ptrGlobalIdleManager->get_or_create_loose_idle_list(this->parent_idle);
+            if (!sibling_list) {
+               sibling_list = ptrGlobalIdleManager->get_or_create_loose_idle_list(this->previous_sibling);
+            }
+         }
+         this->parent_idle      = nullptr;
+         this->previous_sibling = nullptr;
+         goto after_validate_hierarchy;
+      }
+      seen.insert(current);
+   }
+   
+after_validate_hierarchy:
+   if (!this->parent_idle) {
+      if (!ptrGlobalIdleManager->idle_is_action_root(this)) {
+         error("Idle '%s' has no parent and is not an action root.", this);
+         if (!sibling_list)
+            sibling_list = ptrGlobalIdleManager->get_or_create_loose_idle_list(this);
+         if (sibling_list) {
+            sibling_list->push_back(this);
+         }
+         return false;
+      }
+      return true;
+   }
+   sibling_list = this->parent_idle->get_or_create_child_list();
+   auto index = sibling_list->index_of(this->previous_sibling);
+   if (index != -1) {
+      sibling_list->insert_at(index + 1);
+   } else {
+      sibling_list->push_back(this);
+   }
+   this->re_sort_all_next_siblings(sibling_list);
+   return true;
+}
+
+void TESIdleForm::re_sort_all_next_siblings(NiFormArray* sibling_list) {
+   constexpr const bool strip_nulls_only_once = false;
+   
+   if (!sibling_list)
+      return;
+   
+   if constexpr (strip_nulls_only_once) {
+      sibling_list->strip_nulls_and_shrink();
+   }
+   
+   /*
+   
+      To understand why this function doesn't just move `this` within the sibling 
+      list, we need to consider an idle list. Imagine we have a list of these idles:
+      
+         [A, B, C, D, E]
+         
+      However, they load in the order A, D, C, B, E. Each idle inserts itself after 
+      its previous sibling *if* its previous sibling is in the sibling list, and it 
+      gets appended otherwise, so we end up with this:
+      
+         [A]
+         [A, D]
+         [A, D, C]        // previous sibling B not found; append
+         [A, B, D, C]
+      
+      Having just inserted B, we now call `B->re_sort_all_next_siblings()`. The loop 
+      in this function begins by treating B as the `current_idle`; the next idle is 
+      thus C, and we attempt to move C to a spot directly after B:
+      
+         [A, B, D, C]
+         [A, D, B]
+         [A, D, B, C]
+      
+      We then set C as the `current_idle`, and walk the array again. The next idle is 
+      thus D, which we attempt to move after C:
+      
+         [A, D, B, C]
+         [A, B, C]
+         [A, B, C, D]
+      
+      We then set D as the `current_idle`, and walk the array again. We don't find a 
+      next idle, so we stop. (Similarly, if the next idle was already where it should 
+      be, then we'd stop as well. If we reach a point where the next idle doesn't need 
+      to move, then logically, nothing that belongs after it needs to move either.)
+      
+      Bethesda is doing this every time they insert any idle as a new child to a given 
+      parent, rather than first inserting each child and then recursively walking the 
+      behavior graph tree to sort the children. I *believe* the results *should* be 
+      the same, though? Except that if an idle is wholly orphaned and lacks an ANAM 
+      subrecord, it would still be sorted by this process, whereas a recursive sort 
+      wouldn't handle it (because Bethesda doesn't seem to bother tracking IDLEs that 
+      lack an ANAM; I assume they consider that *completely* invalid).
+   
+   */
+   
+   TESIdleForm* current_idle = this;
+   do {
+      uint32_t     current_idle_index = -1;
+      TESIdleForm* next_idle          = nullptr;
+      uint32_t     next_idle_index    = -1;
+      uint32_t     null_sibling_count =  0;
+      for(uint32_t i = 0; i < sibling_list->size(); ++i) {
+         TESIdleForm* candidate_idle = dynamic_cast<TESIdleForm*>(sibling_list->get_nth(i));
+         if (!candidate_idle) {
+            ++null_sibling_count;
+            continue;
+         }
+         if (candidate_idle == current_idle) {
+            current_idle_index = i;
+            continue;
+         }
+         if (candidate_idle->previous_sibling == current_idle) {
+            if (next_idle) {
+               error("Multiple next idles for %s.", current_idle);
+            } else {
+               next_idle       = candidate_idle;
+               next_idle_index = i;
+            }
+         }
+      }
+      if (next_idle_index == -1) // no next idle?
+         break;
+      if (next_idle_index == current_idle_index + 1) // next idle is already where it should be?
+         break;
+      if constexpr (strip_nulls_only_once) {
+         array->move(next_idle_index, current_idle_index + 1);
+      } else {
+         //
+         // Remove the next idle from the list by setting that list index to null 
+         // and then stripping all nulls. Then, re-insert the next idle into the 
+         // list.
+         //
+         // This branch requires `null_sibling_count` because if there are already 
+         // nulls in the list, then those will be stripped too, so we need to know 
+         // by how much to adjust our destination index.
+         //
+         // Problem: if there are non-TESIdleForm forms in the array, then we'd 
+         // increment `null_sibling_count` but they wouldn't be stripped from the 
+         // array.
+         //
+         array->set_nth(next_idle_index, nullptr);
+         array->strip_nulls_and_shrink();
+         auto dst_index = current_idle_index + 1 - null_sibling_count;
+         if (next_idle_index < current_idle_index)
+            ++dst_index;
+         array->insert(array->begin() + dst_index, next_idle);
+      }
+      current_idle = next_idle;
+   } while (true);
+   
+}
+
+bool TESIdleForm::check_parentage(NiFormArray* sibling_list) {
+   if (!sibling_list)
+      return false;
+   bool valid = true;
+   if (this->parent_idle)
+      if (this->parent_idle->child_idles != sibling_list)
+         valid = false;
+   auto index = sibling_list->index_of(this);
+   if (index == -1) {
+      error("Parent array does not contain %s", this);
+      valid = false;
+   }
+   if (this->previous_sibling && (index == 0 || sibling_list->get_nth(index - 1) != this->previous_sibling)) {
+      error("Invalid prev idle on %s", this);
+      this->previous_sibling = sibling_list->get_nth(index - 1);
+      valid = false;
+   }
+   if (this->child_idles) {
+      this->child_idles->strip_nulls_and_shrink();
+      for(auto* child : *this->child_idles) {
+         auto* casted = dynamic_cast<TESIdleForm*>(child);
+         if (!casted)
+            continue;
+         if (!casted->check_parentage(this->child_idles))
+            valid = false;
+      }
+   }
+   return valid;
+}

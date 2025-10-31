@@ -14,6 +14,7 @@ namespace DovahKitDebug::features {
       
       auto* model = new IdleAnimationFormsModel(widget);
       widget->setModel(model);
+      widget->setHeaderHidden(true);
 
       layout->addWidget(widget);
       
