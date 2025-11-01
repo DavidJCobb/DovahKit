@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include "helpers/const_forwarding_ptr.h"
 #include "./node.h"
 namespace dovah {
    class form_stub;
@@ -15,7 +16,7 @@ namespace dovah::datastores::impl::idles {
          ~action_parent_node();
 
       public:
-         std::vector<action_node*> children; // owned
+         std::vector<cobb::const_forwarding_ptr<action_node>> children; // owned
 
       protected:
          static bool _sort_comparator(const action_node*, const action_node*);

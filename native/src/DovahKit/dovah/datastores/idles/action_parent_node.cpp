@@ -5,7 +5,7 @@
 
 namespace dovah::datastores::impl::idles {
    action_parent_node::~action_parent_node() {
-      for (auto*& ptr : this->children) {
+      for (auto& ptr : this->children) {
          if (!ptr)
             continue;
          delete ptr;
@@ -52,8 +52,8 @@ namespace dovah::datastores::impl::idles {
             return;
          auto i = node.parent->index_of_child(node);
          assert(i != no_index);
-         auto*& dst_ptr = this->children.emplace_back();
-         auto   src_ptr = node.parent->take_child(i);
+         auto& dst_ptr = this->children.emplace_back();
+         auto  src_ptr = node.parent->take_child(i);
          dst_ptr = src_ptr.release();
          return;
       }
@@ -62,14 +62,14 @@ namespace dovah::datastores::impl::idles {
    void action_parent_node::destroy_child(size_t i) {
       if (i >= this->children.size())
          throw std::out_of_range("Index out of range.");
-      auto* node = this->children[i];
+      action_node* node = this->children[i];
       if (node)
          delete node;
       this->children.erase(this->children.begin() + i);
    }
    size_t action_parent_node::index_of_child(const form_stub& stub) const noexcept {
       for (size_t i = 0; i < this->children.size(); ++i) {
-         auto* node = this->children[i];
+         const action_node* node = this->children[i];
          if (&node->stub == &stub)
             return i;
       }
@@ -79,7 +79,7 @@ namespace dovah::datastores::impl::idles {
       if (i >= this->children.size())
          throw std::out_of_range("Index out of range.");
       std::unique_ptr<action_node> node_ptr;
-      auto* node = this->children[i];
+      action_node* node = this->children[i];
       this->children.erase(this->children.begin() + i);
       node_ptr.reset(node);
       return node_ptr;
@@ -97,14 +97,14 @@ namespace dovah::datastores::impl::idles {
    }
    void action_parent_node::sort_descendants() {
       this->sort_children();
-      for (auto* child : this->children)
+      for (action_node* child : this->children)
          child->sort_descendants();
    }
 
    const action_node* action_parent_node::action_by_stub(const form_stub& action) const noexcept {
       if (action.form_type != form_type::action)
          return nullptr;
-      for (auto* node : this->children)
+      for (const action_node* node : this->children)
          if (&node->stub == &action)
             return node;
       return nullptr;

@@ -8,7 +8,7 @@
 
 namespace dovah::datastores::impl::idles {
    idle_parent_node::~idle_parent_node() {
-      for (auto*& ptr : this->children) {
+      for (auto& ptr : this->children) {
          if (!ptr)
             continue;
          delete ptr;
@@ -30,8 +30,8 @@ namespace dovah::datastores::impl::idles {
             return;
          auto i = node.parent->index_of_child(node);
          assert(i != no_index);
-         auto*& dst_ptr = this->children.emplace_back();
-         auto   src_ptr = node.parent->take_child(i);
+         auto& dst_ptr = this->children.emplace_back();
+         auto  src_ptr = node.parent->take_child(i);
          dst_ptr = src_ptr.release();
          return;
       }
@@ -40,14 +40,14 @@ namespace dovah::datastores::impl::idles {
    void idle_parent_node::destroy_child(size_t i) {
       if (i >= this->children.size())
          throw std::out_of_range("Index out of range.");
-      auto* node = this->children[i];
+      idle_node* node = this->children[i];
       if (node)
          delete node;
       this->children.erase(this->children.begin() + i);
    }
    size_t idle_parent_node::index_of_child(const form_stub& stub) const noexcept {
       for (size_t i = 0; i < this->children.size(); ++i) {
-         auto* node = this->children[i];
+         const idle_node* node = this->children[i];
          if (&node->stub == &stub)
             return i;
       }
@@ -57,7 +57,7 @@ namespace dovah::datastores::impl::idles {
       if (i >= this->children.size())
          throw std::out_of_range("Index out of range.");
       std::unique_ptr<idle_node> node_ptr;
-      auto* node = this->children[i];
+      idle_node* node = this->children[i];
       this->children.erase(this->children.begin() + i);
       node_ptr.reset(node);
       return node_ptr;
@@ -69,8 +69,8 @@ namespace dovah::datastores::impl::idles {
       
       size_t i = 0;
       do {
-         auto* subject  = list[i];
-         auto* previous = subject->_get_sort_state({}).previous_idle;
+         idle_node* subject  = list[i];
+         idle_node* previous = subject->_get_sort_state({}).previous_idle;
          if (!previous) {
             ++i;
             continue;
@@ -102,7 +102,7 @@ namespace dovah::datastores::impl::idles {
    }
    void idle_parent_node::sort_descendants() {
       this->sort_children();
-      for (auto* child : this->children)
+      for (idle_node* child : this->children)
          child->sort_descendants();
    }
 
@@ -115,7 +115,7 @@ namespace dovah::datastores::impl::idles {
          size_t current_index = no_index;
          size_t next_index    = no_index;
          for (size_t i = 0; i < this->children.size(); ++i) {
-            auto* subject = this->children[i];
+            idle_node* subject = this->children[i];
             if (subject == current_node) {
                current_index = i;
                continue;

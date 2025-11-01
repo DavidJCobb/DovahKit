@@ -1,4 +1,5 @@
 #pragma once
+#include "helpers/const_forwarding_ptr.h"
 #include "./idle_parent_node.h"
 #include "./passkeys/idle_sorting.h"
 namespace dovah {
@@ -11,8 +12,8 @@ namespace dovah::datastores::impl::idles {
          constexpr idle_node(form_stub& idle) : stub(idle) {}
 
       public:
-         idle_parent_node* parent = nullptr;
-         form_stub&        stub;
+         cobb::const_forwarding_ptr<idle_parent_node> parent = nullptr;
+         form_stub& stub;
       protected:
          struct {
             idle_parent_node* parent_idle   = nullptr;

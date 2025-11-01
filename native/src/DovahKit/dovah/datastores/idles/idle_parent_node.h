@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include "helpers/const_forwarding_ptr.h"
 #include "./node.h"
 namespace dovah {
    class form_stub;
@@ -19,7 +20,7 @@ namespace dovah::datastores::impl::idles {
          ~idle_parent_node();
 
       public:
-         std::vector<idle_node*> children; // owned
+         std::vector<cobb::const_forwarding_ptr<idle_node>> children; // owned
 
       public:
          // The to-be-appended node must not have a parent.
