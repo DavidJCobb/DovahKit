@@ -63,7 +63,10 @@ namespace dovah::datastores {
          ~idles();
 
          void build(file_load_order&);
-         void clear();
+         void reset();
+
+      protected:
+         void _clear();
 
       protected:
          #pragma region Initial build
@@ -108,7 +111,7 @@ namespace dovah::datastores {
             const graph_node* graph_by_path(std::string_view) const noexcept;
             graph_node* graph_by_path(std::string_view) noexcept;
             //
-            graph_node* get_or_create_graph_by_path(std::string_view);
+            graph_node* get_or_create_graph_by_path(std::string_view); // can fail and return nullptr for an empty path
          #pragma endregion
          #pragma region Loose action getters
             const action_node* loose_action(dovah::form_stub&) const noexcept;

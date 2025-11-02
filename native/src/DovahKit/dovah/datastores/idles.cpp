@@ -30,11 +30,11 @@ namespace dovah::datastores {
       this->loose.idles   = new idle_parent_node;
    }
    idles::~idles() {
-      this->clear();
+      this->_clear();
    }
 
    void idles::build(file_load_order& lo) {
-      this->clear();
+      this->reset();
       //
       // Pre-create all idle nodes.
       //
@@ -83,9 +83,16 @@ namespace dovah::datastores {
       }
       // (The CK doesn't do this validation step for idles that are wholly orphaned and not in any graph.)
    }
-   void idles::clear() {
+   void idles::reset() {
       if (auto& callback = this->callbacks.on_cleared.before; callback)
          (callback)();
+      this->_clear();
+      this->loose.actions = new action_parent_node;
+      this->loose.idles   = new idle_parent_node;
+      if (auto& callback = this->callbacks.on_cleared.after; callback)
+         (callback)();
+   }
+   void idles::_clear() {
       this->idles_by_stub.clear();
       for (auto*& ptr : this->graphs) {
          if (!ptr)
@@ -107,8 +114,6 @@ namespace dovah::datastores {
          delete ptr;
          ptr = nullptr;
       }
-      if (auto& callback = this->callbacks.on_cleared.after; callback)
-         (callback)();
    }
 
    #pragma region Initial build
@@ -138,7 +143,7 @@ namespace dovah::datastores {
          parent_node->append_child(node);
       }
       void idles::_place_child_idle(idle_node& child_idle, const loaded_idle_type& loaded_idle) {
-         auto* graph = graph_by_path(loaded_idle.filename);
+         auto* graph = this->get_or_create_graph_by_path(loaded_idle.filename);
 
          dovah::form_stub* parent   = loaded_idle.parent.get_form_stub();
          dovah::form_stub* previous = loaded_idle.previous_sibling.get_form_stub();
@@ -342,6 +347,8 @@ namespace dovah::datastores {
          auto* graph = this->graph_by_path(path);
          if (graph)
             return graph;
+         if (path.empty())
+            return nullptr;
          auto& pointer = this->graphs.emplace_back();
          pointer = new graph_node;
          pointer->path = path;

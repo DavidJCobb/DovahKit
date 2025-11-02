@@ -58,6 +58,7 @@ namespace dovah::datastores::impl::idles {
          return;
       }
       this->children.emplace_back() = &node;
+      node.parent = this;
    }
    void action_parent_node::destroy_child(size_t i) {
       if (i >= this->children.size())

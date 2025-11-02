@@ -36,6 +36,7 @@ namespace dovah::datastores::impl::idles {
          return;
       }
       this->children.emplace_back() = &node;
+      node.parent = this;
    }
    void idle_parent_node::destroy_child(size_t i) {
       if (i >= this->children.size())
@@ -137,8 +138,13 @@ namespace dovah::datastores::impl::idles {
          cobb::vectors::move_item_within(
             this->children,
             next_index,
-            (int)(current_index + 1) - next_index
+            (int)(current_index) - next_index
          );
-      } while (current_node = next_node);
+         //
+         // Move on to next.
+         //
+         current_node = next_node;
+         next_node    = nullptr;
+      } while (current_node);
    }
 }
