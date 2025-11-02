@@ -33,6 +33,7 @@ namespace dovah::datastores::impl::idles {
          auto& dst_ptr = this->children.emplace_back();
          auto  src_ptr = node.parent->take_child(i);
          dst_ptr = src_ptr.release();
+         node.parent = this;
          return;
       }
       this->children.emplace_back() = &node;
@@ -53,6 +54,35 @@ namespace dovah::datastores::impl::idles {
             return i;
       }
       return no_index;
+   }
+   void idle_parent_node::insert_child_at(idle_node& idle, size_t at) {
+      if (at >= this->children.size()) {
+         this->append_child(idle);
+         return;
+      }
+      if (idle.parent == this) {
+         size_t from = this->index_of_child(idle);
+         if (from == at)
+            return;
+         cobb::vectors::move_item_within(
+            this->children,
+            from,
+            (int)at - from
+         );
+         return;
+      }
+      auto  dst_it  = this->children.insert(this->children.begin() + at, nullptr);
+      auto& dst_ptr = *dst_it;
+      if (idle.parent) {
+         auto i = idle.parent->index_of_child(idle);
+         assert(i != no_index);
+         auto src_ptr = idle.parent->take_child(i);
+         dst_ptr = src_ptr.release();
+         idle.parent = this;
+         return;
+      }
+      dst_ptr = &idle;
+      idle.parent = this;
    }
    std::unique_ptr<idle_node> idle_parent_node::take_child(size_t i) {
       if (i >= this->children.size())

@@ -4,6 +4,7 @@
 #include <QTreeView>
 #include "dovah/form_stub.h"
 #include "ui/form_windows/idle/IdleAnimationFormsModel.h"
+#include "ui/form_windows/idle/IdleAnimationFormsModel_2.h"
 
 namespace DovahKitDebug::features {
    /*static*/ void idle_animations_model::execute(QWidget* from) {
@@ -12,7 +13,7 @@ namespace DovahKitDebug::features {
       auto* widget = new QTreeView(dialog);
       QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
       
-      auto* model = new IdleAnimationFormsModel(widget);
+      auto* model = new IdleAnimationFormsModel_2(widget);
       widget->setModel(model);
       widget->setHeaderHidden(true);
 

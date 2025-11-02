@@ -18,10 +18,9 @@ namespace dovah::datastores::impl::idles {
       public:
          std::vector<cobb::const_forwarding_ptr<action_node>> children; // owned
 
-      protected:
-         static bool _sort_comparator(const action_node*, const action_node*);
-
       public:
+         static bool sort_comparator(const action_node*, const action_node*);
+
          // The to-be-appended node must not have a parent.
          void append_child(std::unique_ptr<action_node>&&);
 

@@ -958,6 +958,7 @@
     <ClCompile Include="ui\form_windows\grass.cpp" />
     <ClCompile Include="ui\form_windows\hazard.cpp" />
     <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel.cpp" />
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_2.cpp" />
     <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\action_node.cpp" />
     <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\action_parent_node.cpp" />
     <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\graph_node.cpp" />
@@ -1089,6 +1090,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\filter_object_selection_by_scriptname.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\form_info_cache.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\idles_datastore.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\idle_animations_model.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\load_nif.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\papyrus_subsystem.cpp" />
@@ -1829,7 +1831,6 @@
     <ClInclude Include="dovah\notices\_util.define.h" />
     <ClInclude Include="dovah\notices\_util.undef.h" />
     <ClInclude Include="dovah\use_info_entry.h" />
-    <ClInclude Include="dovah\utils\idle_tree_builder.h" />
     <ClInclude Include="dovah\utils\magic_effect_list_item_cost_calculator.h" />
     <ClInclude Include="dovah\utils\cell_grid_position.h" />
     <ClInclude Include="dovah\utils\compute_classed_stat_points.h" />
@@ -1899,6 +1900,7 @@
     <QtMoc Include="ui\form_windows\actor_value_info\SkillTreeVisualEditor.h" />
     <QtMoc Include="ui\form_windows\actor_value_info\FormSubdialogActorValueInfoPerkTree.h" />
     <QtMoc Include="ui\form_windows\actor_value_info.h" />
+    <ClInclude Include="helpers\const_forwarding_ptr.h" />
     <ClInclude Include="helpers\optionals\finite_float.h" />
     <QtMoc Include="ui\form_windows\apparatus.h" />
     <ClInclude Include="helpers\scope_guards\exit.h" />
@@ -1920,6 +1922,7 @@
     <QtMoc Include="ui\form_windows\furniture\FurnitureMarkersModel.h" />
     <QtMoc Include="ui\form_windows\furniture.h" />
     <QtMoc Include="ui\form_windows\idle\IdleAnimationFormsModel.h" />
+    <QtMoc Include="ui\form_windows\idle\IdleAnimationFormsModel_2.h" />
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\action_node.h" />
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\action_parent_node.h" />
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\graph_node.h" />
@@ -2111,6 +2114,7 @@
     <QtMoc Include="ui\form_windows\volumetric_lighting.h" />
     <ClInclude Include="ui\form_windows\weather\WeatherIntpackedFloatEditor.h" />
     <ClInclude Include="ui\form_windows\weather\WeatherSoundsModel.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\idles_datastore.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\idle_animations_model.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
@@ -3709,7 +3713,6 @@
     <None Include="dovah\notices\form_load_warnings\by_form_type\dialogue_branch\mishandled_owning_quest_id.md" />
     <None Include="dovah\utils\cell_grid_position.inl" />
     <None Include="dovah\utils\file_prefix.inl" />
-    <None Include="dovah\utils\idle_tree_builder.inl" />
     <None Include="dovah\_docs\common form flags.md" />
     <None Include="dovah\_docs\compiled script files.md" />
     <None Include="dovah\_docs\enchanting.md">
@@ -3950,6 +3953,9 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="dovah\bs_hash.natvis" />
+    <Natvis Include="dovah\datastores\idles\action_node.natvis" />
+    <Natvis Include="dovah\datastores\idles\graph_node.natvis" />
+    <Natvis Include="dovah\datastores\idles\idle_node.natvis" />
     <Natvis Include="dovah\files\bsa\packed_folder_info.natvis" />
     <Natvis Include="dovah\files\pex\compiled_function.natvis" />
     <Natvis Include="dovah\files\pex\compiled_opcode.natvis" />
@@ -3988,6 +3994,7 @@
     <Natvis Include="editor\subsystems\worldinput\inputs\button.natvis" />
     <Natvis Include="editor\subsystems\worldinput\input_sequence.natvis" />
     <Natvis Include="helpers\bitfield_array.natvis" />
+    <Natvis Include="helpers\const_forwarding_ptr.natvis" />
     <Natvis Include="helpers\eight_cc.natvis" />
     <Natvis Include="helpers\enum_flags.natvis" />
     <Natvis Include="helpers\enum_in.natvis" />

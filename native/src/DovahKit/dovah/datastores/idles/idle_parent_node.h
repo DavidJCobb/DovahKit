@@ -34,6 +34,7 @@ namespace dovah::datastores::impl::idles {
          void destroy_child(size_t);
          constexpr size_t index_of_child(const idle_node&) const noexcept;
          size_t index_of_child(const form_stub&) const noexcept;
+         void insert_child_at(idle_node&, size_t);
          std::unique_ptr<idle_node> take_child(size_t);
 
          void sort_children();

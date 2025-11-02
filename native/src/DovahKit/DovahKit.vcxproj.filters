@@ -3630,6 +3630,12 @@
     <ClCompile Include="dovah\datastores\idles\idle_parent_node.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\idles_datastore.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8870,9 +8876,6 @@
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_unique_ptr_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\utils\idle_tree_builder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\datastores\idles\idle_parent_node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -8928,6 +8931,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\datastores\idles\warnings\idle_has_multiple_next_siblings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\const_forwarding_ptr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\idles_datastore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -10290,6 +10299,9 @@
     <QtMoc Include="ui\form_windows\idle\IdleAnimationFormsModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ui\form_windows\idle\IdleAnimationFormsModel_2.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -10775,9 +10787,6 @@
     <None Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_parent_node_mixin.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="dovah\utils\idle_tree_builder.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="dovah\datastores\idles\action_parent_node.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -10883,5 +10892,9 @@
     <Natvis Include="dovah\forms\structs\perk_entry_point_data.natvis" />
     <Natvis Include="helpers\enum_flags.natvis" />
     <Natvis Include="ui\types\packages\procedure_node.natvis" />
+    <Natvis Include="dovah\datastores\idles\graph_node.natvis" />
+    <Natvis Include="dovah\datastores\idles\action_node.natvis" />
+    <Natvis Include="helpers\const_forwarding_ptr.natvis" />
+    <Natvis Include="dovah\datastores\idles\idle_node.natvis" />
   </ItemGroup>
 </Project>

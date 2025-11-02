@@ -13,7 +13,7 @@ namespace dovah::datastores::impl::idles {
       }
    }
 
-   /*static*/ bool action_parent_node::_sort_comparator(const action_node* a, const action_node* b) {
+   /*static*/ bool action_parent_node::sort_comparator(const action_node* a, const action_node* b) {
       //
       // Case-insensitive sort by editor ID.
       //
@@ -55,6 +55,7 @@ namespace dovah::datastores::impl::idles {
          auto& dst_ptr = this->children.emplace_back();
          auto  src_ptr = node.parent->take_child(i);
          dst_ptr = src_ptr.release();
+         node.parent = this;
          return;
       }
       this->children.emplace_back() = &node;
@@ -93,7 +94,7 @@ namespace dovah::datastores::impl::idles {
       std::sort(
          this->children.begin(),
          this->children.end(),
-         _sort_comparator
+         sort_comparator
       );
    }
    void action_parent_node::sort_descendants() {
