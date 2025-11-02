@@ -120,6 +120,7 @@ namespace dovah::datastores::impl::idles {
       if (node)
          return node;
       auto node_ptr = std::make_unique<action_node>(stub);
+      node_ptr->parent = this;
       this->children.emplace_back(node_ptr.get());
       return node_ptr.release();
    }

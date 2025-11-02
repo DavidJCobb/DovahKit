@@ -158,10 +158,17 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
       const auto& graphs = this->_datastore.graphs;
       const auto  g_size = graphs.size();
 
-      if (&n == this->_datastore.loose.actions) {
-         return this->createIndex(g_size, column, nullptr);
-      } else if (&n == this->_datastore.loose.idles) {
-         return this->createIndex(g_size + 1, column, nullptr);
+      {
+         auto* loose_a = this->_datastore.loose.actions;
+         auto* loose_i = this->_datastore.loose.idles;
+         if (&n == loose_a) {
+            return this->createIndex(g_size, column, nullptr);
+         }
+         if (&n == loose_i) {
+            if (loose_a && !loose_a->children.empty())
+               return this->createIndex(g_size + 1, column, nullptr);
+            return this->createIndex(g_size, column, nullptr);
+         }
       }
 
       const void* parent_void = nullptr;
@@ -186,7 +193,7 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
       } else if (auto* casted = dynamic_cast<const idle_parent_node*>(&n)) {
          for (size_t i = 0; i < g_size; ++i) {
             if (graphs[i]->loose == casted) {
-               row         = i;
+               row         = graphs[i]->children.size();
                parent_void = graphs[i];
                break;
             }
@@ -403,7 +410,7 @@ void IdleAnimationFormsModel_2::_rebuild_datastore() {
 }
 void IdleAnimationFormsModel_2::_recache_action(const action_node& node) {
    auto& stub  = node.stub;
-   auto  cache = this->_cache[(action_node*)&node];
+   auto& cache = this->_cache[(action_node*)&node];
    cache.display_string = QString::fromStdString(stub.get_editor_id());
    if (stub.is_edited()) {
       cache.display_string += tr(" *", "form indicator: edited");
@@ -413,18 +420,6 @@ void IdleAnimationFormsModel_2::_recache_action(const action_node& node) {
    }
 }
 void IdleAnimationFormsModel_2::_recache_action(const dovah::form_stub& stub) {
-   auto _build_cache_for = [this](action_node& node) {
-      auto& stub  = node.stub;
-      auto  cache = this->_cache[&node];
-      cache.display_string = QString::fromStdString(stub.get_editor_id());
-      if (stub.is_edited()) {
-         cache.display_string += tr(" *", "form indicator: edited");
-      }
-      if (stub.is_deleted()) {
-         cache.display_string += tr(" (D)", "form indicator: deletion");
-      }
-   };
-
    for (auto* graph : this->_datastore.graphs) {
       auto index = graph->index_of_child(stub);
       if (index == datastore_node::no_index)
@@ -447,7 +442,7 @@ void IdleAnimationFormsModel_2::_recache_action(const dovah::form_stub& stub) {
 }
 void IdleAnimationFormsModel_2::_recache_idle(const idle_node& node) {
    auto& stub  = node.stub;
-   auto  cache = this->_cache[(idle_node*)&node];
+   auto& cache = this->_cache[(idle_node*)&node];
    cache.display_string = QString::fromStdString(stub.get_editor_id());
    if (stub.is_edited()) {
       cache.display_string += tr(" *", "form indicator: edited");
@@ -582,7 +577,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
    #pragma endregion
    #pragma region Node data
       /*virtual*/ QVariant IdleAnimationFormsModel_2::data(const QModelIndex& qmi, int role) const /*override*/ {
-         const auto* node = _node_for_qmi(qmi);
+         const datastore_node* node = _node_for_qmi(qmi);
          if (!node)
             return {};
          switch (role) {
