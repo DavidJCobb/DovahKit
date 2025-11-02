@@ -4,7 +4,7 @@
 namespace dovah::datastores::impl::idles {
    constexpr size_t idle_parent_node::index_of_child(const idle_node& idle) const noexcept {
       for (size_t i = 0; i < this->children.size(); ++i) {
-         auto* node = this->children[i];
+         const idle_node* node = this->children[i];
          if (node == &idle)
             return i;
       }

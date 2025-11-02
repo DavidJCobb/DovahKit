@@ -42,6 +42,7 @@
 #include "ui_scene_editor_testcase.h"
 #include "ui_yes_no_unset_widget.h"
 #include "idle_animations_model.h"
+#include "idles_datastore.h"
 
 namespace DovahKitDebug {
    using all_features = cobb::class_list<
@@ -84,7 +85,8 @@ namespace DovahKitDebug {
       features::ui_status_bar_segment,
       features::ui_scene_editor_testcase,
       features::ui_yes_no_unset_widget,
-      features::idle_animations_model//,
+      features::idle_animations_model,
+      features::idles_datastore//,
    >;
 
    template<typename T> struct _add_functor {

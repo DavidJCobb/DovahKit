@@ -67,7 +67,7 @@ namespace dovah::datastores {
       }
       if constexpr (!sort_during_initial_insertion) {
          this->loose.actions->sort_descendants();
-         for (auto* idle : this->loose.idles->children) {
+         for (idle_node* idle : this->loose.idles->children) {
             idle->sort_descendants();
          }
       }
@@ -75,10 +75,10 @@ namespace dovah::datastores {
       // Final validation.
       //
       for (auto* graph : this->graphs) {
-         for (auto* action : graph->children)
-            for (auto* idle : action->children)
+         for (action_node* action : graph->children)
+            for (idle_node* idle : action->children)
                this->_post_placement_parentage_validation(*idle);
-         for(auto* idle : graph->loose->children)
+         for(idle_node* idle : graph->loose->children)
             this->_post_placement_parentage_validation(*idle);
       }
       // (The CK doesn't do this validation step for idles that are wholly orphaned and not in any graph.)
@@ -311,7 +311,7 @@ namespace dovah::datastores {
                dst = new warnings::previous_sibling_is_not_as_expected(idle, previous, actual);
             }
          }
-         for (auto* child : idle.children) {
+         for (idle_node* child : idle.children) {
             this->_post_placement_parentage_validation(*child);
          }
       }
