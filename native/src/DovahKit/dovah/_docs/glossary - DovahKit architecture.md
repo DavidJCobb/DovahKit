@@ -9,7 +9,7 @@ The core systems within DovahKit which deal with loading and parsing game data f
 ## D
 
 ### datastore
-A helper class provided for use by frontends. Some datastores are provided by the backend; others exist wholly within the frontend.
+A helper class provided for use by [frontends](#frontend). Some datastores are provided by the [backend](#backend); others exist wholly within the frontend.
 
 DovahKit's frontend is built using Qt, and Qt uses a model/view system for treeviews, tableviews, and similar widgets. Datastores are appropriate when:
 
@@ -31,15 +31,15 @@ Dovahscript runs Lua code in a worker thread, so that the main thread (powering 
 DovahKit does not load forms in full; it indexes forms across the load order, tracking their source files and offsets, and their key properties such as form ID and editor ID. Form stubs are the entries in this index. Given a stub, you can load the full data for a form on demand.
 
 ### form stub addenda
-An add-on struct created and tracked by a form stub, for certain properties that are common on forms of a given type and need to be tracked even when the form is not fully loaded.
+An add-on struct created and tracked by a [form stub](#form%20stub), for certain properties that are common on forms of a given type and need to be tracked even when the form is not fully loaded. Form stub addenda is used so that most form stubs can avoid having to make room for data they don't use.
 
 ### frontend
-Any code existing outside of the backend.
+Any code existing outside of the [backend](#backend).
 
 ## R
 
 ### record skimmer
-A helper struct that can be used to read a form's winning record and extract just specific information, skipping past everything else. They exist for cases where a frontend might need to use some information for every form of a given type, but that information isn't worth packing into form-stub addenda.
+A helper struct that can be used to read a form's winning record and extract just specific information, skipping past everything else. They exist for cases where a [frontend](#frontend) might need to use some information for every form of a given type, but that information isn't worth packing into [form stub addenda](#form%20stub%20addenda).
 
 #### Examples
 * `dovah::loaded_forms::Package::record_skimmers::legacy_type` reads the legacy package type from a `PACK` record, taking into account all subrecords (including deprecated ones) that would mutate a package's type through the load process.
