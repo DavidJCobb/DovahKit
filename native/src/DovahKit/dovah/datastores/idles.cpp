@@ -380,7 +380,7 @@ namespace dovah::datastores {
             if (auto* parent_idle = dynamic_cast<const idle_node*>(parent_node)) {
                parent_stub = &parent_idle->stub;
             } else if (auto* parent_action = dynamic_cast<const action_node*>(parent_node)) {
-               parent_stub = &parent_idle->stub;
+               parent_stub = &parent_action->stub;
             }
          } else {
             i = 0;

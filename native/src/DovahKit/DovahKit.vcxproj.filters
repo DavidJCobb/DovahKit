@@ -3636,6 +3636,9 @@
     <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\idle\IdleNewActionRootPickerFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8939,6 +8942,9 @@
     <ClInclude Include="ui\main_window\_debug_hooks\idles_datastore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\form_windows\idle\IdleNewActionRootPickerFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -10794,6 +10800,8 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\_docs\idle animations\idle tree construction.md" />
+    <None Include="dovah\_docs\glossary - DovahKit architecture.md" />
+    <None Include="dovah\_docs\glossary - game data.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

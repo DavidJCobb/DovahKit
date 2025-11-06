@@ -18,6 +18,19 @@ namespace IdleAnimationFormsModel_impl {
 
 class IdleAnimationFormsModel_2 : public QAbstractItemModel {
    Q_OBJECT;
+   public:
+      enum class NodeType {
+         Graph,
+         Action,
+         Idle,
+         LooseIdlesPerGraph,
+         LooseActionsPerModel,
+         LooseIdlesPerModel,
+      };
+      Q_ENUM(NodeType);
+
+      static constexpr const Qt::ItemDataRole NodeTypeRole = (Qt::ItemDataRole)(Qt::ItemDataRole::UserRole);
+
    protected:
       using datastore_type = dovah::datastores::idles;
       using datastore_node = datastore_type::node;
@@ -37,6 +50,7 @@ class IdleAnimationFormsModel_2 : public QAbstractItemModel {
          QModelIndex _qmi_for_model_root() const;
          QModelIndex _qmi_for_node(const datastore_node&, int column = 0) const;
          QModelIndex _qmi_for_child_node(int row, int column, const datastore_node& parent) const;
+         bool _qmi_is_child_of(const QModelIndex&, const datastore_node&) const;
 
          const datastore_node* _child_node_by_row(const datastore_node* parent, size_t row) const;
 
@@ -71,6 +85,22 @@ class IdleAnimationFormsModel_2 : public QAbstractItemModel {
    public:
       IdleAnimationFormsModel_2(QObject* parent = nullptr);
 
+      #pragma region Accessors
+         QModelIndex graphQMI(QString path) const noexcept;
+
+      protected:
+         [[nodiscard]] std::vector<dovah::form_stub*> _actionsByGraph(const graph_node&) const noexcept;
+      public:
+         [[nodiscard]] std::vector<dovah::form_stub*> actionsByGraph(const QModelIndex&) const noexcept;
+         [[nodiscard]] std::vector<dovah::form_stub*> actionsByGraph(QString path) const noexcept;
+
+      protected:
+         void _createActionRoot(graph_node&, dovah::form_stub& action, QString idle_editor_id);
+      public:
+         void createActionRoot(const QModelIndex& graph_qmi, dovah::form_stub& action, QString idle_editor_id);
+         void createActionRoot(QString graph_path, dovah::form_stub& action, QString idle_editor_id);
+      #pragma endregion
+
    public:
       #pragma region QAbstractItemModel overrides
          #pragma region Hierarchy
@@ -102,6 +132,7 @@ class IdleAnimationFormsModel_2 : public QAbstractItemModel {
       datastore_type _datastore;
       std::unordered_map<datastore_node*, node_cached_data> _cache;
       struct {
+         bool ignore_next_created_idle = false;
          bool emitted_last_deletion = false;
       } _callback_state;
 };

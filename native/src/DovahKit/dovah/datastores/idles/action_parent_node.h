@@ -35,6 +35,7 @@ namespace dovah::datastores::impl::idles {
          std::unique_ptr<action_node> take_child(size_t);
 
          void sort_children();
+         [[nodiscard]] std::vector<size_t> sort_children_and_remember();
          void sort_descendants();
 
          const action_node* action_by_stub(const form_stub&) const noexcept;

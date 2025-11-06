@@ -965,6 +965,7 @@
     <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\idle_node.cpp" />
     <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\idle_parent_node.cpp" />
     <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_unique_ptr_utils.cpp" />
+    <ClCompile Include="ui\form_windows\idle\IdleNewActionRootPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\idle_marker.cpp" />
     <ClCompile Include="ui\form_windows\impact_data.cpp" />
     <ClCompile Include="ui\form_windows\ingredient.cpp" />
@@ -1935,6 +1936,7 @@
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_base_node.h" />
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_unique_ptr_utils.h" />
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\_parent_node_mixin.h" />
+    <ClInclude Include="ui\form_windows\idle\IdleNewActionRootPickerFilter.h" />
     <ClInclude Include="ui\form_windows\lens_flare\LensFlareSpritesModel.h" />
     <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h" />
     <QtMoc Include="ui\form_windows\potion.h" />
@@ -3720,6 +3722,14 @@
       </SubType>
     </None>
     <None Include="dovah\_docs\game data file format\file header.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\glossary - DovahKit architecture.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\glossary - game data.md">
       <SubType>
       </SubType>
     </None>

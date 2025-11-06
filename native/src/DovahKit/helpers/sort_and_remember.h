@@ -36,8 +36,8 @@ namespace cobb {
 
       Container sorted;
       sorted.resize(size);
-      for (size_t index_prior = 0; index_prior < size; ++index_prior) {
-         size_t index_after = indices[index_prior];
+      for (size_t index_after = 0; index_after < size; ++index_after) {
+         size_t index_prior = indices[index_after];
          sorted[index_after] = std::move(list[index_prior]);
       }
       

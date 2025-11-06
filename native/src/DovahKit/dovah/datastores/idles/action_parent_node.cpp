@@ -1,5 +1,6 @@
 #include "./action_parent_node.h"
 #include "./action_node.h"
+#include "helpers/sort_and_remember.h"
 #include "../../form_stub.h"
 #include "../../form_types.h"
 
@@ -24,8 +25,7 @@ namespace dovah::datastores::impl::idles {
       const auto&  a_name   = a->stub.editorID;
       const auto&  b_name   = b->stub.editorID;
       const size_t min_size = std::min(a_name.size(), b_name.size());
-      size_t i = 0;
-      for (; i < min_size; ++i) {
+      for (size_t i = 0; i < min_size; ++i) {
          char ca = a_name[i];
          char cb = b_name[i];
          if (ca >= 'a' && ca <= 'z')
@@ -94,6 +94,12 @@ namespace dovah::datastores::impl::idles {
       std::sort(
          this->children.begin(),
          this->children.end(),
+         sort_comparator
+      );
+   }
+   [[nodiscard]] std::vector<size_t> action_parent_node::sort_children_and_remember() {
+      return cobb::sort_and_remember(
+         this->children,
          sort_comparator
       );
    }
