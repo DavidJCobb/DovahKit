@@ -899,6 +899,7 @@
     <ClCompile Include="nif\types\NiTransform.cpp" />
     <ClCompile Include="nif\utils\find_all_retexturable_blocks.cpp" />
     <ClCompile Include="nif\utils\precache_nif_info.cpp" />
+    <ClCompile Include="ui\form_group_windows\idle\IdleAnimationsDialog.cpp" />
     <ClCompile Include="ui\form_windows\acoustic_space.cpp" />
     <ClCompile Include="ui\form_windows\activator.cpp" />
     <ClCompile Include="ui\form_windows\actor_action.cpp" />
@@ -957,6 +958,7 @@
     <ClCompile Include="ui\form_windows\furniture\FurnitureMarkersModel.cpp" />
     <ClCompile Include="ui\form_windows\grass.cpp" />
     <ClCompile Include="ui\form_windows\hazard.cpp" />
+    <ClCompile Include="ui\form_windows\idle\FormSubdialogIdleNewActionRoot.cpp" />
     <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel.cpp" />
     <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_2.cpp" />
     <ClCompile Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\action_node.cpp" />
@@ -1909,6 +1911,7 @@
     <ClInclude Include="helpers\scope_guards\success.h" />
     <ClInclude Include="helpers\sort_and_remember.h" />
     <ClInclude Include="nif\blocks\BSFurnitureMarkerNode.h" />
+    <QtMoc Include="ui\form_group_windows\idle\IdleAnimationsDialog.h" />
     <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h" />
     <QtMoc Include="ui\form_windows\climate\FormSubdialogClimateWeather.h" />
     <QtMoc Include="ui\form_windows\encounter_zone.h" />
@@ -1924,6 +1927,7 @@
     <QtMoc Include="ui\form_windows\furniture.h" />
     <QtMoc Include="ui\form_windows\idle\IdleAnimationFormsModel.h" />
     <QtMoc Include="ui\form_windows\idle\IdleAnimationFormsModel_2.h" />
+    <QtMoc Include="ui\form_windows\idle\FormSubdialogIdleNewActionRoot.h" />
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\action_node.h" />
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\action_parent_node.h" />
     <ClInclude Include="ui\form_windows\idle\IdleAnimationFormsModel_impl\graph_node.h" />
@@ -3471,6 +3475,7 @@
     <QtUic Include="ui\form_windows\grass.ui" />
     <QtUic Include="ui\form_windows\hazard.ui" />
     <QtUic Include="ui\form_windows\head_part.ui" />
+    <QtUic Include="ui\form_windows\idle\FormSubdialogIdleNewActionRoot.ui" />
     <QtUic Include="ui\form_windows\idle_marker.ui" />
     <QtUic Include="ui\form_windows\imagespace.ui" />
     <QtUic Include="ui\form_windows\impact_data.ui" />

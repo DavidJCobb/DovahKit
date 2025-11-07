@@ -504,7 +504,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
       return this->_actionsByGraph(*graph);
    }
 
-   void IdleAnimationFormsModel_2::_createActionRoot(graph_node& graph, dovah::form_stub& action, QString idle_editor_id) {
+   QModelIndex IdleAnimationFormsModel_2::_createActionRoot(graph_node& graph, dovah::form_stub& action, QString idle_editor_id) {
       dovah::form_stub* idle_stub = nullptr;
       {
          this->_callback_state.ignore_next_created_idle = true;
@@ -514,7 +514,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
             idle_stub = request.commit();
          } catch (...) {
             this->_callback_state.ignore_next_created_idle = false;
-            return;
+            return {};
          }
       }
 
@@ -559,20 +559,21 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
       assert(i_node != nullptr);
       this->_datastore.append_idle_in(*i_node, *a_node);
       i_node_ptr.release();
+      return _qmi_for_node(*i_node);
    }
-   void IdleAnimationFormsModel_2::createActionRoot(const QModelIndex& graph_qmi, dovah::form_stub& action, QString idle_editor_id) {
+   QModelIndex IdleAnimationFormsModel_2::createActionRoot(const QModelIndex& graph_qmi, dovah::form_stub& action, QString idle_editor_id) {
       if (!graph_qmi.isValid())
-         return;
+         return {};
       auto* graph = dynamic_cast<graph_node*>(_node_for_qmi(graph_qmi));
       if (!graph)
-         return;
-      this->_createActionRoot(*graph, action, idle_editor_id);
+         return {};
+      return this->_createActionRoot(*graph, action, idle_editor_id);
    }
-   void IdleAnimationFormsModel_2::createActionRoot(QString graph_path, dovah::form_stub& action, QString idle_editor_id) {
+   QModelIndex IdleAnimationFormsModel_2::createActionRoot(QString graph_path, dovah::form_stub& action, QString idle_editor_id) {
       auto* graph = _node_for_graph_path(graph_path);
       if (!graph)
-         return;
-      this->_createActionRoot(*graph, action, idle_editor_id);
+         return {};
+      return this->_createActionRoot(*graph, action, idle_editor_id);
    }
 #pragma endregion
 

@@ -95,10 +95,10 @@ class IdleAnimationFormsModel_2 : public QAbstractItemModel {
          [[nodiscard]] std::vector<dovah::form_stub*> actionsByGraph(QString path) const noexcept;
 
       protected:
-         void _createActionRoot(graph_node&, dovah::form_stub& action, QString idle_editor_id);
+         QModelIndex _createActionRoot(graph_node&, dovah::form_stub& action, QString idle_editor_id);
       public:
-         void createActionRoot(const QModelIndex& graph_qmi, dovah::form_stub& action, QString idle_editor_id);
-         void createActionRoot(QString graph_path, dovah::form_stub& action, QString idle_editor_id);
+         QModelIndex createActionRoot(const QModelIndex& graph_qmi, dovah::form_stub& action, QString idle_editor_id);
+         QModelIndex createActionRoot(QString graph_path, dovah::form_stub& action, QString idle_editor_id);
       #pragma endregion
 
    public:

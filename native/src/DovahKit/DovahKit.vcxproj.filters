@@ -3639,6 +3639,12 @@
     <ClCompile Include="ui\form_windows\idle\IdleNewActionRootPickerFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\idle\FormSubdialogIdleNewActionRoot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_group_windows\idle\IdleAnimationsDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9421,6 +9427,9 @@
     <QtUic Include="ui\form_windows\apparatus.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="ui\form_windows\idle\FormSubdialogIdleNewActionRoot.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\main_window.h">
@@ -10306,6 +10315,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\idle\IdleAnimationFormsModel_2.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\idle\FormSubdialogIdleNewActionRoot.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_group_windows\idle\IdleAnimationsDialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
