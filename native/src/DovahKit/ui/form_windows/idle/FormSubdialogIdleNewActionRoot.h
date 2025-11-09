@@ -22,4 +22,6 @@ class FormSubdialogIdleNewActionRoot : public QDialog {
    protected:
       Ui::FormSubdialogIdleNewActionRoot ui;
       IdleNewActionRootPickerFilter* _action_filter = nullptr;
+
+      void _update_ok_button_enable_state();
 };

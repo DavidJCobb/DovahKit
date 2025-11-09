@@ -7,6 +7,7 @@
 #include "dovah/form_stub.h"
 #include "dovahscript/dovahscript_host.h"
 #include "editor/core.h"
+#include "editor/helpers/make_editor_id_for_duplicate.h"
 #include "dovah/files/tes_file_reading/file_loader.h"
 
 namespace {
@@ -150,7 +151,7 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
    }
 }
 
-#pragma region Node utils
+#pragma region Node/QMI utils and node lookups
    QModelIndex IdleAnimationFormsModel_2::_qmi_for_model_root() const {
       return {};
    }
@@ -316,6 +317,32 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
    }
 #pragma endregion
 
+#pragma region Constraints
+   bool IdleAnimationFormsModel_2::_can_create_new_idle_in(const idle_parent_node& parent) const {
+      if (dynamic_cast<const action_node*>(&parent)) {
+         return parent.children.empty();
+      }
+      return true;
+   }
+   bool IdleAnimationFormsModel_2::_can_ever_duplicate(const idle_node& n) const {
+      if (!n.parent)
+         return false;
+      if (dynamic_cast<const action_node*>((const idle_parent_node*)n.parent))
+         return false;
+      return true;
+   }
+#pragma endregion
+
+/*static*/ dovah::file_load_order* IdleAnimationFormsModel_2::_get_file_load_order() {
+   auto files = DovahKitCore::get().get_loaded_files();
+   if (files.empty())
+      return nullptr;
+   auto* file = files[0];
+   if (!file)
+      return nullptr;
+   return &file->get_load_order();
+}
+
 #pragma region Form events
    void IdleAnimationFormsModel_2::_on_game_data_acquired() {
       this->_rebuild_datastore();
@@ -368,27 +395,16 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
 void IdleAnimationFormsModel_2::_rebuild_datastore() {
    this->_cache.clear();
 
-   auto& editor = DovahKitCore::get();
-   //
-   // Disgusting hack to access the file_load_order:
-   //
-   auto files = editor.get_loaded_files();
-   if (files.empty()) {
+   auto* flo = _get_file_load_order();
+   if (!flo) {
       this->beginResetModel();
       this->_datastore.reset();
       this->endResetModel();
       return;
    }
-   auto* file = files[0];
-   if (!file) {
-      this->beginResetModel();
-      this->_datastore.reset();
-      this->endResetModel();
-      return;
-   }
-   //
+
    this->beginResetModel();
-   this->_datastore.build(file->get_load_order());
+   this->_datastore.build(*flo);
    {
       auto _recache_idle_tree = [this](this auto&& recurse, idle_node& idle) -> void {
          this->_recache_idle(idle);
@@ -473,9 +489,144 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
    }
 }
 
+#pragma region Form utils
+   dovah::form_stub* IdleAnimationFormsModel_2::_try_silently_create_idle(QString editor_id) {
+      //
+      // Normally, we automatically react to the creation of an IDLE form occurring 
+      // anywhere in DovahKit: we tell the datastore that a new IDLE has been created, 
+      // and in turn, the datastore's own callbacks lead back to us invoking callbacks 
+      // on QAbstractItemModel for when a row is inserted. This is sufficient for when 
+      // IDLEs are created outside of our control.
+      // 
+      // The IDLE is created "bare," with no parent and no behavior graph, so the row 
+      // would be inserted into the model-level loose idles. From there, we could then 
+      // trigger the IDLE to be moved into the correct place, when we're the ones who 
+      // created the IDLE.
+      // 
+      // However, it's cleaner for us to have finer-grained control over this process. 
+      // Since we can't slip in between the form being created and it being configured, 
+      // the better option is:
+      // 
+      //  - Set a flag so that we ignore the next form-creation notification that we 
+      //    get from DovahKitCore, such that we don't tell the datastore about the IDLE 
+      //    we're creating.
+      // 
+      //  - Create the `idle_node` ourselves.
+      // 
+      //  - Use the datastore to insert the node. Since it has no parent node (not even 
+      //    the model-level loose idle container node), the datastore will trigger the 
+      //    insertion callbacks rather than the movement callbacks.
+      // 
+      // This function handles the first of those three steps for the specific case of 
+      // duplicating an idle.
+      //
+      this->_callback_state.ignore_next_created_idle = true;
+      auto request = DovahKitCore::get().request_form_creation(dovah::form_type::idle);
+      request.editorID = editor_id.toStdString();
+      try {
+         auto* stub = request.commit();
+         if (!stub) {
+            this->_callback_state.ignore_next_created_idle = false;
+         }
+         return stub;
+      } catch (...) {
+         this->_callback_state.ignore_next_created_idle = false;
+         return nullptr;
+      }
+   }
+   dovah::form_stub* IdleAnimationFormsModel_2::_try_silently_duplicate_idle(dovah::form_stub& idle) {
+      //
+      // See documentation comment in `_try_silently_create_idle`.
+      //
+
+      auto& editor = DovahKitCore::get();
+
+      dovah::form_stub* stub = nullptr;
+
+      this->_callback_state.ignore_next_created_idle = true;
+      try {
+         auto request = editor.request_form_duplication();
+         request.set_target(&idle);
+         request.editorID = editor_helpers::make_editor_id_for_duplicate(idle.get_editor_id()).toStdString();
+         stub = request.commit();
+      } catch (...) {
+         this->_callback_state.ignore_next_created_idle = false;
+         return nullptr;
+      }
+      if (!stub) {
+         this->_callback_state.ignore_next_created_idle = false;
+         return nullptr;
+      }
+      return stub;
+   }
+#pragma endregion
+#pragma region Node utils
+   IdleAnimationFormsModel_2::action_node& IdleAnimationFormsModel_2::_get_or_create_action(graph_node& graph, dovah::form_stub& action) {
+      auto* a_node = graph.action_by_stub(action);
+      if (a_node)
+         return *a_node;
+      
+      auto qmi = _qmi_for_node(graph);
+      this->beginInsertRows(qmi, graph.children.size(), graph.children.size());
+      {
+         auto a_node_ptr = std::make_unique<action_node>(action);
+         a_node = a_node_ptr.get();
+         graph.append_child(std::move(a_node_ptr));
+         this->_recache_action(*a_node);
+      }
+      this->endInsertRows();
+      //
+      this->layoutAboutToBeChanged({ qmi }, LayoutChangeHint::VerticalSortHint);
+      auto mapping = graph.sort_children_and_remember();
+      QModelIndexList qpmi_prior = this->persistentIndexList();
+      QModelIndexList qpmi_after;
+      for (const auto& qpmi : qpmi_prior) {
+         if (!_qmi_is_child_of(qpmi, graph)) {
+            qpmi_after.push_back(qpmi);
+            continue;
+         }
+         if (_node_for_qmi(qpmi) == graph.loose) {
+            qpmi_after.push_back(qpmi);
+            continue;
+         }
+         auto row = qpmi.row();
+         if (row < 0 || row >= mapping.size())
+            row = -1;
+         else
+            row = mapping[row];
+         qpmi_after.push_back(this->createIndex(row, qpmi.column(), qpmi.internalPointer()));
+      }
+      this->changePersistentIndexList(qpmi_prior, qpmi_after);
+      this->layoutChanged({ qmi }, LayoutChangeHint::VerticalSortHint);
+      //
+      return *a_node;
+   }
+   IdleAnimationFormsModel_2::idle_node* IdleAnimationFormsModel_2::_create_action_root(graph_node& graph, dovah::form_stub& action, QString idle_editor_id) {
+      dovah::form_stub* idle_stub = this->_try_silently_create_idle(idle_editor_id);
+      if (!idle_stub)
+         return nullptr;
+
+      auto& a_node = _get_or_create_action(graph, action);
+      auto  i_node_ptr = std::make_unique<idle_node>(*idle_stub);
+      auto* i_node     = i_node_ptr.get();
+      assert(i_node != nullptr);
+      this->_datastore.append_idle_in(*i_node, a_node);
+      i_node_ptr.release();
+      return i_node;
+   }
+#pragma endregion
+
 #pragma region Accessors
    QModelIndex IdleAnimationFormsModel_2::graphQMI(QString path) const noexcept {
       auto* node = this->_node_for_graph_path(path);
+      if (!node)
+         return {};
+      return _qmi_for_node(*node);
+   }
+   QModelIndex IdleAnimationFormsModel_2::idleQMI(dovah::form_stub& stub) const noexcept {
+      if (stub.form_type != dovah::form_type::idle)
+         return {};
+      auto* node = this->_datastore.idle_by_stub(stub);
       if (!node)
          return {};
       return _qmi_for_node(*node);
@@ -504,76 +655,159 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
       return this->_actionsByGraph(*graph);
    }
 
-   QModelIndex IdleAnimationFormsModel_2::_createActionRoot(graph_node& graph, dovah::form_stub& action, QString idle_editor_id) {
-      dovah::form_stub* idle_stub = nullptr;
-      {
-         this->_callback_state.ignore_next_created_idle = true;
-         auto request = DovahKitCore::get().request_form_creation(dovah::form_type::idle);
-         request.editorID = idle_editor_id.toStdString();
-         try {
-            idle_stub = request.commit();
-         } catch (...) {
-            this->_callback_state.ignore_next_created_idle = false;
-            return {};
-         }
-      }
-
-      auto* a_node = graph.action_by_stub(action);
-      if (!a_node) {
-         auto qmi = _qmi_for_node(graph);
-         this->beginInsertRows(qmi, graph.children.size(), graph.children.size());
-         {
-            auto a_node_ptr = std::make_unique<action_node>(action);
-            a_node = a_node_ptr.get();
-            graph.append_child(std::move(a_node_ptr));
-            this->_recache_action(*a_node);
-         }
-         this->endInsertRows();
-         //
-         this->layoutAboutToBeChanged({ qmi }, LayoutChangeHint::VerticalSortHint);
-         auto mapping = graph.sort_children_and_remember();
-         QModelIndexList qpmi_prior = this->persistentIndexList();
-         QModelIndexList qpmi_after;
-         for (const auto& qpmi : qpmi_prior) {
-            if (!_qmi_is_child_of(qpmi, graph)) {
-               qpmi_after.push_back(qpmi);
-               continue;
-            }
-            if (_node_for_qmi(qpmi) == graph.loose) {
-               qpmi_after.push_back(qpmi);
-               continue;
-            }
-            auto row = qpmi.row();
-            if (row < 0 || row >= mapping.size())
-               row = -1;
-            else
-               row = mapping[row];
-            qpmi_after.push_back(this->createIndex(row, qpmi.column(), qpmi.internalPointer()));
-         }
-         this->changePersistentIndexList(qpmi_prior, qpmi_after);
-         this->layoutChanged({ qmi }, LayoutChangeHint::VerticalSortHint);
-      }
-      assert(a_node != nullptr);
-      auto  i_node_ptr = std::make_unique<idle_node>(*idle_stub);
-      auto* i_node     = i_node_ptr.get();
-      assert(i_node != nullptr);
-      this->_datastore.append_idle_in(*i_node, *a_node);
-      i_node_ptr.release();
-      return _qmi_for_node(*i_node);
-   }
    QModelIndex IdleAnimationFormsModel_2::createActionRoot(const QModelIndex& graph_qmi, dovah::form_stub& action, QString idle_editor_id) {
       if (!graph_qmi.isValid())
          return {};
       auto* graph = dynamic_cast<graph_node*>(_node_for_qmi(graph_qmi));
       if (!graph)
          return {};
-      return this->_createActionRoot(*graph, action, idle_editor_id);
+      auto* node = this->_create_action_root(*graph, action, idle_editor_id);
+      if (!node)
+         return {};
+      return _qmi_for_node(*node);
    }
    QModelIndex IdleAnimationFormsModel_2::createActionRoot(QString graph_path, dovah::form_stub& action, QString idle_editor_id) {
       auto* graph = _node_for_graph_path(graph_path);
       if (!graph)
          return {};
-      return this->_createActionRoot(*graph, action, idle_editor_id);
+      auto* node = this->_create_action_root(*graph, action, idle_editor_id);
+      if (!node)
+         return {};
+      return _qmi_for_node(*node);
+   }
+
+   bool IdleAnimationFormsModel_2::canCreateIdleIn(const QModelIndex& parent) const {
+      auto* node = _node_for_qmi(parent);
+      if (!node)
+         return false;
+      auto* casted = dynamic_cast<const idle_parent_node*>(node);
+      if (!casted)
+         return false;
+      return _can_create_new_idle_in(*casted);
+   }
+   QModelIndex IdleAnimationFormsModel_2::createIdle(const QModelIndex& parent_qmi, QString idle_editor_id) {
+      idle_parent_node* parent_node = nullptr;
+      {
+         auto* node = _node_for_qmi(parent_qmi);
+         if (!node)
+            return {};
+         parent_node = dynamic_cast<idle_parent_node*>(node);
+         if (!parent_node)
+            return {};
+      }
+      if (!_can_create_new_idle_in(*parent_node))
+         return {};
+
+      dovah::form_stub* stub = this->_try_silently_create_idle(idle_editor_id);
+      if (!stub)
+         return {};
+
+      auto  i_node_ptr = std::make_unique<idle_node>(*stub);
+      auto* i_node     = i_node_ptr.get();
+      assert(i_node != nullptr);
+      this->_datastore.append_idle_in(*i_node, *parent_node);
+      i_node_ptr.release();
+      return _qmi_for_node(*i_node);
+   }
+
+   bool IdleAnimationFormsModel_2::canEverDuplicateIdle(const QModelIndex& idle_qmi) const {
+      auto* src_node = _node_for_qmi(idle_qmi);
+      if (!src_node)
+         return {};
+      auto* src_idle = dynamic_cast<const idle_node*>(src_node);
+      if (!src_idle) // QMI is not that of an idle
+         return {};
+      return _can_ever_duplicate(*src_idle);
+   }
+   QModelIndex IdleAnimationFormsModel_2::duplicateIdle(const QModelIndex& idle_qmi, bool and_descendants) {
+      auto* src_node = _node_for_qmi(idle_qmi);
+      if (!src_node)
+         return {};
+      auto* src_idle = dynamic_cast<idle_node*>(src_node);
+      if (!src_idle) // QMI is not that of an idle
+         return {};
+
+      if (!_can_ever_duplicate(*src_idle))
+         return {};
+
+      auto& editor = DovahKitCore::get();
+      if (!editor.has_data())
+         return {};
+
+      if (and_descendants) {
+         //
+         // Ensure there are sufficient form IDs available in the active file.
+         //
+         {
+            auto* flo = _get_file_load_order();
+            if (!flo)
+               return {};
+
+            size_t count_to_duplicate = [](this auto&& recurse, idle_node& idle) -> size_t {
+               size_t count = 1;
+               for (auto& child_ptr : idle.children) {
+                  count += recurse(*child_ptr);
+               }
+               return count;
+            }(*src_idle);
+
+            dovah::bare_form_id_t last_found_form_id     = 0;
+            bool                  all_form_ids_available = true;
+            for (size_t i = 0; i < count_to_duplicate; ++i) {
+               auto id = flo->find_first_free_form_id_in_active_file(last_found_form_id);
+               if (id == 0) {
+                  all_form_ids_available = false;
+                  break;
+               }
+               last_found_form_id = id;
+            }
+            if (!all_form_ids_available) {
+               //
+               // TODO: Throw an exception: insufficient form IDs available.
+               //
+               return {};
+            }
+         }
+         //
+         // Recursively duplicate the IDLEs.
+         //
+         assert(src_idle->parent);
+         QModelIndex root_qmi = {};
+         [this, &root_qmi](this auto&& recurse, idle_node& idle, idle_parent_node& dst_parent, bool is_root = false) -> void {
+            dovah::form_stub* stub = this->_try_silently_duplicate_idle(idle.stub);
+            if (!stub)
+               return;
+
+            auto  i_node_ptr = std::make_unique<idle_node>(*stub);
+            auto* i_node = i_node_ptr.get();
+            assert(i_node != nullptr);
+            if (is_root) {
+               this->_datastore.place_idle_after(*i_node, idle);
+            } else {
+               this->_datastore.append_idle_in(*i_node, dst_parent);
+            }
+            i_node_ptr.release();
+            if (is_root) {
+               root_qmi = _qmi_for_node(*i_node);
+            }
+
+            for (auto& child_ptr : idle.children) {
+               recurse(*child_ptr, *i_node);
+            }
+         }(*src_idle, *src_idle->parent, true);
+         return root_qmi;
+      } else {
+         dovah::form_stub* stub = this->_try_silently_duplicate_idle(src_idle->stub);
+         if (!stub)
+            return {};
+
+         auto  i_node_ptr = std::make_unique<idle_node>(*stub);
+         auto* i_node = i_node_ptr.get();
+         assert(i_node != nullptr);
+         this->_datastore.place_idle_after(*i_node, *src_idle);
+         i_node_ptr.release();
+         return _qmi_for_node(*i_node);
+      }
    }
 #pragma endregion
 

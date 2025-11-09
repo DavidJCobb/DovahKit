@@ -46,7 +46,7 @@ class IdleAnimationFormsModel_2 : public QAbstractItemModel {
          QString display_string;
       };
 
-      #pragma region Node utils
+      #pragma region Node/QMI utils and node lookups
          QModelIndex _qmi_for_model_root() const;
          QModelIndex _qmi_for_node(const datastore_node&, int column = 0) const;
          QModelIndex _qmi_for_child_node(int row, int column, const datastore_node& parent) const;
@@ -68,6 +68,13 @@ class IdleAnimationFormsModel_2 : public QAbstractItemModel {
          action_node* _node_for_loose_action(const dovah::form_stub&);
       #pragma endregion
 
+      #pragma region Constraints
+         bool _can_create_new_idle_in(const idle_parent_node&) const;
+         bool _can_ever_duplicate(const idle_node&) const;
+      #pragma endregion
+
+      static dovah::file_load_order* _get_file_load_order();
+
       #pragma region Form events
          void _on_game_data_acquired();
          void _on_game_data_abandon();
@@ -82,11 +89,21 @@ class IdleAnimationFormsModel_2 : public QAbstractItemModel {
       void _recache_idle(const idle_node&);
       void _recache_idle(const dovah::form_stub&);
 
+      #pragma region Form utils
+         dovah::form_stub* _try_silently_create_idle(QString editor_id);
+         dovah::form_stub* _try_silently_duplicate_idle(dovah::form_stub& idle);
+      #pragma endregion
+      #pragma region Node utils
+         action_node& _get_or_create_action(graph_node&, dovah::form_stub& action);
+         idle_node* _create_action_root(graph_node&, dovah::form_stub& action, QString idle_editor_id);
+      #pragma endregion
+
    public:
       IdleAnimationFormsModel_2(QObject* parent = nullptr);
 
       #pragma region Accessors
          QModelIndex graphQMI(QString path) const noexcept;
+         QModelIndex idleQMI(dovah::form_stub&) const noexcept;
 
       protected:
          [[nodiscard]] std::vector<dovah::form_stub*> _actionsByGraph(const graph_node&) const noexcept;
@@ -94,11 +111,14 @@ class IdleAnimationFormsModel_2 : public QAbstractItemModel {
          [[nodiscard]] std::vector<dovah::form_stub*> actionsByGraph(const QModelIndex&) const noexcept;
          [[nodiscard]] std::vector<dovah::form_stub*> actionsByGraph(QString path) const noexcept;
 
-      protected:
-         QModelIndex _createActionRoot(graph_node&, dovah::form_stub& action, QString idle_editor_id);
-      public:
          QModelIndex createActionRoot(const QModelIndex& graph_qmi, dovah::form_stub& action, QString idle_editor_id);
          QModelIndex createActionRoot(QString graph_path, dovah::form_stub& action, QString idle_editor_id);
+
+         bool canCreateIdleIn(const QModelIndex& parent) const;
+         QModelIndex createIdle(const QModelIndex& parent, QString idle_editor_id);
+
+         bool canEverDuplicateIdle(const QModelIndex&) const;
+         QModelIndex duplicateIdle(const QModelIndex&, bool and_descendants);
       #pragma endregion
 
    public:
