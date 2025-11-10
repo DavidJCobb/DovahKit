@@ -2,6 +2,7 @@
 #include "helpers/vectors/re_sort_item_within.h"
 #include "./idles/_all.h"
 #include "./idles/config/sort_during_initial_insertion.h"
+#include "./idles/passkeys/check_is_building.h"
 #include "./idles/passkeys/idle_sorting.h"
 #include "../files/file_load_order.h"
 #include "../form_stub.h"
@@ -69,13 +70,13 @@ namespace dovah::datastores {
          if constexpr (sort_during_initial_insertion) {
             graph->sort_children();
          } else {
-            graph->sort_descendants();
+            graph->sort_descendants({});
          }
       }
       if constexpr (!sort_during_initial_insertion) {
-         this->loose.actions->sort_descendants();
+         this->loose.actions->sort_descendants({});
          for (idle_node* idle : this->loose.idles->children) {
-            idle->sort_descendants();
+            idle->sort_descendants({});
          }
       }
       //
@@ -110,6 +111,11 @@ namespace dovah::datastores {
       if (auto& callback = this->callbacks.on_cleared.after; callback)
          (callback)();
    }
+
+   bool idles::_check_is_building(impl::idles::passkeys::check_is_building) const {
+      return this->_is_building;
+   }
+
    void idles::_clear() {
       this->idles_by_stub.clear();
       for (auto*& ptr : this->graphs) {
@@ -361,44 +367,6 @@ namespace dovah::datastores {
       }
       return path_a.size() < path_b.size();
    }
-
-   #pragma region Post-build updates
-      void idles::_push_idle_hierarchy_position_to_form(idle_node& idle, size_t i) {
-         auto loaded = idle.stub.load().ptr_cast<loaded_idle_type>();
-         if (!loaded)
-            return;
-
-         const idle_parent_node* parent_node = idle.parent;
-         if (i == node::no_index) {
-            i = parent_node->index_of_child(idle);
-         } else if (parent_node) {
-            i = 0;
-         }
-
-         form_stub* parent_stub = nullptr;
-         if (parent_node) {
-            if (auto* parent_idle = dynamic_cast<const idle_node*>(parent_node)) {
-               parent_stub = &parent_idle->stub;
-            } else if (auto* parent_action = dynamic_cast<const action_node*>(parent_node)) {
-               parent_stub = &parent_action->stub;
-            }
-         } else {
-            i = 0;
-         }
-         
-         if (auto& cb = this->callbacks.on_any_form_modified.before)
-            cb(idle.stub);
-         //
-         loaded->parent.set(*loaded, parent_stub);
-         if (i == 0)
-            loaded->previous_sibling.set(*loaded, nullptr);
-         else
-            loaded->previous_sibling.set(*loaded, &parent_node->children[i - 1]->stub);
-         //
-         if (auto& cb = this->callbacks.on_any_form_modified.after)
-            cb(idle.stub);
-      }
-   #pragma endregion
    
    #pragma region Graph node getters
       const idles::graph_node* idles::graph_by_idle(dovah::form_stub& stub) const noexcept {
@@ -437,11 +405,11 @@ namespace dovah::datastores {
                   created,
                   _graph_node_sort_comparator
                );
-               if (auto& cb = this->callbacks.graphs.on_inserted.before)
-                  cb(std::distance(this->graphs.begin(), it));
+               if (auto& cb = this->callbacks.graphs.on_created.before)
+                  cb(path, std::distance(this->graphs.begin(), it));
                this->graphs.insert(it, created);
-               if (auto& cb = this->callbacks.graphs.on_inserted.after)
-                  cb(*created);
+               if (auto& cb = this->callbacks.graphs.on_created.after)
+                  cb(path, *created);
             } catch (...) {
                delete created;
                throw;
@@ -534,11 +502,7 @@ namespace dovah::datastores {
                      auto  index = parent.index_of_child(stub);
                      if (index == node::no_index)
                         return;
-                     if (auto& cb = this->callbacks.actions.on_deleted.before)
-                        cb(*parent.children[index]);
                      parent.destroy_child(index);
-                     if (auto& cb = this->callbacks.actions.on_deleted.after)
-                        cb();
                   };
                   for (auto* graph : this->graphs) {
                      _delete_if_present_in(*graph);
@@ -557,23 +521,7 @@ namespace dovah::datastores {
             auto index = parent.index_of_child(stub);
             if (index == node::no_index)
                return;
-            bool  moved = false;
-            auto& list  = parent.children;
-            cobb::vectors::re_sort_item_within(
-               list,
-               list.begin() + index,
-               &action_parent_node::sort_comparator,
-               [this, &moved, &parent, &list](auto from_it, auto to_it) {
-                  moved = true;
-                  size_t from = std::distance(list.begin(), from_it);
-                  size_t to   = std::distance(list.begin(), to_it);
-                  if (auto& cb = this->callbacks.actions.on_moved.before)
-                     cb(parent, from, parent, to);
-               }
-            );
-            if (moved)
-               if (auto& cb = this->callbacks.actions.on_moved.after)
-                  cb();
+            parent.re_sort_child(index);
          };
 
          for (auto* graph : this->graphs) {
@@ -631,104 +579,38 @@ namespace dovah::datastores {
                return;
             node = it->second;
             assert(node != nullptr);
-            //
-            if (auto& cb = this->callbacks.idles.on_deleted.before)
-               cb(*node);
-            this->idles_by_stub.erase(it);
          }
          //
          if (idle_parent_node* parent = node->parent) {
             auto i = parent->index_of_child(*node);
-            parent->destroy_child(i);
+            parent->destroy_child(i); // this erases from `this->idles_by_stub` for us.
             node = nullptr;
-            //
-            // Update next-sibling, if there was one:
-            //
-            if (i < parent->children.size()) {
-               this->_push_idle_hierarchy_position_to_form(*parent->children[i], i);
-            }
          } else {
             delete node;
          }
-         //
-         if (auto& cb = this->callbacks.idles.on_deleted.after)
-            cb();
       }
    #pragma endregion
 
    bool idles::place_idle_after(idle_node& idle, idle_node& desired_previous_sibling) {
       if (!desired_previous_sibling.parent)
          return false;
-      size_t index_after = desired_previous_sibling.index_of_child(desired_previous_sibling) + 1;
-      assert(index_after != node::no_index);
       idle_parent_node* parent_after = desired_previous_sibling.parent;
-
-      auto _update_next_sibling = [this, &idle, parent_after, index_after](bool is_same_parent) {
-         size_t i = index_after;
-         if (is_same_parent) {
-            i = parent_after->index_of_child(idle);
-         }
-         if (i < parent_after->children.size() - 1) {
-            idle_node* next = parent_after->children[i + 1];
-            assert(next != nullptr);
-            this->_push_idle_hierarchy_position_to_form(*next, i + 1);
-         }
-      };
+      size_t index_after = parent_after->index_of_child(desired_previous_sibling);
+      assert(index_after != node::no_index);
 
       if (idle.parent) {
          size_t index_prior = idle.parent->index_of_child(idle);
          assert(index_prior != node::no_index);
          bool same_parent = idle.parent == parent_after;
 
-         if (auto& cb = this->callbacks.idles.on_moved.before)
-            cb(*idle.parent, index_prior, *parent_after, index_after);
          if (same_parent && index_prior == index_after - 1)
             return true;
-         parent_after->insert_child_at(idle, index_after + 1);
-         this->_push_idle_hierarchy_position_to_form(idle, same_parent ? node::no_index : index_after);
-         _update_next_sibling(same_parent);
-         if (auto& cb = this->callbacks.idles.on_moved.after)
-            cb();
-      } else {
-         if (auto& cb = this->callbacks.idles.on_inserted.before)
-            cb(*parent_after, index_after);
-         parent_after->insert_child_at(idle, index_after + 1);
-         this->_push_idle_hierarchy_position_to_form(idle, index_after);
-         _update_next_sibling(false);
-         if (auto& cb = this->callbacks.idles.on_inserted.after)
-            cb(idle);
       }
+      parent_after->insert_child_after(idle, index_after);
       return true;
    }
    bool idles::append_idle_in(idle_node& idle, idle_parent_node& desired_parent) {
-      if (idle.parent == &desired_parent)
-         return true;
-
-      if (idle.parent) {
-         size_t index_prior = idle.parent->index_of_child(idle);
-         size_t index_after = desired_parent.children.size();
-         if (auto& cb = this->callbacks.idles.on_moved.before)
-            cb(*idle.parent, index_prior, desired_parent, index_after);
-         if (idle.parent == &desired_parent) {
-            auto idle_ptr = desired_parent.take_child(index_prior);
-            if (index_prior < index_after)
-               --index_after;
-            desired_parent.append_child(std::move(idle_ptr));
-         } else {
-            desired_parent.append_child(idle);
-         }
-         this->_push_idle_hierarchy_position_to_form(idle, index_after);
-         if (auto& cb = this->callbacks.idles.on_moved.after)
-            cb();
-      } else {
-         size_t i = desired_parent.children.size();
-         if (auto& cb = this->callbacks.idles.on_inserted.before)
-            cb(desired_parent, i);
-         desired_parent.append_child(idle);
-         this->_push_idle_hierarchy_position_to_form(idle, i);
-         if (auto& cb = this->callbacks.idles.on_inserted.after)
-            cb(idle);
-      }
+      desired_parent.append_child(idle);
       return true;
    }
 }

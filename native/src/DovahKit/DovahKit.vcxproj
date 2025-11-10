@@ -140,6 +140,7 @@
     <ClCompile Include="dovah\datastores\idles.cpp" />
     <ClCompile Include="dovah\datastores\idles\action_parent_node.cpp" />
     <ClCompile Include="dovah\datastores\idles\graph_node.cpp" />
+    <ClCompile Include="dovah\datastores\idles\idle_node.cpp" />
     <ClCompile Include="dovah\datastores\idles\idle_parent_node.cpp" />
     <ClCompile Include="dovah\exceptions\form_creation_failed.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.cpp" />
@@ -1369,7 +1370,9 @@
     <ClInclude Include="dovah\datastores\idles\idle_node.h" />
     <ClInclude Include="dovah\datastores\idles\idle_parent_node.h" />
     <ClInclude Include="dovah\datastores\idles\node.h" />
+    <ClInclude Include="dovah\datastores\idles\passkeys\check_is_building.h" />
     <ClInclude Include="dovah\datastores\idles\passkeys\idle_sorting.h" />
+    <ClInclude Include="dovah\datastores\idles\passkeys\push_idle_hierarchy_position_to_form.h" />
     <ClInclude Include="dovah\datastores\idles\warnings\cyclical_sibling_relationships.h" />
     <ClInclude Include="dovah\datastores\idles\warnings\idle_has_multiple_next_siblings.h" />
     <ClInclude Include="dovah\datastores\idles\warnings\inconsistent_parentage.h" />
@@ -1910,6 +1913,7 @@
     <ClInclude Include="helpers\scope_guards\fail.h" />
     <ClInclude Include="helpers\scope_guards\success.h" />
     <ClInclude Include="helpers\sort_and_remember.h" />
+    <ClInclude Include="helpers\vectors\move_item_to_index.h" />
     <ClInclude Include="nif\blocks\BSFurnitureMarkerNode.h" />
     <QtMoc Include="ui\form_group_windows\idle\IdleAnimationsDialog.h" />
     <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h" />

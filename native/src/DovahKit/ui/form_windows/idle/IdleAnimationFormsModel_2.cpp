@@ -34,11 +34,11 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
       #pragma endregion
       #pragma region Graphs
          {
-            auto& cb_set = this->_datastore.callbacks.graphs.on_inserted;
-            cb_set.before = [this](size_t index) {
+            auto& cb_set = this->_datastore.callbacks.graphs.on_created;
+            cb_set.before = [this](std::string_view path, size_t index) {
                this->beginInsertRows(_qmi_for_model_root(), index, index);
             };
-            cb_set.after = [this](const graph_node&) {
+            cb_set.after = [this](std::string_view path, const graph_node&) {
                this->endInsertRows();
             };
          }
@@ -54,33 +54,36 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
                   this->_callback_state.emitted_last_deletion = true;
                }
             };
-            cb_set.after = [this]() {
+            cb_set.after = [this](const dovah::form_stub&) {
                if (this->_callback_state.emitted_last_deletion)
                   this->endRemoveRows();
                this->_callback_state.emitted_last_deletion = false;
             };
          }
          {
-            auto& cb_set = this->_datastore.callbacks.actions.on_inserted;
-            cb_set.before = [this](const action_parent_node& parent, size_t index) {
-               this->beginInsertRows(_qmi_for_node(parent), index, index);
+            auto& cb_set = this->_datastore.callbacks.actions.on_placed;
+            cb_set.before = [this](const action_node& node, const action_parent_node& parent_after, size_t index) {
+               if (node.parent) {
+                  auto& parent_prior = *node.parent;
+                  auto  from         = parent_prior.index_of_child(node);
+                  auto  to           = index;
+                  auto  qmi_prior = _qmi_for_node(parent_prior);
+                  auto  qmi_after = _qmi_for_node(parent_after);
+                  if (to >= from)
+                     ++to;
+                  this->_callback_state.last_node_placement_was_an_insertion = false;
+                  this->beginMoveRows(qmi_prior, from, from, qmi_after, to);
+               } else {
+                  this->_callback_state.last_node_placement_was_an_insertion = true;
+                  this->beginInsertRows(_qmi_for_node(parent_after), index, index);
+               }
             };
             cb_set.after = [this](const action_node& node) {
                this->_recache_action(node);
-               this->endInsertRows();
-            };
-         }
-         {
-            auto& cb_set = this->_datastore.callbacks.actions.on_moved;
-            cb_set.before = [this](const action_parent_node& parent_prior, size_t from, const action_parent_node& parent_after, size_t to) {
-               auto qmi_prior = _qmi_for_node(parent_prior);
-               auto qmi_after = _qmi_for_node(parent_after);
-               if (to >= from)
-                  ++to;
-               this->beginMoveRows(qmi_prior, from, from, qmi_after, to);
-            };
-            cb_set.after = [this]() {
-               this->endMoveRows();
+               if (this->_callback_state.last_node_placement_was_an_insertion)
+                  this->endInsertRows();
+               else
+                  this->endMoveRows();
             };
          }
       #pragma endregion
@@ -95,33 +98,36 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
                   this->_callback_state.emitted_last_deletion = true;
                }
             };
-            cb_set.after = [this]() {
+            cb_set.after = [this](const dovah::form_stub&) {
                if (this->_callback_state.emitted_last_deletion)
                   this->endRemoveRows();
                this->_callback_state.emitted_last_deletion = false;
             };
          }
          {
-            auto& cb_set = this->_datastore.callbacks.idles.on_inserted;
-            cb_set.before = [this](const idle_parent_node& parent, size_t index) {
-               this->beginInsertRows(_qmi_for_node(parent), index, index);
+            auto& cb_set = this->_datastore.callbacks.idles.on_placed;
+            cb_set.before = [this](const idle_node& node, const idle_parent_node& parent_after, size_t index) {
+               if (node.parent) {
+                  auto& parent_prior = *node.parent;
+                  auto  from         = parent_prior.index_of_child(node);
+                  auto  to           = index;
+                  auto  qmi_prior = _qmi_for_node(parent_prior);
+                  auto  qmi_after = _qmi_for_node(parent_after);
+                  if (to >= from)
+                     ++to;
+                  this->_callback_state.last_node_placement_was_an_insertion = false;
+                  this->beginMoveRows(qmi_prior, from, from, qmi_after, to);
+               } else {
+                  this->_callback_state.last_node_placement_was_an_insertion = true;
+                  this->beginInsertRows(_qmi_for_node(parent_after), index, index);
+               }
             };
             cb_set.after = [this](const idle_node& node) {
                this->_recache_idle(node);
-               this->endInsertRows();
-            };
-         }
-         {
-            auto& cb_set = this->_datastore.callbacks.idles.on_moved;
-            cb_set.before = [this](const idle_parent_node& parent_prior, size_t from, const idle_parent_node& parent_after, size_t to) {
-               auto qmi_prior = _qmi_for_node(parent_prior);
-               auto qmi_after = _qmi_for_node(parent_after);
-               if (to >= from)
-                  ++to;
-               this->beginMoveRows(qmi_prior, from, from, qmi_after, to);
-            };
-            cb_set.after = [this]() {
-               this->endMoveRows();
+               if (this->_callback_state.last_node_placement_was_an_insertion)
+                  this->endInsertRows();
+               else
+                  this->endMoveRows();
             };
          }
       #pragma endregion

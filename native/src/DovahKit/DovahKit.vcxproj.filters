@@ -3645,6 +3645,9 @@
     <ClCompile Include="ui\form_group_windows\idle\IdleAnimationsDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\datastores\idles\idle_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8949,6 +8952,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\form_windows\idle\IdleNewActionRootPickerFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\passkeys\check_is_building.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\idles\passkeys\push_idle_hierarchy_position_to_form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\vectors\move_item_to_index.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

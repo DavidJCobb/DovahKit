@@ -156,5 +156,6 @@ class IdleAnimationFormsModel_2 : public QAbstractItemModel {
       struct {
          bool ignore_next_created_idle = false;
          bool emitted_last_deletion = false;
+         bool last_node_placement_was_an_insertion = false;
       } _callback_state;
 };

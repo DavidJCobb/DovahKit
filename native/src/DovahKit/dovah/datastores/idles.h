@@ -13,6 +13,9 @@ namespace dovah {
    class form_stub;
 }
 namespace dovah::datastores::impl::idles {
+   namespace passkeys {
+      class check_is_building;
+   }
    class node;
    class action_node;
    class action_parent_node;
@@ -56,12 +59,70 @@ namespace dovah::datastores {
             } on_moved;
          };
 
+         struct node_hierarchy_callback_set {
+            //
+            // The general pattern for these callbacks is:
+            // 
+            //  - Each event offers a "before" callback and an "after" callback.
+            // 
+            //  - The "before" callback is invoked before any changes are made.
+            // 
+            //  - The "after" callback is invoked after changes are successfully made.
+            // 
+            // The current use case for this is to facilitate the creation of QAbstractItemModels 
+            // that wrap this datastore; Qt models need to emit "before" and "after" signals for 
+            // hierarchy changes. The Qt API for this isn't exception-safe and can't be made so, 
+            // so at present we make no attempt to offer an "except" callback.
+            //
+            struct {
+               struct {
+                  std::function<void(std::string_view, size_t will_be_nth_graph)> before;
+                  std::function<void(std::string_view, const graph_node&)> after;
+               } on_created;
+               struct {
+                  std::function<void(std::string_view, const graph_node&)> before;
+                  std::function<void(std::string_view)> after;
+               } on_deleted;
+            } graphs;
+            struct {
+               struct {
+                  std::function<void(const action_node&, const action_parent_node&, size_t will_be_nth_child)> before;
+                  std::function<void(const action_node&)> after;
+               } on_placed; // created or moved; node has no parent during "before" = created
+               struct {
+                  std::function<void(const action_node&)> before;
+                  std::function<void(const action_node&)> after;
+               } on_taken; // removed from the hierarchy, but not deleted. happens briefly to a node when moved from one parent to another.
+               struct {
+                  std::function<void(const action_node&)> before;
+                  std::function<void(const form_stub&)>   after;
+               } on_deleted;
+            } actions;
+            struct {
+               struct {
+                  std::function<void(const idle_node&, const idle_parent_node&, size_t will_be_nth_child)> before;
+                  std::function<void(const idle_node&)> after;
+               } on_placed; // created or moved; node has no parent during "before" = created
+               struct {
+                  std::function<void(const idle_node&)> before;
+                  std::function<void(const idle_node&)> after;
+               } on_taken; // removed from the hierarchy, but not deleted. happens briefly to a node when moved from one parent to another.
+               struct {
+                  std::function<void(const idle_node&)> before;
+                  std::function<void(const form_stub&)> after;
+               } on_deleted;
+            } idles;
+         };
+
       public:
          idles();
          ~idles();
 
          void build(file_load_order&);
          void reset();
+
+      public: // passkeyed
+         bool _check_is_building(impl::idles::passkeys::check_is_building) const;
 
       protected:
          void _clear();
@@ -86,10 +147,6 @@ namespace dovah::datastores {
 
          static bool _graph_node_sort_comparator(const graph_node*, const graph_node*);
 
-         #pragma region Post-build updates
-            void _push_idle_hierarchy_position_to_form(idle_node&, size_t i);
-         #pragma endregion
-
       public:
          std::vector<graph_node*> graphs; // owned
          struct {
@@ -98,15 +155,7 @@ namespace dovah::datastores {
          } loose;
          std::unordered_map<form_stub*, idle_node*> idles_by_stub; // unowned
          //
-         struct {
-            struct {
-               struct {
-                  std::function<void(size_t)>      before;
-                  std::function<void(graph_node&)> after;
-               } on_inserted;
-            } graphs;
-            callbacks_by_type<action_node, action_parent_node> actions;
-            callbacks_by_type<idle_node,   idle_parent_node>   idles;
+         struct : public node_hierarchy_callback_set {
             struct {
                std::function<void()> before;
                std::function<void()> after;

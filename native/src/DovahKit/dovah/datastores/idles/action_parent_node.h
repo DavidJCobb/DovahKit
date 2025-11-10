@@ -9,6 +9,9 @@ namespace dovah {
 namespace dovah::datastores::impl::idles {
    class action_node;
 }
+namespace dovah::datastores::impl::idles::passkeys {
+   class idle_sorting;
+}
 
 namespace dovah::datastores::impl::idles {
    class action_parent_node : public node {
@@ -37,7 +40,10 @@ namespace dovah::datastores::impl::idles {
 
          void sort_children();
          [[nodiscard]] std::vector<size_t> sort_children_and_remember();
-         void sort_descendants();
+         void sort_descendants(passkeys::idle_sorting);
+
+         void re_sort_child(size_t);
+         void re_sort_child(action_node&);
 
          const action_node* action_by_stub(const form_stub&) const noexcept;
          action_node* action_by_stub(const form_stub&) noexcept;

@@ -2,6 +2,7 @@
 #include "helpers/const_forwarding_ptr.h"
 #include "./idle_parent_node.h"
 #include "./passkeys/idle_sorting.h"
+#include "./passkeys/push_idle_hierarchy_position_to_form.h"
 namespace dovah {
    class form_stub;
 }
@@ -22,5 +23,10 @@ namespace dovah::datastores::impl::idles {
 
       public:
          constexpr auto& _get_sort_state(passkeys::idle_sorting) noexcept { return this->sort_state; }
+
+      public: // passkeyed
+         // Update the IDLE form's ANAM subrecord (indicating its parent and previous sibling), 
+         // while also triggering the owning datastore's form-changed callbacks.
+         void _on_hierarchy_changed(passkeys::push_idle_hierarchy_position_to_form, size_t my_new_index = no_index);
    };
 }

@@ -1,8 +1,12 @@
 #include "./action_parent_node.h"
-#include "./action_node.h"
+#include "helpers/vectors/re_sort_item_within.h"
 #include "helpers/sort_and_remember.h"
 #include "../../form_stub.h"
 #include "../../form_types.h"
+#include "../idles.h"
+#include "./action_node.h"
+#include "./passkeys/check_is_building.h"
+#include "./passkeys/idle_sorting.h"
 
 namespace dovah::datastores::impl::idles {
    action_parent_node::~action_parent_node() {
@@ -39,37 +43,63 @@ namespace dovah::datastores::impl::idles {
    }
 
    void action_parent_node::append_child(std::unique_ptr<action_node>&& node_ptr) {
+      auto& callbacks   = this->datastore.callbacks.actions.on_placed;
+      bool  should_fire = !this->datastore._check_is_building({});
       assert(node_ptr != nullptr);
       assert(&node_ptr->datastore == &this->datastore);
       assert(node_ptr->parent == nullptr && "When using unique pointers, a node must be taken (`take_child`) from its parent before it can be appended!");
       auto& node = *node_ptr.get();
+      if (should_fire && callbacks.before)
+         (callbacks.before)(node, *this, this->children.size());
       this->children.emplace_back() = node_ptr.get();
       node_ptr.release();
       node.parent = this;
+      if (should_fire && callbacks.after)
+         (callbacks.after)(node);
    }
    void action_parent_node::append_child(action_node& node) {
       assert(&node.datastore == &this->datastore);
+      if (node.parent == this)
+         return;
+
+      auto& callbacks   = this->datastore.callbacks.actions.on_placed;
+      bool  should_fire = !this->datastore._check_is_building({});
+
+      if (should_fire && callbacks.before)
+         (callbacks.before)(node, *this, this->children.size());
+      auto& dst_ptr = this->children.emplace_back();
       if (node.parent) {
-         if (node.parent == this)
-            return;
          auto i = node.parent->index_of_child(node);
          assert(i != no_index);
-         auto& dst_ptr = this->children.emplace_back();
-         auto  src_ptr = node.parent->take_child(i);
+         auto src_ptr = node.parent->take_child(i);
          dst_ptr = src_ptr.release();
-         node.parent = this;
-         return;
+      } else {
+         dst_ptr = &node;
       }
-      this->children.emplace_back() = &node;
       node.parent = this;
+      if (should_fire && callbacks.after)
+         (callbacks.after)(node);
    }
    void action_parent_node::destroy_child(size_t i) {
       if (i >= this->children.size())
          throw std::out_of_range("Index out of range.");
+      
+      auto& callbacks   = this->datastore.callbacks.actions.on_deleted;
+      bool  should_fire = !this->datastore._check_is_building({});
+
       action_node* node = this->children[i];
-      if (node)
-         delete node;
+      assert(node != nullptr);
+      form_stub*   stub = &node->stub;
+      assert(stub != nullptr);
+
+      if (should_fire && callbacks.before)
+         (callbacks.before(*node));
+
+      delete node;
       this->children.erase(this->children.begin() + i);
+
+      if (should_fire && callbacks.after)
+         (callbacks.after)(*stub);
    }
    size_t action_parent_node::index_of_child(const form_stub& stub) const noexcept {
       for (size_t i = 0; i < this->children.size(); ++i) {
@@ -82,10 +112,19 @@ namespace dovah::datastores::impl::idles {
    std::unique_ptr<action_node> action_parent_node::take_child(size_t i) {
       if (i >= this->children.size())
          throw std::out_of_range("Index out of range.");
+
+      auto& callbacks   = this->datastore.callbacks.actions.on_taken;
+      bool  should_fire = !this->datastore._check_is_building({});
+
       std::unique_ptr<action_node> node_ptr;
       action_node* node = this->children[i];
+      assert(node != nullptr);
+      if (should_fire && callbacks.before)
+         (callbacks.before)(*node);
       this->children.erase(this->children.begin() + i);
       node_ptr.reset(node);
+      if (should_fire && callbacks.after)
+         (callbacks.after)(*node);
       return node_ptr;
    }
 
@@ -105,10 +144,39 @@ namespace dovah::datastores::impl::idles {
          sort_comparator
       );
    }
-   void action_parent_node::sort_descendants() {
+   void action_parent_node::sort_descendants(passkeys::idle_sorting passkey) {
       this->sort_children();
       for (action_node* child : this->children)
-         child->sort_descendants();
+         child->sort_descendants(passkey);
+   }
+
+   void action_parent_node::re_sort_child(size_t n) {
+      auto& node = *this->children[n];
+
+      bool fired_before = false;
+      cobb::vectors::re_sort_item_within(
+         this->children,
+         this->children.begin() + n,
+         &action_parent_node::sort_comparator,
+         [this, &fired_before, &node](auto from_it, auto to_it) {
+            auto& callbacks   = this->datastore.callbacks.actions.on_placed;
+            bool  should_fire = !this->datastore._check_is_building({});
+            if (should_fire && callbacks.before) {
+               fired_before = true;
+               (callbacks.before)(node, *this, std::distance(this->children.begin(), to_it));
+            }
+         }
+      );
+      if (fired_before) {
+         auto& callbacks = this->datastore.callbacks.actions.on_placed;
+         if (callbacks.after)
+            (callbacks.after)(node);
+      }
+   }
+   void action_parent_node::re_sort_child(action_node& node) {
+      auto i = this->index_of_child(node);
+      assert(i != no_index);
+      this->re_sort_child(i);
    }
 
    const action_node* action_parent_node::action_by_stub(const form_stub& action) const noexcept {
@@ -124,12 +192,24 @@ namespace dovah::datastores::impl::idles {
    }
 
    action_node* action_parent_node::get_or_create_action(form_stub& stub) {
-      auto* node = this->action_by_stub(stub);
-      if (node)
-         return node;
-      auto node_ptr = std::make_unique<action_node>(this->datastore, stub);
+      {
+         auto* node = this->action_by_stub(stub);
+         if (node)
+            return node;
+      }
+      
+      auto& callbacks   = this->datastore.callbacks.actions.on_placed;
+      bool  should_fire = !this->datastore._check_is_building({});
+
+      auto  node_ptr = std::make_unique<action_node>(this->datastore, stub);
+      auto& node     = *node_ptr;
+      if (should_fire && callbacks.before)
+         (callbacks.before)(node, *this, this->children.size());
       node_ptr->parent = this;
       this->children.emplace_back(node_ptr.get());
-      return node_ptr.release();
+      node_ptr.release();
+      if (should_fire && callbacks.after)
+         (callbacks.after)(node);
+      return &node;
    }
 }
