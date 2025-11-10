@@ -307,16 +307,21 @@ void PackageDataModel::reSortDeclarations(const dovah::loaded_forms::structs::cu
       }
    );
 
-   for (size_t index_prior = 0; index_prior < indices.size(); ++index_prior) {
-      size_t index_after = indices[index_prior];
+   QModelIndexList list_prior;
+   QModelIndexList list_after;
+   for (size_t index_after = 0; index_after < indices.size(); ++index_after) {
+      size_t index_prior = indices[index_after];
       if (index_prior == index_after)
          continue;
+
       for (size_t col = 0; col < ColumnCount; ++col) {
          QModelIndex qmi_prior = this->index(index_prior, col, {});
          QModelIndex qmi_after = this->index(index_after, col, {});
-         this->changePersistentIndex(qmi_prior, qmi_after);
+         list_prior.push_back(qmi_prior);
+         list_after.push_back(qmi_after);
       }
    }
+   this->changePersistentIndexList(list_prior, list_after);
 
    emit layoutChanged({ QModelIndex{} }, LayoutChangeHint::VerticalSortHint);
 }

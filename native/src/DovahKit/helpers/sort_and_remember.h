@@ -7,7 +7,7 @@ namespace cobb {
    //
    // Sort a container, and remember items' indices before and after the sort. 
    // Returns a vector of indices, such that given an item that was at index 
-   // I and was moved to index J, vec[I] == J.
+   // I and was moved to index J, vec[J] == I.
    //
    template<typename Container, typename Functor>
       requires requires {

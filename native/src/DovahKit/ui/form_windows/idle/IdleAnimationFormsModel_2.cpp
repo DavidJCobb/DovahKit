@@ -578,25 +578,79 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
       //
       this->layoutAboutToBeChanged({ qmi }, LayoutChangeHint::VerticalSortHint);
       auto mapping = graph.sort_children_and_remember();
-      QModelIndexList qpmi_prior = this->persistentIndexList();
-      QModelIndexList qpmi_after;
-      for (const auto& qpmi : qpmi_prior) {
-         if (!_qmi_is_child_of(qpmi, graph)) {
-            qpmi_after.push_back(qpmi);
-            continue;
+      {  // Update QPMIs.
+         //
+         // QAbstractItemModel offers `changePersistentIndex` and `changePersistentIndexList`. 
+         // The former may seem preferable because it doesn't require you to create two lists 
+         // to throw away; just change the indices one at a time, right? The problem is that 
+         // if you don't change all of the indices at once, using the list approach, then one 
+         // index can be changed to become identical to another index that has yet to be changed, 
+         // such that trying to change the latter index corrupts the former index.
+         // 
+         // If you need to change multiple QPMIs (which, in practice, is basically always), then 
+         // the ONLY safe option is `changePersistentIndexList`. The only question, then, is 
+         // this: do you loop over the collection of rows you've reordered and blindly change 
+         // every possibly QPMI, or do you loop over only those QPMIs that already exist?
+         //
+         QModelIndexList list_prior;
+         QModelIndexList list_after;
+         //
+         auto   all_qpmis   = this->persistentIndexList(); // implicitly shared, so no overhead here
+         size_t blind_count = mapping.size() * ColumnCount;
+         if (blind_count > all_qpmis.size()) {
+            //
+            // There are more cells to (potentially) update than there are extant QPMIs, so 
+            // just loop over the latter instead.
+            //
+            for (const auto& qpmi : all_qpmis) {
+               if (!_qmi_is_child_of(qpmi, graph)) // ignore irrelevant QPMIs
+                  continue;
+
+               int row = qpmi.row();
+               if (row == mapping.size()) { // special-case for graphs' "loose" nodes
+                  //
+                  // A graph's "loose" node exists after its child actions, and so outside of the 
+                  // `mapping` variable. We can leave the row unchanged.
+                  //
+                  continue;
+               }
+               if (row < 0 || row >= mapping.size())
+                  row = -1;
+               else {
+                  for (size_t i = 0; i < mapping.size(); ++i) {
+                     if (mapping[i] == row) {
+                        row = i;
+                        break;
+                     }
+                  }
+               }
+
+               list_prior.push_back(qpmi);
+               list_after.push_back(this->createIndex(row, qpmi.column(), qpmi.internalPointer()));
+            }
+         } else {
+            //
+            // There are fewer cells to (potentially) update than there are extant QPMIs, so 
+            // loop over the former. We can freely update a QPMI that doesn't actually exist 
+            // (i.e. a cell that isn't referred to by any extant QPMI) without causing any 
+            // problems.
+            //
+            list_prior.clear();
+            for (size_t index_after = 0; index_after < mapping.size(); ++index_after) {
+               size_t index_prior = mapping[index_after];
+               if (index_prior == index_after)
+                  continue;
+
+               for (size_t col = 0; col < ColumnCount; ++col) {
+                  QModelIndex qmi_prior = this->createIndex(index_prior, col, &graph);
+                  QModelIndex qmi_after = this->createIndex(index_after, col, &graph);
+                  list_prior.push_back(qmi_prior);
+                  list_after.push_back(qmi_after);
+               }
+            }
          }
-         if (_node_for_qmi(qpmi) == graph.loose) {
-            qpmi_after.push_back(qpmi);
-            continue;
-         }
-         auto row = qpmi.row();
-         if (row < 0 || row >= mapping.size())
-            row = -1;
-         else
-            row = mapping[row];
-         qpmi_after.push_back(this->createIndex(row, qpmi.column(), qpmi.internalPointer()));
+         this->changePersistentIndexList(list_prior, list_after);
       }
-      this->changePersistentIndexList(qpmi_prior, qpmi_after);
       this->layoutChanged({ qmi }, LayoutChangeHint::VerticalSortHint);
       //
       return *a_node;

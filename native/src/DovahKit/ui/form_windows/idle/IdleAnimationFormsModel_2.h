@@ -31,6 +31,8 @@ class IdleAnimationFormsModel_2 : public QAbstractItemModel {
 
       static constexpr const Qt::ItemDataRole NodeTypeRole = (Qt::ItemDataRole)(Qt::ItemDataRole::UserRole);
 
+      static constexpr const size_t ColumnCount = 1;
+
    protected:
       using datastore_type = dovah::datastores::idles;
       using datastore_node = datastore_type::node;
