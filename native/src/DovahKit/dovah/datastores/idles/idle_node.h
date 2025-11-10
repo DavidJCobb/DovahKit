@@ -9,7 +9,7 @@ namespace dovah {
 namespace dovah::datastores::impl::idles {
    class idle_node : public idle_parent_node {
       public:
-         constexpr idle_node(form_stub& idle) : stub(idle) {}
+         constexpr idle_node(datastore_type& d, form_stub& idle) : idle_parent_node(d), stub(idle) {}
 
       public:
          cobb::const_forwarding_ptr<idle_parent_node> parent = nullptr;

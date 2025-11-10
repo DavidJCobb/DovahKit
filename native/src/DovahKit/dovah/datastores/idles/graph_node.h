@@ -9,7 +9,7 @@ namespace dovah {
 namespace dovah::datastores::impl::idles {
    class graph_node : public action_parent_node {
       public:
-         graph_node();
+         graph_node(datastore_type& d);
          ~graph_node();
 
       public:

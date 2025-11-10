@@ -569,7 +569,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
       auto qmi = _qmi_for_node(graph);
       this->beginInsertRows(qmi, graph.children.size(), graph.children.size());
       {
-         auto a_node_ptr = std::make_unique<action_node>(action);
+         auto a_node_ptr = std::make_unique<action_node>(this->_datastore, action);
          a_node = a_node_ptr.get();
          graph.append_child(std::move(a_node_ptr));
          this->_recache_action(*a_node);
@@ -661,7 +661,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
          return nullptr;
 
       auto& a_node = _get_or_create_action(graph, action);
-      auto  i_node_ptr = std::make_unique<idle_node>(*idle_stub);
+      auto  i_node_ptr = std::make_unique<idle_node>(this->_datastore, *idle_stub);
       auto* i_node     = i_node_ptr.get();
       assert(i_node != nullptr);
       this->_datastore.append_idle_in(*i_node, a_node);
@@ -756,7 +756,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
       if (!stub)
          return {};
 
-      auto  i_node_ptr = std::make_unique<idle_node>(*stub);
+      auto  i_node_ptr = std::make_unique<idle_node>(this->_datastore, *stub);
       auto* i_node     = i_node_ptr.get();
       assert(i_node != nullptr);
       this->_datastore.append_idle_in(*i_node, *parent_node);
@@ -832,7 +832,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
             if (!stub)
                return;
 
-            auto  i_node_ptr = std::make_unique<idle_node>(*stub);
+            auto  i_node_ptr = std::make_unique<idle_node>(this->_datastore, *stub);
             auto* i_node = i_node_ptr.get();
             assert(i_node != nullptr);
             if (is_root) {
@@ -855,7 +855,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
          if (!stub)
             return {};
 
-         auto  i_node_ptr = std::make_unique<idle_node>(*stub);
+         auto  i_node_ptr = std::make_unique<idle_node>(this->_datastore, *stub);
          auto* i_node = i_node_ptr.get();
          assert(i_node != nullptr);
          this->_datastore.place_idle_after(*i_node, *src_idle);

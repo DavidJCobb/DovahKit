@@ -27,8 +27,8 @@ namespace {
 
 namespace dovah::datastores {
    idles::idles() {
-      this->loose.actions = new action_parent_node;
-      this->loose.idles   = new idle_parent_node;
+      this->loose.actions = new action_parent_node(*this);
+      this->loose.idles   = new idle_parent_node(*this);
    }
    idles::~idles() {
       this->_clear();
@@ -42,7 +42,7 @@ namespace dovah::datastores {
       //
       lo.for_each_form_of_type(form_type::idle, [this](dovah::form_stub* stub) -> bool {
          idle_node*& mapping = this->idles_by_stub[stub];
-         mapping = new idle_node(*stub);
+         mapping = new idle_node(*this, *stub);
          return false;
       });
       //
@@ -105,8 +105,8 @@ namespace dovah::datastores {
       if (auto& callback = this->callbacks.on_cleared.before; callback)
          (callback)();
       this->_clear();
-      this->loose.actions = new action_parent_node;
-      this->loose.idles   = new idle_parent_node;
+      this->loose.actions = new action_parent_node(*this);
+      this->loose.idles   = new idle_parent_node(*this);
       if (auto& callback = this->callbacks.on_cleared.after; callback)
          (callback)();
    }
@@ -428,7 +428,7 @@ namespace dovah::datastores {
          if (path.empty())
             return nullptr;
          if (!this->_is_building) {
-            auto* created = new graph_node;
+            auto* created = new graph_node(*this);
             try {
                created->path = path;
                auto it = std::upper_bound(
@@ -449,7 +449,7 @@ namespace dovah::datastores {
             return created;
          }
          auto& pointer = this->graphs.emplace_back();
-         pointer = new graph_node;
+         pointer = new graph_node(*this);
          pointer->path = path;
          return pointer;
       }
@@ -592,7 +592,7 @@ namespace dovah::datastores {
          idle_node*& node = this->idles_by_stub[&stub];
          if (!node) {
             try {
-               node = new idle_node(stub);
+               node = new idle_node(*this, stub);
             } catch (...) {
                this->idles_by_stub.erase(&stub);
                throw;
@@ -684,7 +684,7 @@ namespace dovah::datastores {
             cb(*idle.parent, index_prior, *parent_after, index_after);
          if (same_parent && index_prior == index_after - 1)
             return true;
-         parent_after->insert_child_at(idle, index_after);
+         parent_after->insert_child_at(idle, index_after + 1);
          this->_push_idle_hierarchy_position_to_form(idle, same_parent ? node::no_index : index_after);
          _update_next_sibling(same_parent);
          if (auto& cb = this->callbacks.idles.on_moved.after)
@@ -692,7 +692,7 @@ namespace dovah::datastores {
       } else {
          if (auto& cb = this->callbacks.idles.on_inserted.before)
             cb(*parent_after, index_after);
-         parent_after->insert_child_at(idle, index_after);
+         parent_after->insert_child_at(idle, index_after + 1);
          this->_push_idle_hierarchy_position_to_form(idle, index_after);
          _update_next_sibling(false);
          if (auto& cb = this->callbacks.idles.on_inserted.after)

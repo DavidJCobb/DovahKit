@@ -17,6 +17,7 @@ namespace dovah::datastores::impl::idles::passkeys {
 namespace dovah::datastores::impl::idles {
    class idle_parent_node : public node {
       public:
+         using node::node;
          ~idle_parent_node();
 
       public:

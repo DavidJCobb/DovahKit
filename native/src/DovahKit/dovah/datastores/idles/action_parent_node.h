@@ -13,6 +13,7 @@ namespace dovah::datastores::impl::idles {
 namespace dovah::datastores::impl::idles {
    class action_parent_node : public node {
       public:
+         using node::node;
          ~action_parent_node();
 
       public:

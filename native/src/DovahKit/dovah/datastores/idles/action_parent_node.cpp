@@ -40,6 +40,7 @@ namespace dovah::datastores::impl::idles {
 
    void action_parent_node::append_child(std::unique_ptr<action_node>&& node_ptr) {
       assert(node_ptr != nullptr);
+      assert(&node_ptr->datastore == &this->datastore);
       assert(node_ptr->parent == nullptr && "When using unique pointers, a node must be taken (`take_child`) from its parent before it can be appended!");
       auto& node = *node_ptr.get();
       this->children.emplace_back() = node_ptr.get();
@@ -47,6 +48,7 @@ namespace dovah::datastores::impl::idles {
       node.parent = this;
    }
    void action_parent_node::append_child(action_node& node) {
+      assert(&node.datastore == &this->datastore);
       if (node.parent) {
          if (node.parent == this)
             return;
@@ -125,7 +127,7 @@ namespace dovah::datastores::impl::idles {
       auto* node = this->action_by_stub(stub);
       if (node)
          return node;
-      auto node_ptr = std::make_unique<action_node>(stub);
+      auto node_ptr = std::make_unique<action_node>(this->datastore, stub);
       node_ptr->parent = this;
       this->children.emplace_back(node_ptr.get());
       return node_ptr.release();
