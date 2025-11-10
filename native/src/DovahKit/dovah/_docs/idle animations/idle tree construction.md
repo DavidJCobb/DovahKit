@@ -13,7 +13,7 @@ As such, after all forms have been loaded, the game must build an idle tree. The
 * During file load:
   * When any `IDLE/ANAM` subrecord is seen:
     * Add the idle to a list of <dfn>pending idles</dfn> that need to be incorporated into the global idle tree.
-    * Check whether the parent form ID is an action. If so, register the idle as an action root, and then set the parent form ID to zero: at run-time, the "parent" field on `TESIdleForm` is only ever a `TESIdleForm*`.
+    * Check whether the parent form ID is an action.[^actions-load-before-idles] If so, register the idle as an action root (given the idle's behavior graph and the action in question), and then set the parent form ID to zero: at run-time, the "parent" field on `TESIdleForm` is only ever a `TESIdleForm*`; never a `BGSAction*`.
 * Post-load:
   * **Initialize idles and remove duplicates.** Loop over the list of pending idles. If the current list item is already initialized, then remove it; otherwise, initialize it.[^pending-dupes]
   * **For each idle, try inserting it into its parent.**
@@ -24,7 +24,7 @@ As such, after all forms have been loaded, the game must build an idle tree. The
       * **Validate siblings.** Scan over the idle's previous siblings. If any previous sibling is also an ancestor, then assume that a cyclical reference is formed.[^crusader-kings-are-cyclical] If any of those previous siblings form a cyclical reference, *or* if any sibling has a different parent from this idle, then...
         * Try to set *LooseList* to the loose idle list for an appropriate behavior graph. Specifically, check each of the following idles to see if they have a containing behavior graph, and use the first such graph you find: this idle; this idle's parent; this idle's previous sibling.
         * Set this idle's parent and previous-sibling pointers to null.
-      * **Insert idle into its parent, if it still has one.** If this idle has a parent, then...
+      * **Insert the idle into its parent, if it still has one.** If this idle has a parent, then...
         * Append this idle into its parent's child list.
         * Iteratively re-sort this idle's next siblings within that child list.
         * Done.
@@ -34,6 +34,8 @@ As such, after all forms have been loaded, the game must build an idle tree. The
   * **Recursively crawl all loaded behavior graphs and validate the parentage of all non-loose idles.**
     * If this idle has a parent idle, but does not belong to that parent idle's child list, then this idle is invalid.
     * If this idle has a previous-sibling pointer, but it's its parent's first child *or* the previous idle in its parent's child list is not the same idle as is pointed to by this idle's previous-sibling pointer, then this idle is invalid. Try to silently fix this idle's previous-sibling pointer (forgetting to check if this idle is the first child, so in that case, I think we just corrupt the heap).
+
+[^actions-load-before-idles]: This check only works because the game and CK always load the `AACT` record group before the `IDLE` record group. All Action forms (`BGSAction`) are guaranteed to be loaded by the time the game processes any idle's `ANAM` subrecord. Therefore the game can take the parent record ID listed in `IDLE/ANAM`, convert it to a form ID, do a form lookup early, and check if the result exists and is an Action form.
 
 [^pending-dupes]: If an `IDLE` record is overridden, then multiple pointers to that idle will end up in the pending idles list. This is because the game doesn't skip overridden records; instead, it just manually clears a form's data between files. As such, each `IDLE` record's `ANAM` subrecord is seen, and causes the idle to be added to the pending idles list.
 
@@ -78,7 +80,7 @@ These are the mitigations employed by the Creation Kit when validating the idle 
 Bethesda's engine performs sorted insertions on idles. The algorithm is as follows:
 
 * Let *CurrentIdle* be the idle to insert.
-* Search the destination list for *CurrentIdle*'s previous sibling. If found, insert *CurrentIdle* after it; else, append *CurrentIdle* to the end of the list.
+* Search the destination list for *CurrentIdle*'s previous sibling. If it *has* a desired previous sibling, and if that sibling is in the destination list, then insert *CurrentIdle* after it; else, append *CurrentIdle* to the end of the list.
 * Loop indefinitely:
   * Let *NextIndex* be -1. Let *NextIdle* be null.
   * Search the parent's child list for *CurrentIdle*, and for an idle that identifies *CurrentIdle* as its previous sibling. Store the index of both idles as *CurrentIndex* and *NextIndex*, respectively, and set *NextIdle* to the latter idle.
@@ -299,6 +301,6 @@ An example of the worst-case sort:
 * E, A, B, C, D
 * A, B, C, D, E
 
-If we assume that we always loop over the full list to find *PreviousIndex*, then this is a nested loop, and our worst-case total iteration count is $`\sum_{i=1}^{n - 1}n`$. However, the only reason not to bail out of the inner loop early is for data validation, and we can't validate that a single idle has multiple next idles (i.e. that two or more idles share the same previous sibling).
+If we assume that we always loop over the full list to find *PreviousIndex*, then this is a nested loop, and our worst-case total iteration count is $`\sum_{i=1}^{n - 1}n`$. However, the only reason not to bail out of the inner loop early is for data validation. One problem with this approach is that we can't validate the previous-sibling relationships by checking whether any single idle has multiple next idles (i.e. whether two or more idles are fighting over the same previous sibling).
 
 For 5 children, the worst-case iteration count is 50.

@@ -215,7 +215,7 @@ namespace dovah::datastores::impl::idles {
       assert(this->datastore._check_is_building({}) == true);
       //
       // Insert the idle after its desired previous sibling, if said sibling 
-      // is already in our child list.
+      // is non-null and is already in our child list.
       //
       {
          idle_node* desired_prev = subject._get_sort_state({}).previous_idle;
@@ -226,7 +226,7 @@ namespace dovah::datastores::impl::idles {
             else
                this->append_child(subject);
          } else {
-            this->insert_child_before(subject, 0);
+            this->append_child(subject);
          }
       }
       //
