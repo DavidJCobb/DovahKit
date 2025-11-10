@@ -1,22 +1,13 @@
 #pragma once
-#include <memory>
 #include <unordered_map>
 #include <vector>
 #include <QAbstractItemModel>
 #include "dovah/datastores/idles.h"
-#include "./IdleAnimationFormsModel_impl/_base_node.h"
-#include "./IdleAnimationFormsModel_impl/graph_node.h"
-#include "./IdleAnimationFormsModel_impl/action_parent_node.h"
-#include "./IdleAnimationFormsModel_impl/idle_parent_node.h"
 namespace dovah {
    class form_stub;
 }
-namespace IdleAnimationFormsModel_impl {
-   class action_node;
-   class idle_node;
-}
 
-class IdleAnimationFormsModel_2 : public QAbstractItemModel {
+class IdleAnimationFormsModel : public QAbstractItemModel {
    Q_OBJECT;
    public:
       enum class NodeType {
@@ -101,7 +92,7 @@ class IdleAnimationFormsModel_2 : public QAbstractItemModel {
       #pragma endregion
 
    public:
-      IdleAnimationFormsModel_2(QObject* parent = nullptr);
+      IdleAnimationFormsModel(QObject* parent = nullptr);
 
       #pragma region Accessors
          QModelIndex graphQMI(QString path) const noexcept;

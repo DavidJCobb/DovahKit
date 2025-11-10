@@ -3,10 +3,8 @@
 #include "dovah/forms/IdleAnimation.h"
 #include "dovah/form_stub.h"
 #include "ui/utils/set_custom_context_menu.h"
-
-// TODO: Move these to ui/form_group_windows/idle:
-#include "ui/form_windows/idle/IdleAnimationFormsModel_2.h" // TODO: delete first model; ditch "_2" prefix on this model
-#include "ui/form_windows/idle/FormSubdialogIdleNewActionRoot.h"
+#include "./IdleAnimationFormsModel.h"
+#include "./FormSubdialogIdleNewActionRoot.h"
 
 IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
    this->ui.setupUi(this);
@@ -15,7 +13,7 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
 
    {
       auto* widget = this->ui.idles;
-      auto* model  = new IdleAnimationFormsModel_2(widget);
+      auto* model  = new IdleAnimationFormsModel(widget);
       widget->setModel(model);
    }
 
@@ -94,14 +92,14 @@ QModelIndex IdleAnimationsDialog::_get_selected_row() {
 
 void IdleAnimationsDialog::_context_add_action_root() {
    auto* widget    = this->ui.idles;
-   auto* model     = (IdleAnimationFormsModel_2*) widget->model();
+   auto* model     = (IdleAnimationFormsModel*) widget->model();
    auto* sel_model = widget->selectionModel();
 
    auto qmi = _get_selected_row();
    if (!qmi.isValid())
       return;
-   auto node_type = model->data(qmi, IdleAnimationFormsModel_2::NodeTypeRole).value<IdleAnimationFormsModel_2::NodeType>();
-   if (node_type != IdleAnimationFormsModel_2::NodeType::Graph)
+   auto node_type = model->data(qmi, IdleAnimationFormsModel::NodeTypeRole).value<IdleAnimationFormsModel::NodeType>();
+   if (node_type != IdleAnimationFormsModel::NodeType::Graph)
       return;
 
    dovah::form_stub* actionStub = nullptr;
@@ -133,7 +131,7 @@ void IdleAnimationsDialog::_context_add_action_root() {
 }
 void IdleAnimationsDialog::_context_add_idle() {
    auto* widget    = this->ui.idles;
-   auto* model     = (IdleAnimationFormsModel_2*)widget->model();
+   auto* model     = (IdleAnimationFormsModel*)widget->model();
    auto* sel_model = widget->selectionModel();
 
    auto qmi = _get_selected_row();
@@ -160,7 +158,7 @@ void IdleAnimationsDialog::_context_add_idle() {
 }
 void IdleAnimationsDialog::_context_duplicate_idle_single() {
    auto* widget    = this->ui.idles;
-   auto* model     = (IdleAnimationFormsModel_2*)widget->model();
+   auto* model     = (IdleAnimationFormsModel*)widget->model();
    auto* sel_model = widget->selectionModel();
 
    auto qmi = _get_selected_row();
@@ -184,7 +182,7 @@ void IdleAnimationsDialog::_context_duplicate_idle_single() {
 }
 void IdleAnimationsDialog::_context_duplicate_idle_tree() {
    auto* widget    = this->ui.idles;
-   auto* model     = (IdleAnimationFormsModel_2*)widget->model();
+   auto* model     = (IdleAnimationFormsModel*)widget->model();
    auto* sel_model = widget->selectionModel();
 
    auto qmi = _get_selected_row();

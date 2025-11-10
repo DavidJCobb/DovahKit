@@ -1,4 +1,4 @@
-#include "./IdleAnimationFormsModel_2.h"
+#include "./IdleAnimationFormsModel.h"
 #include <QColor>
 #include "dovah/datastores/idles/action_node.h"
 #include "dovah/datastores/idles/graph_node.h"
@@ -14,7 +14,7 @@ namespace {
    constexpr const char* const mime_type = "application/dovah-kit.idle-animation-forms-model.node";
 }
 
-IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstractItemModel(parent) {
+IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractItemModel(parent) {
    #pragma region Set up datastore callbacks
       #pragma region Global
          {
@@ -147,8 +147,8 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
    });
 
    auto& editor = DovahKitCore::get();
-   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &IdleAnimationFormsModel_2::_on_game_data_abandon);
-   QObject::connect(&editor, &DovahKitCore::dataAcquireComplete,  this, &IdleAnimationFormsModel_2::_on_game_data_acquired);
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &IdleAnimationFormsModel::_on_game_data_abandon);
+   QObject::connect(&editor, &DovahKitCore::dataAcquireComplete,  this, &IdleAnimationFormsModel::_on_game_data_acquired);
    QObject::connect(&editor, &DovahKitCore::formCreated,          this, [this](dovah::form_stub* stub) { this->_on_form_created(*stub); });
    QObject::connect(&editor, &DovahKitCore::formModified,         this, [this](dovah::form_stub* stub) { this->_on_form_modified(*stub); });
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool flag) { this->_on_form_deletion_imminent(*stub, flag); });
@@ -158,10 +158,10 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
 }
 
 #pragma region Node/QMI utils and node lookups
-   QModelIndex IdleAnimationFormsModel_2::_qmi_for_model_root() const {
+   QModelIndex IdleAnimationFormsModel::_qmi_for_model_root() const {
       return {};
    }
-   QModelIndex IdleAnimationFormsModel_2::_qmi_for_node(const datastore_node& n, int column) const {
+   QModelIndex IdleAnimationFormsModel::_qmi_for_node(const datastore_node& n, int column) const {
       if (column < 0)
          return {};
       const auto& graphs = this->_datastore.graphs;
@@ -212,14 +212,14 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
          return {};
       return this->createIndex(row, column, (quintptr)parent_void);
    }
-   QModelIndex IdleAnimationFormsModel_2::_qmi_for_child_node(int row, int column, const datastore_node& parent) const {
+   QModelIndex IdleAnimationFormsModel::_qmi_for_child_node(int row, int column, const datastore_node& parent) const {
       return this->createIndex(row, column, (quintptr)&parent);
    }
-   bool IdleAnimationFormsModel_2::_qmi_is_child_of(const QModelIndex& qmi, const datastore_node& node) const {
+   bool IdleAnimationFormsModel::_qmi_is_child_of(const QModelIndex& qmi, const datastore_node& node) const {
       return qmi.internalPointer() == &node;
    }
 
-   const IdleAnimationFormsModel_2::datastore_node* IdleAnimationFormsModel_2::_child_node_by_row(const datastore_node* parent, size_t row) const {
+   const IdleAnimationFormsModel::datastore_node* IdleAnimationFormsModel::_child_node_by_row(const datastore_node* parent, size_t row) const {
       if (!parent) {
          const auto&  list = this->_datastore.graphs;
          const size_t size = list.size();
@@ -265,17 +265,17 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
       return nullptr;
    }
 
-   const IdleAnimationFormsModel_2::datastore_node* IdleAnimationFormsModel_2::_node_for_qmi(const QModelIndex& qmi) const {
+   const IdleAnimationFormsModel::datastore_node* IdleAnimationFormsModel::_node_for_qmi(const QModelIndex& qmi) const {
       if (!qmi.isValid())
          return nullptr;
       auto* parent = (datastore_node*)qmi.internalPointer();
       return _child_node_by_row(parent, qmi.row());
    }
-   IdleAnimationFormsModel_2::datastore_node* IdleAnimationFormsModel_2::_node_for_qmi(const QModelIndex& qmi) {
+   IdleAnimationFormsModel::datastore_node* IdleAnimationFormsModel::_node_for_qmi(const QModelIndex& qmi) {
       return const_cast<datastore_node*>(std::as_const(*this)._node_for_qmi(qmi));
    }
 
-   const IdleAnimationFormsModel_2::datastore_node* IdleAnimationFormsModel_2::_child_node_for_qmi(const QModelIndex& parent_qmi, int row) const {
+   const IdleAnimationFormsModel::datastore_node* IdleAnimationFormsModel::_child_node_for_qmi(const QModelIndex& parent_qmi, int row) const {
       if (parent_qmi == _qmi_for_model_root()) {
          return _child_node_by_row(nullptr, row);
       }
@@ -284,11 +284,11 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
          return nullptr;
       return _child_node_by_row(parent_node, row);
    }
-   IdleAnimationFormsModel_2::datastore_node* IdleAnimationFormsModel_2::_child_node_for_qmi(const QModelIndex& parent_qmi, int row) {
+   IdleAnimationFormsModel::datastore_node* IdleAnimationFormsModel::_child_node_for_qmi(const QModelIndex& parent_qmi, int row) {
       return const_cast<datastore_node*>(std::as_const(*this)._child_node_for_qmi(parent_qmi, row));
    }
 
-   const IdleAnimationFormsModel_2::graph_node* IdleAnimationFormsModel_2::_node_for_graph_path(QString path) const {
+   const IdleAnimationFormsModel::graph_node* IdleAnimationFormsModel::_node_for_graph_path(QString path) const {
       for (auto* graph : this->_datastore.graphs) {
          {
             auto it = this->_cache.find(graph);
@@ -303,34 +303,34 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
       }
       return nullptr;
    }
-   IdleAnimationFormsModel_2::graph_node* IdleAnimationFormsModel_2::_node_for_graph_path(QString path) {
+   IdleAnimationFormsModel::graph_node* IdleAnimationFormsModel::_node_for_graph_path(QString path) {
       return const_cast<graph_node*>(std::as_const(*this)._node_for_graph_path(path));
    }
    
-   IdleAnimationFormsModel_2::action_node* IdleAnimationFormsModel_2::_node_for_action(graph_node* graph, const dovah::form_stub& stub) {
+   IdleAnimationFormsModel::action_node* IdleAnimationFormsModel::_node_for_action(graph_node* graph, const dovah::form_stub& stub) {
       if (graph)
          return _node_for_action(*graph, stub);
       return _node_for_loose_action(stub);
    }
-   IdleAnimationFormsModel_2::action_node* IdleAnimationFormsModel_2::_node_for_action(graph_node& graph, const dovah::form_stub& stub) {
+   IdleAnimationFormsModel::action_node* IdleAnimationFormsModel::_node_for_action(graph_node& graph, const dovah::form_stub& stub) {
       for (action_node* node : graph.children)
          if (&node->stub == &stub)
             return node;
       return nullptr;
    }
-   IdleAnimationFormsModel_2::action_node* IdleAnimationFormsModel_2::_node_for_loose_action(const dovah::form_stub& stub) {
+   IdleAnimationFormsModel::action_node* IdleAnimationFormsModel::_node_for_loose_action(const dovah::form_stub& stub) {
       return this->_datastore.loose_action(stub);
    }
 #pragma endregion
 
 #pragma region Constraints
-   bool IdleAnimationFormsModel_2::_can_create_new_idle_in(const idle_parent_node& parent) const {
+   bool IdleAnimationFormsModel::_can_create_new_idle_in(const idle_parent_node& parent) const {
       if (dynamic_cast<const action_node*>(&parent)) {
          return parent.children.empty();
       }
       return true;
    }
-   bool IdleAnimationFormsModel_2::_can_ever_duplicate(const idle_node& n) const {
+   bool IdleAnimationFormsModel::_can_ever_duplicate(const idle_node& n) const {
       if (!n.parent)
          return false;
       if (dynamic_cast<const action_node*>((const idle_parent_node*)n.parent))
@@ -339,7 +339,7 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
    }
 #pragma endregion
 
-/*static*/ dovah::file_load_order* IdleAnimationFormsModel_2::_get_file_load_order() {
+/*static*/ dovah::file_load_order* IdleAnimationFormsModel::_get_file_load_order() {
    auto files = DovahKitCore::get().get_loaded_files();
    if (files.empty())
       return nullptr;
@@ -350,16 +350,16 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
 }
 
 #pragma region Form events
-   void IdleAnimationFormsModel_2::_on_game_data_acquired() {
+   void IdleAnimationFormsModel::_on_game_data_acquired() {
       this->_rebuild_datastore();
    }
-   void IdleAnimationFormsModel_2::_on_game_data_abandon() {
+   void IdleAnimationFormsModel::_on_game_data_abandon() {
       this->beginResetModel();
       this->_cache.clear();
       this->_datastore.reset();
       this->endResetModel();
    }
-   void IdleAnimationFormsModel_2::_on_form_created(dovah::form_stub& stub) {
+   void IdleAnimationFormsModel::_on_form_created(dovah::form_stub& stub) {
       if (stub.form_type != dovah::form_type::idle)
          return;
       if (this->_callback_state.ignore_next_created_idle) {
@@ -368,7 +368,7 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
       }
       this->_datastore.on_idle_created(stub);
    }
-   void IdleAnimationFormsModel_2::_on_form_modified(dovah::form_stub& stub) {
+   void IdleAnimationFormsModel::_on_form_modified(dovah::form_stub& stub) {
       switch (stub.form_type) {
          case dovah::form_type::action:
             this->_datastore.on_action_modified(stub);
@@ -382,7 +382,7 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
             break;
       }
    }
-   void IdleAnimationFormsModel_2::_on_form_deletion_imminent(dovah::form_stub& stub, bool just_being_flagged) {
+   void IdleAnimationFormsModel::_on_form_deletion_imminent(dovah::form_stub& stub, bool just_being_flagged) {
       if (!just_being_flagged) {
          this->_datastore.on_before_form_deleted(stub);
          return;
@@ -398,7 +398,7 @@ IdleAnimationFormsModel_2::IdleAnimationFormsModel_2(QObject* parent) : QAbstrac
    }
 #pragma endregion
 
-void IdleAnimationFormsModel_2::_rebuild_datastore() {
+void IdleAnimationFormsModel::_rebuild_datastore() {
    this->_cache.clear();
 
    auto* flo = _get_file_load_order();
@@ -442,7 +442,7 @@ void IdleAnimationFormsModel_2::_rebuild_datastore() {
    //
    this->endResetModel();
 }
-void IdleAnimationFormsModel_2::_recache_action(const action_node& node) {
+void IdleAnimationFormsModel::_recache_action(const action_node& node) {
    auto& stub  = node.stub;
    auto& cache = this->_cache[(action_node*)&node];
    cache.display_string = QString::fromStdString(stub.get_editor_id());
@@ -453,7 +453,7 @@ void IdleAnimationFormsModel_2::_recache_action(const action_node& node) {
       cache.display_string += tr(" (D)", "form indicator: deletion");
    }
 }
-void IdleAnimationFormsModel_2::_recache_action(const dovah::form_stub& stub) {
+void IdleAnimationFormsModel::_recache_action(const dovah::form_stub& stub) {
    for (auto* graph : this->_datastore.graphs) {
       auto index = graph->index_of_child(stub);
       if (index == datastore_node::no_index)
@@ -474,7 +474,7 @@ void IdleAnimationFormsModel_2::_recache_action(const dovah::form_stub& stub) {
       }
    }
 }
-void IdleAnimationFormsModel_2::_recache_idle(const idle_node& node) {
+void IdleAnimationFormsModel::_recache_idle(const idle_node& node) {
    auto& stub  = node.stub;
    auto& cache = this->_cache[(idle_node*)&node];
    cache.display_string = QString::fromStdString(stub.get_editor_id());
@@ -485,7 +485,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const idle_node& node) {
       cache.display_string += tr(" (D)", "form indicator: deletion");
    }
 }
-void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
+void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
    auto* node = this->_datastore.idle_by_stub(stub);
    if (node) {
       this->_recache_idle(*node);
@@ -496,7 +496,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
 }
 
 #pragma region Form utils
-   dovah::form_stub* IdleAnimationFormsModel_2::_try_silently_create_idle(QString editor_id) {
+   dovah::form_stub* IdleAnimationFormsModel::_try_silently_create_idle(QString editor_id) {
       //
       // Normally, we automatically react to the creation of an IDLE form occurring 
       // anywhere in DovahKit: we tell the datastore that a new IDLE has been created, 
@@ -540,7 +540,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
          return nullptr;
       }
    }
-   dovah::form_stub* IdleAnimationFormsModel_2::_try_silently_duplicate_idle(dovah::form_stub& idle) {
+   dovah::form_stub* IdleAnimationFormsModel::_try_silently_duplicate_idle(dovah::form_stub& idle) {
       //
       // See documentation comment in `_try_silently_create_idle`.
       //
@@ -567,7 +567,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
    }
 #pragma endregion
 #pragma region Node utils
-   IdleAnimationFormsModel_2::action_node& IdleAnimationFormsModel_2::_get_or_create_action(graph_node& graph, dovah::form_stub& action) {
+   IdleAnimationFormsModel::action_node& IdleAnimationFormsModel::_get_or_create_action(graph_node& graph, dovah::form_stub& action) {
       auto* a_node = graph.action_by_stub(action);
       if (a_node)
          return *a_node;
@@ -661,7 +661,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
       //
       return *a_node;
    }
-   IdleAnimationFormsModel_2::idle_node* IdleAnimationFormsModel_2::_create_action_root(graph_node& graph, dovah::form_stub& action, QString idle_editor_id) {
+   IdleAnimationFormsModel::idle_node* IdleAnimationFormsModel::_create_action_root(graph_node& graph, dovah::form_stub& action, QString idle_editor_id) {
       dovah::form_stub* idle_stub = this->_try_silently_create_idle(idle_editor_id);
       if (!idle_stub)
          return nullptr;
@@ -677,13 +677,13 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
 #pragma endregion
 
 #pragma region Accessors
-   QModelIndex IdleAnimationFormsModel_2::graphQMI(QString path) const noexcept {
+   QModelIndex IdleAnimationFormsModel::graphQMI(QString path) const noexcept {
       auto* node = this->_node_for_graph_path(path);
       if (!node)
          return {};
       return _qmi_for_node(*node);
    }
-   QModelIndex IdleAnimationFormsModel_2::idleQMI(dovah::form_stub& stub) const noexcept {
+   QModelIndex IdleAnimationFormsModel::idleQMI(dovah::form_stub& stub) const noexcept {
       if (stub.form_type != dovah::form_type::idle)
          return {};
       auto* node = this->_datastore.idle_by_stub(stub);
@@ -692,14 +692,14 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
       return _qmi_for_node(*node);
    }
 
-   [[nodiscard]] std::vector<dovah::form_stub*> IdleAnimationFormsModel_2::_actionsByGraph(const graph_node& graph) const noexcept {
+   [[nodiscard]] std::vector<dovah::form_stub*> IdleAnimationFormsModel::_actionsByGraph(const graph_node& graph) const noexcept {
       std::vector<dovah::form_stub*> stubs;
       for (const action_node* action : graph.children) {
          stubs.push_back(&action->stub);
       }
       return stubs;
    }
-   [[nodiscard]] std::vector<dovah::form_stub*> IdleAnimationFormsModel_2::actionsByGraph(const QModelIndex& qmi) const noexcept {
+   [[nodiscard]] std::vector<dovah::form_stub*> IdleAnimationFormsModel::actionsByGraph(const QModelIndex& qmi) const noexcept {
       if (!qmi.isValid())
          return {};
       const datastore_node* node  = _node_for_qmi(qmi);
@@ -708,14 +708,14 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
          return {};
       return this->_actionsByGraph(*graph);
    }
-   [[nodiscard]] std::vector<dovah::form_stub*> IdleAnimationFormsModel_2::actionsByGraph(QString path) const noexcept {
+   [[nodiscard]] std::vector<dovah::form_stub*> IdleAnimationFormsModel::actionsByGraph(QString path) const noexcept {
       auto* graph = _node_for_graph_path(path);
       if (!graph)
          return {};
       return this->_actionsByGraph(*graph);
    }
 
-   QModelIndex IdleAnimationFormsModel_2::createActionRoot(const QModelIndex& graph_qmi, dovah::form_stub& action, QString idle_editor_id) {
+   QModelIndex IdleAnimationFormsModel::createActionRoot(const QModelIndex& graph_qmi, dovah::form_stub& action, QString idle_editor_id) {
       if (!graph_qmi.isValid())
          return {};
       auto* graph = dynamic_cast<graph_node*>(_node_for_qmi(graph_qmi));
@@ -726,7 +726,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
          return {};
       return _qmi_for_node(*node);
    }
-   QModelIndex IdleAnimationFormsModel_2::createActionRoot(QString graph_path, dovah::form_stub& action, QString idle_editor_id) {
+   QModelIndex IdleAnimationFormsModel::createActionRoot(QString graph_path, dovah::form_stub& action, QString idle_editor_id) {
       auto* graph = _node_for_graph_path(graph_path);
       if (!graph)
          return {};
@@ -736,7 +736,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
       return _qmi_for_node(*node);
    }
 
-   bool IdleAnimationFormsModel_2::canCreateIdleIn(const QModelIndex& parent) const {
+   bool IdleAnimationFormsModel::canCreateIdleIn(const QModelIndex& parent) const {
       auto* node = _node_for_qmi(parent);
       if (!node)
          return false;
@@ -745,7 +745,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
          return false;
       return _can_create_new_idle_in(*casted);
    }
-   QModelIndex IdleAnimationFormsModel_2::createIdle(const QModelIndex& parent_qmi, QString idle_editor_id) {
+   QModelIndex IdleAnimationFormsModel::createIdle(const QModelIndex& parent_qmi, QString idle_editor_id) {
       idle_parent_node* parent_node = nullptr;
       {
          auto* node = _node_for_qmi(parent_qmi);
@@ -770,7 +770,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
       return _qmi_for_node(*i_node);
    }
 
-   bool IdleAnimationFormsModel_2::canEverDuplicateIdle(const QModelIndex& idle_qmi) const {
+   bool IdleAnimationFormsModel::canEverDuplicateIdle(const QModelIndex& idle_qmi) const {
       auto* src_node = _node_for_qmi(idle_qmi);
       if (!src_node)
          return {};
@@ -779,7 +779,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
          return {};
       return _can_ever_duplicate(*src_idle);
    }
-   QModelIndex IdleAnimationFormsModel_2::duplicateIdle(const QModelIndex& idle_qmi, bool and_descendants) {
+   QModelIndex IdleAnimationFormsModel::duplicateIdle(const QModelIndex& idle_qmi, bool and_descendants) {
       auto* src_node = _node_for_qmi(idle_qmi);
       if (!src_node)
          return {};
@@ -873,7 +873,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
 
 #pragma region QAbstractItemModel overrides
    #pragma region Hierarchy
-      /*virtual*/ QModelIndex IdleAnimationFormsModel_2::index(int row, int column, const QModelIndex& parent_qmi) const /*override*/ {
+      /*virtual*/ QModelIndex IdleAnimationFormsModel::index(int row, int column, const QModelIndex& parent_qmi) const /*override*/ {
          if (row < 0 || column < 0)
             return {};
          const datastore_node* parent_node = _node_for_qmi(parent_qmi);
@@ -882,7 +882,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
             return {};
          return _qmi_for_node(*target_node, column);
       }
-      /*virtual*/ QModelIndex IdleAnimationFormsModel_2::parent(const QModelIndex& index) const /*override*/ {
+      /*virtual*/ QModelIndex IdleAnimationFormsModel::parent(const QModelIndex& index) const /*override*/ {
          if (!index.isValid())
             return {};
          const datastore_node* subject = _node_for_qmi(index);
@@ -903,7 +903,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
             return _qmi_for_node(*parent);
          return {};
       }
-      /*virtual*/ QModelIndex IdleAnimationFormsModel_2::sibling(int row, int column, const QModelIndex& index) const /*override*/ {
+      /*virtual*/ QModelIndex IdleAnimationFormsModel::sibling(int row, int column, const QModelIndex& index) const /*override*/ {
          if (row < 0 || column < 0)
             return {};
          const auto* basis = _node_for_qmi(index);
@@ -958,7 +958,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
          }
          return {};
       }
-      /*virtual*/ int IdleAnimationFormsModel_2::rowCount(const QModelIndex& parent) const /*override*/ {
+      /*virtual*/ int IdleAnimationFormsModel::rowCount(const QModelIndex& parent) const /*override*/ {
          const auto* node = _node_for_qmi(parent);
          if (!node) {
             size_t size = this->_datastore.graphs.size();
@@ -981,12 +981,12 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
          }
          return size;
       }
-      /*virtual*/ int IdleAnimationFormsModel_2::columnCount(const QModelIndex& parent) const /*override*/ {
+      /*virtual*/ int IdleAnimationFormsModel::columnCount(const QModelIndex& parent) const /*override*/ {
          return 1;
       }
    #pragma endregion
    #pragma region Node data
-      /*virtual*/ QVariant IdleAnimationFormsModel_2::data(const QModelIndex& qmi, int role) const /*override*/ {
+      /*virtual*/ QVariant IdleAnimationFormsModel::data(const QModelIndex& qmi, int role) const /*override*/ {
          const datastore_node* node = _node_for_qmi(qmi);
          if (!node)
             return {};
@@ -1033,7 +1033,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
          }
          return {};
       }
-      /*virtual*/ Qt::ItemFlags IdleAnimationFormsModel_2::flags(const QModelIndex& index) const /*override*/ {
+      /*virtual*/ Qt::ItemFlags IdleAnimationFormsModel::flags(const QModelIndex& index) const /*override*/ {
          auto  flags = Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled;
          auto* node  = _node_for_qmi(index);
          if (!node) {
@@ -1055,7 +1055,7 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
          return flags;
       }
    #pragma endregion
-   /*virtual*/ QVariant IdleAnimationFormsModel_2::headerData(int section, Qt::Orientation orientation, int role) const /*override*/ {
+   /*virtual*/ QVariant IdleAnimationFormsModel::headerData(int section, Qt::Orientation orientation, int role) const /*override*/ {
       if (orientation == Qt::Orientation::Horizontal && section == 0) {
          switch (role) {
             case Qt::DisplayRole:
@@ -1067,17 +1067,17 @@ void IdleAnimationFormsModel_2::_recache_idle(const dovah::form_stub& stub) {
    }
    #pragma region Drag and drop
       #pragma region Whole-model queries
-         /*virtual*/ QStringList IdleAnimationFormsModel_2::mimeTypes() const /*override*/ {
+         /*virtual*/ QStringList IdleAnimationFormsModel::mimeTypes() const /*override*/ {
             return { QString::fromLatin1(mime_type) };
          }
-         /*virtual*/ Qt::DropActions IdleAnimationFormsModel_2::supportedDropActions() const /*override*/ {
+         /*virtual*/ Qt::DropActions IdleAnimationFormsModel::supportedDropActions() const /*override*/ {
             return Qt::DropAction::CopyAction | Qt::DropAction::MoveAction;
          }
       #pragma endregion
 #if 0
-      /*virtual*/ QMimeData* IdleAnimationFormsModel_2::mimeData(const QModelIndexList& indices) const /*override*/;
-      /*virtual*/ bool IdleAnimationFormsModel_2::canDropMimeData(const QMimeData* mime, Qt::DropAction action, int row, int column, const QModelIndex& parent) const /*override*/;
-      /*virtual*/ bool IdleAnimationFormsModel_2::dropMimeData(const QMimeData* mime, Qt::DropAction action, int row, int column, const QModelIndex& parent) /*override*/;
+      /*virtual*/ QMimeData* IdleAnimationFormsModel::mimeData(const QModelIndexList& indices) const /*override*/;
+      /*virtual*/ bool IdleAnimationFormsModel::canDropMimeData(const QMimeData* mime, Qt::DropAction action, int row, int column, const QModelIndex& parent) const /*override*/;
+      /*virtual*/ bool IdleAnimationFormsModel::dropMimeData(const QMimeData* mime, Qt::DropAction action, int row, int column, const QModelIndex& parent) /*override*/;
 #endif
    #pragma endregion
 #pragma endregion
