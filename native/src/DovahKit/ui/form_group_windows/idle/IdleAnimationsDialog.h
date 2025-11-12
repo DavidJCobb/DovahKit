@@ -3,9 +3,17 @@
 #include <QDialog>
 #include <QMenu>
 #include "ui_idle.h" // generated
+#include "dovah/forms/IdleAnimation.h"
+#include "dovah/form_stub.h"
+namespace dovah::exceptions {
+   class form_creation_failed;
+}
 
 class IdleAnimationsDialog : public QDialog {
    Q_OBJECT;
+   public:
+      using loaded_form_type = dovah::loaded_forms::IdleAnimation;
+
    public:
       IdleAnimationsDialog(QWidget* parent = nullptr);
 
@@ -15,6 +23,7 @@ class IdleAnimationsDialog : public QDialog {
          QMenu* menu = nullptr;
          struct {
             struct {
+               QAction* create          = nullptr;
                QAction* add_action_root = nullptr;
             } graph;
             struct {
@@ -24,12 +33,22 @@ class IdleAnimationsDialog : public QDialog {
             } idle;
          } actions;
       } _context;
+      dovah::loaded_form_ptr<loaded_form_type> _current_idle;
 
       QModelIndex _get_selected_row();
 
-      void _context_add_action_root();
-      void _context_add_idle();
-      void _context_duplicate_idle_single();
-      void _context_duplicate_idle_tree();
-      void _context_delete_idle();
+      #pragma region Idle tree context menu
+         void _context_add_action_root();
+         void _context_add_graph();
+         void _context_add_idle();
+         void _context_duplicate_idle_single();
+         void _context_duplicate_idle_tree();
+         void _context_delete_idle();
+      #pragma endregion
+
+      void _report_idle_create_error(const dovah::exceptions::form_creation_failed&);
+
+      void _pull_selected_idle_to_ui();
+      void _push_selected_idle_to_form();
+      void _set_form_ui_enable_state(bool);
 };

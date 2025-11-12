@@ -45,6 +45,27 @@ static void _append_canonicalized_path_fragment(QString& dst, QStringView src) {
    }
 }
 
+static void _deduplicate_directory_separators(QString& v) {
+   uint size = v.size();
+   for (uint i = 0; i < size; ++i) {
+      QChar c = v[i];
+      if (!_is_directory_separator(c))
+         continue;
+      uint extra_separator_count;
+      {
+         uint j = i + 1;
+         for (; j < size; ++j) {
+            if (!_is_directory_separator(v[j]))
+               break;
+         }
+         extra_separator_count = j - i - 1;
+      }
+      if (extra_separator_count) {
+         v.remove(i + 1, extra_separator_count);
+         size -= extra_separator_count;
+      }
+   }
+}
 
 namespace ui::types {
    game_file_path::game_file_path(QStringView canonical_input_path) : game_file_path(canonical_input_path, canonical_options) {
@@ -55,6 +76,7 @@ namespace ui::types {
          this->_data = "Data\\";
       }
       this->_data += v.toString().replace('/', '\\');
+      _deduplicate_directory_separators(this->_data);
    }
 
    QStringView game_file_path::data() const noexcept {

@@ -1,10 +1,14 @@
 #pragma once
+#include <exception>
 #include <unordered_map>
 #include <vector>
 #include <QAbstractItemModel>
 #include "dovah/datastores/idles.h"
 namespace dovah {
    class form_stub;
+}
+namespace ui::types {
+   class game_file_path;
 }
 
 class IdleAnimationFormsModel : public QAbstractItemModel {
@@ -21,8 +25,23 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
       Q_ENUM(NodeType);
 
       static constexpr const Qt::ItemDataRole NodeTypeRole = (Qt::ItemDataRole)(Qt::ItemDataRole::UserRole);
+      static constexpr const Qt::ItemDataRole FormStubRole = (Qt::ItemDataRole)(Qt::ItemDataRole::UserRole + 1);
 
       static constexpr const size_t ColumnCount = 1;
+
+      class too_many_to_duplicate_exception : public std::exception {
+         public:
+            too_many_to_duplicate_exception(size_t needed, size_t available)
+            :
+               std::exception("Insufficient form IDs available to duplicate this idle"),
+               form_id_counts({needed, available})
+            {};
+
+            const struct {
+               size_t needed;
+               size_t available;
+            } form_id_counts;
+      };
 
    protected:
       using datastore_type = dovah::datastores::idles;
@@ -74,6 +93,7 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
          void _on_form_created(dovah::form_stub&);
          void _on_form_modified(dovah::form_stub&);
          void _on_form_deletion_imminent(dovah::form_stub&, bool just_being_flagged);
+         void _on_form_deleted(uint32_t form_id, bool just_being_flagged);
       #pragma endregion
 
       void _rebuild_datastore();
@@ -83,12 +103,12 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
       void _recache_idle(const dovah::form_stub&);
 
       #pragma region Form utils
-         dovah::form_stub* _try_silently_create_idle(QString editor_id);
-         dovah::form_stub* _try_silently_duplicate_idle(dovah::form_stub& idle);
+         dovah::form_stub* _try_silently_create_idle(QString editor_id) noexcept(false);
+         dovah::form_stub* _try_silently_duplicate_idle(dovah::form_stub& idle) noexcept(false);
       #pragma endregion
       #pragma region Node utils
          action_node& _get_or_create_action(graph_node&, dovah::form_stub& action);
-         idle_node* _create_action_root(graph_node&, dovah::form_stub& action, QString idle_editor_id);
+         idle_node* _create_action_root(graph_node&, dovah::form_stub& action, QString idle_editor_id) noexcept(false);
       #pragma endregion
 
    public:
@@ -98,20 +118,25 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
          QModelIndex graphQMI(QString path) const noexcept;
          QModelIndex idleQMI(dovah::form_stub&) const noexcept;
 
+         QModelIndex getOrCreateGraph(QString path);
+
       protected:
          [[nodiscard]] std::vector<dovah::form_stub*> _actionsByGraph(const graph_node&) const noexcept;
       public:
          [[nodiscard]] std::vector<dovah::form_stub*> actionsByGraph(const QModelIndex&) const noexcept;
          [[nodiscard]] std::vector<dovah::form_stub*> actionsByGraph(QString path) const noexcept;
 
-         QModelIndex createActionRoot(const QModelIndex& graph_qmi, dovah::form_stub& action, QString idle_editor_id);
-         QModelIndex createActionRoot(QString graph_path, dovah::form_stub& action, QString idle_editor_id);
+         QModelIndex createActionRoot(const QModelIndex& graph_qmi, dovah::form_stub& action, QString idle_editor_id) noexcept(false);
+         QModelIndex createActionRoot(QString graph_path, dovah::form_stub& action, QString idle_editor_id) noexcept(false);
 
          bool canCreateIdleIn(const QModelIndex& parent) const;
-         QModelIndex createIdle(const QModelIndex& parent, QString idle_editor_id);
+         QModelIndex createIdle(const QModelIndex& parent, QString idle_editor_id) noexcept(false); // may throw `dovah::exceptions::form_creation_failed`
 
          bool canEverDuplicateIdle(const QModelIndex&) const;
-         QModelIndex duplicateIdle(const QModelIndex&, bool and_descendants);
+         QModelIndex duplicateIdle(const QModelIndex&, bool and_descendants) noexcept(false); // may throw `too_many_to_duplicate_exception` or `dovah::exceptions::form_creation_failed`
+
+         bool canDeleteIdle(const QModelIndex&) const;
+         void deleteIdle(const QModelIndex&, QWidget* error_dialog_parent = nullptr); // deletes the idle *and its descendants*
       #pragma endregion
 
    public:

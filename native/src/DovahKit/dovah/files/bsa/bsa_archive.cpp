@@ -141,6 +141,8 @@ namespace dovah {
       size_t size = strnlen_s(src, max_length);
       out.assign(src, size);
       this->stream_position += size;
+      if (size != max_length)
+         this->stream_position += sizeof('\0');
    }
    void bsa_archive::_read_non_null_terminated_string(std::string& out, size_t length) {
       out.resize(length);

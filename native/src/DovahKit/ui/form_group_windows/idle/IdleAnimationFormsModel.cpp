@@ -1,5 +1,6 @@
 #include "./IdleAnimationFormsModel.h"
 #include <QColor>
+#include <QMessageBox>
 #include "dovah/datastores/idles/action_node.h"
 #include "dovah/datastores/idles/graph_node.h"
 #include "dovah/datastores/idles/idle_node.h"
@@ -7,8 +8,10 @@
 #include "dovah/form_stub.h"
 #include "dovahscript/dovahscript_host.h"
 #include "editor/core.h"
+#include "editor/form_stub_meta_type.h"
 #include "editor/helpers/make_editor_id_for_duplicate.h"
 #include "dovah/files/tes_file_reading/file_loader.h"
+#include "ui/types/game_file_path.h"
 
 namespace {
    constexpr const char* const mime_type = "application/dovah-kit.idle-animation-forms-model.node";
@@ -152,6 +155,7 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
    QObject::connect(&editor, &DovahKitCore::formCreated,          this, [this](dovah::form_stub* stub) { this->_on_form_created(*stub); });
    QObject::connect(&editor, &DovahKitCore::formModified,         this, [this](dovah::form_stub* stub) { this->_on_form_modified(*stub); });
    QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool flag) { this->_on_form_deletion_imminent(*stub, flag); });
+   QObject::connect(&editor, &DovahKitCore::formDeletionComplete, this, [this](dovah::bare_form_id_t id, bool flag) { this->_on_form_deleted(id, flag); });
    if (editor.has_data()) {
       this->_rebuild_datastore();
    }
@@ -396,6 +400,22 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
             break;
       }
    }
+   void IdleAnimationFormsModel::_on_form_deleted(uint32_t form_id, bool just_being_flagged) {
+      if (!just_being_flagged)
+         return;
+      auto& editor = DovahKitCore::get();
+      auto* stub   = editor.get_form(form_id);
+      if (!stub)
+         return;
+      switch (stub->form_type) {
+         case dovah::form_type::action:
+            this->_recache_action(*stub);
+            break;
+         case dovah::form_type::idle:
+            this->_recache_idle(*stub);
+            break;
+      }
+   }
 #pragma endregion
 
 void IdleAnimationFormsModel::_rebuild_datastore() {
@@ -537,7 +557,7 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          return stub;
       } catch (...) {
          this->_callback_state.ignore_next_created_idle = false;
-         return nullptr;
+         throw;
       }
    }
    dovah::form_stub* IdleAnimationFormsModel::_try_silently_duplicate_idle(dovah::form_stub& idle) {
@@ -557,7 +577,7 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          stub = request.commit();
       } catch (...) {
          this->_callback_state.ignore_next_created_idle = false;
-         return nullptr;
+         throw;
       }
       if (!stub) {
          this->_callback_state.ignore_next_created_idle = false;
@@ -692,6 +712,17 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
       return _qmi_for_node(*node);
    }
 
+   QModelIndex IdleAnimationFormsModel::getOrCreateGraph(QString path) {
+      auto* graph = this->_datastore.get_or_create_graph_by_path(path.toStdString());
+      if (!graph)
+         return {};
+
+      auto& cached_graph = this->_cache[graph];
+      cached_graph.display_string = QString::fromStdString(graph->path);
+
+      return _qmi_for_node(*graph);
+   }
+
    [[nodiscard]] std::vector<dovah::form_stub*> IdleAnimationFormsModel::_actionsByGraph(const graph_node& graph) const noexcept {
       std::vector<dovah::form_stub*> stubs;
       for (const action_node* action : graph.children) {
@@ -773,10 +804,10 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
    bool IdleAnimationFormsModel::canEverDuplicateIdle(const QModelIndex& idle_qmi) const {
       auto* src_node = _node_for_qmi(idle_qmi);
       if (!src_node)
-         return {};
+         return false;
       auto* src_idle = dynamic_cast<const idle_node*>(src_node);
       if (!src_idle) // QMI is not that of an idle
-         return {};
+         return false;
       return _can_ever_duplicate(*src_idle);
    }
    QModelIndex IdleAnimationFormsModel::duplicateIdle(const QModelIndex& idle_qmi, bool and_descendants) {
@@ -813,19 +844,18 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
 
             dovah::bare_form_id_t last_found_form_id     = 0;
             bool                  all_form_ids_available = true;
+            size_t count_available = 0;
             for (size_t i = 0; i < count_to_duplicate; ++i) {
                auto id = flo->find_first_free_form_id_in_active_file(last_found_form_id);
                if (id == 0) {
                   all_form_ids_available = false;
                   break;
                }
+               ++count_available;
                last_found_form_id = id;
             }
             if (!all_form_ids_available) {
-               //
-               // TODO: Throw an exception: insufficient form IDs available.
-               //
-               return {};
+               throw too_many_to_duplicate_exception(count_to_duplicate, count_available);
             }
          }
          //
@@ -867,6 +897,65 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          this->_datastore.place_idle_after(*i_node, *src_idle);
          i_node_ptr.release();
          return _qmi_for_node(*i_node);
+      }
+   }
+
+   bool IdleAnimationFormsModel::canDeleteIdle(const QModelIndex& idle_qmi) const {
+      auto* src_node = _node_for_qmi(idle_qmi);
+      if (!src_node)
+         return false;
+      auto* src_idle = dynamic_cast<const idle_node*>(src_node);
+      if (!src_idle) // QMI is not that of an idle
+         return false;
+
+      // Don't allow deleting action roots unless they're from the active file. The way the 
+      // CK and game parse IDLE/ANAM suggests to me that deleting action roots via an override 
+      // may not be fully reliable.
+      if (dynamic_cast<const action_node*>((const idle_parent_node*)src_idle->parent)) {
+         auto& stub = src_idle->stub;
+         auto& lo   = stub.get_owning_load_order();
+         if (!lo.is_defined_in_active_file(stub))
+            return false;
+      }
+
+      return true;
+   }
+   void IdleAnimationFormsModel::deleteIdle(const QModelIndex& idle_qmi, QWidget* error_dialog_parent) {
+      auto* src_node = _node_for_qmi(idle_qmi);
+      if (!src_node)
+         return;
+      auto* src_idle = dynamic_cast<const idle_node*>(src_node);
+      if (!src_idle) // QMI is not that of an idle
+         return;
+
+      std::vector<dovah::form_stub*> stubs_to_delete;
+      [&stubs_to_delete](this auto&& recurse, const idle_node& node) -> void {
+         stubs_to_delete.push_back(&node.stub);
+         for (auto& child_ptr : node.children) {
+            recurse(*child_ptr);
+         }
+      }(*src_idle);
+
+      auto& editor = DovahKitCore::get();
+      bool any_failed = false;
+      for (auto* stub : stubs_to_delete) {
+         editor.delete_form(
+            *stub,
+            [](const dovah::form_deletion_request&) {
+               return true;
+            },
+            [&any_failed](const dovah::exceptions::form_deletion_failed& ex) {
+               any_failed = true;
+            },
+            [](const dovah::form_deletion_request& request) {}
+         );
+      }
+      if (any_failed) {
+         QMessageBox::critical(
+            error_dialog_parent,
+            QObject::tr("Error", "delete form error"),
+            QObject::tr("Unable to delete all of the needed idles.")
+         );
       }
    }
 #pragma endregion
@@ -1005,6 +1094,12 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
                      return QVariant::fromValue(NodeType::LooseIdlesPerModel);
                   return QVariant::fromValue(NodeType::LooseIdlesPerGraph);
                }
+               break;
+            case FormStubRole:
+               if (auto* casted = dynamic_cast<const action_node*>(node))
+                  return QVariant::fromValue(&casted->stub);
+               if (auto* casted = dynamic_cast<const idle_node*>(node))
+                  return QVariant::fromValue(&casted->stub);
                break;
             case Qt::DisplayRole:
             case Qt::ToolTipRole:

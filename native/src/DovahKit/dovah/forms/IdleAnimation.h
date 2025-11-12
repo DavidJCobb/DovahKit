@@ -12,7 +12,7 @@ namespace dovah::loaded_forms {
          static constexpr const enum form_type form_type = form_type::idle;
          IdleAnimation(const constructor_params& c) : Form(form_type, c) {};
 
-         static constexpr const uint8_t loop_forever = 0xFF;
+         static constexpr const uint8_t loop_time_forever = 0xFF;
 
          static constexpr const size_t max_event_name_length = 0x104;
          static constexpr const size_t max_filename_length   = 0x104;
@@ -44,9 +44,13 @@ namespace dovah::loaded_forms {
             uint16_t replay_delay       = 0; // DATA+0x04
          } data; // DATA
 
+         constexpr bool loops_forever() const noexcept {
+            return data.loop_time_range.min == loop_time_forever && data.loop_time_range.max == loop_time_forever;
+         }
+
+      public:
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_record_reader&, form_stub_use_info_builder&);
-         //
       protected:
          virtual void _clone_impl(Form* out) const noexcept override;
          virtual void _save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) override;

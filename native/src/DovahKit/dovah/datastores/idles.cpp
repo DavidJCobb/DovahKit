@@ -381,9 +381,32 @@ namespace dovah::datastores {
          return const_cast<graph_node*>(std::as_const(*this).graph_by_idle(stub));
       }
       const idles::graph_node* idles::graph_by_path(std::string_view path) const noexcept {
-         for (auto* graph : this->graphs)
-            if (graph->path == path) // TODO: Case-insensitive comparison
+         const size_t path_size = path.size();
+         for (auto* graph : this->graphs) {
+            auto& current_path = graph->path;
+            if (current_path.size() != path_size)
+               continue;
+            bool matches = true;
+            for (size_t i = 0; i < path_size; ++i) {
+               char a = path[i];
+               char b = current_path[i];
+               if (a == b)
+                  continue;
+               if (a == '/' || a == '\\')
+                  if (b == '/' || b == '\\')
+                     continue;
+               if (a >= 'a' && a <= 'z')
+                  a -= 0x20;
+               if (b >= 'a' && b <= 'z')
+                  b -= 0x20;
+               if (a != b) {
+                  matches = false;
+                  break;
+               }
+            }
+            if (matches)
                return graph;
+         }
          return nullptr;
       }
       idles::graph_node* idles::graph_by_path(std::string_view path) noexcept {
