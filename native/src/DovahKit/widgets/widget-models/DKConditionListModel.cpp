@@ -208,7 +208,9 @@ QString DKConditionListModel::_stringify_condition_parameter(const Condition& co
    }
    #pragma endregion
 
-   if (condition.get_argument_typeinfo(i) == &dovah::conditions::parameter_types::ActorValue) {
+   const auto* argument_typeinfo = condition.get_argument_typeinfo(i);
+
+   if (argument_typeinfo == &dovah::conditions::parameter_types::ActorValue) {
       if (auto* casted = std::get_if<int32_t>(&parameter)) {
          QString out = editor_helpers::actor_value_index_to_name(*casted);
          if (!out.isEmpty())
@@ -220,6 +222,20 @@ QString DKConditionListModel::_stringify_condition_parameter(const Condition& co
    if (auto* casted = std::get_if<float>(&parameter)) {
       return QString::number(*casted);
    } else if (auto* casted = std::get_if<int32_t>(&parameter)) {
+      if (argument_typeinfo && argument_typeinfo->enumeration_info.has_value()) {
+         //
+         // NOTE: If we want to localize enumeration members' names, we could do that HERE if we 
+         // check what enum we're working with (i.e. identity comparison on *argument_typeinfo).
+         //
+         const auto& info = argument_typeinfo->enumeration_info.value();
+         for (size_t i = 0; i < info.size; ++i) {
+            const auto& member = info.members[i];
+            if (*casted == member.value) {
+               const std::string_view& name = member.name;
+               return QString::fromLatin1(QByteArray(name.data(), name.size()));
+            }
+         }
+      }
       return QString::number(*casted);
    } else if (auto* casted = std::get_if<std::string>(&parameter)) {
       return QString::fromUtf8(QByteArray::fromStdString(*casted));
