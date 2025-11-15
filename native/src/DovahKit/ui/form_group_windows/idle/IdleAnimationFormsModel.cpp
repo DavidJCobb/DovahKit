@@ -10,11 +10,26 @@
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
 #include "editor/helpers/make_editor_id_for_duplicate.h"
+#include "editor/subsystems/message_log/core.h"
 #include "dovah/files/tes_file_reading/file_loader.h"
 #include "ui/types/game_file_path.h"
 
+// for pushing warnings to the log window:
+#include "dovah/datastores/idles/warnings/cyclical_parent_relationships.h"
+#include "dovah/datastores/idles/warnings/cyclical_sibling_relationships.h"
+#include "dovah/datastores/idles/warnings/idle_has_multiple_next_siblings.h"
+#include "dovah/datastores/idles/warnings/inconsistent_parentage.h"
+#include "dovah/datastores/idles/warnings/orphaned_idle.h"
+#include "dovah/datastores/idles/warnings/previous_sibling_is_not_as_expected.h"
+#include "dovah/datastores/idles/warnings/siblings_have_mismatched_parents.h"
+#include "dovah/datastores/idles/warnings/sibling_is_an_ancestor.h"
+#include "editor/helpers/form_identifiers_to_string.h"
+
 namespace {
    constexpr const char* const mime_type = "application/dovah-kit.idle-animation-forms-model.node";
+}
+namespace datastore_warnings {
+   using namespace dovah::datastores::impl::idles::warnings;
 }
 
 IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractItemModel(parent) {
@@ -457,9 +472,71 @@ void IdleAnimationFormsModel::_rebuild_datastore() {
       for (idle_node* idle : this->_datastore.loose.idles->children)
          _recache_idle_tree(*idle);
    }
-   //
-   // TODO: Transfer warnings from the datastore to the log window.
-   //
+   {
+      auto& list = this->_datastore.warnings;
+      if (!list.empty()) {
+         auto& logger = dovahkit::subsystems::message_log::core::get();
+         for (const auto* warning : list) {
+            QString text;
+            if (auto* casted = dynamic_cast<const datastore_warnings::cyclical_parent_relationships*>(warning)) {
+               text = tr("Idle %1's parent chain forms a cyclical reference.")
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+            } else if (auto* casted = dynamic_cast<const datastore_warnings::cyclical_sibling_relationships*>(warning)) {
+               text = tr("Idle %1's previous-sibling chain forms a cyclical reference.")
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+            } else if (auto* casted = dynamic_cast<const datastore_warnings::idle_has_multiple_next_siblings*>(warning)) {
+               text = tr(
+                  "Multiple idles are fighting to have %1 as their previous sibling. This can "
+                  "happen if the idle tree has been overridden improperly by a mod."
+               )
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+            } else if (auto* casted = dynamic_cast<const datastore_warnings::inconsistent_parentage*>(warning)) {
+               text = tr("Somehow, idle %1 is not present in its parent's child list.")
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+            } else if (auto* casted = dynamic_cast<const datastore_warnings::orphaned_idle*>(warning)) {
+               text = tr("Idle %1 is orphaned: it has no parent idle, and isn't an action root.")
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+            } else if (auto* casted = dynamic_cast<const datastore_warnings::previous_sibling_is_not_as_expected*>(warning)) {
+               if (auto* node = casted->previous_sibling.expected) {
+                  text = tr("After the idle tree was fully built, idle %1 expected to be the next sibling of idle %2.");
+                  text = text.arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+                  text = text.arg(editor_helpers::form_identifiers_to_string(&node->stub));
+               } else {
+                  text = tr("After the idle tree was fully built, idle %1 expected to be the first (or possibly only) child of its parent.");
+                  text = text.arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+               }
+
+               QString instead;
+               if (auto* node = casted->previous_sibling.actual) {
+                  instead = tr("Instead, the idle is located after %1.");
+                  instead = instead.arg(editor_helpers::form_identifiers_to_string(&node->stub));
+               } else {
+                  instead = tr("Instead, the idle is its parent's first or only child.");
+               }
+
+               text = tr("%1 %2", "datastore warning sentence order for 'previous sibling is not as expected'").arg(text).arg(instead);
+            } else if (auto* casted = dynamic_cast<const datastore_warnings::sibling_is_an_ancestor*>(warning)) {
+               text = tr("Idle %1 has a previous sibling that is one of its ancestor idles.")
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+            } else if (auto* casted = dynamic_cast<const datastore_warnings::siblings_have_mismatched_parents*>(warning)) {
+               text = tr("Idle %1 has a different parent from one of its previous siblings.")
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+            } else {
+               text = tr(
+                  "An unknown warning occurred when loading the idle animation trees. Please contact DovahKit's developer "
+                  "so that a warning message can be added for this. If possible, please make backup copies of the file(s) "
+                  "that you had loaded at the time, and be ready to send those along, so the developer can reproduce the "
+                  "problem on their end."
+               );
+            }
+            logger.addLogItem({
+               text,
+               ui::types::log_item_type::warning,
+               ui::types::log_item_context::unspecified
+            });
+         }
+      }
+   }
    this->endResetModel();
 }
 void IdleAnimationFormsModel::_recache_action(const action_node& node) {
