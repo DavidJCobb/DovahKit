@@ -32,6 +32,8 @@ namespace dovah::datastores::impl::idles {
          // from that node.
          void append_child(idle_node&);
 
+         bool contains(const idle_node&) const noexcept;
+
          void destroy_child(size_t);
          constexpr size_t index_of_child(const idle_node&) const noexcept;
          size_t index_of_child(const form_stub&) const noexcept;

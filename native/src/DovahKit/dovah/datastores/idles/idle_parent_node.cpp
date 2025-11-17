@@ -80,6 +80,20 @@ namespace dovah::datastores::impl::idles {
             (callbacks.after)(node);
       }
    }
+   bool idle_parent_node::contains(const idle_node& node) const noexcept {
+      const idle_parent_node* current = node.parent;
+      do {
+         if (current == this)
+            return true;
+         //
+         if (auto* casted = dynamic_cast<const idle_node*>(current)) {
+            current = casted->parent;
+         } else {
+            current = nullptr;
+         }
+      } while (current);
+      return false;
+   }
    void idle_parent_node::destroy_child(size_t i) {
       if (i >= this->children.size())
          throw std::out_of_range("Index out of range.");

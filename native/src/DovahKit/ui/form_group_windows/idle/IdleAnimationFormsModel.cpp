@@ -1,6 +1,11 @@
 #include "./IdleAnimationFormsModel.h"
 #include <QColor>
 #include <QMessageBox>
+#pragma region Drag and drop
+   #include <QByteArray>
+   #include <QDataStream>
+   #include <QMimeData>
+#pragma endregion
 #include "dovah/datastores/idles/action_node.h"
 #include "dovah/datastores/idles/graph_node.h"
 #include "dovah/datastores/idles/idle_node.h"
@@ -365,6 +370,7 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
    void IdleAnimationFormsModel::_on_game_data_abandon() {
       this->beginResetModel();
       this->_cache.clear();
+      this->_drag_and_drop.clear();
       this->_datastore.reset();
       this->endResetModel();
    }
@@ -393,6 +399,9 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
    }
    void IdleAnimationFormsModel::_on_form_deletion_imminent(dovah::form_stub& stub, bool just_being_flagged) {
       if (!just_being_flagged) {
+         if (auto* idle = this->_datastore.idle_by_stub(stub)) {
+            this->_drag_and_drop.untrack(*idle);
+         }
          this->_datastore.on_before_form_deleted(stub);
          return;
       }
@@ -425,6 +434,7 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
 
 void IdleAnimationFormsModel::_rebuild_datastore() {
    this->_cache.clear();
+   this->_drag_and_drop.clear();
 
    auto* flo = DovahKitCore::get().get_file_load_order();
    if (!flo) {
@@ -761,6 +771,49 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
       i_node_ptr.release();
       return i_node;
    }
+
+   bool IdleAnimationFormsModel::_could_ever_move_idles_into(const idle_parent_node& destination) const {
+      //
+      // Don't allow moving into an action.
+      //
+      if (dynamic_cast<const action_node*>(&destination))
+         return false;
+      //
+      return true;
+   }
+   bool IdleAnimationFormsModel::_can_move_idle_into(const idle_node& subject, const idle_parent_node& destination) const {
+      assert(_could_ever_move_idles_into(destination)); // require that the caller have checked this first
+
+      //
+      // Don't allow moving an idle inside of itself or its own descendants.
+      //
+      if (&subject == &destination)
+         return false;
+      if (auto* idle_dst = dynamic_cast<const idle_node*>(&destination)) {
+         if (subject.contains(*idle_dst))
+            return false;
+      }
+      //
+      // Don't allow moving an action root.
+      //
+      if (dynamic_cast<const action_node*>((const idle_parent_node*)subject.parent))
+         return false;
+      //
+      return true;
+
+   }
+   void IdleAnimationFormsModel::_unchecked_move_idle_node(idle_node& subject, idle_parent_node& destination, int row) {
+      assert(_can_move_idle_into(subject, destination));
+      auto subject_qmi     = _qmi_for_node(subject);
+      auto destination_qmi = _qmi_for_node(destination);
+      if (row < 0)
+         row = destination.children.size();
+
+      // the datastore fires callbacks that trigger beforeMoveRows/endMoveRows when 
+      // we tell it to move the node, so we shouldn't fire those here.
+
+      destination.insert_child_before(subject, row);
+   }
 #pragma endregion
 
 #pragma region Accessors
@@ -1025,6 +1078,63 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          );
       }
    }
+
+   bool IdleAnimationFormsModel::canMoveIdleUp(const QModelIndex& idle_qmi) const {
+      if (!idle_qmi.isValid())
+         return false;
+      auto* idle = dynamic_cast<const idle_node*>(_node_for_qmi(idle_qmi));
+      if (!idle)
+         return false;
+      const idle_parent_node* parent = idle->parent;
+      if (!parent)
+         return false;
+
+      size_t i = parent->index_of_child(*idle);
+      assert(i != idle_parent_node::no_index);
+      return i > 0;
+   }
+   bool IdleAnimationFormsModel::canMoveIdleDown(const QModelIndex& idle_qmi) const {
+      if (!idle_qmi.isValid())
+         return false;
+      auto* idle = dynamic_cast<const idle_node*>(_node_for_qmi(idle_qmi));
+      if (!idle)
+         return false;
+      const idle_parent_node* parent = idle->parent;
+      if (!parent)
+         return false;
+
+      size_t i = parent->index_of_child(*idle);
+      assert(i != idle_parent_node::no_index);
+      return i < parent->children.size() - 1;
+   }
+   void IdleAnimationFormsModel::moveIdleUp(const QModelIndex& idle_qmi) {
+      auto* idle = dynamic_cast<idle_node*>(_node_for_qmi(idle_qmi));
+      if (!idle)
+         return;
+      idle_parent_node* parent = idle->parent;
+      if (!parent)
+         return;
+
+      size_t i = parent->index_of_child(*idle);
+      assert(i != idle_parent_node::no_index);
+      if (i == 0)
+         return;
+      parent->insert_child_before(*idle, i - 1);
+   }
+   void IdleAnimationFormsModel::moveIdleDown(const QModelIndex& idle_qmi) {
+      auto* idle = dynamic_cast<idle_node*>(_node_for_qmi(idle_qmi));
+      if (!idle)
+         return;
+      idle_parent_node* parent = idle->parent;
+      if (!parent)
+         return;
+
+      size_t i = parent->index_of_child(*idle);
+      assert(i != idle_parent_node::no_index);
+      if (i == parent->children.size() - 1)
+         return;
+      parent->insert_child_after(*idle, i);
+   }
 #pragma endregion
 
 #pragma region QAbstractItemModel overrides
@@ -1201,19 +1311,38 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          if (!node) {
             return flags;
          }
-         flags |= Qt::ItemIsDragEnabled;
-         if (auto* casted = dynamic_cast<const action_node*>(node)) {
-            //
-            // Try to limit actions to just one child node (though the data structure allows 
-            // multiple, to account for edge-cases involving multiple mods applying a new root 
-            // idle to the same action on the same behavior graph).
-            //
-            if (casted->children.empty()) {
-               flags |= Qt::ItemIsDropEnabled;
+
+         {
+            bool can_drag = false;
+            if (auto* casted_idle = dynamic_cast<const idle_node*>(node)) {
+               can_drag = true;
+               if (dynamic_cast<const action_node*>((const idle_parent_node*)casted_idle->parent)) {
+                  //
+                  // Don't allow drag-moving an action root.
+                  //
+                  can_drag = false;
+               }
             }
-         } else {
-            flags |= Qt::ItemIsDropEnabled;
+            if (can_drag)
+               flags |= Qt::ItemIsDragEnabled;
          }
+
+         {
+            bool can_drop = true;
+            if (auto* casted = dynamic_cast<const action_node*>(node)) {
+               //
+               // Try to limit actions to just one child node (though the data structure allows 
+               // multiple, to account for edge-cases involving multiple mods applying a new root 
+               // idle to the same action on the same behavior graph).
+               //
+               if (!casted->children.empty()) {
+                  can_drop = false;
+               }
+            }
+            if (can_drop)
+               flags |= Qt::ItemIsDropEnabled;
+         }
+
          return flags;
       }
    #pragma endregion
@@ -1236,10 +1365,151 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
             return Qt::DropAction::CopyAction | Qt::DropAction::MoveAction;
          }
       #pragma endregion
-#if 0
-      /*virtual*/ QMimeData* IdleAnimationFormsModel::mimeData(const QModelIndexList& indices) const /*override*/;
-      /*virtual*/ bool IdleAnimationFormsModel::canDropMimeData(const QMimeData* mime, Qt::DropAction action, int row, int column, const QModelIndex& parent) const /*override*/;
-      /*virtual*/ bool IdleAnimationFormsModel::dropMimeData(const QMimeData* mime, Qt::DropAction action, int row, int column, const QModelIndex& parent) /*override*/;
-#endif
+      /*virtual*/ QMimeData* IdleAnimationFormsModel::mimeData(const QModelIndexList& indices) const /*override*/ {
+         if (indices.count() <= 0)
+            return nullptr;
+         QByteArray  data;
+         QDataStream stream(&data, QIODevice::WriteOnly);
+         //
+         // Stream begins with our `this` pointer. The pointer is used only for equality 
+         // checks on drop (i.e. no moving/copying procedure data across packages) and is 
+         // never dereferenced.
+         //
+         stream << (intptr_t)this;
+         //
+         for (const QModelIndex& qmi : indices) {
+            const auto* node = _node_for_qmi(qmi);
+            if (!node)
+               continue;
+            const auto* casted = dynamic_cast<const idle_node*>(node);
+            if (!casted)
+               continue;
+            //
+            // QAbstractItemModel's default implementation serializes all itemData for the 
+            // node into the stream. We can't do that because some things, like conditions, 
+            // are both not serializable *and* require references to objects held elsewhere. 
+            // If QAbstractItemModel's implementation is designed to avoid the possibility 
+            // of referenced objects being deleted during the drag operation, then trying 
+            // to serialize conditions fails that requirement.
+            // 
+            // We also can't track the lifetime of the drag operation, so we can't, for 
+            // example, store a map of unique IDs to QPersistentModelIndexes, because we 
+            // wouldn't know when to destroy the QPMIs.
+            // 
+            // Our solution is to create IDs on demand for nodes that are being dragged, 
+            // and serialize those. We never expose direct access to nodes (and thus to the 
+            // unique_ptr list of child nodes), so all node removals go through us; we can 
+            // invalidate unique IDs properly.
+            // 
+            // Of course, since we can't track the lifetime of a drag operation, we have to 
+            // assume that a request for a node's MIME data is the start of a drag, and we 
+            // have to create the ID then. Since the mimeData() getter is const, this is... 
+            // a complication.
+            //
+            stream << this->_drag_and_drop.track(*const_cast<idle_node*>(casted));
+         }
+         //
+         QMimeData* mime = new QMimeData();
+         mime->setData(mime_type, data);
+         return mime;
+      }
+      /*virtual*/ bool IdleAnimationFormsModel::canDropMimeData(const QMimeData* mime, Qt::DropAction action, int row, int column, const QModelIndex& parent) const /*override*/ {
+         QByteArray  data = mime->data(mime_type);
+         QDataStream stream(&data, QIODevice::ReadOnly);
+         {  // Verify that this is an internal move.
+            std::intptr_t this_pointer;
+            stream >> this_pointer;
+            if ((IdleAnimationFormsModel*)this_pointer != this)
+               return false;
+         }
+
+         if (parent == _qmi_for_model_root())
+            //
+            // Don't allow movement of a non-top-level node to the top level.
+            //
+            return false;
+
+         const auto* parent_node = dynamic_cast<const idle_parent_node*>(_node_for_qmi(parent));
+         if (!parent_node) // sanity
+            return false;
+         if (!_could_ever_move_idles_into(*parent_node))
+            return false;
+
+         std::vector<idle_node*> dragged_nodes;
+         while (!stream.atEnd()) {
+            DragDropTracking::uid_t id;
+            stream >> id;
+            auto* node = this->_drag_and_drop.get_by_id(id);
+            if (node)
+               dragged_nodes.push_back(node);
+         }
+         if (!dragged_nodes.size())
+            return true;
+
+         for (auto* dragged : dragged_nodes)
+            if (!_can_move_idle_into(*dragged, *parent_node))
+               return false;
+
+         return true;
+      }
+      /*virtual*/ bool IdleAnimationFormsModel::dropMimeData(const QMimeData* mime, Qt::DropAction action, int row, int column, const QModelIndex& parent) /*override*/ {
+         if (!this->canDropMimeData(mime, action, row, column, parent))
+            return false;
+
+         QByteArray  data = mime->data(mime_type);
+         QDataStream stream(&data, QIODevice::ReadOnly);
+         {  // Verify that this is an internal move.
+            std::intptr_t this_pointer;
+            stream >> this_pointer;
+            if ((IdleAnimationFormsModel*)this_pointer != this)
+               return false;
+         }
+         std::vector<idle_node*> nodes;
+         while (!stream.atEnd()) {
+            DragDropTracking::uid_t id;
+            stream >> id;
+            auto* node = this->_drag_and_drop.get_by_id(id);
+            if (node)
+               nodes.push_back(node);
+         }
+         if (!nodes.size())
+            return false;
+
+         auto* destination_parent = dynamic_cast<idle_parent_node*>(_node_for_qmi(parent));
+         assert(destination_parent != nullptr);
+         for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
+            this->_unchecked_move_idle_node(**it, *destination_parent, row);
+         return true;
+      }
    #pragma endregion
+#pragma endregion
+
+#pragma region IdleAnimationFormsModel::DragDropTracking
+   IdleAnimationFormsModel::DragDropTracking::uid_t IdleAnimationFormsModel::DragDropTracking::track(idle_node& node) {
+      for (const auto& pair : this->nodes)
+         if (pair.second == &node)
+            return pair.first;
+      auto id = this->next_id;
+      this->next_id++;
+      this->nodes[id] = &node;
+      return id;
+   }
+   void IdleAnimationFormsModel::DragDropTracking::untrack(idle_node& node) {
+      auto& map = this->nodes;
+      auto  it  = std::find_if(map.begin(), map.end(), [&node](const auto& pair) {
+         return pair.second == &node;
+      });
+      if (it != map.end())
+         map.erase(it);
+   }
+   void IdleAnimationFormsModel::DragDropTracking::clear() {
+      this->nodes.clear();
+   }
+   IdleAnimationFormsModel::idle_node* IdleAnimationFormsModel::DragDropTracking::get_by_id(uid_t id) {
+      auto& map = this->nodes;
+      auto  it  = map.find(id);
+      if (it != map.end())
+         return it->second;
+      return nullptr;
+   }
 #pragma endregion

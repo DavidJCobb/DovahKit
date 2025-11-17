@@ -55,6 +55,8 @@ class IdleAnimationsDialog : public QDialog {
 
       void _report_idle_create_error(const dovah::exceptions::form_creation_failed&);
 
+      void _update_move_button_enable_states();
+
       void _pull_selected_idle_to_ui();
       void _push_selected_idle_to_form();
       void _set_form_ui_enable_state(bool);

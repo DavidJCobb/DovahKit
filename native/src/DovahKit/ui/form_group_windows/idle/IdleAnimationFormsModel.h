@@ -107,6 +107,14 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
       #pragma region Node utils
          action_node& _get_or_create_action(graph_node&, dovah::form_stub& action);
          idle_node* _create_action_root(graph_node&, dovah::form_stub& action, QString idle_editor_id) noexcept(false);
+
+         bool _could_ever_move_idles_into(const idle_parent_node& destination) const;
+
+         // You must test `_could_ever_move_idles_into(destination)` first. This function will not 
+         // do it for you (but, in Debug, will assert that you did it).
+         bool _can_move_idle_into(const idle_node& subject, const idle_parent_node& destination) const;
+
+         void _unchecked_move_idle_node(idle_node& subject, idle_parent_node& destination, int row = -1);
       #pragma endregion
 
    public:
@@ -135,6 +143,11 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
 
          bool canDeleteIdle(const QModelIndex&) const;
          void deleteIdle(const QModelIndex&, QWidget* error_dialog_parent = nullptr); // deletes the idle *and its descendants*
+
+         bool canMoveIdleUp(const QModelIndex&) const;
+         bool canMoveIdleDown(const QModelIndex&) const;
+         void moveIdleUp(const QModelIndex&);
+         void moveIdleDown(const QModelIndex&);
       #pragma endregion
 
    public:
@@ -156,11 +169,9 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
                virtual QStringList mimeTypes() const override;
                virtual Qt::DropActions supportedDropActions() const override;
             #pragma endregion
-            /*//
             virtual QMimeData* mimeData(const QModelIndexList&) const override;
             virtual bool canDropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) const override;
             virtual bool dropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) override;
-            //*/
          #pragma endregion
       #pragma endregion
 
@@ -172,4 +183,19 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
          bool emitted_last_deletion = false;
          bool last_node_placement_was_an_insertion = false;
       } _callback_state;
+
+      struct DragDropTracking {
+         public:
+            using uid_t = uint64_t;
+
+         public:
+            uid_t next_id = 0;
+            std::unordered_map<uid_t, idle_node*> nodes;
+
+            uid_t track(idle_node&);
+            void untrack(idle_node&);
+            void clear();
+            idle_node* get_by_id(uid_t);
+      };
+      mutable DragDropTracking _drag_and_drop; // mutable because QAbstractItemModel::mimeData is const
 };

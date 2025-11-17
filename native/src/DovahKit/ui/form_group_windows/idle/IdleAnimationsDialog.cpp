@@ -21,6 +21,17 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
       auto* widget = this->ui.idles;
       auto* model  = new IdleAnimationFormsModel(widget);
       widget->setModel(model);
+
+      widget->setDragDropMode(QAbstractItemView::DragDropMode::InternalMove);
+      widget->setDragDropOverwriteMode(false);
+      widget->setDragEnabled(true);
+      widget->setAcceptDrops(true);
+      widget->setDropIndicatorShown(true);
+
+      // edge-case: moving the currently selected row
+      QObject::connect(model, &QAbstractItemModel::rowsMoved, this, [this]() {
+         this->_update_move_button_enable_states();
+      });
    }
 
    #pragma region Context menu
@@ -130,19 +141,24 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
    }
    #pragma endregion
 
-   //
-   // TODO: Drag-and-drop (most of the implementation will need to be in the model)
-   //
-
-   //
-   // TODO: "Move Up" and "Move Down" buttons for idles that are children of another idle
-   //
+   QObject::connect(this->ui.buttonIdleMoveUp, &QPushButton::clicked, this, [this]() {
+      auto* model    = (IdleAnimationFormsModel*)this->ui.idles->model();
+      auto  idle_qmi = this->_get_selected_row();
+      model->moveIdleUp(idle_qmi);
+   });
+   QObject::connect(this->ui.buttonIdleMoveDown, &QPushButton::clicked, this, [this]() {
+      auto* model    = (IdleAnimationFormsModel*)this->ui.idles->model();
+      auto  idle_qmi = this->_get_selected_row();
+      model->moveIdleDown(idle_qmi);
+   });
 
    this->_set_form_ui_enable_state(false);
-   
+   this->_update_move_button_enable_states();
+
    {  // Push the selected idle to the UI
       auto* sel_model = this->ui.idles->selectionModel();
       QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this]() {
+         this->_update_move_button_enable_states();
          this->_pull_selected_idle_to_ui();
       });
    }
@@ -429,6 +445,13 @@ void IdleAnimationsDialog::_report_idle_create_error(const dovah::exceptions::fo
       QObject::tr("Error", "create new form error"),
       QObject::tr("Unable to create a new idle animation. %1").arg(text)
    );
+}
+
+void IdleAnimationsDialog::_update_move_button_enable_states() {
+   auto* model    = (IdleAnimationFormsModel*)this->ui.idles->model();
+   auto  idle_qmi = this->_get_selected_row();
+   this->ui.buttonIdleMoveUp->setEnabled(model->canMoveIdleUp(idle_qmi));
+   this->ui.buttonIdleMoveDown->setEnabled(model->canMoveIdleDown(idle_qmi));
 }
 
 void IdleAnimationsDialog::_pull_selected_idle_to_ui() {
