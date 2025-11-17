@@ -316,11 +316,11 @@ namespace dovah::conditions::parameter_types {
          enum_member{4, "Lean"},
       };
       inline constexpr const auto FurnitureEntry    = std::array{
-         enum_member{0x01, "Front"},
-         enum_member{0x02, "Back"},
-         enum_member{0x04, "Left"},
-         enum_member{0x08, "Right"},
-         enum_member{0x10, "Up"},
+         enum_member{0x00010000, "Front"},
+         enum_member{0x00020000, "Back"},
+         enum_member{0x00040000, "Right"},
+         enum_member{0x00080000, "Left"},
+         enum_member{0x00100000, "Up"},
       };
       inline constexpr const auto MiscStat          = std::array{
          enum_member{ uint32_t(0xFCDD5011), "Animals Killed" },
