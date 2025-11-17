@@ -19,6 +19,8 @@ class IdleAnimationsDialog : public QDialog {
 
       void focusIdle(dovah::form_stub&);
 
+      virtual bool eventFilter(QObject* watched, QEvent*) override;
+
    protected:
       Ui::IdleAnimationsDialog ui;
       struct {
@@ -52,6 +54,8 @@ class IdleAnimationsDialog : public QDialog {
          void _context_delete_idle();
          void _context_use_info();
       #pragma endregion
+         
+      void _keybind_delete_idle();
 
       void _report_idle_create_error(const dovah::exceptions::form_creation_failed&);
 

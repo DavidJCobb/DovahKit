@@ -1,5 +1,6 @@
 #include "./IdleAnimationsDialog.h"
 #include <QInputDialog>
+#include <QKeyEvent>
 #include <QMessageBox>
 #include "dovah/exceptions/form_creation_failed.h"
 #include "dovah/forms/IdleAnimation.h"
@@ -18,6 +19,13 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
    QObject::connect(this->ui.buttonOK, &QPushButton::clicked, this, &QDialog::accept);
 
    {
+      auto& editor = DovahKitCore::get();
+      QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
+         this->_current_idle = {};
+      });
+   }
+
+   {
       auto* widget = this->ui.idles;
       auto* model  = new IdleAnimationFormsModel(widget);
       widget->setModel(model);
@@ -27,6 +35,8 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
       widget->setDragEnabled(true);
       widget->setAcceptDrops(true);
       widget->setDropIndicatorShown(true);
+
+      widget->installEventFilter(this); // "Del" key deletes an idle
 
       // edge-case: moving the currently selected row
       QObject::connect(model, &QAbstractItemModel::rowsMoved, this, [this]() {
@@ -190,6 +200,19 @@ void IdleAnimationsDialog::focusIdle(dovah::form_stub& idle) {
       return;
    widget->scrollTo(qmi); // also expands the treeview as necessary
    sel_model->select({ qmi, qmi }, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+}
+
+/*virtual*/ bool IdleAnimationsDialog::eventFilter(QObject* watched, QEvent* event) /*override*/ {
+   if (watched != this->ui.idles)
+      return QObject::eventFilter(watched, event);
+   if (event->type() == QEvent::KeyPress) {
+      auto* casted = (QKeyEvent*)event;
+      if (casted->key() == Qt::Key_Delete) {
+         this->_keybind_delete_idle();
+         return true;
+      }
+   }
+   return false;
 }
 
 QModelIndex IdleAnimationsDialog::_get_selected_row() {
@@ -370,9 +393,8 @@ QModelIndex IdleAnimationsDialog::_get_selected_row() {
       sel_model->select({ tl, br }, QItemSelectionModel::SelectionFlag::ClearAndSelect); // select new idle
    }
    void IdleAnimationsDialog::_context_delete_idle() {
-      auto* widget    = this->ui.idles;
-      auto* model     = (IdleAnimationFormsModel*)widget->model();
-      auto* sel_model = widget->selectionModel();
+      auto* widget = this->ui.idles;
+      auto* model  = (IdleAnimationFormsModel*)widget->model();
 
       auto qmi = _get_selected_row();
       if (!qmi.isValid())
@@ -401,6 +423,24 @@ QModelIndex IdleAnimationsDialog::_get_selected_row() {
       open_use_info_dialog_for_form(*stub);
    }
 #pragma endregion
+
+void IdleAnimationsDialog::_keybind_delete_idle() {
+   auto* widget = this->ui.idles;
+   auto* model  = (IdleAnimationFormsModel*)widget->model();
+
+   auto qmi = _get_selected_row();
+   if (!model->canDeleteIdle(qmi)) {
+      QApplication::beep();
+      return;
+   }
+   auto* stub = model->data(qmi, IdleAnimationFormsModel::FormStubRole).value<dovah::form_stub*>();
+   if (!stub) {
+      QApplication::beep();
+      return;
+   }
+
+   model->deleteIdle(qmi, this);
+}
 
 void IdleAnimationsDialog::_report_idle_create_error(const dovah::exceptions::form_creation_failed& ex) {
    QString text;
