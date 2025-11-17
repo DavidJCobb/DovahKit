@@ -29,9 +29,13 @@ class IdleAnimationsDialog : public QDialog {
                QAction* add_action_root = nullptr;
             } graph;
             struct {
+               QAction* use_info = nullptr;
+            } action;
+            struct {
                QAction* create    = nullptr;
                QMenu*   duplicate = nullptr;
                QAction* del       = nullptr;
+               QAction* use_info  = nullptr;
             } idle;
          } actions;
       } _context;
@@ -46,6 +50,7 @@ class IdleAnimationsDialog : public QDialog {
          void _context_duplicate_idle_single();
          void _context_duplicate_idle_tree();
          void _context_delete_idle();
+         void _context_use_info();
       #pragma endregion
 
       void _report_idle_create_error(const dovah::exceptions::form_creation_failed&);

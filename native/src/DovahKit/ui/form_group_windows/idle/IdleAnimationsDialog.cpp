@@ -6,6 +6,7 @@
 #include "dovah/form_stub.h"
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
+#include "editor/open_window_for_form.h"
 #include "ui/utils/set_custom_context_menu.h"
 #include "./IdleAnimationFormsModel.h"
 #include "./FormSubdialogIdleNewActionRoot.h"
@@ -43,6 +44,16 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
          }
       }
       #pragma endregion
+      #pragma region Action actions
+      {
+         auto& group = this->_context.actions.action;
+         {
+            auto* action = group.use_info = new QAction(tr("Use Info"), menu);
+            menu->addAction(action);
+            QObject::connect(action, &QAction::triggered, this, &IdleAnimationsDialog::_context_use_info);
+         }
+      }
+      #pragma endregion
       #pragma region Idle actions
       {
          auto& group = this->_context.actions.idle;
@@ -69,6 +80,11 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
             auto* action = group.del = new QAction(tr("Delete idle"), menu);
             menu->addAction(action);
             QObject::connect(action, &QAction::triggered, this, &IdleAnimationsDialog::_context_delete_idle);
+         }
+         {
+            auto* action = group.use_info = new QAction(tr("Use Info"), menu);
+            menu->addAction(action);
+            QObject::connect(action, &QAction::triggered, this, &IdleAnimationsDialog::_context_use_info);
          }
       }
       #pragma endregion
@@ -104,9 +120,12 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
          this->_context.actions.graph.create->setVisible(is_none || is_graph);
          this->_context.actions.graph.add_action_root->setVisible(is_graph);
 
+         this->_context.actions.action.use_info->setVisible(is_action);
+
          this->_context.actions.idle.create->setVisible(is_idle_parent);
          this->_context.actions.idle.duplicate->menuAction()->setVisible(can_duplicate_idle);
          this->_context.actions.idle.del->setVisible(can_delete_idle);
+         this->_context.actions.idle.use_info->setVisible(can_delete_idle);
       });
    }
    #pragma endregion
@@ -118,6 +137,8 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
    //
    // TODO: "Move Up" and "Move Down" buttons for idles that are children of another idle
    //
+
+   this->_set_form_ui_enable_state(false);
    
    {  // Push the selected idle to the UI
       auto* sel_model = this->ui.idles->selectionModel();
@@ -348,6 +369,20 @@ QModelIndex IdleAnimationsDialog::_get_selected_row() {
          return;
 
       model->deleteIdle(qmi, this);
+   }
+   void IdleAnimationsDialog::_context_use_info() {
+      auto* widget    = this->ui.idles;
+      auto* model     = (IdleAnimationFormsModel*)widget->model();
+      auto* sel_model = widget->selectionModel();
+
+      auto qmi = _get_selected_row();
+      if (!qmi.isValid())
+         return;
+      auto* stub = model->data(qmi, IdleAnimationFormsModel::FormStubRole).value<dovah::form_stub*>();
+      if (!stub)
+         return;
+
+      open_use_info_dialog_for_form(*stub);
    }
 #pragma endregion
 
