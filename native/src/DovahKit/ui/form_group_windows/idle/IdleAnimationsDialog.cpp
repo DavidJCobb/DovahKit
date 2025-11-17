@@ -140,6 +140,21 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
    }
 }
 
+void IdleAnimationsDialog::focusIdle(dovah::form_stub& idle) {
+   if (idle.form_type != dovah::form_type::idle)
+      return;
+   
+   auto* widget    = this->ui.idles;
+   auto* model     = (IdleAnimationFormsModel*) widget->model();
+   auto* sel_model = widget->selectionModel();
+
+   auto qmi = model->idleQMI(idle);
+   if (!qmi.isValid())
+      return;
+   widget->scrollTo(qmi); // also expands the treeview as necessary
+   sel_model->select({ qmi, qmi }, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+}
+
 QModelIndex IdleAnimationsDialog::_get_selected_row() {
    auto rows = this->ui.idles->selectionModel()->selectedRows();
    if (rows.empty())

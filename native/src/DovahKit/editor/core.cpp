@@ -383,6 +383,9 @@ bool DovahKitCore::for_each_form_uses_dialog(std::function<bool(FormUseInfoDialo
    return false;
 }
 
+dovah::file_load_order* DovahKitCore::get_file_load_order() noexcept {
+   return this->load_order;
+}
 std::vector<const dovah::tes_file_reading::file_loader*> DovahKitCore::get_loaded_files() const noexcept {
    return this->load_order->get_loaded_files();
 }

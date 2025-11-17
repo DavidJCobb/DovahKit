@@ -3594,9 +3594,6 @@
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\topic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\idle_animations_model.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\datastores\idles\graph_node.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -3625,6 +3622,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\datastores\idles\idle_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="editor\open_window_for_form_type.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -8828,9 +8831,6 @@
     <ClInclude Include="dovah\form_stubs\passkeys\do_custom_parse_during_load.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\idle_animations_model.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\datastores\idles\idle_parent_node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -8904,6 +8904,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\vectors\move_item_to_index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\open_window_for_form_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -9383,6 +9386,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_group_windows\idle\FormSubdialogIdleNewActionRoot.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -10273,6 +10279,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_group_windows\idle\IdleAnimationsDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

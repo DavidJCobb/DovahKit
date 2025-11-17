@@ -28,6 +28,7 @@ namespace dovah {
    class  bsa_archived_file;
    class  bsa_load_order;
    class  compiled_papyrus_script;
+   class  file_load_order;
    class  form_deletion_request;
    class  form_stub;
    struct localized_string;
@@ -48,12 +49,14 @@ namespace DovahKitEditorInternals {
 class DKBSACollectionModelBackend;
 class FormEditDialogInterface;
 class FormUseInfoDialog;
+class IdleAnimationsDialog;
 
 class DovahKitCore : public QObject {
-   Q_OBJECT
+   Q_OBJECT;
    friend class DovahKitEditorInternals::load_task;
    friend void open_use_info_dialog_for_form(dovah::form_stub&, QWidget* parent);
    friend void open_edit_dialog_for_form(dovah::form_stub&, QWidget* parent);
+   friend void open_edit_dialog_for_form_type(dovah::form_type);
    public:
       using bare_form_id_t = dovah::bare_form_id_t;
       struct file_load_stats {
@@ -86,6 +89,9 @@ class DovahKitCore : public QObject {
       //
       std::unordered_map<bare_form_id_t, QDialog*> extant_form_edit_dialogs;
       std::unordered_map<bare_form_id_t, QDialog*> extant_use_info_dialogs;
+      struct {
+         IdleAnimationsDialog* idle = nullptr;
+      } extant_form_type_dialogs;
       //
       void _configure_load_order();
       //
@@ -105,6 +111,9 @@ class DovahKitCore : public QObject {
       void formWorkingCopyCommitComplete(dovah::form_stub*);
       void formWorkingCopyDeleteImminent(dovah::form_stub*); // not emitted if the form itself is deleted, data is abandoned, etc.
       void formWorkingCopyDeleteComplete(dovah::form_stub*);
+
+      // Used to update DKConditionLists program-wide as unsaved changes are made to form data that 
+      // can be referenced in conditions.
       void questWorkingCopyStagesAltered(dovah::form_stub*);
       void questWorkingCopyAliasesAltered(dovah::form_stub*);
       void packageWorkingCopyPackageDataAltered(dovah::form_stub*);
@@ -115,7 +124,7 @@ class DovahKitCore : public QObject {
       void formDeletionComplete(dovah::bare_form_id_t, bool just_being_flagged);
       
       void formRenumbered(dovah::form_stub*, bare_form_id_t oldID, bare_form_id_t newID);
-      void formsRenumberedEnMasse();
+      void formsRenumberedEnMasse(); // i.e. post-save
       
       void gameSettingValueChanged(const char* name);
       void gameSettingRenumbered(const char* name, bare_form_id_t oldID, bare_form_id_t newID);
@@ -145,6 +154,11 @@ class DovahKitCore : public QObject {
 
       bool for_each_form_edit_dialog(std::function<bool(FormEditDialogInterface*)>);
       bool for_each_form_uses_dialog(std::function<bool(FormUseInfoDialog*)>);
+
+      // Prefer accessors on DovahKitCore over directly modifying things via the FLO, 
+      // as the former emit signals that are needed program-wide. Direct access to 
+      // the FLO is sometimes needed when working with backend-provided utility code.
+      dovah::file_load_order* get_file_load_order() noexcept;
 
       std::vector<const dovah::tes_file_reading::file_loader*> get_loaded_files() const noexcept;
       bool loaded_file_is_active(const dovah::tes_file_reading::file_loader&) const noexcept;

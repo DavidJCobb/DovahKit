@@ -360,6 +360,7 @@
     <ClCompile Include="editor\localize\package_procedure_tree_branch_type.cpp" />
     <ClCompile Include="editor\localize\package_procedure_type.cpp" />
     <ClCompile Include="editor\localize\perk_entry_point.cpp" />
+    <ClCompile Include="editor\open_window_for_form_type.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\attached_scripts.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\faction.cpp" />
@@ -900,6 +901,7 @@
     <ClCompile Include="nif\types\NiTransform.cpp" />
     <ClCompile Include="nif\utils\find_all_retexturable_blocks.cpp" />
     <ClCompile Include="nif\utils\precache_nif_info.cpp" />
+    <ClCompile Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.cpp" />
     <ClCompile Include="ui\form_group_windows\idle\IdleAnimationsDialog.cpp" />
     <ClCompile Include="ui\form_windows\acoustic_space.cpp" />
     <ClCompile Include="ui\form_windows\activator.cpp" />
@@ -1088,7 +1090,6 @@
     <ClCompile Include="ui\main_window\_debug_hooks\form_info_cache.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\idles_datastore.cpp" />
-    <ClCompile Include="ui\main_window\_debug_hooks\idle_animations_model.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\load_nif.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\papyrus_subsystem.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\pex_parsing_benchmarks.cpp" />
@@ -1877,6 +1878,7 @@
     <ClInclude Include="editor\localize\package_procedure_tree_branch_type.h" />
     <ClInclude Include="editor\localize\package_procedure_type.h" />
     <ClInclude Include="editor\localize\perk_entry_point.h" />
+    <ClInclude Include="editor\open_window_for_form_type.h" />
     <ClInclude Include="editor\q_declare_metatype\package_flag_overrides.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\actor_base.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.h" />
@@ -1909,6 +1911,7 @@
     <ClInclude Include="helpers\vectors\move_item_to_index.h" />
     <ClInclude Include="nif\blocks\BSFurnitureMarkerNode.h" />
     <QtMoc Include="ui\form_group_windows\idle\IdleAnimationsDialog.h" />
+    <QtMoc Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.h" />
     <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h" />
     <QtMoc Include="ui\form_windows\climate\FormSubdialogClimateWeather.h" />
     <QtMoc Include="ui\form_windows\encounter_zone.h" />
@@ -2105,7 +2108,6 @@
     <ClInclude Include="ui\form_windows\weather\WeatherIntpackedFloatEditor.h" />
     <ClInclude Include="ui\form_windows\weather\WeatherSoundsModel.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\idles_datastore.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\idle_animations_model.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_float_slider.h" />
@@ -3412,6 +3414,7 @@
     <QtMoc Include="ui\main_window.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.ui" />
     <QtUic Include="ui\form_group_windows\idle\idle.ui" />
     <QtUic Include="ui\form_windows\acoustic_space.ui" />
     <QtUic Include="ui\form_windows\activator.ui" />

@@ -9,6 +9,7 @@
 #include "editor/core.h"
 #include "editor/subsystems/message_log/core.h"
 #include "editor/open_window_for_form.h"
+#include "editor/open_window_for_form_type.h"
 #include "dovah/data/game/hardcoded_form_ids_ignore_record_id_prefix.h"
 #include "dovah/data/game.h"
 #include "dovah/files/file_header.h"
@@ -253,6 +254,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
          dialog->deleteLater();
       });
       dialog->show();
+   });
+   QObject::connect(this->ui.actionIdleAnimations, &QAction::triggered, this, [this]() {
+      open_edit_dialog_for_form_type(dovah::form_type::idle);
    });
    QObject::connect(this->ui.actionSave, &QAction::triggered, this, [this]() {
       auto& editor = DovahKitCore::get();

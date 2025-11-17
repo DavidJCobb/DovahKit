@@ -17,6 +17,8 @@ class IdleAnimationsDialog : public QDialog {
    public:
       IdleAnimationsDialog(QWidget* parent = nullptr);
 
+      void focusIdle(dovah::form_stub&);
+
    protected:
       Ui::IdleAnimationsDialog ui;
       struct {

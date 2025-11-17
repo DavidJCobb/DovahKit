@@ -87,6 +87,7 @@
     <addaction name="menuTextEncoding"/>
     <addaction name="actionDefaultObjects"/>
     <addaction name="actionGameSettings"/>
+    <addaction name="actionIdleAnimations"/>
     <addaction name="separator"/>
     <addaction name="menuManageFormIDs"/>
     <addaction name="separator"/>
@@ -204,6 +205,11 @@
   <action name="actionMoveFormIDsOutOfBEES">
    <property name="text">
     <string>Move form IDs out of extended ESL range</string>
+   </property>
+  </action>
+  <action name="actionIdleAnimations">
+   <property name="text">
+    <string>Idle Animations...</string>
    </property>
   </action>
  </widget>

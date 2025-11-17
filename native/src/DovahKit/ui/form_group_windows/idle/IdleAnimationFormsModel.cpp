@@ -358,16 +358,6 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
    }
 #pragma endregion
 
-/*static*/ dovah::file_load_order* IdleAnimationFormsModel::_get_file_load_order() {
-   auto files = DovahKitCore::get().get_loaded_files();
-   if (files.empty())
-      return nullptr;
-   auto* file = files[0];
-   if (!file)
-      return nullptr;
-   return &file->get_load_order();
-}
-
 #pragma region Form events
    void IdleAnimationFormsModel::_on_game_data_acquired() {
       this->_rebuild_datastore();
@@ -436,7 +426,7 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
 void IdleAnimationFormsModel::_rebuild_datastore() {
    this->_cache.clear();
 
-   auto* flo = _get_file_load_order();
+   auto* flo = DovahKitCore::get().get_file_load_order();
    if (!flo) {
       this->beginResetModel();
       this->_datastore.reset();
@@ -907,7 +897,7 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          // Ensure there are sufficient form IDs available in the active file.
          //
          {
-            auto* flo = _get_file_load_order();
+            auto* flo = editor.get_file_load_order();
             if (!flo)
                return {};
 

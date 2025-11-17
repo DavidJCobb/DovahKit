@@ -85,8 +85,6 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
          bool _can_ever_duplicate(const idle_node&) const;
       #pragma endregion
 
-      static dovah::file_load_order* _get_file_load_order();
-
       #pragma region Form events
          void _on_game_data_acquired();
          void _on_game_data_abandon();
