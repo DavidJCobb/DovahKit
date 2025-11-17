@@ -52,6 +52,6 @@ A helper struct that can be used to read a form's winning record and extract jus
 <a name="use info"></a>
 <a name="used form"></a>
 <a name="user form"></a>
-When one form refers to another, this is a <dfn>use</dfn>. The referring form is the <dfn>user form</dfn>, and the form to which it refers <dfn>used form</dfn>. Every [form stub](#form%20stub) tracks its <dfn>use info</dfn> bidirectionally, so given any stub, you can find [the stubs of] its user forms or used forms.
+When one form refers to another, this is a <dfn>use</dfn>. The referring form is the <dfn>user form</dfn>, and the form to which it refers is the <dfn>used form</dfn>. Every [form stub](#form%20stub) tracks its <dfn>use info</dfn> bidirectionally, so given any stub, you can find [the stubs of] its user forms or used forms.
 
 When two forms have a parent/child relationship within the data file (i.e. when one form exists inside of a child group of the other form), the child is considered the user of its parent.
