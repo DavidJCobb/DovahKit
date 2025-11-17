@@ -48,14 +48,17 @@ These are the mitigations employed by the Creation Kit while building the idle t
 | Problem | Mitigation |
 | :- | :- |
 | An idle is its own parent or previous sibling. | This is a cyclical reference of length 1 and trips one of those cases below. |
-| An idle has no parent and no previous sibling. | The idle is appended to its behavior graph's loose idle list. |
+| An idle has no parent and no previous sibling. | The idle is appended to its behavior graph's loose idle list. (Indeed, this is actually the intended way to define loose idles and not a "problem" as such.) |
 | A group of sibling idles each have no parent. | ??? |
 | A group of idles has a cyclical parent idle chain. | The first-seen idle in the chain is made a loose idle[^mitigate-make-loose], breaking the chain. |
-| An idle has an inconsistent parent idle from any of its siblings. | Each of the siblings is made a loose idle[^mitigate-make-loose] as they are processed.[^mitigate-siblings-individually] |
-| A group of idles has a cyclical sibling chain. | Each of the siblings is made a loose idle[^mitigate-make-loose] as they are processed.[^mitigate-siblings-individually] |
-| Multiple idles in the same behavior graph have the same parent action. | ??? |
-| A group of sibling idles have different parent actions. | ??? |
-| An idle is initially defined as having a parent action, but its parent is changed in an override record. | No mitigation. The idle may become the root for all of the parent actions specified across the base record and overrides. |
+| An idle has an inconsistent parent idle from any of its previous siblings. | The idle and each of its next siblings are made loose idles[^mitigate-make-loose] as they are processed.[^mitigate-siblings-individually] |
+| A group of idles has a cyclical sibling chain. | The idle and each of its next siblings are made loose idles[^mitigate-make-loose] as they are processed.[^mitigate-siblings-individually] |
+| Multiple idles in the same behavior graph have the same parent action. | The last-loaded idle becomes the action root, and the previously-seen ones become loose idles. |
+| A group of sibling idles have different parent actions. | No mitigation. No apparent effect in the Creation Kit. Both idles become the roots of their respective actions. Code analysis suggests that one may identify the other as its previous sibling; whether this has negative effects down the line would require a broader analysis of the animation system. |
+| An idle is initially defined as having a parent action, but its parent is changed in an override record. | No mitigation. The idle becomes the root for all of the parent actions specified across the base record and overrides. If any override made the idle a child of another idle, then the idle will be both an action root *and* the child of whatever parent idle was specified by the last of those overrides to be loaded. The Creation Kit will crash when unloading forms (e.g. to load a new set of files). |
+| Two or more idles have the same parent and previous sibling. | The idles are reordered per the sorting algorithm described below. (This situation can happen if a data file tries to insert a new idle into a set of siblings without overriding any of the siblings.[^unsafe-reordering] In that specific case, the new idle ends up being the last sibling, because none of the original siblings specify it as their previous sibling.) |
+| An idle specifies a parent idle and previous sibling, but no behavior graph path. Its parent specifies a path. The idle and its containing hierarchy are otherwise well-formed. | No mitigation. As long as the hierarchy is well-formed, the behavior graph path isn't used in this situation. |
+| An idle is made loose by one of the above mitigations, but that idle specified no behavior graph or an empty path. | No mitigation. The Creation Kit instantly crashes when opening the "Animations" dialog. |
 
 [^mitigate-make-loose]: The idle's parent and previous-sibling pointers are set to null before the idle is added to any idle tree.
 
@@ -66,8 +69,8 @@ These are the mitigations employed by the Creation Kit when validating the idle 
 | Problem | Mitigation | Note |
 | :- | :- | :- |
 | *X* has a parent idle, but *X* was added to some other list of siblings. | No mitigation. | This may be possible for action roots depending on how overrides are handled. It is impossible for idles that are children of other idles. |
-| *X* is, somehow, not in the sibling list that it is being validated against. | Warning dialog ("Parent array does not contain *idle*"). | This should be flat-out impossible. |
-| *X* has a previous sibling pointer, but its actual previous sibling is a different idle or no idle. | Warning dialog ("Invalid prev idle on *idle*"). The game attempts to correct *X*'s previous-sibling but may fail to do so reliably. | This could happen if a mod reorders idles exclusively by modifying the single idle being moved.[^unsafe-reordering] |
+| *X* is, somehow, not in the sibling list that it is being validated against. | Warning ("Parent array does not contain *idle*"). | This should be flat-out impossible. |
+| *X* has a previous sibling pointer, but its actual previous sibling is a different idle or no idle. | Warning ("Invalid prev idle on *idle*"). The game attempts to correct *X*'s previous-sibling but may fail to do so reliably. | This could happen if a mod reorders idles exclusively by modifying the single idle being moved.[^unsafe-reordering] |
 
 [^unsafe-reordering]: The intended way to reorder or reparent an idle is by overriding the moved idle, the idle after the destination position (if the idle isn't being moved to the end), and the idle after the source position (if the idle isn't being moved from the end).
   

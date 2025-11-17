@@ -118,12 +118,15 @@ namespace dovah::datastores {
 
    void idles::_clear() {
       this->idles_by_stub.clear();
+
       for (auto*& ptr : this->graphs) {
          if (!ptr)
             continue;
          delete ptr;
          ptr = nullptr;
       }
+      this->graphs.clear();
+
       if (auto*& ptr = this->loose.actions) {
          delete ptr;
          ptr = nullptr;
@@ -132,12 +135,14 @@ namespace dovah::datastores {
          delete ptr;
          ptr = nullptr;
       }
+
       for (auto*& ptr : this->warnings) {
          if (!ptr)
             continue;
          delete ptr;
          ptr = nullptr;
       }
+      this->warnings.clear();
    }
 
    #pragma region Initial build
@@ -148,7 +153,7 @@ namespace dovah::datastores {
 
          idle_parent_node* parent_node = nullptr;
 
-         auto* graph = this->get_or_create_graph_by_path(loaded_idle.filename);
+         auto* graph = this->get_or_create_graph_by_path(loaded_idle.corrected_behavior_graph_path());
          if (graph) {
             if (parent_is_action) {
                parent_node = graph->get_or_create_action(*parent);
@@ -167,7 +172,7 @@ namespace dovah::datastores {
          parent_node->append_child(node);
       }
       void idles::_place_child_idle(idle_node& child_idle, const loaded_idle_type& loaded_idle) {
-         auto* graph = this->get_or_create_graph_by_path(loaded_idle.filename);
+         auto* graph = this->get_or_create_graph_by_path(loaded_idle.corrected_behavior_graph_path());
 
          dovah::form_stub* parent   = loaded_idle.parent.get_form_stub();
          dovah::form_stub* previous = loaded_idle.previous_sibling.get_form_stub();
@@ -296,6 +301,7 @@ namespace dovah::datastores {
                return sibling_problem::ancestor;
             if (seen_siblings.contains(current))
                return sibling_problem::cyclical;
+            seen_siblings.insert(current);
 
             auto loaded = current->load().ptr_cast<loaded_idle_type>();
             if (!loaded)
@@ -375,7 +381,7 @@ namespace dovah::datastores {
          auto loaded = stub.load().ptr_cast<loaded_idle_type>();
          if (!loaded)
             return nullptr;
-         return this->graph_by_path(loaded->filename);
+         return this->graph_by_path(loaded->corrected_behavior_graph_path());
       }
       idles::graph_node* idles::graph_by_idle(dovah::form_stub& stub) noexcept {
          return const_cast<graph_node*>(std::as_const(*this).graph_by_idle(stub));
