@@ -258,8 +258,12 @@ namespace dovah::datastores {
             }
             assert(loose_parent_node != nullptr);
          } else {
-            auto& dst = this->warnings.emplace_back();
-            dst = new warnings::orphaned_idle(child_idle);
+            if (graph) {
+               loose_parent_node = graph->loose;
+            } else {
+               auto& dst = this->warnings.emplace_back();
+               dst = new warnings::orphaned_idle(child_idle);
+            }
          }
          if (!loose_parent_node) {
             loose_parent_node = this->loose.idles;

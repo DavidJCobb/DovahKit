@@ -33,6 +33,9 @@ namespace dovah::datastores::impl::idles {
          cb(this->stub);
       //
       loaded->parent.set(*loaded, parent_stub);
+      if (!parent_stub || parent_stub->form_type != form_type::action) {
+         loaded->data.flags &= ~loaded_forms::IdleAnimation::flag::parent;
+      }
       if (i == 0)
          loaded->previous_sibling.set(*loaded, nullptr);
       else
