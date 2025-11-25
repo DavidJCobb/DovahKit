@@ -486,6 +486,34 @@ namespace dovah::loaded_forms {
       record.write_string_subrecord('DNAM', this->_hierarchy.behavior_graph.verbatim);
       record.write_string_subrecord('ENAM', this->animation_event);
       {
+         const auto& active_file_candidacies = this->_as_action_root.active;
+         const auto  size = active_file_candidacies.size();
+         if (size > 1) {
+            //
+            // If we loaded a malformed IDLE record with multiple ANAM subrecords (or a 
+            // malformed file with multiple IDLE records for the same form), and if the 
+            // ANAMs collectively place the idle into multiple action roots, then we 
+            // need to ensure we preserve that malformedness when saving. Otherwise, 
+            // dealing with it during editing becomes a thousand times more complicated, 
+            // and it's complicated enough as it is.
+            //
+            for (size_t i = 0; i < size - 1; ++i) {
+               auto& item      = active_file_candidacies[i];
+               auto& subrecord = record.open_next_subrecord('ANAM');
+               subrecord.write(item.action);
+               subrecord.write((uint32_t)0);
+               subrecord.close();
+            }
+            auto& back = active_file_candidacies.back();
+            if (back.action != this->_hierarchy.parent) { // avoid a redundant ANAM
+               auto& subrecord = record.open_next_subrecord('ANAM');
+               subrecord.write(back.action);
+               subrecord.write((uint32_t)0);
+               subrecord.close();
+            }
+         }
+      }
+      {
          auto& subrecord = record.open_next_subrecord('ANAM');
          subrecord.write(this->_hierarchy.parent);
          subrecord.write(this->_hierarchy.previous_sibling);
