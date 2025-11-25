@@ -148,12 +148,12 @@ namespace dovah::datastores {
    #pragma region Initial build
       void idles::_place_parent_idle(idle_node& node, const loaded_idle_type& loaded_idle) {
          assert(loaded_idle.data.flags & idle_flag::parent);
-         auto* parent = loaded_idle.parent.get_form_stub();
+         form_stub* parent = loaded_idle.get_hierarchy_parent();
          const bool parent_is_action = parent && parent->form_type == form_type::action;
 
          idle_parent_node* parent_node = nullptr;
 
-         auto* graph = this->get_or_create_graph_by_path(loaded_idle.corrected_behavior_graph_path());
+         auto* graph = this->get_or_create_graph_by_path(loaded_idle.get_behavior_graph_path(false));
          if (graph) {
             if (parent_is_action) {
                parent_node = graph->get_or_create_action(*parent);
@@ -172,11 +172,11 @@ namespace dovah::datastores {
          parent_node->append_child(node);
       }
       void idles::_place_child_idle(idle_node& child_idle, const loaded_idle_type& loaded_idle) {
-         auto* graph = this->get_or_create_graph_by_path(loaded_idle.corrected_behavior_graph_path());
+         auto* graph = this->get_or_create_graph_by_path(loaded_idle.get_behavior_graph_path(false));
 
-         dovah::form_stub* parent   = loaded_idle.parent.get_form_stub();
-         dovah::form_stub* previous = loaded_idle.previous_sibling.get_form_stub();
-         dovah::form_stub* action   = nullptr;
+         form_stub* parent   = loaded_idle.get_hierarchy_parent();
+         form_stub* previous = loaded_idle.get_hierarchy_previous_sibling();
+         form_stub* action   = nullptr;
          if (parent && parent->form_type != form_type::idle) {
             if (parent->form_type == form_type::action)
                action = parent;
@@ -273,7 +273,7 @@ namespace dovah::datastores {
       }
 
       bool idles::_has_cyclical_parentage(seen_idle_set& seen, const loaded_idle_type& idle) {
-         auto* current = idle.parent.get_form_stub();
+         auto* current = idle.get_hierarchy_parent();
          do {
             if (!current)
                break;
@@ -286,16 +286,16 @@ namespace dovah::datastores {
             auto loaded = current->load().ptr_cast<loaded_idle_type>();
             if (!loaded)
                break;
-            current = loaded->parent.get_form_stub();
+            current = loaded->get_hierarchy_parent();
          } while (true);
          return false;
       }
       std::optional<idles::sibling_problem> idles::_check_siblings(const seen_idle_set& seen_ancestors, const loaded_idle_type& idle) {
-         auto* parent  = idle.parent.get_form_stub();
+         auto* parent  = idle.get_hierarchy_parent();
          if (parent && parent->form_type != dovah::form_type::idle)
             parent = nullptr;
 
-         auto* current = idle.previous_sibling.get_form_stub();
+         auto* current = idle.get_hierarchy_previous_sibling();
          if (!current || current->form_type != form_type::idle)
             return {};
 
@@ -311,7 +311,7 @@ namespace dovah::datastores {
             if (!loaded)
                break;
 
-            auto* current_parent = loaded->parent.get_form_stub();
+            auto* current_parent = loaded->get_hierarchy_parent();
             if (current_parent && current_parent->form_type != form_type::idle)
                current_parent = nullptr;
             if (current_parent != parent)
@@ -320,7 +320,7 @@ namespace dovah::datastores {
             //
             // Move on to next.
             //
-            current = loaded->previous_sibling.get_form_stub();
+            current = loaded->get_hierarchy_previous_sibling();
             if (!current || current->form_type != form_type::idle)
                break;
          } while (true);
@@ -385,7 +385,7 @@ namespace dovah::datastores {
          auto loaded = stub.load().ptr_cast<loaded_idle_type>();
          if (!loaded)
             return nullptr;
-         return this->graph_by_path(loaded->corrected_behavior_graph_path());
+         return this->graph_by_path(loaded->get_behavior_graph_path(false));
       }
       idles::graph_node* idles::graph_by_idle(dovah::form_stub& stub) noexcept {
          return const_cast<graph_node*>(std::as_const(*this).graph_by_idle(stub));
@@ -579,7 +579,7 @@ namespace dovah::datastores {
                throw;
             }
          }
-         if (auto* prev_stub = loaded->previous_sibling.get_form_stub()) {
+         if (auto* prev_stub = loaded->get_hierarchy_previous_sibling()) {
             idle_node* prev_node = this->idle_by_stub(*prev_stub);
             if (prev_node) {
                this->place_idle_after(*node, *prev_node);
@@ -587,7 +587,7 @@ namespace dovah::datastores {
             }
          }
          idle_parent_node* parent_node = nullptr;
-         if (auto* parent_stub = loaded->parent.get_form_stub()) {
+         if (auto* parent_stub = loaded->get_hierarchy_parent()) {
             if (parent_stub->form_type == form_type::action) {
                if (auto* graph = this->graph_by_idle(stub)) {
                   parent_node = graph->get_or_create_action(*parent_stub);
