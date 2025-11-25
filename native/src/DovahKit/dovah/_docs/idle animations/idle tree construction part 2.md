@@ -154,49 +154,63 @@ This algorithm defines the process of moving *SubjectIdle* to *Destination*, as 
   * Let *SubjectHasBeenMoved* be *false*.
   * Let *DroppedFromActions* be the list of actions for which *SubjectIdle* has any active-file action root candidacies.
   * Let *DisqualifiedFromActions* be those actions from *DroppedFromActions* which have *SubjectIdle* as their active winning root.
-  * **Destroy the subject's active-file action root candidacies.** For each action *Action* of *DroppedFromActions*:
-    * If *Action* is *SubjectIdle*'s canonical parent, then:
-      * 🛂Move *SubjectIdle* from *Action* to *Destination*.
-      * Set *SubjectHasBeenMoved* to *true*.
-    * Else:
+  * **Destroy all of the subject's active-file action root candidacies, save for that of the canonical parent.**  For each action *Action* of *DroppedFromActions*:
+    * If *Action* is not *SubjectIdle*'s canonical parent, then:
       * If *Action* contains a clone-of-*SubjectIdle* node:
         * 🛂Delete that clone-of-*SubjectIdle* node.
-    * Delete all active-file action root candidacies, tracked by *Action*, that pertain to *SubjectIdle*.
+        * For *Action*, [handle runner-ups after loss of an action root](#handling%20runner-ups%20after%20loss%20of%20an%20action%20root).
+      * Delete all active-file action root candidacies, tracked by *Action*, that pertain to *SubjectIdle*.
   * Let *FormerNextSibling* be null.
-  * If *SubjectHasBeenMoved* is *false*, then...[^subject-fallback-move]
+  * **Move the subject.**
     * Let *MovedFrom* be *SubjectIdle*'s canonical parent.
     * If *MovedFrom* is an idle:
       * Set *FormerNextSibling* to *SubjectIdle*'s next sibling within *MovedFrom*.
+    * If *MovedFrom* is an action:
+      *  Delete all active-file action root candidacies, tracked by *MovedFrom*, that pertain to *SubjectIdle*.
     * 🛂Move *SubjectIdle* from its canonical parent to *Destination*.
-    * If *MovedFrom* is an action, then... (By implication, *Subject* must be a master winning root for that action.)
-      * 🛂Clone *SubjectIdle* into *MovedFrom*.[^move-and-then-clone-back-home]
-    * Set *SubjectHasBeenMoved* to *true*.
-  * **Update form hierarchy data.**
-    * 🛂Edit *SubjectIdle*'s form data to represent its new hierarchy position.
-    * If *FormerNextSibling* is not null, then 🛂edit its form data to point to its new previous sibling.
-    * If *Destination* is an idle:
-      * Let *NewNextSibling* be *SubjectIdle*'s previous sibling after having been moved.
-      * If *NewNextSibling* is not null, then 🛂edit its form data to point to *SubjectIdle* as its new previous sibling.
-  * For *DisqualifiedFromActions*, [handle runner-ups after loss of an action root](#handling%20runner-ups%20after%20loss%20of%20an%20action%20root).
-
-[^subject-fallback-move]: This occurs if the subject: isn't an active winning root; or is an active winning root, but is also canonically located elsewhere due to having a malformed `IDLE` record (i.e. multiple `ANAM` subrecords in a single record, or multiple records for the same form in the same file) such that multiple active-file `ANAM`s exist, at least one places it in an action root, and the last-loaded `ANAM` places it inside of an idle.
+      * This should also sever *SubjectIdle*'s outbound active-file action root candidacies, and (if *Destination* is an action) create a new such candidacy as appropriate.
+    * **Update form hierarchy data.**
+      * 🛂Edit *SubjectIdle*'s form data to represent its new hierarchy position.
+      * If *FormerNextSibling* is not null, then 🛂edit its form data to point to its new previous sibling.
+      * If *Destination* is an idle:
+        * Let *NewNextSibling* be *SubjectIdle*'s previous sibling after having been moved.
+        * If *NewNextSibling* is not null, then 🛂edit its form data to point to *SubjectIdle* as its new previous sibling.
+    * **Update the action that the subject was moved from.** If *MovedFrom* is an action:
+      * If *SubjectIdle* is still the winning root of *MovedFrom*:[^still-winning-after-move]
+        * 🛂Clone *SubjectIdle* into *MovedFrom*.[^move-and-then-clone-back-home]
+      * Else:
+        * For *MovedFrom*, [handle runner-ups after loss of an action root](#handling%20runner-ups%20after%20loss%20of%20an%20action%20root).
 
 [^move-and-then-clone-back-home]: The effect of this operation is that *SubjectIdle* ends up in two places at once, and "isn't moved" out of *MovedFrom*, but the instance of the subject in *Destination* is the canonical one and the instance in *MovedFrom* is a clone.
 
+[^still-winning-after-move]: This can happen if *SubjectIdle* is the winning root of *MovedFrom* due both to an active-file action root candidacy *and* a non-active-file action root candidacy.
+
 Consequently the potential sequence of callbacks is:
 
-* Move a different (displaced) idle, and edit its form data
-* Delete one or more displaced clones of a different idle
-* *in any order:*
-  * Move the subject idle
-  * Delete zero or more clones of the subject idle
-* Edit the subject idle's form data
-* *zero, one, or two times:*
-  * Edit a different (former or new next-sibling) idle's form data
-* *handling runner-ups after loss of an action root:*
-  * *in any order, zero or more times:*
-    * Move a different (runner-up) idle
-    * Clone a different (runner-up) idle
+* *displacing a prior root*
+  * Idle moved (displaced idle)
+  * Form data edited (displaced idle)
+  * Idle is no longer multiply present at a particular root (displaced idle)
+* *updating the subject's hierarchy placement*
+  * *destroying non-canonical active-file action root candidacies*
+    * Idle is no longer multiply present at a particular root (subject idle)
+    * *handling runner-ups after loss of an action root:*
+      * *in any order, zero or more times:*
+        * Move a different (runner-up) idle
+        * Clone a different (runner-up) idle
+  * *moving the subject*
+    * Idle moved (subject idle)
+    * *updating form hierarchy data*
+      * Form data edited (subject idle)
+      * Form data edited (former next-sibling)
+      * Form data edited (new next-sibling)
+    * *updating the action the subject was moved from*
+      * *either of:*
+        * Idle is now multiply present at a particular root (subject idle)
+        * *handling runner-ups after loss of an action root:*
+          * *in any order, zero or more times:*
+            * Move a different (runner-up) idle
+            * Clone a different (runner-up) idle
 
 and algorithm-based movement of the intended idle may be deferred until after algorithm-based movement of a displaced idle.
 
@@ -235,10 +249,25 @@ This algorithm, performed on a list of *SubjectActions*, may need to be invoked 
 * **Handle runner-ups for any of the subject's former active-file action root candidacies.** For each action *Action* of *SubjectActions*:
   * Let *Graph* be the containing graph of *Action*.
   * Let *RunnerUpIdle* be *Action*'s new winning root.
-  * If *RunnerUpIdle*'s canonical parent node is the loose idle container of *Graph*:
-    * 🛂Move *RunnerUpidle* from the loose idle container of *Graph*, to *Action*.
+  * If *RunnerUpIdle*'s canonical parent node is already *Action*, then exit.
+  * Else if *RunnerUpIdle*'s canonical parent node is the loose idle container of *Graph*:
+    * 🛂Move *RunnerUpIdle* from the loose idle container of *Graph*, to *Action*.
   * Else:
     * 🛂Clone *RunnerUpIdle* into *Action*. (It must be the case that *RunnerUpIdle*'s canonical parent is either some other action root, another idle, or the loose idle container of a different graph.)
+
+## Interface
+
+For moving an idle, I think we'll want to divide the steps into these functions, each passkeyed as appropriate:
+
+* `void action_node::_displace_current_winning_root();`
+  * Represents the entire "displace whatever root is already there" part of the algorithm.
+* `void action_node::_idle_is_no_longer_an_active_candidate(const idle_node&);`
+  * Invoked when looping over *SubjectIdle*'s active-file candidacies (except that of the canonical parent). If the `idle_node`'s parent node isn't the `action_node`, then this invokes the "idle is no longer multiply present in a particular action" callback.
+* `void idle_node::_replace_active_file_candidacies_with(action_node*);`
+* `void action_node::_on_winning_root_changed();`
+  * Represents the "handle runner-ups after loss of an action root" algorithm as invoked for a single action.
+
+These functions should be useful for deleting idles as well.
 
 # Appendix A
 
