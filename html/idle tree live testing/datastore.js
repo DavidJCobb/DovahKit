@@ -30,7 +30,7 @@ class Datastore {
          // Build the parent/child hierarchy for the idle nodes.
          //
          for(let idle_node of this.idles_by_id.values()) {
-            if (idle_node.flags.is_parent) {
+            if (idle_node.form.flags.is_parent) {
                this.#place_parent_idle(idle_node);
             } else {
                this.#place_child_idle(idle_node);

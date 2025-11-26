@@ -168,9 +168,6 @@ class Idle {
    constructor(/*String*/ editor_id, /*IdleForm*/ form) {
       this.editor_id  = editor_id;
       this.form  = form;
-      this.flags = {
-         is_parent: false,
-      };
       this.candidacies = {
          masters: [], // Array<Action> // in order from least- to most-recently-loaded
          active:  [], // Array<Action> // in order from least- to most-recently-loaded

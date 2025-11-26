@@ -670,3 +670,34 @@ TESTCASES.action_root_moved_by_master_and_active = new Testcase({
       },
    ],
 });
+
+TESTCASES.action_root_flagged_as_loose = new Testcase({
+   /*
+      There's a flag in IDLE/DATA that causes the idle to always 
+      be treated as loose, skipping all hierarchy processing. If 
+      this flag is used on an action root, I'd expect that root 
+      to end up in two places at once.
+      
+       - Human.hkx
+          - ActionActivate
+             - HumanActivateRoot [non-canonical]
+          - LOOSE
+             - HumanActivateRoot [canonical]
+   */
+   actions: [
+      { editor_id: "ActionActivate" },
+   ],
+   idles: [
+      {  // HumanActivateRoot
+         editor_id: "HumanActivateRoot",
+         subrecords: {
+            masters: [
+               { signature: "DATA", is_parent: true },
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null },
+            ],
+            active: [],
+         },
+      },
+   ],
+});
