@@ -555,6 +555,70 @@ TESTCASES.siblings_with_different_parents = new Testcase({
    ],
 });
 
+TESTCASES.siblings_with_just_one_odd_one_out = new Testcase({
+   /*
+      Testcase for siblings with different parents. Final 
+      result should be:
+      
+       - Human.hkx
+          - ActionActivate
+             - HumanActivateRoot
+               - HumanActivate01
+          - LOOSE
+             - HumanActivate02
+             - HumanActivate03
+   */
+   actions: [
+      { editor_id: "ActionActivate" },
+   ],
+   idles: [
+      {  // HumanActivateRoot
+         editor_id: "HumanActivateRoot",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null }
+            ],
+         },
+      },
+      {  // HumanActivate01
+         editor_id: "HumanActivate01",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: null }
+            ],
+         },
+      },
+      {  // HumanActivate02
+         editor_id: "HumanActivate02",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: null, previous: "HumanActivate01" }
+            ],
+         },
+      },
+      {  // HumanActivate02
+         editor_id: "HumanActivate03",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: "HumanActivate02" }
+            ],
+         },
+      },
+   ],
+});
+
 TESTCASES.idle_in_multiple_active_file_roots = new Testcase({
    /*
       Testcase for an idle that (by virtue of being malformed within 

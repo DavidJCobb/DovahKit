@@ -172,10 +172,17 @@ class Idle {
          masters: [], // Array<Action> // in order from least- to most-recently-loaded
          active:  [], // Array<Action> // in order from least- to most-recently-loaded
       };
-      this._sort_state = { // used during initial build
+      
+      // Used during initial build. These are essentially the ANAM pointers, but 
+      // to datastore nodes rather than forms, and with the same corrections the 
+      // game would make when it detects an invalid hierarchy placement.
+      //
+      // Cleared out after initial build.
+      this._sort_state = {
          parent:   null, // Idle
          previous: null, // Idle
       };
+      
       this.live = {
          parent:   null, // Variant<null, LooseIdleList, Action, Idle>
          children: [],   // Array<Idle>

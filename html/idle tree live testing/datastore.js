@@ -178,6 +178,7 @@ class Datastore {
          parent_idle   = null;
          previous_idle = null;
       } else {
+         // Handle invalid previous siblings
          let problem = this.#idle_has_bad_siblinghood(seen_ancestors, idle_node);
          if (problem) {
             console.warn("Idle has invalid sibling: ", idle_node, problem);
@@ -200,6 +201,34 @@ class Datastore {
             previous_idle = null;
          }
       }
+      //
+      // A minor note about the corrections made to the idle pointers 
+      // above. These are the same corrections that the game makes, but 
+      // this case, we don't *retain* the corrections. That is: the game 
+      // directly modifies the loaded `TESIdleForm` objects in memory to 
+      // have the corrected pointers, whereas we don't.
+      //
+      // The only effect this should have is that when we build the trees, 
+      // we can't early-out as quickly. If for example there's a cyclical 
+      // sibling relationship between A < B < C < D < A, then:
+      //
+      //  - The game nulls out A's previous-sibling and parent; then when 
+      //    it checks B, B has a different parent from A and fails right 
+      //    off rip. This cascades such that C and D both fail quickly as 
+      //    well.
+      //
+      //  - ...whereas DovahKit has to detect the full cycle every time 
+      //    it processes any of the siblings in that cycle.
+      //
+      // We still produce the same tree as the CK once we're done, and 
+      // doing it this way is simpler. As a potential optimization, we 
+      // could split building from two steps into three: create all idle 
+      // nodes; then [new step] set all idle nodes' sort states blindly 
+      // based on what their ANAM wants; then, in this function, we'd use 
+      // (and modify) the sort states alone, allowing us to early-out 
+      // exactly as the CK does. But having that extra step would be slower 
+      // to no benefit when dealing with well-formed idle trees.
+      //
       
       // Find parent-node and previous-node given parent-idle-form and 
       // previous-idle-form.
@@ -244,6 +273,12 @@ class Datastore {
       let previous = idle_node._sort_state.previous;
       let parent   = idle_node._sort_state.parent;
       idle_node._sort_state = { parent: null, previous: null };
+      
+      if (parent) { // if idle_node.live.parent is an action, parent should be null
+         console.assert(parent == idle_node.live.parent);
+      } else {
+         console.assert(!(idle_node.live.parent instanceof Idle));
+      }
       
       if (!parent)
          return;
