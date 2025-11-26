@@ -1,0 +1,10 @@
+
+:where(:host) {
+   --action-color: #0080FF;
+}
+
+.action {
+   & > label {
+      color: var(--action-color);
+   }
+}

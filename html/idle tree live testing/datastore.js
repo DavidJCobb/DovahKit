@@ -28,7 +28,7 @@ class Datastore {
                return dst_list;
             };
             
-            let node = new Idle(form.editor_id);
+            let node = new Idle(form.editor_id, form);
             this.idles_by_id.set(form.editor_id, node);
             node.serialized.masters = _clone_serialized(form.serialized.masters);
             node.serialized.active  = _clone_serialized(form.serialized.active);
@@ -36,7 +36,7 @@ class Datastore {
          //
          // Build the parent/child hierarchy for the idle nodes.
          //
-         for(let idle_node of this.idle_forms.values()) {
+         for(let idle_node of this.idles_by_id.values()) {
             this.#place_action_root(idle_node);
             if (idle_node.flags.is_parent) {
                this.#place_parent_idle(idle_node);
@@ -54,7 +54,7 @@ class Datastore {
             });
          }
          //
-         for(let idle_node of this.idle_forms.values()) {
+         for(let idle_node of this.idles_by_id.values()) {
             this.#post_placement_parentage_validation(idle_node);
          }
       } finally {
@@ -62,16 +62,22 @@ class Datastore {
       }
    }
 
-   /*Graph*/ graph_by_idle(/*Idle*/ idle) {
-      const path = idle.canonical_graph_path;
+   /*Graph*/ graph_by_path(/*String*/ path) {
       for(let graph of this.graphs)
          if (graph.path == path)
             return graph;
       return null;
    }
+   /*Graph*/ graph_by_idle(/*const Idle*/ idle) {
+      return this.graph_by_path(idle.canonical_graph_path);
+   }
    /*Graph*/ #get_or_create_graph(/*String*/ path) {
-      // TODO
-      throw new Error("NOT YET IMPLEMENTED");
+      for(let graph of this.graphs)
+         if (graph.path == path)
+            return graph;
+      let graph = new Graph(path);
+      this.graphs.push(graph);
+      return graph;
    }
    
    #ensure_action_for_building(/*IdleSerialized*/ anam_and_dnam) {
@@ -110,40 +116,73 @@ class Datastore {
       }
       console.assert(loose instanceof LooseIdleList);
       loose.idles.push(idle_node);
+      idle_node.live.parent = loose;
    }
    
-   #idle_has_cyclical_parentage(/*Set<IdleForm>*/ seen, /*IdleNode*/ idle) {
-      // TODO
-      throw new Error("NOT YET IMPLEMENTED");
+   #idle_has_cyclical_parentage(/*Set<IdleForm>*/ seen, /*IdleNode*/ node) {
+      let form    = node.form;
+      let current = form.hierarchy_parent;
+      do {
+         if (!current)
+            break;
+         if (!(current instanceof IdleForm))
+            break;
+         if (seen.has(current))
+            return true;
+         seen.add(current);
+         
+         current = current.hierarchy_parent;
+      } while (true);
+      return false;
+   }
+   
+   #idle_has_bad_siblinghood(/*Set<IdleForm>*/ seen_ancestors, /*IdleNode*/ node) {
+      let form   = node.form;
+      let parent = form.hierarchy_parent;
+      if (!(parent instanceof IdleForm))
+         parent = null;
+      
+      let current = form.hierarchy_previous;
+      if (!(current instanceof IdleForm))
+         return false;
+      
+      let seen_siblings = new Set(); // Set<IdleForm>
+      do {
+         if (seen_ancestors.has(current))
+            return "ancestor";
+         if (seen_siblings.has(current))
+            return "cyclical";
+         seen_siblings.add(current);
+         
+         let current_parent = current.hierarchy_parent;
+         if (!(current_parent instanceof IdleForm))
+            current_parent = null;
+         if (current_parent != parent)
+            return "mismatched";
+         
+         current = current.hierarchy_previous;
+         if (!(current instanceof IdleForm))
+            break;
+      } while (true);
+      return false;
    }
    
    #place_child_idle(/*Idle*/ idle_node) {
-      let canonical_graph_path = idle_node.canonical_graph_path;
+      const canonical_graph_path = idle_node.canonical_graph_path;
       
-      let parent_idle   = null; // Optional<IdleForm>
-      let previous_idle = null; // Optional<IdleForm>
+      let parent_idle   = idle_node.form.hierarchy_parent;   // Optional<IdleForm>
+      let previous_idle = idle_node.form.hierarchy_previous; // Optional<IdleForm>
       let is_action_root_in_own_graph = false;
       {
-         const active  = idle_node.serialized.active;
-         const masters = idle_node.serialized.masters;
-         
-         const list = active.length ? active : masters;
-         if (list.length > 0) {
-            let item = list[list.length - 1];
-            parent_idle   = item.parent;
-            previous_idle = item.previous;
-            if (!(parent_idle instanceof IdleForm))
-               parent_idle = null;
-         }
          for(let item of idle_node.serialized.masters) {
-            if (item.parent instanceof ActionForm && item.graph == canonical_graph_path) {
+            if ((item.parent instanceof ActionForm) && item.graph == canonical_graph_path) {
                is_action_root_in_own_graph = true;
                break;
             }
          }
-         if (!action) {
+         if (!is_action_root_in_own_graph) {
             for(let item of idle_node.serialized.active) {
-               if (item.parent instanceof ActionForm && item.graph == canonical_graph_path) {
+               if ((item.parent instanceof ActionForm) && item.graph == canonical_graph_path) {
                   is_action_root_in_own_graph = true;
                   break;
                }
@@ -161,15 +200,37 @@ class Datastore {
          parent_idle   = null;
          previous_idle = null;
       } else {
-         // TODO: Handle invalid preivous-siblings
-         throw new Error("NOT YET COMPLETE");
+         let problem = this.#idle_has_bad_siblinghood(seen_ancestors, idle_node);
+         if (problem) {
+            console.warn("Idle has invalid sibling: ", idle_node, problem);
+            {
+               let graph = this.graph_by_path(canonical_graph_path);
+               if (!graph && parent_idle) {
+                  let path = parent_idle.canonical_graph_path;
+                  if (path)
+                     graph = this.graph_by_path(path);
+               }
+               if (!graph && previous_idle) {
+                  let path = previous_idle.canonical_graph_path;
+                  if (path)
+                     graph = this.graph_by_path(path);
+               }
+               if (graph)
+                  loose_parent_node = graph.loose;
+            }
+            parent_idle   = null;
+            previous_idle = null;
+         }
       }
       
+      // Find parent-node and previous-node given parent-idle-form and 
+      // previous-idle-form.
       let parent_node   = null; // Optional<Idle>
       let previous_node = null; // Optional<Idle>
-      // TODO: Find parent-node and previous-node given parent-idle-form and 
-      // previous-idle-form.
-      throw new Error("NOT YET COMPLETE");
+      if (parent_idle)
+         parent_node = this.idles_by_id.get(parent_idle.editor_id);
+      if (previous_idle)
+         previous_node = this.idles_by_id.get(previous_idle.editor_id);
       
       // Update "sort state" on idles to reflect any severed parent or 
       // previous-sibling relationships above. This will be used when we 
@@ -178,7 +239,7 @@ class Datastore {
       idle_node._sort_state.previous = previous_node;
       
       if (parent_node) {
-         parent_node.insert_sorted_child(idle_node);
+         parent_node._insert_sorted_child(idle_node);
          return;
       }
       
@@ -190,15 +251,37 @@ class Datastore {
          return;
       }
       if (!loose_parent_node) {
-         console.warn("Orphaned idle: ", idle_node);
-         loose_parent_node = this.loose;
+         if (canonical_graph_path) {
+            loose_parent_node = this.#get_or_create_graph(canonical_graph_path).loose;
+         } else {
+            console.warn("Orphaned idle: ", idle_node);
+            loose_parent_node = this.loose;
+         }
       }
       loose_parent_node.idles.push(idle_node);
+      idle_node.live.parent = loose_parent_node;
    }
    
    #post_placement_parentage_validation(/*Idle*/ idle_node) {
-      // TODO
-      throw new Error("NOT YET IMPLEMENTED");
+      let previous = idle_node._sort_state.previous;
+      let parent   = idle_node._sort_state.parent;
+      idle_node._sort_state = { parent: null, previous: null };
+      
+      if (!parent)
+         return;
+      const siblings = parent.live.children;
+      
+      let i = siblings.indexOf(idle_node);
+      if (i < 0) {
+         console.warn("Inconsistent parentage on ", idle_node);
+      }
+      if (previous) {
+         let actual = null;
+         if (i > 0)
+            actual = siblings[i - 1];
+         if (i == 0 || actual != previous)
+            console.warn("Previous-sibling on idle is not what it wanted: ", idle_node);
+      }
    }
    
 };

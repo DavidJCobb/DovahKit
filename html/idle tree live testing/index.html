@@ -2,10 +2,48 @@
 <html>
    <head>
       <title>idle datastore tests</title>
+      <style>
+datastore-element {
+}
+      </style>
    </head>
    <body>
       <script src="datastore-nodes.js"></script>
       <script src="datastore.js"></script>
       <script src="testcases.js"></script>
+      <script src="datastore-element.js"></script>
+      
+      <section>
+         <label for="testcase">Testcase:</label>
+         <select id="testcase"></select>
+         <button id="set-testcase">View</button>
+      </section>
+      <datastore-element></datastore-element>
+      
+      <script>
+{
+   let sel = document.getElementById("testcase");
+   let btn = document.getElementById("set-testcase");
+   for(let key in TESTCASES) {
+      if (!TESTCASES.hasOwnProperty(key))
+         continue;
+      let opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = key;
+      sel.append(opt);
+   }
+   btn.addEventListener("click", function() {
+      let opt  = sel.selectedOptions[0];
+      if (!opt)
+         return;
+      let elem = document.querySelector("datastore-element");
+      let test = TESTCASES[opt.value];
+      let data = new Datastore();
+      data.build(test.actions, test.idles);
+      console.log(data);
+      elem.datastore = data;
+   });
+}
+      </script>
    </body>
 </html>
