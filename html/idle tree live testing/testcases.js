@@ -264,3 +264,52 @@ TESTCASES.displaced_root = new Testcase({
       },
    ],
 });
+
+TESTCASES.displaced_root_across_graphs = new Testcase({
+   /*
+      Testcase verifies that we correctly handle displacement of an action 
+      root, when that action root has been moved across graphs and is being 
+      displaced from a graph it is no longer in. Specifically:
+      
+       - The "displaced" idle is originally an action root in Human.
+       
+       - The "displaced" idle is overridden to be an action root in Dog, 
+         such that it is now in two places at once and its canonical graph 
+         is Dog.
+         
+       - The "displacing" idle is the same action root in Dog.
+      
+      The correct result should be that the "displaced" idle is both an 
+      action root in Human and a loose idle in Dog, while the "displacing" 
+      idle is an action root in Dog.
+   */
+   actions: [
+      { editor_id: "ActionActivate" },
+   ],
+   idles: [
+      {  // HumanActivateRoot_Displaced
+         editor_id: "HumanToDogActivateRoot_Displaced",
+         subrecords: {
+            masters: [
+               { signature: "DNAM", string: "Test04_Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null },
+               { signature: "DNAM", string: "Test04_Dog.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null },
+            ],
+            active: [
+            ],
+         },
+      },
+      {  // HumanActivateRoot_Displacing
+         editor_id: "DogActivateRoot_Displacing",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test04_Dog.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null }
+            ],
+         },
+      },
+   ],
+});

@@ -102,7 +102,9 @@ class DatastoreElement extends HTMLElement {
          let node = this.#render_graph(graph);
          frag.append(node);
       }
-      frag.append(this.#render_loose(this.#datastore.loose, "ORPHANS"));
+      let loose = this.#render_loose(this.#datastore.loose, "ORPHANS");
+      loose.classList.add("orphans");
+      frag.append(loose);
       
       this.#list.replaceChildren(frag);
    }

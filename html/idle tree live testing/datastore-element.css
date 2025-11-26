@@ -8,3 +8,7 @@
       color: var(--action-color);
    }
 }
+
+.orphans:has(>ul:empty) {
+   display: none;
+}
