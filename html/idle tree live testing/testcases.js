@@ -123,7 +123,7 @@ TESTCASES.typical_tree = new Testcase({
             ],
             active: [
                { signature: "DNAM", string: "Test01_Human.hkx" },
-               { signature: "ANAM", parent: "HumanActivateRoot", previous: "ActivateVariant01" }
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: "HumanActivateVariant01" }
             ],
          },
       },
@@ -157,6 +157,108 @@ TESTCASES.typical_tree = new Testcase({
             active: [
                { signature: "DNAM", string: "Test01_Dog.hkx" },
                { signature: "ANAM", parent: null, previous: null }
+            ],
+         },
+      },
+   ],
+});
+
+TESTCASES.typical_sibling_ordering = new Testcase({
+   /*
+       - Human.hkx
+          - ActionActivate
+             - HumanActivateRoot
+                - HumanActivateVariant01
+                - HumanActivateVariant02
+                - HumanActivateVariant03
+      
+      Testcase verifies correct sibling ordering post-build even when 
+      siblings are seen out of order.
+   */
+   actions: [
+      { editor_id: "ActionActivate" },
+   ],
+   idles: [
+      {  // HumanActivateRoot
+         editor_id: "HumanActivateRoot",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test02_Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null }
+            ],
+         },
+      },
+      {  // HumanActivateVariant03
+         editor_id: "HumanActivateVariant03",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test02_Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: "HumanActivateVariant02" }
+            ],
+         },
+      },
+      {  // HumanActivateVariant02
+         editor_id: "HumanActivateVariant02",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test02_Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: "HumanActivateVariant01" }
+            ],
+         },
+      },
+      {  // HumanActivateVariant01
+         editor_id: "HumanActivateVariant01",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test02_Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: null }
+            ],
+         },
+      },
+   ],
+});
+
+TESTCASES.displaced_root = new Testcase({
+   /*
+       - Human.hkx
+          - ActionActivate
+             - HumanActivateRoot_Displaced  [loaded earlier]
+             - HumanActivateRoot_Displacing [loaded later]
+      
+      Testcase verifies that we correctly handle displacement of an idle 
+      from the action for which it is a root.
+   */
+   actions: [
+      { editor_id: "ActionActivate" },
+   ],
+   idles: [
+      {  // HumanActivateRoot_Displaced
+         editor_id: "HumanActivateRoot_Displaced",
+         subrecords: {
+            masters: [
+               { signature: "DNAM", string: "Test03_Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null }
+            ],
+            active: [
+            ],
+         },
+      },
+      {  // HumanActivateRoot_Displacing
+         editor_id: "HumanActivateRoot_Displacing",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test03_Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null }
             ],
          },
       },

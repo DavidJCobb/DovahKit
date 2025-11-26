@@ -21,23 +21,15 @@ class Datastore {
          // Pre-create all idle nodes.
          //
          for(let form of idle_forms) {
-            let _clone_serialized = function(src_list) {
-               let dst_list = [];
-               for(let src of src_list)
-                  dst_list.push(src.clone());
-               return dst_list;
-            };
-            
             let node = new Idle(form.editor_id, form);
             this.idles_by_id.set(form.editor_id, node);
-            node.serialized.masters = _clone_serialized(form.serialized.masters);
-            node.serialized.active  = _clone_serialized(form.serialized.active);
+            
+            this.#place_action_root(node);
          }
          //
          // Build the parent/child hierarchy for the idle nodes.
          //
          for(let idle_node of this.idles_by_id.values()) {
-            this.#place_action_root(idle_node);
             if (idle_node.flags.is_parent) {
                this.#place_parent_idle(idle_node);
             } else {
@@ -91,17 +83,19 @@ class Datastore {
    }
    
    #place_action_root(/*Idle*/ idle_node) {
-      for(let anam_and_dnam of idle_node.serialized.masters) {
+      for(let anam_and_dnam of idle_node.form.serialized.masters) {
          let action = this.#ensure_action_for_building(anam_and_dnam);
          if (!action)
             continue;
          action._track_candidate(anam_and_dnam, idle_node, false);
+         idle_node._track_candidacy(action, false);
       }
-      for(let anam_and_dnam of idle_node.serialized.active) {
+      for(let anam_and_dnam of idle_node.form.serialized.active) {
          let action = this.#ensure_action_for_building(anam_and_dnam);
          if (!action)
             continue;
          action._track_candidate(anam_and_dnam, idle_node, true);
+         idle_node._track_candidacy(action, true);
       }
    }
    
@@ -172,23 +166,7 @@ class Datastore {
       
       let parent_idle   = idle_node.form.hierarchy_parent;   // Optional<IdleForm>
       let previous_idle = idle_node.form.hierarchy_previous; // Optional<IdleForm>
-      let is_action_root_in_own_graph = false;
-      {
-         for(let item of idle_node.serialized.masters) {
-            if ((item.parent instanceof ActionForm) && item.graph == canonical_graph_path) {
-               is_action_root_in_own_graph = true;
-               break;
-            }
-         }
-         if (!is_action_root_in_own_graph) {
-            for(let item of idle_node.serialized.active) {
-               if ((item.parent instanceof ActionForm) && item.graph == canonical_graph_path) {
-                  is_action_root_in_own_graph = true;
-                  break;
-               }
-            }
-         }
-      }
+      const is_action_root_in_own_graph = idle_node.is_winning_root_of_action_in_own_graph();
       
       let loose_parent_node = null; // Optional<LooseIdleList>
       

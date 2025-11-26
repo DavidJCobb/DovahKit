@@ -11,6 +11,7 @@ class Graph {
          if (action.editor_id == editor_id)
             return action;
       let action = new Action(editor_id);
+      action.graph = this;
       this.actions.push(action);
       return action;
    }
@@ -39,10 +40,10 @@ class Action {
    constructor(/*String*/ editor_id) {
       this.graph     = null; // Graph
       this.editor_id = editor_id;
-      this.root      = null; // Optional<Idle>
+      this.root      = null; // Optional<Idle> // winning root idle
       this.candidacies = {
-         masters: [],
-         active:  []
+         masters: [], // in order from least- to most-recently-loaded
+         active:  []  // in order from least- to most-recently-loaded
       };
    }
    
@@ -53,8 +54,12 @@ class Action {
          idle: idle,
          info: candidacy,
       });
-      if (!this.root)
-         this.root = idle;
+      
+      // For now, we assume that the order the testcase defines things in is the order 
+      // things come in within the file. In the C++ implementation, we'd want to compare 
+      // the new candidacy to the last candidacy across our two lists, and keep the lists 
+      // sorted.
+      this.root = idle;
    }
 };
 
@@ -165,9 +170,9 @@ class Idle {
       this.flags = {
          is_parent: false,
       };
-      this.serialized = {
-         masters: [], // Array<IdleSerialized>
-         active:  [], // Array<IdleSerialized>
+      this.candidacies = {
+         masters: [], // Array<Action> // in order from least- to most-recently-loaded
+         active:  [], // Array<Action> // in order from least- to most-recently-loaded
       };
       this._sort_state = { // used during initial build
          parent:   null, // Idle
@@ -181,6 +186,29 @@ class Idle {
    
    /*String*/ get canonical_graph_path() {
       return this.form.canonical_graph_path;
+   }
+   
+   _track_candidacy(action, is_master) {
+      let list = is_master ? this.candidacies.masters : this.candidacies.active;
+      list.push(action);
+   }
+   
+   /*bool*/ is_winning_root_of_action_in_own_graph() /*const*/ {
+      let graph_path = this.canonical_graph_path;
+      let _check = (function(list) {
+         for(let action of list) {
+            if (action.graph.path != graph_path)
+               continue;
+            if (action.root == this)
+               return true;
+         }
+         return false;
+      }).bind(this);
+      if (_check(this.candidacies.masters))
+         return true;
+      if (_check(this.candidacies.active))
+         return true;
+      return false;
    }
    
    _insert_sorted_child(/*Idle*/ idle) {
