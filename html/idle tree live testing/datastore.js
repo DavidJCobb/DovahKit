@@ -30,8 +30,8 @@ class Datastore {
          // Build the parent/child hierarchy for the idle nodes.
          //
          for(let idle_node of this.idles_by_id.values()) {
-            if (idle_node.form.flags.is_parent) {
-               this.#place_parent_idle(idle_node);
+            if (idle_node.form.flags.is_forced_loose) {
+               this.#place_forced_loose_idle(idle_node);
             } else {
                this.#place_child_idle(idle_node);
             }
@@ -99,7 +99,7 @@ class Datastore {
       }
    }
    
-   #place_parent_idle(/*Idle*/ idle_node) {
+   #place_forced_loose_idle(/*Idle*/ idle_node) {
       let graph = this.graph_by_idle(idle_node);
       let loose;
       if (graph)

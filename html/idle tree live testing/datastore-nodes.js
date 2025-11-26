@@ -87,7 +87,7 @@ class IdleForm {
    constructor(options) {
       this.editor_id = options.editor_id;  // String
       this.flags = {
-         is_parent: false,
+         is_forced_loose: false,
       };
       this.serialized = {
          masters: options.serialized?.masters || [], // Array<IdleSerialized>

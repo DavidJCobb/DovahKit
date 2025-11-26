@@ -44,7 +44,7 @@ class Testcase {
       for(let subrecord of subrecords) {
          switch (subrecord.signature) {
             case "DATA":
-               form.flags.is_parent = !!subrecord.is_parent;
+               form.flags.is_forced_loose = !!subrecord.is_forced_loose;
                break;
             case "DNAM":
                graph = subrecord.string;
@@ -692,7 +692,7 @@ TESTCASES.action_root_flagged_as_loose = new Testcase({
          editor_id: "HumanActivateRoot",
          subrecords: {
             masters: [
-               { signature: "DATA", is_parent: true },
+               { signature: "DATA", is_forced_loose: true },
                { signature: "DNAM", string: "Test06_Human.hkx" },
                { signature: "ANAM", parent: "ActionActivate", previous: null },
             ],
