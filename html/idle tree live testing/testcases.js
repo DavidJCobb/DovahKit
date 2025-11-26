@@ -78,6 +78,11 @@ const TESTCASES = {};
 
 TESTCASES.typical_tree = new Testcase({
    /*
+       - Dog.hkx
+          - ActionActivate
+             - DogActivateRoot
+          - LOOSE
+             - DogLooseBark
        - Human.hkx
           - ActionActivate
              - HumanActivateRoot
@@ -85,9 +90,6 @@ TESTCASES.typical_tree = new Testcase({
                 - HumanActivateVariant02
           - ActionDeath
              - HumanDeathRoot
-       - Dog.hkx
-          - ActionActivate
-             - DogActivateRoot
    */
    actions: [
       { editor_id: "ActionActivate" },
@@ -228,13 +230,21 @@ TESTCASES.typical_sibling_ordering = new Testcase({
 
 TESTCASES.displaced_root = new Testcase({
    /*
+      Testcase verifies that we correctly handle displacement of an idle 
+      from the action for which it is a root. We define the hierarchy as
+      
        - Human.hkx
           - ActionActivate
              - HumanActivateRoot_Displaced  [loaded earlier]
              - HumanActivateRoot_Displacing [loaded later]
       
-      Testcase verifies that we correctly handle displacement of an idle 
-      from the action for which it is a root.
+      which should ultimately produce:
+      
+       - Human.hkx
+          - ActionActivate
+             - HumanActivateRoot_Displacing
+          - LOOSE
+             - HumanActivateRoot_Displaced
    */
    actions: [
       { editor_id: "ActionActivate" },
@@ -285,7 +295,16 @@ TESTCASES.displaced_root_across_graphs = new Testcase({
       
       The correct result should be that the "displaced" idle is both an 
       action root in Human and a loose idle in Dog, while the "displacing" 
-      idle is an action root in Dog.
+      idle is an action root in Dog:
+      
+       - Dog.hkx
+          - ActionActivate
+             - DogActivateRoot_Displacing
+          - LOOSE
+             - HumanToDogActivateRoot_Displaced [canonical]
+       - Human.hkx
+          - ActionActivate
+             - HumanToDogActivateRoot_Displaced [non-canonical]
    */
    actions: [
       { editor_id: "ActionActivate" },
@@ -312,6 +331,340 @@ TESTCASES.displaced_root_across_graphs = new Testcase({
             active: [
                { signature: "DNAM", string: "Test04_Dog.hkx" },
                { signature: "ANAM", parent: "ActionActivate", previous: null }
+            ],
+         },
+      },
+   ],
+});
+
+TESTCASES.action_root_becomes_child_idle = new Testcase({
+   /*
+      Testcase for an idle being in two places at once: both the root of 
+      an action, and the child of another idle. We test both an idle 
+      doing this within a single graph (Human), and an idle doing this 
+      across two graphs (from Cat to Dog). This test involves the roots 
+      being initially placed by a master and the moved by the active 
+      file.
+      
+       - Cat.hkx
+          - ActionActivate
+             - CatActivateRoot [non-canonical]
+       - Dog.hkx
+          - ActionDeath
+             - DogDeathRoot
+                - CatActivateRoot [canonical]
+       - Human.hkx
+          - ActionActivate
+             - HumanActivateRoot [non-canonical]
+          - ActionDeath
+             - HumanDeathRoot
+                - HumanActivateRoot [canonical]
+   */
+   actions: [
+      { editor_id: "ActionActivate" },
+      { editor_id: "ActionDeath" },
+   ],
+   idles: [
+      {  // HumanDeathRoot
+         editor_id: "HumanDeathRoot",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test05_Human.hkx" },
+               { signature: "ANAM", parent: "ActionDeath", previous: null }
+            ],
+         },
+      },
+      {  // HumanActivateRoot
+         editor_id: "HumanActivateRoot",
+         subrecords: {
+            masters: [
+               { signature: "DNAM", string: "Test05_Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null }
+            ],
+            active: [
+               { signature: "DNAM", string: "Test05_Human.hkx" },
+               { signature: "ANAM", parent: "HumanDeathRoot", previous: null }
+            ],
+         },
+      },
+      {  // DogDeathRoot
+         editor_id: "DogDeathRoot",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test05_Dog.hkx" },
+               { signature: "ANAM", parent: "ActionDeath", previous: null }
+            ],
+         },
+      },
+      {  // CatActivateRoot
+         editor_id: "CatActivateRoot",
+         subrecords: {
+            masters: [
+               { signature: "DNAM", string: "Test05_Cat.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null }
+            ],
+            active: [
+               { signature: "DNAM", string: "Test05_Human.hkx" },
+               { signature: "ANAM", parent: "DogDeathRoot", previous: null }
+            ],
+         },
+      },
+   ],
+});
+
+TESTCASES.cyclical_siblings = new Testcase({
+   /*
+      Testcase for cyclical siblings. Final result should be:
+      
+       - Human.hkx
+          - ActionActivate
+             - HumanActivateRoot
+               - HumanActivate01
+               - HumanActivate02
+               - HumanActivate05
+          - LOOSE
+             - HumanActivate03
+             - HumanActivate04
+   */
+   actions: [
+      { editor_id: "ActionActivate" },
+   ],
+   idles: [
+      {  // HumanActivateRoot
+         editor_id: "HumanActivateRoot",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null }
+            ],
+         },
+      },
+      {  // HumanActivate01
+         editor_id: "HumanActivate01",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: null }
+            ],
+         },
+      },
+      {  // HumanActivate02
+         editor_id: "HumanActivate02",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: "HumanActivate01" }
+            ],
+         },
+      },
+      {  // HumanActivate03
+         editor_id: "HumanActivate03",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: "HumanActivate04" }
+            ],
+         },
+      },
+      {  // HumanActivate04
+         editor_id: "HumanActivate04",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: "HumanActivate03" }
+            ],
+         },
+      },
+      {  // HumanActivate05
+         editor_id: "HumanActivate05",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: "HumanActivate02" }
+            ],
+         },
+      },
+   ],
+});
+
+TESTCASES.siblings_with_different_parents = new Testcase({
+   /*
+      Testcase for siblings with different parents. Final 
+      result should be:
+      
+       - Human.hkx
+          - ActionActivate
+             - HumanActivateRoot
+               - HumanActivate01
+          - LOOSE
+             - HumanActivate02
+   */
+   actions: [
+      { editor_id: "ActionActivate" },
+   ],
+   idles: [
+      {  // HumanActivateRoot
+         editor_id: "HumanActivateRoot",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null }
+            ],
+         },
+      },
+      {  // HumanActivate01
+         editor_id: "HumanActivate01",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: null }
+            ],
+         },
+      },
+      {  // HumanActivate02
+         editor_id: "HumanActivate02",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: null, previous: "HumanActivate01" }
+            ],
+         },
+      },
+   ],
+});
+
+TESTCASES.idle_in_multiple_active_file_roots = new Testcase({
+   /*
+      Testcase for an idle that (by virtue of being malformed within 
+      the active file) is placed in multiple action roots by the 
+      active file.
+      
+       - Human.hkx
+          - ActionActivate
+             - HumanActivateRoot [non-canonical]
+          - ActionDeath
+             - HumanActivateRoot [canonical]
+   */
+   actions: [
+      { editor_id: "ActionActivate" },
+      { editor_id: "ActionDeath" },
+   ],
+   idles: [
+      {  // HumanActivateRoot
+         editor_id: "HumanActivateRoot",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null },
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "ActionDeath", previous: null },
+            ],
+         },
+      },
+   ],
+});
+
+TESTCASES.idle_in_active_idle_and_active_root = new Testcase({
+   /*
+      Testcase for an idle that (by virtue of being malformed within 
+      the active file) is placed in both an action root and a parent 
+      idle by the active file.
+      
+       - Human.hkx
+          - ActionActivate
+             - HumanActivateRoot [non-canonical]
+          - ActionDeath
+             - HumanDeathRoot
+                - HumanActivateRoot [canonical]
+   */
+   actions: [
+      { editor_id: "ActionActivate" },
+      { editor_id: "ActionDeath" },
+   ],
+   idles: [
+      {  // HumanActivateRoot
+         editor_id: "HumanActivateRoot",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null },
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "HumanDeathRoot", previous: null },
+            ],
+         },
+      },
+      {  // HumanDeathRoot
+         editor_id: "HumanDeathRoot",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "ActionDeath", previous: null }
+            ],
+         },
+      },
+   ],
+});
+
+TESTCASES.action_root_moved_by_master_and_active = new Testcase({
+   /*
+      Testcase for an idle that is placed by one master, moved by a 
+      later-loaded master, and then moved to a third spot by the 
+      active file.
+      
+       - Human.hkx
+          - ActionActivate
+             - HumanActivateRoot [non-canonical]
+          - ActionDeath
+             - HumanActivateRoot [non-canonical]
+          - ActionFall
+             - HumanActivateRoot [canonical]
+   */
+   actions: [
+      { editor_id: "ActionActivate" },
+      { editor_id: "ActionDeath" },
+      { editor_id: "ActionFall" },
+   ],
+   idles: [
+      {  // HumanActivateRoot
+         editor_id: "HumanActivateRoot",
+         subrecords: {
+            masters: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null },
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "ActionDeath", previous: null },
+            ],
+            active: [
+               { signature: "DNAM", string: "Test06_Human.hkx" },
+               { signature: "ANAM", parent: "ActionFall", previous: null },
             ],
          },
       },
