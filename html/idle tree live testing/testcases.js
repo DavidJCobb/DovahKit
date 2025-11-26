@@ -265,6 +265,10 @@ TESTCASES.displaced_root = new Testcase({
    ],
 });
 
+//
+// Invalid hierarchy tests.
+//
+
 TESTCASES.displaced_root_across_graphs = new Testcase({
    /*
       Testcase verifies that we correctly handle displacement of an action 

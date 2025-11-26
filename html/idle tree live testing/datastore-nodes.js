@@ -60,6 +60,7 @@ class Action {
       // the new candidacy to the last candidacy across our two lists, and keep the lists 
       // sorted.
       this.root = idle;
+      idle.live.parent = this;
    }
 };
 

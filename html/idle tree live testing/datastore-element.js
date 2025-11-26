@@ -29,9 +29,12 @@ class DatastoreElement extends HTMLElement {
       this.#re_render();
    }
    
-   #render_idle(idle) {
+   #render_idle(idle, via_parent) {
       let node = document.createElement("li");
       node.classList.add("idle");
+      if (idle.live.parent != via_parent) {
+         node.classList.add("multiply-placed");
+      }
       node.datastore_node = idle;
       {
          let name = document.createElement("label");
@@ -42,7 +45,7 @@ class DatastoreElement extends HTMLElement {
          let list = document.createElement("ul");
          node.append(list);
          for(let child of idle.live.children) {
-            list.append(this.#render_idle(child));
+            list.append(this.#render_idle(child, idle));
          }
       }
       return node;
@@ -59,7 +62,7 @@ class DatastoreElement extends HTMLElement {
       let nest = document.createElement("ul");
       node.append(nest);
       if (action.root) {
-         nest.append(this.#render_idle(action.root));
+         nest.append(this.#render_idle(action.root, action));
       }
       return node;
    }
@@ -74,7 +77,7 @@ class DatastoreElement extends HTMLElement {
       let nest = document.createElement("ul");
       node.append(nest);
       for(let idle of loose.idles)
-         nest.append(this.#render_idle(idle));
+         nest.append(this.#render_idle(idle, loose));
       return node;
    }
    

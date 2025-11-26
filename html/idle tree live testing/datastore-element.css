@@ -9,6 +9,12 @@
    }
 }
 
+.idle {
+   &.multiply-placed > label {
+      color: #F00;
+   }
+}
+
 .orphans:has(>ul:empty) {
    display: none;
 }
