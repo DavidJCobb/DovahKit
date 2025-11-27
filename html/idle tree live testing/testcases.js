@@ -76,7 +76,7 @@ class Testcase {
 
 const TESTCASES = {};
 
-TESTCASES.typical_tree = new Testcase({
+TESTCASES.typical_tree = new Testcase({ // VERIFIED in CK
    /*
        - Dog.hkx
           - ActionActivate
@@ -228,7 +228,7 @@ TESTCASES.typical_sibling_ordering = new Testcase({
    ],
 });
 
-TESTCASES.displaced_root = new Testcase({
+TESTCASES.displaced_root = new Testcase({ // VERIFIED in CK
    /*
       Testcase verifies that we correctly handle displacement of an idle 
       from the action for which it is a root. We define the hierarchy as
@@ -279,7 +279,7 @@ TESTCASES.displaced_root = new Testcase({
 // Invalid hierarchy tests.
 //
 
-TESTCASES.displaced_root_across_graphs = new Testcase({
+TESTCASES.displaced_root_across_graphs = new Testcase({ // VERIFIED in CK
    /*
       Testcase verifies that we correctly handle displacement of an action 
       root, when that action root has been moved across graphs and is being 
@@ -337,7 +337,7 @@ TESTCASES.displaced_root_across_graphs = new Testcase({
    ],
 });
 
-TESTCASES.action_root_becomes_child_idle = new Testcase({
+TESTCASES.action_root_becomes_child_idle = new Testcase({ // VERIFIED in CK
    /*
       Testcase for an idle being in two places at once: both the root of 
       an action, and the child of another idle. We test both an idle 
@@ -359,6 +359,16 @@ TESTCASES.action_root_becomes_child_idle = new Testcase({
           - ActionDeath
              - HumanDeathRoot
                 - HumanActivateRoot [canonical]
+      
+      The CK produces a matching tree, and additionally emits the following 
+      warnings:
+      
+       - CatActivateRoot
+          - Invalid parent idle
+          - Parent array mismatch
+       - HumanActivateRoot
+          - Invalid parent idle
+          - Parent array mismatch
    */
    actions: [
       { editor_id: "ActionActivate" },
@@ -416,7 +426,7 @@ TESTCASES.action_root_becomes_child_idle = new Testcase({
    ],
 });
 
-TESTCASES.cyclical_siblings = new Testcase({
+TESTCASES.cyclical_siblings = new Testcase({ // verified in CK
    /*
       Testcase for cyclical siblings. Final result should be:
       
@@ -503,7 +513,7 @@ TESTCASES.cyclical_siblings = new Testcase({
    ],
 });
 
-TESTCASES.siblings_with_different_parents = new Testcase({
+TESTCASES.siblings_with_different_parents = new Testcase({ // verified in CK
    /*
       Testcase for siblings with different parents. Final 
       result should be:
@@ -555,7 +565,7 @@ TESTCASES.siblings_with_different_parents = new Testcase({
    ],
 });
 
-TESTCASES.siblings_with_just_one_odd_one_out = new Testcase({
+TESTCASES.siblings_with_just_one_odd_one_out = new Testcase({ // verified in CK
    /*
       Testcase for siblings with different parents. Final 
       result should be:
@@ -619,7 +629,7 @@ TESTCASES.siblings_with_just_one_odd_one_out = new Testcase({
    ],
 });
 
-TESTCASES.idle_in_multiple_active_file_roots = new Testcase({
+TESTCASES.idle_in_multiple_active_file_roots = new Testcase({ // verified in CK
    /*
       Testcase for an idle that (by virtue of being malformed within 
       the active file) is placed in multiple action roots by the 
@@ -652,7 +662,7 @@ TESTCASES.idle_in_multiple_active_file_roots = new Testcase({
    ],
 });
 
-TESTCASES.idle_in_active_idle_and_active_root = new Testcase({
+TESTCASES.idle_in_active_idle_and_active_root = new Testcase({ // verified in CK
    /*
       Testcase for an idle that (by virtue of being malformed within 
       the active file) is placed in both an action root and a parent 
@@ -664,6 +674,12 @@ TESTCASES.idle_in_active_idle_and_active_root = new Testcase({
           - ActionDeath
              - HumanDeathRoot
                 - HumanActivateRoot [canonical]
+      
+      CK should trigger an identical-looking tree, and should also 
+      emit the following warnings on HumanActivateRoot:
+      
+       - Invalid parent idle
+       - Parent array mismatch
    */
    actions: [
       { editor_id: "ActionActivate" },
@@ -697,7 +713,7 @@ TESTCASES.idle_in_active_idle_and_active_root = new Testcase({
    ],
 });
 
-TESTCASES.action_root_moved_by_master_and_active = new Testcase({
+TESTCASES.action_root_moved_by_master_and_active = new Testcase({ // verified in CK
    /*
       Testcase for an idle that is placed by one master, moved by a 
       later-loaded master, and then moved to a third spot by the 
@@ -735,7 +751,7 @@ TESTCASES.action_root_moved_by_master_and_active = new Testcase({
    ],
 });
 
-TESTCASES.action_root_flagged_as_loose = new Testcase({
+TESTCASES.action_root_flagged_as_loose = new Testcase({ // verified in CK
    /*
       There's a flag in IDLE/DATA that causes the idle to always 
       be treated as loose, skipping all hierarchy processing. If 
@@ -765,3 +781,4 @@ TESTCASES.action_root_flagged_as_loose = new Testcase({
       },
    ],
 });
+

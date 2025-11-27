@@ -257,12 +257,19 @@ class Datastore {
          //
          return;
       }
-      if (!loose_parent_node) {
+      if (loose_parent_node) {
+         // Same warning as the CK, but with more precise wording.
+         console.warn("Idle has ended up loose, but wasn't originally flagged as loose. Is this intentional? ", idle_node);
+      } else {
          if (canonical_graph_path) {
             loose_parent_node = this.#get_or_create_graph(canonical_graph_path).loose;
+            
+            // Same warning as the CK, but with more precise wording.
+            console.warn("Idle has ended up loose, but wasn't originally flagged as loose. Is this intentional? ", idle_node);
          } else {
-            console.warn("Orphaned idle: ", idle_node);
             loose_parent_node = this.loose;
+            
+            console.warn("Orphaned idle: ", idle_node);
          }
       }
       loose_parent_node.idles.push(idle_node);
