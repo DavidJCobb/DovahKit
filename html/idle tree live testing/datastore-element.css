@@ -1,6 +1,8 @@
 
 :where(:host) {
    --action-color: #0080FF;
+   
+   display: block;
 }
 
 .action {
@@ -9,7 +11,39 @@
    }
 }
 
+.idle-list {
+   .idle-adjacent-drop-target {
+      margin: 2px;
+      border: 1px dashed #808;
+      
+      text-align: center;
+      
+      &::before {
+         content: "...";
+      }
+   }
+}
+
 .idle {
+   display: grid;
+   grid-template:
+      "label    actions"
+      "contents contents"
+      /
+      1fr max-content
+   ;
+   
+   &>label {
+      grid-area: label;
+   }
+   &>.actions {
+      grid-area: actions;
+      flex: 0 0 auto;
+   }
+   &>ul {
+      grid-area: contents;
+   }
+   
    &.multiply-placed > label {
       color: #F00;
    }
@@ -17,4 +51,10 @@
 
 .orphans:has(>ul:empty) {
    display: none;
+}
+
+:host(.moving-idle) {
+   .idle>.actions {
+      visibility: none;
+   }
 }
