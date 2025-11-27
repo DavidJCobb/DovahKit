@@ -5,6 +5,10 @@
    display: block;
 }
 
+:host>ul:not(.allow-editing) .idle>.actions {
+   display: none;
+}
+
 .action {
    & > label {
       color: var(--action-color);

@@ -1,8 +1,11 @@
 
 class DatastoreElement extends HTMLElement {
+   #allow_editing = true;
    #datastore;
    #list;
    #shadow;
+   
+   #datastore_nodes_to_dom_nodes = new Map();
    
    constructor() {
       super();
@@ -15,6 +18,7 @@ class DatastoreElement extends HTMLElement {
       }
       {
          const list = this.#list = document.createElement("ul");
+         list.classList.add("allow-editing");
          shadow.append(list);
          list.addEventListener("click", this.#on_list_click.bind(this));
          list.addEventListener("dragstart", this.#on_dragstart.bind(this));
@@ -31,7 +35,101 @@ class DatastoreElement extends HTMLElement {
       if (v && !(v instanceof Datastore))
          throw new TypeError("invalid value");
       this.#datastore = v;
+      
+      if (v) {
+         v.callbacks.node_moved.before = this.#on_before_node_moved.bind(this);
+         v.callbacks.node_moved.after  = this.#on_after_node_moved.bind(this);
+         v.callbacks.idle_becoming_multiply_present = this.#on_idle_becoming_multiply_present.bind(this);
+         v.callbacks.idle_no_longer_multiply_present = this.#on_idle_no_longer_multiply_present.bind(this);
+      }
+      
       this.#re_render();
+   }
+   
+   get allow_editing() { return this.#allow_editing; }
+   set allow_editing(v) {
+      v = !!v;
+      if (this.#allow_editing === v)
+         return;
+      this.#allow_editing = v;
+      this.#list.classList[v ? "add" : "remove"]("allow-editing");
+      if (!v) {
+         this.#stop_dragging_idle();
+      }
+   }
+   
+   get_all_forms() {
+      let out = {
+         actions: new Set(),
+         idles:   [],
+      };
+      if (!this.#datastore)
+         return out;
+      for(let graph of this.#datastore.graphs) {
+         for(let action of graph.actions) {
+            out.actions.add(action.form);
+         }
+      }
+      for(let idle of this.#datastore.idles_by_id.values()) {
+         out.idles.push(idle.form);
+      }
+      out.actions = Array.from(out.actions);
+      return out;
+   }
+   
+   //
+   // DATASTORE LIVE-EDIT CALLBACKS
+   //
+   
+   #pending_ops = [];
+   
+   #on_before_node_moved(subject, dst, index) { // beginMoveRows
+      console.assert(index >= 0);
+      this.#pending_ops.push({
+         type:        "move",
+         subject:     subject,
+         destination: dst,
+         index:       index,
+      });
+   }
+   #on_after_node_moved(subject) { // endMoveRows
+      let op = this.#pending_ops[this.#pending_ops.length - 1];
+      if (!op || op.type != "move" || op.subject != subject)
+         throw new Error("mismatched callbacks!");
+      
+      let subject_node = this.#datastore_nodes_to_dom_nodes.get(subject);
+      let dst_node     = this.#datastore_nodes_to_dom_nodes.get(op.destination).querySelector(":scope>ul.idle-list");
+      let dst_index    = op.index;
+      console.assert(!!dst_node);
+      
+      let prev = null;
+      if (dst_index > 0)
+         prev = dst_node.children[dst_index - 1];
+      subject_node.remove();
+      if (prev)
+         prev.after(subject_node);
+      else
+         dst_node.prepend(subject_node);
+   }
+   #on_idle_becoming_multiply_present(idle, action) {
+      console.assert(idle.live.parent !== action);
+      let dom_action = this.#datastore_nodes_to_dom_nodes.get(action);
+      let list       = dom_action.querySelector(":scope>ul.idle-list");
+      console.assert(!list.querySelector("li.idle"));
+      list.append(this.#render_idle(idle, action));
+   }
+   #on_idle_no_longer_multiply_present(idle, action) {
+      let dom_action = this.#datastore_nodes_to_dom_nodes.get(action);
+      let dom_idle   = null;
+      for(let item of dom_action.querySelector(":scope>ul.idle-list").children) {
+         if (item.datastore_node == idle) {
+            dom_idle = item;
+            break;
+         }
+      }
+      console.assert(!!dom_idle);
+      console.assert(dom_idle.classList.contains("multiply-placed"));
+      dom_idle.remove();
    }
    
    //
@@ -39,6 +137,8 @@ class DatastoreElement extends HTMLElement {
    //
    
    #on_list_click(e) {
+      if (!this.#allow_editing)
+         return;
       let button = e.target.closest(".actions>button");
       if (button && this.#list.contains(button)) {
          if (button.classList.contains("delete")) {
@@ -55,8 +155,12 @@ class DatastoreElement extends HTMLElement {
    //
    
    #on_dragstart(e) {
+      if (!this.#allow_editing)
+         return true;
       let node = e.target.closest(".idle");
       if (!node || !this.#list.contains(node))
+         return true;
+      if (node.classList.contains("multiply-placed"))
          return true;
       e.dataTransfer.items.add(node.datastore_node.form.editor_id, "dovahkit/dragged-idle");
       e.dataTransfer.effectAllowed = "move";
@@ -153,6 +257,8 @@ class DatastoreElement extends HTMLElement {
          dst_parent = node.datastore_node;
       }
       this.#stop_dragging_idle();
+      if (!this.#allow_editing)
+         return;
       this.#move_idle(idle, dst_parent, dst_previous);
    }
    
@@ -188,9 +294,10 @@ class DatastoreElement extends HTMLElement {
    //
    
    #move_idle(/*Idle*/ subject, /*Variant<Idle, LooseIdleList, Action>*/ dst_parent, /*Optional<Idle>*/ dst_after) {
-      // TODO
-      alert("NOT YET IMPLEMENTED");
-      throw new Error("NOT YET IMPLEMENTED");
+      this.#datastore.move_idle(subject, dst_parent, dst_after);
+      
+      let event = new CustomEvent("datastore-change");
+      this.dispatchEvent(event);
    }
    
    #delete_idle(/*Idle*/ subject) {
@@ -202,6 +309,11 @@ class DatastoreElement extends HTMLElement {
    //
    // RENDERING
    //
+   
+   #associate_dom(datastore_node, dom_node) {
+      this.#datastore_nodes_to_dom_nodes.set(datastore_node, dom_node);
+      dom_node.datastore_node = datastore_node;
+   }
    
    #build_idle_action_buttons() {
       let node = document.createElement("div");
@@ -221,8 +333,10 @@ class DatastoreElement extends HTMLElement {
       node.setAttribute("draggable", "true");
       if (idle.live.parent != via_parent) {
          node.classList.add("multiply-placed");
+         node.datastore_node = idle;
+      } else {
+         this.#associate_dom(idle, node);
       }
-      node.datastore_node = idle;
       {
          let name = document.createElement("label");
          name.textContent = idle.editor_id;
@@ -241,8 +355,8 @@ class DatastoreElement extends HTMLElement {
    
    #render_action(action) {
       let node = document.createElement("li");
-      node.datastore_node = action;
       node.classList.add("action");
+      this.#associate_dom(action, node);
       {
          let name = document.createElement("label");
          name.textContent = action.editor_id;
@@ -259,8 +373,8 @@ class DatastoreElement extends HTMLElement {
    
    #render_loose(loose, title) {
       let node = document.createElement("li");
-      node.datastore_node = loose;
       node.classList.add("loose");
+      this.#associate_dom(loose, node);
       {
          let name = document.createElement("label");
          name.textContent = title || "LOOSE";
@@ -277,6 +391,7 @@ class DatastoreElement extends HTMLElement {
    #render_graph(graph) {
       let node = document.createElement("li");
       node.classList.add("graph");
+      this.#associate_dom(graph, node);
       {
          let name = document.createElement("label");
          name.textContent = graph.path;
@@ -292,7 +407,13 @@ class DatastoreElement extends HTMLElement {
    }
    
    #re_render() {
+      this.#datastore_nodes_to_dom_nodes = new Map();
+      
       let frag = new DocumentFragment();
+      if (!this.#datastore) {
+         this.#list.replaceChildren(frag);
+         return;
+      }
       
       for(let graph of this.#datastore.graphs) {
          let node = this.#render_graph(graph);

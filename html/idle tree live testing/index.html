@@ -7,9 +7,15 @@ datastore-element {
    max-width: 500px;
    overflow-x: auto;
 }
+
+#datastores {
+   display:   flex;
+   flex-flow: row nowrap;
+}
       </style>
    </head>
    <body>
+      <script src="util.js"></script>
       <script src="datastore-nodes.js"></script>
       <script src="datastore.js"></script>
       <script src="testcases.js"></script>
@@ -20,9 +26,24 @@ datastore-element {
          <select id="testcase"></select>
          <button id="set-testcase">View</button>
       </section>
-      <datastore-element></datastore-element>
+      <section id="datastores">
+         <datastore-element id="live"></datastore-element>
+         <datastore-element id="verify"></datastore-element>
+      </section>
       
       <script>
+{
+   let src = document.getElementById("live");
+   let dst = document.getElementById("verify");
+   dst.allow_editing = false;
+   src.addEventListener("datastore-change", function(e) {
+      dst.datastore = null;
+      let data  = new Datastore();
+      let forms = src.get_all_forms();
+      data.build(forms.actions, forms.idles);
+      dst.datastore = data;
+   });
+}
 {
    let sel = document.getElementById("testcase");
    let btn = document.getElementById("set-testcase");
@@ -35,11 +56,12 @@ datastore-element {
       sel.append(opt);
    }
    btn.addEventListener("click", function() {
+      document.getElementById("verify").datastore = null;
       let opt  = sel.selectedOptions[0];
       if (!opt)
          return;
-      let elem = document.querySelector("datastore-element");
-      let test = TESTCASES[opt.value];
+      let elem = document.getElementById("live");
+      let test = TESTCASES[opt.value].clone();
       let data = new Datastore();
       data.build(test.actions, test.idles);
       console.log(data);

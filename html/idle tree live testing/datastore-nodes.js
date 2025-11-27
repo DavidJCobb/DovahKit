@@ -62,6 +62,32 @@ class Action {
       this.root = idle;
       idle.live.parent = this;
    }
+   
+   // caller must update `action.root` afterward
+   _untrack_active_file_candidate(/*Idle*/ idle) {
+      let list = this.candidacies.active;
+      let size = list.length;
+      for(let i = 0; i < size; ++i) {
+         let item = list[i];
+         if (item.idle === idle) {
+            list.splice(i, 1);
+            --size;
+            --i;
+         }
+      }
+   }
+   
+   _recalc_winning_root() {
+      let list = this.candidacies.active;
+      if (!list.length) {
+         list = this.candidacies.masters;
+         if (!list.length) {
+            this.root = null;
+            return;
+         }
+      }
+      this.root = list[list.length - 1].idle;
+   }
 };
 
 class IdleSerialized {
@@ -198,6 +224,13 @@ class Idle {
       list.push(action);
    }
    
+   /*bool*/ is_active_winning_root_of(/*const Action*/ action) /*const*/ {
+      for(let item of this.candidacies.active)
+         if (item == action)
+            return true;
+         return false;
+   }
+   
    /*bool*/ is_winning_root_of_action_in_own_graph() /*const*/ {
       let graph_path = this.canonical_graph_path;
       let _check = (function(list) {
@@ -216,6 +249,7 @@ class Idle {
       return false;
    }
    
+   // during initial build
    _insert_sorted_child(/*Idle*/ idle) {
       const children = this.live.children;
       {
@@ -268,5 +302,57 @@ class Idle {
          current_node = next_node;
          next_node    = null;
       } while (current_node);
+   }
+   
+   // post-build
+   _update_form_hierarchy_data() {
+      this.form.serialized.active = [];
+      for(let action of this.candidacies.active) {
+         let candidacy = new IdleSerialized();
+         candidacy.graph    = action.graph.path;
+         candidacy.parent   = action.form;
+         candidacy.previous = null;
+         this.form.serialized.active.push(candidacy);
+      }
+      let canonical = this.live.parent;
+      if (canonical) {
+         if (!(canonical instanceof Action)) {
+            let candidacy = new IdleSerialized();
+            if (canonical instanceof LooseIdleList) {
+               this.flags.is_forced_loose = true;
+               candidacy.graph    = canonical.graph?.path || "";
+               candidacy.parent   = null;
+               candidacy.previous = null;
+            } else if (canonical instanceof Idle) {
+               this.flags.is_forced_loose = false;
+               let graph = null;
+               {
+                  let parent = canonical.live.parent;
+                  while (parent) {
+                     if (parent instanceof ActionForm || parent instanceof LooseIdleList) {
+                        graph = parent.graph;
+                        break;
+                     }
+                     if (parent instanceof Idle) {
+                        parent = parent.live.parent;
+                        continue;
+                     }
+                     console.assert(false, "unhandled case!");
+                  }
+               }
+               candidacy.graph    = graph?.path || "";
+               candidacy.parent   = canonical.form;
+               candidacy.previous = null;
+               //
+               let i = canonical.live.children.indexOf(this);
+               if (i > 0 && i <= canonical.live.children.length) {
+                  candidacy.previous = canonical.live.children[i - 1].form;
+               }
+            } else {
+               console.assert(false, "unhandled case");
+            }
+            this.form.serialized.active.push(candidacy);
+         }
+      }
    }
 };

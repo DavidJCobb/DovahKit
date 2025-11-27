@@ -39,6 +39,61 @@ class Testcase {
       }
    }
    
+   /*Testcase*/ clone() /*const*/ {
+      let flattened = {
+         actions: [],
+         idles:   [],
+      };
+      this.#forms_by_editor_id.forEach(function(form, editor_id) {
+         if (form instanceof ActionForm) {
+            flattened.actions.push({
+               editor_id: form.editor_id
+            });
+            return;
+         }
+         if (form instanceof IdleForm) {
+            let item = {
+               editor_id: form.editor_id,
+               subrecords: {
+                  masters: [],
+                  active:  []
+               }
+            };
+            for(let src of form.serialized.masters) {
+               item.subrecords.masters.push({
+                  signature: "DNAM",
+                  string:    src.graph
+               });
+               item.subrecords.masters.push({
+                  signature: "ANAM",
+                  parent:    src.parent   ? src.parent.editor_id   : null,
+                  previous:  src.previous ? src.previous.editor_id : null,
+               });
+            }
+            if (form.flags.is_forced_loose) {
+               item.subrecords.active.push({
+                  signature:       "DATA",
+                  is_forced_loose: true,
+               });
+            }
+            for(let src of form.serialized.active) {
+               item.subrecords.active.push({
+                  signature: "DNAM",
+                  string:    src.graph
+               });
+               item.subrecords.active.push({
+                  signature: "ANAM",
+                  parent:    src.parent   ? src.parent.editor_id   : null,
+                  previous:  src.previous ? src.previous.editor_id : null,
+               });
+            }
+            flattened.idles.push(item);
+            return;
+         }
+      });
+      return new Testcase(flattened);
+   }
+   
    #parse_subrecord_list(form, subrecords, is_master) {
       let graph = "";
       for(let subrecord of subrecords) {
@@ -157,6 +212,95 @@ TESTCASES.typical_tree = new Testcase({ // VERIFIED in CK
             masters: [
             ],
             active: [
+               { signature: "DNAM", string: "Test01_Dog.hkx" },
+               { signature: "ANAM", parent: null, previous: null }
+            ],
+         },
+      },
+   ],
+});
+
+TESTCASES.typical_tree_in_masters = new Testcase({
+   /*
+       - Dog.hkx
+          - ActionActivate
+             - DogActivateRoot
+          - LOOSE
+             - DogLooseBark
+       - Human.hkx
+          - ActionActivate
+             - HumanActivateRoot
+                - HumanActivateVariant01
+                - HumanActivateVariant02
+          - ActionDeath
+             - HumanDeathRoot
+   */
+   actions: [
+      { editor_id: "ActionActivate" },
+      { editor_id: "ActionDeath" },
+   ],
+   idles: [
+      {  // HumanActivateRoot
+         editor_id: "HumanActivateRoot",
+         subrecords: {
+            active: [
+            ],
+            masters: [
+               { signature: "DNAM", string: "Test01_Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null }
+            ],
+         },
+      },
+      {  // HumanActivateVariant01
+         editor_id: "HumanActivateVariant01",
+         subrecords: {
+            active: [
+            ],
+            masters: [
+               { signature: "DNAM", string: "Test01_Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: null }
+            ],
+         },
+      },
+      {  // HumanActivateVariant02
+         editor_id: "HumanActivateVariant02",
+         subrecords: {
+            active: [
+            ],
+            masters: [
+               { signature: "DNAM", string: "Test01_Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: "HumanActivateVariant01" }
+            ],
+         },
+      },
+      {  // HumanDeathRoot
+         editor_id: "HumanDeathRoot",
+         subrecords: {
+            active: [
+            ],
+            masters: [
+               { signature: "DNAM", string: "Test01_Human.hkx" },
+               { signature: "ANAM", parent: "ActionDeath", previous: null }
+            ],
+         },
+      },
+      {  // DogActivateRoot
+         editor_id: "DogActivateRoot",
+         subrecords: {
+            active: [
+            ],
+            masters: [
+               { signature: "DNAM", string: "Test01_Dog.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null }
+            ],
+         },
+      },
+      {  // DogLooseBark
+         editor_id: "DogLooseBark",
+         subrecords: {
+            active: [
+            ],
+            masters: [
                { signature: "DNAM", string: "Test01_Dog.hkx" },
                { signature: "ANAM", parent: null, previous: null }
             ],

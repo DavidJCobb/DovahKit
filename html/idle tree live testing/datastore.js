@@ -3,10 +3,19 @@ class Datastore {
    #is_building = false;
    
    constructor() {
-      this.action_editor_ids = []; // Array<String>
       this.idles_by_id = new Map(); // Map<String editor_id, Idle>
       this.graphs      = []; // Array<Graph>
       this.loose       = new LooseIdleList(null);
+      
+      // callbacks
+      this.callbacks = {
+         node_moved: {
+            before: null,
+            after:  null,
+         },
+         idle_becoming_multiply_present:  null,
+         idle_no_longer_multiply_present: null,
+      };
    }
    
    get is_building() { return this.#is_building; }
@@ -87,15 +96,15 @@ class Datastore {
          let action = this.#ensure_action_for_building(anam_and_dnam);
          if (!action)
             continue;
-         action._track_candidate(anam_and_dnam, idle_node, false);
-         idle_node._track_candidacy(action, false);
+         action._track_candidate(anam_and_dnam, idle_node, true);
+         idle_node._track_candidacy(action, true);
       }
       for(let anam_and_dnam of idle_node.form.serialized.active) {
          let action = this.#ensure_action_for_building(anam_and_dnam);
          if (!action)
             continue;
-         action._track_candidate(anam_and_dnam, idle_node, true);
-         idle_node._track_candidacy(action, true);
+         action._track_candidate(anam_and_dnam, idle_node, false);
+         idle_node._track_candidacy(action, false);
       }
    }
    
@@ -301,6 +310,233 @@ class Datastore {
             actual = siblings[i - 1];
          if (i == 0 || actual != previous)
             console.warn("Previous-sibling on idle is not what it wanted: ", idle_node);
+      }
+   }
+   
+   //
+   // POST-BUILD DATASTORE OPERATIONS
+   //
+   
+   #on_runner_up_becoming_root(/*Action*/ action, /*Idle*/ idle) {
+      if (idle.live.parent == action) {
+         return;
+      }
+      if (idle.live.parent == action.graph.loose) {
+         let loose = action.graph.loose;
+         if (this.callbacks.node_moved.before)
+            (this.callbacks.node_moved.before)(idle, action, 0);
+         loose.idles.splice(loose.idles.indexOf(idle), 1);
+         action.root = idle;
+         idle.live.parent = action;
+         if (this.callbacks.node_moved.after)
+            (this.callbacks.node_moved.after)(idle);
+      } else {
+         action.root = idle;
+         if (this.callbacks.idle_becoming_multiply_present)
+            (this.callbacks.idle_becoming_multiply_present)(idle, action);
+      }
+   }
+   
+   // This only checks whether a given movement would produce a result which is 
+   // representable given the file format and tree-building algorithm. This is 
+   // not intended to prevent moves that are merely bad ideas (e.g. moves that 
+   // would cause the tree to be degenerate in a way that: Bethesda doesn't 
+   // guard against; and therefore has to be repreesntable).
+   //
+   // For those moves, we should offer an additional getter with a name along 
+   // the lines of `is_idle_movement_a_really_bad_idea`.
+   is_idle_movement_legal(/*Idle*/ subject, /*Variant<Idle, LooseIdleList, Action>*/ dst_parent, /*Optional<Idle>*/ dst_previous) {
+      if (dst_parent instanceof LooseIdleList) {
+         let src_parent = subject.live.parent;
+         if (src_parent instanceof Action) {
+            //
+            // An idle cannot be BOTH an action root in a graph, and a loose idle 
+            // in the same graph, UNLESS the idle is flagged as forced-loose.
+            //
+            // TODO: Permit those moves and just set the flag reliably.
+            //
+            if (dst_parent.graph === src_parent.graph)
+               return false;
+         }
+      }
+      //
+      // TODO: Forbid moving an idle into itself or any of its descendants.
+      //
+      return true;
+   }
+   
+   move_idle(/*Idle*/ subject, /*Variant<Idle, LooseIdleList, Action>*/ dst_parent, /*Optional<Idle>*/ dst_previous) {
+      // Skip redundant operations.
+      if (subject.live.parent == dst_parent) {
+         if (dst_parent instanceof Idle) {
+            if (dst_previous) {
+               let i = dst_parent.children.indexOf(subject);
+               console.assert(i >= 0);
+               if (i > 0 && dst_parent.children[i - 1] == dst_previous)
+                  return;
+            } else {
+               if (dst_parent.children[0] == subject)
+                  return;
+            }
+         } else {
+            return;
+         }
+      }
+      
+      // Skip impossible operations.
+      if (!this.is_idle_movement_legal(subject, dst_parent, dst_previous))
+         return;
+      
+      // If moving to an action, displace any action root which is already there.
+      if (dst_parent instanceof Action) {
+         if (dst_parent.root) {
+            let graph     = dst_parent.graph;
+            let displaced = dst_parent.root;
+            if (displaced) {
+               dst_parent.root = null;
+               if (displaced.live.parent == dst_parent) {
+                  //
+                  // The destination is the to-be-displaced idle's canonical parent, 
+                  // so that idle must be moved.
+                  //
+                  if (displaced.is_active_winning_root_of(dst_parent)) {
+                     //
+                     // The to-be-displaced idle is placed here by the active file, 
+                     // so let's do a fully-fledged move operation to make it a 
+                     // loose idle within the active file.
+                     //
+                     console.assert(!!graph);
+                     this.move_idle(displaced, graph.loose, null);
+                  } else {
+                     //
+                     // The to-be-displaced idle is placed here by a master file, 
+                     // so it'll be displaced to a loose idle. The difference 
+                     // between this and the contrary branch is the difference 
+                     // between the idle being "made" a loose idle versus it 
+                     // "ending up as" a loose idle.
+                     //
+                     let i = upper_bound(
+                        graph.loose.idles,
+                        displaced,
+                        function(a, b) {
+                           return a.form.editor_id.localeCompare(b.form.editor_id);
+                        }
+                     );
+                     
+                     if (this.callbacks.node_moved.before)
+                        (this.callbacks.node_moved.before)(displaced, graph.loose, i);
+                     graph.loose.idles.splice(i, 0, displaced);
+                     displaced.live.parent = graph.loose;
+                     if (this.callbacks.node_moved.after)
+                        (this.callbacks.node_moved.after)(displaced);
+                  }
+               } else {
+                  //
+                  // The to-be-displaced idle is in multiple places at once, the 
+                  // destination is one of those, and the destination is not the 
+                  // to-be-displaced idle's canonical parent. So, that idle ceases 
+                  // to be at the destination, but it does not "move" per se.
+                  //
+                  if (this.callbacks.idle_no_longer_multiply_present)
+                     this.callbacks.idle_no_longer_multiply_present(displaced, dst_parent);
+               }
+            }
+         }
+      }
+      
+      // Destroy the subject's active-file action root candidacies, except that 
+      // pertaining to its canonical parent.
+      {
+         const list = subject.candidacies.active;
+         let   size = list.length;
+         for(let i = 0; i < size; ++i) {
+            const action = list[i];
+            if (action == subject.live.parent)
+               continue;
+            const was_root = action.root == subject;
+            action._untrack_active_file_candidate(subject);
+            if (was_root) {
+               action._recalc_winning_root();
+               if (action.root)
+                  this.#on_runner_up_becoming_root(action, action.root);
+            }
+            list.splice(i, 1);
+            --i;
+            --size;
+         }
+      }
+      
+      let insert_at = 0;
+      if (dst_parent instanceof Idle) {
+         if (dst_previous) {
+            insert_at = dst_parent.children.indexOf(dst_previous) + 1;
+         }
+      } else if (dst_parent instanceof LooseIdleList) {
+         insert_at = upper_bound(
+            dst_parent.idles,
+            subject,
+            function(a, b) {
+               return a.form.editor_id.localeCompare(b.form.editor_id);
+            }
+         );
+      }
+      
+      if (this.callbacks.node_moved.before)
+         (this.callbacks.node_moved.before)(subject, dst_parent, insert_at);
+      
+      let   former_next_sibling = null;
+      const moved_from          = subject.live.parent;
+      if (moved_from instanceof Action) {
+         moved_from._untrack_active_file_candidate(subject);
+         console.assert(subject.candidacies.active.length <= 1);
+         subject.candidacies.active = [];
+      } else {
+         console.assert(subject.candidacies.active.length == 0);
+         if (moved_from instanceof Idle) {
+            let i = moved_from.children.indexOf(subject) + 1;
+            if (i < moved_from.children.length)
+               former_next_sibling = moved_from.children[i];
+         }
+      }
+      subject.live.parent = dst_parent;
+      if (dst_parent instanceof Action) {
+         subject._track_candidacy(dst_parent, false);
+         dst_parent.candidacies.active.push({
+            idle: subject,
+            info: null,
+         });
+         dst_parent.root = subject;
+      } else if (dst_parent instanceof LooseIdleList) {
+         dst_parent.idles.splice(insert_at, 0, subject);
+      } else if (dst_parent instanceof Idle) {
+         dst_parent.children.splice(insert_at, 0, subject);
+         let new_next_sibling = dst_parent.children[insert_at + 1];
+         if (new_next_sibling)
+            new_next_sibling._update_form_hierarchy_data();
+      } else {
+         console.assert(false);
+      }
+      subject._update_form_hierarchy_data();
+      if (former_next_sibling)
+         former_next_sibling._update_form_hierarchy_data();
+      
+      if (this.callbacks.node_moved.after)
+         (this.callbacks.node_moved.after)(subject);
+      
+      // TODO: Update the action the subject was moved from (if any).
+      if (moved_from instanceof Action) {
+         moved_from._recalc_winning_root();
+         if (subject == moved_from.root) {
+            //
+            // If `subject` is still the winning root of the action we just moved 
+            // it from, then it must now be present in multiple places, with its 
+            // canonical parent being somewhere else.
+            //
+            if (this.callbacks.idle_becoming_multiply_present)
+               (this.callbacks.idle_becoming_multiply_present)(subject, moved_from);
+         } else if (moved_from.root) {
+            this.#on_runner_up_becoming_root(moved_from, moved_from.root);
+         }
       }
    }
    
