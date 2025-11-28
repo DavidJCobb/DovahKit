@@ -5,6 +5,21 @@ class DatastoreElement extends HTMLElement {
    #list;
    #shadow;
    
+   // A note about how this map is used:
+   //
+   // Our QAbstractItemModel subclass will just use the datastore pointers 
+   // directly as the basis for its QModelIndexes: a QMI will consist of a 
+   // pointer to the parent node, and the row index of the node to which 
+   // the QMI refers.
+   //
+   // For the JS prototype, however, we have to render the contents of the 
+   // datastore via the DOM -- essentially, we have to create a tree of 
+   // wholly distinct nodes that reflect datastore nodes. So, we maintain 
+   // a map of datastore nodes to DOM nodes, and our JS analogues to the 
+   // datastore callbacks (that exist to accommodate QAbstractItemModel) 
+   // have to use this map to select the DOM nodes to edit, whereas the 
+   // Qt model can convert between datastore node pointers and QMIs without 
+   // having to maintain a map and perform lookups.
    #datastore_nodes_to_dom_nodes = new Map();
    
    constructor() {
@@ -60,6 +75,7 @@ class DatastoreElement extends HTMLElement {
       }
    }
    
+   // for the diff that we're using in JS to verify changes made to nodes
    get_all_forms() {
       let out = {
          actions: new Set(),
@@ -113,13 +129,13 @@ class DatastoreElement extends HTMLElement {
       else
          dst_node.prepend(subject_node);
    }
-   #on_before_node_deleted(subject) {
+   #on_before_node_deleted(subject) { // beginRemoveRows
       this.#pending_ops.push({
          type:    "delete",
          subject: subject,
       });
    }
-   #on_after_node_deleted(form) {
+   #on_after_node_deleted(form) { // endRemoveRows
       let op = this.#pending_ops[this.#pending_ops.length - 1];
       if (!op || op.type != "delete" || op.subject.form != form)
          throw new Error("mismatched callbacks!");
@@ -134,7 +150,7 @@ class DatastoreElement extends HTMLElement {
       let dom_action = this.#datastore_nodes_to_dom_nodes.get(action);
       let list       = dom_action.querySelector(":scope>ul.idle-list");
       console.assert(!list.querySelector("li.idle"));
-      list.append(this.#render_idle(idle, action));
+      list.append(this.#render_idle(idle, action)); // beginInsertRows (count 1, index 0) + endInsertRows
    }
    #on_idle_no_longer_multiply_present(idle, action) {
       let dom_action = this.#datastore_nodes_to_dom_nodes.get(action);
@@ -147,7 +163,7 @@ class DatastoreElement extends HTMLElement {
       }
       console.assert(!!dom_idle);
       console.assert(dom_idle.classList.contains("multiply-placed"));
-      dom_idle.remove();
+      dom_idle.remove(); // beginRemoveRows (count 1, index 0) + endRemoveRows
    }
    
    //
@@ -238,6 +254,16 @@ class DatastoreElement extends HTMLElement {
       let node = e.target.closest(".action, .idle, .idle-adjacent-drop-target");
       if (!node || !this.#list.contains(node))
          return true;
+      //
+      // In our C++ implementation, we'll want additional checks; for example, 
+      // you should not be allowed to drag an idle so that it becomes the child 
+      // of a loose idle, because Bethesda wants to avoid loose idles being 
+      // parents to other idles (per CK error messages).
+      //
+      // We can't do that here because I made the unfortunate choice of using 
+      // the HTML5 Drag and Drop API, which sucks, and is bad. As noted above, 
+      // we're not allowed to inspect the drag data during a drag-over event.
+      //
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
    }

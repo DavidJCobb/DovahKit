@@ -345,7 +345,7 @@ class Datastore {
    // representable given the file format and tree-building algorithm. This is 
    // not intended to prevent moves that are merely bad ideas (e.g. moves that 
    // would cause the tree to be degenerate in a way that: Bethesda doesn't 
-   // guard against, and that therefore has to be repreesntable by our code). 
+   // guard against, and that therefore has to be representable by our code). 
    // For those, see `is_idle_movement_a_really_bad_idea`.
    /*bool*/ is_idle_movement_legal(/*const Idle*/ subject, /*const Variant<Idle, LooseIdleList, Action>*/ dst_parent, /*const Optional<Idle>*/ dst_previous) /*const*/ {
       // Moving an idle into itself or its descendants is illegal.
