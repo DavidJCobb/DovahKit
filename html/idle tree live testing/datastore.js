@@ -13,6 +13,10 @@ class Datastore {
             before: null,
             after:  null,
          },
+         node_deleted: {
+            before: null,
+            after:  null,
+         },
          idle_becoming_multiply_present:  null,
          idle_no_longer_multiply_present: null,
       };
@@ -371,17 +375,115 @@ class Datastore {
       return false;
    }
    
+   /*bool*/ is_idle_deletion_legal(/*const Idle*/ subject) {
+      // Deleting idles that are defined in masters isn't legal (the most you 
+      // can do is *flag* them as "deleted;" you cannot wholly erase them from 
+      // existence).
+      if (subject.candidacies.masters.length > 0)
+         return false;
+      if (subject.form.serialized.masters.length > 0)
+         return false;
+      
+      return true;
+   }
+   
+   // This should be invoked for an idle before it is moved or deleted. If the 
+   // idle is an active-file candidate for any action roots besides its canonical 
+   // parent, then [by definition the idle is in multiple places, and] this severs 
+   // those candidacies and emits callbacks for the idle no longer being multiply 
+   // present in those locations.
+   //
+   // The canonical parent is skipped here, and should be handled by the caller 
+   // as appropriate for the given operation (move versus delete).
+   #destroy_non_canonical_active_root_candidacies(/*Idle*/ subject) {
+      const list = subject.candidacies.active;
+      let   size = list.length;
+      for(let i = 0; i < size; ++i) {
+         const action = list[i];
+         if (action == subject.live.parent) // if canonical parent is an action, skip it
+            continue;
+         const was_root = action.root == subject;
+         action._untrack_active_file_candidate(subject);
+         if (was_root) {
+            action._recalc_winning_root();
+            if (action.root != subject) {
+               if (this.callbacks.idle_no_longer_multiply_present)
+                  this.callbacks.idle_no_longer_multiply_present(subject, action);
+            }
+            if (action.root) {
+               this.#on_runner_up_becoming_root(action, action.root);
+            }
+         }
+         list.splice(i, 1);
+         --i;
+         --size;
+      }
+   }
+   
+   // Use only for fully deleting an idle out of existence. For merely flagging 
+   // an IDLE's override record as "deleted," do not invoke this. When we save 
+   // an IDLE record, we always include DNAM and ANAM, so the "deleted" flag 
+   // allowing those to bleed through from the previous record is irrelevant 
+   // because the blood gets wiped off the floor, walls, and ceiling anyway.
+   /*void*/ delete_idle(/*Idle*/ subject) {
+      console.assert(subject.candidacies.masters.length == 0);
+      
+      // Destroy the subject's active-file action root candidacies, except that 
+      // pertaining to its canonical parent. (That particular candidacy will be 
+      // destroyed when we delete the subject, further below.)
+      this.#destroy_non_canonical_active_root_candidacies(subject);
+      
+      let form = subject.form;
+      
+      if (this.callbacks.node_deleted.before)
+         (this.callbacks.node_deleted.before)(subject);
+      
+      let   former_next_sibling = null;
+      const moved_from          = subject.live.parent;
+      if (moved_from instanceof Action) {
+         moved_from._untrack_active_file_candidate(subject);
+         console.assert(subject.candidacies.active.length <= 1);
+         subject.candidacies.active = [];
+      } else {
+         console.assert(subject.candidacies.active.length == 0);
+         if (moved_from instanceof Idle) {
+            let i = moved_from.live.children.indexOf(subject) + 1;
+            if (i < moved_from.live.children.length)
+               former_next_sibling = moved_from.live.children[i];
+            moved_from.live.children.splice(i - 1, 1);
+         } else if (moved_from instanceof LooseIdleList) {
+            let i = moved_from.idles.indexOf(subject);
+            moved_from.idles.splice(i, 1);
+         }
+      }
+      subject.live.parent = null;
+      if (former_next_sibling)
+         former_next_sibling._update_form_hierarchy_data();
+      this.idles_by_id.delete(form.editor_id);
+      subject._update_form_hierarchy_data();
+      subject.form.editor_id = "DELETED DELETED DELETED";
+      
+      // Explicit `delete` instructions don't actually delete the pointed-to 
+      // object; they just reset the identifier (or cause browsers to whine 
+      // at you and spew syntax errors in strict mode, I guess). This is just 
+      // here to indicate where and when we'd delete the node in C++.
+      //delete subject;
+      
+      if (this.callbacks.node_deleted.after)
+         (this.callbacks.node_deleted.after)(form);
+   }
+   
    /*void*/ move_idle(/*Idle*/ subject, /*Variant<Idle, LooseIdleList, Action>*/ dst_parent, /*Optional<Idle>*/ dst_previous) {
       // Skip redundant operations.
       if (subject.live.parent == dst_parent) {
          if (dst_parent instanceof Idle) {
             if (dst_previous) {
-               let i = dst_parent.children.indexOf(subject);
+               let i = dst_parent.live.children.indexOf(subject);
                console.assert(i >= 0);
-               if (i > 0 && dst_parent.children[i - 1] == dst_previous)
+               if (i > 0 && dst_parent.live.children[i - 1] == dst_previous)
                   return;
             } else {
-               if (dst_parent.children[0] == subject)
+               if (dst_parent.live.children[0] == subject)
                   return;
             }
          } else {
@@ -453,30 +555,12 @@ class Datastore {
       // Destroy the subject's active-file action root candidacies, except that 
       // pertaining to its canonical parent. (That particular candidacy will be 
       // destroyed when we move the subject, further below.)
-      {
-         const list = subject.candidacies.active;
-         let   size = list.length;
-         for(let i = 0; i < size; ++i) {
-            const action = list[i];
-            if (action == subject.live.parent)
-               continue;
-            const was_root = action.root == subject;
-            action._untrack_active_file_candidate(subject);
-            if (was_root) {
-               action._recalc_winning_root();
-               if (action.root)
-                  this.#on_runner_up_becoming_root(action, action.root);
-            }
-            list.splice(i, 1);
-            --i;
-            --size;
-         }
-      }
+      this.#destroy_non_canonical_active_root_candidacies(subject);
       
       let insert_at = 0;
       if (dst_parent instanceof Idle) {
          if (dst_previous) {
-            insert_at = dst_parent.children.indexOf(dst_previous) + 1;
+            insert_at = dst_parent.live.children.indexOf(dst_previous) + 1;
          }
       } else if (dst_parent instanceof LooseIdleList) {
          insert_at = upper_bound(
@@ -493,6 +577,17 @@ class Datastore {
       
       let   former_next_sibling = null;
       const moved_from          = subject.live.parent;
+      if (moved_from == dst_parent) {
+         let moved_from_index = insert_at + 1;
+         if (moved_from instanceof Idle) {
+            moved_from_index = moved_from.live.children.indexOf(subject);
+         } else if (moved_from instanceof LooseIdleList) {
+            moved_from_index = moved_from.idles.indexOf(subject);
+         }
+         if (insert_at >= moved_from_index) {
+            --insert_at;
+         }
+      }
       if (moved_from instanceof Action) {
          moved_from._untrack_active_file_candidate(subject);
          console.assert(subject.candidacies.active.length <= 1);
@@ -500,9 +595,13 @@ class Datastore {
       } else {
          console.assert(subject.candidacies.active.length == 0);
          if (moved_from instanceof Idle) {
-            let i = moved_from.children.indexOf(subject) + 1;
-            if (i < moved_from.children.length)
-               former_next_sibling = moved_from.children[i];
+            let i = moved_from.live.children.indexOf(subject) + 1;
+            if (i < moved_from.live.children.length)
+               former_next_sibling = moved_from.live.children[i];
+            moved_from.live.children.splice(i - 1, 1);
+         } else if (moved_from instanceof LooseIdleList) {
+            let i = moved_from.idles.indexOf(subject);
+            moved_from.idles.splice(i, 1);
          }
       }
       subject.live.parent = dst_parent;

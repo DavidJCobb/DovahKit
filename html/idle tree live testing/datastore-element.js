@@ -37,8 +37,10 @@ class DatastoreElement extends HTMLElement {
       this.#datastore = v;
       
       if (v) {
-         v.callbacks.node_moved.before = this.#on_before_node_moved.bind(this);
-         v.callbacks.node_moved.after  = this.#on_after_node_moved.bind(this);
+         v.callbacks.node_moved.before   = this.#on_before_node_moved.bind(this);
+         v.callbacks.node_moved.after    = this.#on_after_node_moved.bind(this);
+         v.callbacks.node_deleted.before = this.#on_before_node_deleted.bind(this);
+         v.callbacks.node_deleted.after  = this.#on_after_node_deleted.bind(this);
          v.callbacks.idle_becoming_multiply_present = this.#on_idle_becoming_multiply_present.bind(this);
          v.callbacks.idle_no_longer_multiply_present = this.#on_idle_no_longer_multiply_present.bind(this);
       }
@@ -110,6 +112,22 @@ class DatastoreElement extends HTMLElement {
          prev.after(subject_node);
       else
          dst_node.prepend(subject_node);
+   }
+   #on_before_node_deleted(subject) {
+      this.#pending_ops.push({
+         type:    "delete",
+         subject: subject,
+      });
+   }
+   #on_after_node_deleted(form) {
+      let op = this.#pending_ops[this.#pending_ops.length - 1];
+      if (!op || op.type != "delete" || op.subject.form != form)
+         throw new Error("mismatched callbacks!");
+      
+      let subject_node = this.#datastore_nodes_to_dom_nodes.get(op.subject);
+      console.assert(!!subject_node);
+      
+      subject_node.remove();
    }
    #on_idle_becoming_multiply_present(idle, action) {
       console.assert(idle.live.parent !== action);
@@ -301,9 +319,10 @@ class DatastoreElement extends HTMLElement {
    }
    
    #delete_idle(/*Idle*/ subject) {
-      // TODO
-      alert("NOT YET IMPLEMENTED");
-      throw new Error("NOT YET IMPLEMENTED");
+      this.#datastore.delete_idle(subject);
+      
+      let event = new CustomEvent("datastore-change");
+      this.dispatchEvent(event);
    }
    
    //
@@ -315,10 +334,10 @@ class DatastoreElement extends HTMLElement {
       dom_node.datastore_node = datastore_node;
    }
    
-   #build_idle_action_buttons() {
+   #build_idle_action_buttons(idle) {
       let node = document.createElement("div");
       node.classList.add("actions");
-      {
+      if (this.#datastore.is_idle_deletion_legal(idle)) {
          let button = document.createElement("button");
          button.textContent = "Delete";
          button.classList.add("delete");
@@ -337,20 +356,21 @@ class DatastoreElement extends HTMLElement {
       } else {
          this.#associate_dom(idle, node);
       }
+      
       {
          let name = document.createElement("label");
          name.textContent = idle.editor_id;
          node.append(name);
       }
-      node.append(this.#build_idle_action_buttons());
-      if (idle.live.children.length) {
-         let list = document.createElement("ul");
-         list.classList.add("idle-list");
-         node.append(list);
-         for(let child of idle.live.children) {
-            list.append(this.#render_idle(child, idle));
-         }
+      node.append(this.#build_idle_action_buttons(idle));
+      
+      let nest = document.createElement("ul");
+      nest.classList.add("idle-list");
+      node.append(nest);
+      for(let child of idle.live.children) {
+         nest.append(this.#render_idle(child, idle));
       }
+      
       return node;
    }
    
