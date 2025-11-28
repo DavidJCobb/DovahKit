@@ -7,7 +7,10 @@ class Datastore {
       this.graphs      = []; // Array<Graph>
       this.loose       = new LooseIdleList(null);
       
-      // callbacks
+      // These callbacks exist to accommodate QAbstractItemModel, which 
+      // generally needs to do certain bookkeeping tasks before and after 
+      // operations such as the movement, insertion, or deletion of model 
+      // nodes.
       this.callbacks = {
          node_moved: {
             before: null,
@@ -17,6 +20,35 @@ class Datastore {
             before: null,
             after:  null,
          },
+         
+         // These callbacks don't need "before" or "after" variants. 
+         // They exist for when an idle becomes, or ceases to be, present 
+         // in multiple places at once, and are fired only for the idle's 
+         // non-canonical parents.
+         //
+         // In general, the reason QAbstractItemModel needs "before" 
+         // and "after" behaviors is so it can prepare to adjust its 
+         // QPersistentModelIndexes in response to the insertion or 
+         // removal of nodes: if you insert or remove a node, you will 
+         // displace its siblings; additionally, if you move a node, then 
+         // that node's own QPMI also needs adjustment; and if you remove 
+         // a node, then that node's QPMI needs to be invalidated.
+         //
+         // However, if an idle is present in multiple places at once, 
+         // all but one of those places *must* be an action, and the last 
+         // one (the canonical parent) *may* be an action node. We fire 
+         // these callbacks for non-canonical parents (i.e. the places 
+         // that *must* be actions). In those cases, there can't be any 
+         // siblings to adjust: these callbacks represent the insertion 
+         // or removal of an only-child.
+         //
+         // The appropriate response by a QAbstractModelIndex, then, is 
+         // to call beginInsertRows and endInsertRows immediately in 
+         // response to the former callback, and beginRemoveRows and 
+         // endRemoveRows immediately in response to the latter callback. 
+         // The parent should be the QMI of the action, the row index 
+         // should always be 0, and the number of rows being inserted or 
+         // removed should always be 1.
          idle_becoming_multiply_present:  null,
          idle_no_longer_multiply_present: null,
       };
@@ -96,10 +128,24 @@ class Datastore {
    }
    
    #place_action_root(/*Idle*/ idle_node) {
+      let first_action   = null;
+      let actions_differ = false;
+      
+      let _on_action = function(action) {
+         if (actions_differ)
+            return;
+         if (first_action) {
+            actions_differ = action != first_action;
+         } else {
+            first_action = action;
+         }
+      };
+      
       for(let anam_and_dnam of idle_node.form.serialized.masters) {
          let action = this.#ensure_action_for_building(anam_and_dnam);
          if (!action)
             continue;
+         _on_action(action);
          action._track_candidate(anam_and_dnam, idle_node, true);
          idle_node._track_candidacy(action, true);
       }
@@ -107,8 +153,13 @@ class Datastore {
          let action = this.#ensure_action_for_building(anam_and_dnam);
          if (!action)
             continue;
+         _on_action(action);
          action._track_candidate(anam_and_dnam, idle_node, false);
          idle_node._track_candidacy(action, false);
+      }
+      
+      if (actions_differ) {
+         console.warn("Idle attempts to be the root of multiple actions. This can happen if an override attempts to re-parent an action root, and can result in the idle ending up in multiple places at once. More rarely, it could happen if a malformed IDLE record contains multiple ANAM subrecords placing the same idle as different action roots. ", idle_node);
       }
    }
    
@@ -124,6 +175,13 @@ class Datastore {
       console.assert(loose instanceof LooseIdleList);
       loose.idles.push(idle_node);
       idle_node.live.parent = loose;
+      
+      if (idle_node.candidacies.masters.length || idle_node.candidacies.active.length) {
+         console.warn("Idle is an action root, but is also flagged as loose, and so risks ending up in multiple places at once: ", idle_node);
+      }
+      if (idle_node.form.hierarchy_parent && !(idle_node.form.hierarchy_parent instanceof ActionForm)) {
+         console.warn("Idle is set to be the child of another idle, but is also flagged as loose, so it will not in fact be a child. Is this intentional? ", idle_node);
+      }
    }
    
    #idle_has_cyclical_parentage(/*Set<IdleForm>*/ seen, /*IdleNode*/ node) {
@@ -259,6 +317,9 @@ class Datastore {
       idle_node._sort_state.previous = previous_node;
       
       if (parent_node) {
+         if (idle_node.candidacies.masters.length || idle_node.candidacies.active.length) {
+            console.warn("Idle has been placed as both an action root and a child idle, and so may end up in multiple places at once. ", idle_node);
+         }
          parent_node._insert_sorted_child(idle_node);
          return;
       }
