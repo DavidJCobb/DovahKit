@@ -249,6 +249,18 @@ class Idle {
       return false;
    }
    
+   /*bool*/ contains(/*const Idle*/ idle) /*const*/ {
+      idle = idle.live.parent;
+      if (!(idle instanceof Idle))
+         return false;
+      do {
+         if (idle == this)
+            return true;
+         idle = idle.live.parent;
+      } while (idle instanceof Idle);
+      return false;
+   }
+   
    // during initial build
    _insert_sorted_child(/*Idle*/ idle) {
       const children = this.live.children;
@@ -319,17 +331,17 @@ class Idle {
          if (!(canonical instanceof Action)) {
             let candidacy = new IdleSerialized();
             if (canonical instanceof LooseIdleList) {
-               this.flags.is_forced_loose = true;
+               this.form.flags.is_forced_loose = true;
                candidacy.graph    = canonical.graph?.path || "";
                candidacy.parent   = null;
                candidacy.previous = null;
             } else if (canonical instanceof Idle) {
-               this.flags.is_forced_loose = false;
+               this.form.flags.is_forced_loose = false;
                let graph = null;
                {
                   let parent = canonical.live.parent;
                   while (parent) {
-                     if (parent instanceof ActionForm || parent instanceof LooseIdleList) {
+                     if (parent instanceof Action || parent instanceof LooseIdleList) {
                         graph = parent.graph;
                         break;
                      }

@@ -345,6 +345,7 @@ class DatastoreElement extends HTMLElement {
       node.append(this.#build_idle_action_buttons());
       if (idle.live.children.length) {
          let list = document.createElement("ul");
+         list.classList.add("idle-list");
          node.append(list);
          for(let child of idle.live.children) {
             list.append(this.#render_idle(child, idle));

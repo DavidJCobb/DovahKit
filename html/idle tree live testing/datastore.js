@@ -109,7 +109,7 @@ class Datastore {
    }
    
    #place_forced_loose_idle(/*Idle*/ idle_node) {
-      let graph = this.graph_by_idle(idle_node);
+      let graph = this.#get_or_create_graph(idle_node.canonical_graph_path);
       let loose;
       if (graph)
          loose = graph.loose;
@@ -341,31 +341,37 @@ class Datastore {
    // representable given the file format and tree-building algorithm. This is 
    // not intended to prevent moves that are merely bad ideas (e.g. moves that 
    // would cause the tree to be degenerate in a way that: Bethesda doesn't 
-   // guard against; and therefore has to be repreesntable).
-   //
-   // For those moves, we should offer an additional getter with a name along 
-   // the lines of `is_idle_movement_a_really_bad_idea`.
-   is_idle_movement_legal(/*Idle*/ subject, /*Variant<Idle, LooseIdleList, Action>*/ dst_parent, /*Optional<Idle>*/ dst_previous) {
-      if (dst_parent instanceof LooseIdleList) {
-         let src_parent = subject.live.parent;
-         if (src_parent instanceof Action) {
-            //
-            // An idle cannot be BOTH an action root in a graph, and a loose idle 
-            // in the same graph, UNLESS the idle is flagged as forced-loose.
-            //
-            // TODO: Permit those moves and just set the flag reliably.
-            //
-            if (dst_parent.graph === src_parent.graph)
-               return false;
-         }
-      }
-      //
-      // TODO: Forbid moving an idle into itself or any of its descendants.
-      //
+   // guard against, and that therefore has to be repreesntable by our code). 
+   // For those, see `is_idle_movement_a_really_bad_idea`.
+   /*bool*/ is_idle_movement_legal(/*const Idle*/ subject, /*const Variant<Idle, LooseIdleList, Action>*/ dst_parent, /*const Optional<Idle>*/ dst_previous) /*const*/ {
+      // Moving an idle into itself or its descendants is illegal.
+      if (dst_parent instanceof Idle)
+         if (subject == dst_parent || subject.contains(dst_parent))
+            return false;
+      
       return true;
    }
    
-   move_idle(/*Idle*/ subject, /*Variant<Idle, LooseIdleList, Action>*/ dst_parent, /*Optional<Idle>*/ dst_previous) {
+   /*bool*/ is_idle_movement_a_really_bad_idea(/*const Idle*/ subject, /*const Variant<Idle, LooseIdleList, Action>*/ dst_parent, /*const Optional<Idle>*/ dst_previous) /*const*/ {
+      // Moving action roots is a bad idea.
+      if (subject.live.parent instanceof Action)
+         return true;
+      
+      // Displacing action roots is a bad idea.
+      if (dst_parent instanceof Action)
+         if (dst_parent.root)
+            return true;
+      
+      // Bethesda doesn't intend for loose idles to have children, so moving 
+      // an idle that has children into LOOSE is a bad idea.
+      if (subject.children.length)
+         if (dst_parent instanceof LooseIdleList)
+            return true;
+      
+      return false;
+   }
+   
+   /*void*/ move_idle(/*Idle*/ subject, /*Variant<Idle, LooseIdleList, Action>*/ dst_parent, /*Optional<Idle>*/ dst_previous) {
       // Skip redundant operations.
       if (subject.live.parent == dst_parent) {
          if (dst_parent instanceof Idle) {
@@ -445,7 +451,8 @@ class Datastore {
       }
       
       // Destroy the subject's active-file action root candidacies, except that 
-      // pertaining to its canonical parent.
+      // pertaining to its canonical parent. (That particular candidacy will be 
+      // destroyed when we move the subject, further below.)
       {
          const list = subject.candidacies.active;
          let   size = list.length;
@@ -509,21 +516,23 @@ class Datastore {
       } else if (dst_parent instanceof LooseIdleList) {
          dst_parent.idles.splice(insert_at, 0, subject);
       } else if (dst_parent instanceof Idle) {
-         dst_parent.children.splice(insert_at, 0, subject);
-         let new_next_sibling = dst_parent.children[insert_at + 1];
+         dst_parent.live.children.splice(insert_at, 0, subject);
+         let new_next_sibling = dst_parent.live.children[insert_at + 1];
          if (new_next_sibling)
             new_next_sibling._update_form_hierarchy_data();
       } else {
          console.assert(false);
       }
+      let graph_path_prior = subject.canonical_graph_path;
       subject._update_form_hierarchy_data();
+      let graph_path_after = subject.canonical_graph_path;
       if (former_next_sibling)
          former_next_sibling._update_form_hierarchy_data();
       
       if (this.callbacks.node_moved.after)
          (this.callbacks.node_moved.after)(subject);
       
-      // TODO: Update the action the subject was moved from (if any).
+      // Update the action the subject was moved from (if any).
       if (moved_from instanceof Action) {
          moved_from._recalc_winning_root();
          if (subject == moved_from.root) {
@@ -537,6 +546,23 @@ class Datastore {
          } else if (moved_from.root) {
             this.#on_runner_up_becoming_root(moved_from, moved_from.root);
          }
+      }
+      
+      // If the subject was moved across graphs, update form data for all of its 
+      // descendants.
+      if (graph_path_prior != graph_path_after) {
+         //
+         // Moving the subject across graphs should, in general, force changes 
+         // to all of its descendants to update their DNAM subrecords. I don't 
+         // believe that's strictly necessary, but it seems like it'd make for 
+         // the cleanest serialized data.
+         //
+         (function _recurse(parent) {
+            for(let idle of parent.live.children) {
+               idle._update_form_hierarchy_data();
+               _recurse(idle);
+            }
+         })(subject);
       }
    }
    
