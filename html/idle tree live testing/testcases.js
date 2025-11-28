@@ -926,3 +926,83 @@ TESTCASES.action_root_flagged_as_loose = new Testcase({ // verified in CK
    ],
 });
 
+TESTCASES.forced_loose_sibling = new Testcase({ // VERIFIED in CK
+   /*
+      Testcase verifies the effect of incorrectly applying the 
+      "is forced loose" flag to an idle that would otherwise 
+      be a non-loose sibling. The specified hierarchy is:
+      
+       - Human.hkx
+          - ActionActivate
+             - HumanActivateRoot
+                - HumanActivate01
+                - HumanActivate02 [is forced loose]
+                - HumanActivate03
+      
+      The result hierarchy is:
+      
+       - Human.hkx
+          - ActionActivate
+             - HumanActivateRoot
+                - HumanActivate01
+                - HumanActivate03
+          - LOOSE
+                - HumanActivate02
+      
+      CK should trigger an identical-looking tree, and should also 
+      emit the following warnings on HumanActivate03:
+      
+       - Invalid prev idle
+   */
+   actions: [
+      { editor_id: "ActionActivate" },
+   ],
+   idles: [
+      {
+         editor_id: "HumanActivateRoot",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null },
+            ],
+         },
+      },
+      {
+         editor_id: "HumanActivate01",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: null },
+            ],
+         },
+      },
+      {
+         editor_id: "HumanActivate02",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DATA", is_forced_loose: true },
+               { signature: "DNAM", string: "Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: "HumanActivate01" },
+            ],
+         },
+      },
+      {
+         editor_id: "HumanActivate03",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Human.hkx" },
+               { signature: "ANAM", parent: "HumanActivateRoot", previous: "HumanActivate02" },
+            ],
+         },
+      },
+   ],
+});
+
