@@ -376,15 +376,16 @@ class Datastore {
    }
    
    /*bool*/ is_idle_deletion_legal(/*const Idle*/ subject) {
-      // Deleting idles that are defined in masters isn't legal (the most you 
-      // can do is *flag* them as "deleted;" you cannot wholly erase them from 
-      // existence).
-      if (subject.candidacies.masters.length > 0)
-         return false;
-      if (subject.form.serialized.masters.length > 0)
-         return false;
-      
       return true;
+   }
+   
+   /*bool*/ is_idle_deletion_a_really_bad_idea(/*const Idle*/ subject) {
+      // Deleting an action-root defined by a non-active file is a bad idea, 
+      // since it won't necessarily stop being the root for that action.
+      if (subject.candidacies.master.length > 0)
+         return true;
+      
+      return false;
    }
    
    // This should be invoked for an idle before it is moved or deleted. If the 
@@ -420,13 +421,96 @@ class Datastore {
       }
    }
    
+   // To be invoked as part of move- or delete-idle operations. Returns the 
+   // idle's former next-sibling. The caller must have already severed the 
+   // idle's active-file action root candidacies, and is responsible for 
+   // telling the idle to where it has been relocated.
+   /*Idle*/ #take_idle_from_canonical_parent(taken_from, /*Idle*/ idle) {
+      let former_next_sibling = null;
+      if (taken_from instanceof Action) {
+         taken_from._untrack_active_file_candidate(idle);
+         console.assert(idle.candidacies.active.length <= 1);
+         idle.candidacies.active = [];
+      } else {
+         console.assert(idle.candidacies.active.length == 0);
+         if (taken_from instanceof Idle) {
+            let i = taken_from.live.children.indexOf(idle) + 1;
+            if (i < taken_from.live.children.length)
+               former_next_sibling = taken_from.live.children[i];
+            taken_from.live.children.splice(i - 1, 1);
+         } else if (taken_from instanceof LooseIdleList) {
+            let i = taken_from.idles.indexOf(idle);
+            taken_from.idles.splice(i, 1);
+         }
+      }
+      return former_next_sibling;
+   }
+   
+   /*void*/ #update_canonical_parent_action_after_root_taken(/*Action*/ taken_from, /*Idle*/ taken_idle) {
+      taken_from._recalc_winning_root();
+      if (taken_idle == taken_from.root) {
+         //
+         // If `taken_idle` is still the winning root of the action we just 
+         // moved it from, then it must now be present in multiple places, with 
+         // its canonical parent being somewhere else.
+         //
+         if (this.callbacks.idle_becoming_multiply_present)
+            (this.callbacks.idle_becoming_multiply_present)(taken_idle, taken_from);
+      } else if (taken_from.root) {
+         this.#on_runner_up_becoming_root(taken_from, taken_from.root);
+      }
+   }
+   
    // Use only for fully deleting an idle out of existence. For merely flagging 
    // an IDLE's override record as "deleted," do not invoke this. When we save 
    // an IDLE record, we always include DNAM and ANAM, so the "deleted" flag 
    // allowing those to bleed through from the previous record is irrelevant 
    // because the blood gets wiped off the floor, walls, and ceiling anyway.
    /*void*/ delete_idle(/*Idle*/ subject) {
-      console.assert(subject.candidacies.masters.length == 0);
+      let defined_in_master = subject.form.serialized.masters.length > 0;
+      
+      if (defined_in_master) {
+         //
+         // The IDLE form was originally defined in a master file and so cannot 
+         // be wholly deleted. The most we can do is move it to LOOSE and flag 
+         // it and its descendants as "deleted."
+         //
+         ; // flag the idle form as "deleted" here.
+         //
+         let graph = null;
+         {
+            let parent = subject.live.parent;
+            while (parent) {
+               if (parent instanceof Action || parent instanceof LooseIdleList) {
+                  graph = parent.graph;
+                  break;
+               }
+               if (parent instanceof Idle) {
+                  parent = parent.live.parent;
+                  continue;
+               }
+               console.assert(false, "unhandled case!");
+            }
+         }
+         let loose = null;
+         if (graph)
+            loose = graph.loose;
+         else
+            loose = this.loose;
+         this.move_idle(subject, loose, null);
+      }
+      
+      // Recursively delete descendant idles.
+      {
+         let children = ([]).concat(subject.live.children); // copy array
+         for(let child of children) {
+            this.delete_idle(child);
+         }
+      }
+      
+      if (defined_in_master) {
+         return;
+      }
       
       // Destroy the subject's active-file action root candidacies, except that 
       // pertaining to its canonical parent. (That particular candidacy will be 
@@ -438,24 +522,8 @@ class Datastore {
       if (this.callbacks.node_deleted.before)
          (this.callbacks.node_deleted.before)(subject);
       
-      let   former_next_sibling = null;
       const moved_from          = subject.live.parent;
-      if (moved_from instanceof Action) {
-         moved_from._untrack_active_file_candidate(subject);
-         console.assert(subject.candidacies.active.length <= 1);
-         subject.candidacies.active = [];
-      } else {
-         console.assert(subject.candidacies.active.length == 0);
-         if (moved_from instanceof Idle) {
-            let i = moved_from.live.children.indexOf(subject) + 1;
-            if (i < moved_from.live.children.length)
-               former_next_sibling = moved_from.live.children[i];
-            moved_from.live.children.splice(i - 1, 1);
-         } else if (moved_from instanceof LooseIdleList) {
-            let i = moved_from.idles.indexOf(subject);
-            moved_from.idles.splice(i, 1);
-         }
-      }
+      let   former_next_sibling = this.#take_idle_from_canonical_parent(moved_from, subject);
       subject.live.parent = null;
       if (former_next_sibling)
          former_next_sibling._update_form_hierarchy_data();
@@ -471,6 +539,11 @@ class Datastore {
       
       if (this.callbacks.node_deleted.after)
          (this.callbacks.node_deleted.after)(form);
+      
+      // Update the action the subject was deleted from (if any).
+      if (moved_from instanceof Action) {
+         this.#update_canonical_parent_action_after_root_taken(moved_from, subject);
+      }
    }
    
    /*void*/ move_idle(/*Idle*/ subject, /*Variant<Idle, LooseIdleList, Action>*/ dst_parent, /*Optional<Idle>*/ dst_previous) {
@@ -485,6 +558,21 @@ class Datastore {
             } else {
                if (dst_parent.live.children[0] == subject)
                   return;
+            }
+            //
+            // Else movement proceeds, because the idle can still be reordered 
+            // within its parent. (All other parent types are unordered.)
+            //
+         } else if (dst_parent instanceof LooseIdleList) {
+            if (!subject.form.flags.is_forced_loose) {
+               //
+               // If a subject happened to *end up* in LOOSE, rather than being 
+               // made loose intentionally, then an explicit move to LOOSE is 
+               // not strictly a no-op; make the subject intentionally loose and 
+               // then exit.
+               //
+               subject._update_form_hierarchy_data();
+               return;
             }
          } else {
             return;
@@ -575,8 +663,7 @@ class Datastore {
       if (this.callbacks.node_moved.before)
          (this.callbacks.node_moved.before)(subject, dst_parent, insert_at);
       
-      let   former_next_sibling = null;
-      const moved_from          = subject.live.parent;
+      const moved_from = subject.live.parent;
       if (moved_from == dst_parent) {
          let moved_from_index = insert_at + 1;
          if (moved_from instanceof Idle) {
@@ -588,22 +675,7 @@ class Datastore {
             --insert_at;
          }
       }
-      if (moved_from instanceof Action) {
-         moved_from._untrack_active_file_candidate(subject);
-         console.assert(subject.candidacies.active.length <= 1);
-         subject.candidacies.active = [];
-      } else {
-         console.assert(subject.candidacies.active.length == 0);
-         if (moved_from instanceof Idle) {
-            let i = moved_from.live.children.indexOf(subject) + 1;
-            if (i < moved_from.live.children.length)
-               former_next_sibling = moved_from.live.children[i];
-            moved_from.live.children.splice(i - 1, 1);
-         } else if (moved_from instanceof LooseIdleList) {
-            let i = moved_from.idles.indexOf(subject);
-            moved_from.idles.splice(i, 1);
-         }
-      }
+      let former_next_sibling = this.#take_idle_from_canonical_parent(moved_from, subject);
       subject.live.parent = dst_parent;
       if (dst_parent instanceof Action) {
          subject._track_candidacy(dst_parent, false);
@@ -633,18 +705,7 @@ class Datastore {
       
       // Update the action the subject was moved from (if any).
       if (moved_from instanceof Action) {
-         moved_from._recalc_winning_root();
-         if (subject == moved_from.root) {
-            //
-            // If `subject` is still the winning root of the action we just moved 
-            // it from, then it must now be present in multiple places, with its 
-            // canonical parent being somewhere else.
-            //
-            if (this.callbacks.idle_becoming_multiply_present)
-               (this.callbacks.idle_becoming_multiply_present)(subject, moved_from);
-         } else if (moved_from.root) {
-            this.#on_runner_up_becoming_root(moved_from, moved_from.root);
-         }
+         this.#update_canonical_parent_action_after_root_taken(moved_from, subject);
       }
       
       // If the subject was moved across graphs, update form data for all of its 
