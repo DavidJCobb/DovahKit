@@ -227,7 +227,7 @@ class Idle {
       list.push(action);
    }
    
-   /*bool*/ is_active_winning_root_of(/*const Action*/ action) /*const*/ {
+   /*bool*/ is_active_candidate_for(/*const Action*/ action) /*const*/ {
       for(let item of this.candidacies.active)
          if (item == action)
             return true;
@@ -341,7 +341,7 @@ class Idle {
             } else if (canonical instanceof Idle) {
                this.form.flags.is_forced_loose = false;
                let graph = null;
-               {
+               {  // in C++, we'll define idle_node::containing_graph() for this
                   let parent = canonical.live.parent;
                   while (parent) {
                      if (parent instanceof Action || parent instanceof LooseIdleList) {

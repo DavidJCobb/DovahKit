@@ -675,7 +675,7 @@ class Datastore {
                // The destination is the to-be-displaced idle's canonical parent, 
                // so that idle must be moved.
                //
-               if (displaced.is_active_winning_root_of(dst_parent)) {
+               if (displaced.is_active_candidate_for(dst_parent)) {
                   //
                   // The to-be-displaced idle is placed here by the active file, 
                   // so let's do a fully-fledged move operation to make it a 
@@ -722,7 +722,7 @@ class Datastore {
                //
                if (this.callbacks.idle_no_longer_multiply_present)
                   this.callbacks.idle_no_longer_multiply_present(displaced, dst_parent);
-               if (displaced.is_active_winning_root_of(dst_parent)) {
+               if (displaced.is_active_candidate_for(dst_parent)) {
                   //
                   // The displaced idle is placed in multiple locations by the 
                   // active file specifically, and the destination is one of 
