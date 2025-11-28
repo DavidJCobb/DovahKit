@@ -124,7 +124,7 @@ class Datastore {
       let graph = this.#get_or_create_graph(anam_and_dnam.graph);
       if (!graph)
          return null;
-      return graph.get_or_create_action(form.editor_id);
+      return graph.get_or_create_action(form);
    }
    
    #place_action_root(/*Idle*/ idle_node) {
@@ -659,59 +659,92 @@ class Datastore {
       
       // If moving to an action, displace any action root which is already there.
       if (dst_parent instanceof Action) {
-         if (dst_parent.root) {
+         //
+         // We need a loop because *some* kinds of displacement may "summon" a 
+         // runner-up root into the spot, and we'll then need to displace that 
+         // runner-up as well.
+         //
+         while (dst_parent.root) {
             let graph     = dst_parent.graph;
             let displaced = dst_parent.root;
-            if (displaced) {
-               dst_parent.root = null;
-               if (displaced.live.parent == dst_parent) {
+            if (!displaced)
+               break;
+            dst_parent.root = null;
+            if (displaced.live.parent == dst_parent) {
+               //
+               // The destination is the to-be-displaced idle's canonical parent, 
+               // so that idle must be moved.
+               //
+               if (displaced.is_active_winning_root_of(dst_parent)) {
                   //
-                  // The destination is the to-be-displaced idle's canonical parent, 
-                  // so that idle must be moved.
+                  // The to-be-displaced idle is placed here by the active file, 
+                  // so let's do a fully-fledged move operation to make it a 
+                  // loose idle within the active file. Because this runs the 
+                  // full move algorithm, it may summon a runner-up.
                   //
-                  if (displaced.is_active_winning_root_of(dst_parent)) {
-                     //
-                     // The to-be-displaced idle is placed here by the active file, 
-                     // so let's do a fully-fledged move operation to make it a 
-                     // loose idle within the active file.
-                     //
-                     console.assert(!!graph);
-                     this.move_idle(displaced, graph.loose, null);
-                  } else {
-                     //
-                     // The to-be-displaced idle is placed here by a master file, 
-                     // so it'll be displaced to a loose idle. The difference 
-                     // between this and the contrary branch is the difference 
-                     // between the idle being "made" a loose idle versus it 
-                     // "ending up as" a loose idle.
-                     //
-                     let i = upper_bound(
-                        graph.loose.idles,
-                        displaced,
-                        function(a, b) {
-                           return a.form.editor_id.localeCompare(b.form.editor_id);
-                        }
-                     );
-                     
-                     if (this.callbacks.node_moved.before)
-                        (this.callbacks.node_moved.before)(displaced, graph.loose, i);
-                     graph.loose.idles.splice(i, 0, displaced);
-                     displaced.live.parent = graph.loose;
-                     if (this.callbacks.node_moved.after)
-                        (this.callbacks.node_moved.after)(displaced);
-                  }
+                  console.assert(!!graph);
+                  this.move_idle(displaced, graph.loose, null);
                } else {
                   //
-                  // The to-be-displaced idle is in multiple places at once, the 
-                  // destination is one of those, and the destination is not the 
-                  // to-be-displaced idle's canonical parent. So, that idle ceases 
-                  // to be at the destination, but it does not "move" per se.
+                  // The to-be-displaced idle is placed here by a master file, 
+                  // so it'll be displaced to a loose idle. The difference 
+                  // between this and the contrary branch is the difference 
+                  // between the idle being "made" a loose idle versus it 
+                  // "ending up as" a loose idle.
                   //
-                  if (this.callbacks.idle_no_longer_multiply_present)
-                     this.callbacks.idle_no_longer_multiply_present(displaced, dst_parent);
+                  let i = upper_bound(
+                     graph.loose.idles,
+                     displaced,
+                     function(a, b) {
+                        return a.form.editor_id.localeCompare(b.form.editor_id);
+                     }
+                  );
+                  
+                  if (this.callbacks.node_moved.before)
+                     (this.callbacks.node_moved.before)(displaced, graph.loose, i);
+                  graph.loose.idles.splice(i, 0, displaced);
+                  displaced.live.parent = graph.loose;
+                  if (this.callbacks.node_moved.after)
+                     (this.callbacks.node_moved.after)(displaced);
+                  //
+                  // This wasn't the full move algorithm and therefore did not 
+                  // process runner-ups. We can exit.
+                  //
+                  break;
+               }
+            } else {
+               //
+               // The to-be-displaced idle is in multiple places at once, the 
+               // destination is one of those, and the destination is not the 
+               // to-be-displaced idle's canonical parent. At minimum, the 
+               // to-be-displaced idle will cease to be multiply present in 
+               // this action.
+               //
+               if (this.callbacks.idle_no_longer_multiply_present)
+                  this.callbacks.idle_no_longer_multiply_present(displaced, dst_parent);
+               if (displaced.is_active_winning_root_of(dst_parent)) {
+                  //
+                  // The displaced idle is placed in multiple locations by the 
+                  // active file specifically, and the destination is one of 
+                  // those places. The idle we're moving is also going to be 
+                  // put here, and we can't predict in advance which of these 
+                  // idles will "win" (i.e. which will come later in the file 
+                  // that we eventually save back out).
+                  //
+                  // To avoid an ambiguous ordering, adjust the displaced idle 
+                  // so that the active file no longer places it here.
+                  //
+                  this.move_idle(displaced, graph.loose, null);
+               } else {
+                  //
+                  // This wasn't the full move algorithm and therefore did not 
+                  // process runner-ups. We can exit.
+                  //
+                  break;
                }
             }
          }
+         console.assert(dst_parent.root === null);
       }
       
       // Destroy the subject's active-file action root candidacies, except that 
@@ -753,6 +786,7 @@ class Datastore {
       subject.live.parent = dst_parent;
       if (dst_parent instanceof Action) {
          subject._track_candidacy(dst_parent, false);
+         console.assert(dst_parent.candidacies.active.length == 0);
          dst_parent.candidacies.active.push({
             idle: subject,
             info: null,

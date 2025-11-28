@@ -6,11 +6,11 @@ class Graph {
       this.loose   = new LooseIdleList(this);
    }
    
-   /*Action*/ get_or_create_action(/*String*/ editor_id) {
+   /*Action*/ get_or_create_action(/*ActionForm*/ form) {
       for(let action of this.actions)
-         if (action.editor_id == editor_id)
+         if (action.form == form)
             return action;
-      let action = new Action(editor_id);
+      let action = new Action(form);
       action.graph = this;
       this.actions.push(action);
       return action;
@@ -37,9 +37,10 @@ class ActionForm {
 };
 
 class Action {
-   constructor(/*String*/ editor_id) {
+   constructor(/*ActionForm*/ form) {
       this.graph     = null; // Graph
-      this.editor_id = editor_id;
+      this.form      = form;
+      this.editor_id = form.editor_id;
       this.root      = null; // Optional<Idle> // winning root idle
       this.candidacies = {
          masters: [], // in order from least- to most-recently-loaded
@@ -59,8 +60,10 @@ class Action {
       // things come in within the file. In the C++ implementation, we'd want to compare 
       // the new candidacy to the last candidacy across our two lists, and keep the lists 
       // sorted.
-      this.root = idle;
-      idle.live.parent = this;
+      if (!via_master || this.candidacies.active.length == 0) {
+         this.root = idle;
+         idle.live.parent = this;
+      }
    }
    
    // caller must update `action.root` afterward
