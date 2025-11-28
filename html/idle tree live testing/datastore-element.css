@@ -6,7 +6,9 @@
 }
 
 :host>ul:not(.allow-editing) .idle>.actions {
-   display: none;
+   visibility: hidden;
+   pointer-events: none;
+   user-select: none;
 }
 
 .action {
@@ -59,6 +61,8 @@
 
 :host(.moving-idle) {
    .idle>.actions {
-      visibility: none;
+      visibility: hidden;
+      pointer-events: none;
+      user-select: none;
    }
 }
