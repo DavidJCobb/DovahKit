@@ -382,26 +382,6 @@ class Datastore {
    // POST-BUILD DATASTORE OPERATIONS
    //
    
-   #on_runner_up_becoming_root(/*Action*/ action, /*Idle*/ idle) {
-      if (idle.live.parent == action) {
-         return;
-      }
-      if (idle.live.parent == action.graph.loose) {
-         let loose = action.graph.loose;
-         if (this.callbacks.node_moved.before)
-            (this.callbacks.node_moved.before)(idle, action, 0);
-         loose.idles.splice(loose.idles.indexOf(idle), 1);
-         action.root = idle;
-         idle.live.parent = action;
-         if (this.callbacks.node_moved.after)
-            (this.callbacks.node_moved.after)(idle);
-      } else {
-         action.root = idle;
-         if (this.callbacks.idle_becoming_multiply_present)
-            (this.callbacks.idle_becoming_multiply_present)(idle, action);
-      }
-   }
-   
    // This only checks whether a given movement would produce a result which is 
    // representable given the file format and tree-building algorithm. This is 
    // not intended to prevent moves that are merely bad ideas (e.g. moves that 
@@ -447,6 +427,32 @@ class Datastore {
          return true;
       
       return false;
+   }
+   
+   #on_runner_up_becoming_root(/*Action*/ action, /*Idle*/ idle) {
+      if (idle.live.parent == action) {
+         return;
+      }
+      if (idle.live.parent == action.graph.loose) {
+         let loose = action.graph.loose;
+         if (idle.form.flags.is_forced_loose) {
+            action.root = idle;
+            if (this.callbacks.idle_becoming_multiply_present)
+               (this.callbacks.idle_becoming_multiply_present)(idle, action);
+         } else {
+            if (this.callbacks.node_moved.before)
+               (this.callbacks.node_moved.before)(idle, action, 0);
+            loose.idles.splice(loose.idles.indexOf(idle), 1);
+            action.root = idle;
+            idle.live.parent = action;
+            if (this.callbacks.node_moved.after)
+               (this.callbacks.node_moved.after)(idle);
+         }
+      } else {
+         action.root = idle;
+         if (this.callbacks.idle_becoming_multiply_present)
+            (this.callbacks.idle_becoming_multiply_present)(idle, action);
+      }
    }
    
    // This should be invoked for an idle before it is moved or deleted. If the 

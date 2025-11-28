@@ -1006,3 +1006,57 @@ TESTCASES.forced_loose_sibling = new Testcase({ // VERIFIED in CK
    ],
 });
 
+TESTCASES.forced_loose_runner_up = new Testcase({
+   /*
+      This testcase is meant for a specific situation during editing. 
+      The "RunnerUp" idle is initially in two places at once, being 
+      both an action root and a forced-loose idle, but it's displaced 
+      from that action root by the "Displacing" idle, producing this 
+      tree:
+      
+       - Human.hkx
+          - ActionActivate
+             - Displacing
+          - LOOSE
+             - RunnerUp
+      
+      Deleting the "Displacing" idle causes RunnerUp to no longer be 
+      displaced; however, it's still forced-loose, so it should end 
+      up in multiple places at once, forming this tree:
+      
+       - Human.hkx
+          - ActionActivate
+             - RunnerUp [non-canonical]
+          - LOOSE
+             - RunnerUp [canonical]
+   */
+   actions: [
+      { editor_id: "ActionActivate" },
+   ],
+   idles: [
+      {
+         editor_id: "RunnerUp",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DATA", is_forced_loose: true },
+               { signature: "DNAM", string: "Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null },
+            ],
+         },
+      },
+      {
+         editor_id: "Displacing",
+         subrecords: {
+            masters: [
+            ],
+            active: [
+               { signature: "DNAM", string: "Human.hkx" },
+               { signature: "ANAM", parent: "ActionActivate", previous: null },
+            ],
+         },
+      },
+   ]
+});
+
