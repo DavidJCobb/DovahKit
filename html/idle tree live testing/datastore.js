@@ -412,6 +412,13 @@ class Datastore {
       if (subject.children.length)
          if (dst_parent instanceof LooseIdleList)
             return true;
+         
+      // Similarly, moving an idle to be the child of a loose idle is also a 
+      // bad idea, though we'll allow it if the latter already has children.
+      if (dst_parent instanceof Idle)
+         if (dst_parent.children.length == 0)
+            if (dst_parent.live.parent instanceof LooseIdleList)
+               return true;
       
       return false;
    }
