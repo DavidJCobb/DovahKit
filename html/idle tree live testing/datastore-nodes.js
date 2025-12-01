@@ -264,6 +264,21 @@ class Idle {
       return false;
    }
    
+   get containing_graph() {
+      let parent = this.live.parent;
+      while (parent) {
+         if (parent instanceof Action || parent instanceof LooseIdleList) {
+            return parent.graph;
+         }
+         if (parent instanceof Idle) {
+            parent = parent.live.parent;
+            continue;
+         }
+         console.assert(false, "unhandled case!");
+      }
+      return null;
+   }
+   
    // during initial build
    _insert_sorted_child(/*Idle*/ idle) {
       const children = this.live.children;
@@ -340,21 +355,7 @@ class Idle {
                candidacy.previous = null;
             } else if (canonical instanceof Idle) {
                this.form.flags.is_forced_loose = false;
-               let graph = null;
-               {  // in C++, we'll define idle_node::containing_graph() for this
-                  let parent = canonical.live.parent;
-                  while (parent) {
-                     if (parent instanceof Action || parent instanceof LooseIdleList) {
-                        graph = parent.graph;
-                        break;
-                     }
-                     if (parent instanceof Idle) {
-                        parent = parent.live.parent;
-                        continue;
-                     }
-                     console.assert(false, "unhandled case!");
-                  }
-               }
+               let graph = canonical.containing_graph;
                candidacy.graph    = graph?.path || "";
                candidacy.parent   = canonical.form;
                candidacy.previous = null;

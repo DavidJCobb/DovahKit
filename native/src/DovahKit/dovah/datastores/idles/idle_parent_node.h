@@ -21,7 +21,7 @@ namespace dovah::datastores::impl::idles {
          ~idle_parent_node();
 
       public:
-         std::vector<cobb::const_forwarding_ptr<idle_node>> children; // owned
+         std::vector<cobb::const_forwarding_ptr<idle_node>> children; // unowned
 
       public:
          // The to-be-appended node must not have a parent.
@@ -34,7 +34,6 @@ namespace dovah::datastores::impl::idles {
 
          bool contains(const idle_node&) const noexcept;
 
-         void destroy_child(size_t);
          constexpr size_t index_of_child(const idle_node&) const noexcept;
          size_t index_of_child(const form_stub&) const noexcept;
          void insert_child_before(idle_node&, size_t);

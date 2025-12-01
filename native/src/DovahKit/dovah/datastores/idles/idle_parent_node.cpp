@@ -11,12 +11,6 @@
 
 namespace dovah::datastores::impl::idles {
    idle_parent_node::~idle_parent_node() {
-      for (auto& ptr : this->children) {
-         if (!ptr)
-            continue;
-         delete ptr;
-         ptr = nullptr;
-      }
    }
 
    void idle_parent_node::append_child(std::unique_ptr<idle_node>&& node_ptr) {
@@ -93,31 +87,6 @@ namespace dovah::datastores::impl::idles {
          }
       } while (current);
       return false;
-   }
-   void idle_parent_node::destroy_child(size_t i) {
-      if (i >= this->children.size())
-         throw std::out_of_range("Index out of range.");
-
-      auto& callbacks   = this->datastore.callbacks.idles.on_deleted;
-      bool  should_fire = !this->datastore._check_is_building({});
-
-      idle_node* node = this->children[i];
-      assert(node != nullptr);
-      form_stub* stub = &node->stub;
-      assert(stub != nullptr);
-
-      if (should_fire && callbacks.before)
-         (callbacks.before(*node));
-
-      this->datastore.idles_by_stub.erase(stub);
-      delete node;
-      this->children.erase(this->children.begin() + i);
-
-      if (should_fire) {
-         this->_on_previous_sibling_changed(i);
-         if (callbacks.after)
-            (callbacks.after)(*stub);
-      }
    }
    size_t idle_parent_node::index_of_child(const form_stub& stub) const noexcept {
       for (size_t i = 0; i < this->children.size(); ++i) {

@@ -15,11 +15,15 @@ namespace dovah {
 namespace dovah::datastores::impl::idles {
    namespace passkeys {
       class check_is_building;
+      class check_is_clearing;
+      class fully_delete_action;
+      class fully_delete_idle;
    }
    class node;
    class action_node;
    class action_parent_node;
    class graph_node;
+   class idle_list_node;
    class idle_parent_node;
    class idle_node;
    //
@@ -35,6 +39,7 @@ namespace dovah::datastores {
          using graph_node = impl::idles::graph_node;
          using idle_node = impl::idles::idle_node;
          using idle_parent_node = impl::idles::idle_parent_node;
+         using idle_list_node = impl::idles::idle_list_node;
 
          using loaded_idle_type = dovah::loaded_forms::IdleAnimation;
 
@@ -123,12 +128,14 @@ namespace dovah::datastores {
 
       public: // passkeyed
          bool _check_is_building(impl::idles::passkeys::check_is_building) const;
+         bool _check_is_clearing(impl::idles::passkeys::check_is_clearing) const;
 
       protected:
          void _clear();
 
       protected:
          #pragma region Initial build
+            void _place_action_root(file_load_order&, idle_node&, const loaded_idle_type&);
             void _place_parent_idle(idle_node&, const loaded_idle_type&);
             void _place_child_idle(idle_node&, const loaded_idle_type&);
 
@@ -153,7 +160,7 @@ namespace dovah::datastores {
             action_parent_node* actions; // owned
             idle_parent_node*   idles;   // owned
          } loose;
-         std::unordered_map<form_stub*, idle_node*> idles_by_stub; // unowned
+         std::unordered_map<form_stub*, idle_node*> idles_by_stub; // owned
          //
          struct : public node_hierarchy_callback_set {
             struct {
@@ -164,10 +171,17 @@ namespace dovah::datastores {
                std::function<void(form_stub&)> before;
                std::function<void(form_stub&)> after;
             } on_any_form_modified;
+
+            // Because Bethesda mishandled action root overrides, an idle can "retroactively" become an 
+            // action root. If an idle is set as an action root in one file, and then displaced by an 
+            // override, the idle never stops "trying" to be that action root. If the override is moved 
+            // out of the way, then the idle may retroactively become the root for that action.
+            std::function<void(action_node&, idle_node&)> on_action_root_changed;
          } callbacks;
          std::vector<warning*> warnings; // owned
       protected:
          bool _is_building = false;
+         bool _is_clearing = false;
 
       public:
          #pragma region Graph node getters
@@ -214,6 +228,5 @@ namespace dovah::datastores {
          // for the moved idle (i.e. parent/previous-sibling data) and may update data 
          // for adjacent nodes (i.e. previous-sibling relationships).
          bool place_idle_after(idle_node&, idle_node& desired_previous_sibling);
-         bool append_idle_in(idle_node&, idle_parent_node& desired_parent);
    };
 }

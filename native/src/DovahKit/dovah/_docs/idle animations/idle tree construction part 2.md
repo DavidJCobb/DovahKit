@@ -151,7 +151,6 @@ This algorithm defines the process of moving *SubjectIdle* to *Destination*, as 
     * Else if a clone-of-*DisplacedIdle* exists at *Destination*:
       * 🛂Delete the clone-of-*DisplacedIdle*.
 * **Update the subject's hierarchy placement.**
-  * Let *SubjectHasBeenMoved* be *false*.
   * Let *DroppedFromActions* be the list of actions for which *SubjectIdle* has any active-file action root candidacies.
   * Let *DisqualifiedFromActions* be those actions from *DroppedFromActions* which have *SubjectIdle* as their active winning root.
   * **Destroy all of the subject's active-file action root candidacies, save for that of the canonical parent.**  For each action *Action* of *DroppedFromActions*:

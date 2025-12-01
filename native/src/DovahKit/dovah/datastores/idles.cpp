@@ -3,7 +3,9 @@
 #include "./idles/_all.h"
 #include "./idles/config/sort_during_initial_insertion.h"
 #include "./idles/passkeys/check_is_building.h"
+#include "./idles/passkeys/check_is_clearing.h"
 #include "./idles/passkeys/idle_sorting.h"
+#include "./idles/passkeys/initial_build_action_root.h"
 #include "../files/file_load_order.h"
 #include "../form_stub.h"
 #include "../form_types.h"
@@ -21,6 +23,9 @@ namespace {
    using idle_flag = loaded_idle_type::flag;
 
    using namespace dovah::datastores::impl::idles::config;
+   namespace passkeys {
+      using namespace dovah::datastores::impl::idles::passkeys;
+   }
    namespace warnings {
       using namespace dovah::datastores::impl::idles::warnings;
    }
@@ -55,6 +60,7 @@ namespace dovah::datastores {
          auto  loaded = stub->load().ptr_cast<loaded_idle_type>();
          if (!loaded)
             continue;
+         this->_place_action_root(lo, *node, *loaded);
          if (loaded->data.flags & idle_flag::parent) {
             this->_place_parent_idle(*node, *loaded);
          } else {
@@ -82,23 +88,14 @@ namespace dovah::datastores {
       //
       // Final validation.
       //
-      for (auto* graph : this->graphs) {
-         for (action_node* action : graph->children)
-            for (idle_node* idle : action->children)
-               this->_post_placement_parentage_validation(*idle);
-         for(idle_node* idle : graph->loose->children)
-            this->_post_placement_parentage_validation(*idle);
-      }
-      //
       // The CK doesn't do this validation step for idles that are wholly orphaned and not in any 
       // graph, but we (ab)use the validation step to clean up sort-related state to avoid dangling 
-      // pointers in the future, so we'll do it.
+      // pointers in the future, so we'll do it. Plus, it's also just faster to blindly process all 
+      // idles rather than traversing the hierarchy.
       //
-      for (action_node* action : this->loose.actions->children)
-         for (idle_node* idle : action->children)
-            this->_post_placement_parentage_validation(*idle);
-      for (idle_node* idle : this->loose.idles->children)
-         this->_post_placement_parentage_validation(*idle);
+      for (auto& pair : this->idles_by_stub) {
+         this->_post_placement_parentage_validation(*pair.second);
+      }
       //
       this->_is_building = false;
    }
@@ -115,8 +112,16 @@ namespace dovah::datastores {
    bool idles::_check_is_building(impl::idles::passkeys::check_is_building) const {
       return this->_is_building;
    }
+   bool idles::_check_is_clearing(impl::idles::passkeys::check_is_clearing) const {
+      return this->_is_clearing;
+   }
 
    void idles::_clear() {
+      this->_is_clearing = true;
+
+      for (auto& pair : this->idles_by_stub) {
+         delete pair.second;
+      }
       this->idles_by_stub.clear();
 
       for (auto*& ptr : this->graphs) {
@@ -143,26 +148,79 @@ namespace dovah::datastores {
          ptr = nullptr;
       }
       this->warnings.clear();
+
+      this->_is_clearing = false;
    }
 
    #pragma region Initial build
+      void idles::_place_action_root(file_load_order& flo, idle_node& node, const loaded_idle_type& loaded_idle) {
+         passkeys::initial_build_action_root passkey;
+
+         auto _get_or_make_action = [this](const loaded_idle_type::action_root_candidacy& candidacy) -> action_node* {
+            auto* action_stub = candidacy.action.get_form_stub();
+            if (!action_stub)
+               return nullptr;
+            auto* graph = this->get_or_create_graph_by_path(candidacy.behavior_graph_path);
+            if (graph)
+               return graph->get_or_create_action(*action_stub);
+            return this->get_or_create_loose_action(*action_stub);
+         };
+
+         const auto& candidacies = loaded_idle.get_all_action_root_candidicacies();
+         for (auto& candidacy : candidacies.masters) {
+            auto* action = _get_or_make_action(candidacy);
+            if (!action)
+               continue;
+
+            action->_register_root_idle(
+               passkey,
+               flo,
+               node,
+               {
+                  .source_file = candidacy.anam_subrecord.source_file,
+                  .offsets = {
+                     .of_record    = candidacy.anam_subrecord.offsets.of_record,
+                     .of_subrecord = candidacy.anam_subrecord.offsets.of_subrecord,
+                  }
+               }
+            );
+            node._build_action_root_candidacy(passkey, *action, false);
+         }
+         for (auto& candidacy : candidacies.active) {
+            auto* action = _get_or_make_action(candidacy);
+            if (!action)
+               continue;
+
+            action->_register_root_idle(
+               passkey,
+               flo,
+               node,
+               {
+                  .source_file = candidacy.anam_subrecord.source_file,
+                  .offsets = {
+                     .of_record    = candidacy.anam_subrecord.offsets.of_record,
+                     .of_subrecord = candidacy.anam_subrecord.offsets.of_subrecord,
+                  }
+               }
+            );
+            node._build_action_root_candidacy(passkey, *action, true);
+         }
+      }
       void idles::_place_parent_idle(idle_node& node, const loaded_idle_type& loaded_idle) {
          assert(loaded_idle.data.flags & idle_flag::parent);
          form_stub* parent = loaded_idle.get_hierarchy_parent();
-         const bool parent_is_action = parent && parent->form_type == form_type::action;
+         if (parent && parent->form_type == form_type::action) {
+            //
+            // Already handled by `_place_action_root`.
+            //
+            return;
+         }
 
          idle_parent_node* parent_node = nullptr;
 
          auto* graph = this->get_or_create_graph_by_path(loaded_idle.get_behavior_graph_path(false));
          if (graph) {
-            if (parent_is_action) {
-               parent_node = graph->get_or_create_action(*parent);
-            } else {
-               parent_node = graph->loose;
-               assert(parent_node != nullptr);
-            }
-         } else if (parent_is_action) {
-            parent_node = this->get_or_create_loose_action(*parent);
+            parent_node = graph->loose;
             assert(parent_node != nullptr);
          }
          if (!parent_node) {
@@ -206,6 +264,9 @@ namespace dovah::datastores {
                } else if (*problem == sibling_problem::mismatched) {
                   auto& dst = this->warnings.emplace_back();
                   dst = new warnings::siblings_have_mismatched_parents(child_idle);
+               }
+               if (graph) {
+                  loose_parent_node = graph->loose;
                }
                if (!loose_parent_node && parent) {
                   auto* g = this->graph_by_idle(*parent);
@@ -251,19 +312,16 @@ namespace dovah::datastores {
          }
 
          if (action) {
-            if (graph) {
-               loose_parent_node = graph->get_or_create_action(*action);
-            } else {
-               loose_parent_node = this->get_or_create_loose_action(*action);
-            }
-            assert(loose_parent_node != nullptr);
+            //
+            // Already handled by `_place_action_root`.
+            //
+            return;
+         }
+         if (graph) {
+            loose_parent_node = graph->loose;
          } else {
-            if (graph) {
-               loose_parent_node = graph->loose;
-            } else {
-               auto& dst = this->warnings.emplace_back();
-               dst = new warnings::orphaned_idle(child_idle);
-            }
+            auto& dst = this->warnings.emplace_back();
+            dst = new warnings::orphaned_idle(child_idle);
          }
          if (!loose_parent_node) {
             loose_parent_node = this->loose.idles;
@@ -349,9 +407,6 @@ namespace dovah::datastores {
                auto& dst = this->warnings.emplace_back();
                dst = new warnings::previous_sibling_is_not_as_expected(idle, previous, actual);
             }
-         }
-         for (idle_node* child : idle.children) {
-            this->_post_placement_parentage_validation(*child);
          }
       }
    #pragma endregion
@@ -532,7 +587,7 @@ namespace dovah::datastores {
             case form_type::action:
                {
                   auto _delete_if_present_in = [this, &stub](action_parent_node& parent) {
-                     auto  index = parent.index_of_child(stub);
+                     auto index = parent.index_of_child(stub);
                      if (index == node::no_index)
                         return;
                      parent.destroy_child(index);
@@ -586,38 +641,44 @@ namespace dovah::datastores {
                return;
             }
          }
-         idle_parent_node* parent_node = nullptr;
-         if (auto* parent_stub = loaded->get_hierarchy_parent()) {
-            if (parent_stub->form_type == form_type::action) {
-               if (auto* graph = this->graph_by_idle(stub)) {
-                  parent_node = graph->get_or_create_action(*parent_stub);
-               } else {
-                  parent_node = this->get_or_create_loose_action(*parent_stub);
-               }
+         auto* parent_stub = loaded->get_hierarchy_parent();
+         if (parent_stub && parent_stub->form_type == form_type::action) {
+            auto* graph = this->get_or_create_graph_by_path(loaded->get_behavior_graph_path(false));
+            if (graph) {
+               auto* action = graph->get_or_create_action(*parent_stub);
+               assert(action != nullptr);
+               action->set_active_root(*node);
             } else {
-               parent_node = this->idle_by_stub(*parent_stub);
+               this->loose.idles->append_child(*node);
             }
+            return;
+         }
+         idle_parent_node* parent_node = nullptr;
+         if (parent_stub) {
+            parent_node = this->idle_by_stub(*parent_stub);
          }
          if (!parent_node)
             parent_node = this->loose.idles;
-         this->append_idle_in(*node, *parent_node);
+         parent_node->append_child(*node);
       }
       void idles::on_before_idle_deleted(form_stub& stub) {
          if (stub.form_type != form_type::idle)
             return;
-         idle_node* node = nullptr;
-         {
-            auto it = this->idles_by_stub.find(&stub);
-            if (it == this->idles_by_stub.end())
-               return;
-            node = it->second;
-            assert(node != nullptr);
-         }
-         //
+         auto it = this->idles_by_stub.find(&stub);
+         if (it == this->idles_by_stub.end())
+            return;
+         auto* node = it->second;
+         assert(node != nullptr);
          if (idle_parent_node* parent = node->parent) {
-            auto i = parent->index_of_child(*node);
-            parent->destroy_child(i); // this erases from `this->idles_by_stub` for us.
-            node = nullptr;
+            auto& callbacks = this->callbacks.idles.on_deleted;
+            if (callbacks.before)
+               (callbacks.before)(*node);
+            //
+            parent->take_child(parent->index_of_child(*node));
+            delete node;
+            //
+            if (callbacks.after)
+               (callbacks.after)(stub);
          } else {
             delete node;
          }
@@ -640,10 +701,6 @@ namespace dovah::datastores {
             return true;
       }
       parent_after->insert_child_after(idle, index_after);
-      return true;
-   }
-   bool idles::append_idle_in(idle_node& idle, idle_parent_node& desired_parent) {
-      desired_parent.append_child(idle);
       return true;
    }
 }

@@ -1,4 +1,10 @@
 
+// DovahKit in specific is designed so that when you delete a form -- even 
+// if it's just being flagged as deleted, and not actually erased from 
+// memory -- the program's form-handling backend will forcibly sever all 
+// references to the to-be-deleted form.
+const BACKEND_SEVERS_REFERENCES_TO_DELETED_FORMS = false;
+
 class Datastore {
    #is_building = false;
    
@@ -540,10 +546,47 @@ class Datastore {
    // an IDLE record, we always include DNAM and ANAM, so the "deleted" flag 
    // allowing those to bleed through from the previous record is irrelevant 
    // because the blood gets wiped off the floor, walls, and ceiling anyway.
-   /*void*/ delete_idle(/*Idle*/ subject) {
+   /*void*/ delete_idle(/*Idle*/ subject, _recursing) {
       let defined_in_master = subject.form.serialized.masters.length > 0;
       
-      if (defined_in_master) {
+      if (BACKEND_SEVERS_REFERENCES_TO_DELETED_FORMS) {
+         //
+         // The backend will forcibly sever references to the to-be-deleted 
+         // form, so if we delete a parent idle and recursively delete its 
+         // descendants, then the latter will cease to be its descendants 
+         // and become loose. We'll formally move them to loose, in order 
+         // to ensure that they're properly flagged as loose and in order 
+         // to carry out all action-root-related logic, and then we'll 
+         // either flag them as deleted (if defined in a master) or wholly 
+         // delete them from memory (otherwise).
+         //
+         // We'll delete descendants before their parents, so let's start 
+         // by recursing.
+         //
+         let children = ([]).concat(subject.live.children); // copy array
+         for(let child of children) {
+            this.delete_idle(child, true);
+         }
+         
+         let graph = subject.containing_graph;
+         let loose = graph ? graph.loose : this.loose;
+         this.move_idle(subject, loose, null);
+         if (!defined_in_master) {
+            let form       = subject.form;
+            let moved_from = subject.live.parent;
+            
+            if (this.callbacks.node_deleted.before)
+               (this.callbacks.node_deleted.before)(subject);
+            this.#take_idle_from_canonical_parent(moved_from, subject);
+            subject.live.parent = null;
+            this.idles_by_id.delete(form.editor_id);
+            if (this.callbacks.node_deleted.after)
+               (this.callbacks.node_deleted.after)(form);
+         }
+         return;
+      }
+      
+      if (defined_in_master && !_recursing) {
          //
          // The IDLE form was originally defined in a master file and so cannot 
          // be wholly deleted. The most we can do is move it to LOOSE and flag 
@@ -551,21 +594,7 @@ class Datastore {
          //
          ; // flag the idle form as "deleted" here.
          //
-         let graph = null;
-         {
-            let parent = subject.live.parent;
-            while (parent) {
-               if (parent instanceof Action || parent instanceof LooseIdleList) {
-                  graph = parent.graph;
-                  break;
-               }
-               if (parent instanceof Idle) {
-                  parent = parent.live.parent;
-                  continue;
-               }
-               console.assert(false, "unhandled case!");
-            }
-         }
+         let graph = subject.containing_graph;
          let loose = null;
          if (graph)
             loose = graph.loose;
@@ -578,7 +607,7 @@ class Datastore {
       {
          let children = ([]).concat(subject.live.children); // copy array
          for(let child of children) {
-            this.delete_idle(child);
+            this.delete_idle(child, true);
          }
       }
       
