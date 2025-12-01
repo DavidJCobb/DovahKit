@@ -19,10 +19,10 @@ namespace dovah::loaded_forms {
 
          struct flag {
             enum type : uint8_t {
-               parent       = 0x01,
-               sequence     = 0x02,
-               no_attacking = 0x04,
-               blocking     = 0x08,
+               is_forced_loose = 0x01,
+               sequence        = 0x02,
+               no_attacking    = 0x04,
+               blocking        = 0x08,
             };
          };
          using flags_t = std::underlying_type_t<flag::type>;
@@ -37,6 +37,11 @@ namespace dovah::loaded_forms {
                   size_t of_subrecord = 0; // subrecord offset within record body (in case record was compressed and had multiple ANAM))
                } offsets;
             } anam_subrecord;
+         };
+
+         struct action_root_candidacy_set {
+            std::vector<action_root_candidacy> masters;
+            std::vector<action_root_candidacy> active;
          };
 
       public:
@@ -54,10 +59,7 @@ namespace dovah::loaded_forms {
             uint16_t replay_delay       = 0; // DATA+0x04
          } data; // DATA
       protected:
-         struct {
-            std::vector<action_root_candidacy> masters;
-            std::vector<action_root_candidacy> active;
-         } _as_action_root;
+         action_root_candidacy_set _as_action_root;
          struct {
             struct {
                std::string corrected;
@@ -85,6 +87,7 @@ namespace dovah::loaded_forms {
          void make_loose(std::string_view behavior_graph);
          void make_child(std::string_view behavior_graph, form_stub& parent_idle, form_stub* previous_sibling_idle);
 
+         constexpr const action_root_candidacy_set& get_all_action_root_candidicacies() const noexcept { return this->_as_action_root; }
          [[nodiscard]] std::vector<const action_root_candidacy*> get_candidicacies_for_action_root(std::string_view behavior_graph, form_stub& action) const;
          void for_each_action_root_candidacy(std::function<void(const std::string_view, form_stub* action)>);
          bool is_better_action_root_candidate_than(const IdleAnimation& other_idle, const std::string_view graph, form_stub& action) const;

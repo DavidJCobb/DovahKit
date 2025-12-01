@@ -84,8 +84,8 @@ namespace dovah::datastores::impl::idles {
          this->actions.begin(),
          this->actions.end(),
          &stub,
-         [](dovah::form_stub* a, const action_node& b) {
-            return _compare_actions(*a, b.stub);
+         [](const dovah::form_stub* a, const action_node* b) {
+            return _compare_actions(*a, b->stub);
          }
       );
       return std::distance(this->actions.begin(), it);

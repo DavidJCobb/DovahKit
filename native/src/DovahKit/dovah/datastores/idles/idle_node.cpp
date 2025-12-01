@@ -62,6 +62,7 @@ namespace dovah::datastores::impl::idles {
             return true;
          idle = dynamic_cast<idle_node*>(idle->canonical_parent);
       } while (idle);
+      return false;
    }
    size_t idle_node::index_of_child(const idle_node& other) const noexcept {
       for (size_t i = 0; i < this->child_idles.size(); ++i)
@@ -72,8 +73,10 @@ namespace dovah::datastores::impl::idles {
 
    bool idle_node::is_active_candidate_for(const action_node& action) const noexcept {
       auto& list = this->is_candidate_for.active;
-      auto  it   = std::find(list.begin(), list.end(), &action);
-      return it != list.end();
+      for (auto& item : list)
+         if (item.action == &action)
+            return true;
+      return false;
    }
    bool idle_node::is_winning_root_of_action_in_own_graph() const noexcept {
       const auto path = this->canonical_graph_path();

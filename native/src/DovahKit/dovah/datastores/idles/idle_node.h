@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <string_view>
 #include <vector>
 #include "helpers/const_forwarding_ptr.h"
@@ -33,6 +34,8 @@ namespace dovah::datastores::impl::idles {
 
          struct candidacy : public action_root_candidacy {
             action_node* action = nullptr; // unowned
+
+            constexpr bool operator==(const candidacy&) const noexcept = default;
          };
 
       public:

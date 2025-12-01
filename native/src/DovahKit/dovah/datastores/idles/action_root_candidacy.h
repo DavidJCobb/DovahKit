@@ -12,5 +12,6 @@ namespace dovah::datastores::impl::idles {
       } offsets;
 
       bool operator<(const action_root_candidacy&) const noexcept;
+      constexpr bool operator==(const action_root_candidacy&) const noexcept = default;
    };
 }

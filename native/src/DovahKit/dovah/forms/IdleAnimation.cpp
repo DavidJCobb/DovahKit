@@ -111,7 +111,7 @@ namespace dovah::loaded_forms {
       this->_hierarchy.parent.set(*this, &action);
       this->_hierarchy.previous_sibling.set(*this, nullptr);
 
-      this->data.flags |= flag::parent;
+      this->data.flags &= ~flag::is_forced_loose;
    }
    void IdleAnimation::make_loose() {
       auto& list = this->_as_action_root.active;
@@ -123,7 +123,7 @@ namespace dovah::loaded_forms {
 
       this->_hierarchy.parent.set(*this, nullptr);
       this->_hierarchy.previous_sibling.set(*this, nullptr);
-      this->data.flags &= ~flag::parent;
+      this->data.flags |= ~flag::is_forced_loose;
    }
    void IdleAnimation::make_loose(std::string_view behavior_graph) {
       this->_hierarchy.behavior_graph.verbatim  = behavior_graph;
@@ -146,7 +146,7 @@ namespace dovah::loaded_forms {
       }
       this->_hierarchy.parent.set(*this, &parent_idle);
       this->_hierarchy.previous_sibling.set(*this, previous_sibling_idle);
-      this->data.flags &= ~flag::parent;
+      this->data.flags &= ~flag::is_forced_loose;
    }
 
    std::vector<const IdleAnimation::action_root_candidacy*> IdleAnimation::get_candidicacies_for_action_root(std::string_view behavior_graph, form_stub& action) const {
