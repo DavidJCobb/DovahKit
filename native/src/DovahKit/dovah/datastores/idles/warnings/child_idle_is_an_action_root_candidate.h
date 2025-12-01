@@ -1,10 +1,10 @@
 #pragma once
 #include "../warning.h"
-namespace dovah::datastores::impl::idles2 {
+namespace dovah::datastores::impl::idles {
    class idle_node;
 }
 
-namespace dovah::datastores::impl::idles2::warnings {
+namespace dovah::datastores::impl::idles::warnings {
    //
    // Idle has been placed as both an action root and a child idle, and so may 
    // end up in multiple places at once.

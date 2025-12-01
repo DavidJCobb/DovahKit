@@ -1,16 +1,19 @@
 #pragma once
-#include "./_base.h"
+#include "../warning.h"
 namespace dovah::datastores::impl::idles {
    class idle_node;
 }
 
 namespace dovah::datastores::impl::idles::warnings {
-   // Idle has no parent idle, but also isn't an action root.
+   //
+   // Idle has ended up orphaned, seemingly not belonging to any behavior 
+   // graph.
+   //
    class orphaned_idle : public warning {
       public:
-         constexpr orphaned_idle(const idle_node& i) : idle(i) {}
+         orphaned_idle(idle_node& s) : subject(s) {};
 
       public:
-         const idle_node& idle;
+         idle_node& subject;
    };
 }

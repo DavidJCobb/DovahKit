@@ -1,5 +1,5 @@
 #pragma once
-#include "./_base.h"
+#include "../warning.h"
 namespace dovah::datastores::impl::idles {
    class idle_node;
 }
@@ -7,23 +7,20 @@ namespace dovah::datastores::impl::idles {
 namespace dovah::datastores::impl::idles::warnings {
    class previous_sibling_is_not_as_expected : public warning {
       public:
-         constexpr previous_sibling_is_not_as_expected(
-            const idle_node& i,
-            const idle_node* expected,
-            const idle_node* actual
+         previous_sibling_is_not_as_expected(
+            idle_node& s,
+            idle_node* i,
+            idle_node* a
          ) :
-            idle(i),
-            previous_sibling({
-               .expected = expected,
-               .actual   = actual,
-            })
-         {}
+            subject(s),
+            sibling({ i, a })
+         {};
 
       public:
-         const idle_node& idle;
+         idle_node& subject;
          struct {
-            const idle_node* expected = nullptr;
-            const idle_node* actual   = nullptr;
-         } previous_sibling;
+            idle_node* intended = nullptr;
+            idle_node* actual   = nullptr;
+         } sibling;
    };
 }

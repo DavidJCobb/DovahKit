@@ -2,7 +2,7 @@
 #include <cassert>
 #include "../../files/tes_file_reading/file_loader.h"
 
-namespace dovah::datastores::impl::idles2 {
+namespace dovah::datastores::impl::idles {
    bool action_root_candidacy::operator<(const action_root_candidacy& other) const noexcept {
       if (this->source_file == other.source_file) {
          //

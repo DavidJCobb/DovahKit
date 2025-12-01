@@ -1,15 +1,19 @@
 #pragma once
-#include "./_base.h"
+#include "../warning.h"
 namespace dovah::datastores::impl::idles {
    class idle_node;
 }
 
 namespace dovah::datastores::impl::idles::warnings {
+   //
+   // Idle is part of a cyclical hierarchy (via its parent), and has therefore 
+   // been loaded as a loose idle.
+   //
    class cyclical_parent_relationships : public warning {
       public:
-         constexpr cyclical_parent_relationships(const idle_node& i) : idle(i) {}
+         cyclical_parent_relationships(idle_node& s) : subject(s) {};
 
       public:
-         const idle_node& idle;
+         idle_node& subject;
    };
 }

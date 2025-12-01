@@ -1,11 +1,11 @@
 #pragma once
 namespace dovah::datastores {
-   class idles2;
+   class idles;
 }
 
-namespace dovah::datastores::impl::idles2::passkeys {
+namespace dovah::datastores::impl::idles::passkeys {
    class initial_build {
-      friend ::dovah::datastores::idles2;
+      friend ::dovah::datastores::idles;
       private:
          constexpr initial_build() {}
    };

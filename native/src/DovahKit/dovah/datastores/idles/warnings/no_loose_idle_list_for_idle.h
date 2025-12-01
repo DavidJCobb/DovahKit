@@ -1,10 +1,10 @@
 #pragma once
 #include "../warning.h"
-namespace dovah::datastores::impl::idles2 {
+namespace dovah::datastores::impl::idles {
    class idle_node;
 }
 
-namespace dovah::datastores::impl::idles2::warnings {
+namespace dovah::datastores::impl::idles::warnings {
    //
    // No loose idle list for this idle.
    //

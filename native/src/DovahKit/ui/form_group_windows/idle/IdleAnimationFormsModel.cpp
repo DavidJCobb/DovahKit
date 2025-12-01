@@ -9,6 +9,7 @@
 #include "dovah/datastores/idles/action_node.h"
 #include "dovah/datastores/idles/graph_node.h"
 #include "dovah/datastores/idles/idle_node.h"
+#include "dovah/datastores/idles/loose_idle_list_node.h"
 #include "dovah/forms/IdleAnimation.h"
 #include "dovah/form_stub.h"
 #include "dovahscript/dovahscript_host.h"
@@ -20,10 +21,16 @@
 #include "ui/types/game_file_path.h"
 
 // for pushing warnings to the log window:
+#include "dovah/datastores/idles/warnings/action_root_is_forced_loose.h"
+#include "dovah/datastores/idles/warnings/child_idle_is_an_action_root_candidate.h"
+#include "dovah/datastores/idles/warnings/child_of_idle_is_forced_loose.h"
 #include "dovah/datastores/idles/warnings/cyclical_parent_relationships.h"
 #include "dovah/datastores/idles/warnings/cyclical_sibling_relationships.h"
+#include "dovah/datastores/idles/warnings/idle_has_candidacies_for_multiple_actions.h"
 #include "dovah/datastores/idles/warnings/idle_has_multiple_next_siblings.h"
-#include "dovah/datastores/idles/warnings/inconsistent_parentage.h"
+#include "dovah/datastores/idles/warnings/inconsistent_parentage_on_idle.h"
+#include "dovah/datastores/idles/warnings/loose_idle_is_not_flagged.h"
+#include "dovah/datastores/idles/warnings/no_loose_idle_list_for_idle.h"
 #include "dovah/datastores/idles/warnings/orphaned_idle.h"
 #include "dovah/datastores/idles/warnings/previous_sibling_is_not_as_expected.h"
 #include "dovah/datastores/idles/warnings/siblings_have_mismatched_parents.h"
@@ -38,15 +45,29 @@ namespace datastore_warnings {
 }
 
 IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractItemModel(parent) {
+   #pragma region Set up datastore handlers
+      this->_datastore.handlers.delete_idle = [this](dovah::form_stub& stub) {
+         DovahKitCore::get().delete_form(
+            stub,
+            [](const dovah::form_deletion_request&) {
+               return true;
+            },
+            [this](const dovah::exceptions::form_deletion_failed& ex) {
+               this->_handler_state.any_deletions_failed = true;
+            },
+            [](const dovah::form_deletion_request& request) {}
+         );
+      };
+   #pragma endregion
    #pragma region Set up datastore callbacks
       #pragma region Global
          {
-            auto& cb_set = this->_datastore.callbacks.on_cleared;
+            auto& cb_set = this->_datastore.callbacks.reset;
             cb_set.before = [this]() { this->beginResetModel(); };
             cb_set.after = [this]() { this->endResetModel(); };
          }
          {
-            auto& cb_set = this->_datastore.callbacks.on_any_form_modified;
+            auto& cb_set = this->_datastore.callbacks.form_data_modified;
             cb_set.before = [this](dovah::form_stub& stub) {
                DovahKitCore::get().formModificationImminent(&stub);
             };
@@ -57,49 +78,37 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
       #pragma endregion
       #pragma region Graphs
          {
-            auto& cb_set = this->_datastore.callbacks.graphs.on_created;
-            cb_set.before = [this](std::string_view path, size_t index) {
+            auto& cb_set = this->_datastore.callbacks.graph_inserted;
+            cb_set.before = [this](const graph_node&, size_t index) {
                this->beginInsertRows(_qmi_for_model_root(), index, index);
             };
-            cb_set.after = [this](std::string_view path, const graph_node&) {
+            cb_set.after = [this](const graph_node&) {
                this->endInsertRows();
             };
          }
       #pragma endregion
       #pragma region Actions
          {
-            auto& cb_set = this->_datastore.callbacks.actions.on_deleted;
+            auto& cb_set = this->_datastore.callbacks.action_deleted;
             cb_set.before = [this](const action_node& node) {
-               if (node.parent) {
-                  auto qmi = _qmi_for_node(*node.parent);
-                  auto i   = node.parent->index_of_child(node);
+               if (node.graph) {
+                  auto qmi = _qmi_for_node(*node.graph);
+                  auto i   = node.graph->index_of_action(node);
                   this->beginRemoveRows(qmi, i, i);
                   this->_callback_state.emitted_last_deletion = true;
                }
             };
-            cb_set.after = [this](const dovah::form_stub&) {
+            cb_set.after = [this]() {
                if (this->_callback_state.emitted_last_deletion)
                   this->endRemoveRows();
                this->_callback_state.emitted_last_deletion = false;
             };
          }
          {
-            auto& cb_set = this->_datastore.callbacks.actions.on_placed;
-            cb_set.before = [this](const action_node& node, const action_parent_node& parent_after, size_t index) {
-               if (node.parent) {
-                  auto& parent_prior = *node.parent;
-                  auto  from         = parent_prior.index_of_child(node);
-                  auto  to           = index;
-                  auto  qmi_prior = _qmi_for_node(parent_prior);
-                  auto  qmi_after = _qmi_for_node(parent_after);
-                  if (to >= from)
-                     ++to;
-                  this->_callback_state.last_node_placement_was_an_insertion = false;
-                  this->beginMoveRows(qmi_prior, from, from, qmi_after, to);
-               } else {
-                  this->_callback_state.last_node_placement_was_an_insertion = true;
-                  this->beginInsertRows(_qmi_for_node(parent_after), index, index);
-               }
+            auto& cb_set = this->_datastore.callbacks.action_inserted;
+            cb_set.before = [this](const graph_node& graph, const action_node& action, size_t index) {
+               this->_callback_state.last_node_placement_was_an_insertion = true;
+               this->beginInsertRows(_qmi_for_node(graph), index, index);
             };
             cb_set.after = [this](const action_node& node) {
                this->_recache_action(node);
@@ -112,30 +121,40 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
       #pragma endregion
       #pragma region Idles
          {
-            auto& cb_set = this->_datastore.callbacks.idles.on_deleted;
+            auto& cb_set = this->_datastore.callbacks.idle_deleted;
             cb_set.before = [this](const idle_node& node) {
-               if (node.parent) {
-                  auto qmi = _qmi_for_node(*node.parent);
-                  auto i   = node.parent->index_of_child(node);
+               if (node.canonical_parent) {
+                  auto qmi = _qmi_for_node(*node.canonical_parent);
+                  size_t i = 0;
+                  if (auto* casted = dynamic_cast<idle_node*>(node.canonical_parent)) {
+                     i = casted->index_of_child(node);
+                  } else if (auto* casted = dynamic_cast<loose_idle_list_node*>(node.canonical_parent)) {
+                     i = casted->index_of_child(node);
+                  }
                   this->beginRemoveRows(qmi, i, i);
                   this->_callback_state.emitted_last_deletion = true;
                }
             };
-            cb_set.after = [this](const dovah::form_stub&) {
+            cb_set.after = [this](const uint32_t form_id) {
                if (this->_callback_state.emitted_last_deletion)
                   this->endRemoveRows();
                this->_callback_state.emitted_last_deletion = false;
             };
          }
          {
-            auto& cb_set = this->_datastore.callbacks.idles.on_placed;
-            cb_set.before = [this](const idle_node& node, const idle_parent_node& parent_after, size_t index) {
-               if (node.parent) {
-                  auto& parent_prior = *node.parent;
-                  auto  from         = parent_prior.index_of_child(node);
-                  auto  to           = index;
-                  auto  qmi_prior = _qmi_for_node(parent_prior);
-                  auto  qmi_after = _qmi_for_node(parent_after);
+            auto& cb_set = this->_datastore.callbacks.idle_moved;
+            cb_set.before = [this](const idle_node& idle, const datastore_node& parent_after, size_t index) {
+               if (idle.canonical_parent) {
+                  auto&  parent_prior = *idle.canonical_parent;
+                  size_t from = 0;
+                  if (auto* casted = dynamic_cast<idle_node*>(idle.canonical_parent)) {
+                     from = casted->index_of_child(idle);
+                  } else if (auto* casted = dynamic_cast<loose_idle_list_node*>(idle.canonical_parent)) {
+                     from = casted->index_of_child(idle);
+                  }
+                  auto to        = index;
+                  auto qmi_prior = _qmi_for_node(parent_prior);
+                  auto qmi_after = _qmi_for_node(parent_after);
                   if (to >= from)
                      ++to;
                   this->_callback_state.last_node_placement_was_an_insertion = false;
@@ -153,6 +172,14 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
                   this->endMoveRows();
             };
          }
+         this->_datastore.callbacks.idle_becoming_multiply_present_in = [this](idle_node& idle, action_node& action) {
+            this->beginInsertRows(_qmi_for_node(action), 0, 0);
+            this->endInsertRows();
+         };
+         this->_datastore.callbacks.idle_no_longer_multiply_present_in = [this](idle_node& idle, action_node& action) {
+            this->beginRemoveRows(_qmi_for_node(action), 0, 0);
+            this->endRemoveRows();
+         };
       #pragma endregion
    #pragma endregion
 
@@ -191,31 +218,28 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
       const auto& graphs = this->_datastore.graphs;
       const auto  g_size = graphs.size();
 
-      {
-         auto* loose_a = this->_datastore.loose.actions;
-         auto* loose_i = this->_datastore.loose.idles;
-         if (&n == loose_a) {
-            return this->createIndex(g_size, column, nullptr);
-         }
-         if (&n == loose_i) {
-            if (loose_a && !loose_a->children.empty())
-               return this->createIndex(g_size + 1, column, nullptr);
-            return this->createIndex(g_size, column, nullptr);
-         }
+      if (&n == this->_datastore.loose) {
+         if (this->_datastore.loose->child_idles.empty())
+            return {};
+         return this->createIndex(this->_datastore.graphs.size(), column, nullptr);
       }
 
       const void* parent_void = nullptr;
       int         row         = -1;
       if (auto* casted = dynamic_cast<const action_node*>(&n)) {
-         const action_parent_node* parent = casted->parent;
+         const graph_node* parent = casted->graph;
          parent_void = parent;
          if (parent)
-            row = parent->index_of_child(*casted);
+            row = parent->index_of_action(*casted);
       } else if (auto* casted = dynamic_cast<const idle_node*>(&n)) {
-         const idle_parent_node* parent = casted->parent;
-         parent_void = parent;
-         if (parent)
-            row = parent->index_of_child(*casted);
+         parent_void = casted->canonical_parent;
+         if (auto* casted_parent = dynamic_cast<action_node*>(casted->canonical_parent)) {
+            row = 0;
+         } else if (auto* casted_parent = dynamic_cast<loose_idle_list_node*>(casted->canonical_parent)) {
+            row = casted_parent->index_of_child(*casted);
+         } else if (auto* casted_parent = dynamic_cast<idle_node*>(casted->canonical_parent)) {
+            row = casted_parent->index_of_child(*casted);
+         }
       } else if (auto* casted = dynamic_cast<const graph_node*>(&n)) {
          for (size_t i = 0; i < g_size; ++i) {
             if (graphs[i] == casted) {
@@ -223,14 +247,11 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
                break;
             }
          }
-      } else if (auto* casted = dynamic_cast<const idle_parent_node*>(&n)) {
-         for (size_t i = 0; i < g_size; ++i) {
-            if (graphs[i]->loose == casted) {
-               row         = graphs[i]->children.size();
-               parent_void = graphs[i];
-               break;
-            }
-         }
+      } else if (auto* casted = dynamic_cast<const loose_idle_list_node*>(&n)) {
+         const graph_node* parent = casted->graph;
+         parent_void = parent;
+         if (parent)
+            row = parent->actions.size();
       }
       if (row == -1)
          return {};
@@ -249,38 +270,36 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
          const size_t size = list.size();
          if (row < size)
             return list[row];
-         auto* loose_a = this->_datastore.loose.actions;
-         auto* loose_i = this->_datastore.loose.idles;
          if (row == size) {
-            if (loose_a && !loose_a->children.empty())
-               return loose_a;
-            if (loose_i && !loose_i->children.empty())
-               return loose_i;
-            return nullptr;
-         }
-         if (row == size + 1) {
-            if (loose_a && !loose_a->children.empty())
-               if (loose_i && !loose_i->children.empty())
-                  return loose_i;
-            return nullptr;
+            auto* loose = this->_datastore.loose;
+            if (!loose->child_idles.empty())
+               return loose;
          }
          return nullptr;
       }
-      if (auto* casted = dynamic_cast<const action_parent_node*>(parent)) {
-         const auto&  list = casted->children;
+      if (auto* casted = dynamic_cast<const graph_node*>(parent)) {
+         const auto&  list = casted->actions;
          const size_t size = list.size();
          if (row < size)
             return list[row];
-         //
-         if (row == size) {
-            if (auto* specific = dynamic_cast<const graph_node*>(casted)) {
-               return specific->loose;
-            }
-         }
+         if (row == size)
+            return casted->loose;
          return nullptr;
       }
-      if (auto* casted = dynamic_cast<const idle_parent_node*>(parent)) {
-         const auto&  list = casted->children;
+      if (auto* casted = dynamic_cast<const action_node*>(parent)) {
+         if (row == 0)
+            return casted->winning_root;
+         return nullptr;
+      }
+      if (auto* casted = dynamic_cast<const idle_node*>(parent)) {
+         const auto&  list = casted->child_idles;
+         const size_t size = list.size();
+         if (row < size)
+            return list[row];
+         return nullptr;
+      }
+      if (auto* casted = dynamic_cast<const loose_idle_list_node*>(parent)) {
+         const auto&  list = casted->child_idles;
          const size_t size = list.size();
          if (row < size)
             return list[row];
@@ -331,33 +350,38 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
       return const_cast<graph_node*>(std::as_const(*this)._node_for_graph_path(path));
    }
    
-   IdleAnimationFormsModel::action_node* IdleAnimationFormsModel::_node_for_action(graph_node* graph, const dovah::form_stub& stub) {
-      if (graph)
-         return _node_for_action(*graph, stub);
-      return _node_for_loose_action(stub);
-   }
    IdleAnimationFormsModel::action_node* IdleAnimationFormsModel::_node_for_action(graph_node& graph, const dovah::form_stub& stub) {
-      for (action_node* node : graph.children)
+      for (action_node* node : graph.actions)
          if (&node->stub == &stub)
             return node;
       return nullptr;
    }
-   IdleAnimationFormsModel::action_node* IdleAnimationFormsModel::_node_for_loose_action(const dovah::form_stub& stub) {
-      return this->_datastore.loose_action(stub);
-   }
 #pragma endregion
 
 #pragma region Constraints
-   bool IdleAnimationFormsModel::_can_create_new_idle_in(const idle_parent_node& parent) const {
-      if (dynamic_cast<const action_node*>(&parent)) {
-         return parent.children.empty();
+   bool IdleAnimationFormsModel::_can_create_new_idle_in(const datastore_node& parent) const {
+      if (auto* as_action = dynamic_cast<const action_node*>(&parent)) {
+         return as_action->winning_root == nullptr;
+      }
+      if (dynamic_cast<const loose_idle_list_node*>(&parent)) {
+         return true;
+      }
+      if (auto* as_idle = dynamic_cast<const idle_node*>(&parent)) {
+         if (!as_idle->child_idles.empty())
+            return true;
+         //
+         // Don't allow adding children to loose idles.
+         //
+         if (dynamic_cast<const loose_idle_list_node*>(as_idle->canonical_parent))
+            return false;
+         return true;
       }
       return true;
    }
    bool IdleAnimationFormsModel::_can_ever_duplicate(const idle_node& n) const {
-      if (!n.parent)
+      if (!n.canonical_parent)
          return false;
-      if (dynamic_cast<const action_node*>((const idle_parent_node*)n.parent))
+      if (dynamic_cast<const action_node*>((datastore_node*)n.canonical_parent))
          return false;
       return true;
    }
@@ -393,6 +417,7 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
             //
             // In case the editor ID changed.
             //
+            this->_datastore.on_idle_editor_id_potentially_changed(stub);
             this->_recache_idle(stub);
             break;
       }
@@ -402,7 +427,7 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
          if (auto* idle = this->_datastore.idle_by_stub(stub)) {
             this->_drag_and_drop.untrack(*idle);
          }
-         this->_datastore.on_before_form_deleted(stub);
+         this->_datastore.on_before_form_fully_deleted(stub);
          return;
       }
       switch (stub.form_type) {
@@ -449,27 +474,25 @@ void IdleAnimationFormsModel::_rebuild_datastore() {
    {
       auto _recache_idle_tree = [this](this auto&& recurse, idle_node& idle) -> void {
          this->_recache_idle(idle);
-         for (idle_node* child : idle.children) {
+         for (idle_node* child : idle.child_idles) {
             recurse(*child);
          }
       };
-      auto _recache_action_tree = [this, &_recache_idle_tree](action_node& action) -> void {
+      auto _recache_action_tree = [this](action_node& action) -> void {
          this->_recache_action(action);
-         for (idle_node* idle : action.children)
-            _recache_idle_tree(*idle);
+         if (idle_node* idle = action.winning_root)
+            this->_recache_idle(*idle);
       };
 
       for (auto* graph : this->_datastore.graphs) {
          auto& cached_graph = this->_cache[graph];
          cached_graph.display_string = QString::fromStdString(graph->path);
-         for (action_node* action : graph->children)
+         for (action_node* action : graph->actions)
             _recache_action_tree(*action);
-         for (idle_node* idle : graph->loose->children)
+         for (idle_node* idle : graph->loose->child_idles)
             _recache_idle_tree(*idle);
       }
-      for (action_node* action : this->_datastore.loose.actions->children)
-         _recache_action_tree(*action);
-      for (idle_node* idle : this->_datastore.loose.idles->children)
+      for (idle_node* idle : this->_datastore.loose->child_idles)
          _recache_idle_tree(*idle);
    }
    {
@@ -478,36 +501,70 @@ void IdleAnimationFormsModel::_rebuild_datastore() {
          auto& logger = dovahkit::subsystems::message_log::core::get();
          for (const auto* warning : list) {
             QString text;
-            if (auto* casted = dynamic_cast<const datastore_warnings::cyclical_parent_relationships*>(warning)) {
+            if (auto* casted = dynamic_cast<const datastore_warnings::action_root_is_forced_loose*>(warning)) {
+               text = tr(
+                  "Idle %1 is an action root, but is also flagged as loose, and so risks "
+                  "ending up in multiple places at once."
+               )
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
+            } else if (auto* casted = dynamic_cast<const datastore_warnings::child_idle_is_an_action_root_candidate*>(warning)) {
+               text = tr(
+                  "Idle %1 has been placed as both an action root and a child idle, and so may "
+                  "end up in multiple places at once."
+               )
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
+            } else if (auto* casted = dynamic_cast<const datastore_warnings::child_of_idle_is_forced_loose*>(warning)) {
+               text = tr(
+                  "Idle %1 is set to be the child of another idle, but is also flagged as loose, "
+                  "so it will not in fact be a child. Is this intentional?"
+               )
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
+            } else if (auto* casted = dynamic_cast<const datastore_warnings::cyclical_parent_relationships*>(warning)) {
                text = tr("Idle %1's parent chain forms a cyclical reference.")
-                  .arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
             } else if (auto* casted = dynamic_cast<const datastore_warnings::cyclical_sibling_relationships*>(warning)) {
                text = tr("Idle %1's previous-sibling chain forms a cyclical reference.")
-                  .arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
+            } else if (auto* casted = dynamic_cast<const datastore_warnings::idle_has_candidacies_for_multiple_actions*>(warning)) {
+               text = tr(
+                  "Idle %1 attempts to be the root idle for multiple actions, and may end up being "
+                  "in multiple places at once.\n"
+                  "\n"
+                  "This can happen if an override attempts to re-parent an action root. More rarely, "
+                  "it could happen if a malformed IDLE record contains multiple ANAM subrecords "
+                  "placing the same idle in different action roots."
+               )
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
             } else if (auto* casted = dynamic_cast<const datastore_warnings::idle_has_multiple_next_siblings*>(warning)) {
                text = tr(
                   "Multiple idles are fighting to have %1 as their previous sibling. This can "
                   "happen if the idle tree has been overridden improperly by a mod."
                )
-                  .arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
-            } else if (auto* casted = dynamic_cast<const datastore_warnings::inconsistent_parentage*>(warning)) {
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
+            } else if (auto* casted = dynamic_cast<const datastore_warnings::inconsistent_parentage_on_idle*>(warning)) {
                text = tr("Somehow, idle %1 is not present in its parent's child list.")
-                  .arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
+            } else if (auto* casted = dynamic_cast<const datastore_warnings::loose_idle_is_not_flagged*>(warning)) {
+               text = tr("Idle %1 has ended up loose, but wasn't originally flagged as loose. Is this intentional?")
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
+            } else if (auto* casted = dynamic_cast<const datastore_warnings::no_loose_idle_list_for_idle*>(warning)) {
+               text = tr("There is no loose idle list to place %1 in.")
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
             } else if (auto* casted = dynamic_cast<const datastore_warnings::orphaned_idle*>(warning)) {
                text = tr("Idle %1 is orphaned: it has no parent idle, and isn't an action root.")
-                  .arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
             } else if (auto* casted = dynamic_cast<const datastore_warnings::previous_sibling_is_not_as_expected*>(warning)) {
-               if (auto* node = casted->previous_sibling.expected) {
+               if (auto* node = casted->sibling.intended) {
                   text = tr("After the idle tree was fully built, idle %1 expected to be the next sibling of idle %2.");
-                  text = text.arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+                  text = text.arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
                   text = text.arg(editor_helpers::form_identifiers_to_string(&node->stub));
                } else {
                   text = tr("After the idle tree was fully built, idle %1 expected to be the first (or possibly only) child of its parent.");
-                  text = text.arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+                  text = text.arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
                }
 
                QString instead;
-               if (auto* node = casted->previous_sibling.actual) {
+               if (auto* node = casted->sibling.actual) {
                   instead = tr("Instead, the idle is located after %1.");
                   instead = instead.arg(editor_helpers::form_identifiers_to_string(&node->stub));
                } else {
@@ -517,10 +574,10 @@ void IdleAnimationFormsModel::_rebuild_datastore() {
                text = tr("%1 %2", "datastore warning sentence order for 'previous sibling is not as expected'").arg(text).arg(instead);
             } else if (auto* casted = dynamic_cast<const datastore_warnings::sibling_is_an_ancestor*>(warning)) {
                text = tr("Idle %1 has a previous sibling that is one of its ancestor idles.")
-                  .arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
             } else if (auto* casted = dynamic_cast<const datastore_warnings::siblings_have_mismatched_parents*>(warning)) {
                text = tr("Idle %1 has a different parent from one of its previous siblings.")
-                  .arg(editor_helpers::form_identifiers_to_string(&casted->idle.stub));
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
             } else {
                text = tr(
                   "An unknown warning occurred when loading the idle animation trees. Please contact DovahKit's developer "
@@ -552,23 +609,13 @@ void IdleAnimationFormsModel::_recache_action(const action_node& node) {
 }
 void IdleAnimationFormsModel::_recache_action(const dovah::form_stub& stub) {
    for (auto* graph : this->_datastore.graphs) {
-      auto index = graph->index_of_child(stub);
-      if (index == datastore_node::no_index)
+      auto index = graph->index_of_action(stub);
+      if (index == datastore_node::index_of_none)
          continue;
-      this->_recache_action(*graph->children[index]);
+      this->_recache_action(*graph->actions[index]);
       auto tl = _qmi_for_child_node(index, 0, *graph);
       auto br = _qmi_for_child_node(index, this->columnCount({}), *graph);
       emit dataChanged(tl, br);
-   }
-   {
-      auto* parent = this->_datastore.loose.actions;
-      auto  index = parent->index_of_child(stub);
-      if (index != datastore_node::no_index) {
-         this->_recache_action(*parent->children[index]);
-         auto tl = _qmi_for_child_node(index, 0, *parent);
-         auto br = _qmi_for_child_node(index, this->columnCount({}), *parent);
-         emit dataChanged(tl, br);
-      }
    }
 }
 void IdleAnimationFormsModel::_recache_idle(const idle_node& node) {
@@ -665,96 +712,22 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
 #pragma endregion
 #pragma region Node utils
    IdleAnimationFormsModel::action_node& IdleAnimationFormsModel::_get_or_create_action(graph_node& graph, dovah::form_stub& action) {
-      auto* a_node = graph.action_by_stub(action);
+      assert(action.form_type == dovah::form_type::action);
+      auto* a_node = graph.get_action(action);
       if (a_node)
          return *a_node;
       
       auto qmi = _qmi_for_node(graph);
-      this->beginInsertRows(qmi, graph.children.size(), graph.children.size());
+      auto i   = graph.prospective_index_of(action);
+      this->beginInsertRows(qmi, i, i);
       {
          auto a_node_ptr = std::make_unique<action_node>(this->_datastore, action);
          a_node = a_node_ptr.get();
-         graph.append_child(std::move(a_node_ptr));
+         graph.actions.insert(graph.actions.begin() + i, a_node);
+         a_node_ptr.release();
          this->_recache_action(*a_node);
       }
       this->endInsertRows();
-      //
-      this->layoutAboutToBeChanged({ qmi }, LayoutChangeHint::VerticalSortHint);
-      auto mapping = graph.sort_children_and_remember();
-      {  // Update QPMIs.
-         //
-         // QAbstractItemModel offers `changePersistentIndex` and `changePersistentIndexList`. 
-         // The former may seem preferable because it doesn't require you to create two lists 
-         // to throw away; just change the indices one at a time, right? The problem is that 
-         // if you don't change all of the indices at once, using the list approach, then one 
-         // index can be changed to become identical to another index that has yet to be changed, 
-         // such that trying to change the latter index corrupts the former index.
-         // 
-         // If you need to change multiple QPMIs (which, in practice, is basically always), then 
-         // the ONLY safe option is `changePersistentIndexList`. The only question, then, is 
-         // this: do you loop over the collection of rows you've reordered and blindly change 
-         // every possibly QPMI, or do you loop over only those QPMIs that already exist?
-         //
-         QModelIndexList list_prior;
-         QModelIndexList list_after;
-         //
-         auto   all_qpmis   = this->persistentIndexList(); // implicitly shared, so no overhead here
-         size_t blind_count = mapping.size() * ColumnCount;
-         if (blind_count > all_qpmis.size()) {
-            //
-            // There are more cells to (potentially) update than there are extant QPMIs, so 
-            // just loop over the latter instead.
-            //
-            for (const auto& qpmi : all_qpmis) {
-               if (!_qmi_is_child_of(qpmi, graph)) // ignore irrelevant QPMIs
-                  continue;
-
-               int row = qpmi.row();
-               if (row == mapping.size()) { // special-case for graphs' "loose" nodes
-                  //
-                  // A graph's "loose" node exists after its child actions, and so outside of the 
-                  // `mapping` variable. We can leave the row unchanged.
-                  //
-                  continue;
-               }
-               if (row < 0 || row >= mapping.size())
-                  row = -1;
-               else {
-                  for (size_t i = 0; i < mapping.size(); ++i) {
-                     if (mapping[i] == row) {
-                        row = i;
-                        break;
-                     }
-                  }
-               }
-
-               list_prior.push_back(qpmi);
-               list_after.push_back(this->createIndex(row, qpmi.column(), qpmi.internalPointer()));
-            }
-         } else {
-            //
-            // There are fewer cells to (potentially) update than there are extant QPMIs, so 
-            // loop over the former. We can freely update a QPMI that doesn't actually exist 
-            // (i.e. a cell that isn't referred to by any extant QPMI) without causing any 
-            // problems.
-            //
-            list_prior.clear();
-            for (size_t index_after = 0; index_after < mapping.size(); ++index_after) {
-               size_t index_prior = mapping[index_after];
-               if (index_prior == index_after)
-                  continue;
-
-               for (size_t col = 0; col < ColumnCount; ++col) {
-                  QModelIndex qmi_prior = this->createIndex(index_prior, col, &graph);
-                  QModelIndex qmi_after = this->createIndex(index_after, col, &graph);
-                  list_prior.push_back(qmi_prior);
-                  list_after.push_back(qmi_after);
-               }
-            }
-         }
-         this->changePersistentIndexList(list_prior, list_after);
-      }
-      this->layoutChanged({ qmi }, LayoutChangeHint::VerticalSortHint);
       //
       return *a_node;
    }
@@ -763,16 +736,18 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
       if (!idle_stub)
          return nullptr;
 
-      auto& a_node = _get_or_create_action(graph, action);
+      auto& a_node     = _get_or_create_action(graph, action);
       auto  i_node_ptr = std::make_unique<idle_node>(this->_datastore, *idle_stub);
       auto* i_node     = i_node_ptr.get();
       assert(i_node != nullptr);
-      this->_datastore.append_idle_in(*i_node, a_node);
+      this->_datastore.move_idle(*i_node, a_node, nullptr);
       i_node_ptr.release();
       return i_node;
    }
 
-   bool IdleAnimationFormsModel::_could_ever_move_idles_into(const idle_parent_node& destination) const {
+   bool IdleAnimationFormsModel::_could_ever_move_idles_into(const datastore_node& destination) const {
+      if (dynamic_cast<const graph_node*>(&destination))
+         return false;
       //
       // Don't allow moving into an action.
       //
@@ -781,38 +756,29 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
       //
       return true;
    }
-   bool IdleAnimationFormsModel::_can_move_idle_into(const idle_node& subject, const idle_parent_node& destination) const {
+   bool IdleAnimationFormsModel::_can_move_idle_into(const idle_node& subject, const datastore_node& destination) const {
       assert(_could_ever_move_idles_into(destination)); // require that the caller have checked this first
-
-      //
-      // Don't allow moving an idle inside of itself or its own descendants.
-      //
-      if (&subject == &destination)
-         return false;
-      if (auto* idle_dst = dynamic_cast<const idle_node*>(&destination)) {
-         if (subject.contains(*idle_dst))
-            return false;
-      }
-      //
-      // Don't allow moving an action root.
-      //
-      if (dynamic_cast<const action_node*>((const idle_parent_node*)subject.parent))
-         return false;
-      //
-      return true;
-
+      return this->_datastore.is_idle_movement_legal(subject, destination, nullptr) && !this->_datastore.is_idle_movement_a_really_bad_idea(subject, destination, nullptr);
    }
-   void IdleAnimationFormsModel::_unchecked_move_idle_node(idle_node& subject, idle_parent_node& destination, int row) {
+   void IdleAnimationFormsModel::_unchecked_move_idle_node(idle_node& subject, datastore_node& destination, int row) {
       assert(_can_move_idle_into(subject, destination));
       auto subject_qmi     = _qmi_for_node(subject);
       auto destination_qmi = _qmi_for_node(destination);
-      if (row < 0)
-         row = destination.children.size();
+
+      idle_node* previous = nullptr;
+      if (row < 0) {
+         if (auto* dst_idle = dynamic_cast<idle_node*>(&destination))
+            if (!dst_idle->child_idles.empty())
+               previous = dst_idle->child_idles.back();
+      } else if (row > 0) {
+         if (auto* dst_idle = dynamic_cast<idle_node*>(&destination))
+            previous = dst_idle->child_idles[row - 1];
+      }
 
       // the datastore fires callbacks that trigger beforeMoveRows/endMoveRows when 
       // we tell it to move the node, so we shouldn't fire those here.
 
-      destination.insert_child_before(subject, row);
+      this->_datastore.move_idle(subject, destination, previous);
    }
 #pragma endregion
 
@@ -833,7 +799,7 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
    }
 
    QModelIndex IdleAnimationFormsModel::getOrCreateGraph(QString path) {
-      auto* graph = this->_datastore.get_or_create_graph_by_path(path.toStdString());
+      auto* graph = this->_datastore.get_or_create_graph(path.toStdString());
       if (!graph)
          return {};
 
@@ -845,7 +811,7 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
 
    [[nodiscard]] std::vector<dovah::form_stub*> IdleAnimationFormsModel::_actionsByGraph(const graph_node& graph) const noexcept {
       std::vector<dovah::form_stub*> stubs;
-      for (const action_node* action : graph.children) {
+      for (const action_node* action : graph.actions) {
          stubs.push_back(&action->stub);
       }
       return stubs;
@@ -891,21 +857,12 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
       auto* node = _node_for_qmi(parent);
       if (!node)
          return false;
-      auto* casted = dynamic_cast<const idle_parent_node*>(node);
-      if (!casted)
-         return false;
-      return _can_create_new_idle_in(*casted);
+      return _can_create_new_idle_in(*node);
    }
    QModelIndex IdleAnimationFormsModel::createIdle(const QModelIndex& parent_qmi, QString idle_editor_id) {
-      idle_parent_node* parent_node = nullptr;
-      {
-         auto* node = _node_for_qmi(parent_qmi);
-         if (!node)
-            return {};
-         parent_node = dynamic_cast<idle_parent_node*>(node);
-         if (!parent_node)
-            return {};
-      }
+      datastore_node* parent_node = _node_for_qmi(parent_qmi);
+      if (!parent_node)
+         return {};
       if (!_can_create_new_idle_in(*parent_node))
          return {};
 
@@ -913,10 +870,16 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
       if (!stub)
          return {};
 
+      idle_node* previous = nullptr;
+      if (auto* dst_idle = dynamic_cast<idle_node*>(parent_node))
+         if (!dst_idle->child_idles.empty())
+            previous = dst_idle->child_idles.back();
+
       auto  i_node_ptr = std::make_unique<idle_node>(this->_datastore, *stub);
       auto* i_node     = i_node_ptr.get();
       assert(i_node != nullptr);
-      this->_datastore.append_idle_in(*i_node, *parent_node);
+      this->_datastore.move_idle(*i_node, *parent_node, previous);
+      assert(i_node->canonical_parent != nullptr);
       i_node_ptr.release();
       return _qmi_for_node(*i_node);
    }
@@ -956,7 +919,7 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
 
             size_t count_to_duplicate = [](this auto&& recurse, idle_node& idle) -> size_t {
                size_t count = 1;
-               for (auto& child_ptr : idle.children) {
+               for (auto& child_ptr : idle.child_idles) {
                   count += recurse(*child_ptr);
                }
                return count;
@@ -981,9 +944,9 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          //
          // Recursively duplicate the IDLEs.
          //
-         assert(src_idle->parent);
+         assert(src_idle->canonical_parent);
          QModelIndex root_qmi = {};
-         [this, &root_qmi](this auto&& recurse, idle_node& idle, idle_parent_node& dst_parent, bool is_root = false) -> void {
+         [this, &root_qmi](this auto&& recurse, idle_node& idle, datastore_node& dst_parent, bool is_root = false) -> void {
             dovah::form_stub* stub = this->_try_silently_duplicate_idle(idle.stub);
             if (!stub)
                return;
@@ -992,19 +955,31 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
             auto* i_node = i_node_ptr.get();
             assert(i_node != nullptr);
             if (is_root) {
-               this->_datastore.place_idle_after(*i_node, idle);
+               this->_datastore.move_idle(
+                  *i_node,
+                  dst_parent,
+                  &idle
+               );
             } else {
-               this->_datastore.append_idle_in(*i_node, dst_parent);
+               idle_node* parent_idle = dynamic_cast<idle_node*>(&dst_parent);
+               assert(parent_idle != nullptr);
+               idle_node* previous_idle = nullptr;
+               if (!parent_idle->child_idles.empty())
+                  previous_idle = parent_idle->child_idles.back();
+               this->_datastore.move_idle(
+                  *i_node,
+                  dst_parent,
+                  previous_idle
+               );
             }
             i_node_ptr.release();
-            if (is_root) {
+            if (is_root)
                root_qmi = _qmi_for_node(*i_node);
-            }
 
-            for (auto& child_ptr : idle.children) {
+            for (auto& child_ptr : idle.child_idles) {
                recurse(*child_ptr, *i_node);
             }
-         }(*src_idle, *src_idle->parent, true);
+         }(*src_idle, *src_idle->canonical_parent, true);
          return root_qmi;
       } else {
          dovah::form_stub* stub = this->_try_silently_duplicate_idle(src_idle->stub);
@@ -1014,7 +989,12 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          auto  i_node_ptr = std::make_unique<idle_node>(this->_datastore, *stub);
          auto* i_node = i_node_ptr.get();
          assert(i_node != nullptr);
-         this->_datastore.place_idle_after(*i_node, *src_idle);
+         assert(src_idle->canonical_parent);
+         this->_datastore.move_idle(
+            *i_node,
+            *src_idle->canonical_parent,
+            src_idle
+         );
          i_node_ptr.release();
          return _qmi_for_node(*i_node);
       }
@@ -1028,49 +1008,20 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
       if (!src_idle) // QMI is not that of an idle
          return false;
 
-      // Don't allow deleting action roots unless they're from the active file. The way the 
-      // CK and game parse IDLE/ANAM suggests to me that deleting action roots via an override 
-      // may not be fully reliable.
-      if (dynamic_cast<const action_node*>((const idle_parent_node*)src_idle->parent)) {
-         auto& stub = src_idle->stub;
-         auto& lo   = stub.get_owning_load_order();
-         if (!lo.is_defined_in_active_file(stub))
-            return false;
-      }
-
-      return true;
+      return this->_datastore.is_idle_deletion_legal(*src_idle) && !this->_datastore.is_idle_deletion_a_really_bad_idea(*src_idle);
    }
    void IdleAnimationFormsModel::deleteIdle(const QModelIndex& idle_qmi, QWidget* error_dialog_parent) {
       auto* src_node = _node_for_qmi(idle_qmi);
       if (!src_node)
          return;
-      auto* src_idle = dynamic_cast<const idle_node*>(src_node);
+      auto* src_idle = dynamic_cast<idle_node*>(src_node);
       if (!src_idle) // QMI is not that of an idle
          return;
 
-      std::vector<dovah::form_stub*> stubs_to_delete;
-      [&stubs_to_delete](this auto&& recurse, const idle_node& node) -> void {
-         stubs_to_delete.push_back(&node.stub);
-         for (auto& child_ptr : node.children) {
-            recurse(*child_ptr);
-         }
-      }(*src_idle);
-
-      auto& editor = DovahKitCore::get();
-      bool any_failed = false;
-      for (auto* stub : stubs_to_delete) {
-         editor.delete_form(
-            *stub,
-            [](const dovah::form_deletion_request&) {
-               return true;
-            },
-            [&any_failed](const dovah::exceptions::form_deletion_failed& ex) {
-               any_failed = true;
-            },
-            [](const dovah::form_deletion_request& request) {}
-         );
-      }
-      if (any_failed) {
+      this->_handler_state.any_deletions_failed = false;
+      this->_datastore.delete_idle(*src_idle);
+      if (this->_handler_state.any_deletions_failed) {
+         this->_handler_state.any_deletions_failed = false;
          QMessageBox::critical(
             error_dialog_parent,
             QObject::tr("Error", "delete form error"),
@@ -1085,12 +1036,12 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
       auto* idle = dynamic_cast<const idle_node*>(_node_for_qmi(idle_qmi));
       if (!idle)
          return false;
-      const idle_parent_node* parent = idle->parent;
+      auto* parent = dynamic_cast<const idle_node*>(idle->canonical_parent);
       if (!parent)
          return false;
 
       size_t i = parent->index_of_child(*idle);
-      assert(i != idle_parent_node::no_index);
+      assert(i != datastore_node::index_of_none);
       return i > 0;
    }
    bool IdleAnimationFormsModel::canMoveIdleDown(const QModelIndex& idle_qmi) const {
@@ -1099,41 +1050,25 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
       auto* idle = dynamic_cast<const idle_node*>(_node_for_qmi(idle_qmi));
       if (!idle)
          return false;
-      const idle_parent_node* parent = idle->parent;
+      auto* parent = dynamic_cast<const idle_node*>(idle->canonical_parent);
       if (!parent)
          return false;
 
       size_t i = parent->index_of_child(*idle);
-      assert(i != idle_parent_node::no_index);
-      return i < parent->children.size() - 1;
+      assert(i != datastore_node::index_of_none);
+      return i < parent->child_idles.size() - 1;
    }
    void IdleAnimationFormsModel::moveIdleUp(const QModelIndex& idle_qmi) {
       auto* idle = dynamic_cast<idle_node*>(_node_for_qmi(idle_qmi));
       if (!idle)
          return;
-      idle_parent_node* parent = idle->parent;
-      if (!parent)
-         return;
-
-      size_t i = parent->index_of_child(*idle);
-      assert(i != idle_parent_node::no_index);
-      if (i == 0)
-         return;
-      parent->insert_child_before(*idle, i - 1);
+      this->_datastore.move_idle_within_parent(*idle, -1);
    }
    void IdleAnimationFormsModel::moveIdleDown(const QModelIndex& idle_qmi) {
       auto* idle = dynamic_cast<idle_node*>(_node_for_qmi(idle_qmi));
       if (!idle)
          return;
-      idle_parent_node* parent = idle->parent;
-      if (!parent)
-         return;
-
-      size_t i = parent->index_of_child(*idle);
-      assert(i != idle_parent_node::no_index);
-      if (i == parent->children.size() - 1)
-         return;
-      parent->insert_child_after(*idle, i);
+      this->_datastore.move_idle_within_parent(*idle, 1);
    }
 #pragma endregion
 
@@ -1154,16 +1089,11 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          const datastore_node* subject = _node_for_qmi(index);
          const datastore_node* parent  = nullptr;
          if (auto* casted = dynamic_cast<const action_node*>(subject)) {
-            parent = casted->parent;
+            parent = casted->graph;
          } else if (auto* casted = dynamic_cast<const idle_node*>(subject)) {
-            parent = casted->parent;
-         } else if (auto* casted = dynamic_cast<const idle_parent_node*>(subject)) {
-            for (auto* graph : this->_datastore.graphs) {
-               if (graph->loose == casted) {
-                  parent = graph;
-                  break;
-               }
-            }
+            parent = casted->canonical_parent;
+         } else if (auto* casted = dynamic_cast<const loose_idle_list_node*>(subject)) {
+            parent = casted->graph;
          }
          if (parent)
             return _qmi_for_node(*parent);
@@ -1177,28 +1107,33 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          if (!basis)
             return {};
          if (auto* casted = dynamic_cast<const action_node*>(basis)) {
-            if (!casted->parent)
+            if (!casted->graph)
                return {};
-            if (!_child_node_by_row(casted->parent, row))
+            if (!_child_node_by_row(casted->graph, row))
                return {};
-            return _qmi_for_child_node(row, column, *casted->parent);
+            return _qmi_for_child_node(row, column, *casted->graph);
          } else if (auto* casted = dynamic_cast<const idle_node*>(basis)) {
-            if (!casted->parent)
-               return {};
-            if (row >= casted->children.size())
-               return {};
-            return _qmi_for_child_node(row, column, *casted->parent);
+            auto* parent = casted->canonical_parent;
+            if (dynamic_cast<action_node*>(parent)) {
+               if (row != 0)
+                  return {};
+            } else if (auto* casted_parent = dynamic_cast<idle_node*>(parent)) {
+               if (row >= casted_parent->child_idles.size())
+                  return {};
+            } else if (auto* casted_parent = dynamic_cast<loose_idle_list_node*>(parent)) {
+               if (row >= casted_parent->child_idles.size())
+                  return {};
+            }
+            return _qmi_for_child_node(row, column, *parent);
          } else if (dynamic_cast<const graph_node*>(basis)) {
             basis_is_top_level = true;
-         } else if (auto* casted = dynamic_cast<const idle_parent_node*>(basis)) {
-            basis_is_top_level = true;
-            for (auto* graph : this->_datastore.graphs) {
-               if (graph->loose == casted) {
+         } else if (auto* casted = dynamic_cast<const loose_idle_list_node*>(basis)) {
+            if (auto* graph = casted->graph) {
+               if (row <= graph->actions.size())
                   return _qmi_for_child_node(row, column, *graph);
-               }
+               return {};
             }
-         } else if (auto* casted = dynamic_cast<const action_parent_node*>(basis)) {
-            basis_is_top_level = true;
+            basis_is_top_level = true; // model-level LOOSE node
          }
          if (basis_is_top_level) {
             const size_t size = this->_datastore.graphs.size();
@@ -1206,18 +1141,9 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
                return _qmi_for_node(*this->_datastore.graphs[row], column);
             datastore_node* subject = nullptr;
             if (row == size) {
-               auto* loose_a = this->_datastore.loose.actions;
-               auto* loose_i = this->_datastore.loose.idles;
-               if (loose_a && !loose_a->children.empty())
-                  subject = loose_a;
-               else if (loose_i && !loose_i->children.empty())
-                  subject = loose_i;
-            } else if (row == size + 1) {
-               auto* loose_a = this->_datastore.loose.actions;
-               auto* loose_i = this->_datastore.loose.idles;
-               if (loose_a && !loose_a->children.empty())
-                  if (loose_i && !loose_i->children.empty())
-                     subject = loose_i;
+               auto* loose = this->_datastore.loose;
+               if (loose && !loose->child_idles.empty())
+                  subject = loose;
             }
             if (subject)
                return _qmi_for_node(*subject, column);
@@ -1228,22 +1154,30 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          const auto* node = _node_for_qmi(parent);
          if (!node) {
             size_t size = this->_datastore.graphs.size();
-            const auto* loose_a = this->_datastore.loose.actions;
-            const auto* loose_i = this->_datastore.loose.idles;
-            if (loose_a && !loose_a->children.empty())
-               ++size;
-            if (loose_i && !loose_i->children.empty())
+            const auto* loose = this->_datastore.loose;
+            if (loose && !loose->child_idles.empty())
                ++size;
             return size;
          }
          size_t size = 0;
-         if (auto* casted = dynamic_cast<const action_parent_node*>(node)) {
-            size = casted->children.size();
-            if (auto* subtype = dynamic_cast<const graph_node*>(casted))
-               if (subtype->loose)
-                  ++size;
-         } else if (auto* casted = dynamic_cast<const idle_parent_node*>(node)) {
-            size = casted->children.size();
+         if (auto* casted = dynamic_cast<const graph_node*>(node)) {
+            size = casted->actions.size() + 1; // +1 for loose
+         } else if (auto* casted = dynamic_cast<const idle_node*>(node)) {
+            if (casted->canonical_parent != parent.internalPointer()) {
+               //
+               // This idle is present in multiple places at once, and this particular place 
+               // isn't the idle's canonical parent. Do not allow expanding the idle and 
+               // viewing its child nodes from this particular place (QMIs can't properly 
+               // represent children of a node that exists in multiple spots in a tree).
+               // 
+               return 0;
+            }
+            size = casted->child_idles.size();
+         } else if (auto* casted = dynamic_cast<const loose_idle_list_node*>(node)) {
+            size = casted->child_idles.size();
+         } else if (auto* casted = dynamic_cast<const action_node*>(node)) {
+            if (casted->winning_root)
+               size = 1;
          }
          return size;
       }
@@ -1264,10 +1198,8 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
                   return QVariant::fromValue(NodeType::Action);
                if (dynamic_cast<const idle_node*>(node))
                   return QVariant::fromValue(NodeType::Idle);
-               if (dynamic_cast<const action_parent_node*>(node))
-                  return QVariant::fromValue(NodeType::LooseActionsPerModel);
-               if (auto* loose = dynamic_cast<const idle_parent_node*>(node)) {
-                  if (loose == this->_datastore.loose.idles)
+               if (auto* loose = dynamic_cast<const loose_idle_list_node*>(node)) {
+                  if (!loose->graph)
                      return QVariant::fromValue(NodeType::LooseIdlesPerModel);
                   return QVariant::fromValue(NodeType::LooseIdlesPerGraph);
                }
@@ -1286,20 +1218,23 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
                      return it->second.display_string;
                   }
                }
-               if (node == this->_datastore.loose.actions)
-                  return tr("LOOSE ACTIONS");
-               if (node == this->_datastore.loose.idles)
+               if (node == this->_datastore.loose)
                   return tr("LOOSE");
-               if (auto* casted = dynamic_cast<const idle_parent_node*>(node)) {
-                  for (auto* graph : this->_datastore.graphs) {
-                     if (casted == graph->loose)
-                        return tr("LOOSE");
-                  }
-               }
+               if (dynamic_cast<const loose_idle_list_node*>(node))
+                  return tr("LOOSE");
                break;
             case Qt::ForegroundRole:
                if (dynamic_cast<const action_node*>(node)) {
                   return QColor(64, 160, 255);
+               }
+               if (auto* idle = dynamic_cast<const idle_node*>(node)) {
+                  if (idle->canonical_parent != qmi.internalPointer()) {
+                     //
+                     // This idle is present in multiple places at once, and this particular place 
+                     // isn't the idle's canonical parent.
+                     // 
+                     return QColor(255, 0, 0);
+                  }
                }
                break;
          }
@@ -1316,7 +1251,7 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
             bool can_drag = false;
             if (auto* casted_idle = dynamic_cast<const idle_node*>(node)) {
                can_drag = true;
-               if (dynamic_cast<const action_node*>((const idle_parent_node*)casted_idle->parent)) {
+               if (dynamic_cast<const action_node*>(casted_idle->canonical_parent)) {
                   //
                   // Don't allow drag-moving an action root.
                   //
@@ -1329,15 +1264,16 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
 
          {
             bool can_drop = true;
-            if (auto* casted = dynamic_cast<const action_node*>(node)) {
+            if (auto* action = dynamic_cast<const action_node*>(node)) {
+               can_drop = action->winning_root == nullptr;
+            } else if (auto* idle = dynamic_cast<const idle_node*>(node)) {
                //
-               // Try to limit actions to just one child node (though the data structure allows 
-               // multiple, to account for edge-cases involving multiple mods applying a new root 
-               // idle to the same action on the same behavior graph).
+               // Don't allow dropping an idle into a loose idle, unless that loose idle already 
+               // has child idles for some reason.
                //
-               if (!casted->children.empty()) {
-                  can_drop = false;
-               }
+               if (idle->child_idles.empty())
+                  if (dynamic_cast<const loose_idle_list_node*>(idle->canonical_parent))
+                     can_drop = false;
             }
             if (can_drop)
                flags |= Qt::ItemIsDropEnabled;
@@ -1429,7 +1365,7 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
             //
             return false;
 
-         const auto* parent_node = dynamic_cast<const idle_parent_node*>(_node_for_qmi(parent));
+         const auto* parent_node = _node_for_qmi(parent);
          if (!parent_node) // sanity
             return false;
          if (!_could_ever_move_idles_into(*parent_node))
@@ -1475,7 +1411,7 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          if (!nodes.size())
             return false;
 
-         auto* destination_parent = dynamic_cast<idle_parent_node*>(_node_for_qmi(parent));
+         auto* destination_parent = _node_for_qmi(parent);
          assert(destination_parent != nullptr);
          for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
             this->_unchecked_move_idle_node(**it, *destination_parent, row);

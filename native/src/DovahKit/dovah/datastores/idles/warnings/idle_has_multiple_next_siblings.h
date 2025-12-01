@@ -1,19 +1,18 @@
 #pragma once
-#include "./_base.h"
+#include "../warning.h"
 namespace dovah::datastores::impl::idles {
    class idle_node;
 }
 
 namespace dovah::datastores::impl::idles::warnings {
+   //
+   // Multiple idles are competing to be this idle's next-sibling.
+   //
    class idle_has_multiple_next_siblings : public warning {
       public:
-         constexpr idle_has_multiple_next_siblings(
-            const idle_node& i
-         ) :
-            idle(i)
-         {}
+         idle_has_multiple_next_siblings(idle_node& s) : subject(s) {};
 
       public:
-         const idle_node& idle;
+         idle_node& subject;
    };
 }

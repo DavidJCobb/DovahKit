@@ -6,7 +6,7 @@ namespace dovah::datastores {
 namespace dovah::datastores::impl::idles {
    class node {
       public:
-         static constexpr const size_t no_index = -1;
+         static constexpr const size_t index_of_none = -1;
 
          using datastore_type = ::dovah::datastores::idles;
 

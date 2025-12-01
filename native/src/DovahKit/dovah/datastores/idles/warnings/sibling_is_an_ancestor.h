@@ -1,15 +1,20 @@
 #pragma once
-#include "./_base.h"
+#include "../warning.h"
 namespace dovah::datastores::impl::idles {
    class idle_node;
 }
 
 namespace dovah::datastores::impl::idles::warnings {
+   //
+   // Idle defines a degenerate hierarchy placement (its intended parent is one 
+   // of its intended previous-siblings), and has therefore been loaded as a 
+   // loose idle.
+   //
    class sibling_is_an_ancestor : public warning {
       public:
-         constexpr sibling_is_an_ancestor(const idle_node& i) : idle(i) {}
+         sibling_is_an_ancestor(idle_node& s) : subject(s) {};
 
       public:
-         const idle_node& idle;
+         idle_node& subject;
    };
 }

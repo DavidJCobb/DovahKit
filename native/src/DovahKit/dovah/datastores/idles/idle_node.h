@@ -1,58 +1,73 @@
 #pragma once
+#include <string_view>
+#include <vector>
 #include "helpers/const_forwarding_ptr.h"
-#include "./idle_parent_node.h"
-#include "./passkeys/idle_sorting.h"
-#include "./passkeys/push_idle_hierarchy_position_to_form.h"
+#include "./action_root_candidacy.h"
+#include "./node.h"
 namespace dovah {
    class form_stub;
 }
 namespace dovah::datastores::impl::idles {
    class action_node;
+   class graph_node;
    namespace passkeys {
-      class action_update_root;
-      class fully_delete_action;
+      class initial_build;
+      class post_build_edit;
    }
 }
 
 namespace dovah::datastores::impl::idles {
-   class idle_node : public idle_parent_node {
+   class idle_node : public node {
       public:
-         constexpr idle_node(datastore_type& d, form_stub& idle) : idle_parent_node(d), stub(idle) {}
-         ~idle_node();
+         idle_node(datastore_type& d, form_stub&);
+
+         // Used during initial build. These are essentially IDLE/ANAM, but with 
+         // node pointers instead of form-stub pointers, and with the same fixup 
+         // that the game and CK do when they detect an invalid hierarchy.
+         //
+         // Cleared out after initial build.
+         struct internal_sort_state {
+            idle_node* parent_idle   = nullptr;
+            idle_node* previous_idle = nullptr;
+         };
+
+         struct candidacy : public action_root_candidacy {
+            action_node* action = nullptr; // unowned
+         };
 
       public:
-         cobb::const_forwarding_ptr<idle_parent_node> parent = nullptr;
          form_stub& stub;
-      protected:
+         //
+         node* canonical_parent = nullptr; // action_node, idle_node, or loose_idle_list_node // unowned
+         std::vector<cobb::const_forwarding_ptr<idle_node>> child_idles; // unowned
          struct {
-            idle_parent_node* parent_idle   = nullptr;
-            idle_node*        previous_idle = nullptr;
-         } sort_state;
-         struct {
-            std::vector<action_node*> masters;
-            std::vector<action_node*> active;
-         } action_root_candidacies; // mainly tracked so that if this idle is deleted, we can notify whatever action it is the root of
+            std::vector<candidacy> masters;
+            std::vector<candidacy> active;
+         } is_candidate_for;
+         internal_sort_state _sort_state;
 
       public:
-         constexpr auto& _get_sort_state(passkeys::idle_sorting) noexcept { return this->sort_state; }
+         std::string canonical_graph_path() const noexcept; // retrieved via the form stub
+         bool is_defined_in_non_active_file() const noexcept;
+         bool is_forced_loose() const noexcept; // retrieved via the form stub
 
-         // Returns the parent action, if there is no parent idle or LOOSE node.
-         action_node* get_parent_action() const noexcept;
+         const graph_node* containing_graph() const noexcept; // retrieved by walking up the canonical parents
+         graph_node* containing_graph() noexcept;
 
-      public: // passkeyed
-         void _build_action_root_candidacy(passkeys::initial_build_action_root, action_node&, bool is_active_file);
+         bool contains(const idle_node&) const noexcept;
+         size_t index_of_child(const idle_node&) const noexcept;
 
-         void _on_action_fully_deleted(passkeys::fully_delete_action, action_node&);
+         bool is_active_candidate_for(const action_node&) const noexcept;
+         bool is_winning_root_of_action_in_own_graph() const noexcept;
 
-         void _clear_active_action_root_candidacies(passkeys::action_update_root, action_node&);
-         void _add_active_action_root_candidacy(passkeys::action_update_root, action_node&);
+         // initial build:
+         internal_sort_state& _get_sort_state(passkeys::initial_build) noexcept;
+         void _track_loaded_candidacy(passkeys::initial_build, action_node&, const action_root_candidacy&, bool is_master);
+         void _insert_sorted_child(passkeys::initial_build, idle_node&);
 
-         // Update the IDLE form's ANAM subrecord (indicating its parent and previous sibling), 
-         // while also triggering the owning datastore's form-changed callbacks.
-         void _on_hierarchy_changed(passkeys::push_idle_hierarchy_position_to_form, size_t my_new_index = no_index);
-
-         // TODO: Abandon active-file action root candidacies, with whatever knock-on effects 
-         // that would have.
-         void _on_become_child_of_idle();
+         // post-build:
+         void _sever_active_candidacies_for(passkeys::post_build_edit, action_node&);
+         void _track_new_active_candidacy(passkeys::post_build_edit, action_node&);
+         void _update_form_hierarchy_data(passkeys::post_build_edit);
    };
 }

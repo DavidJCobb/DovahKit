@@ -4,51 +4,49 @@
 #include "./action_root_candidacy.h"
 #include "./node.h"
 namespace dovah {
-   class file_load_order;
    class form_stub;
 }
 namespace dovah::datastores::impl::idles {
-   class action_parent_node;
-   class idle_mirror_node;
+   class graph_node;
    class idle_node;
    namespace passkeys {
-      class fully_delete_idle;
-      class initial_build_action_root;
+      class initial_build;
+      class post_build_edit;
    }
 }
 
 namespace dovah::datastores::impl::idles {
    class action_node : public node {
       public:
-         constexpr action_node(datastore_type& d, form_stub& action) : node(d), stub(action) {}
-         ~action_node();
+         action_node(datastore_type& d, form_stub&);
 
-      protected:
-         struct tracked_candidacy : public action_root_candidacy {
-            idle_node* candidate = nullptr;
+         struct candidacy : public action_root_candidacy {
+            idle_node* idle = nullptr;
          };
 
       public:
-         cobb::const_forwarding_ptr<action_parent_node> parent = nullptr;
-         form_stub& stub;
-      protected:
+         form_stub&  stub;
+         graph_node* graph = nullptr; // unowned
+         cobb::const_forwarding_ptr<idle_node> winning_root; // unowned
          struct {
-            std::vector<tracked_candidacy> masters;
-            std::vector<tracked_candidacy> active;
-         } action_root_candidacies;
+            //
+            // These lists are kept sorted, with the most recently loaded candidacy 
+            // at the end.
+            //
+            std::vector<candidacy> masters;
+            std::vector<candidacy> active;
+         } candidacies;
 
       public:
-         constexpr idle_node* get_winning_root_idle() noexcept;
-         constexpr const idle_node* get_winning_root_idle() const noexcept;
-
-         void set_active_root(idle_node&);
-         void unset_active_root(idle_node&);
+         bool candidates_include(const idle_node&) const noexcept;
 
       public: // passkeyed
-         void _register_root_idle(passkeys::initial_build_action_root, const file_load_order&, idle_node&, const action_root_candidacy&);
+         // initial-build:
+         void _track_candidate(passkeys::initial_build, const action_root_candidacy&, idle_node&, bool via_master);
 
-         void _on_idle_fully_deleted(passkeys::fully_delete_idle, idle_node&);
+         // post-build:
+         void _untrack_active_file_candidate(passkeys::post_build_edit, idle_node&); // caller must update the winning-root afterward
+         void _track_active_file_candidate(passkeys::post_build_edit, idle_node&);
+         void _recalc_winning_root(passkeys::post_build_edit);
    };
 }
-
-#include "./action_node.inl"

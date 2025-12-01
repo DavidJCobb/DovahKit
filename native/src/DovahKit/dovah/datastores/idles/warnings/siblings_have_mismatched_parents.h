@@ -1,15 +1,19 @@
 #pragma once
-#include "./_base.h"
+#include "../warning.h"
 namespace dovah::datastores::impl::idles {
    class idle_node;
 }
 
 namespace dovah::datastores::impl::idles::warnings {
+   //
+   // Idle and its intended previous siblings have inconsistent parents, so the 
+   // idle and its next-siblings will be loaded as loose idles.
+   //
    class siblings_have_mismatched_parents : public warning {
       public:
-         constexpr siblings_have_mismatched_parents(const idle_node& i) : idle(i) {}
+         siblings_have_mismatched_parents(idle_node& s) : subject(s) {};
 
       public:
-         const idle_node& idle;
+         idle_node& subject;
    };
 }

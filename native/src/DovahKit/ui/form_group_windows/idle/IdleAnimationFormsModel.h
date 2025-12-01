@@ -19,7 +19,6 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
          Action,
          Idle,
          LooseIdlesPerGraph,
-         LooseActionsPerModel,
          LooseIdlesPerModel,
       };
       Q_ENUM(NodeType);
@@ -50,9 +49,7 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
       using action_node = datastore_type::action_node;
       using graph_node  = datastore_type::graph_node;
       using idle_node   = datastore_type::idle_node;
-      //
-      using action_parent_node = datastore_type::action_parent_node;
-      using idle_parent_node   = datastore_type::idle_parent_node;
+      using loose_idle_list_node = datastore_type::loose_idle_list_node;
 
       struct node_cached_data {
          QString display_string;
@@ -75,13 +72,11 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
          const graph_node* _node_for_graph_path(QString) const;
          graph_node* _node_for_graph_path(QString);
 
-         action_node* _node_for_action(graph_node*, const dovah::form_stub&);
          action_node* _node_for_action(graph_node&, const dovah::form_stub&);
-         action_node* _node_for_loose_action(const dovah::form_stub&);
       #pragma endregion
 
       #pragma region Constraints
-         bool _can_create_new_idle_in(const idle_parent_node&) const;
+         bool _can_create_new_idle_in(const datastore_node&) const;
          bool _can_ever_duplicate(const idle_node&) const;
       #pragma endregion
 
@@ -108,13 +103,13 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
          action_node& _get_or_create_action(graph_node&, dovah::form_stub& action);
          idle_node* _create_action_root(graph_node&, dovah::form_stub& action, QString idle_editor_id) noexcept(false);
 
-         bool _could_ever_move_idles_into(const idle_parent_node& destination) const;
+         bool _could_ever_move_idles_into(const datastore_node& destination) const;
 
          // You must test `_could_ever_move_idles_into(destination)` first. This function will not 
          // do it for you (but, in Debug, will assert that you did it).
-         bool _can_move_idle_into(const idle_node& subject, const idle_parent_node& destination) const;
+         bool _can_move_idle_into(const idle_node& subject, const datastore_node& destination) const;
 
-         void _unchecked_move_idle_node(idle_node& subject, idle_parent_node& destination, int row = -1);
+         void _unchecked_move_idle_node(idle_node& subject, datastore_node& destination, int row = -1);
       #pragma endregion
 
    public:
@@ -183,6 +178,9 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
          bool emitted_last_deletion = false;
          bool last_node_placement_was_an_insertion = false;
       } _callback_state;
+      struct {
+         bool any_deletions_failed = false;
+      } _handler_state;
 
       struct DragDropTracking {
          public:
