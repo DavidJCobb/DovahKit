@@ -478,17 +478,15 @@ void IdleAnimationFormsModel::_rebuild_datastore() {
             recurse(*child);
          }
       };
-      auto _recache_action_tree = [this](action_node& action) -> void {
-         this->_recache_action(action);
-         if (idle_node* idle = action.winning_root)
-            this->_recache_idle(*idle);
-      };
 
       for (auto* graph : this->_datastore.graphs) {
          auto& cached_graph = this->_cache[graph];
          cached_graph.display_string = QString::fromStdString(graph->path);
-         for (action_node* action : graph->actions)
-            _recache_action_tree(*action);
+         for (action_node* action : graph->actions) {
+            this->_recache_action(*action);
+            if (idle_node* idle = action->winning_root)
+               _recache_idle_tree(*idle);
+         }
          for (idle_node* idle : graph->loose->child_idles)
             _recache_idle_tree(*idle);
       }
@@ -1078,6 +1076,24 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          if (row < 0 || column < 0)
             return {};
          const datastore_node* parent_node = _node_for_qmi(parent_qmi);
+         if (auto* parent_action = dynamic_cast<const action_node*>(parent_node)) {
+            if (row != 0)
+               return {};
+            //
+            // Idles can potentially be in multiple places at once: an arbitrary number of 
+            // parent actions plus at most one parent idle. When an idle is in multiple 
+            // places at once, one of those places is considered "canonical." If one of 
+            // those places is an idle, then that must be the canonical parent.
+            // 
+            // When an idle is in multiple places at once, the QMI we use for it depends 
+            // on how we got to the idle, i.e. the parent through which we accessed it, 
+            // since QMIs consist of a parent pointer and child index.
+            //
+            if (parent_action->winning_root) {
+               return _qmi_for_child_node(row, column, *parent_action);
+            }
+            return {};
+         }
          const datastore_node* target_node = _child_node_by_row(parent_node, row);
          if (!target_node)
             return {};
@@ -1091,7 +1107,11 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          if (auto* casted = dynamic_cast<const action_node*>(subject)) {
             parent = casted->graph;
          } else if (auto* casted = dynamic_cast<const idle_node*>(subject)) {
-            parent = casted->canonical_parent;
+            //
+            // Idles can potentially be in multiple places at once, so we have to 
+            // rely on the parent pointer in the QMI.
+            //
+            parent = (datastore_node*)index.internalPointer();
          } else if (auto* casted = dynamic_cast<const loose_idle_list_node*>(subject)) {
             parent = casted->graph;
          }
@@ -1113,7 +1133,11 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
                return {};
             return _qmi_for_child_node(row, column, *casted->graph);
          } else if (auto* casted = dynamic_cast<const idle_node*>(basis)) {
-            auto* parent = casted->canonical_parent;
+            //
+            // Idles can potentially be in multiple places at once, so we have to 
+            // rely on the parent pointer in the QMI.
+            //
+            auto* parent = (datastore_node*)index.internalPointer();
             if (dynamic_cast<action_node*>(parent)) {
                if (row != 0)
                   return {};

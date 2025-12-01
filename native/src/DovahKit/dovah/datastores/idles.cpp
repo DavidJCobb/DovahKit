@@ -592,9 +592,7 @@ namespace dovah::datastores {
       auto* parent   = idle._get_sort_state({}).parent_idle;
       idle._get_sort_state({}) = {};
 
-      if (parent) {
-         assert(parent == idle.canonical_parent);
-      } else {
+      if (!parent) {
          assert(!dynamic_cast<idle_node*>(idle.canonical_parent));
       }
 

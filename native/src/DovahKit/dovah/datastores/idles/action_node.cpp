@@ -2,6 +2,7 @@
 #include <cassert>
 #include "./passkeys/initial_build.h"
 #include "./passkeys/post_build_edit.h"
+#include "./idle_node.h"
 
 namespace dovah::datastores::impl::idles {
    action_node::action_node(datastore_type& d, form_stub& stub) : node(d), stub(stub) {
@@ -22,7 +23,14 @@ namespace dovah::datastores::impl::idles {
 
       auto& list      = via_master ? this->candidacies.masters : this->candidacies.active;
       auto  insert_at = std::upper_bound(list.begin(), list.end(), v);
+      bool  is_at_end = insert_at == list.end();
       list.insert(insert_at, v);
+
+      if (is_at_end) {
+         if (!via_master || this->candidacies.active.empty()) {
+            this->winning_root = &idle;
+         }
+      }
    }
 
    // post-build:

@@ -110,7 +110,14 @@ namespace dovah::datastores::impl::idles {
 
       auto& list      = is_master ? this->is_candidate_for.masters : this->is_candidate_for.active;
       auto  insert_at = std::upper_bound(list.begin(), list.end(), v);
+      bool  is_at_end = insert_at == list.end();
       list.insert(insert_at, v);
+
+      if (is_at_end) {
+         if (!is_master || this->is_candidate_for.active.empty()) {
+            this->canonical_parent = &action;
+         }
+      }
    }
    void idle_node::_insert_sorted_child(passkeys::initial_build, idle_node& subject) {
       //
@@ -128,6 +135,7 @@ namespace dovah::datastores::impl::idles {
          } else {
             this->child_idles.push_back(&subject);
          }
+         subject.canonical_parent = this;
       }
       //
       // This idle may potentially be the desired previous sibling of an idle 
