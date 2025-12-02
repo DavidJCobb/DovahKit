@@ -223,12 +223,7 @@ namespace dovah::loaded_forms {
          auto& item = this->_as_action_root.masters.emplace_back();
          item.behavior_graph_path = graph;
          item.action.unmanaged_set(action);
-         item.anam_subrecord.source_file = intfc.current_file;
-         subrecord.back_to_start(); // HACK: no accessor for subrecord start pos, so rewind to start of subrecord body and use record.current_offset()
-         item.anam_subrecord.offsets = {
-            .of_record    = record.header_pos(),
-            .of_subrecord = record.current_offset(),
-         };
+         item.anam_subrecord = utils::subrecord_data_position::from_loader(subrecord, intfc);
       };
       
       if (!intfc.is_winning_record) {
@@ -283,6 +278,8 @@ namespace dovah::loaded_forms {
                      if (subrecord.read(parent)) {
                         _try_store_action_root_candidacy(subrecord, behavior_graph, parent.get_form_stub());
                      }
+                     if (!this->_first_seen_anam_position.has_value())
+                        this->_first_seen_anam_position = utils::subrecord_data_position::from_loader(subrecord, intfc);
                   }
                   break;
             }
@@ -352,6 +349,8 @@ namespace dovah::loaded_forms {
                   if (had_parent) {
                      _try_store_action_root_candidacy(subrecord, this->_hierarchy.behavior_graph.corrected, this->_hierarchy.parent.get_form_stub());
                   }
+                  if (!this->_first_seen_anam_position.has_value())
+                     this->_first_seen_anam_position = utils::subrecord_data_position::from_loader(subrecord, intfc);
                }
                break;
             case 'DATA':

@@ -48,12 +48,12 @@ namespace dovah::datastores::impl::idles {
    }
    void action_node::_track_active_file_candidate(passkeys::post_build_edit, idle_node& idle) {
       candidacy v = {
-         {
+         {{
             .offsets = {
                .of_record    = std::numeric_limits<size_t>::max(),
                .of_subrecord = std::numeric_limits<size_t>::max(),
             },
-         },
+         }},
          &idle,
       };
       auto& list      = this->candidacies.active;

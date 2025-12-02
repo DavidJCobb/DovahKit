@@ -138,10 +138,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dovah\datastores\idles.cpp" />
-    <ClCompile Include="dovah\datastores\idles\action_parent_node.cpp" />
+    <ClCompile Include="dovah\datastores\idles\action_node.cpp" />
+    <ClCompile Include="dovah\datastores\idles\action_root_candidacy.cpp" />
     <ClCompile Include="dovah\datastores\idles\graph_node.cpp" />
     <ClCompile Include="dovah\datastores\idles\idle_node.cpp" />
-    <ClCompile Include="dovah\datastores\idles\idle_parent_node.cpp" />
+    <ClCompile Include="dovah\datastores\idles\loose_idle_list_node.cpp" />
     <ClCompile Include="dovah\exceptions\form_creation_failed.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.tests.cpp" />
@@ -330,6 +331,7 @@
     <ClCompile Include="dovah\load_order_requests\form_renumber_request.cpp" />
     <ClCompile Include="dovah\load_order_requests\game_setting_edit_request.cpp" />
     <ClCompile Include="dovah\load_order_requests\game_setting_renumber_request.cpp" />
+    <ClCompile Include="dovah\utils\subrecord_data_position.cpp" />
     <ClCompile Include="dovah\utils\update_location_content.cpp" />
     <ClCompile Include="dovah\utils\compute_classed_stat_points.cpp" />
     <ClCompile Include="dovah\utils\compute_voice_file_location.cpp" />
@@ -1358,25 +1360,28 @@
   <ItemGroup>
     <ClInclude Include="dovah\datastores\idles.h" />
     <ClInclude Include="dovah\datastores\idles\action_node.h" />
-    <ClInclude Include="dovah\datastores\idles\action_parent_node.h" />
-    <ClInclude Include="dovah\datastores\idles\config\sort_during_initial_insertion.h" />
+    <ClInclude Include="dovah\datastores\idles\action_root_candidacy.h" />
     <ClInclude Include="dovah\datastores\idles\graph_node.h" />
     <ClInclude Include="dovah\datastores\idles\idle_node.h" />
-    <ClInclude Include="dovah\datastores\idles\idle_parent_node.h" />
+    <ClInclude Include="dovah\datastores\idles\loose_idle_list_node.h" />
     <ClInclude Include="dovah\datastores\idles\node.h" />
-    <ClInclude Include="dovah\datastores\idles\passkeys\check_is_building.h" />
-    <ClInclude Include="dovah\datastores\idles\passkeys\idle_sorting.h" />
-    <ClInclude Include="dovah\datastores\idles\passkeys\push_idle_hierarchy_position_to_form.h" />
+    <ClInclude Include="dovah\datastores\idles\passkeys\initial_build.h" />
+    <ClInclude Include="dovah\datastores\idles\passkeys\post_build_edit.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\action_root_is_forced_loose.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\child_idle_is_an_action_root_candidate.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\child_of_idle_is_forced_loose.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\cyclical_parent_relationships.h" />
     <ClInclude Include="dovah\datastores\idles\warnings\cyclical_sibling_relationships.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\idle_has_candidacies_for_multiple_actions.h" />
+    <ClInclude Include="dovah\datastores\idles\warning.h" />
     <ClInclude Include="dovah\datastores\idles\warnings\idle_has_multiple_next_siblings.h" />
-    <ClInclude Include="dovah\datastores\idles\warnings\inconsistent_parentage.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\inconsistent_parentage_on_idle.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\loose_idle_is_not_flagged.h" />
+    <ClInclude Include="dovah\datastores\idles\warnings\no_loose_idle_list_for_idle.h" />
     <ClInclude Include="dovah\datastores\idles\warnings\orphaned_idle.h" />
     <ClInclude Include="dovah\datastores\idles\warnings\previous_sibling_is_not_as_expected.h" />
     <ClInclude Include="dovah\datastores\idles\warnings\siblings_have_mismatched_parents.h" />
     <ClInclude Include="dovah\datastores\idles\warnings\sibling_is_an_ancestor.h" />
-    <ClInclude Include="dovah\datastores\idles\warnings\_base.h" />
-    <ClInclude Include="dovah\datastores\idles\warnings\cyclical_parent_relationships.h" />
-    <ClInclude Include="dovah\datastores\idles\_all.h" />
     <ClInclude Include="dovah\data\all_base_form_types.h" />
     <ClInclude Include="dovah\data\all_carryable_form_types.h" />
     <ClInclude Include="dovah\data\all_item_form_types.h" />
@@ -1841,6 +1846,7 @@
     <ClInclude Include="dovah\utils\form_list_contains.h" />
     <ClInclude Include="dovah\utils\get_all_relevant_template_actors.h" />
     <ClInclude Include="dovah\utils\leveled_list_preview.h" />
+    <ClInclude Include="dovah\utils\subrecord_data_position.h" />
     <ClInclude Include="dovah\utils\text_replacers\do_text_replacement.h" />
     <ClInclude Include="dovah\utils\text_replacers\effect_item_handler.h" />
     <ClInclude Include="dovah\utils\update_location_content.h" />
@@ -3665,8 +3671,6 @@
     <None Include="cpp.hint" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\bs_hash.inl" />
-    <None Include="dovah\datastores\idles\action_parent_node.inl" />
-    <None Include="dovah\datastores\idles\idle_parent_node.inl" />
     <None Include="dovah\data\conditions\all_function_info.md" />
     <None Include="dovah\data\conditions\all_parameter_types.md" />
     <None Include="dovah\data\dialogue\category.inl" />
@@ -3696,6 +3700,7 @@
     <None Include="dovah\forms\components\model.md" />
     <None Include="dovah\forms\components\papyrus\attached_script.inl" />
     <None Include="dovah\forms\components\papyrus\attachment_data.inl" />
+    <None Include="dovah\forms\IdleAnimation.inl" />
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="dovah\forms\structs\precached_nif_info.inl" />
     <None Include="dovah\form_stub.inl" />
@@ -3725,7 +3730,15 @@
       <SubType>
       </SubType>
     </None>
+    <None Include="dovah\_docs\idle animations\idle tree construction part 2.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovah\_docs\idle animations\idle tree construction.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\idle animations\idle tree model operations.md">
       <SubType>
       </SubType>
     </None>
@@ -3953,9 +3966,6 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="dovah\bs_hash.natvis" />
-    <Natvis Include="dovah\datastores\idles\action_node.natvis" />
-    <Natvis Include="dovah\datastores\idles\graph_node.natvis" />
-    <Natvis Include="dovah\datastores\idles\idle_node.natvis" />
     <Natvis Include="dovah\files\bsa\packed_folder_info.natvis" />
     <Natvis Include="dovah\files\pex\compiled_function.natvis" />
     <Natvis Include="dovah\files\pex\compiled_opcode.natvis" />

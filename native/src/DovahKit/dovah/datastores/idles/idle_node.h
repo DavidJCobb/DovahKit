@@ -43,6 +43,7 @@ namespace dovah::datastores::impl::idles {
          //
          node* canonical_parent = nullptr; // action_node, idle_node, or loose_idle_list_node // unowned
          std::vector<cobb::const_forwarding_ptr<idle_node>> child_idles; // unowned
+         anam_subrecord_position first_seen_anam;
          struct {
             std::vector<candidacy> masters;
             std::vector<candidacy> active;

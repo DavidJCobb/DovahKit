@@ -111,8 +111,14 @@ namespace dovah::datastores {
          node_ptr.release();
 
          auto loaded = node.stub.load().ptr_cast<loaded_idle_data>();
-         if (loaded)
+         if (loaded) {
+            {
+               const auto& opt = loaded->get_first_seen_anam_position();
+               if (opt.has_value())
+                  node.first_seen_anam = impl::idles::anam_subrecord_position{ *opt };
+            }
             this->_place_action_root(node, *loaded);
+         }
 
          return false;
       });
@@ -287,6 +293,9 @@ namespace dovah::datastores {
          if (!node) {
             try {
                node = new idle_node(*this, stub);
+               auto& opt = loaded->get_first_seen_anam_position();
+               if (opt.has_value())
+                  node->first_seen_anam = impl::idles::anam_subrecord_position{ *opt };
             } catch (...) {
                this->idles_by_stub.erase(&stub);
                throw;
@@ -368,14 +377,8 @@ namespace dovah::datastores {
          if (!action)
             continue;
          _on_action(*action);
-
-         auto candidacy = action_root_candidacy{
-            .source_file = item.anam_subrecord.source_file,
-            .offsets = {
-               .of_record    = item.anam_subrecord.offsets.of_record,
-               .of_subrecord = item.anam_subrecord.offsets.of_subrecord,
-            },
-         };
+         
+         auto candidacy = action_root_candidacy{ item.anam_subrecord };
          action->_track_candidate({}, candidacy, idle, true);
          idle._track_loaded_candidacy({}, *action, candidacy, true);
       }
@@ -385,13 +388,7 @@ namespace dovah::datastores {
             continue;
          _on_action(*action);
 
-         auto candidacy = action_root_candidacy{
-            .source_file = item.anam_subrecord.source_file,
-            .offsets = {
-               .of_record    = item.anam_subrecord.offsets.of_record,
-               .of_subrecord = item.anam_subrecord.offsets.of_subrecord,
-            },
-         };
+         auto candidacy = action_root_candidacy{ item.anam_subrecord };
          action->_track_candidate({}, candidacy, idle, false);
          idle._track_loaded_candidacy({}, *action, candidacy, false);
       }

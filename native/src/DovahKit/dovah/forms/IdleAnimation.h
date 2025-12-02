@@ -5,6 +5,7 @@
 #include "_common.h"
 #include "components/conditions.h"
 #include "components/papyrus.h"
+#include "../utils/subrecord_data_position.h"
 
 namespace dovah::loaded_forms {
    class IdleAnimation : public Form {
@@ -30,13 +31,7 @@ namespace dovah::loaded_forms {
          struct action_root_candidacy {
             std::string      behavior_graph_path;
             form_reference_t action;
-            struct {
-               const tes_file_reading::file_loader* source_file = nullptr;
-               struct {
-                  size_t of_record    = 0; // record offset within containing file
-                  size_t of_subrecord = 0; // subrecord offset within record body (in case record was compressed and had multiple ANAM))
-               } offsets;
-            } anam_subrecord;
+            utils::subrecord_data_position anam_subrecord;
          };
 
          struct action_root_candidacy_set {
@@ -59,7 +54,8 @@ namespace dovah::loaded_forms {
             uint16_t replay_delay       = 0; // DATA+0x04
          } data; // DATA
       protected:
-         action_root_candidacy_set _as_action_root;
+         action_root_candidacy_set      _as_action_root;
+         std::optional<utils::subrecord_data_position> _first_seen_anam_position;
          struct {
             struct {
                std::string corrected;
@@ -78,6 +74,10 @@ namespace dovah::loaded_forms {
 
          constexpr const std::string& get_behavior_graph_path(bool verbatim = true) const noexcept;
          void set_behavior_graph_path(std::string_view, bool do_corrections = false);
+
+         constexpr const std::optional<utils::subrecord_data_position>& get_first_seen_anam_position() const noexcept {
+            return this->_first_seen_anam_position;
+         }
 
          constexpr form_stub* get_hierarchy_parent() const noexcept;
          constexpr form_stub* get_hierarchy_previous_sibling() const noexcept;
