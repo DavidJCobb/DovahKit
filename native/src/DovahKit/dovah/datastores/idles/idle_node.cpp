@@ -32,6 +32,28 @@ namespace dovah::datastores::impl::idles {
          return false;
       return !!(loaded->data.flags & loaded_forms::IdleAnimation::flag::is_forced_loose);
    }
+   bool idle_node::is_queued_for_processing_before(const idle_node& that) const noexcept {
+      using file = tes_file_reading::file_loader;
+
+      auto _get_timing = [](const idle_node& subject) -> action_root_candidacy {
+         if (!subject.is_candidate_for.masters.empty())
+            return subject.is_candidate_for.masters[0];
+         if (!subject.is_candidate_for.active.empty())
+            return subject.is_candidate_for.active[0];
+         auto* info = subject.stub.get_source_file_info(0);
+         if (!info)
+            return {};
+         return action_root_candidacy{
+            .source_file = info->pointer,
+            .offsets     = {
+               .of_record    = info->offset,
+               .of_subrecord = 0,
+            }
+         };
+      };
+
+      return _get_timing(*this) < _get_timing(that);
+   }
 
    const graph_node* idle_node::containing_graph() const noexcept {
       node* parent = this->canonical_parent;

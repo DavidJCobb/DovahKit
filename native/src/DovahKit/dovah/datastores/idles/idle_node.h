@@ -53,6 +53,7 @@ namespace dovah::datastores::impl::idles {
          std::string canonical_graph_path() const noexcept; // retrieved via the form stub
          bool is_defined_in_non_active_file() const noexcept;
          bool is_forced_loose() const noexcept; // retrieved via the form stub
+         bool is_queued_for_processing_before(const idle_node&) const noexcept;
 
          const graph_node* containing_graph() const noexcept; // retrieved by walking up the canonical parents
          graph_node* containing_graph() noexcept;

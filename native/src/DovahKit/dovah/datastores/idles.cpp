@@ -45,6 +45,14 @@ namespace {
    // the active-file ANAM will be cleared out, making the idle loose. (We don't 
    // clear non-active-file ANAMs; see comments in IdleAnimation for details.)
    static constexpr const bool backend_severs_references_to_deleted_forms = true;
+
+   // This is needed to ensure that siblings are processed in a consistent order. 
+   // The order in which siblings is processed becomes significant when dealing 
+   // with invalid data, e.g. if one of a group of siblings is flagged as "forced 
+   // loose."
+   //
+   // The game seems to store 
+   static constexpr const bool process_idles_in_a_consistent_order = true;
 }
 
 namespace dovah::datastores {
@@ -111,14 +119,38 @@ namespace dovah::datastores {
       //
       // Build the parent/child hierarchy for the idle nodes.
       //
-      for (auto& pair : this->idles_by_stub) {
-         auto& node   = *pair.second;
-         auto  loaded = node.stub.load().ptr_cast<loaded_idle_data>();
-         if (loaded) {
-            if (loaded->data.flags & loaded_idle_data::flag::is_forced_loose) {
-               this->_place_forced_loose_idle(node, *loaded);
-            } else {
-               this->_place_child_idle(node, *loaded);
+      if constexpr (process_idles_in_a_consistent_order) {
+         std::vector<idle_node*> sorted;
+         for (auto& pair : this->idles_by_stub)
+            sorted.push_back(pair.second);
+         std::sort(
+            sorted.begin(),
+            sorted.end(),
+            [&lo](idle_node* x, idle_node* y) {
+               return x->is_queued_for_processing_before(*y);
+            }
+         );
+         for (auto* node_ptr : sorted) {
+            auto& node   = *node_ptr;
+            auto  loaded = node.stub.load().ptr_cast<loaded_idle_data>();
+            if (loaded) {
+               if (loaded->data.flags & loaded_idle_data::flag::is_forced_loose) {
+                  this->_place_forced_loose_idle(node, *loaded);
+               } else {
+                  this->_place_child_idle(node, *loaded);
+               }
+            }
+         }
+      } else {
+         for (auto& pair : this->idles_by_stub) {
+            auto& node   = *pair.second;
+            auto  loaded = node.stub.load().ptr_cast<loaded_idle_data>();
+            if (loaded) {
+               if (loaded->data.flags & loaded_idle_data::flag::is_forced_loose) {
+                  this->_place_forced_loose_idle(node, *loaded);
+               } else {
+                  this->_place_child_idle(node, *loaded);
+               }
             }
          }
       }
