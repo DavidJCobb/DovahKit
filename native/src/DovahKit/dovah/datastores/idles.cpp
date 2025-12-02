@@ -177,6 +177,472 @@ namespace dovah::datastores {
       this->_clear();
       this->loose = new loose_idle_list_node(*this);
    }
+
+   void idles::debug_verify_integrity() const {
+      #if _DEBUG
+         #pragma region Basic pointer validation
+         {
+            auto check_node_pointer = [this](const node* ptr) -> bool {
+               if (!ptr) {
+                  __debugbreak();
+                  return false;
+               }
+               if (&ptr->datastore != this) {
+                  __debugbreak();
+                  return false;
+               }
+               return true;
+            };
+
+            check_node_pointer(this->loose);
+            for (const graph_node* graph : this->graphs) {
+               if (!check_node_pointer(graph))
+                  continue;
+               if (check_node_pointer(graph->loose)) {
+                  if (graph->loose->graph != graph)
+                     __debugbreak(); // mismatched parent/child relationship between a graph and its loose node!
+               }
+               for (const action_node* action : graph->actions) {
+                  if (!check_node_pointer(action))
+                     continue;
+                  if (action->graph != graph)
+                     __debugbreak(); // mismatched parent/child relationship between a graph and an action!
+                  if (action->stub.form_type != form_type::action)
+                     __debugbreak(); // action nodes must represent an action form!
+               }
+            }
+            for (const auto& pair : this->idles_by_stub) {
+               auto* idle = pair.second;
+               if (!check_node_pointer(idle))
+                  continue;
+               if (&idle->stub != pair.first)
+                  __debugbreak(); // idle is indexed by a different stub than the one it represents!
+               if (idle->stub.form_type != form_type::idle)
+                  __debugbreak(); // idle nodes must represent an idle form!
+               for (const idle_node* child : idle->child_idles) {
+                  if (!check_node_pointer(child))
+                     continue;
+                  if (child->canonical_parent != idle)
+                     __debugbreak(); // `idle` is not the parent of its `child`!
+               }
+               if (const node* parent = idle->canonical_parent) {
+                  if (&parent->datastore != this)
+                     __debugbreak(); // we don't own the parent node!
+
+                  bool valid_parent_type = false;
+
+                  if (auto* casted = dynamic_cast<const action_node*>(parent)) {
+                     valid_parent_type = true;
+                     if (casted->winning_root != idle)
+                        __debugbreak(); // idle's canonical parent is an action, but it is not the winning root of that action!
+                  } else if (auto* casted = dynamic_cast<const idle_node*>(parent)) {
+                     valid_parent_type = true;
+                     if (casted->index_of_child(*idle) == node::index_of_none)
+                        __debugbreak(); // idle is not a child of its canonical parent!
+                  } else if (auto* casted = dynamic_cast<const loose_idle_list_node*>(parent)) {
+                     valid_parent_type = true;
+                     if (casted->index_of_child(*idle) == node::index_of_none)
+                        __debugbreak(); // idle is not a child of its canonical parent!
+                  }
+
+                  if (!valid_parent_type) {
+                     __debugbreak(); // invalid canonical parent node for idle node!
+                  }
+               }
+               if (const graph_node* graph = idle->containing_graph()) {
+                  if (&graph->datastore != this)
+                     __debugbreak(); // we don't own the graph node!
+                  bool found = false;
+                  for (const auto* g : this->graphs) {
+                     if (g == graph) {
+                        found = true;
+                        break;
+                     }
+                  }
+                  if (!found)
+                     __debugbreak(); // idle's containing graph is orphaned from the datastore!
+               } else {
+                  __debugbreak(); // idle has no containing graph!
+               }
+            }
+         }
+         #pragma endregion
+         #pragma region Verify bidirectional action root candidacies
+            for (const graph_node* graph : this->graphs) {
+               if (!graph)
+                  continue;
+               for (const action_node* action : graph->actions) {
+                  if (!action)
+                     continue;
+
+                  auto _check_candidacies = [action](bool master) {
+                     auto& a_list = master ? action->candidacies.masters : action->candidacies.active;
+                     for (const auto& a_item : a_list) {
+                        const idle_node* idle = a_item.idle;
+                        if (!idle) {
+                           __debugbreak(); // this should not be nullptr!
+                           continue;
+                        }
+                        auto& i_list = master ? idle->is_candidate_for.masters : idle->is_candidate_for.active;
+                        bool  found  = false;
+                        for (const auto& i_item : i_list) {
+                           if (i_item.action != action)
+                              continue;
+                           if ((impl::idles::anam_subrecord_position&)a_item == (impl::idles::anam_subrecord_position&)i_item) {
+                              found = true;
+                              break;
+                           }
+                        }
+                        if (!found) {
+                           __debugbreak(); // an action is aware of an idle, but the idle isn't aware of the action!
+                           continue;
+                        }
+                     }
+                  };
+                  _check_candidacies(true);
+                  _check_candidacies(false);
+
+                  if (action->winning_root) {
+                     bool found = false;
+                     for (auto& item : action->winning_root->is_candidate_for.masters) {
+                        if (item.action == action) {
+                           found = true;
+                           break;
+                        }
+                     }
+                     if (!found) {
+                        for (auto& item : action->winning_root->is_candidate_for.active) {
+                           if (item.action == action) {
+                              found = true;
+                              break;
+                           }
+                        }
+                     }
+                     if (!found) {
+                        __debugbreak(); // An action's winning-root idle doesn't know that it's a candidate for that action!
+                     }
+                  }
+               }
+            }
+            for (const auto& pair : this->idles_by_stub) {
+               auto* idle = pair.second;
+               if (!idle)
+                  continue;
+
+               auto _check_candidacies = [idle](bool master) {
+                  auto& i_list = master ? idle->is_candidate_for.masters : idle->is_candidate_for.active;
+                  for (const auto& i_item : i_list) {
+                     const action_node* action = i_item.action;
+                     if (!action) {
+                        __debugbreak(); // this should not be nullptr!
+                        continue;
+                     }
+                     auto& a_list = master ? action->candidacies.masters : action->candidacies.active;
+                     bool  found  = false;
+                     for (const auto& a_item : a_list) {
+                        if (a_item.idle != idle)
+                           continue;
+                        if ((impl::idles::anam_subrecord_position&)a_item == (impl::idles::anam_subrecord_position&)i_item) {
+                           found = true;
+                           break;
+                        }
+                     }
+                     if (!found) {
+                        __debugbreak(); // an idle is aware of an action, but the action isn't aware of the idle!
+                        continue;
+                     }
+                  }
+               };
+               _check_candidacies(true);
+               _check_candidacies(false);
+            }
+         #pragma endregion
+      #endif
+   }
+   void idles::debug_do_semantic_compare(const idles& other) const {
+      #if _DEBUG
+         std::unordered_map<const graph_node*, const graph_node*> my_graphs_to_other_graphs;
+
+         file_load_order* flo = nullptr;
+         for (const auto& pair : this->idles_by_stub) {
+            if (pair.second) {
+               flo = &pair.second->stub.get_owning_load_order();
+               break;
+            }
+         }
+         if (!flo) {
+            for (const graph_node* graph : this->graphs) {
+               if (graph->actions.empty())
+                  continue;
+               flo = &(graph->actions[0]->stub.get_owning_load_order());
+               break;
+            }
+         }
+
+         auto _anam_is_from_active_file = [flo](const impl::idles::anam_subrecord_position& anam) -> bool {
+            if (!anam.source_file)
+               return true;
+            if (flo)
+               if (anam.source_file == flo->get_active_file())
+                  return true;
+            return false;
+         };
+         auto _anams_are_equal = [_anam_is_from_active_file](const impl::idles::anam_subrecord_position& a, const impl::idles::anam_subrecord_position& b) -> bool {
+            if (a.source_file == b.source_file)
+               return a.offsets == b.offsets;
+            if (!a.source_file)
+               return _anam_is_from_active_file(b);
+            if (!b.source_file)
+               return _anam_is_from_active_file(a);
+            return false;
+         };
+
+         #pragma region Verify the presence of all non-empty graphs
+         {
+            std::set<std::string> graph_paths;
+
+            auto _gather_non_empty_graphs = [&graph_paths](const idles& datastore) {
+               for (const graph_node* graph : datastore.graphs) {
+                  bool empty = true;
+                  if (graph->loose && !graph->loose->child_idles.empty())
+                     empty = false;
+                  else {
+                     for (const action_node* action : graph->actions) {
+                        if (action->winning_root) {
+                           empty = false;
+                           break;
+                        }
+                     }
+                  }
+                  if (!empty)
+                     graph_paths.insert(graph->path);
+               }
+            };
+            _gather_non_empty_graphs(*this);
+            _gather_non_empty_graphs(other);
+
+            for (const auto& path : graph_paths) {
+               auto* this_graph = this->graph_by_path(path);
+               auto* that_graph = other.graph_by_path(path);
+               if (!this_graph)
+                  __debugbreak(); // missing graph!
+               if (!that_graph)
+                  __debugbreak(); // missing graph!
+               if (this_graph && that_graph)
+                  my_graphs_to_other_graphs[this_graph] = that_graph;
+            }
+         }
+         #pragma endregion
+         #pragma region Compare actions
+            for (const auto& pair : my_graphs_to_other_graphs) {
+               const graph_node* this_graph = pair.first;
+               const graph_node* that_graph = pair.second;
+
+               std::set<const form_stub*> action_stubs;
+               auto _gather_non_empty_actions = [&action_stubs](const graph_node& graph) {
+                  for (const action_node* action : graph.actions) {
+                     if (!action->winning_root)
+                        continue;
+                     action_stubs.insert(&action->stub);
+                  }
+               };
+               _gather_non_empty_actions(*this_graph);
+               _gather_non_empty_actions(*that_graph);
+
+               for (const form_stub* stub : action_stubs) {
+                  const action_node* this_action = this_graph->get_action(*stub);
+                  const action_node* that_action = that_graph->get_action(*stub);
+                  if (!this_action)
+                     __debugbreak(); // missing action!
+                  if (!that_action)
+                     __debugbreak(); // missing action!
+                  if (this_action && that_action) {
+                     //
+                     // Verify consistent winning roots.
+                     //
+                     const idle_node* this_root = this_action->winning_root;
+                     const idle_node* that_root = that_action->winning_root;
+                     if (this_root) {
+                        if (!that_root || &that_root->stub != &this_root->stub)
+                           __debugbreak();
+                     } else {
+                        if (that_root != nullptr)
+                           __debugbreak();
+                     }
+                     //
+                     // Verify consistent candidacies.
+                     //
+                     auto _check_candidacies = [this_action, that_action, _anams_are_equal](bool master) {
+                        auto& this_list = master ? this_action->candidacies.masters : this_action->candidacies.active;
+                        auto& that_list = master ? that_action->candidacies.masters : that_action->candidacies.active;
+                        if (this_list.size() != that_list.size()) {
+                           __debugbreak();
+                           return;
+                        }
+                        for (size_t i = 0; i < this_list.size(); ++i) {
+                           auto& this_item = this_list[i];
+                           auto& that_item = that_list[i];
+                           if (!this_item.idle) {
+                              if (that_item.idle) {
+                                 __debugbreak();
+                                 return;
+                              }
+                              continue;
+                           }
+                           if (!that_item.idle) {
+                              __debugbreak();
+                              return;
+                           }
+                           if (&this_item.idle->stub != &that_item.idle->stub) {
+                              __debugbreak();
+                              return;
+                           }
+                           if (!_anams_are_equal(this_item, that_item)) {
+                              __debugbreak();
+                              return;
+                           }
+                        }
+                     };
+                     _check_candidacies(true);
+                     _check_candidacies(false);
+                  }
+               }
+            }
+         #pragma endregion
+         #pragma region Compare idles
+            std::set<const form_stub*> idle_stubs;
+            for (const auto& pair : this->idles_by_stub)
+               idle_stubs.insert(pair.first);
+            for (const auto& pair : other.idles_by_stub)
+               idle_stubs.insert(pair.first);
+            for (const form_stub* stub : idle_stubs) {
+               if (!stub)
+                  continue;
+               const idle_node* this_idle = this->idle_by_stub(*stub);
+               const idle_node* that_idle = other.idle_by_stub(*stub);
+               if (!this_idle || !that_idle) {
+                  __debugbreak();
+                  continue;
+               }
+               //
+               // Verify equal canonical parents.
+               //
+               [this_idle, that_idle]() {
+                  const auto* this_parent = this_idle->canonical_parent;
+                  const auto* that_parent = that_idle->canonical_parent;
+                  if (!this_parent) {
+                     if (that_parent != nullptr) {
+                        __debugbreak();
+                     }
+                     return;
+                  }
+                  if (!that_parent) {
+                     __debugbreak();
+                  } else if (auto* this_casted = dynamic_cast<const action_node*>(this_parent)) {
+                     auto* that_casted = dynamic_cast<const action_node*>(that_parent);
+                     if (!that_casted || &this_casted->stub != &that_casted->stub) {
+                        __debugbreak();
+                     }
+                  } else if (auto* this_casted = dynamic_cast<const idle_node*>(this_parent)) {
+                     auto* that_casted = dynamic_cast<const idle_node*>(that_parent);
+                     if (!that_casted || &this_casted->stub != &that_casted->stub) {
+                        __debugbreak();
+                     }
+                  } else if (auto* this_casted = dynamic_cast<const loose_idle_list_node*>(this_parent)) {
+                     auto* that_casted = dynamic_cast<const loose_idle_list_node*>(that_parent);
+                     if (!that_casted) {
+                        __debugbreak();
+                        return;
+                     }
+                     if (this_casted->graph) {
+                        if (!that_casted->graph) {
+                           __debugbreak();
+                        } else {
+                           if (!this_casted->graph->path_equals(that_casted->graph->path))
+                              __debugbreak();
+                        }
+                     } else {
+                        if (that_casted->graph != nullptr) {
+                           __debugbreak();
+                        }
+                     }
+                  }
+               }();
+               //
+               // Verify equal first-seen ANAMs.
+               //
+               if (!_anams_are_equal(this_idle->first_seen_anam, that_idle->first_seen_anam)) {
+                  __debugbreak();
+               }
+               //
+               // Verify consistent candidacies.
+               //
+               auto _check_candidacies = [this_idle, that_idle, _anams_are_equal](bool master) {
+                  auto& this_list = master ? this_idle->is_candidate_for.masters : this_idle->is_candidate_for.active;
+                  auto& that_list = master ? that_idle->is_candidate_for.masters : that_idle->is_candidate_for.active;
+                  if (this_list.size() != that_list.size()) {
+                     __debugbreak();
+                     return;
+                  }
+                  for (size_t i = 0; i < this_list.size(); ++i) {
+                     auto& this_item = this_list[i];
+                     auto& that_item = that_list[i];
+                     if (!this_item.action) {
+                        if (that_item.action) {
+                           __debugbreak();
+                           return;
+                        }
+                        continue;
+                     }
+                     if (!that_item.action) {
+                        __debugbreak();
+                        return;
+                     }
+                     if (&this_item.action->stub != &that_item.action->stub) {
+                        __debugbreak();
+                        return;
+                     }
+                     if (!_anams_are_equal(this_item, that_item)) {
+                        __debugbreak();
+                        return;
+                     }
+                  }
+               };
+               _check_candidacies(true);
+               _check_candidacies(false);
+               //
+               // Verify consistent children.
+               //
+               {
+                  auto& this_list = this_idle->child_idles;
+                  auto& that_list = that_idle->child_idles;
+                  if (this_list.size() != that_list.size()) {
+                     __debugbreak();
+                  } else {
+                     for (size_t i = 0; i < this_list.size(); ++i) {
+                        const idle_node* this_child = this_idle->child_idles[i];
+                        const idle_node* that_child = that_idle->child_idles[i];
+                        if (!this_child) {
+                           if (!that_child)
+                              continue;
+                           __debugbreak();
+                           break;
+                        }
+                        if (!that_child) {
+                           __debugbreak();
+                           break;
+                        }
+                        if (&this_child->stub != &that_child->stub) {
+                           __debugbreak();
+                           break;
+                        }
+                     }
+                  }
+               }
+            }
+         #pragma endregion
+      #endif
+   }
          
    #pragma region Handlers for events occurring outside the datastore
       void idles::on_before_form_fully_deleted(form_stub& stub) {

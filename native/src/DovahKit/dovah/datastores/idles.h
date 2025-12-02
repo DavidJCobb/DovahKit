@@ -85,6 +85,9 @@ namespace dovah::datastores {
       public:
          void build(file_load_order&);
          void reset();
+
+         void debug_verify_integrity() const;
+         void debug_do_semantic_compare(const idles&) const;
          
          #pragma region Handlers for events occurring outside the datastore
             void on_before_form_fully_deleted(form_stub&); // only call if the form is actually deleted, not merely flagged as "deleted by override"

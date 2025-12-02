@@ -47,13 +47,13 @@ namespace dovah::datastores::impl::idles {
       return _compare_actions(a->stub, b->stub);
    }
 
-   const action_node* graph_node::get_action(form_stub& stub) const noexcept {
+   const action_node* graph_node::get_action(const form_stub& stub) const noexcept {
       for(const action_node* action : this->actions)
          if (&action->stub == &stub)
             return action;
       return nullptr;
    }
-   action_node* graph_node::get_action(form_stub& stub) noexcept {
+   action_node* graph_node::get_action(const form_stub& stub) noexcept {
       return const_cast<action_node*>(std::as_const(*this).get_action(stub));
    }
 

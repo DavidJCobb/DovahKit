@@ -31,8 +31,8 @@ namespace dovah::datastores::impl::idles {
          static bool action_sort_comparator(const action_node*, const action_node*);
 
       public:
-         const action_node* get_action(form_stub&) const noexcept;
-         action_node* get_action(form_stub&) noexcept;
+         const action_node* get_action(const form_stub&) const noexcept;
+         action_node* get_action(const form_stub&) noexcept;
 
          size_t index_of_action(const action_node&) const noexcept;
          size_t index_of_action(const form_stub&) const noexcept;

@@ -114,6 +114,8 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
 
    public:
       IdleAnimationFormsModel(QObject* parent = nullptr);
+      
+      void validateForDebug();
 
       #pragma region Accessors
          QModelIndex graphQMI(QString path) const noexcept;

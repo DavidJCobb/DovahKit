@@ -42,6 +42,14 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
       QObject::connect(model, &QAbstractItemModel::rowsMoved, this, [this]() {
          this->_update_move_button_enable_states();
       });
+
+      #if _DEBUG
+      {
+         auto* button = new QPushButton(tr("Debug"), this);
+         this->ui.idleButtonsLayout->addWidget(button);
+         QObject::connect(button, &QPushButton::clicked, model, &IdleAnimationFormsModel::validateForDebug);
+      }
+      #endif
    }
 
    #pragma region Context menu

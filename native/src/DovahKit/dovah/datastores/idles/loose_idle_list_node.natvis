@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::datastores::impl::idles::loose_idle_list_node">
+      <DisplayString>loose({child_idles.size()})</DisplayString>
+      <Expand>
+         <Item Name="[graph]" ExcludeView="viagraph">graph,na</Item>
+         <Item Name="[idles]">child_idles,na</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

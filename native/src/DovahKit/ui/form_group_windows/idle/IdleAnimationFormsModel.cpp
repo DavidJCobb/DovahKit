@@ -208,6 +208,43 @@ IdleAnimationFormsModel::IdleAnimationFormsModel(QObject* parent) : QAbstractIte
    }
 }
 
+void IdleAnimationFormsModel::validateForDebug() {
+   #if _DEBUG
+      #pragma region Verify that all reachable nodes have cached data for the UI
+         //
+         // Cached data is used at display time so that we're not converting a bunch 
+         // of std::strings to QStrings on every single frame.
+         //
+         for (auto& pair : this->_datastore.idles_by_stub) {
+            auto it = this->_cache.find(pair.second);
+            if (it == this->_cache.end())
+               __debugbreak(); // idle has no UI-side cache!
+         }
+         for (const graph_node* graph : this->_datastore.graphs) {
+            auto it = this->_cache.find((graph_node*)graph); // unordered_map chokes on lookups by const-pointer keys if the base key type isn't const
+            if (it == this->_cache.end())
+               __debugbreak(); // graph has no UI-side cache!
+            for (const action_node* action : graph->actions) {
+               auto it = this->_cache.find((action_node*)action); // unordered_map chokes on lookups by const-pointer keys if the base key type isn't const
+               if (it == this->_cache.end())
+                  __debugbreak(); // action has no UI-side cache!
+            }
+         }
+      #pragma endregion
+      this->_datastore.debug_verify_integrity();
+      #pragma region Diff the datastore
+      {
+         auto* flo = DovahKitCore::get().get_file_load_order();
+         if (flo) {
+            datastore_type diff;
+            diff.build(*flo);
+            this->_datastore.debug_do_semantic_compare(diff);
+         }
+      }
+      #pragma endregion
+   #endif
+}
+
 #pragma region Node/QMI utils and node lookups
    QModelIndex IdleAnimationFormsModel::_qmi_for_model_root() const {
       return {};

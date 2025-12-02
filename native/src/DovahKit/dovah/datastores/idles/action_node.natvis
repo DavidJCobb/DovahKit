@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::datastores::impl::idles::action_node">
+      <DisplayString>AACT:{stub.editorID,sb}</DisplayString>
+      <Expand>
+         <Item Name="[stub]">stub,na</Item>
+         <Item Name="[graph]" ExcludeView="viagraph">graph,na</Item>
+         <Item Name="[action root candidacies]">candidacies</Item>
+         <Item Name="[winning root]">winning_root,na</Item>
+      </Expand>
+   </Type>
+   <Type Name="dovah::datastores::impl::idles::action_node::candidacy">
+      <Expand>
+         <Item Name="idle">idle,na</Item>
+         <ExpandedItem>(dovah::utils::subrecord_data_position*)this</ExpandedItem>
+      </Expand>
+   </Type>
+</AutoVisualizer>
