@@ -1,10 +1,10 @@
-#include "form_picker_debug.h"
+#include "./form_picker.h"
 #include "widgets/DKFormPicker.h"
 #include <QCheckBox>
 #include <QDialog>
 #include <QGridLayout>
 
-namespace DovahKitDebug::features {
+namespace DovahKitDebug::features::widgets {
    /*static*/ void debug_form_picker::execute(QWidget* parent) {
       auto* dialog = new QDialog(parent);
       auto* layout = new QGridLayout(dialog);

@@ -1,12 +1,12 @@
-#include "ui_float_slider.h"
+#include "./float_slider.h"
 #include <QDebug>
 #include <QDialog>
 #include <QGridLayout>
 #include <QLabel>
 #include "widgets/DKFloatSlider.h"
 
-namespace DovahKitDebug::features {
-   /*static*/ void ui_float_slider::execute(QWidget* from) {
+namespace DovahKitDebug::features::widgets {
+   /*static*/ void float_slider::execute(QWidget* from) {
       auto* dialog = new QDialog(from);
       auto* layout = new QGridLayout(dialog);
       QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);

@@ -561,7 +561,7 @@
     <ClCompile Include="helpers\lua\qt_variant.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\form_picker_debug.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\form_picker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\main_window\script_window\hyperlink_confirm.cpp">
@@ -1206,7 +1206,7 @@
     <ClCompile Include="dovahscript\api_helpers\pull_rotation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_collapsible_pane.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\collapsible_pane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\DKUnreadCountBadge.cpp">
@@ -1260,7 +1260,7 @@
     <ClCompile Include="widgets\widget-dialogs\DKBSABrowseDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_bsa_picker.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\ui_bsa_picker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\DKGameFilePicker.cpp">
@@ -1284,7 +1284,7 @@
     <ClCompile Include="widgets\DKTextureAssetPane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\texture_asset_pane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\asset_manager\data\dds.cpp">
@@ -1371,7 +1371,7 @@
     <ClCompile Include="widgets\DKKeyPickerWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_key_picker.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\key_picker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\options_window\options_window.cpp">
@@ -2070,7 +2070,7 @@
     <ClCompile Include="widgets\widget-models\DKRefsInCellModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_ref_picker.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\ref_picker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\DKQuestAliasPicker.cpp">
@@ -2151,7 +2151,7 @@
     <ClCompile Include="widgets\widget-models\DKBoundScriptListModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_bound_script.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\bound_script_list_pane.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nif\utils\precache_nif_info.cpp">
@@ -2352,7 +2352,7 @@
     <ClCompile Include="widgets\widget-dialogs\DKLeveledListPreviewDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_form_inventory.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\form_inventory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\widget-models\DKLeveledListPreviewModel.cpp">
@@ -2445,7 +2445,7 @@
     <ClCompile Include="ui\form_windows\shared\FaceExtraHeadPartsModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_attack_data.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\attack_data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\utils\typical_tableview_config.cpp">
@@ -2475,7 +2475,7 @@
     <ClCompile Include="widgets\DKTabWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_float_slider.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\float_slider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\form_reference_t.cpp">
@@ -2505,7 +2505,7 @@
     <ClCompile Include="dovah\forms\ActorBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_status_bar_segment.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\status_bar_segment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\DKStatusBar.cpp">
@@ -2844,7 +2844,7 @@
     <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\scene_editor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Phase.cpp">
@@ -2907,7 +2907,7 @@
     <ClCompile Include="widgets\DKYesNoUnsetWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_yes_no_unset_widget.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\yes_no_unset_widget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dovah\forms\MusicType.cpp">
@@ -3636,6 +3636,12 @@
     <ClCompile Include="dovah\utils\subrecord_data_position.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\DKBreadcrumbBar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\breadcrumb_bar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4244,7 +4250,7 @@
     <ClInclude Include="editor\form_stub_meta_type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\form_picker_debug.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\form_picker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\components\legacy_script.h">
@@ -4958,7 +4964,7 @@
     <ClInclude Include="helpers\generic_reader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\ui_bsa_picker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\utils\game_asset_path_validation.h">
@@ -4967,7 +4973,7 @@
     <ClInclude Include="helpers\unreachable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\texture_asset_pane.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\asset_manager\data\dds.h">
@@ -5066,7 +5072,7 @@
     <ClInclude Include="helpers\bitfield_array.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_key_picker.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\key_picker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\qt\mass_set_visible.h">
@@ -6776,7 +6782,7 @@
     <ClInclude Include="dovah\forms\components\papyrus\property_status.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_ref_picker.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\ref_picker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\files\bsa\archive_header.h">
@@ -6941,7 +6947,7 @@
     <ClInclude Include="widgets\widget-models\bound-scripts\property_value.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\bound_script_list_pane.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\structs\precached_nif_info.h">
@@ -7409,7 +7415,7 @@
     <ClInclude Include="ui\form_windows\leveled_lists\LeveledListEditDialogHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\form_inventory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\HeadPart.h">
@@ -7505,7 +7511,7 @@
     <ClInclude Include="ui\form_windows\actor_base\FaceTintColorPickerFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\attack_data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\utils\typical_tableview_config.h">
@@ -7535,7 +7541,7 @@
     <ClInclude Include="dovah\utils\compute_classed_stat_points.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_float_slider.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\float_slider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\data\game.h">
@@ -7592,7 +7598,7 @@
     <ClInclude Include="dovah\form_stubs\helpers\for_each_persistent_ref_in_world.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_status_bar_segment.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\status_bar_segment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\message_log\model.h">
@@ -7937,7 +7943,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\scene\scene_actor_subrecords_out_of_order.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\scene_editor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Style.h">
@@ -7985,7 +7991,7 @@
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\ActionType.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_yes_no_unset_widget.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\yes_no_unset_widget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\forms\MusicType.h">
@@ -8927,6 +8933,9 @@
     <ClInclude Include="dovah\utils\subrecord_data_position.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\breadcrumb_bar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -9603,7 +9612,7 @@
     <QtMoc Include="widgets\DKCollapsiblePane.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="ui\main_window\_debug_hooks\ui_collapsible_pane.h">
+    <QtMoc Include="ui\main_window\_debug_hooks\widgets\collapsible_pane.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKUnreadCountBadge.h">
@@ -10302,6 +10311,9 @@
     <QtMoc Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="widgets\DKBreadcrumbBar.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -10888,5 +10900,9 @@
     <Natvis Include="helpers\enum_flags.natvis" />
     <Natvis Include="ui\types\packages\procedure_node.natvis" />
     <Natvis Include="helpers\const_forwarding_ptr.natvis" />
+    <Natvis Include="dovah\datastores\idles\graph_node.natvis" />
+    <Natvis Include="dovah\datastores\idles\loose_idle_list_node.natvis" />
+    <Natvis Include="dovah\datastores\idles\idle_node.natvis" />
+    <Natvis Include="dovah\datastores\idles\action_node.natvis" />
   </ItemGroup>
 </Project>

@@ -1098,25 +1098,26 @@
     <ClCompile Include="ui\main_window\_debug_hooks\qt_3d_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\script_attachment_query_from_cache.cpp" />
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_attack_data.cpp" />
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_bound_script.cpp" />
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_bsa_picker.cpp" />
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_collapsible_pane.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\attack_data.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\bound_script_list_pane.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\ui_bsa_picker.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\collapsible_pane.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_float_slider.cpp" />
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_form_inventory.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\float_slider.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\form_inventory.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\ui_form_list_pane_extra_col.cpp" />
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_key_picker.cpp" />
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_ref_picker.cpp" />
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.cpp" />
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_status_bar_segment.cpp" />
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.cpp" />
-    <ClCompile Include="ui\main_window\_debug_hooks\ui_yes_no_unset_widget.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\key_picker.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\ref_picker.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\scene_editor.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\status_bar_segment.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\texture_asset_pane.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\yes_no_unset_widget.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\breadcrumb_bar.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_rebuild.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_ui.cpp" />
@@ -1232,6 +1233,7 @@
     <ClCompile Include="vulkan\swap_chain_image.cpp" />
     <ClCompile Include="vulkan\vertex.cpp" />
     <ClCompile Include="widgets\DKAttackDataWidget.cpp" />
+    <ClCompile Include="widgets\DKBreadcrumbBar.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="ui\generic\DKLuaSyntaxHighlighter.cpp" />
     <ClCompile Include="ui\generic\FormSignatureCombobox.cpp">
@@ -1276,7 +1278,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\extract_bsa_file.cpp" />
-    <ClCompile Include="ui\main_window\_debug_hooks\form_picker_debug.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\form_picker.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\list_none_stubs.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\lua_resource_manager_tests.cpp" />
@@ -2114,14 +2116,15 @@
     <ClInclude Include="ui\form_windows\weather\WeatherIntpackedFloatEditor.h" />
     <ClInclude Include="ui\form_windows\weather\WeatherSoundsModel.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\idles_datastore.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_scene_editor_testcase.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_attack_data.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_float_slider.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_form_inventory.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_bound_script.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\scene_editor.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\attack_data.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\float_slider.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\form_inventory.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\bound_script_list_pane.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\ui_form_list_pane_extra_col.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_status_bar_segment.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_yes_no_unset_widget.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\status_bar_segment.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\yes_no_unset_widget.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\breadcrumb_bar.h" />
     <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
     <QtMoc Include="ui\models\forms\LeveledListModel.h" />
     <ClInclude Include="ui\types\conditions\condition.h" />
@@ -2184,6 +2187,7 @@
     <QtMoc Include="widgets\DKTopicOrSubtypePicker.h" />
     <QtMoc Include="widgets\DKSliderSpinboxPairInt.h" />
     <QtMoc Include="widgets\DKSliderSpinboxPairFloat.h" />
+    <QtMoc Include="widgets\DKBreadcrumbBar.h" />
     <ClInclude Include="widgets\widget-data\DKCustomFormFilterableModelMixin.h" />
     <QtMoc Include="widgets\widget-dialogs\DKMagicEffectListItemDialog.h" />
     <ClInclude Include="widgets\widget-models\DKAttackDataModel.h" />
@@ -2753,11 +2757,11 @@
     <ClInclude Include="ui\main_window\_debug_hooks\pex_parsing_benchmarks.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\script_attachment_query_from_cache.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_bsa_picker.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\ui_bsa_picker.h" />
     <QtMoc Include="widgets\DKColorPickerButton.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_key_picker.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_ref_picker.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\ui_texture_asset_pane.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\key_picker.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\ref_picker.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\texture_asset_pane.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.h" />
     <QtMoc Include="ui\options_window\options_window.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\worldinput2.h" />
@@ -2932,7 +2936,7 @@
     <ClInclude Include="ui\main_window\_debug_hooks\get_record_size_stats.h" />
     <QtMoc Include="widgets\DKUnreadCountBadgePaneHeader.h" />
     <QtMoc Include="widgets\DKUnreadCountBadge.h" />
-    <QtMoc Include="ui\main_window\_debug_hooks\ui_collapsible_pane.h" />
+    <QtMoc Include="ui\main_window\_debug_hooks\widgets\collapsible_pane.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\_base.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\_setup.h" />
@@ -3365,7 +3369,7 @@
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\enumerate_bsa_contents.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\extract_bsa_file.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\form_picker_debug.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\form_picker.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\list_none_stubs.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\lookup_bsa_file_from_bsa_load_order.h" />
     <QtMoc Include="ui\main_window\delete_form_dialog\delete_form_table.h" />
@@ -3966,6 +3970,10 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="dovah\bs_hash.natvis" />
+    <Natvis Include="dovah\datastores\idles\action_node.natvis" />
+    <Natvis Include="dovah\datastores\idles\graph_node.natvis" />
+    <Natvis Include="dovah\datastores\idles\idle_node.natvis" />
+    <Natvis Include="dovah\datastores\idles\loose_idle_list_node.natvis" />
     <Natvis Include="dovah\files\bsa\packed_folder_info.natvis" />
     <Natvis Include="dovah\files\pex\compiled_function.natvis" />
     <Natvis Include="dovah\files\pex\compiled_opcode.natvis" />

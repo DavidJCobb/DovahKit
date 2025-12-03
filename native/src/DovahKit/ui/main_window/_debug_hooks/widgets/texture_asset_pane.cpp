@@ -1,14 +1,15 @@
-#include "ui_texture_asset_pane.h"
+#include "./texture_asset_pane.h"
 #include <QDialog>
 #include <QGridLayout>
+#include <QLabel>
 #include "widgets/DKGameFilePicker.h"
 #include "widgets/DKTextureAssetPane.h"
-#include "../../../dovah/form_stub.h"
-#include "../../../editor/form_stub_meta_type.h"
+#include "dovah/form_stub.h"
+#include "editor/form_stub_meta_type.h"
 #include "widgets/DKFormPicker.h"
 
-namespace DovahKitDebug::features {
-   /*static*/ void ui_texture_asset_pane::execute(QWidget* from) {
+namespace DovahKitDebug::features::widgets {
+   /*static*/ void texture_asset_pane::execute(QWidget* from) {
       auto* dialog = new QDialog(from);
       auto* layout = new QGridLayout(dialog);
       auto* widget = new DKTextureAssetPane(dialog);

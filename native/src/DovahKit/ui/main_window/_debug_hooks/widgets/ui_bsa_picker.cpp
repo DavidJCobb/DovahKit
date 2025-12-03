@@ -8,7 +8,7 @@
 #include "widgets/widget-dialogs/DKBSABrowseDialog.h"
 #include "widgets/widget-models/DKBSACollectionModel.h"
 
-namespace DovahKitDebug::features {
+namespace DovahKitDebug::features::widgets {
    /*static*/ void ui_bsa_picker::execute(QWidget* from) {
       qDebug("Loading BSAs...");
       dovah::bsa_load_order blo;

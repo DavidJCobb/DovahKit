@@ -1,11 +1,11 @@
-#include "ui_key_picker.h"
+#include "./key_picker.h"
 #include <QDialog>
 #include <QGridLayout>
 #include <QKeySequence>
 #include "widgets/DKKeyPickerWidget.h"
 
-namespace DovahKitDebug::features {
-   /*static*/ void ui_key_picker::execute(QWidget* from) {
+namespace DovahKitDebug::features::widgets {
+   /*static*/ void key_picker::execute(QWidget* from) {
       auto* dialog = new QDialog(from);
       auto* layout = new QBoxLayout(QBoxLayout::Direction::Down, dialog);
       auto* widget = new DKKeyPickerWidget(dialog);

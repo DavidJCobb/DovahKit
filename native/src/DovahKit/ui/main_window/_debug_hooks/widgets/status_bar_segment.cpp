@@ -1,4 +1,4 @@
-#include "ui_status_bar_segment.h"
+#include "./status_bar_segment.h"
 #include <QDialog>
 #include <QGridLayout>
 #include <QLabel>
@@ -6,8 +6,8 @@
 #include <QStatusBar>
 #include "widgets/DKStatusBar.h"
 
-namespace DovahKitDebug::features {
-   /*static*/ void ui_status_bar_segment::execute(QWidget* from) {
+namespace DovahKitDebug::features::widgets {
+   /*static*/ void status_bar_segment::execute(QWidget* from) {
       auto* dialog = new QDialog(from);
       auto* layout = new QBoxLayout(QBoxLayout::Direction::Down, dialog);
       layout->setContentsMargins(0, 0, 0, 0);

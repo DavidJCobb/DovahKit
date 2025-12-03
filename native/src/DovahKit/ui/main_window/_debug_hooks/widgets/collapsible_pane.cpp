@@ -1,11 +1,11 @@
-#include "ui_collapsible_pane.h"
+#include "./collapsible_pane.h"
 #include <QAction>
 #include <QBoxLayout>
 #include <QDialog>
 #include <QGridLayout>
 #include <QMessageBox>
 #include <QPushButton>
-#include "../../../widgets/DKCollapsiblePane.h"
+#include "widgets/DKCollapsiblePane.h"
 
 #include <QPaintEvent>
 #include <QPainter>
@@ -86,8 +86,8 @@ namespace DovahKitDebug {
    }
 }
 
-namespace DovahKitDebug::features {
-   /*static*/ void ui_collapsible_pane::execute(QWidget* from) {
+namespace DovahKitDebug::features::widgets {
+   /*static*/ void collapsible_pane::execute(QWidget* from) {
       auto* dialog = new QDialog(from);
       auto* layout = new QBoxLayout(QBoxLayout::Direction::Down, dialog);
       dialog->setLayout(layout);

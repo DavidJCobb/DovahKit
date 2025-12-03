@@ -1,4 +1,4 @@
-#include "ui_bound_script.h"
+#include "./bound_script_list_pane.h"
 #include <QDialog>
 #include <QGridLayout>
 #include <QKeySequence>
@@ -6,7 +6,7 @@
 #include "widgets/DKObjectReferencePicker.h"
 #include "widgets/DKPapyrusBoundScriptListPane.h"
 
-namespace DovahKitDebug::features {
+namespace DovahKitDebug::features::widgets {
    class _test_dialog : public QDialog {
       public:
          _test_dialog(QWidget* parent) : QDialog(parent) {
@@ -33,7 +33,7 @@ namespace DovahKitDebug::features {
          dovah::loaded_form_ptr<dovah::loaded_forms::Form> loaded_form;
    };
 
-   /*static*/ void ui_bound_script::execute(QWidget* from) {
+   /*static*/ void bound_script_list_pane::execute(QWidget* from) {
       auto* dialog = new _test_dialog(from);
       QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
       dialog->show();

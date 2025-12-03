@@ -1,11 +1,11 @@
-#include "./ui_scene_editor_testcase.h"
+#include "./scene_editor.h"
 #include <QDialog>
 #include <QGridLayout>
 //#include "widgets/DKQuestSceneEditor.h"
 #include "dovah/form_stub.h"
 
-namespace DovahKitDebug::features {
-   /*static*/ void ui_scene_editor_testcase::execute(QWidget* from) {
+namespace DovahKitDebug::features::widgets {
+   /*static*/ void scene_editor::execute(QWidget* from) {
       auto* dialog = new QDialog(from);
       auto* layout = new QBoxLayout(QBoxLayout::Direction::Down, dialog);
       //auto* widget = new DKQuestSceneEditor(dialog);

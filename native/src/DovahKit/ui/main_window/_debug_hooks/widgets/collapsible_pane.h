@@ -1,5 +1,5 @@
 #pragma once
-#include "_base.h"
+#include "../_base.h"
 #include <QLabel>
 
 namespace DovahKitDebug {
@@ -35,11 +35,9 @@ namespace DovahKitDebug {
    };
 }
 
-namespace DovahKitDebug {
-   namespace features {
-      struct ui_collapsible_pane : debug_feature {
-         static constexpr const char* name = "DKCollapsiblePane test";
-         static void execute(QWidget* from);
-      };
-   }
+namespace DovahKitDebug::features::widgets {
+   struct collapsible_pane : debug_feature {
+      static constexpr const char* name = "DKCollapsiblePane";
+      static void execute(QWidget* from);
+   };
 }

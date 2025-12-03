@@ -1,12 +1,12 @@
-#include "ui_yes_no_unset_widget.h"
+#include "./yes_no_unset_widget.h"
 #include <QDebug>
 #include <QDialog>
 #include <QGridLayout>
 #include <QLabel>
 #include "widgets/DKYesNoUnsetWidget.h"
 
-namespace DovahKitDebug::features {
-   /*static*/ void ui_yes_no_unset_widget::execute(QWidget* from) {
+namespace DovahKitDebug::features::widgets {
+   /*static*/ void yes_no_unset_widget::execute(QWidget* from) {
       auto* dialog = new QDialog(from);
       auto* layout = new QGridLayout(dialog);
       QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
