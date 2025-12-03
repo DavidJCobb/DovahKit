@@ -759,6 +759,7 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          auto a_node_ptr = std::make_unique<action_node>(this->_datastore, action);
          a_node = a_node_ptr.get();
          graph.actions.insert(graph.actions.begin() + i, a_node);
+         a_node->graph = &graph;
          a_node_ptr.release();
          this->_recache_action(*a_node);
       }

@@ -24,7 +24,7 @@ namespace dovah::datastores::impl::idles {
       return loaded->get_behavior_graph_path(false);
    }
    bool idle_node::is_defined_in_non_active_file() const noexcept {
-      return this->stub.get_owning_load_order().is_defined_in_active_file(this->stub);
+      return !this->stub.get_owning_load_order().is_defined_in_active_file(this->stub);
    }
    bool idle_node::is_forced_loose() const noexcept {
       auto loaded = this->stub.load().ptr_cast<loaded_forms::IdleAnimation>();
@@ -200,7 +200,15 @@ namespace dovah::datastores::impl::idles {
    }
    void idle_node::_track_new_active_candidacy(passkeys::post_build_edit, action_node& action) {
       assert(this->is_candidate_for.active.empty());
-      this->is_candidate_for.active.push_back({ {}, &action });
+      this->is_candidate_for.active.push_back({
+         {{
+            .offsets = {
+               .of_record    = std::numeric_limits<size_t>::max(),
+               .of_subrecord = std::numeric_limits<size_t>::max(),
+            },
+         }},
+         &action
+      });
    }
    void idle_node::_update_form_hierarchy_data(passkeys::post_build_edit) {
       auto loaded = this->stub.load().ptr_cast<loaded_forms::IdleAnimation>();
