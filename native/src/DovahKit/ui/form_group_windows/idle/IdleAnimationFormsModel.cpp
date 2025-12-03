@@ -1106,6 +1106,21 @@ void IdleAnimationFormsModel::_recache_idle(const dovah::form_stub& stub) {
          return;
       this->_datastore.move_idle_within_parent(*idle, 1);
    }
+
+   bool IdleAnimationFormsModel::isNonCanonicalPosition(const QModelIndex& idle_qmi) const noexcept {
+      const auto* via_parent = (const datastore_node*)idle_qmi.internalPointer();
+      const auto* node       = _node_for_qmi(idle_qmi);
+      if (auto* casted = dynamic_cast<const idle_node*>(node)) {
+         return casted->canonical_parent != via_parent;
+      }
+      return false;
+   }
+   QModelIndex IdleAnimationFormsModel::canonicalPosition(const QModelIndex& src_qmi) const noexcept {
+      const auto* node = dynamic_cast<const idle_node*>(_node_for_qmi(src_qmi));
+      if (!node)
+         return src_qmi;
+      return _qmi_for_node(*node);
+   }
 #pragma endregion
 
 #pragma region QAbstractItemModel overrides

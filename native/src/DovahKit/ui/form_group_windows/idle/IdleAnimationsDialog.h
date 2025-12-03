@@ -34,10 +34,11 @@ class IdleAnimationsDialog : public QDialog {
                QAction* use_info = nullptr;
             } action;
             struct {
-               QAction* create    = nullptr;
-               QMenu*   duplicate = nullptr;
-               QAction* del       = nullptr;
-               QAction* use_info  = nullptr;
+               QAction* create       = nullptr;
+               QMenu*   duplicate    = nullptr;
+               QAction* del          = nullptr;
+               QAction* to_canonical = nullptr;
+               QAction* use_info     = nullptr;
             } idle;
          } actions;
       } _context;
@@ -52,6 +53,7 @@ class IdleAnimationsDialog : public QDialog {
          void _context_duplicate_idle_single();
          void _context_duplicate_idle_tree();
          void _context_delete_idle();
+         void _context_to_canonical();
          void _context_use_info();
       #pragma endregion
          

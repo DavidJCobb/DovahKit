@@ -145,6 +145,9 @@ class IdleAnimationFormsModel : public QAbstractItemModel {
          bool canMoveIdleDown(const QModelIndex&) const;
          void moveIdleUp(const QModelIndex&);
          void moveIdleDown(const QModelIndex&);
+
+         bool isNonCanonicalPosition(const QModelIndex& idle_qmi) const noexcept;
+         QModelIndex canonicalPosition(const QModelIndex&) const noexcept;
       #pragma endregion
 
    public:

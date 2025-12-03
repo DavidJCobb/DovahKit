@@ -111,6 +111,11 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
             QObject::connect(action, &QAction::triggered, this, &IdleAnimationsDialog::_context_delete_idle);
          }
          {
+            auto* action = group.to_canonical = new QAction(tr("Jump to canonical placement"), menu);
+            menu->addAction(action);
+            QObject::connect(action, &QAction::triggered, this, &IdleAnimationsDialog::_context_to_canonical);
+         }
+         {
             auto* action = group.use_info = new QAction(tr("Use Info"), menu);
             menu->addAction(action);
             QObject::connect(action, &QAction::triggered, this, &IdleAnimationsDialog::_context_use_info);
@@ -125,11 +130,12 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
 
          auto qmi = _get_selected_row();
 
-         bool is_none        = !qmi.isValid();
-         bool is_graph       = false;
-         bool is_action      = false;
-         bool is_idle        = false;
-         bool is_idle_parent = false;
+         bool is_none         = !qmi.isValid();
+         bool is_graph        = false;
+         bool is_action       = false;
+         bool is_idle         = false;
+         bool is_idle_parent  = false;
+         bool multiply_placed = false;
          if (!is_none) {
             using enum IdleAnimationFormsModel::NodeType;
             //
@@ -138,12 +144,20 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
             is_action      = node_type == Action;
             is_idle        = node_type == Idle;
             is_idle_parent = is_action || is_idle || node_type == LooseIdlesPerGraph || node_type == LooseIdlesPerModel;
+            if (is_idle_parent) {
+               is_idle_parent = model->canCreateIdleIn(qmi);
+            }
          }
          bool can_duplicate_idle = false;
          bool can_delete_idle    = false;
          if (is_idle) {
-            can_duplicate_idle = model->canEverDuplicateIdle(qmi);
-            can_delete_idle    = model->canDeleteIdle(qmi);
+            multiply_placed = model->isNonCanonicalPosition(qmi);
+            if (multiply_placed) {
+               is_idle_parent = false;
+            } else {
+               can_duplicate_idle = model->canEverDuplicateIdle(qmi);
+               can_delete_idle    = model->canDeleteIdle(qmi);
+            }
          }
 
          this->_context.actions.graph.create->setVisible(is_none || is_graph);
@@ -154,6 +168,7 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
          this->_context.actions.idle.create->setVisible(is_idle_parent);
          this->_context.actions.idle.duplicate->menuAction()->setVisible(can_duplicate_idle);
          this->_context.actions.idle.del->setVisible(can_delete_idle);
+         this->_context.actions.idle.to_canonical->setVisible(multiply_placed);
          this->_context.actions.idle.use_info->setVisible(can_delete_idle);
       });
    }
@@ -414,7 +429,27 @@ QModelIndex IdleAnimationsDialog::_get_selected_row() {
       if (!stub)
          return;
 
+      if (this->_current_idle) {
+         if (stub == &this->_current_idle->stub) {
+            this->_current_idle = nullptr;
+         }
+      }
       model->deleteIdle(qmi, this);
+   }
+   void IdleAnimationsDialog::_context_to_canonical() {
+      auto* widget    = this->ui.idles;
+      auto* model     = (IdleAnimationFormsModel*)widget->model();
+      auto* sel_model = widget->selectionModel();
+
+      auto src_qmi = _get_selected_row();
+      auto dst_qmi = model->canonicalPosition(src_qmi);
+      if (!dst_qmi.isValid())
+         return;
+
+      widget->scrollTo(dst_qmi); // also expands the treeview as necessary
+      auto tl = dst_qmi.siblingAtColumn(0);
+      auto br = dst_qmi.siblingAtColumn(model->columnCount(dst_qmi) - 1);
+      sel_model->select({ tl, br }, QItemSelectionModel::SelectionFlag::ClearAndSelect); // select new idle
    }
    void IdleAnimationsDialog::_context_use_info() {
       auto* widget    = this->ui.idles;
