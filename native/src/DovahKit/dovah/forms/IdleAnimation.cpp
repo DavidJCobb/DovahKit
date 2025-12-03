@@ -16,13 +16,15 @@ namespace dovah::loaded_forms {
       constexpr const std::string_view old_folder = "animations";
 
       auto stristr = [](const std::string_view str, const std::string_view& needle) -> const char* {
+         if (needle.empty())
+            return nullptr;
          if (str.size() < needle.size())
             return nullptr;
-         for (size_t i = 0; i < str.size() - needle.size(); ++i) {
+         for (size_t i = 0; i < str.size() - (needle.size() - 1); ++i) {
             size_t j = 0;
             for (; j < needle.size(); ++j) {
                char a = needle[j];
-               char b = str[i];
+               char b = str[i + j];
                if (b >= 'A' && b <= 'Z')
                   b += 0x20;
                if (a != b)

@@ -14,7 +14,9 @@ namespace dovah::datastores::impl::idles {
          return this->offsets.of_record < other.offsets.of_record;
       }
       //
-      // As a cheap hack, treat a nullptr file pointer as being the active file.
+      // As a cheap hack, treat a nullptr file pointer as being the active file. 
+      // This means that the datastore doesn't need to remember the `file_load_order` 
+      // and query the active file in order to update a newly-edited idle.
       //
       if (!this->source_file)
          return true;
