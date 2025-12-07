@@ -26,9 +26,9 @@ DKBreadcrumbBar::DKBreadcrumbBar(QWidget* parent) : QWidget(parent) {
       textbox->installEventFilter(this);
       QObject::connect(textbox, &QLineEdit::editingFinished, this, [this]() {
          this->_subwidgets.textbox->setVisible(false);
-         //
-         // TODO: Apply the edit.
-         //
+         this->_navigate_to_path(this->_subwidgets.textbox->text());
+         this->setFocus();
+         this->repaint();
       });
    }
 
@@ -72,8 +72,89 @@ void DKBreadcrumbBar::setCurrentIndex(const QModelIndex& qmi) {
    this->_on_navigated();
 }
 
-bool DKBreadcrumbBar::allowTextEditing() const noexcept {
-   return true;
+bool DKBreadcrumbBar::textEditingAllowed() const noexcept {
+   return this->_text_editing.allowed;
+}
+void DKBreadcrumbBar::setTextEditingAllowed(bool v) {
+   if (v == this->_text_editing.allowed)
+      return;
+   this->_text_editing.allowed = v;
+   if (!v) {
+      auto* textbox = this->_subwidgets.textbox;
+      if (textbox->isVisible()) {
+         if (QApplication::focusWidget() == textbox) {
+            this->setFocus();
+         }
+         textbox->setHidden(true);
+         this->repaint();
+      }
+   }
+}
+
+QChar DKBreadcrumbBar::textSeparator() const noexcept {
+   return this->_text_editing.separator;
+}
+void DKBreadcrumbBar::setTextSeparator(QChar c) {
+   auto& prop = this->_text_editing.separator;
+   if (prop == c)
+      return;
+   prop = c;
+   //
+   if (this->textEditingAllowed()) {
+      auto* textbox = this->_subwidgets.textbox;
+      if (textbox->isVisible()) {
+         this->_update_textbox_value();
+      }
+   }
+}
+
+Qt::CaseSensitivity DKBreadcrumbBar::caseSensitivity() const noexcept {
+   return this->_text_editing.case_sensitivity;
+}
+void DKBreadcrumbBar::setCaseSensitivity(Qt::CaseSensitivity v) {
+   auto& prop = this->_text_editing.case_sensitivity;
+   if (prop == v)
+      return;
+   prop = v;
+}
+
+QString DKBreadcrumbBar::path() const noexcept {
+   size_t size = 0;
+   for (size_t i = 0; i < this->_segments.size(); ++i) {
+      if (i > 0)
+         ++size;
+      size += this->_segments[i].text.size();
+   }
+   QString path;
+   path.reserve(size);
+   for (size_t i = 0; i < this->_segments.size(); ++i) {
+      if (i > 0)
+         path += this->_text_editing.separator;
+      path += this->_segments[i].text;
+   }
+   return path;
+}
+
+QMenu* DKBreadcrumbBar::rootMenu() const noexcept {
+   return this->_root_button.menu;
+}
+void DKBreadcrumbBar::setRootMenu(QMenu* m) {
+   QMenu* prior = this->_root_button.menu;
+   if (m == prior)
+      return;
+   bool menu_state_changed = false;
+   if (this->_state.menu_open_for == index_of_root_button) {
+      if (prior)
+         prior->setVisible(false);
+      this->_state.menu_open_for = index_of_none;
+      menu_state_changed = true;
+   }
+   this->_root_button.menu = m;
+   if (!!m != !!prior) {
+      this->_re_layout();
+   } else if (menu_state_changed) {
+      this->repaint();
+   }
 }
 
 void DKBreadcrumbBar::_on_navigated() {
@@ -223,43 +304,64 @@ void DKBreadcrumbBar::_set_up_menu(QMenu& menu, const QModelIndex& qmi) {
       menu.addAction(action);
    }
 }
-void DKBreadcrumbBar::_re_layout() {
+void DKBreadcrumbBar::_re_layout(bool force) {
    auto& last_layout = this->_state.last_layout;
    auto& next_layout = this->_state.next_layout;
 
-   bool guaranteed_relayout = false;
-   if (next_layout.segments_changed || last_layout.any_truncated) {
-      guaranteed_relayout = true;
+   bool guaranteed_relayout = force;
+   if (!guaranteed_relayout) {
+      if (
+         next_layout.segments_changed
+      || last_layout.any_truncated
+      || last_layout.root_button != (this->_root_button.menu != nullptr)
+      ) {
+         guaranteed_relayout = true;
+      }
    }
    next_layout.segments_changed = {};
-
-   auto& segments = this->_segments;
-
-   auto*  style = this->style();
-   size_t count = segments.size();
-   if (!count) {
-      last_layout.any_truncated = false;
-      last_layout.count_shown   = 0;
-      return;
-   }
 
    {
       auto* textbox = this->_subwidgets.textbox;
       textbox->setGeometry(0, 0, this->width(), this->height());
       //
-      // TODO: Make room for root icon, etc.
+      // TODO: Make room for current icon, if visible.
       //
+   }
+
+   bool show_root_button = this->_root_button.menu != nullptr;
+   {
+      int x = this->_styles.border_width;
+      int y = this->_styles.border_width;
+      int h = this->minimumSizeHint().height();
+      h -= this->_styles.border_width * 2; // the widget height includes the widget's own border, so reduce the segment height accordingly
+      this->_root_button.geometry = QRect(x, y, this->_styles.segment.menu_button_width, h);
+   };
+
+   auto& segments = this->_segments;
+
+   size_t count = segments.size();
+   if (!count) {
+      last_layout.any_truncated = false;
+      last_layout.count_shown   = 0;
+      last_layout.root_button   = this->_root_button.menu != nullptr;
+      if (guaranteed_relayout) {
+         this->repaint();
+      }
+      return;
    }
 
    const auto metrics = QFontMetrics(this->font());
 
-   int total_width = 0;
    std::vector<int> widths;
    widths.resize(count);
    {
       int x = this->_styles.border_width;
       int y = this->_styles.border_width;
       int h = this->minimumSizeHint().height();
+      if (show_root_button) {
+         x += this->_root_button.geometry.width();
+         --x; // overlap borders
+      }
       h -= this->_styles.border_width * 2; // the widget height includes the widget's own border, so reduce the segment height accordingly
 
       const int mw = this->_styles.segment.margins.left() + this->_styles.segment.margins.right();
@@ -286,21 +388,30 @@ void DKBreadcrumbBar::_re_layout() {
          } else {
             menu = {};
          }
-         widths[i] = main.width() + menu.width();
-         total_width += widths[i];
+         widths[i] = main.width() + menu.width() - 1;
       }
    }
 
    bool   any_truncated = false;
    size_t count_to_show = count;
 
-   int available = this->size().width();
+   int total_width = 0;
+   {
+      const auto& seg = this->_segments.back();
+      if (seg.menu) {
+         total_width = seg.geometry.menu_button.right();
+      } else {
+         total_width = seg.geometry.main_button.right();
+      }
+   }
+
+   int available = this->width();
    if (available < total_width) {
       if (available < widths.back()) {
          count_to_show = 1;
          widths.back() = available;
          segments.back().geometry.main_button.setWidth(available - this->_styles.segment.menu_button_width);
-         segments.back().geometry.menu_button.setX(segments.back().geometry.main_button.right());
+         segments.back().geometry.menu_button.setX(segments.back().geometry.main_button.right() - 1); // minus 1 to overlap borders
       } else {
          count_to_show = 0;
          total_width   = 0;
@@ -322,11 +433,18 @@ void DKBreadcrumbBar::_re_layout() {
       int    dx = 0;
       size_t i  = 0;
       for (; i < first_to_show; ++i) {
-         segments[i].culled = true;
-         dx += widths[i];
+         auto& seg = segments[i];
+         seg.culled = true;
+         if (i == first_to_show - 1) {
+            if (seg.menu) {
+               dx = seg.geometry.menu_button.right();
+            } else {
+               dx = seg.geometry.main_button.right();
+            }
+            --dx; // overlap borders
+            --dx; // account for leftmost to-be-shown segment's lefthand border being outside of the rect
+         }
       }
-      int x = this->contentsMargins().left();
-      int y = this->contentsMargins().top();
       for (; i < count; ++i) {
          auto& seg = segments[i];
          seg.culled = false;
@@ -336,17 +454,42 @@ void DKBreadcrumbBar::_re_layout() {
          main.translate(-dx, 0);
          menu.translate(-dx, 0);
       }
+      if (!show_root_button && count_to_show < count) {
+         //
+         // Make space to show a "..." indicator where the root button 
+         // would ordinarily be.
+         //
+         show_root_button = true;
+         //
+         // And bump the segments forward out of the root button's way.
+         //
+         int dx = this->_root_button.geometry.width();
+         --dx; // overlap borders
+         available -= dx;
+         for (auto& seg : this->_segments) {
+            seg.geometry.main_button.translate(dx, 0);
+            seg.geometry.menu_button.translate(dx, 0);
+         }
+      }
    }
 
    last_layout.any_truncated = any_truncated;
    last_layout.count_shown   = count_to_show;
+   last_layout.root_button   = this->_root_button.menu != nullptr;
 
    this->repaint();
 }
 
 void DKBreadcrumbBar::_on_segment_hovered(size_t i) {
-   if (i >= this->_segments.size())
-      i = index_of_none;
+   switch (i) {
+      case index_of_root_button:
+      case index_of_none:
+         break;
+      default:
+         if (i >= this->_segments.size())
+            i = index_of_none;
+         break;
+   }
    if (this->_state.hovered_segment == i)
       return;
 
@@ -358,7 +501,7 @@ void DKBreadcrumbBar::_on_segment_hovered(size_t i) {
    // latter segment's menu.
    //
    if (i != index_of_none && this->_state.menu_open_for != index_of_none) {
-      this->_open_menu(this->_state.hovered_segment);
+      this->_open_menu(i);
    }
 }
 
@@ -371,35 +514,61 @@ void DKBreadcrumbBar::_close_menu(size_t i) {
    seg.menu->hide();
 }
 void DKBreadcrumbBar::_open_menu(size_t i) {
-   const segment& seg = this->_segments[i];
-   if (i == this->_state.menu_open_for) {
-      if (seg.menu && seg.menu == QApplication::activePopupWidget())
-         return;
+   QPoint open_from;
+   QMenu* to_open = nullptr;
+   switch (i) {
+      case index_of_none:
+         break;
+      case index_of_root_button:
+         to_open   = this->_root_button.menu;
+         open_from = this->_root_button.geometry.bottomLeft().toPoint();
+         break;
+      default:
+         {
+            const auto& seg = this->_segments[i];
+            to_open   = this->_segments[i].menu;
+            open_from = seg.geometry.menu_button.bottomRight().toPoint();
+            open_from.rx() -= 32;
+            //
+            // The intent of the displacement above is to make it so that opening the root menu 
+            // aligns the menu roughly with the leading edge of the widget. The same displacement 
+            // is applied to Windows's native breadcrumb widgets for each segment's menu as well, 
+            // such that for a segment's menu, icons on menu items are aligned roughly below the 
+            // segment text, while the leading edge of the menu items' labels is aligned roughly 
+            // below the bottom-right corner of the segment's menu button.
+         }
+         break;
    }
 
+   if (i == this->_state.menu_open_for) {
+      if (to_open && to_open == QApplication::activePopupWidget())
+         return;
+   }
    this->_close_menu(this->_state.menu_open_for);
-   if (!seg.menu) {
+
+   if (!to_open) {
       //
       // We want to forcibly close any menu that's already open on a segment, even if 
       // we don't open a menu ourselves. This makes it simpler and easier to maintain 
-      // consistent behaviors with Windows's native breadcrumb menu.
+      // consistent behaviors with Windows's native breadcrumb menu. (Specifically, 
+      // the native widget tracks whether its menu is "supposed to be" open. If you 
+      // open a segment's menu and then use the left and right arrow keys to hover a 
+      // segment with no menu, then no menu will be visible; but pressing left or 
+      // right *again* and moving to a segment that has a menu will pop that segment's 
+      // menu.)
       //
       this->_state.menu_open_for = i;
       return;
    }
 
-   auto pos = seg.geometry.menu_button.bottomRight().toPoint();
-   pos.rx() -= 32; // icon size
-   pos = this->mapToGlobal(pos);
-   //
-   // The intent of the displacement above is to make it so that opening the root menu 
-   // aligns the menu roughly with the leading edge of the widget. The same displacement 
-   // is applied to Windows's native breadcrumb widgets for each segment's menu as well, 
-   // such that for a segment's menu, icons on menu items are aligned roughly below the 
-   // segment text, while the leading edge of the menu items' labels is aligned roughly 
-   // below the bottom-right corner of the segment's menu button.
-
-   seg.menu->popup(pos);
+   if (i == index_of_root_button) {
+      //
+      // The root menu doesn't know its own index, and won't tell us when it's opened, 
+      // so we here need to manually track that it's the menu we have open.
+      //
+      this->_state.menu_open_for = index_of_root_button;
+   }
+   to_open->popup(this->mapToGlobal(open_from));
    this->repaint(); // to update the menu-button chevron for each segment
 }
 void DKBreadcrumbBar::_start_menu_eavesdropping(QMenu& menu) {
@@ -457,21 +626,42 @@ void DKBreadcrumbBar::_on_segment_clicked(const segment& seg) {
    this->setCurrentIndex(seg.qmi);
 }
 void DKBreadcrumbBar::_on_horizontal_arrow_key(bool left) {
-   size_t i = this->_state.hovered_segment;
-   if (this->_segments.empty())
+   const size_t count = this->_segments.size();
+   if (!count) {
+      if (this->_root_button.menu) {
+         this->_on_segment_hovered(index_of_root_button);
+      }
       return;
+   }
+   const size_t first = [&]() -> size_t {
+      if (this->_root_button.menu) {
+         return index_of_root_button;
+      }
+      const auto vis = this->_state.last_layout.count_shown;
+      if (count >= vis) {
+         return count - vis;
+      }
+      return 0;
+   }();
+
+   size_t i = this->_state.hovered_segment;
    if (i == index_of_none) {
       if (left) {
-         i = this->_segments.size() - 1;
+         i = count - 1;
       } else {
-         i = 0;
+         i = first;
       }
+   } else if (i == index_of_root_button) {
+      if (left)
+         i = count - 1;
+      else
+         i = 0;
    } else {
       if (left) {
-         i = ((i == 0) ? this->_segments.size() : i) - 1;
+         i = ((i == first) ? count : i) - 1;
       } else {
-         if (++i >= this->_segments.size())
-            i = 0;
+         if (++i >= count)
+            i = first;
       }
    }
    this->_on_segment_hovered(i);
@@ -509,6 +699,56 @@ void DKBreadcrumbBar::_on_vertical_arrow_key() {
    this->_open_menu(hover_idx);
 }
 
+void DKBreadcrumbBar::_update_textbox_value() {
+   auto*      textbox = this->_subwidgets.textbox;
+   const auto blocker = QSignalBlocker(textbox);
+   textbox->setText(this->path());
+}
+bool DKBreadcrumbBar::_navigate_to_path(QString path) {
+   if (!this->_data.model)
+      return false;
+   const auto cs     = this->caseSensitivity();
+   const auto chunks = path.splitRef(this->_text_editing.separator, Qt::SkipEmptyParts, cs);
+   //
+   // Try to see if this matches a subset of the path we're already in. 
+   // If so, that saves us some model queries.
+   //
+   QModelIndex qmi;
+   size_t ci = 0; // chunk index
+   {
+      size_t max = std::min((size_t)chunks.size(), this->_segments.size());
+      for (; ci < max; ++ci) {
+         auto& seg = this->_segments[ci];
+         if (seg.text.compare(chunks[ci], cs) != 0)
+            break;
+         qmi = seg.qmi;
+      }
+   }
+   for (; ci < chunks.size(); ++ci) {
+      auto rows = this->_data.model->rowCount(qmi);
+      if (rows <= 0)
+         return false; // failed.
+      bool found = false;
+      for (size_t ri = 0; ri < rows; ++ri) {
+         auto row_qmi = this->_data.model->index(ri, 0, qmi);
+         if (!row_qmi.isValid())
+            continue;
+         auto text = this->_data.model->data(row_qmi, Qt::DisplayRole).toString();
+         if (text.isEmpty())
+            continue;
+         if (text.compare(chunks[ci], cs) == 0) {
+            qmi   = row_qmi;
+            found = true;
+            break;
+         }
+      }
+      if (!found)
+         return false;
+   }
+   this->setCurrentIndex(qmi);
+   return true;
+}
+
 /*virtual*/ QSize DKBreadcrumbBar::minimumSizeHint() const /*override*/ {
    auto size = this->minimumSize();
 
@@ -535,6 +775,31 @@ void DKBreadcrumbBar::_on_vertical_arrow_key() {
 }
 //
 #pragma region Events
+   /*virtual*/ void DKBreadcrumbBar::changeEvent(QEvent* event) {
+      switch (event->type()) {
+         case QEvent::EnabledChange:
+            if (this->_subwidgets.textbox->isVisible()) {
+               this->_subwidgets.textbox->setVisible(false);
+            }
+            {
+               size_t i = this->_state.menu_open_for;
+               if (i < this->_segments.size()) {
+                  auto& seg = this->_segments[i];
+                  if (seg.menu)
+                     seg.menu->setVisible(false);
+               } else if (i == index_of_root_button) {
+                  if (QMenu* menu = this->_root_button.menu)
+                     menu->setVisible(false);
+               }
+               this->_state.menu_open_for = index_of_none;
+            }
+            this->repaint();
+            break;
+         case QEvent::LayoutDirectionChange:
+            this->_re_layout(true);
+            break;
+      }
+   }
    /*virtual*/ void DKBreadcrumbBar::keyPressEvent(QKeyEvent* event) {
       switch (event->key()) {
          case Qt::Key::Key_Up:
@@ -578,8 +843,16 @@ void DKBreadcrumbBar::_on_vertical_arrow_key() {
          // so we can't trust its own localPos(). Refer to the "menu eavesdropping" 
          // code and its comments for further information.
 
+         if (this->_root_button.menu) {
+            if (this->_root_button.geometry.contains(pos)) {
+               this->_open_menu(index_of_root_button);
+               return;
+            }
+         }
          for (size_t i = 0; i < this->_segments.size(); ++i) {
             const auto& segment = this->_segments[i];
+            if (segment.culled)
+               continue;
             if (segment.geometry.main_button.contains(pos)) {
                this->_on_segment_clicked(segment);
                event->accept();
@@ -594,9 +867,13 @@ void DKBreadcrumbBar::_on_vertical_arrow_key() {
                return;
             }
          }
-         this->_subwidgets.textbox->setVisible(true);
-         this->_subwidgets.textbox->setFocus();
-         event->accept();
+         if (this->textEditingAllowed()) {
+            this->_update_textbox_value();
+            this->_subwidgets.textbox->setVisible(true);
+            this->_subwidgets.textbox->setFocus();
+            this->_subwidgets.textbox->selectAll();
+            event->accept();
+         }
          return;
       }
    }
@@ -605,6 +882,9 @@ void DKBreadcrumbBar::_on_vertical_arrow_key() {
 
       if (this->_subwidgets.textbox->isVisible())
          return;
+
+      const bool is_disabled  = !this->isEnabled();
+      const bool is_menu_open = this->_state.menu_open_for != index_of_none;
 
       // Widget base layer
       {
@@ -619,6 +899,7 @@ void DKBreadcrumbBar::_on_vertical_arrow_key() {
       // NOTE: For RTL layouts, it should probably be to the right instead
       //
 
+      QPainterPath menu_chevron_elided;
       QPainterPath menu_chevron_base;
       QPainterPath menu_chevron_open;
       {
@@ -637,19 +918,19 @@ void DKBreadcrumbBar::_on_vertical_arrow_key() {
          menu_chevron_base.moveTo(QPointF{ cx - pos, cy - 2 });
          menu_chevron_base.lineTo(QPointF{ cx + pos, cy });
          menu_chevron_base.lineTo(QPointF{ cx - pos, cy + 2 });
+
+         menu_chevron_elided.moveTo(QPointF{ cx-(pos) - pos, cy - 2});
+         menu_chevron_elided.lineTo(QPointF{ cx-(pos) + pos, cy });
+         menu_chevron_elided.lineTo(QPointF{ cx-(pos) - pos, cy + 2 });
+         menu_chevron_elided.moveTo(QPointF{ cx+(pos) - pos, cy - 2 });
+         menu_chevron_elided.lineTo(QPointF{ cx+(pos) + pos, cy });
+         menu_chevron_elided.lineTo(QPointF{ cx+(pos) - pos, cy + 2 });
       }
+      const auto* active_popup = QApplication::activePopupWidget();
 
-      const bool is_disabled  = !this->isEnabled();
-      const bool is_menu_open = this->_state.menu_open_for != index_of_none;
-
-      painter.setFont(this->font());
-      for (size_t i = 0; i < this->_segments.size(); ++i) {
-         const auto& segment = this->_segments[i];
-         if (segment.culled) {
-            continue;
-         }
-         const bool  hovered = i == this->_state.hovered_segment;
-         const auto& colors  =
+      const auto& _colors_for_segment = [this, is_disabled, is_menu_open](size_t i) -> SegmentPalette& {
+         const bool  hovered = !is_menu_open && this->_state.hovered_segment == i;
+         return
             is_disabled ?
                this->_styles.segment.colors.disabled
             :
@@ -658,22 +939,71 @@ void DKBreadcrumbBar::_on_vertical_arrow_key() {
                :
                   this->_styles.segment.colors.normal
          ;
+      };
+      auto _draw_icon = [&painter](const SegmentPalette& colors, QPointF pos, const QPainterPath& path) {
+         painter.save();
+         painter.setPen(colors.menu_button.icon);
+         painter.translate(pos);
+         painter.setRenderHint(QPainter::RenderHint::Antialiasing);
+         painter.drawPath(path);
+         painter.restore();
+      };
+
+      if (this->_root_button.menu) {
+         const auto& colors = _colors_for_segment(index_of_root_button);
+         painter.setBrush(colors.menu_button.fill);
+         painter.setPen(colors.menu_button.line);
+         painter.drawRect(this->_root_button.geometry - qt_border_jank);
+         const auto& icon =
+            (this->_state.last_layout.count_shown < this->_segments.size()) ?
+               menu_chevron_elided
+            :
+               (active_popup == this->_root_button.menu) ?
+                  menu_chevron_open
+               :
+                  menu_chevron_base
+         ;
+         _draw_icon(colors, this->_root_button.geometry.topLeft(), icon);
+      } else if (this->_state.last_layout.count_shown < this->_segments.size()) {
+         //
+         // Draw a "..." button to indicate that not all segments are shown.
+         // 
+         // QPainterPath doesn't have `drawPoint`, and if QPainter is told to 
+         // draw a line from a point to the same point, it produces no output 
+         // rather than a single point; so we can't prepare a path for this in 
+         // advance.
+         //
+         qreal cx = this->_styles.segment.menu_button_width / 2.0F;
+         qreal cy = this->height() / 2.0F;
+         painter.save();
+         painter.setPen(this->palette().color(QPalette::Text));
+         painter.setRenderHint(QPainter::RenderHint::Antialiasing);
+         painter.translate(this->_root_button.geometry.topLeft());
+         painter.drawPoint(QPointF{ cx - 2, cy });
+         painter.drawPoint(QPointF{ cx    , cy });
+         painter.drawPoint(QPointF{ cx + 2, cy });
+         painter.restore();
+      }
+
+      painter.setFont(this->font());
+      for (size_t i = 0; i < this->_segments.size(); ++i) {
+         const auto& segment = this->_segments[i];
+         if (segment.culled) {
+            continue;
+         }
+         const auto& colors = _colors_for_segment(i);
          if (segment.menu) {
             painter.setBrush(colors.menu_button.fill);
             painter.setPen(colors.menu_button.line);
             painter.drawRect(segment.geometry.menu_button - qt_border_jank);
-            {  // Draw menu button glyph
-               painter.save();
-               painter.setPen(colors.menu_button.icon);
-               painter.translate(segment.geometry.menu_button.topLeft());
-               painter.setRenderHint(QPainter::RenderHint::Antialiasing);
-               if (QApplication::activePopupWidget() == segment.menu) {
-                  painter.drawPath(menu_chevron_open);
-               } else {
-                  painter.drawPath(menu_chevron_base);
-               }
-               painter.restore();
-            }
+            _draw_icon(
+               colors,
+               segment.geometry.menu_button.topLeft(),
+               (active_popup == segment.menu) ?
+                  menu_chevron_open
+               :
+                  menu_chevron_base
+            );
          }
          if (!segment.geometry.main_button.isEmpty()) {
             painter.setBrush(colors.main_button.fill);
@@ -704,6 +1034,14 @@ void DKBreadcrumbBar::_on_vertical_arrow_key() {
          if (event->type() == QEvent::FocusOut) {
             this->_subwidgets.textbox->setVisible(false);
             this->repaint();
+         }
+         if (event->type() == QEvent::KeyPress) {
+            auto* kev = (QKeyEvent*)event;
+            if (kev->key() == Qt::Key::Key_Escape) {
+               this->_subwidgets.textbox->setVisible(false);
+               this->setFocus();
+               this->repaint();
+            }
          }
       }
       if (auto* casted = qobject_cast<QMenu*>(watched)) {

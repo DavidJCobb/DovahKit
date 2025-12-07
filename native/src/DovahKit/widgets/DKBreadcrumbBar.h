@@ -9,6 +9,9 @@
 
 class DKBreadcrumbBar : public QWidget {
    Q_OBJECT;
+   Q_PROPERTY(bool  textEditingAllowed READ textEditingAllowed WRITE setTextEditingAllowed DESIGNABLE true);
+   Q_PROPERTY(QChar textSeparator      READ textSeparator      WRITE setTextSeparator      DESIGNABLE true);
+   Q_PROPERTY(Qt::CaseSensitivity caseSensitivity READ caseSensitivity WRITE setCaseSensitivity DESIGNABLE true);
    public:
       DKBreadcrumbBar(QWidget* parent = nullptr);
 
@@ -40,7 +43,17 @@ class DKBreadcrumbBar : public QWidget {
                      .line = QPen(QColor(204, 232, 255), 0),
                   },
                };
-               SegmentPalette disabled;
+               SegmentPalette disabled{
+                  .main_button = {
+                     .fill = QColor(0, 0, 0, 0),
+                     .line = QColor(0, 0, 0, 0),
+                  },
+                  .menu_button = {
+                     .fill = QColor(0, 0, 0, 0),
+                     .line = QColor(0, 0, 0, 0),
+                     .icon = QPen(QColor(0, 0, 0), 1.5, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin),
+                  },
+               };
             } colors;
             unsigned int menu_button_width = 15; // includes borders
          } segment;
@@ -59,7 +72,8 @@ class DKBreadcrumbBar : public QWidget {
          QPersistentModelIndex qmi;
       };
 
-      static constexpr const size_t index_of_none = (size_t)-1;
+      static constexpr const size_t index_of_none        = (size_t)-1;
+      static constexpr const size_t index_of_root_button = (size_t)-2;
 
    public: // properties
       QAbstractItemModel* model() const noexcept;
@@ -68,7 +82,19 @@ class DKBreadcrumbBar : public QWidget {
       QModelIndex currentIndex() const noexcept;
       void setCurrentIndex(const QModelIndex&);
 
-      bool allowTextEditing() const noexcept;
+      bool textEditingAllowed() const noexcept;
+      void setTextEditingAllowed(bool);
+
+      QChar textSeparator() const noexcept;
+      void setTextSeparator(QChar);
+
+      Qt::CaseSensitivity caseSensitivity() const noexcept;
+      void setCaseSensitivity(Qt::CaseSensitivity);
+
+      QString path() const noexcept;
+
+      QMenu* rootMenu() const noexcept;
+      void setRootMenu(QMenu*); // does NOT take ownership
 
       constexpr const Styles& styles() const noexcept { return this->_styles; }
 
@@ -77,7 +103,7 @@ class DKBreadcrumbBar : public QWidget {
       void _on_data_changed(const QModelIndex&);
       bool _on_before_item_deleted(const QModelIndex&);
       void _set_up_menu(QMenu&, const QModelIndex& qpmi);
-      void _re_layout();
+      void _re_layout(bool force = false);
 
       void _on_segment_hovered(size_t);
 
@@ -91,11 +117,15 @@ class DKBreadcrumbBar : public QWidget {
       void _on_horizontal_arrow_key(bool left);
       void _on_vertical_arrow_key();
 
+      void _update_textbox_value();
+      bool _navigate_to_path(QString);
+
    public:
       virtual QSize minimumSizeHint() const override;
       virtual QSize sizeHint() const override;
       //
       #pragma region Events
+         virtual void changeEvent(QEvent* event);
          virtual void keyPressEvent(QKeyEvent* event);
          virtual void mouseMoveEvent(QMouseEvent* event);
          virtual void mousePressEvent(QMouseEvent* event);
@@ -115,7 +145,16 @@ class DKBreadcrumbBar : public QWidget {
          QPointer<QAbstractItemModel> model;
          QPersistentModelIndex index;
       } _data;
+      struct {
+         QPointer<QMenu> menu;
+         QRectF geometry;
+      } _root_button;
       std::vector<segment> _segments;
+      struct {
+         bool  allowed   = true;
+         QChar separator = '/';
+         Qt::CaseSensitivity case_sensitivity = Qt::CaseSensitivity::CaseInsensitive;
+      } _text_editing;
       struct {
          QLineEdit* textbox = nullptr;
       } _subwidgets;
@@ -125,6 +164,7 @@ class DKBreadcrumbBar : public QWidget {
          struct {
             bool   any_truncated = false;
             size_t count_shown   = 0;
+            bool   root_button   = false;
          } last_layout;
          struct {
             bool segments_changed = false;
