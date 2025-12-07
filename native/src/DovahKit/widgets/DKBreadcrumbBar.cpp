@@ -239,10 +239,13 @@ void DKBreadcrumbBar::setRootMenu(QMenu* m) {
    }
    this->_root_button.menu = m;
    if (m) {
-      QObject::connect(m, &QMenu::aboutToShow, this, [this]() {
-         this->_state.menu_open_for = index_of_root_button;
-         this->repaint();
-      });
+      //
+      // We hook `QMenu::aboutToHide` so we know when the root menu is 
+      // dismissed and can update our internal state. However, it's not 
+      // safe to hook `QMenu::aboutToShow` because the root menu could 
+      // potentially be shown by some other UI, such as a different 
+      // DKBreadcrumbBar.
+      //
       QObject::connect(m, &QMenu::aboutToHide, this, [this]() {
          if (this->_state.menu_open_for == index_of_root_button) {
             this->_state.menu_open_for = index_of_none;
@@ -534,7 +537,7 @@ void DKBreadcrumbBar::_re_layout(bool force) {
             for (count_to_show = 0; count_to_show < count; ++count_to_show) {
                size_t i = count - count_to_show - 1;
                auto   w = this->_segments[i].width();
-               if (total_width + w > available)
+               if (total_width + w > available - 1) // minus 1 to account for the leading-est segment's leading border being added
                   break;
                total_width += w;
             }
@@ -593,6 +596,7 @@ void DKBreadcrumbBar::_re_layout(bool force) {
          seg.geometry.main_button.translate(dx, 0);
          seg.geometry.menu_button.translate(dx, 0);
       }
+      this->_segments[first_to_show].geometry.main_borders.leading = true;
    }
 
    last_layout.count_shown = count_to_show;
@@ -648,6 +652,12 @@ void DKBreadcrumbBar::_on_segment_hovered(size_t i) {
 }
 
 void DKBreadcrumbBar::_close_menu(size_t i) {
+   if (i == index_of_root_button) {
+      QMenu* menu = this->_root_button.menu;
+      if (menu)
+         menu->hide();
+      return;
+   }
    if (i == index_of_none || i >= this->_segments.size())
       return;
    auto& seg = this->_segments[i];
@@ -678,8 +688,29 @@ void DKBreadcrumbBar::_open_menu(size_t i) {
             // such that for a segment's menu, icons on menu items are aligned roughly below the 
             // segment text, while the leading edge of the menu items' labels is aligned roughly 
             // below the bottom-right corner of the segment's menu button.
+            //
          }
          break;
+   }
+
+   //
+   // Opening a QMenu causes Qt's core to hijack basically all input events and 
+   // route them exclusively to the QMenu (see the notes on "eavesdropping"). 
+   // However, it also causes Qt to potentially dispatch a synthetic "mouse leave" 
+   // event to whatever widget the mouse was previously over. We need to make sure 
+   // that when we receive this "mouse leave" event, we're aware that the mouse has 
+   // not actually left.
+   //
+   {
+      bool mouseleave_pending = (this->_state.menu_open_for == index_of_none);
+      if (!mouseleave_pending) {
+         // last segment has no menu, but we track whether its menu *would* be open
+         mouseleave_pending = this->_state.menu_open_for == (this->_segments.size() - 1);
+      }
+
+      if (mouseleave_pending) {
+         this->_state.next_mouseleave_is_from_menu_opening = true;
+      }
    }
 
    if (i == this->_state.menu_open_for) {
@@ -703,6 +734,16 @@ void DKBreadcrumbBar::_open_menu(size_t i) {
       return;
    }
 
+   if (i == index_of_root_button) {
+      //
+      // Our own menus use `QMenu::aboutToShow` to update this variable, but that isn't 
+      // safe to use for the root menu (since it could be shared with other widgets and 
+      // shown for any of them), so for that menu specifically, we update the state here.
+      // 
+      // (Why use `aboutToShow` at all? The other menus also do setup there.)
+      //
+      this->_state.menu_open_for = i;
+   }
    to_open->popup(this->mapToGlobal(open_from));
    this->repaint(); // to update the menu-button chevron for each segment
 }
@@ -732,13 +773,12 @@ bool DKBreadcrumbBar::_do_menu_eavesdropping(QMenu& menu, QEvent& event) {
          this->mouseMoveEvent((QMouseEvent*)&event);
          break;
       case QEvent::MouseButtonPress:
-         /*{
+         {
             auto* mev = (QMouseEvent*)&event;
-            if (this == QApplication::widgetAt(mev->globalPos())) {
-               this->mousePressEvent(mev);
-               return true;
+            if (mev->button() == Qt::LeftButton && this == QApplication::widgetAt(mev->globalPos())) {
+               this->_state.last_click_closed_our_menu = true;
             }
-         }*/
+         }
          break;
       case QEvent::KeyPress:
          if (!menu.activeAction()) {
@@ -779,41 +819,38 @@ void DKBreadcrumbBar::_on_horizontal_arrow_key(bool left) {
       }
       return;
    }
-   const size_t first = [&]() -> size_t {
-      if (this->_root_button.menu) {
-         return index_of_root_button;
-      }
-      const auto vis = this->_state.last_layout.count_shown;
-      if (count >= vis) {
-         return count - vis;
-      }
-      return 0;
-   }();
+   const bool   has_root_button = this->_root_button.menu != nullptr;
+   const size_t first_segment   = count - this->_state.last_layout.count_shown;
+   const size_t first_index     = has_root_button ? index_of_root_button : first_segment;
+   const size_t last_index      = count - 1;
 
    size_t i = this->_state.hovered_segment;
    if (i == index_of_none) {
       if (left) {
-         i = count - 1;
+         i = last_index;
       } else {
-         i = first;
+         i = first_index;
       }
    } else if (i == index_of_root_button) {
       if (left)
-         i = count - 1;
+         i = last_index;
       else
-         i = 0;
+         i = first_segment;
    } else {
       if (left) {
-         if (i == first) {
-            i = count - 1;
-         } else if (i == 0 && this->_root_button.menu) {
+         if (i == first_index)
+            i = last_index;
+         else if (i == first_segment && has_root_button)
             i = index_of_root_button;
-         } else {
+         else
             --i;
-         }
       } else {
-         if (++i >= count)
-            i = first;
+         if (i == index_of_root_button)
+            i = first_segment;
+         else if (i == last_index)
+            i = first_index;
+         else
+            ++i;
       }
    }
    this->_on_segment_hovered(i);
@@ -995,6 +1032,8 @@ void DKBreadcrumbBar::_recache_icons() {
       const auto* focused = QApplication::focusWidget();
       auto*       textbox = this->_subwidgets.textbox;
       if (focused) {
+         if (focused == this) // spurious activation
+            return;
          if (focused == textbox)
             return;
          for (auto& seg : this->_segments)
@@ -1045,6 +1084,10 @@ void DKBreadcrumbBar::_recache_icons() {
       }
    }
    /*virtual*/ void DKBreadcrumbBar::leaveEvent(QEvent* event) {
+      if (this->_state.next_mouseleave_is_from_menu_opening) {
+         this->_state.next_mouseleave_is_from_menu_opening = false;
+         return;
+      }
       this->_on_segment_hovered(index_of_none);
    }
    /*virtual*/ void DKBreadcrumbBar::mouseMoveEvent(QMouseEvent* event) {
@@ -1075,6 +1118,17 @@ void DKBreadcrumbBar::_recache_icons() {
          return;
       }
       if (event->button() == Qt::LeftButton) {
+         if (this->_state.last_click_closed_our_menu) {
+            //
+            // We're responding to the same click that closed our menu. We will have 
+            // already received `QMenu::aboutToHide` and cleared our "menu open for" 
+            // state value, so we have no other way of knowing this. If we don't exit 
+            // here, then we'll re-open the menu that was just closed.
+            //
+            this->_state.last_click_closed_our_menu = false;
+            return;
+         }
+
          //auto pos = event->localPos();
          auto pos = this->mapFromGlobal(event->globalPos());
          // The event may have been originally delivered to a QMenu before we took it, 
@@ -1097,10 +1151,6 @@ void DKBreadcrumbBar::_recache_icons() {
                return;
             }
             if (segment.geometry.menu_button.contains(pos)) {
-               if (this->_state.menu_open_for == i) {
-                  this->_close_menu(i);
-                  return;
-               }
                this->_open_menu(i);
                return;
             }
@@ -1230,11 +1280,6 @@ void DKBreadcrumbBar::_recache_icons() {
       }
       if (auto* casted = qobject_cast<QMenu*>(watched)) {
          if (this->_do_menu_eavesdropping(*casted, *event))
-            //
-            // Clicking on a segment while a menu is open will cause us to close 
-            // the menu. Let's make sure that QMenu doesn't then forward the same 
-            // mouse event back to us afterward.
-            //
             return true;
       }
       return QWidget::eventFilter(watched, event);

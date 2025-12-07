@@ -194,5 +194,10 @@ class DKBreadcrumbBar : public QWidget {
             QPainterPath chevron_open;
             QPainterPath chevron_more; // root button, regardless of state, if any segments are culled
          } icons;
+         //
+         // Vile hacks:
+         //
+         bool last_click_closed_our_menu = false;
+         bool next_mouseleave_is_from_menu_opening = false;
       } _state;
 };
