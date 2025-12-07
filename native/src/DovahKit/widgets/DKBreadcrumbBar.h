@@ -3,6 +3,7 @@
 #include <QAbstractItemModel>
 #include <QLineEdit>
 #include <QMenu>
+#include <QPainterPath>
 #include <QPointer>
 #include <QPushButton>
 #include <QWidget>
@@ -61,15 +62,30 @@ class DKBreadcrumbBar : public QWidget {
       };
 
    protected:
+      enum class segment_paint_state {
+         normal,
+         hovered,
+         disabled,
+      };
+
       struct segment {
-         bool culled = false;
-         struct {
-            QRectF main_button;
-            QRectF menu_button;
-         } geometry;
-         QString text;
-         QMenu*  menu = nullptr;
-         QPersistentModelIndex qmi;
+         public:
+            bool culled = false;
+            struct {
+               QRectF main_button;
+               QRectF menu_button;
+               struct {
+                  bool leading  = false;
+                  bool trailing = false;
+               } main_borders;
+            } geometry;
+            QString text;
+            QMenu*  menu = nullptr;
+            QPersistentModelIndex qmi;
+
+         public:
+            unsigned int width() const noexcept;
+            void repaint(DKBreadcrumbBar&, QPainter&, segment_paint_state, size_t my_index) const;
       };
 
       static constexpr const size_t index_of_none        = (size_t)-1;
@@ -117,8 +133,11 @@ class DKBreadcrumbBar : public QWidget {
       void _on_horizontal_arrow_key(bool left);
       void _on_vertical_arrow_key();
 
+      void _begin_text_editing();
       void _update_textbox_value();
       bool _navigate_to_path(QString);
+
+      void _recache_icons();
 
    public:
       virtual QSize minimumSizeHint() const override;
@@ -126,7 +145,9 @@ class DKBreadcrumbBar : public QWidget {
       //
       #pragma region Events
          virtual void changeEvent(QEvent* event);
+         virtual void focusOutEvent(QFocusEvent* event);
          virtual void keyPressEvent(QKeyEvent* event);
+         virtual void leaveEvent(QEvent* event);
          virtual void mouseMoveEvent(QMouseEvent* event);
          virtual void mousePressEvent(QMouseEvent* event);
          virtual void paintEvent(QPaintEvent* event);
@@ -162,12 +183,16 @@ class DKBreadcrumbBar : public QWidget {
          size_t menu_open_for   = index_of_none;
          size_t hovered_segment = index_of_none;
          struct {
-            bool   any_truncated = false;
-            size_t count_shown   = 0;
-            bool   root_button   = false;
+            size_t count_shown = 0;
          } last_layout;
          struct {
             bool segments_changed = false;
          } next_layout;
+         struct {
+            bool cached = false;
+            QPainterPath chevron_base;
+            QPainterPath chevron_open;
+            QPainterPath chevron_more; // root button, regardless of state, if any segments are culled
+         } icons;
       } _state;
 };

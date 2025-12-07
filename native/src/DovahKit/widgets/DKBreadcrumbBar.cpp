@@ -17,6 +17,81 @@ namespace {
    static constexpr const QMargins qt_border_jank = { 0, 0, 1, 1 };
 }
 
+#pragma region DKBreadcrumbBar::segment
+   unsigned int DKBreadcrumbBar::segment::width() const noexcept {
+      int width = this->geometry.main_button.width();
+      if (this->menu)
+         width += this->geometry.menu_button.width();
+      if (this->geometry.main_borders.leading)
+         ++width;
+      if (this->geometry.main_borders.trailing)
+         ++width;
+      return width;
+   }
+   void DKBreadcrumbBar::segment::repaint(DKBreadcrumbBar& widget, QPainter& painter, segment_paint_state state, size_t my_index) const {
+      auto& palette = [state, &widget]() -> const SegmentPalette& {
+         switch (state) {
+            case segment_paint_state::disabled:
+               return widget._styles.segment.colors.disabled;
+            case segment_paint_state::hovered:
+               return widget._styles.segment.colors.hovered;
+         }
+         return widget._styles.segment.colors.normal;
+      }();
+
+      if (this->menu) {
+         painter.setBrush(palette.menu_button.fill);
+         painter.setPen(palette.menu_button.line);
+         painter.drawRect(this->geometry.menu_button - qt_border_jank);
+         //
+         // Draw icon.
+         //
+         painter.save();
+         painter.setPen(palette.menu_button.icon);
+         painter.translate(this->geometry.menu_button.center());
+         painter.setRenderHint(QPainter::RenderHint::Antialiasing);
+         if (my_index == widget._state.menu_open_for) {
+            painter.drawPath(widget._state.icons.chevron_open);
+         } else {
+            painter.drawPath(widget._state.icons.chevron_base);
+         }
+         painter.restore();
+      }
+      {
+         painter.fillRect(this->geometry.main_button, palette.main_button.fill);
+         //
+         // Borders:
+         //
+         bool draw_left  = this->geometry.main_borders.leading;
+         bool draw_right = this->geometry.main_borders.trailing;
+         if (widget.layoutDirection() == Qt::LayoutDirection::RightToLeft) {
+            std::swap(draw_left, draw_right);
+         }
+         const auto&  rect = this->geometry.main_button - qt_border_jank;
+         QPainterPath path;
+         path.moveTo(rect.topLeft());
+         path.lineTo(rect.topRight());
+         if (draw_right) {
+            path.lineTo(rect.bottomRight());
+         } else {
+            path.moveTo(rect.bottomRight());
+         }
+         path.lineTo(rect.bottomLeft());
+         if (draw_left) {
+            path.lineTo(rect.topLeft());
+         }
+         painter.strokePath(path, palette.main_button.line);
+      }
+      painter.setPen(palette.main_button.text);
+      painter.drawText(
+         this->geometry.main_button - widget._styles.segment.margins,
+         Qt::AlignLeading,
+         this->text,
+         nullptr
+      );
+   }
+#pragma endregion
+
 DKBreadcrumbBar::DKBreadcrumbBar(QWidget* parent) : QWidget(parent) {
    this->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Fixed);
 
@@ -32,7 +107,7 @@ DKBreadcrumbBar::DKBreadcrumbBar(QWidget* parent) : QWidget(parent) {
       });
    }
 
-   this->setFocusPolicy(Qt::FocusPolicy::TabFocus);
+   this->setFocusPolicy(Qt::FocusPolicy::StrongFocus);
    this->setMouseTracking(true);
 }
 
@@ -142,6 +217,15 @@ void DKBreadcrumbBar::setRootMenu(QMenu* m) {
    QMenu* prior = this->_root_button.menu;
    if (m == prior)
       return;
+   for (const auto& seg : this->_segments) {
+      //
+      // Theoretically, someone could grab our per-segment menus via 
+      // QApplication::activePopupWidget, etc., and try to set one 
+      // of those as the root menu. This would be weird and stupid, 
+      // but I'll guard against it anyway.
+      //
+      assert(m != seg.menu && "What the hell are you doing?! Don't take a DKBreadcrumbBar's internal menus and set them as the root menu!");
+   }
    bool menu_state_changed = false;
    if (this->_state.menu_open_for == index_of_root_button) {
       if (prior)
@@ -149,7 +233,22 @@ void DKBreadcrumbBar::setRootMenu(QMenu* m) {
       this->_state.menu_open_for = index_of_none;
       menu_state_changed = true;
    }
+   if (prior) {
+      QObject::disconnect(prior, nullptr, this, nullptr);
+   }
    this->_root_button.menu = m;
+   if (m) {
+      QObject::connect(m, &QMenu::aboutToShow, this, [this]() {
+         this->_state.menu_open_for = index_of_root_button;
+         this->repaint();
+      });
+      QObject::connect(m, &QMenu::aboutToHide, this, [this]() {
+         if (this->_state.menu_open_for == index_of_root_button) {
+            this->_state.menu_open_for = index_of_none;
+            this->repaint();
+         }
+      });
+   }
    if (!!m != !!prior) {
       this->_re_layout();
    } else if (menu_state_changed) {
@@ -212,6 +311,7 @@ void DKBreadcrumbBar::_on_navigated() {
       if (list.size() > 0) {
          for (size_t i = 0; i < list.size() - 1; ++i) { // minus one because the current-item (i.e. last segment) never has a menu
             auto& seg = this->_segments[i];
+            assert(seg.menu != nullptr);
             if (seg.menu)
                seg.menu->setProperty("segment-index", i);
          }
@@ -305,20 +405,24 @@ void DKBreadcrumbBar::_set_up_menu(QMenu& menu, const QModelIndex& qmi) {
    }
 }
 void DKBreadcrumbBar::_re_layout(bool force) {
+   //
+   // The positioning rules are as follows:
+   // 
+   //  - A menu button's width includes its horizontal borders.
+   // 
+   //  - A segment main button generally has no horizontal borders, except:
+   // 
+   //     - The leading segment has a leading border if there is any space 
+   //       or content before it.
+   // 
+   //     - The trailing segment has a trailing border if it has no menu 
+   //       button.
+   //
    auto& last_layout = this->_state.last_layout;
    auto& next_layout = this->_state.next_layout;
 
-   bool guaranteed_relayout = force;
-   if (!guaranteed_relayout) {
-      if (
-         next_layout.segments_changed
-      || last_layout.any_truncated
-      || last_layout.root_button != (this->_root_button.menu != nullptr)
-      ) {
-         guaranteed_relayout = true;
-      }
-   }
-   next_layout.segments_changed = {};
+   bool guaranteed_relayout = force || next_layout.segments_changed;
+   next_layout = {};
 
    {
       auto* textbox = this->_subwidgets.textbox;
@@ -328,154 +432,186 @@ void DKBreadcrumbBar::_re_layout(bool force) {
       //
    }
 
+   const int  widget_inner_height = this->minimumSizeHint().height() - (this->_styles.border_width * 2);
+   const auto menu_button_width   = this->_styles.segment.menu_button_width;
+
    bool show_root_button = this->_root_button.menu != nullptr;
    {
       int x = this->_styles.border_width;
       int y = this->_styles.border_width;
-      int h = this->minimumSizeHint().height();
-      h -= this->_styles.border_width * 2; // the widget height includes the widget's own border, so reduce the segment height accordingly
-      this->_root_button.geometry = QRect(x, y, this->_styles.segment.menu_button_width, h);
+      this->_root_button.geometry = QRect(x, y, menu_button_width, widget_inner_height);
    };
 
    auto& segments = this->_segments;
 
    size_t count = segments.size();
    if (!count) {
-      last_layout.any_truncated = false;
-      last_layout.count_shown   = 0;
-      last_layout.root_button   = this->_root_button.menu != nullptr;
-      if (guaranteed_relayout) {
+      last_layout.count_shown = 0;
+      if (guaranteed_relayout)
          this->repaint();
-      }
       return;
    }
 
-   const auto metrics = QFontMetrics(this->font());
-
-   std::vector<int> widths;
-   widths.resize(count);
+   //
+   // Compute sizes and positions for segments, assuming no constraints on the 
+   // available space.
+   //
    {
       int x = this->_styles.border_width;
       int y = this->_styles.border_width;
-      int h = this->minimumSizeHint().height();
-      if (show_root_button) {
-         x += this->_root_button.geometry.width();
-         --x; // overlap borders
-      }
-      h -= this->_styles.border_width * 2; // the widget height includes the widget's own border, so reduce the segment height accordingly
+      if (show_root_button)
+         x += menu_button_width;
+      this->_segments[0].geometry.main_borders.leading = !show_root_button;
 
-      const int mw = this->_styles.segment.margins.left() + this->_styles.segment.margins.right();
+      const auto metrics  = QFontMetrics(this->font());
+      const int  margin_h = this->_styles.segment.margins.left() + this->_styles.segment.margins.right();
 
       for (size_t i = 0; i < count; ++i) {
          auto& seg = segments[i];
          seg.culled = false;
 
+         seg.geometry.main_borders.trailing = !seg.menu;
+
          auto& main = seg.geometry.main_button;
          auto& menu = seg.geometry.menu_button;
          main = metrics.boundingRect(seg.text);
          main.translate(x, -main.y() + y);
-         main.setWidth(main.width() + mw);
-         main.setHeight(h);
+         main.setWidth(main.width() + margin_h);
+         if (seg.geometry.main_borders.leading) {
+            main.setWidth(main.width() + 1);
+         }
+         if (seg.geometry.main_borders.trailing) {
+            main.setWidth(main.width() + 1);
+         }
+         main.setHeight(widget_inner_height);
          x += main.width();
-         --x; // overlap borders
          if (seg.menu) {
-            menu.setLeft(x);
-            menu.setTop(y);
-            menu.setWidth(this->_styles.segment.menu_button_width);
-            menu.setHeight(h);
-            x += menu.width();
-            --x; // overlap borders
+            menu = QRectF(x, y, menu_button_width, widget_inner_height);
+            x += menu_button_width;
          } else {
             menu = {};
          }
-         widths[i] = main.width() + menu.width() - 1;
       }
    }
-
-   bool   any_truncated = false;
+   //
+   // Check if the segments all fit in the available space. If not, then count 
+   // how many of the trailing segments can fit. If none of them can fit, then 
+   // constrain the last segment to the available space and count it as the 
+   // only segment that fits.
+   //
    size_t count_to_show = count;
-
-   int total_width = 0;
    {
-      const auto& seg = this->_segments.back();
-      if (seg.menu) {
-         total_width = seg.geometry.menu_button.right();
-      } else {
-         total_width = seg.geometry.main_button.right();
-      }
-   }
-
-   int available = this->width();
-   if (available < total_width) {
-      if (available < widths.back()) {
-         count_to_show = 1;
-         widths.back() = available;
-         segments.back().geometry.main_button.setWidth(available - this->_styles.segment.menu_button_width);
-         segments.back().geometry.menu_button.setX(segments.back().geometry.main_button.right() - 1); // minus 1 to overlap borders
-      } else {
-         count_to_show = 0;
-         total_width   = 0;
-         for (count_to_show = 0; count_to_show < count; ++count_to_show) {
-            size_t i = count - count_to_show - 1;
-            if (total_width + widths[i] > available)
-               break;
-            total_width += widths[i];
+      auto& trailing_seg = segments.back();
+      int   total_width  = trailing_seg.geometry.main_button.x() + trailing_seg.width();
+      int   available    = this->width();
+      if (available < total_width) {
+         if (available < trailing_seg.width()) {
+            count_to_show = 1;
+            trailing_seg.geometry.main_borders.leading = !!this->_root_button.menu;
+            auto& main_rect = trailing_seg.geometry.main_button;
+            auto& menu_rect = trailing_seg.geometry.menu_button;
+            if (trailing_seg.menu) {
+               //
+               // Display only the trailing segment, constraining it to fill the 
+               // available space. That space is reduced to make room for a "..." 
+               // indicator (see comments below).
+               //
+               auto main_width = available - menu_button_width;
+               main_rect.setWidth(main_width);
+               menu_rect.setX(main_rect.x() + main_width);
+            } else {
+               main_rect.setWidth(available);
+            }
+         } else {
+            count_to_show = 0;
+            total_width   = 0;
+            for (count_to_show = 0; count_to_show < count; ++count_to_show) {
+               size_t i = count - count_to_show - 1;
+               auto   w = this->_segments[i].width();
+               if (total_width + w > available)
+                  break;
+               total_width += w;
+            }
          }
       }
    }
-   if (!guaranteed_relayout) {
-      if (!any_truncated && last_layout.count_shown == count_to_show)
-         return;
-   }
+   //
+   // Update culling state for segments, culling out those that can't fit per the 
+   // above checks. Additionally, if the leading segment(s) were culled, then shift 
+   // the non-culled segments to take that space.
+   //
+   if (count == count_to_show) {
+      for (auto& seg : segments)
+         seg.culled = false;
+   } else {
+      assert(count_to_show < count);
+      size_t first_to_show = count - count_to_show;
 
-   size_t first_to_show = count - count_to_show;
-   {
-      int    dx = 0;
-      size_t i  = 0;
+      int displace_forward  = 0;
+      int displace_backward = 0;
+      if (!show_root_button) {
+         //
+         // If the root button isn't already set to show, then use the 
+         // space it would occupy to show a "..." indicator. This means 
+         // we'll need to displace the segments forward so they don't 
+         // cover that space up.
+         //
+         displace_forward = menu_button_width;
+      }
+      {
+         auto& last_hidden = this->_segments[first_to_show - 1];
+         if (last_hidden.menu) {
+            displace_backward = last_hidden.geometry.menu_button.right();
+         } else {
+            displace_backward = last_hidden.geometry.main_button.right();
+         }
+         if (show_root_button) { // don't cover the root
+            displace_backward -= menu_button_width;
+         }
+      }
+      show_root_button = true;
+      //
+      // Apply displacement and update "culled" flag for all segments.
+      //
+      int    dx = displace_forward - displace_backward;
+      size_t i = 0;
       for (; i < first_to_show; ++i) {
          auto& seg = segments[i];
          seg.culled = true;
-         if (i == first_to_show - 1) {
-            if (seg.menu) {
-               dx = seg.geometry.menu_button.right();
-            } else {
-               dx = seg.geometry.main_button.right();
-            }
-            --dx; // overlap borders
-            --dx; // account for leftmost to-be-shown segment's lefthand border being outside of the rect
-         }
+         seg.geometry.main_button.translate(dx, 0);
+         seg.geometry.menu_button.translate(dx, 0);
       }
       for (; i < count; ++i) {
          auto& seg = segments[i];
          seg.culled = false;
-
-         auto& main = seg.geometry.main_button;
-         auto& menu = seg.geometry.menu_button;
-         main.translate(-dx, 0);
-         menu.translate(-dx, 0);
-      }
-      if (!show_root_button && count_to_show < count) {
-         //
-         // Make space to show a "..." indicator where the root button 
-         // would ordinarily be.
-         //
-         show_root_button = true;
-         //
-         // And bump the segments forward out of the root button's way.
-         //
-         int dx = this->_root_button.geometry.width();
-         --dx; // overlap borders
-         available -= dx;
-         for (auto& seg : this->_segments) {
-            seg.geometry.main_button.translate(dx, 0);
-            seg.geometry.menu_button.translate(dx, 0);
-         }
+         seg.geometry.main_button.translate(dx, 0);
+         seg.geometry.menu_button.translate(dx, 0);
       }
    }
 
-   last_layout.any_truncated = any_truncated;
-   last_layout.count_shown   = count_to_show;
-   last_layout.root_button   = this->_root_button.menu != nullptr;
+   last_layout.count_shown = count_to_show;
+
+   if (this->layoutDirection() == Qt::LayoutDirection::RightToLeft) {
+      //
+      // Mirror all positioning.
+      //
+      const int widget_width = this->width();
+      for (auto& seg : this->_segments) {
+         auto& main_rect = seg.geometry.main_button;
+         auto& menu_rect = seg.geometry.menu_button;
+         const int dst_r = widget_width - main_rect.left();
+         int       dst_x = dst_r - main_rect.width();
+         if (seg.menu) {
+            main_rect.moveLeft(dst_x);
+            dst_x -= menu_button_width;
+            menu_rect.moveLeft(dst_x);
+         } else {
+            main_rect.moveLeft(dst_x);
+            menu_rect.moveLeft(dst_x);
+         }
+      }
+      this->_root_button.geometry.moveLeft(widget_width - this->_root_button.geometry.left() - menu_button_width);
+   }
 
    this->repaint();
 }
@@ -561,13 +697,6 @@ void DKBreadcrumbBar::_open_menu(size_t i) {
       return;
    }
 
-   if (i == index_of_root_button) {
-      //
-      // The root menu doesn't know its own index, and won't tell us when it's opened, 
-      // so we here need to manually track that it's the menu we have open.
-      //
-      this->_state.menu_open_for = index_of_root_button;
-   }
    to_open->popup(this->mapToGlobal(open_from));
    this->repaint(); // to update the menu-button chevron for each segment
 }
@@ -606,18 +735,29 @@ bool DKBreadcrumbBar::_do_menu_eavesdropping(QMenu& menu, QEvent& event) {
          }*/
          break;
       case QEvent::KeyPress:
-         //
-         // We only care about keypresses that don't occur while the 
-         // cursor is over the menu.
-         //
-         if (&menu != QApplication::widgetAt(QCursor::pos())) {
-            this->keyPressEvent((QKeyEvent*)&event);
+         if (!menu.activeAction()) {
+            auto kev          = (QKeyEvent*)&event;
+            bool was_accepted = kev->isAccepted();
+            {
+               kev->ignore();
+               this->keyPressEvent((QKeyEvent*)&event);
+               if (kev->isAccepted())
+                  return true;
+            }
+            if (was_accepted)
+               kev->accept();
          }
          break;
    }
    return false;
 }
 void DKBreadcrumbBar::_on_segment_menu_hidden() {
+   if (auto* s = sender()) {
+      auto closing = s->property("segment-index");
+      if (closing.isValid())
+         if (closing.toInt() != this->_state.menu_open_for)
+            return;
+   }
    this->_state.menu_open_for = index_of_none;
 }
 
@@ -658,7 +798,13 @@ void DKBreadcrumbBar::_on_horizontal_arrow_key(bool left) {
          i = 0;
    } else {
       if (left) {
-         i = ((i == first) ? count : i) - 1;
+         if (i == first) {
+            i = count - 1;
+         } else if (i == 0 && this->_root_button.menu) {
+            i = index_of_root_button;
+         } else {
+            --i;
+         }
       } else {
          if (++i >= count)
             i = first;
@@ -699,6 +845,16 @@ void DKBreadcrumbBar::_on_vertical_arrow_key() {
    this->_open_menu(hover_idx);
 }
 
+void DKBreadcrumbBar::_begin_text_editing() {
+   auto* textbox = this->_subwidgets.textbox;
+   {
+      const auto blocker = QSignalBlocker(textbox);
+      textbox->setText(this->path());
+   }
+   textbox->setVisible(true);
+   textbox->setFocus();
+   textbox->selectAll();
+}
 void DKBreadcrumbBar::_update_textbox_value() {
    auto*      textbox = this->_subwidgets.textbox;
    const auto blocker = QSignalBlocker(textbox);
@@ -747,6 +903,35 @@ bool DKBreadcrumbBar::_navigate_to_path(QString path) {
    }
    this->setCurrentIndex(qmi);
    return true;
+}
+
+void DKBreadcrumbBar::_recache_icons() {
+   qreal dx = this->layoutDirection() == Qt::LayoutDirection::LeftToRight ? 1 : -1;
+   {
+      auto& path = this->_state.icons.chevron_base;
+      path.clear();
+      path.moveTo(QPointF{ -dx, -2 });
+      path.lineTo(QPointF{  dx,  0 });
+      path.lineTo(QPointF{ -dx,  2 });
+   }
+   {
+      auto& path = this->_state.icons.chevron_open;
+      path.clear();
+      path.moveTo(QPointF{ -2, -1 });
+      path.lineTo(QPointF{  0,  1 });
+      path.lineTo(QPointF{  2, -1 });
+   }
+   {
+      auto& path = this->_state.icons.chevron_more;
+      path.clear();
+      path.moveTo(QPointF{ -dx*2, -2 });
+      path.lineTo(QPointF{     0,  0 });
+      path.lineTo(QPointF{ -dx*2,  2 });
+      path.moveTo(QPointF{     0, -2 });
+      path.lineTo(QPointF{  dx*2,  0 });
+      path.lineTo(QPointF{     0,  2 });
+   }
+   this->_state.icons.cached = true;
 }
 
 /*virtual*/ QSize DKBreadcrumbBar::minimumSizeHint() const /*override*/ {
@@ -800,20 +985,61 @@ bool DKBreadcrumbBar::_navigate_to_path(QString path) {
             break;
       }
    }
+   /*virtual*/ void DKBreadcrumbBar::focusOutEvent(QFocusEvent* event) {
+      const auto* focused = QApplication::focusWidget();
+      auto*       textbox = this->_subwidgets.textbox;
+      if (focused) {
+         if (focused == textbox)
+            return;
+         for (auto& seg : this->_segments)
+            if (focused == seg.menu)
+               return;
+      }
+      //
+      // Focus has not been transferred to a sub-widget or submenu.
+      //
+      this->_on_segment_hovered(index_of_none);
+      if (textbox->isVisible())
+         textbox->setVisible(false);
+   }
    /*virtual*/ void DKBreadcrumbBar::keyPressEvent(QKeyEvent* event) {
       switch (event->key()) {
          case Qt::Key::Key_Up:
             [[fallthrough]];
          case Qt::Key::Key_Down:
+            event->accept();
             this->_on_vertical_arrow_key();
             break;
          case Qt::Key::Key_Left:
+            event->accept();
             this->_on_horizontal_arrow_key(true);
             break;
          case Qt::Key::Key_Right:
+            event->accept();
             this->_on_horizontal_arrow_key(false);
             break;
+         case Qt::Key::Key_Enter:
+         case Qt::Key::Key_Space:
+            switch (size_t i = this->_state.hovered_segment) {
+               case index_of_none:
+                  break;
+               case index_of_root_button:
+                  if (this->textEditingAllowed()) {
+                     event->accept();
+                     this->_begin_text_editing();
+                  }
+                  break;
+               default:
+                  event->accept();
+                  if (i < this->_segments.size())
+                     this->_on_segment_clicked(this->_segments[i]);
+                  break;
+            }
+            break;
       }
+   }
+   /*virtual*/ void DKBreadcrumbBar::leaveEvent(QEvent* event) {
+      this->_on_segment_hovered(index_of_none);
    }
    /*virtual*/ void DKBreadcrumbBar::mouseMoveEvent(QMouseEvent* event) {
       //auto pos = event->localPos();
@@ -868,11 +1094,8 @@ bool DKBreadcrumbBar::_navigate_to_path(QString path) {
             }
          }
          if (this->textEditingAllowed()) {
-            this->_update_textbox_value();
-            this->_subwidgets.textbox->setVisible(true);
-            this->_subwidgets.textbox->setFocus();
-            this->_subwidgets.textbox->selectAll();
             event->accept();
+            this->_begin_text_editing();
          }
          return;
       }
@@ -885,6 +1108,13 @@ bool DKBreadcrumbBar::_navigate_to_path(QString path) {
 
       const bool is_disabled  = !this->isEnabled();
       const bool is_menu_open = this->_state.menu_open_for != index_of_none;
+      const auto _segment_state = [this, is_disabled, is_menu_open](size_t i) {
+         if (is_disabled)
+            return segment_paint_state::disabled;
+         if (!is_menu_open && i == this->_state.hovered_segment)
+            return segment_paint_state::hovered;
+         return segment_paint_state::normal;
+      };
 
       // Widget base layer
       {
@@ -899,71 +1129,41 @@ bool DKBreadcrumbBar::_navigate_to_path(QString path) {
       // NOTE: For RTL layouts, it should probably be to the right instead
       //
 
-      QPainterPath menu_chevron_elided;
-      QPainterPath menu_chevron_base;
-      QPainterPath menu_chevron_open;
-      {
-         qreal cx = this->_styles.segment.menu_button_width / 2.0F;
-         qreal cy = this->height() / 2.0F;
-
-         menu_chevron_open.moveTo(QPointF{ cx - 2, cy - 1 });
-         menu_chevron_open.lineTo(QPointF{ cx,     cy + 1 });
-         menu_chevron_open.lineTo(QPointF{ cx + 2, cy - 1 });
-
-         bool is_rtl = false;
-         if (auto* app = qobject_cast<QGuiApplication*>(QApplication::instance())) {
-            is_rtl = app->layoutDirection() == Qt::LayoutDirection::RightToLeft;
-         }
-         int pos = is_rtl ? -1 : 1;
-         menu_chevron_base.moveTo(QPointF{ cx - pos, cy - 2 });
-         menu_chevron_base.lineTo(QPointF{ cx + pos, cy });
-         menu_chevron_base.lineTo(QPointF{ cx - pos, cy + 2 });
-
-         menu_chevron_elided.moveTo(QPointF{ cx-(pos) - pos, cy - 2});
-         menu_chevron_elided.lineTo(QPointF{ cx-(pos) + pos, cy });
-         menu_chevron_elided.lineTo(QPointF{ cx-(pos) - pos, cy + 2 });
-         menu_chevron_elided.moveTo(QPointF{ cx+(pos) - pos, cy - 2 });
-         menu_chevron_elided.lineTo(QPointF{ cx+(pos) + pos, cy });
-         menu_chevron_elided.lineTo(QPointF{ cx+(pos) - pos, cy + 2 });
+      if (!this->_state.icons.cached) {
+         this->_recache_icons();
       }
-      const auto* active_popup = QApplication::activePopupWidget();
 
-      const auto& _colors_for_segment = [this, is_disabled, is_menu_open](size_t i) -> SegmentPalette& {
-         const bool  hovered = !is_menu_open && this->_state.hovered_segment == i;
-         return
-            is_disabled ?
-               this->_styles.segment.colors.disabled
-            :
-               hovered ?
-                  this->_styles.segment.colors.hovered
-               :
-                  this->_styles.segment.colors.normal
-         ;
-      };
-      auto _draw_icon = [&painter](const SegmentPalette& colors, QPointF pos, const QPainterPath& path) {
-         painter.save();
-         painter.setPen(colors.menu_button.icon);
-         painter.translate(pos);
-         painter.setRenderHint(QPainter::RenderHint::Antialiasing);
-         painter.drawPath(path);
-         painter.restore();
+      const auto& _colors_for_segment = [this](segment_paint_state state) -> SegmentPalette& {
+         switch (state) {
+            case segment_paint_state::disabled: return this->_styles.segment.colors.disabled;
+            case segment_paint_state::hovered:  return this->_styles.segment.colors.hovered;
+         }
+         return this->_styles.segment.colors.normal;
       };
 
       if (this->_root_button.menu) {
-         const auto& colors = _colors_for_segment(index_of_root_button);
+         const auto& colors = _colors_for_segment(_segment_state(index_of_root_button));
          painter.setBrush(colors.menu_button.fill);
          painter.setPen(colors.menu_button.line);
          painter.drawRect(this->_root_button.geometry - qt_border_jank);
+         //
+         // Draw icon.
+         //
+         painter.save();
+         painter.setPen(colors.menu_button.icon);
+         painter.setRenderHint(QPainter::RenderHint::Antialiasing);
+         painter.translate(this->_root_button.geometry.center());
          const auto& icon =
             (this->_state.last_layout.count_shown < this->_segments.size()) ?
-               menu_chevron_elided
+               this->_state.icons.chevron_more
             :
-               (active_popup == this->_root_button.menu) ?
-                  menu_chevron_open
+               (this->_state.menu_open_for == index_of_root_button) ?
+                  this->_state.icons.chevron_open
                :
-                  menu_chevron_base
+                  this->_state.icons.chevron_base
          ;
-         _draw_icon(colors, this->_root_button.geometry.topLeft(), icon);
+         painter.drawPath(icon);
+         painter.restore();
       } else if (this->_state.last_layout.count_shown < this->_segments.size()) {
          //
          // Draw a "..." button to indicate that not all segments are shown.
@@ -976,7 +1176,7 @@ bool DKBreadcrumbBar::_navigate_to_path(QString path) {
          qreal cx = this->_styles.segment.menu_button_width / 2.0F;
          qreal cy = this->height() / 2.0F;
          painter.save();
-         painter.setPen(this->palette().color(QPalette::Text));
+         painter.setPen(QPen(this->palette().color(QPalette::Text), 1.5F));
          painter.setRenderHint(QPainter::RenderHint::Antialiasing);
          painter.translate(this->_root_button.geometry.topLeft());
          painter.drawPoint(QPointF{ cx - 2, cy });
@@ -991,35 +1191,7 @@ bool DKBreadcrumbBar::_navigate_to_path(QString path) {
          if (segment.culled) {
             continue;
          }
-         const auto& colors = _colors_for_segment(i);
-         if (segment.menu) {
-            painter.setBrush(colors.menu_button.fill);
-            painter.setPen(colors.menu_button.line);
-            painter.drawRect(segment.geometry.menu_button - qt_border_jank);
-            _draw_icon(
-               colors,
-               segment.geometry.menu_button.topLeft(),
-               (active_popup == segment.menu) ?
-                  menu_chevron_open
-               :
-                  menu_chevron_base
-            );
-         }
-         if (!segment.geometry.main_button.isEmpty()) {
-            painter.setBrush(colors.main_button.fill);
-            painter.setPen(colors.main_button.line);
-            painter.drawRect(segment.geometry.main_button - qt_border_jank);
-            //
-            auto rect = segment.geometry.main_button;
-            rect -= this->_styles.segment.margins;
-            painter.setPen(colors.main_button.text);
-            painter.drawText(
-               rect,
-               Qt::AlignLeft,
-               segment.text,
-               nullptr
-            );
-         }
+         segment.repaint(*this, painter, _segment_state(i), i);
       }
    }
    /*virtual*/ void DKBreadcrumbBar::resizeEvent(QResizeEvent* event) {
