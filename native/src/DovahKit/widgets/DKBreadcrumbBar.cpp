@@ -8,11 +8,17 @@
 #include <QStyle>
 #include <QStyleOptionButton>
 
-DKBreadcrumbBar::DKBreadcrumbBar(QWidget* parent) : QFrame(parent) {
+namespace {
+   // When drawing a rect with an odd pen (stroke) width, Qt rounds 
+   // the stroke down. This means that for a rect with a 1px border, 
+   // the left and top borders are inside the rect, and the right and 
+   // bottom borders are outside the rect. As you might expect, this 
+   // is very silly and we have to adjust for it basically everywhere.
+   static constexpr const QMargins qt_border_jank = { 0, 0, 1, 1 };
+}
+
+DKBreadcrumbBar::DKBreadcrumbBar(QWidget* parent) : QWidget(parent) {
    this->setSizePolicy(QSizePolicy::Policy::Minimum, QSizePolicy::Policy::Fixed);
-   this->setMinimumWidth(100);
-   //
-   this->setFrameStyle(QFrame::Shape::Box | QFrame::Shadow::Sunken);
 
    {
       auto* textbox = this->_subwidgets.textbox = new QLineEdit(this);
@@ -251,9 +257,10 @@ void DKBreadcrumbBar::_re_layout() {
    std::vector<int> widths;
    widths.resize(count);
    {
-      int x = 0;
-      int y = 0;
+      int x = this->_styles.border_width;
+      int y = this->_styles.border_width;
       int h = this->minimumSizeHint().height();
+      h -= this->_styles.border_width * 2; // the widget height includes the widget's own border, so reduce the segment height accordingly
 
       const int mw = this->_styles.segment.margins.left() + this->_styles.segment.margins.right();
 
@@ -264,16 +271,18 @@ void DKBreadcrumbBar::_re_layout() {
          auto& main = seg.geometry.main_button;
          auto& menu = seg.geometry.menu_button;
          main = metrics.boundingRect(seg.text);
-         main.setWidth(main.width());
          main.translate(x, -main.y() + y);
          main.setWidth(main.width() + mw);
          main.setHeight(h);
          x += main.width();
+         --x; // overlap borders
          if (seg.menu) {
             menu.setLeft(x);
+            menu.setTop(y);
             menu.setWidth(this->_styles.segment.menu_button_width);
             menu.setHeight(h);
             x += menu.width();
+            --x; // overlap borders
          } else {
             menu = {};
          }
@@ -511,10 +520,12 @@ void DKBreadcrumbBar::_on_vertical_arrow_key() {
       h += w_margins.top() + w_margins.bottom();
       h += s_margins.top() + s_margins.bottom();
    }
+   h += 2; // segment borders
    {
       auto metrics = QFontMetrics(this->font());
       h += metrics.height();
    }
+   h += this->_styles.border_width * 2; // widget borders
    size.setHeight(h);
 
    return size;
@@ -595,6 +606,14 @@ void DKBreadcrumbBar::_on_vertical_arrow_key() {
       if (this->_subwidgets.textbox->isVisible())
          return;
 
+      // Widget base layer
+      {
+         painter.setPen(QPen(this->palette().color(QPalette::Dark), this->_styles.border_width));
+         painter.setBrush(this->palette().color(QPalette::Base));
+         auto rect = QRect(0, 0, this->width(), this->height()) - qt_border_jank;
+         painter.drawRect(rect);
+      }
+
       //
       // TODO: Show icon for current index, to the left of the root
       // NOTE: For RTL layouts, it should probably be to the right instead
@@ -603,17 +622,21 @@ void DKBreadcrumbBar::_on_vertical_arrow_key() {
       QPainterPath menu_chevron_base;
       QPainterPath menu_chevron_open;
       {
-         int cx = this->_styles.segment.menu_button_width / 2;
-         int cy = this->height() / 2;
+         qreal cx = this->_styles.segment.menu_button_width / 2.0F;
+         qreal cy = this->height() / 2.0F;
 
-         menu_chevron_open.moveTo(QPoint{ cx - 2, cy - 1 });
-         menu_chevron_open.lineTo(QPoint{ cx,     cy + 1 });
-         menu_chevron_open.lineTo(QPoint{ cx + 2, cy - 1 });
+         menu_chevron_open.moveTo(QPointF{ cx - 2, cy - 1 });
+         menu_chevron_open.lineTo(QPointF{ cx,     cy + 1 });
+         menu_chevron_open.lineTo(QPointF{ cx + 2, cy - 1 });
 
-         // TODO: This is an LTR icon; we need logic for RTL
-         menu_chevron_base.moveTo(QPoint{ cx - 1, cy - 2 });
-         menu_chevron_base.lineTo(QPoint{ cx + 1, cy });
-         menu_chevron_base.moveTo(QPoint{ cx - 1, cy + 2 });
+         bool is_rtl = false;
+         if (auto* app = qobject_cast<QGuiApplication*>(QApplication::instance())) {
+            is_rtl = app->layoutDirection() == Qt::LayoutDirection::RightToLeft;
+         }
+         int pos = is_rtl ? -1 : 1;
+         menu_chevron_base.moveTo(QPointF{ cx - pos, cy - 2 });
+         menu_chevron_base.lineTo(QPointF{ cx + pos, cy });
+         menu_chevron_base.lineTo(QPointF{ cx - pos, cy + 2 });
       }
 
       const bool is_disabled  = !this->isEnabled();
@@ -638,24 +661,24 @@ void DKBreadcrumbBar::_on_vertical_arrow_key() {
          if (segment.menu) {
             painter.setBrush(colors.menu_button.fill);
             painter.setPen(colors.menu_button.line);
-            painter.drawRect(segment.geometry.menu_button);
+            painter.drawRect(segment.geometry.menu_button - qt_border_jank);
             {  // Draw menu button glyph
                painter.save();
                painter.setPen(colors.menu_button.icon);
                painter.translate(segment.geometry.menu_button.topLeft());
+               painter.setRenderHint(QPainter::RenderHint::Antialiasing);
                if (QApplication::activePopupWidget() == segment.menu) {
                   painter.drawPath(menu_chevron_open);
                } else {
                   painter.drawPath(menu_chevron_base);
                }
-               painter.drawPath(menu_chevron_base);
                painter.restore();
             }
          }
          if (!segment.geometry.main_button.isEmpty()) {
             painter.setBrush(colors.main_button.fill);
             painter.setPen(colors.main_button.line);
-            painter.drawRect(segment.geometry.main_button);
+            painter.drawRect(segment.geometry.main_button - qt_border_jank);
             //
             auto rect = segment.geometry.main_button;
             rect -= this->_styles.segment.margins;
@@ -692,6 +715,6 @@ void DKBreadcrumbBar::_on_vertical_arrow_key() {
             //
             return true;
       }
-      return QFrame::eventFilter(watched, event);
+      return QWidget::eventFilter(watched, event);
    }
 #pragma endregion

@@ -1,14 +1,13 @@
 #pragma once
 #include <vector>
 #include <QAbstractItemModel>
-#include <QFrame>
 #include <QLineEdit>
 #include <QMenu>
 #include <QPointer>
 #include <QPushButton>
 #include <QWidget>
 
-class DKBreadcrumbBar : public QFrame {
+class DKBreadcrumbBar : public QWidget {
    Q_OBJECT;
    public:
       DKBreadcrumbBar(QWidget* parent = nullptr);
@@ -22,13 +21,13 @@ class DKBreadcrumbBar : public QFrame {
          struct {
             QBrush fill = QColor(255, 255, 255);
             QPen   line = QPen(QColor(224, 224, 224), 0);
-            QPen   icon = QPen(QColor(128, 128, 128), 2);
+            QPen   icon = QPen(QColor(128, 128, 128), 1.5, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin);
          } menu_button;
       };
 
       struct Styles {
          struct {
-            QMargins margins{ 3, 3, 3, 3 };
+            QMargins margins{ 5, 3, 5, 3 };
             struct {
                SegmentPalette normal;
                SegmentPalette hovered = {
@@ -43,8 +42,9 @@ class DKBreadcrumbBar : public QFrame {
                };
                SegmentPalette disabled;
             } colors;
-            unsigned int menu_button_width = 16;
+            unsigned int menu_button_width = 15; // includes borders
          } segment;
+         unsigned int border_width = 1;
       };
 
    protected:
