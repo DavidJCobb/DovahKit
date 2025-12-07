@@ -235,6 +235,7 @@ void DKBreadcrumbBar::setRootMenu(QMenu* m) {
    }
    if (prior) {
       QObject::disconnect(prior, nullptr, this, nullptr);
+      prior->removeEventFilter(this); // stop eavesdropping
    }
    this->_root_button.menu = m;
    if (m) {
@@ -248,6 +249,11 @@ void DKBreadcrumbBar::setRootMenu(QMenu* m) {
             this->repaint();
          }
       });
+      //
+      // We'll need to "eavesdrop" on this menu just like we eavesdrop 
+      // on the menus we create and have sole ownership of.
+      //
+      m->installEventFilter(this);
    }
    if (!!m != !!prior) {
       this->_re_layout();
@@ -1048,6 +1054,12 @@ void DKBreadcrumbBar::_recache_icons() {
       // so we can't trust its own localPos(). Refer to the "menu eavesdropping" 
       // code and its comments for further information.
 
+      if (this->_root_button.menu) {
+         if (this->_root_button.geometry.contains(pos)) {
+            this->_on_segment_hovered(index_of_root_button);
+            return;
+         }
+      }
       for (size_t i = 0; i < this->_segments.size(); ++i) {
          const auto& seg = this->_segments[i];
          if (seg.geometry.main_button.contains(pos) || seg.geometry.menu_button.contains(pos)) {
