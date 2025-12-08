@@ -123,6 +123,7 @@ class DKBreadcrumbBar : public QWidget {
 
       void _on_segment_hovered(size_t);
 
+      static int _guesstimate_menu_text_x_offset(QMenu&);
       void _close_menu(size_t);
       void _open_menu(size_t);
       void _start_menu_eavesdropping(QMenu&);

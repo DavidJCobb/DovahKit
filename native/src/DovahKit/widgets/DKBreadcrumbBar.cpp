@@ -7,6 +7,7 @@
 #include <QPainterPath>
 #include <QProxyStyle>
 #include <QStyle>
+#include <QStyleOption>
 
 namespace {
    // When drawing a rect with an odd pen (stroke) width, Qt rounds 
@@ -15,6 +16,17 @@ namespace {
    // bottom borders are outside the rect. As you might expect, this 
    // is very silly and we have to adjust for it basically everywhere.
    static constexpr const QMargins qt_border_jank = { 0, 0, 1, 1 };
+
+   //
+   // Qt's border jank is hard to properly account for and adjust for 
+   // throughout the codebase, so some of our calculations end up being 
+   // completely correct for hit testing but off for rendering, or off 
+   // for both, and it's just a massive headache to try and figure out 
+   // why. Easier to just apply spot corrections during rendering. 
+   // This constant exists just as a succinct means to clearly mark 
+   // those corrections.
+   //
+   constexpr const bool janky_corrections = true;
 }
 
 #pragma region DKBreadcrumbBar::segment
@@ -58,15 +70,6 @@ namespace {
          painter.restore();
       }
       {
-         //
-         // Qt's border jank is hard to properly account for and adjust for 
-         // throughout the codebase, so some of our calculations end up being 
-         // completely correct for hit testing but off for rendering, or off 
-         // for both, and it's just a massive headache to try and figure out 
-         // why. Easier to just apply spot corrections during rendering.
-         //
-         constexpr const bool janky_corrections = true;
-
          painter.fillRect(this->geometry.main_button, palette.main_button.fill);
          //
          // Borders:
@@ -706,6 +709,62 @@ void DKBreadcrumbBar::_on_segment_hovered(size_t i) {
    }
 }
 
+/*static*/ int DKBreadcrumbBar::_guesstimate_menu_text_x_offset(QMenu& menu) {
+   //
+   // Qt offers no convenient getters for the text position/offset within a menu, 
+   // even via QStyle. Most of their offsets are hardcoded constants which were 
+   // occasionally given actual names...
+   //
+   const QStyle* style = menu.style();
+   if (const auto* proxy = qobject_cast<const QProxyStyle*>(style))
+      style = proxy->baseStyle();
+
+   QStyleOption opt;
+   opt.init(&menu);
+
+   int left = 0;
+   //
+   // Apply the effects of QMenuPrivate::updateActionRects.
+   //
+   left += style->pixelMetric(QStyle::PM_MenuPanelWidth, &opt, &menu);
+   left += style->pixelMetric(QStyle::PM_MenuHMargin, &opt, &menu);
+   //
+   int icon_width = 0;
+   if (false) { // TODO: if any actions have an icon
+      // set icon_width to the max width across all such icons
+      icon_width = std::max(icon_width, style->pixelMetric(QStyle::PM_SmallIconSize, &opt, &menu) + 4);
+   }
+   //
+   // Apply the effects of the styles.
+   //
+   if (!style) {
+      return left;
+   }
+   //
+   // As of Qt 5, QWindowsStyle has no public header that we can include 
+   // for direct casts (and I'm not sure that would build on non-Windows 
+   // targets anyway).
+   //
+   if (style->inherits("QWindowsStyle")) {
+      if (!icon_width) {
+         left -= 6;
+      }
+      left += std::max(
+         icon_width,
+         12 // QWindowsStylePrivate::windowsCheckMarkWidth
+      );
+      left += 12;
+   } else if (qobject_cast<const QCommonStyle*>(style)) {
+      if (icon_width > 0) {
+         left += icon_width;
+         left += 6;
+      }
+      if (icon_width > 2) {
+         left += 2;
+      }
+   }
+   return left;
+}
 void DKBreadcrumbBar::_close_menu(size_t i) {
    if (i == index_of_root_button) {
       QMenu* menu = this->_root_button.menu;
@@ -748,16 +807,17 @@ void DKBreadcrumbBar::_open_menu(size_t i) {
             // the parent is not the last segment (i.e. there is a next segment that represents 
             // a child we're already navigated into). We want the menu to be lined up such that 
             // the text of the menu items (representing potential children) aligns with the text 
-            // of the child-segment that we're already navigatedinto.
+            // of the child-segment that we're already navigated into.
             //
             if (this->layoutDirection() == Qt::LayoutDirection::RightToLeft) {
                if (i + 1 < this->_segments.size()) {
                   auto& next_seg = this->_segments[i + 1];
                   open_from = next_seg.geometry.main_button.bottomLeft().toPoint();
-                  //
-                  // subtract segment trailing border(?) + menu border(?) + menu inner padding
-                  //
-                  open_from.rx() -= 18;
+                  open_from.rx() -= _guesstimate_menu_text_x_offset(*to_open);
+                  open_from.rx() += this->_styles.segment.margins.left();
+                  if constexpr (janky_corrections) {
+                     open_from.rx() += 2;
+                  }
                } else {
                   //
                   // Should be impossible, but I'm coding this defensively.
@@ -766,10 +826,9 @@ void DKBreadcrumbBar::_open_menu(size_t i) {
                }
             } else {
                open_from = seg.geometry.menu_button.bottomRight().toPoint();
-               //
-               // subtract menu border(?) + menu inner padding + menu reserved space for icon + space between action icon and label(?)
-               //
-               open_from.rx() -= 32;
+               open_from.rx() -= this->_styles.segment.menu_button_width;
+               open_from.rx() -= _guesstimate_menu_text_x_offset(*to_open);
+               open_from.rx() += this->_styles.segment.margins.left();
             }
          }
          break;
