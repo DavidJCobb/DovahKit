@@ -5,8 +5,8 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
+#include <QProxyStyle>
 #include <QStyle>
-#include <QStyleOptionButton>
 
 namespace {
    // When drawing a rect with an odd pen (stroke) width, Qt rounds 
@@ -285,6 +285,20 @@ void DKBreadcrumbBar::setRootMenu(QMenu* m) {
    }
 }
 
+class _ScrollableMenuProxyStyle : public QProxyStyle {
+   public:
+      virtual int styleHint(
+         StyleHint hint,
+         const QStyleOption* option = nullptr,
+         const QWidget* widget = nullptr,
+         QStyleHintReturn* returnData = nullptr
+      ) const override {
+         if (hint == QStyle::SH_Menu_Scrollable)
+            return true;
+         return QProxyStyle::styleHint(hint, option, widget, returnData);
+      }
+};
+
 void DKBreadcrumbBar::_on_navigated() {
    //
    // Teardown.
@@ -329,6 +343,14 @@ void DKBreadcrumbBar::_on_navigated() {
                });
                QObject::connect(menu, &QMenu::aboutToHide, this, &DKBreadcrumbBar::_on_segment_menu_hidden);
                this->_start_menu_eavesdropping(*menu);
+               //
+               // Ensure that segment menus are scrollable.
+               //
+               {
+                  auto* proxy = new _ScrollableMenuProxyStyle;
+                  proxy->setParent(menu);
+                  menu->setStyle(proxy);
+               }
             }
          }
       } while (qmi = model->parent(qmi), basis = false, qmi.isValid());
@@ -711,22 +733,44 @@ void DKBreadcrumbBar::_open_menu(size_t i) {
          break;
       case index_of_root_button:
          to_open   = this->_root_button.menu;
-         open_from = this->_root_button.geometry.bottomLeft().toPoint();
+         if (this->layoutDirection() == Qt::LayoutDirection::RightToLeft) {
+            open_from = this->_root_button.geometry.bottomRight().toPoint();
+         } else {
+            open_from = this->_root_button.geometry.bottomLeft().toPoint();
+         }
          break;
       default:
          {
             const auto& seg = this->_segments[i];
             to_open   = this->_segments[i].menu;
-            open_from = seg.geometry.menu_button.bottomRight().toPoint();
-            open_from.rx() -= 32;
             //
-            // The intent of the displacement above is to make it so that opening the root menu 
-            // aligns the menu roughly with the leading edge of the widget. The same displacement 
-            // is applied to Windows's native breadcrumb widgets for each segment's menu as well, 
-            // such that for a segment's menu, icons on menu items are aligned roughly below the 
-            // segment text, while the leading edge of the menu items' labels is aligned roughly 
-            // below the bottom-right corner of the segment's menu button.
+            // We're opening the menu on a parent in order to choose a child to navigate to, and 
+            // the parent is not the last segment (i.e. there is a next segment that represents 
+            // a child we're already navigated into). We want the menu to be lined up such that 
+            // the text of the menu items (representing potential children) aligns with the text 
+            // of the child-segment that we're already navigatedinto.
             //
+            if (this->layoutDirection() == Qt::LayoutDirection::RightToLeft) {
+               if (i + 1 < this->_segments.size()) {
+                  auto& next_seg = this->_segments[i + 1];
+                  open_from = next_seg.geometry.main_button.bottomLeft().toPoint();
+                  //
+                  // subtract segment trailing border(?) + menu border(?) + menu inner padding
+                  //
+                  open_from.rx() -= 18;
+               } else {
+                  //
+                  // Should be impossible, but I'm coding this defensively.
+                  //
+                  open_from = seg.geometry.menu_button.bottomLeft().toPoint();
+               }
+            } else {
+               open_from = seg.geometry.menu_button.bottomRight().toPoint();
+               //
+               // subtract menu border(?) + menu inner padding + menu reserved space for icon + space between action icon and label(?)
+               //
+               open_from.rx() -= 32;
+            }
          }
          break;
    }
@@ -808,7 +852,16 @@ bool DKBreadcrumbBar::_do_menu_eavesdropping(QMenu& menu, QEvent& event) {
    //
    switch (event.type()) {
       case QEvent::MouseMove:
-         this->mouseMoveEvent((QMouseEvent*)&event);
+         {
+            auto& mev = (QMouseEvent&)event;
+            //
+            // Only eavesdrop on mouse-move events if the mouse is not over the 
+            // menu. Otherwise, ensure the menu has priority.
+            //
+            if (!menu.rect().contains(menu.mapFromGlobal(mev.globalPos()))) {
+               this->mouseMoveEvent(&mev);
+            }
+         }
          break;
       case QEvent::MouseButtonPress:
          {
