@@ -14,45 +14,7 @@
    <string>Idle Animations</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_3">
-   <item row="0" column="0">
-    <layout class="QVBoxLayout" name="leftCol">
-     <item>
-      <widget class="QTreeView" name="idles">
-       <property name="minimumSize">
-        <size>
-         <width>300</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="uniformRowHeights">
-        <bool>true</bool>
-       </property>
-       <attribute name="headerVisible">
-        <bool>false</bool>
-       </attribute>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="idleButtonsLayout">
-       <item>
-        <widget class="QPushButton" name="buttonIdleMoveUp">
-         <property name="text">
-          <string>Move Up</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="buttonIdleMoveDown">
-         <property name="text">
-          <string>Move Down</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </item>
-   <item row="0" column="1">
+   <item row="1" column="1">
     <widget class="QGroupBox" name="currentIdle">
      <property name="title">
       <string>Selected idle</string>
@@ -237,7 +199,45 @@
      </layout>
     </widget>
    </item>
-   <item row="1" column="0" colspan="2">
+   <item row="1" column="0">
+    <layout class="QVBoxLayout" name="leftCol">
+     <item>
+      <widget class="QTreeView" name="idles">
+       <property name="minimumSize">
+        <size>
+         <width>300</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="uniformRowHeights">
+        <bool>true</bool>
+       </property>
+       <attribute name="headerVisible">
+        <bool>false</bool>
+       </attribute>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="idleButtonsLayout">
+       <item>
+        <widget class="QPushButton" name="buttonIdleMoveUp">
+         <property name="text">
+          <string>Move Up</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="buttonIdleMoveDown">
+         <property name="text">
+          <string>Move Down</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0" colspan="2">
     <layout class="QHBoxLayout" name="buttonsLayout">
      <item>
       <spacer name="horizontalSpacer">
@@ -274,9 +274,22 @@
      </item>
     </layout>
    </item>
+   <item row="0" column="0" colspan="2">
+    <widget class="DKBreadcrumbBar" name="breadcrumbs">
+     <property name="textEditingAllowed">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>DKBreadcrumbBar</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKBreadcrumbBar.h</header>
+   <container>1</container>
+  </customwidget>
   <customwidget>
    <class>DKConditionList</class>
    <extends>QWidget</extends>
@@ -284,6 +297,7 @@
   </customwidget>
  </customwidgets>
  <tabstops>
+  <tabstop>breadcrumbs</tabstop>
   <tabstop>idles</tabstop>
   <tabstop>buttonIdleMoveUp</tabstop>
   <tabstop>buttonIdleMoveDown</tabstop>

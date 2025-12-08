@@ -30,6 +30,20 @@ IdleAnimationsDialog::IdleAnimationsDialog(QWidget* parent) : QDialog(parent) {
       auto* model  = new IdleAnimationFormsModel(widget);
       widget->setModel(model);
 
+      {
+         auto* breadcrumbs = this->ui.breadcrumbs;
+         auto* sel_model   = widget->selectionModel();
+         breadcrumbs->setModel(model);
+         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this, breadcrumbs]() {
+            const auto qmi     = this->_get_selected_row();
+            const auto blocker = QSignalBlocker(breadcrumbs);
+            breadcrumbs->setCurrentIndex(qmi);
+         });
+         QObject::connect(breadcrumbs, &DKBreadcrumbBar::currentIndexChanged, this, [this, sel_model](const QModelIndex& qmi) {
+            sel_model->select({ qmi, qmi }, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+         });
+      }
+
       widget->setDragDropMode(QAbstractItemView::DragDropMode::InternalMove);
       widget->setDragDropOverwriteMode(false);
       widget->setDragEnabled(true);
