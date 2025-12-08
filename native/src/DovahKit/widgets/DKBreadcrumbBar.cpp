@@ -1279,7 +1279,32 @@ void DKBreadcrumbBar::_recache_icons() {
          }
       }
       if (auto* casted = qobject_cast<QMenu*>(watched)) {
-         if (this->_do_menu_eavesdropping(*casted, *event))
+         //
+         // It is not enough to blindly eavesdrop on any menu that trips this 
+         // event filter, because breadcrumb bars can be given a root menu that 
+         // may be shared with other widgets, and the bars have to install an 
+         // event filter on that root menu. If the root menu is opened by some 
+         // other widget, then we'll receive the events that the menu intercepts 
+         // from that other widget.
+         // 
+         // We need to make sure that if the menu we're getting events for is 
+         // our root menu, *we* know that the root menu is open i.e. the root 
+         // menu was opened *via us.*
+         //
+         bool eavesdrop = false;
+         switch (size_t i = this->_state.menu_open_for) {
+            case index_of_none:
+               break;
+            case index_of_root_button:
+               eavesdrop = casted == this->_root_button.menu;
+               break;
+            default:
+               if (i < this->_segments.size()) {
+                  eavesdrop = casted == this->_segments[i].menu;
+               }
+               break;
+         }
+         if (eavesdrop && this->_do_menu_eavesdropping(*casted, *event))
             return true;
       }
       return QWidget::eventFilter(watched, event);

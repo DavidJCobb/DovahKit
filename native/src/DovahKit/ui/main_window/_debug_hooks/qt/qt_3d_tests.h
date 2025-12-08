@@ -1,7 +1,7 @@
 #pragma once
-#include "_base.h"
+#include "../_base.h"
 
-namespace DovahKitDebug::features {
+namespace DovahKitDebug::features::qt {
    struct qt_3d_tests : debug_feature {
       static constexpr const char* name = "Initial Qt 3D tests";
       static void execute(QWidget* from);

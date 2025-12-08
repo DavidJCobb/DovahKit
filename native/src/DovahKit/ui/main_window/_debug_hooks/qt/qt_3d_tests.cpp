@@ -1,4 +1,4 @@
-#include "qt_3d_tests.h"
+#include "./qt_3d_tests.h"
 #include <QDialog>
 #include <QGridLayout>
 #if !defined(QT_3DCORE_LIB) || !defined(QT_3DEXTRAS_LIB) || !defined(QT_3DRENDER_LIB)
@@ -20,7 +20,7 @@
    #include <Qt3DExtras/Qt3DWindow>
 #endif
 
-namespace DovahKitDebug::features {
+namespace DovahKitDebug::features::qt {
    /*static*/ void qt_3d_tests::execute(QWidget* from) {
       #if !defined(QT_3DCORE_LIB) || !defined(QT_3DEXTRAS_LIB) || !defined(QT_3DRENDER_LIB)
          QMessageBox::information(from, "Not enabled", "Program was compiled without Qt 3D");

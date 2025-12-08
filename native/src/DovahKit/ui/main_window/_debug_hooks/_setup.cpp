@@ -14,7 +14,6 @@
 #include "qt_ini_tests.h"
 #include "canvas_widget_tests.h"
 #include "qt_paint_ellipse_tests.h"
-#include "qt_3d_tests.h"
 #include "vulkan_renderer_instance.h"
 #include "load_nif.h"
 #include "worldinput2.h"
@@ -29,6 +28,8 @@
 #include "filter_object_selection_by_scriptname.h"
 #include "ui_form_list_pane_extra_col.h"
 #include "idles_datastore.h"
+#include "./qt/qpalette.h"
+#include "./qt/qt_3d_tests.h"
 #include "./widgets/attack_data.h"
 #include "./widgets/bound_script_list_pane.h"
 #include "./widgets/breadcrumb_bar.h"
@@ -45,6 +46,10 @@
 #include "./widgets/yes_no_unset_widget.h"
 
 namespace DovahKitDebug {
+   using qt_tests = cobb::class_list<
+      features::qt::qt_3d_tests,
+      features::qt::qpalette
+   >;
    using widget_tests = cobb::class_list<
       features::widgets::attack_data,
       features::widgets::bound_script_list_pane,
@@ -75,7 +80,6 @@ namespace DovahKitDebug {
       features::qt_ini_tests,
       features::debug_canvas_widget,
       features::qt_paint_ellipse_tests,
-      features::qt_3d_tests,
       features::vulkan_renderer_instance,
       features::load_nif,
       features::worldinput2,
@@ -112,6 +116,10 @@ namespace DovahKitDebug {
       auto* p = menu->parentWidget();
       if (p)
          p = p->window();
+      {
+         auto* submenu = menu->addMenu(QString("Qt"));
+         qt_tests::for_each_with_args<_add_functor>(submenu, p);
+      }
       {
          auto* submenu = menu->addMenu(QString("Widgets"));
          widget_tests::for_each_with_args<_add_functor>(submenu, p);
