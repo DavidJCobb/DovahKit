@@ -58,16 +58,35 @@ namespace {
          painter.restore();
       }
       {
+         //
+         // Qt's border jank is hard to properly account for and adjust for 
+         // throughout the codebase, so some of our calculations end up being 
+         // completely correct for hit testing but off for rendering, or off 
+         // for both, and it's just a massive headache to try and figure out 
+         // why. Easier to just apply spot corrections during rendering.
+         //
+         constexpr const bool janky_corrections = true;
+
          painter.fillRect(this->geometry.main_button, palette.main_button.fill);
          //
          // Borders:
          //
          bool draw_left  = this->geometry.main_borders.leading;
          bool draw_right = this->geometry.main_borders.trailing;
+         auto rect       = this->geometry.main_button - qt_border_jank;
          if (widget.layoutDirection() == Qt::LayoutDirection::RightToLeft) {
             std::swap(draw_left, draw_right);
+            if constexpr (janky_corrections) {
+               if (draw_left) {
+                  rect.moveLeft(rect.x() - 1);
+               }
+            }
          }
-         const auto&  rect = this->geometry.main_button - qt_border_jank;
+         if constexpr (janky_corrections) {
+            if (this->geometry.main_borders.trailing) {
+               rect.setWidth(rect.width() + 1);
+            }
+         }
          QPainterPath path;
          path.moveTo(rect.topLeft());
          path.lineTo(rect.topRight());
@@ -471,7 +490,6 @@ void DKBreadcrumbBar::_re_layout(bool force) {
       int y = this->_styles.border_width;
       if (show_root_button)
          x += menu_button_width;
-      this->_segments[0].geometry.main_borders.leading = !show_root_button;
 
       const auto metrics  = QFontMetrics(this->font());
       const int  margin_h = this->_styles.segment.margins.left() + this->_styles.segment.margins.right();
@@ -480,6 +498,7 @@ void DKBreadcrumbBar::_re_layout(bool force) {
          auto& seg = segments[i];
          seg.culled = false;
 
+         seg.geometry.main_borders.leading  = false;
          seg.geometry.main_borders.trailing = !seg.menu;
 
          auto& main = seg.geometry.main_button;
@@ -502,6 +521,7 @@ void DKBreadcrumbBar::_re_layout(bool force) {
             menu = {};
          }
       }
+      this->_segments[0].geometry.main_borders.leading = !show_root_button;
    }
    //
    // Check if the segments all fit in the available space. If not, then count 
@@ -1311,15 +1331,13 @@ void DKBreadcrumbBar::_recache_icons() {
          // rather than a single point; so we can't prepare a path for this in 
          // advance.
          //
-         qreal cx = this->_styles.segment.menu_button_width / 2.0F;
-         qreal cy = this->height() / 2.0F;
          painter.save();
          painter.setPen(QPen(this->palette().color(QPalette::Text), 1.5F));
          painter.setRenderHint(QPainter::RenderHint::Antialiasing);
-         painter.translate(this->_root_button.geometry.topLeft());
-         painter.drawPoint(QPointF{ cx - 2, cy });
-         painter.drawPoint(QPointF{ cx    , cy });
-         painter.drawPoint(QPointF{ cx + 2, cy });
+         painter.translate(this->_root_button.geometry.center());
+         painter.drawPoint(QPointF{ -3, 0 });
+         painter.drawPoint(QPointF{  0, 0 });
+         painter.drawPoint(QPointF{  3, 0 });
          painter.restore();
       }
 
