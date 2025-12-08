@@ -249,7 +249,6 @@ void DKBreadcrumbBar::setRootMenu(QMenu* m) {
       QObject::connect(m, &QMenu::aboutToHide, this, [this]() {
          if (this->_state.menu_open_for == index_of_root_button) {
             this->_state.menu_open_for = index_of_none;
-            this->repaint();
          }
       });
       //
@@ -661,8 +660,13 @@ void DKBreadcrumbBar::_close_menu(size_t i) {
    if (i == index_of_none || i >= this->_segments.size())
       return;
    auto& seg = this->_segments[i];
-   if (!seg.menu)
+   if (!seg.menu) {
+      if (this->_state.menu_open_for == i) {
+         this->_state.menu_open_for = index_of_none; // since there's no QMenu to fire aboutToHide and reset this state
+         this->repaint();
+      }
       return;
+   }
    seg.menu->hide();
 }
 void DKBreadcrumbBar::_open_menu(size_t i) {
@@ -799,10 +803,16 @@ bool DKBreadcrumbBar::_do_menu_eavesdropping(QMenu& menu, QEvent& event) {
 }
 void DKBreadcrumbBar::_on_segment_menu_hidden() {
    if (auto* s = sender()) {
-      auto closing = s->property("segment-index");
-      if (closing.isValid())
-         if (closing.toInt() != this->_state.menu_open_for)
+      if (s == this->_root_button.menu) {
+         if (this->_state.menu_open_for != index_of_root_button)
             return;
+      } else {
+         auto closing = s->property("segment-index");
+         if (closing.isValid()) {
+            if (closing.toInt() != this->_state.menu_open_for)
+               return;
+         }
+      }
    }
    this->_state.menu_open_for = index_of_none;
 }
@@ -855,36 +865,66 @@ void DKBreadcrumbBar::_on_horizontal_arrow_key(bool left) {
    }
    this->_on_segment_hovered(i);
 }
-void DKBreadcrumbBar::_on_vertical_arrow_key() {
-   auto& segments  = this->_segments;
-   auto  hover_idx = this->_state.hovered_segment;
-   if (segments.empty())
-      return;
+void DKBreadcrumbBar::_on_vertical_arrow_key(bool up) {
+   {
+      //
+      // If a menu is already open, but none of its actions have focus, then 
+      // move focus to one of its actions.
+      //
+      size_t i = this->_state.menu_open_for;
+      if (i != index_of_none) {
+         QMenu* menu = nullptr;
+         if (i == index_of_root_button)
+            menu = this->_root_button.menu;
+         else if (i < this->_segments.size())
+            menu = this->_segments[i].menu;
+         if (menu && menu->isVisible()) {
+            if (!menu->activeAction()) {
+               auto actions = menu->actions();
+               if (!actions.isEmpty()) {
+                  size_t i = up ? actions.size() - 1 : 0;
+                  menu->setActiveAction(actions[i]);
+               }
+            }
+            return;
+         }
+      }
+   }
+   //
+   // Otherwise, try to open a menu as appropriate.
+   //
+   auto _hover_root_or_first = [this]() {
+      size_t first = 0;
+      if (this->_root_button.menu)
+         first = index_of_root_button;
+      this->_on_segment_hovered(first);
+      this->repaint();
+   };
+   //
+   auto hover_idx = this->_state.hovered_segment;
    if (hover_idx == index_of_none) {
       //
       // If there is no "hovered" segment (i.e. because we're hovering 
       // the empty gutter after all segments), then hover the root 
       // button.
       //
-      this->_on_segment_hovered(0);
-      this->repaint();
+      _hover_root_or_first();
       return;
    }
-   //
-   // TODO: The intended behavior is as follows:
-   //
-   //  - Pressing the arrow key opens the menu but does not focus it; 
-   //    a horizontal arrow key will still navigate within the widget.
-   // 
-   //  - Pressing a vertical arrow key once the menu has been opened 
-   //    will move focus to the menu, allowing keyboard navigation 
-   //    within it. At this point, the left and right arrow keys will 
-   //    no longer navigate within the widget (i.e. they don't count 
-   //    as hovering an adjacent segment) until the menu is closed.
-   // 
-   // How do we implement this in Qt, especially given our need for 
-   // the menu-eavesdropping hack?
-   //
+   if (hover_idx == index_of_root_button) {
+      this->_open_menu(hover_idx);
+      return;
+   }
+   if (hover_idx >= this->_segments.size())
+      return;
+   if (hover_idx == this->_segments.size() - 1) {
+      //
+      // Vertical arrow keys on the trailing (menuless) segment also 
+      // shift hover to the root button.
+      //
+      _hover_root_or_first();
+      return;
+   }
    this->_open_menu(hover_idx);
 }
 
@@ -1048,20 +1088,20 @@ void DKBreadcrumbBar::_recache_icons() {
          textbox->setVisible(false);
    }
    /*virtual*/ void DKBreadcrumbBar::keyPressEvent(QKeyEvent* event) {
+      //
+      // QKeyEvents are accepted by default, but we explicitly accept them 
+      // in order to help the menu-eavesdropping hack.
+      //
       switch (event->key()) {
          case Qt::Key::Key_Up:
-            [[fallthrough]];
          case Qt::Key::Key_Down:
             event->accept();
-            this->_on_vertical_arrow_key();
-            break;
-         case Qt::Key::Key_Left:
-            event->accept();
-            this->_on_horizontal_arrow_key(true);
+            this->_on_vertical_arrow_key(event->key() == Qt::Key::Key_Up);
             break;
          case Qt::Key::Key_Right:
+         case Qt::Key::Key_Left:
             event->accept();
-            this->_on_horizontal_arrow_key(false);
+            this->_on_horizontal_arrow_key(event->key() == Qt::Key::Key_Left);
             break;
          case Qt::Key::Key_Enter:
          case Qt::Key::Key_Space:
@@ -1079,6 +1119,23 @@ void DKBreadcrumbBar::_recache_icons() {
                   if (i < this->_segments.size())
                      this->_on_segment_clicked(this->_segments[i]);
                   break;
+            }
+            break;
+         case Qt::Key::Key_Escape:
+            //
+            // Special-case: The trailing segment never has a menu, but we track 
+            // whether its menu *would* be open as a result of keyboard navigation 
+            // so that navigating to and past that segment properly pops the menu 
+            // of the adjacent segment. In essence, the widget works less in terms 
+            // of "a menu being open" and more in terms of the widget "being in 
+            // 'menu mode.'"
+            // 
+            // If we're "in menu mode" but a menu isn't open, then Esc should take 
+            // us out of "menu mode" consistent with the Windows 10 native widget.
+            //
+            if (this->_state.menu_open_for == this->_segments.size() - 1) {
+               event->accept();
+               this->_close_menu(this->_state.menu_open_for);
             }
             break;
       }

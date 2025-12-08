@@ -131,7 +131,7 @@ class DKBreadcrumbBar : public QWidget {
 
       void _on_segment_clicked(const segment&);
       void _on_horizontal_arrow_key(bool left);
-      void _on_vertical_arrow_key();
+      void _on_vertical_arrow_key(bool up);
 
       void _begin_text_editing();
       void _update_textbox_value();
