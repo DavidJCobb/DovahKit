@@ -217,14 +217,16 @@ void DKBreadcrumbBar::setRootMenu(QMenu* m) {
    QMenu* prior = this->_root_button.menu;
    if (m == prior)
       return;
-   for (const auto& seg : this->_segments) {
-      //
-      // Theoretically, someone could grab our per-segment menus via 
-      // QApplication::activePopupWidget, etc., and try to set one 
-      // of those as the root menu. This would be weird and stupid, 
-      // but I'll guard against it anyway.
-      //
-      assert(m != seg.menu && "What the hell are you doing?! Don't take a DKBreadcrumbBar's internal menus and set them as the root menu!");
+   if (m) {
+      for (const auto& seg : this->_segments) {
+         //
+         // Theoretically, someone could grab our per-segment menus via 
+         // QApplication::activePopupWidget, etc., and try to set one 
+         // of those as the root menu. This would be weird and stupid, 
+         // but I'll guard against it anyway.
+         //
+         assert(m != seg.menu && "What the hell are you doing?! Don't take a DKBreadcrumbBar's internal menus and set them as the root menu!");
+      }
    }
    bool menu_state_changed = false;
    if (this->_state.menu_open_for == index_of_root_button) {
@@ -511,34 +513,45 @@ void DKBreadcrumbBar::_re_layout(bool force) {
    {
       auto& trailing_seg = segments.back();
       int   total_width  = trailing_seg.geometry.main_button.x() + trailing_seg.width();
-      int   available    = this->width();
+      int   available    = this->width() - (this->_styles.border_width * 2);
+      if (show_root_button) {
+         available -= menu_button_width;
+      }
       if (available < total_width) {
-         if (available < trailing_seg.width()) {
+         //
+         // Display only the trailing segment(s). If the root button is not 
+         // being shown, then use the space it would be shown in to display 
+         // a "..." indicator.
+         //
+         if (!show_root_button) {
+            available -= menu_button_width;
+         }
+         count_to_show = 0;
+         if (available >= trailing_seg.width()) {
+            total_width = 0;
+            for (count_to_show = 0; count_to_show < count; ++count_to_show) {
+               size_t i = count - count_to_show - 1;
+               auto   w = this->_segments[i].width();
+               if (total_width + w > available)
+                  break;
+               total_width += w;
+            }
+         }
+         if (count_to_show == 0) {
+            //
+            // Display only the trailing segment, constraining it to fill the 
+            // available space.
+            //
             count_to_show = 1;
             trailing_seg.geometry.main_borders.leading = !!this->_root_button.menu;
             auto& main_rect = trailing_seg.geometry.main_button;
             auto& menu_rect = trailing_seg.geometry.menu_button;
             if (trailing_seg.menu) {
-               //
-               // Display only the trailing segment, constraining it to fill the 
-               // available space. That space is reduced to make room for a "..." 
-               // indicator (see comments below).
-               //
                auto main_width = available - menu_button_width;
                main_rect.setWidth(main_width);
                menu_rect.setX(main_rect.x() + main_width);
             } else {
                main_rect.setWidth(available);
-            }
-         } else {
-            count_to_show = 0;
-            total_width   = 0;
-            for (count_to_show = 0; count_to_show < count; ++count_to_show) {
-               size_t i = count - count_to_show - 1;
-               auto   w = this->_segments[i].width();
-               if (total_width + w > available - 1) // minus 1 to account for the leading-est segment's leading border being added
-                  break;
-               total_width += w;
             }
          }
       }
@@ -552,6 +565,7 @@ void DKBreadcrumbBar::_re_layout(bool force) {
       for (auto& seg : segments)
          seg.culled = false;
    } else {
+      assert(count_to_show > 0);
       assert(count_to_show < count);
       size_t first_to_show = count - count_to_show;
 
@@ -1007,12 +1021,12 @@ void DKBreadcrumbBar::_recache_icons() {
    {
       auto& path = this->_state.icons.chevron_more;
       path.clear();
-      path.moveTo(QPointF{ -dx*2, -2 });
-      path.lineTo(QPointF{     0,  0 });
-      path.lineTo(QPointF{ -dx*2,  2 });
-      path.moveTo(QPointF{     0, -2 });
-      path.lineTo(QPointF{  dx*2,  0 });
-      path.lineTo(QPointF{     0,  2 });
+      path.moveTo(QPointF{ -dx*2.5, -2 });
+      path.lineTo(QPointF{    -0.5,  0 });
+      path.lineTo(QPointF{ -dx*2.5,  2 });
+      path.moveTo(QPointF{     0.5, -2 });
+      path.lineTo(QPointF{  dx*2.5,  0 });
+      path.lineTo(QPointF{     0.5,  2 });
    }
    this->_state.icons.cached = true;
 }
@@ -1101,7 +1115,12 @@ void DKBreadcrumbBar::_recache_icons() {
          case Qt::Key::Key_Right:
          case Qt::Key::Key_Left:
             event->accept();
-            this->_on_horizontal_arrow_key(event->key() == Qt::Key::Key_Left);
+            {
+               bool left = event->key() == Qt::Key::Key_Left;
+               if (this->layoutDirection() == Qt::LayoutDirection::RightToLeft)
+                  left = !left;
+               this->_on_horizontal_arrow_key(left);
+            }
             break;
          case Qt::Key::Key_Enter:
          case Qt::Key::Key_Space:
