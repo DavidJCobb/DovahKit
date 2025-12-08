@@ -13,14 +13,7 @@
 #include "lua_resource_manager_tests.h"
 #include "qt_ini_tests.h"
 #include "canvas_widget_tests.h"
-#include "qt_paint_ellipse_tests.h"
-#include "vulkan_renderer_instance.h"
 #include "load_nif.h"
-#include "worldinput2.h"
-#include "worldinput_serialization.h"
-#include "worldinput2_input_seq_ui.h"
-#include "worldinput2_control_scheme_ui.h"
-#include "worldinput2_control_scheme_rebuild.h"
 #include "papyrus_subsystem.h"
 #include "pex_parsing_benchmarks.h"
 #include "form_info_cache.h"
@@ -28,6 +21,13 @@
 #include "filter_object_selection_by_scriptname.h"
 #include "ui_form_list_pane_extra_col.h"
 #include "idles_datastore.h"
+#include "./renderwin/vulkan_renderer_instance.h"
+#include "./renderwin/worldinput2.h"
+#include "./renderwin/worldinput_serialization.h"
+#include "./renderwin/worldinput2_input_seq_ui.h"
+#include "./renderwin/worldinput2_control_scheme_ui.h"
+#include "./renderwin/worldinput2_control_scheme_rebuild.h"
+#include "./qt/paint_ellipse_tests.h"
 #include "./qt/qpalette.h"
 #include "./qt/qt_3d_tests.h"
 #include "./widgets/attack_data.h"
@@ -46,7 +46,16 @@
 #include "./widgets/yes_no_unset_widget.h"
 
 namespace DovahKitDebug {
+   using renderwin_tests = cobb::class_list<
+      features::renderwin::vulkan_renderer_instance,
+      features::renderwin::worldinput2,
+      features::renderwin::worldinput_serialization,
+      features::renderwin::worldinput2_input_seq_ui,
+      features::renderwin::worldinput2_control_scheme_ui,
+      features::renderwin::worldinput2_control_scheme_rebuild
+   >;
    using qt_tests = cobb::class_list<
+      features::qt::paint_ellipse_tests,
       features::qt::qt_3d_tests,
       features::qt::qpalette
    >;
@@ -79,14 +88,7 @@ namespace DovahKitDebug {
       features::run_lua_resource_manager_tests,
       features::qt_ini_tests,
       features::debug_canvas_widget,
-      features::qt_paint_ellipse_tests,
-      features::vulkan_renderer_instance,
       features::load_nif,
-      features::worldinput2,
-      features::worldinput_serialization,
-      features::worldinput2_input_seq_ui,
-      features::worldinput2_control_scheme_ui,
-      features::worldinput2_control_scheme_rebuild,
       features::papyrus_subsystem,
       features::pex_parsing_benchmarks,
       features::form_info_cache,
@@ -116,6 +118,10 @@ namespace DovahKitDebug {
       auto* p = menu->parentWidget();
       if (p)
          p = p->window();
+      {
+         auto* submenu = menu->addMenu(QString("Render Window and friends"));
+         renderwin_tests::for_each_with_args<_add_functor>(submenu, p);
+      }
       {
          auto* submenu = menu->addMenu(QString("Qt"));
          qt_tests::for_each_with_args<_add_functor>(submenu, p);

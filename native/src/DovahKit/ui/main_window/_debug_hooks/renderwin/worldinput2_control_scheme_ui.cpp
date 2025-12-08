@@ -12,7 +12,7 @@ namespace {
    }
 }
 
-namespace DovahKitDebug::features {
+namespace DovahKitDebug::features::renderwin {
    /*static*/ void worldinput2_control_scheme_ui::execute(QWidget* from) {
 
       // intentional copy

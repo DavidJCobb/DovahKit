@@ -18,7 +18,7 @@ namespace {
    }
 }
 
-namespace DovahKitDebug::features {
+namespace DovahKitDebug::features::renderwin {
    /*static*/ void worldinput2_input_seq_ui::execute(QWidget* from) {
 
       auto data = worldinput::control_scheme_action{

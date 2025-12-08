@@ -4,7 +4,7 @@
 #include <QGridLayout>
 #include "widgets/DKVulkanView.h"
 
-namespace DovahKitDebug::features {
+namespace DovahKitDebug::features::renderwin {
    /*static*/ void vulkan_renderer_instance::execute(QWidget* parent) {
       auto* dialog = new QDialog(parent);
       auto* layout = new QGridLayout(dialog);

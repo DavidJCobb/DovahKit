@@ -1021,7 +1021,7 @@ namespace {
    };
 }
 
-namespace DovahKitDebug::features {
+namespace DovahKitDebug::features::renderwin {
    /*static*/ void worldinput2::execute(QWidget* from) {
       auto& core = worldinput::core::get();
 

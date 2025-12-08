@@ -1,4 +1,4 @@
-#include "qt_paint_ellipse_tests.h"
+#include "paint_ellipse_tests.h"
 #include <algorithm>
 #include <array>
 #include <QDialog>
@@ -25,8 +25,8 @@ namespace {
    }
 }
 
-namespace DovahKitDebug::features {
-   /*static*/ void qt_paint_ellipse_tests::execute(QWidget* parent) {
+namespace DovahKitDebug::features::qt {
+   /*static*/ void paint_ellipse_tests::execute(QWidget* parent) {
       auto* dialog = new QDialog(parent);
       auto* layout = new QGridLayout(dialog);
       dialog->setLayout(layout);

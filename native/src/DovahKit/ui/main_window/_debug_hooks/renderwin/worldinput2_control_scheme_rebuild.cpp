@@ -272,7 +272,7 @@ namespace {
    }
 }
 
-namespace DovahKitDebug::features {
+namespace DovahKitDebug::features::renderwin {
    /*static*/ void worldinput2_control_scheme_rebuild::execute(QWidget* from) {
 
       worldinput::control_scheme scheme = make_scheme();

@@ -1296,7 +1296,7 @@
     <ClCompile Include="editor\asset_manager\data\_base.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\qt_3d_tests.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\qt\qt_3d_tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\main_window\render_window.cpp">
@@ -3642,6 +3642,9 @@
     <ClCompile Include="ui\main_window\_debug_hooks\widgets\breadcrumb_bar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\qt\qpalette.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4985,7 +4988,7 @@
     <ClInclude Include="editor\asset_manager\data\_base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\qt_3d_tests.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\qt\qt_3d_tests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\descriptor_definitions.h">
@@ -8934,6 +8937,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\breadcrumb_bar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\qt\qpalette.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

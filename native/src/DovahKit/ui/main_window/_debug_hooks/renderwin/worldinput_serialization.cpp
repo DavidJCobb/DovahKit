@@ -17,7 +17,7 @@ namespace {
 }
 #include "editor/subsystems/worldinput/algorithms/input_sequence_stringification.h"
 
-namespace DovahKitDebug::features {
+namespace DovahKitDebug::features::renderwin {
    /*static*/ void worldinput_serialization::execute(QWidget* from) {
       auto& core = worldinput::core::get();
 
