@@ -715,6 +715,7 @@ void DKBreadcrumbBar::_on_segment_hovered(size_t i) {
    // even via QStyle. Most of their offsets are hardcoded constants which were 
    // occasionally given actual names...
    //
+   menu.ensurePolished();
    const QStyle* style = menu.style();
    if (const auto* proxy = qobject_cast<const QProxyStyle*>(style))
       style = proxy->baseStyle();
