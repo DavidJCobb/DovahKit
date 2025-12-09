@@ -30,6 +30,8 @@ class DKBreadcrumbBar : public QWidget {
       };
 
       struct Styles {
+         Styles();
+
          struct {
             QMargins margins;
             struct {
@@ -61,7 +63,7 @@ class DKBreadcrumbBar : public QWidget {
                } main_borders;
             } geometry;
             QString text;
-            QMenu*  menu = nullptr;
+            bool    has_menu = false;
             QPersistentModelIndex qmi;
 
          public:
@@ -106,17 +108,23 @@ class DKBreadcrumbBar : public QWidget {
       void _on_navigated();
       void _on_data_changed(const QModelIndex&);
       bool _on_before_item_deleted(const QModelIndex&);
-      void _set_up_menu(QMenu&, const QModelIndex& qpmi);
+      void _on_items_moved(const QModelIndex& src_parent, int first, int last, const QModelIndex& dst_parent);
+      void _build_segment_menu(const QModelIndex& qpmi);
       void _re_layout(bool force = false);
 
       void _on_segment_hovered(size_t);
 
-      static int _guesstimate_menu_text_x_offset(QMenu&);
-      void _close_menu(size_t);
+      static int _guesstimate_menu_text_x_offset(const QMenu&);
+      QPoint _compute_menu_position(size_t segment_index) const;
       void _open_menu(size_t);
       void _start_menu_eavesdropping(QMenu&);
       bool _do_menu_eavesdropping(QMenu&, QEvent&); // returns true if the menu should NOT receive the event
+      void _on_root_menu_hidden();
+      void _on_segment_menu_item_selected(QAction*);
       void _on_segment_menu_hidden();
+      void _close_any_open_menu();
+
+      QAction* _segment_menu_action_by_qmi(const QModelIndex&);
 
       void _on_segment_clicked(const segment&);
       void _on_horizontal_arrow_key(bool left);
@@ -171,6 +179,7 @@ class DKBreadcrumbBar : public QWidget {
          Qt::CaseSensitivity case_sensitivity = Qt::CaseSensitivity::CaseInsensitive;
       } _text_editing;
       struct {
+         QMenu      segment_menu;
          QLineEdit* textbox = nullptr;
       } _subwidgets;
       struct {

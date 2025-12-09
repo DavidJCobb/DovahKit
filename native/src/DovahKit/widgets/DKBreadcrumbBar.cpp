@@ -30,6 +30,21 @@ namespace {
    constexpr const bool janky_corrections = true;
 }
 
+// Forces a QMenu to always use scrolling rather than expanding to multiple columns.
+class _ScrollableMenuProxyStyle : public QProxyStyle {
+   public:
+      virtual int styleHint(
+         StyleHint hint,
+         const QStyleOption* option = nullptr,
+         const QWidget* widget = nullptr,
+         QStyleHintReturn* returnData = nullptr
+      ) const override {
+         if (hint == QStyle::SH_Menu_Scrollable)
+            return true;
+         return QProxyStyle::styleHint(hint, option, widget, returnData);
+      }
+};
+
 #pragma region DKBreadcrumbBar::Styles
    DKBreadcrumbBar::Styles::Styles() {
       this->border_width = 1;
@@ -79,7 +94,7 @@ namespace {
 #pragma region DKBreadcrumbBar::segment
    unsigned int DKBreadcrumbBar::segment::width() const noexcept {
       int width = this->geometry.main_button.width();
-      if (this->menu)
+      if (this->has_menu)
          width += this->geometry.menu_button.width();
       if (this->geometry.main_borders.leading)
          ++width;
@@ -98,7 +113,7 @@ namespace {
          return widget._styles.segment.colors.normal;
       }();
 
-      if (this->menu) {
+      if (this->has_menu) {
          painter.setBrush(palette.menu_button.fill);
          painter.setPen(palette.menu_button.line);
          painter.drawRect(this->geometry.menu_button - qt_border_jank);
@@ -173,6 +188,18 @@ DKBreadcrumbBar::DKBreadcrumbBar(QWidget* parent) : QWidget(parent) {
 
    this->setFocusPolicy(Qt::FocusPolicy::StrongFocus);
    this->setMouseTracking(true);
+
+   {
+      auto& menu = this->_subwidgets.segment_menu;
+      this->_start_menu_eavesdropping(menu);
+      QObject::connect(&menu, &QMenu::aboutToHide, this, &DKBreadcrumbBar::_on_segment_menu_hidden);
+      QObject::connect(&menu, &QMenu::triggered,   this, &DKBreadcrumbBar::_on_segment_menu_item_selected);
+      {
+         auto* proxy = new _ScrollableMenuProxyStyle;
+         proxy->setParent(&menu);
+         menu.setStyle(proxy);
+      }
+   }
 }
 
 QAbstractItemModel* DKBreadcrumbBar::model() const noexcept {
@@ -196,6 +223,8 @@ void DKBreadcrumbBar::setModel(QAbstractItemModel* model) {
                break;
          }
       });
+      QObject::connect(model, &QAbstractItemModel::rowsMoved,   this, &DKBreadcrumbBar::_on_items_moved);
+      QObject::connect(model, &QAbstractItemModel::dataChanged, this, &DKBreadcrumbBar::_on_data_changed);
    }
    this->_on_navigated();
 }
@@ -309,20 +338,10 @@ QMenu* DKBreadcrumbBar::rootMenu() const noexcept {
    return this->_root_button.menu;
 }
 void DKBreadcrumbBar::setRootMenu(QMenu* m) {
+   assert(m != &this->_subwidgets.segment_menu);
    QMenu* prior = this->_root_button.menu;
    if (m == prior)
       return;
-   if (m) {
-      for (const auto& seg : this->_segments) {
-         //
-         // Theoretically, someone could grab our per-segment menus via 
-         // QApplication::activePopupWidget, etc., and try to set one 
-         // of those as the root menu. This would be weird and stupid, 
-         // but I'll guard against it anyway.
-         //
-         assert(m != seg.menu && "What the hell are you doing?! Don't take a DKBreadcrumbBar's internal menus and set them as the root menu!");
-      }
-   }
    bool menu_state_changed = false;
    if (this->_state.menu_open_for == index_of_root_button) {
       if (prior)
@@ -343,16 +362,12 @@ void DKBreadcrumbBar::setRootMenu(QMenu* m) {
       // potentially be shown by some other UI, such as a different 
       // DKBreadcrumbBar.
       //
-      QObject::connect(m, &QMenu::aboutToHide, this, [this]() {
-         if (this->_state.menu_open_for == index_of_root_button) {
-            this->_state.menu_open_for = index_of_none;
-         }
-      });
+      QObject::connect(m, &QMenu::aboutToHide, this, &DKBreadcrumbBar::_on_root_menu_hidden);
       //
       // We'll need to "eavesdrop" on this menu just like we eavesdrop 
-      // on the menus we create and have sole ownership of.
+      // on the segment menu.
       //
-      m->installEventFilter(this);
+      this->_start_menu_eavesdropping(*m);
    }
    if (!!m != !!prior) {
       this->_re_layout();
@@ -366,38 +381,19 @@ void DKBreadcrumbBar::setStyles(const Styles& s) {
    this->update();
 }
 
-class _ScrollableMenuProxyStyle : public QProxyStyle {
-   public:
-      virtual int styleHint(
-         StyleHint hint,
-         const QStyleOption* option = nullptr,
-         const QWidget* widget = nullptr,
-         QStyleHintReturn* returnData = nullptr
-      ) const override {
-         if (hint == QStyle::SH_Menu_Scrollable)
-            return true;
-         return QProxyStyle::styleHint(hint, option, widget, returnData);
-      }
-};
-
 void DKBreadcrumbBar::_on_navigated() {
    //
    // Teardown.
    //
    this->setFocusProxy(nullptr);
-   {
-      auto& list = this->_segments;
-      for (auto& seg : list) {
-         if (seg.menu) {
-            seg.menu->setVisible(false);
-            seg.menu->deleteLater();
-            seg.menu = nullptr;
-         }
-      }
-      list.clear();
-   }
+   this->_segments.clear();
    this->_state.hovered_segment = index_of_none;
    this->_state.menu_open_for   = index_of_none;
+   {
+      auto&      menu    = this->_subwidgets.segment_menu;
+      const auto blocker = QSignalBlocker(&menu); // we don't want to be notified of menu closure here
+      menu.hide();
+   }
    //
    // Rebuild.
    //
@@ -417,37 +413,11 @@ void DKBreadcrumbBar::_on_navigated() {
          seg.text = label;
          if (!basis) { // don't show a menu on the current-index item
             if (!(flags & Qt::ItemNeverHasChildren) && model->rowCount(qmi) > 0) {
-               auto* menu = seg.menu = new QMenu(this);
-               QObject::connect(menu, &QMenu::aboutToShow, this, [this, menu, qmi]() {
-                  this->_state.menu_open_for = menu->property("segment-index").toInt();
-                  this->_set_up_menu(*menu, qmi);
-               });
-               QObject::connect(menu, &QMenu::aboutToHide, this, &DKBreadcrumbBar::_on_segment_menu_hidden);
-               this->_start_menu_eavesdropping(*menu);
-               //
-               // Ensure that segment menus are scrollable.
-               //
-               {
-                  auto* proxy = new _ScrollableMenuProxyStyle;
-                  proxy->setParent(menu);
-                  menu->setStyle(proxy);
-               }
+               seg.has_menu = true;
             }
          }
       } while (qmi = model->parent(qmi), basis = false, qmi.isValid());
       std::reverse(list.begin(), list.end());
-      //
-      // Tell each segment's menu what its index (as in list position, not QMI) 
-      // is, to simplify signal handling.
-      //
-      if (list.size() > 0) {
-         for (size_t i = 0; i < list.size() - 1; ++i) { // minus one because the current-item (i.e. last segment) never has a menu
-            auto& seg = this->_segments[i];
-            assert(seg.menu != nullptr);
-            if (seg.menu)
-               seg.menu->setProperty("segment-index", i);
-         }
-      }
    }
    this->_state.hovered_segment = index_of_none;
    this->_state.next_layout.segments_changed = true;
@@ -469,12 +439,15 @@ void DKBreadcrumbBar::_on_navigated() {
    }
 }
 void DKBreadcrumbBar::_on_data_changed(const QModelIndex& qmi) {
-   auto& list  = this->_segments;
-   bool  found = false;
+   auto&   list  = this->_segments;
+   bool    found = false;
+   QString label;
+   QIcon   icon;
    for (size_t i = 0; i < list.size(); ++i) {
       auto& seg = list[i];
       if (seg.qmi == qmi) {
-         QString label = this->model()->data(seg.qmi, Qt::DisplayRole).toString();
+         label = this->model()->data(qmi, Qt::DisplayRole).toString();
+         icon  = this->model()->data(qmi, Qt::DecorationRole).value<QIcon>();
          seg.text = label;
          found = true;
          break;
@@ -483,6 +456,14 @@ void DKBreadcrumbBar::_on_data_changed(const QModelIndex& qmi) {
    if (found) {
       this->_state.next_layout.segments_changed = true;
       this->_re_layout();
+   }
+   if (auto* action = this->_segment_menu_action_by_qmi(qmi)) {
+      if (!found) {
+         label = this->model()->data(qmi, Qt::DisplayRole).toString();
+         icon  = this->model()->data(qmi, Qt::DecorationRole).value<QIcon>();
+      }
+      action->setText(label);
+      action->setIcon(icon);
    }
 }
 bool DKBreadcrumbBar::_on_before_item_deleted(const QModelIndex& qmi) {
@@ -500,12 +481,55 @@ bool DKBreadcrumbBar::_on_before_item_deleted(const QModelIndex& qmi) {
          break;
       }
    }
-   if (!found)
+   if (auto* action = this->_segment_menu_action_by_qmi(qmi)) {
+      this->_subwidgets.segment_menu.removeAction(action);
+   }
+   if (!found) {
       return false;
+   }
    this->setCurrentIndex(parent);
    return true;
 }
-void DKBreadcrumbBar::_set_up_menu(QMenu& menu, const QModelIndex& qmi) {
+void DKBreadcrumbBar::_on_items_moved(const QModelIndex& src_parent, int first, int last, const QModelIndex& dst_parent) {
+   if (auto size = this->_segments.size(); size > 1) {
+      bool hierarchy_changed = false;
+      for (size_t i = 0; i < size - 1; ++i) {
+         const auto& seg = this->_segments[i];
+         if (seg.qmi == src_parent) {
+            hierarchy_changed = true;
+            break;
+         }
+      }
+      if (hierarchy_changed) {
+         const auto blocker = QSignalBlocker(this); // don't emit index-/path-changed signals
+         this->_on_navigated(); // rebuild the hierarchy
+      }
+   }
+
+   auto mof = this->_state.menu_open_for;
+   switch (mof) {
+      case index_of_none:
+      case index_of_root_button:
+         return;
+   }
+   if (mof < this->_segments.size()) {
+      const auto& seg = this->_segments[mof];
+      if (seg.qmi == src_parent || seg.qmi == dst_parent) {
+         auto& menu = this->_subwidgets.segment_menu;
+         bool  has_active_action = menu.activeAction();
+         menu.setUpdatesEnabled(false);
+         this->_build_segment_menu(seg.qmi);
+         menu.setUpdatesEnabled(true);
+         if (has_active_action && !menu.activeAction()) {
+            auto actions = menu.actions();
+            if (!actions.isEmpty())
+               menu.setActiveAction(actions[0]);
+         }
+      }
+   }
+}
+void DKBreadcrumbBar::_build_segment_menu(const QModelIndex& qmi) {
+   auto& menu = this->_subwidgets.segment_menu;
    menu.clear();
 
    QModelIndex selected_child;
@@ -533,6 +557,7 @@ void DKBreadcrumbBar::_set_up_menu(QMenu& menu, const QModelIndex& qmi) {
          continue;
 
       QAction* action = new QAction(label, &menu);
+      action->setProperty("qpmi", QPersistentModelIndex(child_qmi));
       if (icon.canConvert<QIcon>()) {
          action->setIcon(icon.value<QIcon>());
       }
@@ -541,11 +566,6 @@ void DKBreadcrumbBar::_set_up_menu(QMenu& menu, const QModelIndex& qmi) {
          font.setBold(true);
          action->setFont(font);
       }
-
-      QPersistentModelIndex qpmi = child_qmi;
-      QObject::connect(action, &QAction::triggered, this, [this, qpmi]() {
-         this->setCurrentIndex(qpmi);
-      });
       menu.addAction(action);
    }
 }
@@ -615,7 +635,7 @@ void DKBreadcrumbBar::_re_layout(bool force) {
          seg.culled = false;
 
          seg.geometry.main_borders.leading  = false;
-         seg.geometry.main_borders.trailing = !seg.menu;
+         seg.geometry.main_borders.trailing = !seg.has_menu;
 
          auto& main = seg.geometry.main_button;
          auto& menu = seg.geometry.menu_button;
@@ -630,7 +650,7 @@ void DKBreadcrumbBar::_re_layout(bool force) {
          }
          main.setHeight(widget_inner_height);
          x += main.width();
-         if (seg.menu) {
+         if (seg.has_menu) {
             menu = QRectF(x, y, menu_button_width, widget_inner_height);
             x += menu_button_width;
          } else {
@@ -682,7 +702,7 @@ void DKBreadcrumbBar::_re_layout(bool force) {
             trailing_seg.geometry.main_borders.leading = !!this->_root_button.menu;
             auto& main_rect = trailing_seg.geometry.main_button;
             auto& menu_rect = trailing_seg.geometry.menu_button;
-            if (trailing_seg.menu) {
+            if (trailing_seg.has_menu) {
                auto main_width = available - menu_button_width;
                main_rect.setWidth(main_width);
                menu_rect.setX(main_rect.x() + main_width);
@@ -718,7 +738,7 @@ void DKBreadcrumbBar::_re_layout(bool force) {
       }
       {
          auto& last_hidden = this->_segments[first_to_show - 1];
-         if (last_hidden.menu) {
+         if (last_hidden.has_menu) {
             displace_backward = last_hidden.geometry.menu_button.right();
          } else {
             displace_backward = last_hidden.geometry.main_button.right();
@@ -760,7 +780,7 @@ void DKBreadcrumbBar::_re_layout(bool force) {
          auto& menu_rect = seg.geometry.menu_button;
          const int dst_r = widget_width - main_rect.left();
          int       dst_x = dst_r - main_rect.width();
-         if (seg.menu) {
+         if (seg.has_menu) {
             main_rect.moveLeft(dst_x);
             dst_x -= menu_button_width;
             menu_rect.moveLeft(dst_x);
@@ -800,11 +820,16 @@ void DKBreadcrumbBar::_on_segment_hovered(size_t i) {
    }
 }
 
-/*static*/ int DKBreadcrumbBar::_guesstimate_menu_text_x_offset(QMenu& menu) {
+/*static*/ int DKBreadcrumbBar::_guesstimate_menu_text_x_offset(const QMenu& menu) {
    //
    // Qt offers no convenient getters for the text position/offset within a menu, 
    // even via QStyle. Most of their offsets are hardcoded constants which were 
-   // occasionally given actual names...
+   // only occasionally given actual names. The code that determines text position 
+   // is scattered across QMenu and QWindowsStyle/QCommonStyle, composed from a 
+   // handful of different calculations run in near-total isolation from one 
+   // another.
+   // 
+   // This function is going to be ugly.
    //
    menu.ensurePolished();
    const QStyle* style = menu.style();
@@ -822,9 +847,12 @@ void DKBreadcrumbBar::_on_segment_hovered(size_t i) {
    left += style->pixelMetric(QStyle::PM_MenuHMargin, &opt, &menu);
    //
    int icon_width = 0;
-   if (false) { // TODO: if any actions have an icon
-      // set icon_width to the max width across all such icons
-      icon_width = std::max(icon_width, style->pixelMetric(QStyle::PM_SmallIconSize, &opt, &menu) + 4);
+   for (auto* action : menu.actions()) {
+      auto icon = action->icon();
+      if (!icon.isNull()) {
+         icon_width = style->pixelMetric(QStyle::PM_SmallIconSize, &opt, &menu) + 4;
+         break;
+      }
    }
    //
    // Apply the effects of the styles.
@@ -838,15 +866,23 @@ void DKBreadcrumbBar::_on_segment_hovered(size_t i) {
    // targets anyway).
    //
    if (style->inherits("QWindowsStyle")) {
-      if (!icon_width) {
-         left -= 6;
-      }
-      left += std::max(
-         icon_width,
-         12 // QWindowsStylePrivate::windowsCheckMarkWidth
-      );
+      // Based on QWindowsStyle::sizeFromContents(CT_MenuItem, ...).
+      
+      // Normally, this subtraction is only made if the icon width is 
+      // zero, but testing in Windows 10 suggests it's always needed.
+      left -= 6;
+
+      // Normally, this would be the maximum of the max icon width or 
+      // of the windowsCheckMarkWidth constant. Testing in Windows 10 
+      // suggests it's always needed.
+      left += 12; // QWindowsStylePrivate::windowsCheckMarkWidth
+
+      // This shouldn't have even been here. This was a mistake. But 
+      // testing on Windows 10 suggests it's always needed.
       left += 12;
    } else if (qobject_cast<const QCommonStyle*>(style)) {
+      // Based on QCommonStyle::sizeFromContents(CT_MenuItem, ...).
+
       if (icon_width > 0) {
          left += icon_width;
          left += 6;
@@ -857,74 +893,73 @@ void DKBreadcrumbBar::_on_segment_hovered(size_t i) {
    }
    return left;
 }
-void DKBreadcrumbBar::_close_menu(size_t i) {
-   if (i == index_of_root_button) {
-      QMenu* menu = this->_root_button.menu;
-      if (menu)
-         menu->hide();
-      return;
+QPoint DKBreadcrumbBar::_compute_menu_position(size_t segment_index) const {
+   switch (segment_index) {
+      case index_of_none:
+         return {};
+      case index_of_root_button:
+         assert(!!this->_root_button.menu);
+         if (this->layoutDirection() == Qt::LayoutDirection::RightToLeft) {
+            auto pos = this->_root_button.geometry.bottomRight().toPoint();
+            pos.rx() -= this->_root_button.menu->sizeHint().width();
+            return pos;
+         }
+         return this->_root_button.geometry.bottomLeft().toPoint();
    }
-   if (i == index_of_none || i >= this->_segments.size())
-      return;
-   auto& seg = this->_segments[i];
-   if (!seg.menu) {
-      if (this->_state.menu_open_for == i) {
-         this->_state.menu_open_for = index_of_none; // since there's no QMenu to fire aboutToHide and reset this state
-         this->repaint();
+
+   if (segment_index >= this->_segments.size())
+      return {};
+   auto& seg = this->_segments[segment_index];
+   if (!seg.has_menu)
+      return {};
+
+   QPoint point;
+   //
+   // We're opening the menu on a parent in order to choose a child to navigate to, and 
+   // the parent is not the last segment (i.e. there is a next segment that represents 
+   // a child we're already navigated into). We want the menu to be lined up such that 
+   // the text of the menu items (representing potential children) aligns with the text 
+   // of the child-segment that we're already navigated into.
+   //
+   if (this->layoutDirection() == Qt::LayoutDirection::RightToLeft) {
+      if (segment_index + 1 >= this->_segments.size()) // should be impossible, since the trailing segment isn't allowed to have a menu
+         return seg.geometry.menu_button.bottomLeft().toPoint();
+      point = this->_segments[segment_index + 1].geometry.main_button.bottomLeft().toPoint();
+      point.rx() -= this->_styles.segment.margins.left();
+      if constexpr (janky_corrections) {
+         //
+         // one of the three is true for RTL:
+         // 
+         //  - we need to subtract the margin twice
+         //  - we need to subtract the margin once, and subtract 5px
+         //  - we need to subtract 10px
+         // 
+         // not sure which. there's some kind of offset being applied to the menu position 
+         // that we're compensating for. Qt's code for that is a rat's nest and i don't 
+         // have the energy to scurry around it any longer
+         //
+         point.rx() -= this->_styles.segment.margins.left();
       }
-      return;
+   } else {
+      point = seg.geometry.menu_button.bottomLeft().toPoint();
+      point.rx() += this->_styles.segment.margins.left();
    }
-   seg.menu->hide();
+   point.rx() -= _guesstimate_menu_text_x_offset(this->_subwidgets.segment_menu);
+   return point;
 }
 void DKBreadcrumbBar::_open_menu(size_t i) {
-   QPoint open_from;
    QMenu* to_open = nullptr;
    switch (i) {
       case index_of_none:
          break;
       case index_of_root_button:
-         to_open   = this->_root_button.menu;
-         if (this->layoutDirection() == Qt::LayoutDirection::RightToLeft) {
-            open_from = this->_root_button.geometry.bottomRight().toPoint();
-         } else {
-            open_from = this->_root_button.geometry.bottomLeft().toPoint();
-         }
+         to_open = this->_root_button.menu;
+         if (!to_open)
+            return;
          break;
       default:
-         {
-            const auto& seg = this->_segments[i];
-            to_open   = this->_segments[i].menu;
-            if (!to_open)
-               break;
-            //
-            // We're opening the menu on a parent in order to choose a child to navigate to, and 
-            // the parent is not the last segment (i.e. there is a next segment that represents 
-            // a child we're already navigated into). We want the menu to be lined up such that 
-            // the text of the menu items (representing potential children) aligns with the text 
-            // of the child-segment that we're already navigated into.
-            //
-            if (this->layoutDirection() == Qt::LayoutDirection::RightToLeft) {
-               if (i + 1 < this->_segments.size()) {
-                  auto& next_seg = this->_segments[i + 1];
-                  open_from = next_seg.geometry.main_button.bottomLeft().toPoint();
-                  open_from.rx() -= _guesstimate_menu_text_x_offset(*to_open);
-                  open_from.rx() += this->_styles.segment.margins.left();
-                  if constexpr (janky_corrections) {
-                     open_from.rx() += 2;
-                  }
-               } else {
-                  //
-                  // Should be impossible, but I'm coding this defensively.
-                  //
-                  open_from = seg.geometry.menu_button.bottomLeft().toPoint();
-               }
-            } else {
-               open_from = seg.geometry.menu_button.bottomRight().toPoint();
-               open_from.rx() -= this->_styles.segment.menu_button_width;
-               open_from.rx() -= _guesstimate_menu_text_x_offset(*to_open);
-               open_from.rx() += this->_styles.segment.margins.left();
-            }
-         }
+         if (this->_segments[i].has_menu)
+            to_open = &this->_subwidgets.segment_menu;
          break;
    }
 
@@ -936,7 +971,7 @@ void DKBreadcrumbBar::_open_menu(size_t i) {
    // that when we receive this "mouse leave" event, we're aware that the mouse has 
    // not actually left.
    //
-   {
+   if (to_open) {
       bool mouseleave_pending = (this->_state.menu_open_for == index_of_none);
       if (!mouseleave_pending) {
          // last segment has no menu, but we track whether its menu *would* be open
@@ -952,8 +987,29 @@ void DKBreadcrumbBar::_open_menu(size_t i) {
       if (to_open && to_open == QApplication::activePopupWidget())
          return;
    }
-   this->_close_menu(this->_state.menu_open_for);
+   this->_state.menu_open_for = index_of_none; // so that the menu-close handlers don't do anything
+   {
+      //
+      // Only hide the previous menu if we're switching between two different 
+      // QMenu instances, or if we're switching to no QMenu instance.
+      //
+      bool root_prior = this->_state.menu_open_for == index_of_root_button;
+      bool root_after = i == index_of_root_button;
 
+      bool hide_previous_menu = root_prior != root_after;
+      if (!hide_previous_menu && i != index_of_none && !to_open)
+         hide_previous_menu = true;
+
+      if (hide_previous_menu) {
+         if (root_prior) {
+            if (QMenu* menu = this->_root_button.menu)
+               menu->hide();
+         } else {
+            this->_subwidgets.segment_menu.hide();
+         }
+      }
+   }
+   this->_state.menu_open_for = i;
    if (!to_open) {
       //
       // We want to forcibly close any menu that's already open on a segment, even if 
@@ -965,21 +1021,14 @@ void DKBreadcrumbBar::_open_menu(size_t i) {
       // right *again* and moving to a segment that has a menu will pop that segment's 
       // menu.)
       //
-      this->_state.menu_open_for = i;
       return;
    }
-
-   if (i == index_of_root_button) {
-      //
-      // Our own menus use `QMenu::aboutToShow` to update this variable, but that isn't 
-      // safe to use for the root menu (since it could be shared with other widgets and 
-      // shown for any of them), so for that menu specifically, we update the state here.
-      // 
-      // (Why use `aboutToShow` at all? The other menus also do setup there.)
-      //
-      this->_state.menu_open_for = i;
+   if (i < this->_segments.size()) {
+      this->_subwidgets.segment_menu.setUpdatesEnabled(false);
+      this->_build_segment_menu(this->_segments[i].qmi);
+      this->_subwidgets.segment_menu.setUpdatesEnabled(true);
    }
-   to_open->popup(this->mapToGlobal(open_from));
+   to_open->popup(this->mapToGlobal(this->_compute_menu_position(i)));
    this->repaint(); // to update the menu-button chevron for each segment
 }
 void DKBreadcrumbBar::_start_menu_eavesdropping(QMenu& menu) {
@@ -991,7 +1040,7 @@ void DKBreadcrumbBar::_start_menu_eavesdropping(QMenu& menu) {
    // This is actually kind of important: QMenu has some accommodations which 
    // make it so that if you move the mouse diagonally from an item to a submenu, 
    // the menu won't instantly close as the mouse cuts that corner. But we want 
-   // to still receive those mouse events ourselves (e.g. as a QMenuBar would), 
+   // to still receive those input events ourselves (e.g. as a QMenuBar would), 
    // so we need to install ourselves as an event filter on the menu.
    //
    menu.installEventFilter(this);
@@ -1001,7 +1050,8 @@ bool DKBreadcrumbBar::_do_menu_eavesdropping(QMenu& menu, QEvent& event) {
       return false;
    //
    // Peek at application-wide events that are being re-routed to our 
-   // open menu.
+   // open menu, in case those events *would've* gone to us and we 
+   // still want to handle them.
    //
    switch (event.type()) {
       case QEvent::MouseMove:
@@ -1041,24 +1091,65 @@ bool DKBreadcrumbBar::_do_menu_eavesdropping(QMenu& menu, QEvent& event) {
    }
    return false;
 }
-void DKBreadcrumbBar::_on_segment_menu_hidden() {
-   if (auto* s = sender()) {
-      if (s == this->_root_button.menu) {
-         if (this->_state.menu_open_for != index_of_root_button)
-            return;
-      } else {
-         auto closing = s->property("segment-index");
-         if (closing.isValid()) {
-            if (closing.toInt() != this->_state.menu_open_for)
-               return;
-         }
-      }
+void DKBreadcrumbBar::_on_root_menu_hidden() {
+   switch (this->_state.menu_open_for) {
+      case index_of_root_button:
+         break;
+      case index_of_none:
+      default:
+         return;
    }
    this->_state.menu_open_for = index_of_none;
+   this->repaint();
+}
+void DKBreadcrumbBar::_on_segment_menu_item_selected(QAction* action) {
+   if (!action)
+      return;
+   auto data = action->property("qpmi");
+   if (!data.isValid() || !data.canConvert<QPersistentModelIndex>())
+      return;
+   this->setCurrentIndex(data.value<QPersistentModelIndex>());
+}
+void DKBreadcrumbBar::_on_segment_menu_hidden() {
+   switch (this->_state.menu_open_for) {
+      case index_of_root_button:
+      case index_of_none:
+         return;
+   }
+   this->_state.menu_open_for = index_of_none;
+   this->repaint();
+}
+void DKBreadcrumbBar::_close_any_open_menu() {
+   this->_state.menu_open_for = index_of_none;
+   if (QMenu* menu = this->_root_button.menu)
+      menu->hide();
+   this->_subwidgets.segment_menu.hide();
+   this->repaint();
+}
+
+QAction* DKBreadcrumbBar::_segment_menu_action_by_qmi(const QModelIndex& qmi) {
+   const auto mof = this->_state.menu_open_for;
+   switch (mof) {
+      case index_of_none:
+      case index_of_root_button:
+         return nullptr;
+   }
+   if (mof >= this->_segments.size())
+      return nullptr;
+   if (qmi.parent() != this->_segments[mof].qmi)
+      return nullptr;
+
+   auto& menu = this->_subwidgets.segment_menu;
+   for (auto* action : menu.actions()) {
+      auto action_qmi = action->property("qpmi").value<QPersistentModelIndex>();
+      if (action_qmi == qmi)
+         return action;
+   }
+   return nullptr;
 }
 
 void DKBreadcrumbBar::_on_segment_clicked(const segment& seg) {
-   this->_close_menu(this->_state.menu_open_for);
+   this->_close_any_open_menu();
    this->setCurrentIndex(seg.qmi);
 }
 void DKBreadcrumbBar::_on_horizontal_arrow_key(bool left) {
@@ -1117,7 +1208,7 @@ void DKBreadcrumbBar::_on_vertical_arrow_key(bool up) {
          if (i == index_of_root_button)
             menu = this->_root_button.menu;
          else if (i < this->_segments.size())
-            menu = this->_segments[i].menu;
+            menu = &this->_subwidgets.segment_menu;
          if (menu && menu->isVisible()) {
             if (!menu->activeAction()) {
                auto actions = menu->actions();
@@ -1243,18 +1334,12 @@ void DKBreadcrumbBar::_recache_icons() {
       switch (event->type()) {
          case QEvent::EnabledChange:
             this->cancelTextEditing();
-            {
-               size_t i = this->_state.menu_open_for;
-               if (i < this->_segments.size()) {
-                  auto& seg = this->_segments[i];
-                  if (seg.menu)
-                     seg.menu->setVisible(false);
-               } else if (i == index_of_root_button) {
-                  if (QMenu* menu = this->_root_button.menu)
-                     menu->setVisible(false);
-               }
-               this->_state.menu_open_for = index_of_none;
-            }
+            //
+            this->_state.menu_open_for = index_of_none;
+            this->_subwidgets.segment_menu.hide();
+            if (QMenu* menu = this->_root_button.menu)
+               menu->hide();
+            //
             this->repaint();
             break;
          case QEvent::LayoutDirectionChange:
@@ -1270,9 +1355,8 @@ void DKBreadcrumbBar::_recache_icons() {
             return;
          if (focused == textbox)
             return;
-         for (auto& seg : this->_segments)
-            if (focused == seg.menu)
-               return;
+         if (focused == &this->_subwidgets.segment_menu)
+            return;
       }
       //
       // Focus has not been transferred to a sub-widget or submenu.
@@ -1333,7 +1417,7 @@ void DKBreadcrumbBar::_recache_icons() {
             //
             if (this->_state.menu_open_for == this->_segments.size() - 1) {
                event->accept();
-               this->_close_menu(this->_state.menu_open_for);
+               this->_close_any_open_menu();
             }
             break;
       }
@@ -1341,6 +1425,15 @@ void DKBreadcrumbBar::_recache_icons() {
    /*virtual*/ void DKBreadcrumbBar::leaveEvent(QEvent* event) {
       if (this->_state.next_mouseleave_is_from_menu_opening) {
          this->_state.next_mouseleave_is_from_menu_opening = false;
+         return;
+      }
+      if (this->_state.menu_open_for != index_of_none) {
+         //
+         // This is not strictly accurate. The native Windows breadcrumb bar sets 
+         // the hovered segment to "none" but doesn't change which menu is open, 
+         // so the current menu stays open but arrow keys navigate as if you're 
+         // not hovering over any segment. But that's a bit confusing if anything.
+         //
          return;
       }
       this->_on_segment_hovered(index_of_none);
@@ -1531,7 +1624,7 @@ void DKBreadcrumbBar::_recache_icons() {
             }
          }
       }
-      if (auto* casted = qobject_cast<QMenu*>(watched)) {
+      {
          //
          // It is not enough to blindly eavesdrop on any menu that trips this 
          // event filter, because breadcrumb bars can be given a root menu that 
@@ -1549,15 +1642,13 @@ void DKBreadcrumbBar::_recache_icons() {
             case index_of_none:
                break;
             case index_of_root_button:
-               eavesdrop = casted == this->_root_button.menu;
+               eavesdrop = watched == this->_root_button.menu;
                break;
             default:
-               if (i < this->_segments.size()) {
-                  eavesdrop = casted == this->_segments[i].menu;
-               }
+               eavesdrop = watched == &this->_subwidgets.segment_menu;
                break;
          }
-         if (eavesdrop && this->_do_menu_eavesdropping(*casted, *event))
+         if (eavesdrop && this->_do_menu_eavesdropping(*qobject_cast<QMenu*>(watched), *event))
             return true;
       }
       return QWidget::eventFilter(watched, event);
