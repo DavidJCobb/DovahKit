@@ -18,47 +18,28 @@ class DKBreadcrumbBar : public QWidget {
 
       struct SegmentPalette {
          struct {
-            QBrush fill = QColor(255, 255, 255);
-            QPen   line = QPen(QColor(224, 224, 224), 0);
-            QPen   text = QPen(QColor(0, 0, 0), 0);
+            QBrush fill;
+            QPen   line;
+            QPen   text;
          } main_button;
          struct {
-            QBrush fill = QColor(255, 255, 255);
-            QPen   line = QPen(QColor(224, 224, 224), 0);
-            QPen   icon = QPen(QColor(128, 128, 128), 1.5, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin);
+            QBrush fill;
+            QPen   line;
+            QPen   icon;
          } menu_button;
       };
 
       struct Styles {
          struct {
-            QMargins margins{ 5, 3, 5, 3 };
+            QMargins margins;
             struct {
                SegmentPalette normal;
-               SegmentPalette hovered = {
-                  .main_button = {
-                     .fill = QColor(229, 243, 255),
-                     .line = QPen(QColor(204, 232, 255), 0),
-                  },
-                  .menu_button = {
-                     .fill = QColor(229, 243, 255),
-                     .line = QPen(QColor(204, 232, 255), 0),
-                  },
-               };
-               SegmentPalette disabled{
-                  .main_button = {
-                     .fill = QColor(0, 0, 0, 0),
-                     .line = QColor(0, 0, 0, 0),
-                  },
-                  .menu_button = {
-                     .fill = QColor(0, 0, 0, 0),
-                     .line = QColor(0, 0, 0, 0),
-                     .icon = QPen(QColor(0, 0, 0), 1.5, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin),
-                  },
-               };
+               SegmentPalette hovered;
+               SegmentPalette disabled;
             } colors;
-            unsigned int menu_button_width = 15; // includes borders
+            unsigned int menu_button_width; // includes borders
          } segment;
-         unsigned int border_width = 1;
+         unsigned int border_width;
       };
 
    protected:
@@ -119,6 +100,7 @@ class DKBreadcrumbBar : public QWidget {
       void setRootMenu(QMenu*); // does NOT take ownership
 
       constexpr const Styles& styles() const noexcept { return this->_styles; }
+      void setStyles(const Styles&);
 
    protected:
       void _on_navigated();

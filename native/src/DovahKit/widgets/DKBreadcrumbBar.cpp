@@ -30,6 +30,52 @@ namespace {
    constexpr const bool janky_corrections = true;
 }
 
+#pragma region DKBreadcrumbBar::Styles
+   DKBreadcrumbBar::Styles::Styles() {
+      this->border_width = 1;
+
+      this->segment.margins = { 5, 3, 5, 3 };
+      this->segment.menu_button_width = 15;
+
+      this->segment.colors.normal = {
+         .main_button = {
+            .fill = QColor(255, 255, 255),
+            .line = QPen(QColor(224, 224, 224), 0),
+            .text = QPen(QColor(0, 0, 0), 0),
+         },
+         .menu_button = {
+            .fill = QColor(255, 255, 255),
+            .line = QPen(QColor(224, 224, 224), 0),
+            .icon = QPen(QColor(128, 128, 128), 1.5, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin),
+         },
+      };
+      this->segment.colors.hovered = {
+         .main_button = {
+            .fill = QColor(229, 243, 255),
+            .line = QPen(QColor(204, 232, 255), 0),
+            .text = this->segment.colors.normal.main_button.text,
+         },
+         .menu_button = {
+            .fill = QColor(229, 243, 255),
+            .line = QPen(QColor(204, 232, 255), 0),
+            .icon = this->segment.colors.normal.menu_button.icon,
+         },
+      };
+      this->segment.colors.disabled = {
+         .main_button = {
+            .fill = QColor(0, 0, 0, 0),
+            .line = QColor(0, 0, 0, 0),
+            .text = this->segment.colors.normal.main_button.text,
+         },
+         .menu_button = {
+            .fill = QColor(0, 0, 0, 0),
+            .line = QColor(0, 0, 0, 0),
+            .icon = QPen(this->segment.colors.normal.main_button.text.color(), 1.5, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin),
+         },
+      };
+   }
+#pragma endregion
+
 #pragma region DKBreadcrumbBar::segment
    unsigned int DKBreadcrumbBar::segment::width() const noexcept {
       int width = this->geometry.main_button.width();
@@ -313,6 +359,11 @@ void DKBreadcrumbBar::setRootMenu(QMenu* m) {
    } else if (menu_state_changed) {
       this->repaint();
    }
+}
+
+void DKBreadcrumbBar::setStyles(const Styles& s) {
+   this->_styles = s;
+   this->update();
 }
 
 class _ScrollableMenuProxyStyle : public QProxyStyle {
