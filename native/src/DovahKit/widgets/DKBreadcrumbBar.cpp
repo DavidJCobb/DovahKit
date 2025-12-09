@@ -2,6 +2,7 @@
 #include <algorithm> // std::reverse
 #include <QApplication>
 #include <QCommonStyle>
+#include <QMetaMethod>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
@@ -121,12 +122,7 @@ DKBreadcrumbBar::DKBreadcrumbBar(QWidget* parent) : QWidget(parent) {
       auto* textbox = this->_subwidgets.textbox = new QLineEdit(this);
       textbox->setVisible(false);
       textbox->installEventFilter(this);
-      QObject::connect(textbox, &QLineEdit::editingFinished, this, [this]() {
-         this->_subwidgets.textbox->setVisible(false);
-         this->_navigate_to_path(this->_subwidgets.textbox->text());
-         this->setFocus();
-         this->repaint();
-      });
+      QObject::connect(textbox, &QLineEdit::editingFinished, this, &DKBreadcrumbBar::finishTextEditing);
    }
 
    this->setFocusPolicy(Qt::FocusPolicy::StrongFocus);
@@ -140,6 +136,7 @@ void DKBreadcrumbBar::setModel(QAbstractItemModel* model) {
    auto* prior = this->model();
    if (prior == model)
       return;
+   this->cancelTextEditing();
    if (prior) {
       QObject::disconnect(prior, nullptr, this, nullptr);
    }
@@ -167,52 +164,38 @@ void DKBreadcrumbBar::setCurrentIndex(const QModelIndex& qmi) {
       return;
    this->_data.index = qmi;
    this->_on_navigated();
+   if (this->isEditingText()) {
+      this->_update_textbox_value();
+      this->_subwidgets.textbox->selectAll();
+   }
 }
 
-bool DKBreadcrumbBar::textEditingAllowed() const noexcept {
-   return this->_text_editing.allowed;
-}
 void DKBreadcrumbBar::setTextEditingAllowed(bool v) {
    if (v == this->_text_editing.allowed)
       return;
    this->_text_editing.allowed = v;
-   if (!v) {
-      auto* textbox = this->_subwidgets.textbox;
-      if (textbox->isVisible()) {
-         if (QApplication::focusWidget() == textbox) {
-            this->setFocus();
-         }
-         textbox->setHidden(true);
-         this->repaint();
-      }
-   }
+   if (!v)
+      this->cancelTextEditing();
 }
 
-QChar DKBreadcrumbBar::textSeparator() const noexcept {
-   return this->_text_editing.separator;
-}
 void DKBreadcrumbBar::setTextSeparator(QChar c) {
    auto& prop = this->_text_editing.separator;
    if (prop == c)
       return;
    prop = c;
    //
-   if (this->textEditingAllowed()) {
-      auto* textbox = this->_subwidgets.textbox;
-      if (textbox->isVisible()) {
-         this->_update_textbox_value();
-      }
+   if (this->textEditingAllowed() && this->isEditingText()) {
+      this->_update_textbox_value();
+      this->_subwidgets.textbox->selectAll();
    }
 }
 
-Qt::CaseSensitivity DKBreadcrumbBar::caseSensitivity() const noexcept {
-   return this->_text_editing.case_sensitivity;
-}
 void DKBreadcrumbBar::setCaseSensitivity(Qt::CaseSensitivity v) {
-   auto& prop = this->_text_editing.case_sensitivity;
-   if (prop == v)
-      return;
-   prop = v;
+   this->_text_editing.case_sensitivity = v;
+}
+
+bool DKBreadcrumbBar::isEditingText() const noexcept {
+   return this->_subwidgets.textbox->isVisible();
 }
 
 QString DKBreadcrumbBar::path() const noexcept {
@@ -230,6 +213,50 @@ QString DKBreadcrumbBar::path() const noexcept {
       path += this->_segments[i].text;
    }
    return path;
+}
+bool DKBreadcrumbBar::setPath(QString path) {
+   if (!this->_data.model)
+      return false;
+   const auto cs     = this->caseSensitivity();
+   const auto chunks = path.splitRef(this->_text_editing.separator, Qt::SkipEmptyParts, cs);
+   //
+   // Try to see if this matches a subset of the path we're already in. 
+   // If so, that saves us some model queries.
+   //
+   QModelIndex qmi;
+   size_t ci = 0; // chunk index
+   {
+      size_t max = std::min((size_t)chunks.size(), this->_segments.size());
+      for (; ci < max; ++ci) {
+         auto& seg = this->_segments[ci];
+         if (seg.text.compare(chunks[ci], cs) != 0)
+            break;
+         qmi = seg.qmi;
+      }
+   }
+   for (; ci < chunks.size(); ++ci) {
+      auto rows = this->_data.model->rowCount(qmi);
+      if (rows <= 0)
+         return false; // failed.
+      bool found = false;
+      for (size_t ri = 0; ri < rows; ++ri) {
+         auto row_qmi = this->_data.model->index(ri, 0, qmi);
+         if (!row_qmi.isValid())
+            continue;
+         auto text = this->_data.model->data(row_qmi, Qt::DisplayRole).toString();
+         if (text.isEmpty())
+            continue;
+         if (text.compare(chunks[ci], cs) == 0) {
+            qmi   = row_qmi;
+            found = true;
+            break;
+         }
+      }
+      if (!found)
+         return false;
+   }
+   this->setCurrentIndex(qmi);
+   return true;
 }
 
 QMenu* DKBreadcrumbBar::rootMenu() const noexcept {
@@ -375,7 +402,20 @@ void DKBreadcrumbBar::_on_navigated() {
    this->_state.next_layout.segments_changed = true;
    this->_re_layout();
 
-   emit this->currentIndexChanged(this->currentIndex());
+   //
+   // Emit signals. Don't bother stringifying to a path for signals' sake if nothing 
+   // is listening for path-related signals.
+   //
+   if (!this->signalsBlocked()) {
+      if (this->isSignalConnected(QMetaMethod::fromSignal(&DKBreadcrumbBar::currentPathChanged))) {
+         auto qmi  = this->currentIndex();
+         auto path = this->path();
+         emit this->currentIndexChanged(qmi);
+         emit this->currentPathChanged(path);
+      } else {
+         emit this->currentIndexChanged(this->currentIndex());
+      }
+   }
 }
 void DKBreadcrumbBar::_on_data_changed(const QModelIndex& qmi) {
    auto& list  = this->_segments;
@@ -803,6 +843,8 @@ void DKBreadcrumbBar::_open_menu(size_t i) {
          {
             const auto& seg = this->_segments[i];
             to_open   = this->_segments[i].menu;
+            if (!to_open)
+               break;
             //
             // We're opening the menu on a parent in order to choose a child to navigate to, and 
             // the parent is not the last segment (i.e. there is a next segment that represents 
@@ -1090,50 +1132,6 @@ void DKBreadcrumbBar::_update_textbox_value() {
    const auto blocker = QSignalBlocker(textbox);
    textbox->setText(this->path());
 }
-bool DKBreadcrumbBar::_navigate_to_path(QString path) {
-   if (!this->_data.model)
-      return false;
-   const auto cs     = this->caseSensitivity();
-   const auto chunks = path.splitRef(this->_text_editing.separator, Qt::SkipEmptyParts, cs);
-   //
-   // Try to see if this matches a subset of the path we're already in. 
-   // If so, that saves us some model queries.
-   //
-   QModelIndex qmi;
-   size_t ci = 0; // chunk index
-   {
-      size_t max = std::min((size_t)chunks.size(), this->_segments.size());
-      for (; ci < max; ++ci) {
-         auto& seg = this->_segments[ci];
-         if (seg.text.compare(chunks[ci], cs) != 0)
-            break;
-         qmi = seg.qmi;
-      }
-   }
-   for (; ci < chunks.size(); ++ci) {
-      auto rows = this->_data.model->rowCount(qmi);
-      if (rows <= 0)
-         return false; // failed.
-      bool found = false;
-      for (size_t ri = 0; ri < rows; ++ri) {
-         auto row_qmi = this->_data.model->index(ri, 0, qmi);
-         if (!row_qmi.isValid())
-            continue;
-         auto text = this->_data.model->data(row_qmi, Qt::DisplayRole).toString();
-         if (text.isEmpty())
-            continue;
-         if (text.compare(chunks[ci], cs) == 0) {
-            qmi   = row_qmi;
-            found = true;
-            break;
-         }
-      }
-      if (!found)
-         return false;
-   }
-   this->setCurrentIndex(qmi);
-   return true;
-}
 
 void DKBreadcrumbBar::_recache_icons() {
    qreal dx = this->layoutDirection() == Qt::LayoutDirection::LeftToRight ? 1 : -1;
@@ -1193,9 +1191,7 @@ void DKBreadcrumbBar::_recache_icons() {
    /*virtual*/ void DKBreadcrumbBar::changeEvent(QEvent* event) {
       switch (event->type()) {
          case QEvent::EnabledChange:
-            if (this->_subwidgets.textbox->isVisible()) {
-               this->_subwidgets.textbox->setVisible(false);
-            }
+            this->cancelTextEditing();
             {
                size_t i = this->_state.menu_open_for;
                if (i < this->_segments.size()) {
@@ -1231,8 +1227,7 @@ void DKBreadcrumbBar::_recache_icons() {
       // Focus has not been transferred to a sub-widget or submenu.
       //
       this->_on_segment_hovered(index_of_none);
-      if (textbox->isVisible())
-         textbox->setVisible(false);
+      this->cancelTextEditing();
    }
    /*virtual*/ void DKBreadcrumbBar::keyPressEvent(QKeyEvent* event) {
       //
@@ -1374,7 +1369,7 @@ void DKBreadcrumbBar::_recache_icons() {
    /*virtual*/ void DKBreadcrumbBar::paintEvent(QPaintEvent* event) {
       QPainter painter(this);
 
-      if (this->_subwidgets.textbox->isVisible())
+      if (this->isEditingText())
          return;
 
       const bool is_disabled  = !this->isEnabled();
@@ -1515,5 +1510,32 @@ void DKBreadcrumbBar::_recache_icons() {
             return true;
       }
       return QWidget::eventFilter(watched, event);
+   }
+#pragma endregion
+
+#pragma region Slots
+   void DKBreadcrumbBar::beginTextEditing() {
+      if (this->isEditingText() || !this->textEditingAllowed())
+         return;
+      this->_begin_text_editing();
+   }
+   void DKBreadcrumbBar::cancelTextEditing() {
+      if (!this->isEditingText())
+         return;
+      auto* textbox = this->_subwidgets.textbox;
+      bool  focus   = textbox->hasFocus();
+      textbox->setVisible(false);
+      if (focus)
+         this->setFocus();
+      this->repaint();
+   }
+   void DKBreadcrumbBar::finishTextEditing() {
+      if (!this->isEditingText())
+         return;
+      auto* textbox = this->_subwidgets.textbox;
+      textbox->setVisible(false);
+      this->setPath(textbox->text());
+      this->setFocus();
+      this->repaint();
    }
 #pragma endregion

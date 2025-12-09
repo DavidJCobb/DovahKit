@@ -91,23 +91,29 @@ class DKBreadcrumbBar : public QWidget {
       static constexpr const size_t index_of_none        = (size_t)-1;
       static constexpr const size_t index_of_root_button = (size_t)-2;
 
-   public: // properties
+   public:
       QAbstractItemModel* model() const noexcept;
       void setModel(QAbstractItemModel*);
 
       QModelIndex currentIndex() const noexcept;
       void setCurrentIndex(const QModelIndex&);
 
-      bool textEditingAllowed() const noexcept;
+      constexpr bool textEditingAllowed() const noexcept;
       void setTextEditingAllowed(bool);
 
-      QChar textSeparator() const noexcept;
+      constexpr QChar textSeparator() const noexcept;
       void setTextSeparator(QChar);
 
-      Qt::CaseSensitivity caseSensitivity() const noexcept;
+      constexpr Qt::CaseSensitivity caseSensitivity() const noexcept;
       void setCaseSensitivity(Qt::CaseSensitivity);
 
+      constexpr bool areAnySegmentsHidden() const noexcept;
+      bool isEditingText() const noexcept;
+      constexpr size_t segmentCount() const noexcept;
+      constexpr size_t visibleSegmentCount() const noexcept;
+
       QString path() const noexcept;
+      bool setPath(QString); // returns a success bool
 
       QMenu* rootMenu() const noexcept;
       void setRootMenu(QMenu*); // does NOT take ownership
@@ -136,7 +142,6 @@ class DKBreadcrumbBar : public QWidget {
 
       void _begin_text_editing();
       void _update_textbox_value();
-      bool _navigate_to_path(QString);
 
       void _recache_icons();
 
@@ -160,6 +165,12 @@ class DKBreadcrumbBar : public QWidget {
 
    signals:
       void currentIndexChanged(const QModelIndex&) const;
+      void currentPathChanged(QString) const;
+
+   public slots:
+      void beginTextEditing();
+      void cancelTextEditing();
+      void finishTextEditing();
 
    protected:
       Styles _styles;
@@ -202,3 +213,5 @@ class DKBreadcrumbBar : public QWidget {
          bool next_mouseleave_is_from_menu_opening = false;
       } _state;
 };
+
+#include "./DKBreadcrumbBar.inl"
