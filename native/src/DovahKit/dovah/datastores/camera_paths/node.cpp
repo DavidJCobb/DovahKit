@@ -13,6 +13,9 @@ namespace dovah::datastores::impl::camera_paths {
    bool node::is_defined_in_non_active_file() const noexcept {
       return !this->stub.get_owning_load_order().is_defined_in_active_file(this->stub);
    }
+   bool node::is_queued_for_processing_before(const node& that) const noexcept {
+      return this->first_seen_anam < that.first_seen_anam;
+   }
 
    // initial build:
    node::internal_sort_state& node::_get_sort_state(passkeys::initial_build) noexcept {

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010"> 
+   <Type Name="dovah::datastores::impl::camera_paths::node">
+      <DisplayString>{stub.editorID,sb}</DisplayString>
+      <Expand>
+         <Item Name="[stub]">stub,na</Item>
+         <Item Name="[parent]">parent,na</Item>
+         <Item Name="[children]">children,na</Item>
+         <Item Name="[first seen ANAM]">first_seen_anam</Item>
+         <Item Name="[sort state during build]">_sort_state</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

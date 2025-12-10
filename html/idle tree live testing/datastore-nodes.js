@@ -291,7 +291,7 @@ class Idle {
             else
                children.push(idle);
          } else {
-            children.push(idle);
+            children.unshift(idle);
          }
          idle.live.parent = this;
       }

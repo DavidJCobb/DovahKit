@@ -11,6 +11,7 @@
 #include "./camera_paths/warnings/cyclical_sibling_relationships.h"
 #include "./camera_paths/warnings/form_has_multiple_next_siblings.h"
 #include "./camera_paths/warnings/inconsistent_parentage.h"
+#include "./camera_paths/warnings/multiple_children_want_to_be_first.h"
 #include "./camera_paths/warnings/previous_sibling_is_not_as_expected.h"
 #include "./camera_paths/warnings/sibling_is_an_ancestor.h"
 #include "./camera_paths/warnings/siblings_have_mismatched_parents.h"
@@ -61,16 +62,51 @@ namespace dovah::datastores {
          auto& node     = *node_ptr;
          this->nodes_by_stub[stub] = &node;
          node_ptr.release();
+         //
+         auto loaded = stub->load().ptr_cast<loaded_form_data>();
+         if (loaded) {
+            auto opt = loaded->get_first_seen_anam_position();
+            if (opt.has_value())
+               node.first_seen_anam = { *opt };
+         }
          return false;
       });
       //
       // Build the parent/child hierarchy for the camera path nodes.
       //
+      {
+         std::vector<node*> sorted;
+         for (auto& pair : this->nodes_by_stub)
+            sorted.push_back(pair.second);
+         std::sort(
+            sorted.begin(),
+            sorted.end(),
+            [&lo](node* x, node* y) {
+               return x->is_queued_for_processing_before(*y);
+            }
+         );
+         for(auto* node : sorted) {
+            auto loaded = node->stub.load().ptr_cast<loaded_form_data>();
+            if (loaded) {
+               this->_place_form(*node, *loaded);
+            }
+         }
+      }
       for (auto& pair : this->nodes_by_stub) {
-         auto& node   = *pair.second;
-         auto  loaded = node.stub.load().ptr_cast<loaded_form_data>();
-         if (loaded) {
-            this->_place_form(node, *loaded);
+         auto& siblings = pair.second->children;
+         //
+         bool any_wants_to_be_first = false;
+         for (node* child : siblings) {
+            auto& css = child->_get_sort_state({});
+            if (css.previous)
+               continue;
+            if (any_wants_to_be_first) {
+               auto& dst = this->warnings.emplace_back();
+               dst = new warnings::multiple_children_want_to_be_first(*pair.second);
+               break;
+            } else {
+               any_wants_to_be_first = true;
+            }
          }
       }
       for (auto& pair : this->nodes_by_stub)
@@ -455,6 +491,7 @@ namespace dovah::datastores {
          auto&  list = moved_from->children;
          if (from + 1 < list.size())
             former_next_sibling = list[from + 1];
+         list.erase(list.begin() + from);
          if (moved_from == &dst_parent) {
             if (insert_at >= from)
                --insert_at;

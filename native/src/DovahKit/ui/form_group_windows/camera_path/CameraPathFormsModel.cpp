@@ -21,6 +21,7 @@
 #include "dovah/datastores/camera_paths/warnings/cyclical_sibling_relationships.h"
 #include "dovah/datastores/camera_paths/warnings/form_has_multiple_next_siblings.h"
 #include "dovah/datastores/camera_paths/warnings/inconsistent_parentage.h"
+#include "dovah/datastores/camera_paths/warnings/multiple_children_want_to_be_first.h"
 #include "dovah/datastores/camera_paths/warnings/previous_sibling_is_not_as_expected.h"
 #include "dovah/datastores/camera_paths/warnings/siblings_have_mismatched_parents.h"
 #include "dovah/datastores/camera_paths/warnings/sibling_is_an_ancestor.h"
@@ -110,12 +111,9 @@ CameraPathFormsModel::CameraPathFormsModel(QObject* parent) : QAbstractItemModel
    auto& scripthost = DovahscriptHost::get();
    QObject::connect(&scripthost, &DovahscriptHost::scriptEnded, this, [this]() {
       //
-      // Dovahscript APIs could allow a script to modify an idle's parent and/or previous sibling 
+      // Dovahscript APIs could allow a script to modify an camera path's parent and/or previous sibling 
       // such that its position in the hierarchy is invalid. Error-checking those after the tree 
-      // is already built is bloody difficult, so the datastore currently doesn't implement that. 
-      // The only recourse we have, for any situation where an idle's graph, parent, or previous 
-      // sibling might be changed out from udner the datastore, is to rebuild the datastore from 
-      // scratch.
+      // is already built is a bit difficult, so the datastore currently doesn't implement that. 
       //
       this->_rebuild_datastore();
    });
@@ -293,6 +291,13 @@ void CameraPathFormsModel::_rebuild_datastore() {
             } else if (auto* casted = dynamic_cast<const datastore_warnings::inconsistent_parentage*>(warning)) {
                text = tr("Somehow, camera path %1 is not present in its parent's child list.")
                   .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
+            } else if (auto* casted = dynamic_cast<const datastore_warnings::multiple_children_want_to_be_first*>(warning)) {
+               text = tr(
+                  "Form %1 has multiple child camera paths that want to be first. Which one ends up "
+                  "first, and where the others end up, will depend on the order in which the game "
+                  "reads them from whichever files define them."
+               )
+                  .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
             } else if (auto* casted = dynamic_cast<const datastore_warnings::previous_sibling_is_not_as_expected*>(warning)) {
                if (auto* node = casted->sibling.intended) {
                   text = tr("After the camera path tree was fully built, %1 expected to be the next sibling of %2.");
@@ -313,7 +318,7 @@ void CameraPathFormsModel::_rebuild_datastore() {
 
                text = tr("%1 %2", "datastore warning sentence order for 'previous sibling is not as expected'").arg(text).arg(instead);
             } else if (auto* casted = dynamic_cast<const datastore_warnings::sibling_is_an_ancestor*>(warning)) {
-               text = tr("Form %1 has a previous sibling that is one of its ancestor idles.")
+               text = tr("Form %1 has a previous sibling that is one of its ancestor camera paths.")
                   .arg(editor_helpers::form_identifiers_to_string(&casted->subject.stub));
             } else if (auto* casted = dynamic_cast<const datastore_warnings::siblings_have_mismatched_parents*>(warning)) {
                text = tr("Form %1 has a different parent from one of its previous siblings.")
@@ -360,16 +365,15 @@ void CameraPathFormsModel::_recache(const dovah::form_stub& stub) {
 #pragma region Form utils
    dovah::form_stub* CameraPathFormsModel::_try_silently_create_camera_path(QString editor_id) {
       //
-      // Normally, we automatically react to the creation of an IDLE form occurring 
-      // anywhere in DovahKit: we tell the datastore that a new IDLE has been created, 
+      // Normally, we automatically react to the creation of an CPTH form occurring 
+      // anywhere in DovahKit: we tell the datastore that a new CPTH has been created, 
       // and in turn, the datastore's own callbacks lead back to us invoking callbacks 
       // on QAbstractItemModel for when a row is inserted. This is sufficient for when 
-      // IDLEs are created outside of our control.
+      // CPTHs are created outside of our control.
       // 
-      // The IDLE is created "bare," with no parent and no behavior graph, so the row 
-      // would be inserted into the model-level loose idles. From there, we could then 
-      // trigger the IDLE to be moved into the correct place, when we're the ones who 
-      // created the IDLE.
+      // The CPTH is created "bare," with no parent or previous sibling, so it'd be 
+      // prepended to the top level of the hierarchy. From there, we could then trigger 
+      // the CPTH to be moved into the correct place.
       // 
       // However, it's cleaner for us to have finer-grained control over this process. 
       // Since we can't slip in between the form being created and it being configured, 
@@ -379,14 +383,14 @@ void CameraPathFormsModel::_recache(const dovah::form_stub& stub) {
       //    get from DovahKitCore, such that we don't tell the datastore about the IDLE 
       //    we're creating.
       // 
-      //  - Create the `idle_node` ourselves.
+      //  - Create the `datastore_node` ourselves.
       // 
-      //  - Use the datastore to insert the node. Since it has no parent node (not even 
-      //    the model-level loose idle container node), the datastore will trigger the 
-      //    insertion callbacks rather than the movement callbacks.
+      //  - Use the datastore to insert the node. Since the node has no parent item, 
+      //    the datastore will trigger the insertion callbacks rather than the movement 
+      //    callbacks.
       // 
       // This function handles the first of those three steps for the specific case of 
-      // duplicating an idle.
+      // duplicating a camera path.
       //
       this->_callback_state.ignore_next_created_camera_path = true;
       auto request = DovahKitCore::get().request_form_creation(datastore_type::relevant_form_type);
@@ -402,30 +406,30 @@ void CameraPathFormsModel::_recache(const dovah::form_stub& stub) {
          throw;
       }
    }
-   dovah::form_stub* CameraPathFormsModel::_try_silently_duplicate_camera_path(dovah::form_stub& idle) {
+   dovah::form_stub* CameraPathFormsModel::_try_silently_duplicate_camera_path(dovah::form_stub& base_stub) {
       //
       // See documentation comment in `_try_silently_create_camera_path`.
       //
 
       auto& editor = DovahKitCore::get();
 
-      dovah::form_stub* stub = nullptr;
+      dovah::form_stub* dupe_stub = nullptr;
 
       this->_callback_state.ignore_next_created_camera_path = true;
       try {
          auto request = editor.request_form_duplication();
-         request.set_target(&idle);
-         request.editorID = editor_helpers::make_editor_id_for_duplicate(idle.get_editor_id()).toStdString();
-         stub = request.commit();
+         request.set_target(&base_stub);
+         request.editorID = editor_helpers::make_editor_id_for_duplicate(base_stub.get_editor_id()).toStdString();
+         dupe_stub = request.commit();
       } catch (...) {
          this->_callback_state.ignore_next_created_camera_path = false;
          throw;
       }
-      if (!stub) {
+      if (!dupe_stub) {
          this->_callback_state.ignore_next_created_camera_path = false;
          return nullptr;
       }
-      return stub;
+      return dupe_stub;
    }
 #pragma endregion
 #pragma region Node utils
@@ -462,12 +466,12 @@ void CameraPathFormsModel::_recache(const dovah::form_stub& stub) {
       return _qmi_for_node(*node);
    }
 
-   QModelIndex CameraPathFormsModel::createCameraPath(const QModelIndex& parent_qmi, QString idle_editor_id) {
+   QModelIndex CameraPathFormsModel::createCameraPath(const QModelIndex& parent_qmi, QString editor_id) {
       datastore_item* parent_item = _item_for_qmi(parent_qmi);
       if (!parent_item)
          return {};
 
-      dovah::form_stub* stub = this->_try_silently_create_camera_path(idle_editor_id);
+      dovah::form_stub* stub = this->_try_silently_create_camera_path(editor_id);
       if (!stub)
          return {};
 
@@ -484,7 +488,7 @@ void CameraPathFormsModel::_recache(const dovah::form_stub& stub) {
       return _qmi_for_node(*i_node);
    }
 
-   QModelIndex CameraPathFormsModel::createCameraPathAfter(const QModelIndex& sibling_qmi, QString idle_editor_id) {
+   QModelIndex CameraPathFormsModel::createCameraPathAfter(const QModelIndex& sibling_qmi, QString editor_id) {
       datastore_node* previous = _node_for_qmi(sibling_qmi);
       if (!previous)
          return {};
@@ -492,7 +496,7 @@ void CameraPathFormsModel::_recache(const dovah::form_stub& stub) {
       if (!parent)
          return {};
 
-      dovah::form_stub* stub = this->_try_silently_create_camera_path(idle_editor_id);
+      dovah::form_stub* stub = this->_try_silently_create_camera_path(editor_id);
       if (!stub)
          return {};
 
@@ -505,8 +509,8 @@ void CameraPathFormsModel::_recache(const dovah::form_stub& stub) {
       return _qmi_for_node(*i_node);
    }
 
-   QModelIndex CameraPathFormsModel::duplicateCameraPath(const QModelIndex& idle_qmi, bool and_descendants) {
-      auto* src_node = _node_for_qmi(idle_qmi);
+   QModelIndex CameraPathFormsModel::duplicateCameraPath(const QModelIndex& base_qmi, bool and_descendants) {
+      auto* src_node = _node_for_qmi(base_qmi);
       if (!src_node)
          return {};
 
@@ -523,9 +527,9 @@ void CameraPathFormsModel::_recache(const dovah::form_stub& stub) {
             if (!flo)
                return {};
 
-            size_t count_to_duplicate = [](this auto&& recurse, datastore_node& idle) -> size_t {
+            size_t count_to_duplicate = [](this auto&& recurse, datastore_node& node) -> size_t {
                size_t count = 1;
-               for (auto& child_ptr : idle.children) {
+               for (auto& child_ptr : node.children) {
                   count += recurse(*child_ptr);
                }
                return count;
@@ -552,8 +556,8 @@ void CameraPathFormsModel::_recache(const dovah::form_stub& stub) {
          //
          assert(src_node->parent);
          QModelIndex root_qmi = {};
-         [this, &root_qmi](this auto&& recurse, datastore_node& idle, datastore_item& dst_parent, bool is_root = false) -> void {
-            dovah::form_stub* stub = this->_try_silently_duplicate_camera_path(idle.stub);
+         [this, &root_qmi](this auto&& recurse, datastore_node& node, datastore_item& dst_parent, bool is_root = false) -> void {
+            dovah::form_stub* stub = this->_try_silently_duplicate_camera_path(node.stub);
             if (!stub)
                return;
 
@@ -564,23 +568,23 @@ void CameraPathFormsModel::_recache(const dovah::form_stub& stub) {
                this->_datastore.move_camera_path(
                   *copy,
                   dst_parent,
-                  &idle
+                  &node
                );
             } else {
-               datastore_node* previous_idle = nullptr;
+               datastore_node* previous_node = nullptr;
                if (!dst_parent.children.empty())
-                  previous_idle = dst_parent.children.back();
+                  previous_node = dst_parent.children.back();
                this->_datastore.move_camera_path(
                   *copy,
                   dst_parent,
-                  previous_idle
+                  previous_node
                );
             }
             copy_ptr.release();
             if (is_root)
                root_qmi = _qmi_for_node(*copy);
 
-            for (auto& child_ptr : idle.children) {
+            for (auto& child_ptr : node.children) {
                recurse(*child_ptr, *copy);
             }
          }(*src_node, *src_node->parent, true);
@@ -603,8 +607,8 @@ void CameraPathFormsModel::_recache(const dovah::form_stub& stub) {
       }
    }
 
-   void CameraPathFormsModel::deleteCameraPath(const QModelIndex& idle_qmi, QWidget* error_dialog_parent) {
-      auto* src_node = dynamic_cast<datastore_node*>(_node_for_qmi(idle_qmi));
+   void CameraPathFormsModel::deleteCameraPath(const QModelIndex& qmi, QWidget* error_dialog_parent) {
+      auto* src_node = dynamic_cast<datastore_node*>(_node_for_qmi(qmi));
       if (!src_node)
          return;
 
@@ -615,13 +619,13 @@ void CameraPathFormsModel::_recache(const dovah::form_stub& stub) {
          QMessageBox::critical(
             error_dialog_parent,
             QObject::tr("Error", "delete form error"),
-            QObject::tr("Unable to delete all of the needed idles.")
+            QObject::tr("Unable to delete all of the selected camera paths.")
          );
       }
    }
 
-   bool CameraPathFormsModel::canMoveUp(const QModelIndex& idle_qmi) const {
-      auto* subject = _node_for_qmi(idle_qmi);
+   bool CameraPathFormsModel::canMoveUp(const QModelIndex& qmi) const {
+      auto* subject = _node_for_qmi(qmi);
       if (!subject)
          return false;
       if (!subject->parent)
@@ -631,8 +635,8 @@ void CameraPathFormsModel::_recache(const dovah::form_stub& stub) {
       assert(i != datastore_node::index_of_none);
       return i > 0;
    }
-   bool CameraPathFormsModel::canMoveDown(const QModelIndex& idle_qmi) const {
-      auto* subject = _node_for_qmi(idle_qmi);
+   bool CameraPathFormsModel::canMoveDown(const QModelIndex& qmi) const {
+      auto* subject = _node_for_qmi(qmi);
       if (!subject)
          return false;
       const datastore_item* parent = subject->parent;
@@ -643,14 +647,14 @@ void CameraPathFormsModel::_recache(const dovah::form_stub& stub) {
       assert(i != datastore_node::index_of_none);
       return i < parent->children.size() - 1;
    }
-   void CameraPathFormsModel::moveUp(const QModelIndex& idle_qmi) {
-      auto* node = _node_for_qmi(idle_qmi);
+   void CameraPathFormsModel::moveUp(const QModelIndex& qmi) {
+      auto* node = _node_for_qmi(qmi);
       if (!node)
          return;
       this->_datastore.move_camera_path_within_parent(*node, -1);
    }
-   void CameraPathFormsModel::moveDown(const QModelIndex& idle_qmi) {
-      auto* node = _node_for_qmi(idle_qmi);
+   void CameraPathFormsModel::moveDown(const QModelIndex& qmi) {
+      auto* node = _node_for_qmi(qmi);
       if (!node)
          return;
       this->_datastore.move_camera_path_within_parent(*node, 1);

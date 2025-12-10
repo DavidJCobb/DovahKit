@@ -6,6 +6,7 @@
 #include "_common.h"
 #include "components/conditions.h"
 #include "components/papyrus.h"
+#include "../utils/subrecord_data_position.h"
 
 namespace dovah::loaded_forms {
    class CameraPath : public Form {
@@ -30,6 +31,13 @@ namespace dovah::loaded_forms {
             bool must_have_camera_shots = true;
          } zoom;
          std::vector<form_reference_t> camera_shots; // SNAM[] -> CAMS
+      protected:
+         std::optional<utils::subrecord_data_position> _first_seen_anam_position;
+         
+      public:
+         constexpr const std::optional<utils::subrecord_data_position>& get_first_seen_anam_position() const noexcept {
+            return this->_first_seen_anam_position;
+         }
 
       public:
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);

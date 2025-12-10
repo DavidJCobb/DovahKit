@@ -41,7 +41,7 @@ namespace dovah::datastores::impl::camera_paths {
             else
                this->children.push_back(&subject);
          } else {
-            this->children.push_back(&subject);
+            this->children.insert(this->children.begin(), &subject);
          }
          subject.parent = this;
       }

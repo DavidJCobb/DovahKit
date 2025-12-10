@@ -4,8 +4,24 @@
 namespace dovah::loaded_forms {
    void CameraPath::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
-      if (!intfc.is_winning_record)
+
+      if (!intfc.is_winning_record) {
+         //
+         // Bethesda queues a camera path for insertion into the overall hierarchy 
+         // of camera paths whenever CPTH/ANAM is first parsed. This means that 
+         // even a losing record can influence the timing of a camera path being 
+         // processed, which in turn affects how the path is placed when Bethesda 
+         // handles invalid hierarchy placements.
+         //
+         while (auto& subrecord = record.next_subrecord()) {
+            if (subrecord.signature() != 'ANAM')
+               continue;
+            if (!this->_first_seen_anam_position.has_value())
+               this->_first_seen_anam_position = utils::subrecord_data_position::from_loader(subrecord, intfc);
+            break;
+         }
          return;
+      }
 
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
@@ -21,6 +37,8 @@ namespace dovah::loaded_forms {
                break;
 
             case 'ANAM':
+               if (!this->_first_seen_anam_position.has_value())
+                  this->_first_seen_anam_position = utils::subrecord_data_position::from_loader(subrecord, intfc);
                if (auto& form = this->parent; subrecord.read(form))
                   intfc.warn_if_ref_is_wrong_type(form, form_type::camera_path, subrecord.signature());
                if (auto& form = this->previous_sibling; subrecord.read(form))
@@ -94,6 +112,10 @@ namespace dovah::loaded_forms {
       copy->previous_sibling.set(*copy, this->previous_sibling);
       copy->zoom = this->zoom;
       copy_form_reference_list(*copy, copy->camera_shots, this->camera_shots);
+
+      if (&copy->stub == &this->stub) {
+         copy->_first_seen_anam_position = this->_first_seen_anam_position;
+      }
    }
    void CameraPath::_save_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       this->script_data.save(record, intfc);

@@ -3,6 +3,7 @@
 #include <string_view>
 #include <vector>
 #include "helpers/const_forwarding_ptr.h"
+#include "./anam_subrecord_position.h"
 #include "./node_parent.h"
 namespace dovah {
    namespace datastores {
@@ -39,12 +40,14 @@ namespace dovah::datastores::impl::camera_paths {
       public:
          datastore_type& datastore;
          form_stub&      stub;
+         anam_subrecord_position first_seen_anam;
          cobb::const_forwarding_ptr<node_parent> parent = nullptr; // unowned
       protected:
          internal_sort_state _sort_state;
 
       public:
          bool is_defined_in_non_active_file() const noexcept;
+         bool is_queued_for_processing_before(const node&) const noexcept;
 
          inline node* parent_as_node() noexcept {
             return dynamic_cast<node*>((node_parent*)this->parent);

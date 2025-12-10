@@ -136,7 +136,7 @@ namespace dovah::datastores::impl::idles {
             else
                this->child_idles.push_back(&subject);
          } else {
-            this->child_idles.push_back(&subject);
+            this->child_idles.insert(this->child_idles.begin(), &subject);
          }
          subject.canonical_parent = this;
       }
