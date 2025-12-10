@@ -725,12 +725,12 @@ void CameraPathFormsModel::_recache(const dovah::form_stub& stub) {
       }
       /*virtual*/ Qt::ItemFlags CameraPathFormsModel::flags(const QModelIndex& index) const /*override*/ {
          auto  flags = Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled;
+         flags |= Qt::ItemIsDropEnabled;
          auto* node  = _node_for_qmi(index);
          if (!node) {
             return flags;
          }
          flags |= Qt::ItemIsDragEnabled;
-         flags |= Qt::ItemIsDropEnabled;
          return flags;
       }
    #pragma endregion

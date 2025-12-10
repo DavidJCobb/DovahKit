@@ -110,7 +110,7 @@ CameraPathsDialog::CameraPathsDialog(QWidget* parent) : QDialog(parent) {
 
          this->_context.actions.create_sibling->setVisible(is_form);
          this->_context.actions.del->setVisible(is_form);
-         this->_context.actions.duplicate->setVisible(is_form);
+         this->_context.actions.duplicate->menuAction()->setVisible(is_form);
          this->_context.actions.use_info->setVisible(is_form);
       });
    }
