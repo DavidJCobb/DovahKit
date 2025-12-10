@@ -40,6 +40,8 @@ namespace dovah::datastores {
    }
 
    void camera_paths::_clear() {
+      this->root.children.clear();
+
       for (auto& pair : this->nodes_by_stub)
          delete pair.second;
       this->nodes_by_stub.clear();
@@ -207,10 +209,10 @@ namespace dovah::datastores {
       return sibling_problem::none;
    }
    void camera_paths::_place_form(node& subject, loaded_form_data& loaded) {
-      form_stub* parent   = loaded.parent.get_form_stub();
-      form_stub* previous = loaded.previous_sibling.get_form_stub();
-      if (parent && parent->form_type != relevant_form_type) {
-         parent = nullptr;
+      form_stub* parent_stub   = loaded.parent.get_form_stub();
+      form_stub* previous_stub = loaded.previous_sibling.get_form_stub();
+      if (parent_stub && parent_stub->form_type != relevant_form_type) {
+         parent_stub = nullptr;
       }
 
       std::set<form_stub*> seen_ancestors;
@@ -219,8 +221,8 @@ namespace dovah::datastores {
             auto& dst = this->warnings.emplace_back();
             dst = new warnings::cyclical_parent_relationships(subject);
          }
-         parent   = nullptr;
-         previous = nullptr;
+         parent_stub   = nullptr;
+         previous_stub = nullptr;
       } else {
          auto problem = this->_form_has_bad_siblinghood(seen_ancestors, loaded);
          if (problem != sibling_problem::none) {
@@ -234,23 +236,23 @@ namespace dovah::datastores {
                auto& dst = this->warnings.emplace_back();
                dst = new warnings::siblings_have_mismatched_parents(subject);
             }
-            parent   = nullptr;
-            previous = nullptr;
+            parent_stub   = nullptr;
+            previous_stub = nullptr;
          }
       }
 
       node_parent* parent_obj    = nullptr;
       node*        previous_node = nullptr;
-      if (parent_obj) {
-         auto it = this->nodes_by_stub.find(parent);
+      if (parent_stub) {
+         auto it = this->nodes_by_stub.find(parent_stub);
          if (it != this->nodes_by_stub.end())
             parent_obj = it->second;
       }
       if (!parent_obj) {
          parent_obj = &this->root;
       }
-      if (previous) {
-         auto it = this->nodes_by_stub.find(previous);
+      if (previous_stub) {
+         auto it = this->nodes_by_stub.find(previous_stub);
          if (it != this->nodes_by_stub.end())
             previous_node = it->second;
       }
