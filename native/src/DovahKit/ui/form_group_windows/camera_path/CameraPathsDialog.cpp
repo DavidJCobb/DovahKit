@@ -461,6 +461,7 @@ void CameraPathsDialog::_push_selected_idle_to_form() {
    this->ui.cameraShots->commitStubs(loaded.camera_shots, loaded);
    this->ui.conditions->exportTo(loaded, loaded.conditions);
 
+   loaded.stub.set_edited(true);
    emit editor.formModified(&loaded.stub);
 }
 void CameraPathsDialog::_set_form_ui_enable_state(bool v) {

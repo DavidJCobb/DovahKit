@@ -636,6 +636,7 @@ void IdleAnimationsDialog::_push_selected_idle_to_form() {
    loaded.data.replay_delay = this->ui.repeatDelay->value();
    this->ui.conditions->exportTo(loaded, loaded.conditions);
 
+   loaded.stub.set_edited(true);
    emit editor.formModified(&loaded.stub);
 }
 void IdleAnimationsDialog::_set_form_ui_enable_state(bool v) {

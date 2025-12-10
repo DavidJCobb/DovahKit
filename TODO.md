@@ -97,7 +97,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | Character      | FACT | Faction                   | ✅ | ✅ | ⬛ |
 | Character      | HDPT | HeadPart                  | ✅ | ✅ | ⬛ |
 | Character      | MOVT | Movement Type             | ✅ | ✅ | ⬛ |
-| Character      | PACK | Package                   | ✅ | 🟨 | ⬛ | Finish testing and fixing. |
+| Character      | PACK | Package                   | ✅ | ✅ | ⬛ | Finish testing and fixing. |
 | Character      | QUST | Quest                     | ✅ | 🟩 | 🟨 |
 | Character      | RACE | Race                      | ✅ | ✅ | ⬛ |
 | Character      | RELA | Relationship              | ✅ | ✅ | ⬛ |
@@ -174,8 +174,8 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | WorldObjects   | STAT | Static                    | ✅ | ✅ | 🟨 |
 | WorldObjects   | SCOL | Static Collection         | ✅ | ⬛ | ⬛ |
 | WorldObjects   | TREE | Tree                      | ✅ | ✅ | ⬛ |
-| Menu: Gameplay | CPTH | Camera Path               | ✅ | ⬛ | ⬛ | Not a per-form dialog, but a shared dialog for all forms of this type. These forms are organized into a tree. |
-| Menu: Gameplay | IDLE | Idle Animation            | ✅ | 🟨 | ⬛ | Not a per-form dialog, but a shared dialog for all forms of this type. These forms are organized into a tree. |
+| Menu: Gameplay | CPTH | Camera Path               | ✅ | ✅ | ⬛ | Not a per-form dialog, but a shared dialog for all forms of this type. These forms are organized into a tree. |
+| Menu: Gameplay | IDLE | Idle Animation            | ✅ | ✅ | ⬛ | Not a per-form dialog, but a shared dialog for all forms of this type. These forms are organized into a tree. |
 | Dialogue       | DLBR | Dialogue Branch           | ✅ | ✅ | ⬛ |
 | Dialogue       | DIAL | Dialogue Topic            | ✅ | ✅ | 🟨 |
 | Dialogue       | DLVW | Dialogue View             |   |   |   |
