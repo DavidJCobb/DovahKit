@@ -127,7 +127,9 @@ namespace dovah::datastores::impl::idles {
       // Insert the idle after its desired previous sibling, if said sibling 
       // is non-null and is already in our child list.
       //
-      {
+      if (subject.stub.is_deleted()) {
+         this->child_idles.push_back(&subject);
+      } else {
          idle_node* desired_prev = subject._sort_state.previous_idle;
          if (desired_prev) {
             auto i = this->index_of_child(*desired_prev);
@@ -138,8 +140,8 @@ namespace dovah::datastores::impl::idles {
          } else {
             this->child_idles.insert(this->child_idles.begin(), &subject);
          }
-         subject.canonical_parent = this;
       }
+      subject.canonical_parent = this;
       //
       // This idle may potentially be the desired previous sibling of an idle 
       // that was inserted earlier, so crawl the list and reorder the desired 

@@ -4,6 +4,7 @@
 #include "helpers/vectors/move_item_to_index.h"
 #include "./node.h"
 #include "./passkeys/initial_build.h"
+#include "../../form_stub.h"
 
 namespace dovah::datastores::impl::camera_paths {
    size_t node_parent::index_of_child(const form_stub& stub) const noexcept {
@@ -32,7 +33,9 @@ namespace dovah::datastores::impl::camera_paths {
       // Insert the idle after its desired previous sibling, if said sibling 
       // is non-null and is already in our child list.
       //
-      {
+      if (subject.stub.is_deleted()) {
+         this->children.push_back(&subject);
+      } else {
          node* desired_prev = subject._get_sort_state(passkey).previous;
          if (desired_prev) {
             auto i = this->index_of_child(*desired_prev);
@@ -43,8 +46,8 @@ namespace dovah::datastores::impl::camera_paths {
          } else {
             this->children.insert(this->children.begin(), &subject);
          }
-         subject.parent = this;
       }
+      subject.parent = this;
       //
       // This idle may potentially be the desired previous sibling of an idle 
       // that was inserted earlier, so crawl the list and reorder the desired 
