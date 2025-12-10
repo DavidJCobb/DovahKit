@@ -137,6 +137,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovah\datastores\camera_paths.cpp" />
+    <ClCompile Include="dovah\datastores\camera_paths\node.cpp" />
+    <ClCompile Include="dovah\datastores\camera_paths\node_parent.cpp" />
     <ClCompile Include="dovah\datastores\idles.cpp" />
     <ClCompile Include="dovah\datastores\idles\action_node.cpp" />
     <ClCompile Include="dovah\datastores\idles\action_root_candidacy.cpp" />
@@ -903,6 +906,8 @@
     <ClCompile Include="nif\types\NiTransform.cpp" />
     <ClCompile Include="nif\utils\find_all_retexturable_blocks.cpp" />
     <ClCompile Include="nif\utils\precache_nif_info.cpp" />
+    <ClCompile Include="ui\form_group_windows\camera_path\CameraPathFormsModel.cpp" />
+    <ClCompile Include="ui\form_group_windows\camera_path\CameraPathsDialog.cpp" />
     <ClCompile Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.cpp" />
     <ClCompile Include="ui\form_group_windows\idle\IdleAnimationsDialog.cpp" />
     <ClCompile Include="ui\form_windows\acoustic_space.cpp" />
@@ -1361,6 +1366,19 @@
     <ClCompile Include="widgets\widget-models\DKTopicOrSubtypePicker\DKTopicOrSubtypePickerModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovah\datastores\camera_paths.h" />
+    <ClInclude Include="dovah\datastores\camera_paths\node.h" />
+    <ClInclude Include="dovah\datastores\camera_paths\node_parent.h" />
+    <ClInclude Include="dovah\datastores\camera_paths\passkeys\initial_build.h" />
+    <ClInclude Include="dovah\datastores\camera_paths\passkeys\post_build_edit.h" />
+    <ClInclude Include="dovah\datastores\camera_paths\warning.h" />
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\cyclical_parent_relationships.h" />
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\cyclical_sibling_relationships.h" />
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\form_has_multiple_next_siblings.h" />
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\inconsistent_parentage.h" />
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\previous_sibling_is_not_as_expected.h" />
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\siblings_have_mismatched_parents.h" />
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\sibling_is_an_ancestor.h" />
     <ClInclude Include="dovah\datastores\idles.h" />
     <ClInclude Include="dovah\datastores\idles\action_node.h" />
     <ClInclude Include="dovah\datastores\idles\action_root_candidacy.h" />
@@ -1921,6 +1939,8 @@
     <ClInclude Include="nif\blocks\BSFurnitureMarkerNode.h" />
     <QtMoc Include="ui\form_group_windows\idle\IdleAnimationsDialog.h" />
     <QtMoc Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.h" />
+    <QtMoc Include="ui\form_group_windows\camera_path\CameraPathFormsModel.h" />
+    <QtMoc Include="ui\form_group_windows\camera_path\CameraPathsDialog.h" />
     <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h" />
     <QtMoc Include="ui\form_windows\climate\FormSubdialogClimateWeather.h" />
     <QtMoc Include="ui\form_windows\encounter_zone.h" />
@@ -3427,6 +3447,7 @@
     <QtMoc Include="ui\main_window.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="ui\form_group_windows\camera_path\camera_path.ui" />
     <QtUic Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.ui" />
     <QtUic Include="ui\form_group_windows\idle\idle.ui" />
     <QtUic Include="ui\form_windows\acoustic_space.ui" />
@@ -3678,6 +3699,8 @@
     <None Include="cpp.hint" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovah\bs_hash.inl" />
+    <None Include="dovah\datastores\camera_paths\node.inl" />
+    <None Include="dovah\datastores\camera_paths\node_parent.inl" />
     <None Include="dovah\data\conditions\all_function_info.md" />
     <None Include="dovah\data\conditions\all_parameter_types.md" />
     <None Include="dovah\data\dialogue\category.inl" />
@@ -3957,10 +3980,15 @@
     <None Include="vulkan\scene_entities\base.inl" />
     <None Include="vulkan\scene_gizmo_state.inl" />
     <None Include="vulkan\_docs\rotation-related identities and relationships.md" />
+    <None Include="widgets\DKBreadcrumbBar.inl" />
     <None Include="widgets\widget-data\DKCustomFormFilter.md" />
     <None Include="widgets\widget-models\bound-scripts\property.inl" />
     <None Include="widgets\widget-models\DKBoundScriptModel.inl" />
     <None Include="widgets\widget-models\DKFormListPaneModel.inl" />
+    <None Include="widgets\_docs\DKBreadcrumbBar.md">
+      <SubType>
+      </SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\assets\papyrus-added-edited.png" />

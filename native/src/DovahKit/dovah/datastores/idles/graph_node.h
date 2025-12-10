@@ -47,7 +47,7 @@ namespace dovah::datastores::impl::idles {
          void re_sort_action(passkeys::post_build_edit, size_t);
 
          // Check if this graph's path is equal to a provided path, accounting for 
-         // letter casing and redundant directory separators.
+         // letter casing.
          bool path_equals(std::string_view) const noexcept;
    };
 }

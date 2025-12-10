@@ -85,6 +85,7 @@
      <addaction name="actionMoveFormIDsOutOfBEES"/>
     </widget>
     <addaction name="menuTextEncoding"/>
+    <addaction name="actionCameraPaths"/>
     <addaction name="actionDefaultObjects"/>
     <addaction name="actionGameSettings"/>
     <addaction name="actionIdleAnimations"/>
@@ -210,6 +211,11 @@
   <action name="actionIdleAnimations">
    <property name="text">
     <string>Idle Animations...</string>
+   </property>
+  </action>
+  <action name="actionCameraPaths">
+   <property name="text">
+    <string>Camera Paths...</string>
    </property>
   </action>
  </widget>

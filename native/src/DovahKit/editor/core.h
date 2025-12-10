@@ -46,6 +46,7 @@ namespace DovahKitEditorInternals {
    class load_task;
 }
 
+class CameraPathsDialog;
 class DKBSACollectionModelBackend;
 class FormEditDialogInterface;
 class FormUseInfoDialog;
@@ -90,7 +91,8 @@ class DovahKitCore : public QObject {
       std::unordered_map<bare_form_id_t, QDialog*> extant_form_edit_dialogs;
       std::unordered_map<bare_form_id_t, QDialog*> extant_use_info_dialogs;
       struct {
-         IdleAnimationsDialog* idle = nullptr;
+         CameraPathsDialog*    camera_path = nullptr;
+         IdleAnimationsDialog* idle        = nullptr;
       } extant_form_type_dialogs;
       //
       void _configure_load_order();

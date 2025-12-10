@@ -103,6 +103,7 @@
 #include "../ui/form_windows/weapon.h"
 #include "../ui/form_windows/weather.h"
 #include "../ui/form_windows/word_of_power.h"
+#include "../ui/form_group_windows/camera_path/CameraPathsDialog.h"
 #include "../ui/form_group_windows/idle/IdleAnimationsDialog.h"
 #include "ui/main_window.h" // MainWindow::get
 
@@ -284,6 +285,16 @@ void open_use_info_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
 void open_edit_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
    auto& editor = DovahKitCore::get();
 
+   if (stub.form_type == dovah::form_type::camera_path) {
+      auto* dialog = editor.extant_form_type_dialogs.camera_path;
+      if (!dialog) {
+         dialog = editor.extant_form_type_dialogs.camera_path = new CameraPathsDialog(&MainWindow::get());
+      }
+      dialog->focusCameraPath(stub);
+      dialog->raise();
+      dialog->activateWindow();
+      return;
+   }
    if (stub.form_type == dovah::form_type::idle) {
       auto* dialog = editor.extant_form_type_dialogs.idle;
       if (!dialog) {

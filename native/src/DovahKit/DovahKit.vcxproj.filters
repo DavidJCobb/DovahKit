@@ -1221,9 +1221,6 @@
     <ClCompile Include="helpers\cpuinfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovahscript\core\specialized_traceback.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1356,7 +1353,7 @@
     <ClCompile Include="vulkan\loaded_texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\renderwin\vulkan_renderer_instance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vulkan\swap_chain_image.cpp">
@@ -1767,7 +1764,7 @@
     <ClCompile Include="editor\subsystems\worldinput\worldinput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\worldinput2.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\renderwin\worldinput2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\subsystems\worldinput\devices\abstract_device_handler.cpp">
@@ -1824,7 +1821,7 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\_all.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\worldinput_serialization.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\renderwin\worldinput_serialization.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="helpers\bitstreams\tests\basic.cpp">
@@ -1851,7 +1848,7 @@
     <ClCompile Include="ui\models\worldinput\DKWorldinputInputSequenceModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\renderwin\worldinput2_input_seq_ui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\widget-dialogs\DKWorldinputButtonPickDialog.cpp">
@@ -1881,7 +1878,7 @@
     <ClCompile Include="ui\options_window\worldinput_scheme_editor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_ui.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\renderwin\worldinput2_control_scheme_ui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\models\worldinput\DKWorldinputControlSchemeModel.cpp">
@@ -1899,7 +1896,7 @@
     <ClCompile Include="editor\subsystems\worldinput\algorithms\control_scheme_to_bind_list.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_rebuild.cpp">
+    <ClCompile Include="ui\main_window\_debug_hooks\renderwin\worldinput2_control_scheme_rebuild.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\subsystems\worldinput\builtin_control_schemes\ck_standard.cpp">
@@ -3645,6 +3642,24 @@
     <ClCompile Include="ui\main_window\_debug_hooks\qt\qpalette.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\qt\paint_ellipse_tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\datastores\camera_paths.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\datastores\camera_paths\node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_group_windows\camera_path\CameraPathFormsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\datastores\camera_paths\node_parent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_group_windows\camera_path\CameraPathsDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -5057,7 +5072,7 @@
     <ClInclude Include="vulkan\abstract_renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\vulkan_renderer_instance.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\renderwin\vulkan_renderer_instance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vulkan\swap_chain_image.h">
@@ -6113,7 +6128,7 @@
     <ClInclude Include="editor\subsystems\worldinput\debugging.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\worldinput2.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\renderwin\worldinput2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldinput\device_button_claim.h">
@@ -6296,7 +6311,7 @@
     <ClInclude Include="editor\subsystems\worldedit\tool_system\utils\all_tool_serialization_ids.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\worldinput_serialization.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\renderwin\worldinput_serialization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\bitstreams\reader.h">
@@ -6413,7 +6428,7 @@
     <ClInclude Include="editor\subsystems\worldinput\enums\range_input_axes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_input_seq_ui.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\renderwin\worldinput2_input_seq_ui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\models\DKGenericTreeModel.h">
@@ -6452,7 +6467,7 @@
     <ClInclude Include="ui\options_window\worldedit_tools\options\_all.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_ui.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\renderwin\worldinput2_control_scheme_ui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\tree\node.h">
@@ -6506,7 +6521,7 @@
     <ClInclude Include="editor\subsystems\worldinput\control_scheme\all_node_headers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\worldinput2_control_scheme_rebuild.h">
+    <ClInclude Include="ui\main_window\_debug_hooks\renderwin\worldinput2_control_scheme_rebuild.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor\subsystems\worldinput\builtin_control_schemes\ck_standard.h">
@@ -8942,6 +8957,48 @@
     <ClInclude Include="ui\main_window\_debug_hooks\qt\qpalette.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\qt\paint_ellipse_tests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\camera_paths.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\camera_paths\node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\camera_paths\passkeys\post_build_edit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\camera_paths\passkeys\initial_build.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\cyclical_parent_relationships.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\cyclical_sibling_relationships.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\form_has_multiple_next_siblings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\inconsistent_parentage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\previous_sibling_is_not_as_expected.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\sibling_is_an_ancestor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\siblings_have_mismatched_parents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\camera_paths\warning.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\camera_paths\node_parent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -9422,6 +9479,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_group_windows\camera_path\camera_path.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -10320,6 +10380,12 @@
     <QtMoc Include="widgets\DKBreadcrumbBar.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ui\form_group_windows\camera_path\CameraPathFormsModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_group_windows\camera_path\CameraPathsDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -10807,6 +10873,16 @@
     </None>
     <None Include="dovah\_docs\idle animations\idle tree construction part 2.md" />
     <None Include="dovah\_docs\idle animations\idle tree model operations.md" />
+    <None Include="widgets\DKBreadcrumbBar.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="widgets\_docs\DKBreadcrumbBar.md" />
+    <None Include="dovah\datastores\camera_paths\node.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\datastores\camera_paths\node_parent.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
