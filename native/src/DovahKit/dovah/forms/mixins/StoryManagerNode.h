@@ -21,7 +21,9 @@ namespace dovah::loaded_forms::mixins {
          components::papyrus_attachment_data script_data; // VMAD
          //
          form_reference_t parent;           // PNAM -> BGSStoryManagerBranchNode
-         form_reference_t previous_sibling; // SNAM -> BGSStoryManagerBranchNode
+         form_reference_t previous_sibling; // SNAM -> BGSStoryManagerNodeBase
+         bool has_parent           = false; // if PNAM != NONE, even if it was a missing form ID
+         bool has_previous_sibling = false; // if SNAM != NONE, even if it was a missing form ID
          flags_t  flags = 0; // DNAM
          uint32_t max_concurrent_quests = 0; // XNAM
 

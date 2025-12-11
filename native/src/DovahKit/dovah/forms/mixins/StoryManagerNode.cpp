@@ -1,6 +1,14 @@
 #include "StoryManagerNode.h"
 #include "../_common_cpp.h"
 
+#include "../../notices/form_load_warnings/by_form_type/story_manager_node/orphaned.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_type::story_manager_node;
+   }
+}
+
 namespace dovah::loaded_forms::mixins {
    void StoryManagerNode::load(Form& self, tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       if (!intfc.is_winning_record)
@@ -19,6 +27,7 @@ namespace dovah::loaded_forms::mixins {
                break;
             case 'PNAM':
                if (auto& form = this->parent; subrecord.read(form)) {
+                  this->has_parent = !!form;
                   intfc.warn_if_ref_is_wrong_type(
                      form,
                      std::array{
@@ -27,10 +36,13 @@ namespace dovah::loaded_forms::mixins {
                      },
                      subrecord.signature()
                   );
+               } else {
+                  this->has_parent = true;
                }
                break;
             case 'SNAM':
                if (auto& form = this->previous_sibling; subrecord.read(form)) {
+                  this->has_previous_sibling = !!form;
                   intfc.warn_if_ref_is_wrong_type(
                      form,
                      std::array{
@@ -40,6 +52,8 @@ namespace dovah::loaded_forms::mixins {
                      },
                      subrecord.signature()
                   );
+               } else {
+                  this->has_previous_sibling = true;
                }
                break;
             case 'DNAM':
@@ -59,6 +73,12 @@ namespace dovah::loaded_forms::mixins {
          }
          if (stop)
             break;
+      }
+      if (!self.stub.is_hardcoded()) {
+         if (!this->parent) {
+            specific_load_warnings::orphaned notice(self.stub);
+            intfc.log_load_warning(notice);
+         }
       }
    }
    /*static*/ void StoryManagerNode::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
@@ -109,6 +129,8 @@ namespace dovah::loaded_forms::mixins {
       this->script_data.save(record, intfc);
       record.write_formID_subrecord('PNAM', this->parent);
       record.write_formID_subrecord('SNAM', this->previous_sibling);
+      this->has_parent = !!this->parent;
+      this->has_previous_sibling = !!this->previous_sibling;
       {
          auto& list = this->conditions;
          {

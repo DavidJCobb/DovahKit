@@ -138,6 +138,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dovah\datastores\camera_paths.cpp" />
+    <ClCompile Include="dovah\datastores\camera_paths\anam_subrecord_position.cpp" />
     <ClCompile Include="dovah\datastores\camera_paths\node.cpp" />
     <ClCompile Include="dovah\datastores\camera_paths\node_parent.cpp" />
     <ClCompile Include="dovah\datastores\idles.cpp" />
@@ -1367,6 +1368,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovah\datastores\camera_paths.h" />
+    <ClInclude Include="dovah\datastores\camera_paths\anam_subrecord_position.h" />
     <ClInclude Include="dovah\datastores\camera_paths\node.h" />
     <ClInclude Include="dovah\datastores\camera_paths\node_parent.h" />
     <ClInclude Include="dovah\datastores\camera_paths\passkeys\initial_build.h" />
@@ -1376,6 +1378,7 @@
     <ClInclude Include="dovah\datastores\camera_paths\warnings\cyclical_sibling_relationships.h" />
     <ClInclude Include="dovah\datastores\camera_paths\warnings\form_has_multiple_next_siblings.h" />
     <ClInclude Include="dovah\datastores\camera_paths\warnings\inconsistent_parentage.h" />
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\multiple_children_want_to_be_first.h" />
     <ClInclude Include="dovah\datastores\camera_paths\warnings\previous_sibling_is_not_as_expected.h" />
     <ClInclude Include="dovah\datastores\camera_paths\warnings\siblings_have_mismatched_parents.h" />
     <ClInclude Include="dovah\datastores\camera_paths\warnings\sibling_is_an_ancestor.h" />
@@ -4001,6 +4004,7 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="dovah\bs_hash.natvis" />
+    <Natvis Include="dovah\datastores\camera_paths\node.natvis" />
     <Natvis Include="dovah\datastores\idles\action_node.natvis" />
     <Natvis Include="dovah\datastores\idles\graph_node.natvis" />
     <Natvis Include="dovah\datastores\idles\idle_node.natvis" />

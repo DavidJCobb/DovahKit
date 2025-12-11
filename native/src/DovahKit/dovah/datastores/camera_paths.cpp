@@ -451,7 +451,7 @@ namespace dovah::datastores {
    void camera_paths::delete_camera_path(node& subject) {
       assert(!!this->handlers.delete_camera_path);
 
-      auto children = subject.children;
+      auto children = subject.children; // intentional copy
       for (node* child : children)
          this->delete_camera_path(*child);
 

@@ -3660,6 +3660,9 @@
     <ClCompile Include="ui\form_group_windows\camera_path\CameraPathsDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\datastores\camera_paths\anam_subrecord_position.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -8999,6 +9002,12 @@
     <ClInclude Include="dovah\datastores\camera_paths\node_parent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\datastores\camera_paths\anam_subrecord_position.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\datastores\camera_paths\warnings\multiple_children_want_to_be_first.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -10986,5 +10995,6 @@
     <Natvis Include="dovah\datastores\idles\loose_idle_list_node.natvis" />
     <Natvis Include="dovah\datastores\idles\idle_node.natvis" />
     <Natvis Include="dovah\datastores\idles\action_node.natvis" />
+    <Natvis Include="dovah\datastores\camera_paths\node.natvis" />
   </ItemGroup>
 </Project>
