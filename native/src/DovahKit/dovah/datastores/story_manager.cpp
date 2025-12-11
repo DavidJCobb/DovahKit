@@ -56,31 +56,40 @@ namespace dovah::datastores {
       }
       return false;
    }
+   /*static*/ bool story_manager::_is_branch_node_type(form_type ft) {
+      switch (ft) {
+         case form_type::story_branch_node:
+         case form_type::story_event_node:
+            return true;
+      }
+      return false;
+   }
 
    void story_manager::build(file_load_order& lo) {
       this->reset();
       //
       // Pre-create all nodes.
       //
-      lo.for_each_form_of_type(form_type::story_branch_node, [this](form_stub* stub) {
-         auto  node_ptr = std::make_unique<branch_node>(*this, *stub);
-         auto& node     = *node_ptr;
-         this->nodes_by_stub[stub] = &node;
-         node_ptr.release();
-         if (stub->formID == hardcoded_form_ids::Root) {
-            this->root = &node;
-         }
-         return false;
-      });
       for (auto ft : std::array{
+         form_type::story_branch_node,
          form_type::story_event_node,
          form_type::story_quest_node,
       }) {
-         lo.for_each_form_of_type(ft, [this](form_stub* stub) {
-            auto  node_ptr = std::make_unique<leaf_node>(*this, *stub);
+         bool is_branch = _is_branch_node_type(ft);
+         lo.for_each_form_of_type(ft, [this, is_branch](form_stub* stub) {
+            std::unique_ptr<node> node_ptr;
+            if (is_branch) {
+               node_ptr = std::make_unique<branch_node>(*this, *stub);
+            } else {
+               node_ptr = std::make_unique<leaf_node>(*this, *stub);
+            }
             auto& node     = *node_ptr;
             this->nodes_by_stub[stub] = &node;
             node_ptr.release();
+            if (stub->formID == hardcoded_form_ids::Root) {
+               assert(is_branch);
+               this->root = static_cast<branch_node*>(&node);
+            }
             return false;
          });
       }
@@ -111,7 +120,7 @@ namespace dovah::datastores {
 
                branch_node* parent_node   = nullptr;
                node*        previous_node = nullptr;
-               if (parent_stub && parent_stub->form_type == form_type::story_branch_node) {
+               if (parent_stub && _is_branch_node_type(parent_stub->form_type)) {
                   auto* pn = this->node_by_stub(*parent_stub);
                   if (pn) {
                      parent_node = dynamic_cast<branch_node*>(pn);
@@ -243,13 +252,10 @@ namespace dovah::datastores {
          node*& subject = this->nodes_by_stub[&stub];
          if (!subject) {
             try {
-               switch (stub.form_type) {
-                  case form_type::story_branch_node:
-                     subject = new branch_node(*this, stub);
-                     break;
-                  default:
-                     subject = new leaf_node(*this, stub);
-                     break;
+               if (_is_branch_node_type(stub.form_type)) {
+                  subject = new branch_node(*this, stub);
+               } else {
+                  subject = new leaf_node(*this, stub);
                }
             } catch (...) {
                this->nodes_by_stub.erase(&stub);
@@ -265,7 +271,7 @@ namespace dovah::datastores {
          if (stub.form_type == form_type::story_event_node) {
             parent_node = this->root;
          } else {
-            if (parent_stub && parent_stub->form_type == form_type::story_branch_node) {
+            if (parent_stub && _is_branch_node_type(parent_stub->form_type)) {
                parent_node = (branch_node*)this->node_by_stub(*parent_stub);
             }
             if (!parent_node) {
@@ -331,11 +337,18 @@ namespace dovah::datastores {
 
       if (defined_in_master) {
          //
-         // The IDLE form was originally defined outside of the active file 
-         // and so cannot be wholly deleted. The most we can do is move it 
-         // to LOOSE and flag it and its descendants as "deleted."
+         // The form was originally defined outside of the active file 
+         // and so cannot be wholly deleted. The most we can do is flag 
+         // it and its descendants as "deleted."
          //
          if constexpr (backend_severs_references_to_deleted_forms) {
+            //
+            // The form will be severed from all parent nodes. We'll 
+            // move it to the root node for now, but we should investigate 
+            // either: making it so we can more precisely control what 
+            // uses are severed by deletion; or have a way to represent 
+            // orphans.
+            //
             if (auto* dst = this->root) {
                if (dst->children.empty()) {
                   this->move_node(subject, *this->root, nullptr);

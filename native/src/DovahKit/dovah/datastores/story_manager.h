@@ -58,6 +58,7 @@ namespace dovah::datastores {
       protected:
          void _clear();
          static bool _is_form_type_relevant(form_type);
+         static bool _is_branch_node_type(form_type);
 
       public:
          void build(file_load_order&);
