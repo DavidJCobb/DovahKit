@@ -34,8 +34,7 @@ namespace dovah {
       std::swap(this->forms_needing_delete, other.forms_needing_delete);
       std::swap(this->seen_stubs, other.seen_stubs);
       //
-      this->force_delete_overrides = other.force_delete_overrides;
-      this->is_mid_save_cleanup    = other.is_mid_save_cleanup;
+      this->is_mid_save_cleanup = other.is_mid_save_cleanup;
       //
       this->active_file_prefix = this->owner.expected_active_file_prefix_post_save();
    }
@@ -56,8 +55,6 @@ namespace dovah {
       this->_gather_others(&this->target);
    }
    bool form_deletion_request::_form_should_be_flagged(form_stub& stub) noexcept {
-      if (this->force_delete_overrides)
-         return false;
       if (stub.is_hardcoded()) // we don't currently allow any kind of deletion of hardcoded forms, but it never hurts to be prepared for what might change
          return true;
       if (!this->active_file_prefix.contains_form_id(stub.formID)) {

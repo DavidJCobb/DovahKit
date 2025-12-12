@@ -47,7 +47,6 @@ namespace dovah {
          
       public:
          bool delete_dialogue_children = true;  // if `true`, then deleting a quest deletes branches, topics, etc., even though they aren't literal child forms; and thus also to branches taking their topics with them
-         bool force_delete_overrides   = false; // if (true), then we will straight-up delete ALL forms. if (false), then forms outside the active file are overridden and FLAGGED AS deleted.
          
          void set_is_mid_save_cleanup(file_save_passkey);
 
