@@ -4,6 +4,7 @@ namespace dovah {
    namespace datastores {
       namespace impl::story_manager {
          namespace passkeys {
+            class initial_build;
             class post_build_edit;
          }
          class branch_node;
@@ -35,7 +36,7 @@ namespace dovah::datastores::impl::story_manager {
          build_state _build_state;
 
       public: // passkeyed
-         constexpr build_state& _get_build_state(passkeys::initial_build) noexcept { return this->_build_state; }
+         constexpr build_state& _get_build_state(const passkeys::initial_build&) noexcept { return this->_build_state; }
          void _update_form_hierarchy_data(passkeys::post_build_edit);
    };
 }

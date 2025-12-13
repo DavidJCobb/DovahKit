@@ -21,6 +21,7 @@
 #include "filter_object_selection_by_scriptname.h"
 #include "ui_form_list_pane_extra_col.h"
 #include "idles_datastore.h"
+#include "./models/scoped_proxy_model.h"
 #include "./renderwin/vulkan_renderer_instance.h"
 #include "./renderwin/worldinput2.h"
 #include "./renderwin/worldinput_serialization.h"
@@ -46,6 +47,9 @@
 #include "./widgets/yes_no_unset_widget.h"
 
 namespace DovahKitDebug {
+   using model_tests = cobb::class_list<
+      features::models::scoped_proxy_model
+   >;
    using renderwin_tests = cobb::class_list<
       features::renderwin::vulkan_renderer_instance,
       features::renderwin::worldinput2,
@@ -129,6 +133,10 @@ namespace DovahKitDebug {
       {
          auto* submenu = menu->addMenu(QString("Widgets"));
          widget_tests::for_each_with_args<_add_functor>(submenu, p);
+      }
+      {
+         auto* submenu = menu->addMenu(QString("UI models"));
+         model_tests::for_each_with_args<_add_functor>(submenu, p);
       }
       all_features::for_each_with_args<_add_functor>(menu, p);
    }

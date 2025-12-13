@@ -147,6 +147,9 @@
     <ClCompile Include="dovah\datastores\idles\graph_node.cpp" />
     <ClCompile Include="dovah\datastores\idles\idle_node.cpp" />
     <ClCompile Include="dovah\datastores\idles\loose_idle_list_node.cpp" />
+    <ClCompile Include="dovah\datastores\story_manager.cpp" />
+    <ClCompile Include="dovah\datastores\story_manager\branch_node.cpp" />
+    <ClCompile Include="dovah\datastores\story_manager\node.cpp" />
     <ClCompile Include="dovah\exceptions\form_creation_failed.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.cpp" />
     <ClCompile Include="dovah\files\pex\parsers\full.tests.cpp" />
@@ -324,6 +327,7 @@
     <ClCompile Include="dovah\form_stubs\helpers\get_worldspace_cell_by_grid.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_worldspace_persistent_cell.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\is_worldspace_persistent_cell.cpp" />
+    <ClCompile Include="dovah\form_stubs\helpers\winning_record_loads_after.cpp" />
     <ClCompile Include="dovah\form_stub_use_info_builder_form_specific_data.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\file_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_load.cpp" />
@@ -389,6 +393,7 @@
     <ClCompile Include="editor\subsystems\papyrus\known_script.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\known_script_ptr.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\papyrus_subsystem.cpp" />
+    <ClCompile Include="editor\subsystems\story_manager\story_manager_subsystem.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\edit_gizmo_color_scheme_manager.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\hardcoded.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.cpp" />
@@ -1099,6 +1104,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\idles_datastore.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\load_nif.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\models\scoped_proxy_model.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\papyrus_subsystem.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\pex_parsing_benchmarks.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\qt\paint_ellipse_tests.cpp" />
@@ -1131,6 +1137,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\renderwin\worldinput2_input_seq_ui.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\renderwin\worldinput_serialization.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\_setup.cpp" />
+    <ClCompile Include="ui\models\DKScopedProxyModel.cpp" />
     <ClCompile Include="ui\models\forms\FactionMembersModel.cpp" />
     <ClCompile Include="ui\models\forms\LeveledListModel.cpp" />
     <ClCompile Include="ui\models\papyrus\DKAddPapyrusScriptModel.cpp" />
@@ -1406,6 +1413,13 @@
     <ClInclude Include="dovah\datastores\idles\warnings\previous_sibling_is_not_as_expected.h" />
     <ClInclude Include="dovah\datastores\idles\warnings\siblings_have_mismatched_parents.h" />
     <ClInclude Include="dovah\datastores\idles\warnings\sibling_is_an_ancestor.h" />
+    <ClInclude Include="dovah\datastores\story_manager.h" />
+    <ClInclude Include="dovah\datastores\story_manager\branch_node.h" />
+    <ClInclude Include="dovah\datastores\story_manager\leaf_node.h" />
+    <ClInclude Include="dovah\datastores\story_manager\node.h" />
+    <ClInclude Include="dovah\datastores\story_manager\passkeys\initial_build.h" />
+    <ClInclude Include="dovah\datastores\story_manager\passkeys\post_build_edit.h" />
+    <ClInclude Include="dovah\datastores\story_manager\warning.h" />
     <ClInclude Include="dovah\data\all_base_form_types.h" />
     <ClInclude Include="dovah\data\all_carryable_form_types.h" />
     <ClInclude Include="dovah\data\all_item_form_types.h" />
@@ -1658,6 +1672,7 @@
     <ClInclude Include="dovah\form_stubs\helpers\get_worldspace_persistent_cell.h" />
     <ClInclude Include="dovah\form_stubs\helpers\is_persistent.h" />
     <ClInclude Include="dovah\form_stubs\helpers\is_worldspace_persistent_cell.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\winning_record_loads_after.h" />
     <ClInclude Include="dovah\form_stubs\passkeys\do_custom_parse_during_load.h" />
     <ClInclude Include="dovah\form_stub_use_info_builder_form_specific_data.h" />
     <ClInclude Include="dovah\game_change_failure_reason.h" />
@@ -1822,6 +1837,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\unexpected_subrecord_after_cnam.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\sound_file_path_too_long.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\static_collection\orphaned_instances.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\story_manager_node\orphaned.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\story_manager_quest_node\expected_quest_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_addendum_subrecord_too_early.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_ids_are_not_unique.h" />
@@ -1931,6 +1947,8 @@
     <QtMoc Include="ui\form_windows\actor_value_info\SkillTreeVisualEditor.h" />
     <QtMoc Include="ui\form_windows\actor_value_info\FormSubdialogActorValueInfoPerkTree.h" />
     <QtMoc Include="ui\form_windows\actor_value_info.h" />
+    <QtMoc Include="editor\subsystems\story_manager\story_manager_subsystem.h" />
+    <ClInclude Include="editor\subsystems\story_manager\core.h" />
     <ClInclude Include="helpers\const_forwarding_ptr.h" />
     <ClInclude Include="helpers\optionals\finite_float.h" />
     <QtMoc Include="ui\form_windows\apparatus.h" />
@@ -2140,6 +2158,7 @@
     <ClInclude Include="ui\form_windows\weather\WeatherIntpackedFloatEditor.h" />
     <ClInclude Include="ui\form_windows\weather\WeatherSoundsModel.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\idles_datastore.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\models\scoped_proxy_model.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt\paint_ellipse_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt\qpalette.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\scene_editor.h" />
@@ -2151,6 +2170,7 @@
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\status_bar_segment.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\yes_no_unset_widget.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\breadcrumb_bar.h" />
+    <QtMoc Include="ui\models\DKScopedProxyModel.h" />
     <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
     <QtMoc Include="ui\models\forms\LeveledListModel.h" />
     <ClInclude Include="ui\types\conditions\condition.h" />
@@ -3704,6 +3724,7 @@
     <None Include="dovah\bs_hash.inl" />
     <None Include="dovah\datastores\camera_paths\node.inl" />
     <None Include="dovah\datastores\camera_paths\node_parent.inl" />
+    <None Include="dovah\datastores\story_manager\branch_node.inl" />
     <None Include="dovah\data\conditions\all_function_info.md" />
     <None Include="dovah\data\conditions\all_parameter_types.md" />
     <None Include="dovah\data\dialogue\category.inl" />
