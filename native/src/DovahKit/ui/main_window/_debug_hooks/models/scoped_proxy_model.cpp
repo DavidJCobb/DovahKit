@@ -56,25 +56,25 @@ namespace DovahKitDebug::features::models {
          auto* sel_model = treeview_source->selectionModel();
          QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, proxy, [proxy](const QItemSelection& sel) {
             if (sel.empty()) {
-               proxy->setRootIndex(QModelIndex{});
+               proxy->setScopeIndex(QModelIndex{});
                return;
             }
-            proxy->setRootIndex(sel[0].topLeft());
+            proxy->setScopeIndex(sel[0].topLeft());
          });
       }
       {
          auto* proxy = new DKScopedProxyModel(treeview_proxy_with_root);
          treeview_proxy_with_root->setModel(proxy);
-         proxy->setRootVisible(true);
+         proxy->setScopeVisible(true);
          proxy->setSourceModel(source);
 
          auto* sel_model = treeview_source->selectionModel();
          QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, proxy, [proxy](const QItemSelection& sel) {
             if (sel.empty()) {
-               proxy->setRootIndex(QModelIndex{});
+               proxy->setScopeIndex(QModelIndex{});
                return;
             }
-            proxy->setRootIndex(sel[0].topLeft());
+            proxy->setScopeIndex(sel[0].topLeft());
          });
       }
       

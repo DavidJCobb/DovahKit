@@ -15,19 +15,16 @@ class DKScopedProxyModel : public QIdentityProxyModel {
    public:
       using QIdentityProxyModel::QIdentityProxyModel;
 
-      std::optional<QModelIndex> rootIndex() const;
-      void setRootIndex(const std::optional<QModelIndex>& source_qmi);
+      std::optional<QModelIndex> scopeIndex() const;
+      void setScopeIndex(const std::optional<QModelIndex>& source_qmi);
 
-      // Control whether the item specified by the `rootIndex` is visible in the 
+      // Control whether the item specified by the `scopeIndex` is visible in the 
       // tree. Use this if you want to scope the model to a given QMI, but also 
       // have that QMI itself visible as the only top-level item in the proxy 
       // model. This has no effect when the proxy is scoped to the source model 
       // root.
-      //
-      // If the source-model root is visible, then the proxy-model's "real" root, 
-      // represented by an invalid QModelIndex, is referred to as the "super-root."
-      bool isRootVisible() const;
-      void setRootVisible(bool);
+      bool scopeVisible() const;
+      void setScopeVisible(bool);
 
       #pragma region QAbstractItemModel overrides
          virtual Qt::ItemFlags flags(const QModelIndex&) const override;
@@ -53,23 +50,27 @@ class DKScopedProxyModel : public QIdentityProxyModel {
       #pragma endregion
 
    protected:
-      std::optional<QPersistentModelIndex> _root_index;
-      bool  _root_is_visible = false;
+      struct {
+         bool visible = false;
+         std::optional<QPersistentModelIndex> index;
+      } _scope;
       std::vector<pending_qpmi_remap_list> _pending_layout_changes;
 
    protected:
-      bool _col_range_includes_root(const QModelIndex& source_parent_qmi, int first, int last) const;
-      bool _row_range_includes_root(const QModelIndex& source_parent_qmi, int first, int last) const;
+      constexpr const bool _has_scope() const noexcept { return this->_scope.index.has_value(); }
+      bool _scope_is_source_root() const noexcept;
 
-      bool _root_is_or_contains(const QModelIndex& source_qmi) const;
-      bool _root_contains(const QModelIndex& source_qmi) const;
+      bool _source_col_range_includes_scope(const QModelIndex& source_parent_qmi, int first, int last) const;
+      bool _source_row_range_includes_scope(const QModelIndex& source_parent_qmi, int first, int last) const;
 
-      bool _proxy_qmi_is_root(const QModelIndex& proxy_qmi) const;
-      bool _proxy_qmi_is_super_root(const QModelIndex&) const;
+      bool _scope_is_or_contains(const QModelIndex& source_qmi) const;
+      bool _scope_contains(const QModelIndex& source_qmi) const;
+
+      bool _proxy_scope_qmi_has_parent() const;
+      QModelIndex _proxy_qmi_of_scope(int col = 0) const;
+      bool _proxy_qmi_is_scope(const QModelIndex& proxy_qmi) const;
+      bool _proxy_qmi_is_scope_parent(const QModelIndex&) const;
 
       // Use when you already know `source_qmi` is the root index or is inside of the root index.
       QModelIndex _unchecked_map_from_source(const QModelIndex& source_qmi) const;
-
-      QModelIndex _child_qmi_of_visible_root(int col = 0) const;
-      bool _is_parent_of_visible_root(const QModelIndex& proxy_qmi) const;
 };

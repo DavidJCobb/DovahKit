@@ -1,56 +1,56 @@
 #include "./DKScopedProxyModel.h"
 
-std::optional<QModelIndex> DKScopedProxyModel::rootIndex() const {
-   return this->_root_index;
+std::optional<QModelIndex> DKScopedProxyModel::scopeIndex() const {
+   return this->_scope.index;
 }
-void DKScopedProxyModel::setRootIndex(const std::optional<QModelIndex>& opt_source_qmi) {
+void DKScopedProxyModel::setScopeIndex(const std::optional<QModelIndex>& opt_source_qmi) {
    if (!opt_source_qmi.has_value()) {
-      if (!this->_root_index.has_value())
+      if (!this->_scope.index.has_value())
          return;
       this->beginResetModel();
-      this->_root_index = opt_source_qmi;
+      this->_scope.index = opt_source_qmi;
       this->endResetModel();
       return;
    }
    const auto& source_qmi = opt_source_qmi.value();
    assert(source_qmi.model() == this->sourceModel());
-   if (this->_root_index == source_qmi)
+   if (this->_scope.index == source_qmi)
       return;
    this->beginResetModel();
-   this->_root_index = source_qmi;
+   this->_scope.index = source_qmi;
    this->endResetModel();
 }
 
-bool DKScopedProxyModel::isRootVisible() const {
-   return this->_root_is_visible;
+bool DKScopedProxyModel::scopeVisible() const {
+   return this->_scope.visible;
 }
-void DKScopedProxyModel::setRootVisible(bool v) {
-   if (v == this->_root_is_visible)
+void DKScopedProxyModel::setScopeVisible(bool v) {
+   if (v == this->_scope.visible)
       return;
-   if (!this->sourceModel() || !this->_root_index.has_value()) {
-      this->_root_is_visible = v;
+   if (!this->_scope.index.has_value()) {
+      this->_scope.visible = v;
       return;
    }
    this->beginResetModel();
-   this->_root_is_visible = v;
+   this->_scope.visible = v;
    this->endResetModel();
 }
 
 #pragma region QAbstractItemModel overrides
    /*virtual*/ Qt::ItemFlags DKScopedProxyModel::flags(const QModelIndex& qmi) const /*override*/ {
-      if (_proxy_qmi_is_super_root(qmi)) {
+      if (_proxy_qmi_is_scope_parent(qmi)) {
          return Qt::ItemFlag::ItemIsEnabled;
       }
       return QIdentityProxyModel::flags(qmi);
    }
    /*virtual*/ QModelIndex DKScopedProxyModel::index(int row, int column, const QModelIndex& proxy_parent_qmi) const /*override*/ {
-      if (!this->_root_index.has_value())
+      if (!this->_scope.index.has_value())
          return {};
-      const auto& source_root_qmi = this->_root_index.value();
-      if (_proxy_qmi_is_super_root(proxy_parent_qmi)) {
+      const auto& scope = this->_scope.index.value();
+      if (_proxy_qmi_is_scope_parent(proxy_parent_qmi)) {
          if (row != 0 || column != 0)
             return {};
-         return this->mapFromSource(source_root_qmi);
+         return this->mapFromSource(scope);
       }
       return QIdentityProxyModel::index(row, column, proxy_parent_qmi);
    }
@@ -58,38 +58,38 @@ void DKScopedProxyModel::setRootVisible(bool v) {
       const auto* source_model = this->sourceModel();
       if (!source_model)
          return 0;
-      if (!this->_root_index.has_value())
+      if (!this->_scope.index.has_value())
          return 0;
-      if (_proxy_qmi_is_super_root(proxy_qmi))
+      if (_proxy_qmi_is_scope_parent(proxy_qmi))
          return 1;
-      if (_proxy_qmi_is_root(proxy_qmi))
-         return QIdentityProxyModel::columnCount(this->_root_index.value());
+      if (_proxy_qmi_is_scope(proxy_qmi))
+         return source_model->columnCount(this->_scope.index.value());
       return QIdentityProxyModel::columnCount(proxy_qmi);
    }
    /*virtual*/ int DKScopedProxyModel::rowCount(const QModelIndex& proxy_qmi) const /*override*/ {
       const auto* source_model = this->sourceModel();
       if (!source_model)
          return 0;
-      if (!this->_root_index.has_value())
+      if (!this->_scope.index.has_value())
          return 0;
-      if (_proxy_qmi_is_super_root(proxy_qmi))
+      if (_proxy_qmi_is_scope_parent(proxy_qmi))
          return 1;
-      if (_proxy_qmi_is_root(proxy_qmi))
-         return QIdentityProxyModel::rowCount(this->_root_index.value());
+      if (_proxy_qmi_is_scope(proxy_qmi))
+         return source_model->rowCount(this->_scope.index.value());
       return QIdentityProxyModel::rowCount(proxy_qmi);
    }
    /*virtual*/ QModelIndex DKScopedProxyModel::parent(const QModelIndex& proxy_qmi) const /*override*/ {
       if (!proxy_qmi.isValid())
          return {};
-      if (_proxy_qmi_is_super_root(proxy_qmi))
+      if (_proxy_qmi_is_scope_parent(proxy_qmi))
          return {};
       return QIdentityProxyModel::parent(proxy_qmi);
    }
    /*virtual*/ QModelIndex DKScopedProxyModel::sibling(int row, int col, const QModelIndex& proxy_qmi) const /*override*/ {
       if (!proxy_qmi.isValid())
          return {};
-      if (this->_root_is_visible) {
-         if (_proxy_qmi_is_root(proxy_qmi)) {
+      if (this->_scope.visible) {
+         if (_proxy_qmi_is_scope(proxy_qmi)) {
             if (row == 0 && col == 0)
                return proxy_qmi;
             return {};
@@ -99,41 +99,41 @@ void DKScopedProxyModel::setRootVisible(bool v) {
    }
    #pragma region Modify hierarchy
       /*virtual*/ bool DKScopedProxyModel::dropMimeData(const QMimeData* mime, Qt::DropAction action, int row, int column, const QModelIndex& parent) /*override*/ {
-         if (_proxy_qmi_is_super_root(parent))
+         if (_proxy_qmi_is_scope_parent(parent))
             return false;
          return QIdentityProxyModel::dropMimeData(mime, action, row, column, parent);
       }
       /*virtual*/ bool DKScopedProxyModel::insertColumns(int i, int count, const QModelIndex& proxy_qmi) /*override*/ {
-         if (_proxy_qmi_is_super_root(proxy_qmi))
+         if (_proxy_qmi_is_scope_parent(proxy_qmi))
             return false;
          return QIdentityProxyModel::insertColumns(i, count, proxy_qmi);
       }
       /*virtual*/ bool DKScopedProxyModel::insertRows(int i, int count, const QModelIndex& proxy_qmi) /*override*/ {
-         if (_proxy_qmi_is_super_root(proxy_qmi))
+         if (_proxy_qmi_is_scope_parent(proxy_qmi))
             return false;
          return QIdentityProxyModel::insertRows(i, count, proxy_qmi);
       }
       /*virtual*/ bool DKScopedProxyModel::moveColumns(const QModelIndex& from_parent, int first, int last, const QModelIndex& to_parent, int to) /*override*/ {
-         if (_proxy_qmi_is_super_root(from_parent))
+         if (_proxy_qmi_is_scope_parent(from_parent))
             return false;
-         if (_proxy_qmi_is_super_root(to_parent))
+         if (_proxy_qmi_is_scope_parent(to_parent))
             return false;
          return QIdentityProxyModel::moveColumns(from_parent, first, last, to_parent, to);
       }
       /*virtual*/ bool DKScopedProxyModel::moveRows(const QModelIndex& from_parent, int first, int last, const QModelIndex& to_parent, int to) /*override*/ {
-         if (_proxy_qmi_is_super_root(from_parent))
+         if (_proxy_qmi_is_scope_parent(from_parent))
             return false;
-         if (_proxy_qmi_is_super_root(to_parent))
+         if (_proxy_qmi_is_scope_parent(to_parent))
             return false;
          return QIdentityProxyModel::moveColumns(from_parent, first, last, to_parent, to);
       }
       /*virtual*/ bool DKScopedProxyModel::removeColumns(int i, int count, const QModelIndex& proxy_qmi) /*override*/ {
-         if (_proxy_qmi_is_super_root(proxy_qmi))
+         if (_proxy_qmi_is_scope_parent(proxy_qmi))
             return false;
          return QIdentityProxyModel::removeColumns(i, count, proxy_qmi);
       }
       /*virtual*/ bool DKScopedProxyModel::removeRows(int i, int count, const QModelIndex& proxy_qmi) /*override*/ {
-         if (_proxy_qmi_is_super_root(proxy_qmi))
+         if (_proxy_qmi_is_scope_parent(proxy_qmi))
             return false;
          return QIdentityProxyModel::removeRows(i, count, proxy_qmi);
       }
@@ -141,33 +141,19 @@ void DKScopedProxyModel::setRootVisible(bool v) {
 #pragma endregion
 #pragma region QAbstractProxyModel overrides
    /*virtual*/ QModelIndex DKScopedProxyModel::mapFromSource(const QModelIndex& source_qmi) const /*override*/ {
-      if (!this->_root_index.has_value())
+      if (!_has_scope())
          return {};
-      const auto& root_qmi = this->_root_index.value();
-      if (this->_root_is_visible) {
-         if (source_qmi == root_qmi.parent())
-            return {};
-      }
-      if (this->_root_is_or_contains(source_qmi))
+      if (this->_scope_is_or_contains(source_qmi))
          return _unchecked_map_from_source(source_qmi);
       return {};
    }
    /*virtual*/ QModelIndex DKScopedProxyModel::mapToSource(const QModelIndex& proxy_qmi) const /*override*/ {
-      if (!this->_root_index.has_value())
+      if (!_has_scope())
          return {};
-      if (_proxy_qmi_is_super_root(proxy_qmi))
+      if (_proxy_qmi_is_scope_parent(proxy_qmi))
          return {};
-      const auto& root_qmi = this->_root_index.value();
-      if (this->_root_is_visible) {
-         if (!proxy_qmi.isValid())
-            return {};
-         if (_proxy_qmi_is_root(proxy_qmi)) {
-            return root_qmi;
-         }
-      } else {
-         if (!proxy_qmi.isValid())
-            return root_qmi;
-      }
+      if (_proxy_qmi_is_scope(proxy_qmi))
+         return this->_scope.index.value();
       //
       // We can't call `createIndex` on the source model. Qt cheats by having QIdentityProxyModel 
       // be a friend of `QAbstractItemModel`, so we'll cheat by subclassing QIdentityProxyModel.
@@ -185,118 +171,118 @@ void DKScopedProxyModel::setRootVisible(bool v) {
       // Invoke the QAbstractProxyModel super, but NOT the QIdentityProxyModel super.
       QAbstractProxyModel::setSourceModel(model);
 
-      this->_root_index = {};
+      this->_scope.index = {};
       if (model) {
          #pragma region Column changes
             QObject::connect(model, &QAbstractItemModel::columnsAboutToBeInserted, this, [this](const QModelIndex& parent, int first, int last) {
-               if (!_root_is_or_contains(parent))
+               if (!_scope_is_or_contains(parent))
                   return;
                this->beginInsertColumns(_unchecked_map_from_source(parent), first, last);
             });
             QObject::connect(model, &QAbstractItemModel::columnsInserted, this, [this](const QModelIndex& parent, int first, int last) {
-               if (!_root_is_or_contains(parent))
+               if (!_scope_is_or_contains(parent))
                   return;
                this->endInsertColumns();
             });
 
             QObject::connect(model, &QAbstractItemModel::columnsAboutToBeMoved, this, [this](const QModelIndex& src_parent, int first, int last, const QModelIndex& dst_parent, int dst) {
-               if (_root_is_or_contains(src_parent)) {
-                  if (_root_is_or_contains(dst_parent)) {
+               if (_scope_is_or_contains(src_parent)) {
+                  if (_scope_is_or_contains(dst_parent)) {
                      this->beginMoveColumns(_unchecked_map_from_source(src_parent), first, last, _unchecked_map_from_source(dst_parent), dst);
                   } else {
                      this->beginRemoveColumns(_unchecked_map_from_source(src_parent), first, last);
                   }
                } else {
-                  if (_root_is_or_contains(dst_parent)) {
+                  if (_scope_is_or_contains(dst_parent)) {
                      int count = last - first + 1;
                      this->beginInsertColumns(_unchecked_map_from_source(dst_parent), dst, dst + count - 1);
                   }
                }
             });
             QObject::connect(model, &QAbstractItemModel::columnsMoved, this, [this](const QModelIndex& src_parent, int first, int last, const QModelIndex& dst_parent, int dst) {
-               if (_root_is_or_contains(src_parent)) {
-                  if (_root_is_or_contains(dst_parent)) {
+               if (_scope_is_or_contains(src_parent)) {
+                  if (_scope_is_or_contains(dst_parent)) {
                      this->endMoveColumns();
                   } else {
                      this->endRemoveColumns();
                   }
                } else {
-                  if (_root_is_or_contains(dst_parent)) {
+                  if (_scope_is_or_contains(dst_parent)) {
                      this->endInsertColumns();
                   }
                }
             });
 
             QObject::connect(model, &QAbstractItemModel::columnsAboutToBeRemoved, this, [this](const QModelIndex& parent, int first, int last) {
-               if (_col_range_includes_root(parent, first, last)) {
+               if (_source_col_range_includes_scope(parent, first, last)) {
                   this->beginResetModel();
-                  this->_root_index.reset();
+                  this->_scope.index.reset();
                   this->endResetModel();
                   return;
                }
-               if (!_root_is_or_contains(parent))
+               if (!_scope_is_or_contains(parent))
                   return;
                this->beginRemoveColumns(mapFromSource(parent), first, last);
             });
             QObject::connect(model, &QAbstractItemModel::columnsRemoved, this, [this](const QModelIndex& parent, int first, int last) {
-               if (!_root_is_or_contains(parent))
+               if (!_scope_is_or_contains(parent))
                   return;
                this->endRemoveColumns();
             });
          #pragma endregion
          #pragma region Row changes
             QObject::connect(model, &QAbstractItemModel::rowsAboutToBeInserted, this, [this](const QModelIndex& parent, int first, int last) {
-               if (!_root_is_or_contains(parent))
+               if (!_scope_is_or_contains(parent))
                   return;
                this->beginInsertRows(_unchecked_map_from_source(parent), first, last);
             });
             QObject::connect(model, &QAbstractItemModel::rowsInserted, this, [this](const QModelIndex& parent, int first, int last) {
-               if (!_root_is_or_contains(parent))
+               if (!_scope_is_or_contains(parent))
                   return;
                this->endInsertRows();
             });
 
             QObject::connect(model, &QAbstractItemModel::rowsAboutToBeMoved, this, [this](const QModelIndex& src_parent, int first, int last, const QModelIndex& dst_parent, int dst) {
-               if (_root_is_or_contains(src_parent)) {
-                  if (_root_is_or_contains(dst_parent)) {
+               if (_scope_is_or_contains(src_parent)) {
+                  if (_scope_is_or_contains(dst_parent)) {
                      this->beginMoveRows(_unchecked_map_from_source(src_parent), first, last, _unchecked_map_from_source(dst_parent), dst);
                   } else {
                      this->beginRemoveRows(_unchecked_map_from_source(src_parent), first, last);
                   }
                } else {
-                  if (_root_is_or_contains(dst_parent)) {
+                  if (_scope_is_or_contains(dst_parent)) {
                      int count = last - first + 1;
                      this->beginInsertRows(_unchecked_map_from_source(dst_parent), dst, dst + count - 1);
                   }
                }
             });
             QObject::connect(model, &QAbstractItemModel::rowsMoved, this, [this](const QModelIndex& src_parent, int first, int last, const QModelIndex& dst_parent, int dst) {
-               if (_root_is_or_contains(src_parent)) {
-                  if (_root_is_or_contains(dst_parent)) {
+               if (_scope_is_or_contains(src_parent)) {
+                  if (_scope_is_or_contains(dst_parent)) {
                      this->endMoveRows();
                   } else {
                      this->endRemoveRows();
                   }
                } else {
-                  if (_root_is_or_contains(dst_parent)) {
+                  if (_scope_is_or_contains(dst_parent)) {
                      this->endInsertRows();
                   }
                }
             });
 
             QObject::connect(model, &QAbstractItemModel::rowsAboutToBeRemoved, this, [this](const QModelIndex& parent, int first, int last) {
-               if (_row_range_includes_root(parent, first, last)) {
+               if (_source_row_range_includes_scope(parent, first, last)) {
                   this->beginResetModel();
-                  this->_root_index.reset();
+                  this->_scope.index.reset();
                   this->endResetModel();
                   return;
                }
-               if (!_root_is_or_contains(parent))
+               if (!_scope_is_or_contains(parent))
                   return;
                this->beginRemoveRows(_unchecked_map_from_source(parent), first, last);
             });
             QObject::connect(model, &QAbstractItemModel::rowsRemoved, this, [this](const QModelIndex& parent, int first, int last) {
-               if (!_root_is_or_contains(parent))
+               if (!_scope_is_or_contains(parent))
                   return;
                this->endRemoveRows();
             });
@@ -306,7 +292,7 @@ void DKScopedProxyModel::setRootVisible(bool v) {
             {
                QList<QPersistentModelIndex> proxy_parents;
                for (const auto& qpmi : parents) {
-                  if (!_root_is_or_contains(qpmi))
+                  if (!_scope_is_or_contains(qpmi))
                      continue;
                   proxy_parents.push_back(_unchecked_map_from_source(qpmi));
                }
@@ -331,7 +317,7 @@ void DKScopedProxyModel::setRootVisible(bool v) {
             {
                QList<QPersistentModelIndex> proxy_parents;
                for (const auto& qpmi : parents) {
-                  if (!_root_is_or_contains(qpmi))
+                  if (!_scope_is_or_contains(qpmi))
                      continue;
                   proxy_parents.push_back(_unchecked_map_from_source(qpmi));
                }
@@ -341,16 +327,16 @@ void DKScopedProxyModel::setRootVisible(bool v) {
          });
          //
          QObject::connect(model, &QAbstractItemModel::dataChanged, this, [this](const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles) {
-            if (!this->_root_is_or_contains(topLeft)) {
+            if (!_has_scope())
+               return;
+            if (!_scope_is_or_contains(topLeft)) {
                //
                // Verify that the root isn't among the siblings of topLeft.
                //
-               if (!this->_root_index.has_value())
+               if (_scope_is_source_root())
                   return;
-               const auto& root_qmi = this->_root_index.value();
-               if (!root_qmi.isValid())
-                  return;
-               if (this->sourceModel()->sibling(topLeft.row(), topLeft.column(), root_qmi) != topLeft)
+               const auto& scope = this->_scope.index.value();
+               if (this->sourceModel()->sibling(topLeft.row(), topLeft.column(), scope) != topLeft)
                   return;
             }
             emit dataChanged(_unchecked_map_from_source(topLeft), _unchecked_map_from_source(bottomRight), roles);
@@ -360,52 +346,66 @@ void DKScopedProxyModel::setRootVisible(bool v) {
    }
 #pragma endregion
 
-bool DKScopedProxyModel::_col_range_includes_root(const QModelIndex& source_parent_qmi, int first, int last) const {
-   if (!this->_root_index.has_value())
+bool DKScopedProxyModel::_scope_is_source_root() const noexcept {
+   assert(_has_scope());
+   return !this->_scope.index.value().isValid(); // invalid index is assumed to be model root
+}
+
+bool DKScopedProxyModel::_source_col_range_includes_scope(const QModelIndex& source_parent_qmi, int first, int last) const {
+   if (!_has_scope())
       return false;
-   const auto& root_qmi = this->_root_index.value();
-   if (root_qmi.parent() != source_parent_qmi)
+   const auto& scope = this->_scope.index.value();
+   if (scope.parent() != source_parent_qmi)
       return false;
-   auto i = root_qmi.column();
+   auto i = scope.column();
    return first <= i && i <= last;
 }
-bool DKScopedProxyModel::_row_range_includes_root(const QModelIndex& source_parent_qmi, int first, int last) const {
-   if (!this->_root_index.has_value())
+bool DKScopedProxyModel::_source_row_range_includes_scope(const QModelIndex& source_parent_qmi, int first, int last) const {
+   if (!_has_scope())
       return false;
-   const auto& root_qmi = this->_root_index.value();
-   if (root_qmi.parent() != source_parent_qmi)
+   const auto& scope = this->_scope.index.value();
+   if (scope.parent() != source_parent_qmi)
       return false;
-   auto i = root_qmi.row();
+   auto i = scope.row();
    return first <= i && i <= last;
 }
 
-bool DKScopedProxyModel::_root_is_or_contains(const QModelIndex& source_qmi) const {
-   if (!this->_root_index.has_value())
+bool DKScopedProxyModel::_scope_is_or_contains(const QModelIndex& source_qmi) const {
+   if (!_has_scope())
       return false;
-   const auto& root_qmi = this->_root_index.value();
-   if (!root_qmi.isValid()) // invalid index is assumed to be model root
+   if (_scope_is_source_root())
       return true;
-   if (root_qmi == source_qmi)
+   const auto& scope = this->_scope.index.value();
+   if (scope == source_qmi)
       return true;
-   return this->_root_contains(source_qmi);
+   return _scope_contains(source_qmi);
 }
-bool DKScopedProxyModel::_root_contains(const QModelIndex& source_qmi) const {
-   if (!this->_root_index.has_value())
+bool DKScopedProxyModel::_scope_contains(const QModelIndex& source_qmi) const {
+   if (!_has_scope())
       return false;
-   const auto& root_qmi = this->_root_index.value();
-   if (!root_qmi.isValid()) // invalid index is assumed to be model root
+   if (_scope_is_source_root())
       return true;
-
+   const auto& scope = this->_scope.index.value();
    auto parent = source_qmi.parent();
    for (; parent.isValid(); parent = parent.parent()) {
-      if (parent == root_qmi)
+      if (parent == scope)
          return true;
    }
    return false;
 }
 
-bool DKScopedProxyModel::_proxy_qmi_is_root(const QModelIndex& proxy_qmi) const {
-   if (this->_root_is_visible) {
+bool DKScopedProxyModel::_proxy_scope_qmi_has_parent() const {
+   return this->_scope.visible && _has_scope() && !_scope_is_source_root();
+}
+QModelIndex DKScopedProxyModel::_proxy_qmi_of_scope(int col) const {
+   if (_proxy_scope_qmi_has_parent()) {
+      return this->createIndex(0, col, (void*)this);
+   } else {
+      return {};
+   }
+}
+bool DKScopedProxyModel::_proxy_qmi_is_scope(const QModelIndex& proxy_qmi) const {
+   if (_proxy_scope_qmi_has_parent()) {
       //
       // Check for output of `_child_qmi_of_visible_root`.
       //
@@ -418,43 +418,24 @@ bool DKScopedProxyModel::_proxy_qmi_is_root(const QModelIndex& proxy_qmi) const 
       return !proxy_qmi.isValid();
    }
 }
-bool DKScopedProxyModel::_proxy_qmi_is_super_root(const QModelIndex& qmi) const {
-   return
-      this->_root_is_visible
-   && this->_root_index.has_value()
-   && this->_root_index.value().isValid() // if the root index is the source model's root, then there is no super-root.
-   && !qmi.isValid()
-   ;
+bool DKScopedProxyModel::_proxy_qmi_is_scope_parent(const QModelIndex& proxy_qmi) const {
+   return _proxy_scope_qmi_has_parent() && !proxy_qmi.isValid();
 }
 
 // Use when you already know `source_qmi` is inside of the root model.
 QModelIndex DKScopedProxyModel::_unchecked_map_from_source(const QModelIndex& source_qmi) const {
-   if (!this->_root_index.has_value())
-      return {};
-   const auto& root_qmi = this->_root_index.value();
-   if (this->_root_is_visible) {
-      if (source_qmi == root_qmi.parent()) {
+   const auto& scope = this->_scope.index.value();
+   if (_proxy_scope_qmi_has_parent()) {
+      if (source_qmi == scope.parent()) {
          return {};
       }
-      if (source_qmi == root_qmi && root_qmi.isValid()) {
-         return _child_qmi_of_visible_root(source_qmi.column());
+      if (source_qmi == scope && scope.isValid()) {
+         return _proxy_qmi_of_scope(source_qmi.column());
       }
    } else {
-      if (source_qmi == root_qmi) {
+      if (source_qmi == scope) {
          return {};
       }
    }
    return this->createIndex(source_qmi.row(), source_qmi.column(), source_qmi.internalPointer());
-}
-
-QModelIndex DKScopedProxyModel::_child_qmi_of_visible_root(int col) const {
-   //
-   // Use `this` as the internal pointer to avoid any confusion with source-model QMIs' internal pointers.
-   //
-   return this->createIndex(0, col, (void*)this);
-}
-bool DKScopedProxyModel::_is_parent_of_visible_root(const QModelIndex& proxy_qmi) const {
-   if (!this->_root_is_visible)
-      return false;
-   return proxy_qmi.internalPointer() == this && proxy_qmi.model() == this;
 }

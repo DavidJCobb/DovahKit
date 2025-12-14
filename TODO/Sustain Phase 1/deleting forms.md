@@ -133,7 +133,7 @@ We should replace this with:
 public:
    bool on_before_used_form_deleted(const form_deletion_info&, form_stub&);
 protected:
-   virtual bool _on_before_used_form_deleted(const form_deletion_info&, form_stub&);
+   virtual bool _on_before_used_form_deleted_impl(const form_deletion_info&, form_stub&);
 ```
 
 The form can decide whether to sever a given use based on the parameters given to the deletion request. For example, if an idle is being flagged as deleted, and it knows that its own deletion is happening because an ancestor is being flagged as deleted, then it can decide *not* to sever its use of that ancestor. This means that if you delete a tree of idles and that tree is only flagged as deleted, you don't end up with a bunch of individual loose idles that are flagged as deleted; instead, the topmost idle in that tree is made loose, and the also-flagged-as-deleted descendants *remain* descendants.
