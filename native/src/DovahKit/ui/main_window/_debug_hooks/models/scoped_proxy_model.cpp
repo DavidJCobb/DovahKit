@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QGridLayout>
 #include <QItemSelectionModel>
+#include <QPushButton>
 #include <QStandardItemModel>
 #include <QTreeView>
 #include "ui/models/DKScopedProxyModel.h"
@@ -20,6 +21,18 @@ namespace DovahKitDebug::features::models {
       layout->addWidget(treeview_source);
       layout->addWidget(treeview_proxy);
       layout->addWidget(treeview_proxy_with_root);
+
+      treeview_source->setAcceptDrops(true);
+      treeview_source->setDragDropMode(QAbstractItemView::DragDropMode::InternalMove);
+      treeview_source->setDragDropOverwriteMode(false);
+      treeview_source->setDropIndicatorShown(true);
+
+      {  // allow editing of the "with root" tree so we can test dragging the scope to be a sibling of itself
+         treeview_proxy_with_root->setAcceptDrops(true);
+         treeview_proxy_with_root->setDragDropMode(QAbstractItemView::DragDropMode::InternalMove);
+         treeview_proxy_with_root->setDragDropOverwriteMode(false);
+         treeview_proxy_with_root->setDropIndicatorShown(true);
+      }
 
       union {
          std::array<DKScopedProxyModel*, 2> list = {};
@@ -71,6 +84,7 @@ namespace DovahKitDebug::features::models {
 
       {
          auto* enable = new QCheckBox("Synchronize lower views to top view's selection", dialog);
+         layout->addWidget(enable);
          enable->setChecked(true);
          for (auto* proxy : proxies.list) {
             assert(proxy != nullptr);
@@ -103,6 +117,28 @@ namespace DovahKitDebug::features::models {
          });
       }
 
+      {
+         auto* button = new QPushButton("Toggle name of selected item", dialog);
+         layout->addWidget(button);
+
+         auto* sel_model = treeview_source->selectionModel();
+         QObject::connect(button, &QPushButton::clicked, dialog, [source, sel_model]() {
+            const auto sel = sel_model->selection();
+            if (sel.empty())
+               return;
+            auto qmi = sel[0].topLeft();
+
+            auto data = source->data(qmi, Qt::ToolTipRole);
+            if (data.isValid()) {
+               source->setData(qmi, {}, Qt::ToolTipRole);
+               source->setData(qmi, data, Qt::DisplayRole);
+            } else {
+               data = source->data(qmi, Qt::DisplayRole);
+               source->setData(qmi, data, Qt::ToolTipRole);
+               source->setData(qmi, "Toggled!", Qt::DisplayRole);
+            }
+         });
+      }
       
       dialog->show();
    }
