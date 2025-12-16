@@ -1,5 +1,7 @@
 #pragma once
+#include <optional>
 #include <QObject>
+#include "dovah/data/story_manager.h"
 #include "dovah/datastores/story_manager.h"
 #include "helpers/singleton_ex.h"
 #include "ui/types/logging/log_item.h"
@@ -35,6 +37,7 @@ namespace dovahkit::subsystems::story_manager {
          constexpr StoryManagerFormsModel* model() noexcept { return this->_model; }
 
          dovah::form_stub* containing_event_node_of(const dovah::form_stub&) const noexcept;
+         std::optional<dovah::story_event_code::type> event_type_for(const dovah::form_stub& event_node) const noexcept;
 
          void move_node(const node& subject, const branch_node& dst_parent, const node* dst_previous);
          void move_node_within_parent(const node&, int by);

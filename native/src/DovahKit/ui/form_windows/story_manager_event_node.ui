@@ -96,13 +96,10 @@
         <item row="1" column="0" colspan="2">
          <widget class="QStackedWidget" name="itemFieldsTyped">
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="nodeFields">
            <layout class="QGridLayout" name="gridLayout_2">
-            <property name="sizeConstraint">
-             <enum>QLayout::SetMinAndMaxSize</enum>
-            </property>
             <property name="leftMargin">
              <number>0</number>
             </property>
@@ -239,9 +236,6 @@
           </widget>
           <widget class="QWidget" name="questFields">
            <layout class="QGridLayout" name="gridLayout_5">
-            <property name="sizeConstraint">
-             <enum>QLayout::SetMinAndMaxSize</enum>
-            </property>
             <property name="leftMargin">
              <number>0</number>
             </property>

@@ -97,12 +97,11 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
       return &std::get<cached_quest_data>(cached->typed);
    }
 
-   void StoryManagerFormsModel::_recache_node_from_scratch(const node& n) {
+   void StoryManagerFormsModel::_recache_node_core_properties(const node& n) {
       auto& cached = this->_cache.nodes[(node*)&n]; // containers choke on const pointer keys -_-
-      cached = {};
       cached.editor_id      = QString::fromStdString(n.stub.editorID);
       cached.display_string = cached.editor_id;
-
+      
       bool is_random   = false;
       auto loaded_base = n.stub.load();
       if (loaded_base) {
@@ -115,38 +114,12 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
 
       switch (n.stub.form_type) {
          case dovah::form_type::story_quest_node:
-            {
-               auto loaded = loaded_base.ptr_cast<dovah::loaded_forms::StoryManagerQuestNode>();
-               if (!loaded)
-                  break;
-               auto& cqd = cached.typed.emplace<cached_quest_data>();
-
-               if (cached.is_random) {
-                  cached.display_string = tr("Random Quest Node: %1");
-               } else {
-                  cached.display_string = tr("Stacked Quest Node: %1");
-               }
-               cached.display_string = cached.display_string.arg(cached.editor_id);
-
-               cqd.num_to_run     = loaded->num_quests_to_run;
-               cqd.max_concurrent = loaded->max_concurrent_quests;
-
-               size_t size = loaded->quests.size();
-               cqd.quests.reserve(size);
-               for (auto& src : loaded->quests) {
-                  if (!src.form)
-                     continue;
-                  if (src.form.get_form_stub()->form_type != dovah::form_type::quest)
-                     continue;
-                  auto  dst_ptr = std::make_unique<quest_node>();
-                  auto& dst     = *dst_ptr;
-                  cqd.quests.emplace_back() = std::move(dst_ptr);
-                  dst.stub                 = src.form.get_form_stub();
-                  dst.editor_id            = QString::fromStdString(dst.stub->editorID);
-                  dst.reset_after_24_hours = src.flags & dovah::loaded_forms::StoryManagerQuestNode::quest_entry::flag::reset_after_24_hours;
-                  dst.hours_until_reset    = src.hours_until_reset * 24.0F;
-               }
+            if (cached.is_random) {
+               cached.display_string = tr("Random Quest Node: %1");
+            } else {
+               cached.display_string = tr("Stacked Quest Node: %1");
             }
+            cached.display_string = cached.display_string.arg(cached.editor_id);
             break;
          case dovah::form_type::story_branch_node:
             if (cached.is_random) {
@@ -172,6 +145,160 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
                      cached.display_string = tr("Stacked Event Node: %1");
                   }
                   cached.display_string = cached.display_string.arg(name);
+               }
+            }
+            break;
+      }
+   }
+   void StoryManagerFormsModel::_recache_quest_data(const node& n, cached_node_data& cached) {
+      assert(n.stub.form_type == dovah::form_type::story_quest_node);
+      if (!std::holds_alternative<cached_quest_data>(cached.typed))
+         cached.typed.emplace<cached_quest_data>();
+      auto& cqd    = std::get<cached_quest_data>(cached.typed);
+      auto  loaded = n.stub.load().ptr_cast<dovah::loaded_forms::StoryManagerQuestNode>();
+      if (!loaded)
+         return;
+      cqd.num_to_run     = loaded->num_quests_to_run;
+      cqd.max_concurrent = loaded->max_concurrent_quests;
+   }
+   void StoryManagerFormsModel::_recache_quest_list(const node& n, cached_node_data& cached, bool clobber_sans_signals) {
+      assert(n.stub.form_type == dovah::form_type::story_quest_node);
+      if (!std::holds_alternative<cached_quest_data>(cached.typed))
+         cached.typed.emplace<cached_quest_data>();
+      auto& cqd    = std::get<cached_quest_data>(cached.typed);
+      auto  loaded = n.stub.load().ptr_cast<dovah::loaded_forms::StoryManagerQuestNode>();
+      if (!loaded)
+         return;
+
+      if (!clobber_sans_signals) {
+         bool         any_quests_changed = true;
+         const size_t count = cqd.quests.size();
+         if (count == loaded->quests.size()) {
+            any_quests_changed = false;
+            for (size_t i = 0; i < cqd.quests.size(); ++i) {
+               auto& src = loaded->quests[i];
+               auto& dst = *cqd.quests[i];
+               if (src.form.get_form_stub() != dst.stub) {
+                  any_quests_changed = true;
+                  break;
+               }
+            }
+         }
+         if (!any_quests_changed) {
+            auto smqn_qmi = _qmi_for_node(n);
+            for (size_t i = 0; i < count; ++i) {
+               auto& src = loaded->quests[i];
+               auto& dst = *cqd.quests[i];
+
+               bool changed = false;
+               quest_node updated;
+               updated.stub                 = dst.stub;
+               updated.editor_id            = QString::fromStdString(dst.stub->editorID);
+               updated.reset_after_24_hours = src.flags & dovah::loaded_forms::StoryManagerQuestNode::quest_entry::flag::reset_after_24_hours;
+               updated.hours_until_reset    = src.hours_until_reset * 24.0F;
+               if (updated != dst) {
+                  dst = updated;
+
+                  auto qust_qmi = this->index(i, 0, smqn_qmi);
+                  emit dataChanged(qust_qmi, qust_qmi);
+               }
+            }
+            return;
+         }
+      }
+
+      QModelIndex parent_qmi;
+      bool emitted_removal = false;
+      if (!clobber_sans_signals) {
+         parent_qmi = _qmi_for_node(n);
+         if (!cqd.quests.empty()) {
+            this->beginRemoveRows(parent_qmi, 0, cqd.quests.size() - 1);
+            emitted_removal = true;
+         }
+      }
+      cqd.quests.clear();
+      if (!clobber_sans_signals) {
+         this->endRemoveRows();
+      }
+      cqd.quests.reserve(loaded->quests.size());
+      for (auto& src : loaded->quests) {
+         if (!src.form)
+            continue;
+         if (src.form.get_form_stub()->form_type != dovah::form_type::quest)
+            continue;
+         auto  dst_ptr = std::make_unique<quest_node>();
+         auto& dst     = *dst_ptr;
+         cqd.quests.emplace_back() = std::move(dst_ptr);
+         dst.stub                 = src.form.get_form_stub();
+         dst.editor_id            = QString::fromStdString(dst.stub->editorID);
+         dst.reset_after_24_hours = src.flags & dovah::loaded_forms::StoryManagerQuestNode::quest_entry::flag::reset_after_24_hours;
+         dst.hours_until_reset    = src.hours_until_reset * 24.0F;
+      }
+      if (!clobber_sans_signals) {
+         this->beginInsertRows(parent_qmi, 0, cqd.quests.size() - 1);
+         this->endInsertRows();
+      }
+   }
+   void StoryManagerFormsModel::_recache_node_from_scratch(const node& n) {
+      auto loaded_base = n.stub.load();
+      this->_recache_node_core_properties(n);
+      auto& cached = this->_cache.nodes[(node*)&n]; // containers choke on const pointer keys -_-
+
+      switch (n.stub.form_type) {
+         case dovah::form_type::story_quest_node:
+            this->_recache_quest_data(n, cached);
+            this->_recache_quest_list(n, cached, true);
+            break;
+         case dovah::form_type::story_branch_node:
+            break;
+         case dovah::form_type::story_event_node:
+            break;
+      }
+   }
+   void StoryManagerFormsModel::_recache_node(const node& n) {
+      auto loaded_base = n.stub.load();
+      this->_recache_node_core_properties(n);
+      auto& cached = this->_cache.nodes[(node*)&n]; // containers choke on const pointer keys -_-
+
+      switch (n.stub.form_type) {
+         case dovah::form_type::story_quest_node:
+            this->_recache_quest_data(n, cached);
+            this->_recache_quest_list(n, cached, false);
+            break;
+         case dovah::form_type::story_branch_node:
+            break;
+         case dovah::form_type::story_event_node:
+            break;
+      }
+
+      auto qmi = _qmi_for_node(n);
+      emit dataChanged(qmi, qmi);
+   }
+   void StoryManagerFormsModel::_on_form_modified(passkeys::core_controls_model, const dovah::form_stub& stub) {
+      auto& ds = _get_datastore();
+      switch (stub.form_type) {
+         case dovah::form_type::story_branch_node:
+         case dovah::form_type::story_event_node:
+         case dovah::form_type::story_quest_node:
+            if (auto* node = ds.node_by_stub(stub))
+               this->_recache_node(*node);
+            break;
+         case dovah::form_type::quest:
+            for (const auto& pair : ds.nodes_by_stub) {
+               auto* smqn_stub = pair.first;
+               if (!smqn_stub || smqn_stub->form_type != dovah::form_type::story_quest_node)
+                  continue;
+               auto* cached = _get_cached_quest_data(*pair.second);
+               if (!cached)
+                  continue;
+
+               auto smqn_qmi = _qmi_for_node(*pair.second);
+               for (size_t i = 0; i < cached->quests.size(); ++i) {
+                  auto& item = cached->quests[i];
+                  if (item->stub == &stub) {
+                     auto qust_qmi = this->index(i, 0, smqn_qmi);
+                     emit dataChanged(qust_qmi, qust_qmi);
+                  }
                }
             }
             break;
@@ -242,6 +369,7 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
       if (!qmi.isValid())
          return {};
       const node* n = _node_for_qmi(qmi);
+
       if (!n) {
          const auto* q = _quest_for_qmi(qmi);
          if (!q)
@@ -266,6 +394,7 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
          }
          return {};
       }
+
       auto* cached = _get_cached_data(*n);
       switch (role) {
          case Qt::DisplayRole:
@@ -286,6 +415,13 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
             break;
          case FormStubRole:
             return QVariant::fromValue(&n->stub);
+         case EventTypeRole:
+            if (n->stub.form_type == dovah::form_type::story_event_node) {
+               if (std::holds_alternative<cached_event_data>(cached->typed)) {
+                  return (int)std::get<cached_event_data>(cached->typed).event;
+               }
+            }
+            break;
       }
       return {};
    }

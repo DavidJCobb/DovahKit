@@ -27,6 +27,16 @@ namespace dovahkit::subsystems::story_manager {
       if (editor.has_data()) {
          this->_rebuild_datastore();
       }
+      QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
+         switch (stub->form_type) {
+            case dovah::form_type::story_branch_node:
+            case dovah::form_type::story_event_node:
+            case dovah::form_type::story_quest_node:
+            case dovah::form_type::quest:
+               this->_model->_on_form_modified({}, *stub);
+               break;
+         }
+      });
 
       this->_datastore.handlers.delete_form = [this](dovah::form_stub& stub) {
          DovahKitCore::get().delete_form(
@@ -98,6 +108,15 @@ namespace dovahkit::subsystems::story_manager {
          if (node->stub.form_type == dovah::form_type::story_event_node)
             return &node->stub;
       return nullptr;
+   }
+   std::optional<dovah::story_event_code::type> core::event_type_for(const dovah::form_stub& stub) const noexcept {
+      if (stub.form_type != dovah::form_type::story_event_node)
+         return {};
+      auto qmi  = this->_model->index(stub);
+      auto data = this->_model->data(qmi, StoryManagerFormsModel::EventTypeRole);
+      if (!data.isValid())
+         return {};
+      return (dovah::story_event_code::type)data.toInt();
    }
 
    void core::move_node(const node& subject, const branch_node& dst_parent, const node* dst_previous) {

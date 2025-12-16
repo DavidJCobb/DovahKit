@@ -30,6 +30,7 @@ class StoryManagerFormsModel : public QAbstractItemModel {
       static constexpr const Qt::ItemDataRole FormStubRole = Qt::UserRole;
       static constexpr const Qt::ItemDataRole QuestResetAfter24HoursRole = (Qt::ItemDataRole)(Qt::UserRole + 1);
       static constexpr const Qt::ItemDataRole QuestHoursUntilResetRole   = (Qt::ItemDataRole)(Qt::UserRole + 2);
+      static constexpr const Qt::ItemDataRole EventTypeRole = (Qt::ItemDataRole)(Qt::UserRole + 3); // as an int
 
    protected:
       struct passkeys { // poor man's namespace
@@ -46,6 +47,8 @@ class StoryManagerFormsModel : public QAbstractItemModel {
 
       // Nodes for quest forms are owned by this model.
       struct quest_node {
+         bool operator==(const quest_node&) const noexcept = default;
+
          dovah::form_stub* stub = nullptr;
          QString editor_id;
          bool  reset_after_24_hours = false;
@@ -93,7 +96,11 @@ class StoryManagerFormsModel : public QAbstractItemModel {
          const cached_node_data* _get_cached_data(const node&) const noexcept;
          const cached_quest_data* _get_cached_quest_data(const node&) const noexcept;
 
+         void _recache_node_core_properties(const node&);
+         void _recache_quest_data(const node&, cached_node_data&);
+         void _recache_quest_list(const node&, cached_node_data&, bool clobber_sans_signals);
          void _recache_node_from_scratch(const node&);
+         void _recache_node(const node&);
       #pragma endregion
 
    public:
@@ -122,6 +129,8 @@ class StoryManagerFormsModel : public QAbstractItemModel {
 
          void _on_node_placement_imminent(passkeys::core_controls_model, const node& subject, const branch_node& dst_parent, size_t dst_pos);
          void _on_node_placement_complete(passkeys::core_controls_model, const node&);
+
+         void _on_form_modified(passkeys::core_controls_model, const dovah::form_stub&);
       #pragma endregion
 
    protected:

@@ -45,6 +45,9 @@ FormDialogStoryManagerNodes::FormDialogStoryManagerNodes(dovah::form_stub& stub,
       auto* sel_model = this->ui.tree->selectionModel();
       QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &FormDialogStoryManagerNodes::_pull_selected_node_to_ui);
 
+      QObject::connect(this->ui.nodeFlagMaxConcurrent, &QCheckBox::toggled, this->ui.nodeMaxConcurrent, &QWidget::setEnabled);
+      QObject::connect(this->ui.nodeFlagNumToRun,      &QCheckBox::toggled, this->ui.nodeNumToRun, &QWidget::setEnabled);
+
       QObject::connect(this->ui.nodeEditorID,               &QLineEdit::textChanged,                 this, &FormDialogStoryManagerNodes::_push_selected_node_from_ui);
       QObject::connect(this->ui.nodeFlagRandom,             &QRadioButton::toggled,                  this, &FormDialogStoryManagerNodes::_push_selected_node_from_ui);
       QObject::connect(this->ui.nodeFlagStacked,            &QRadioButton::toggled,                  this, &FormDialogStoryManagerNodes::_push_selected_node_from_ui);
@@ -173,6 +176,7 @@ void FormDialogStoryManagerNodes::_pull_selected_node_to_ui() {
       auto* loaded_mixin = dynamic_cast<loaded_node_base_type*>(&*loaded_base);
       assert(!!loaded_mixin);
 
+      this->ui.nodeFlagStacked->setChecked(!(loaded_mixin->flags & loaded_node_base_type::flag::random));
       this->ui.nodeFlagRandom->setChecked(loaded_mixin->flags & loaded_node_base_type::flag::random);
       this->ui.nodeFlagWarnIfNoStart->setChecked(loaded_mixin->flags & loaded_node_base_type::flag::warn_if_no_child_quest_started);
       this->ui.nodeConditions->importFrom(*loaded_base, loaded_mixin->conditions);

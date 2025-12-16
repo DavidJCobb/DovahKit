@@ -8,6 +8,10 @@
 #include "../../../dovah/form_stub.h"
 #include "../../../dovah/files/common.h"
 
+#include "dovah/data/story_manager.h"
+#include "editor/helpers/story_event_name.h"
+#include "editor/subsystems/story_manager/core.h"
+
 //
 // KNOWN DEFECTS:
 //
@@ -61,7 +65,23 @@ FormTableModelItem::FormTableModelItem(dovah::form_stub* stub) {
 }
 void FormTableModelItem::update() {
    auto stub = this->stub;
-   this->editorID  = QString::fromUtf8(stub->get_editor_id());
+   this->editorID = QString::fromUtf8(stub->get_editor_id());
+   if (stub->form_type == dovah::form_type::story_event_node) {
+      //
+      // It's common for these forms to have no editor ID, and in fact the CK doesn't 
+      // even let you give them one. Instead, the Object Window should identify them 
+      // by their event typename.
+      //
+      auto& sm     = dovahkit::subsystems::story_manager::core::get_or_create();
+      auto  et_opt = sm.event_type_for(*stub);
+      if (et_opt.has_value()) {
+         auto et   = et_opt.value();
+         auto name = editor_helpers::story_event_name(et);
+         if (!name.isEmpty()) {
+            this->editorID = name;
+         }
+      }
+   }
    this->formID    = stub->formID;
    this->userCount = stub->inbound.size();
    
