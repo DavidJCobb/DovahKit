@@ -12,7 +12,7 @@ namespace dovah::loaded_forms {
       {
          auto& subrecord = record.get_current_subrecord();
          if (subrecord.signature() == 'ENAM') {
-            subrecord.read(this->event);
+            subrecord.read_signature(this->event);
             record.next_subrecord();
          }
       }

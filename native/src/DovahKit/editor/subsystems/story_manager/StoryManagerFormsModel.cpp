@@ -34,6 +34,7 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
    const StoryManagerFormsModel::node* StoryManagerFormsModel::_node_for_qmi(const QModelIndex& qmi) const noexcept {
       if (!qmi.isValid())
          return nullptr;
+      assert(qmi.model() == this);
       const node* parent_node = (const node*)qmi.internalPointer();
       if (!parent_node) {
          if (qmi.row() == 0)
@@ -54,6 +55,7 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
    bool StoryManagerFormsModel::_qmi_is_quest_form(const QModelIndex& qmi) const noexcept {
       if (!qmi.isValid())
          return false;
+      assert(qmi.model() == this);
       const node* parent_node = (const node*)qmi.internalPointer();
       if (!parent_node)
          return false;
@@ -62,6 +64,7 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
    const StoryManagerFormsModel::quest_node* StoryManagerFormsModel::_quest_for_qmi(const QModelIndex& qmi) const noexcept {
       if (!qmi.isValid())
          return nullptr;
+      assert(qmi.model() == this);
       const node* parent_node = (const node*)qmi.internalPointer();
       if (!parent_node)
          return nullptr;
@@ -396,12 +399,23 @@ void StoryManagerFormsModel::_make_icons() {
       auto  painter = QPainter(&pixmap);
       painter.setPen(QPen(QColor(0, 0, 0), 0));
       painter.setBrush(QColor(192, 192, 192));
-      painter.drawPolygon(QPolygon(QVector{
-         QPoint{  8,  0 },
-         QPoint{ 16,  8 },
-         QPoint{  8, 16 },
-         QPoint{  0,  8 },
-      }));
+      {
+         auto rect = pixmap.rect() - qt_border_jank;
+         int  rw   = rect.width();
+         int  cw   = rw / 2;
+         int  rh   = rect.height();
+         int  ch   = rh / 2;
+         painter.drawPolygon(QPolygon(QVector{
+            QPoint{ cw,             0 },
+            QPoint{ cw + (rw % 2),  0 },
+            QPoint{ rw,            ch },
+            QPoint{ rw,            ch + (rh % 2) },
+            QPoint{ cw + (rw % 2), rh },
+            QPoint{ cw,            rh },
+            QPoint{  0,            ch + (rh % 2) },
+            QPoint{  0,            ch },
+         }));
+      }
       icon = pixmap;
    }
    {

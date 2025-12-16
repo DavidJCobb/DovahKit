@@ -111,7 +111,7 @@ QModelIndex FormDialogStoryManagerNodes::_selected_qmi() const noexcept {
    auto  sel       = sel_model->selection();
    if (sel.isEmpty())
       return {};
-   return sel[0].topLeft();
+   return ((QAbstractProxyModel*)this->ui.tree->model())->mapToSource(sel[0].topLeft());
 }
 void FormDialogStoryManagerNodes::_pull_selected_node_to_ui() {
    const auto* model    = dovahkit::subsystems::story_manager::core::get().model();

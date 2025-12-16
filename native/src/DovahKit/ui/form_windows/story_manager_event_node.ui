@@ -70,11 +70,18 @@
      <property name="title">
       <string>Selected node</string>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,3">
       <item>
        <layout class="QGridLayout" name="itemFieldsLayout">
         <item row="0" column="1">
-         <widget class="QLineEdit" name="nodeEditorID"/>
+         <widget class="QLineEdit" name="nodeEditorID">
+          <property name="minimumSize">
+           <size>
+            <width>10</width>
+            <height>0</height>
+           </size>
+          </property>
+         </widget>
         </item>
         <item row="0" column="0">
          <widget class="QLabel" name="label_2">
@@ -89,10 +96,13 @@
         <item row="1" column="0" colspan="2">
          <widget class="QStackedWidget" name="itemFieldsTyped">
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="nodeFields">
            <layout class="QGridLayout" name="gridLayout_2">
+            <property name="sizeConstraint">
+             <enum>QLayout::SetMinAndMaxSize</enum>
+            </property>
             <property name="leftMargin">
              <number>0</number>
             </property>
@@ -105,7 +115,54 @@
             <property name="bottomMargin">
              <number>0</number>
             </property>
-            <item row="3" column="0" colspan="2">
+            <item row="4" column="0" colspan="2">
+             <spacer name="verticalSpacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="0">
+             <widget class="QRadioButton" name="nodeFlagRandom">
+              <property name="text">
+               <string>Random</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QRadioButton" name="nodeFlagStacked">
+              <property name="text">
+               <string>Stacked</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <spacer name="horizontalSpacer_5">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="2" column="0" colspan="3">
+             <widget class="QCheckBox" name="nodeFlagWarnIfNoStart">
+              <property name="text">
+               <string>Warn if no child quest starts</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0" colspan="3">
              <widget class="QWidget" name="nodeFieldsQuestList" native="true">
               <property name="minimumSize">
                <size>
@@ -141,7 +198,7 @@
                 </widget>
                </item>
                <item row="2" column="0">
-                <layout class="QGridLayout" name="gridLayout_4">
+                <layout class="QGridLayout" name="gridLayout_4" columnstretch="0,1">
                  <item row="1" column="0">
                   <widget class="QCheckBox" name="nodeFlagMaxConcurrent">
                    <property name="text">
@@ -156,14 +213,14 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="1">
+                 <item row="0" column="1" alignment="Qt::AlignLeft">
                   <widget class="QSpinBox" name="nodeNumToRun">
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
-                 <item row="1" column="1">
+                 <item row="1" column="1" alignment="Qt::AlignLeft">
                   <widget class="QSpinBox" name="nodeMaxConcurrent">
                    <property name="alignment">
                     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -178,44 +235,13 @@
               </layout>
              </widget>
             </item>
-            <item row="4" column="0" colspan="2">
-             <spacer name="verticalSpacer">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="2" column="0" colspan="2">
-             <widget class="QCheckBox" name="nodeFlagWarnIfNoStart">
-              <property name="text">
-               <string>Warn if no child quest starts</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QRadioButton" name="nodeFlagStacked">
-              <property name="text">
-               <string>Stacked</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QRadioButton" name="nodeFlagRandom">
-              <property name="text">
-               <string>Random</string>
-              </property>
-             </widget>
-            </item>
            </layout>
           </widget>
           <widget class="QWidget" name="questFields">
            <layout class="QGridLayout" name="gridLayout_5">
+            <property name="sizeConstraint">
+             <enum>QLayout::SetMinAndMaxSize</enum>
+            </property>
             <property name="leftMargin">
              <number>0</number>
             </property>
@@ -238,10 +264,17 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
+            <item row="0" column="1" alignment="Qt::AlignLeft">
              <widget class="QDoubleSpinBox" name="questFieldHoursUntilReset">
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0" colspan="2">
+             <widget class="QCheckBox" name="questFlagResetAfter24Hours">
+              <property name="text">
+               <string>Reset after 24 hours</string>
               </property>
              </widget>
             </item>
@@ -252,18 +285,24 @@
               </property>
               <property name="sizeHint" stdset="0">
                <size>
-                <width>274</width>
-                <height>197</height>
+                <width>0</width>
+                <height>0</height>
                </size>
               </property>
              </spacer>
             </item>
-            <item row="1" column="0" colspan="2">
-             <widget class="QCheckBox" name="questFlagResetAfter24Hours">
-              <property name="text">
-               <string>Reset after 24 hours</string>
+            <item row="0" column="2">
+             <spacer name="horizontalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
               </property>
-             </widget>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
             </item>
            </layout>
           </widget>
@@ -273,6 +312,12 @@
       </item>
       <item>
        <widget class="QGroupBox" name="groupBox_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="title">
          <string>Conditions</string>
         </property>

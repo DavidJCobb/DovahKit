@@ -23,7 +23,7 @@ class FormDialogStoryManagerNodes :
       virtual void _load_impl() override;
       virtual void _save_impl() override;
 
-      QModelIndex _selected_qmi() const noexcept;
+      QModelIndex _selected_qmi() const noexcept; // mapped from our proxy model to the SM subsystem model
       void _pull_selected_node_to_ui();
       void _push_selected_node_from_ui();
 };
