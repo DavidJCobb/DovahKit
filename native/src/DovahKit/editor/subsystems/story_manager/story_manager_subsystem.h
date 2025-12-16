@@ -4,6 +4,8 @@
 #include "helpers/singleton_ex.h"
 #include "ui/types/logging/log_item.h"
 
+class StoryManagerFormsModel;
+
 namespace dovahkit::subsystems::story_manager {
    class core;
 
@@ -29,21 +31,18 @@ namespace dovahkit::subsystems::story_manager {
 
       public:
          constexpr const datastore_type& datastore() const noexcept { return this->_datastore; }
+         constexpr const StoryManagerFormsModel* model() const noexcept { return this->_model; }
+         constexpr StoryManagerFormsModel* model() noexcept { return this->_model; }
+
+         dovah::form_stub* containing_event_node_of(const dovah::form_stub&) const noexcept;
 
          void move_node(const node& subject, const branch_node& dst_parent, const node* dst_previous);
          void move_node_within_parent(const node&, int by);
          bool delete_node(const node&);
 
-      signals:
-         void nodeDeletionImminent(const node&);
-         void nodeDeletionComplete();
-         void nodePlacementImminent(const node&, const branch_node& dst_parent, size_t at);
-         void nodePlacementComplete(const node&);
-         void resetImminent();
-         void resetComplete();
-
       protected:
          datastore_type _datastore;
+         StoryManagerFormsModel* _model = nullptr;
          struct {
             bool any_deletions_failed = false;
          } _handler_state;

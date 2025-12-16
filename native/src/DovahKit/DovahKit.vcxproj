@@ -393,6 +393,7 @@
     <ClCompile Include="editor\subsystems\papyrus\known_script.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\known_script_ptr.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\papyrus_subsystem.cpp" />
+    <ClCompile Include="editor\subsystems\story_manager\StoryManagerFormsModel.cpp" />
     <ClCompile Include="editor\subsystems\story_manager\story_manager_subsystem.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\edit_gizmo_color_scheme_manager.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\hardcoded.cpp" />
@@ -1075,6 +1076,7 @@
     <ClCompile Include="ui\form_windows\spell.cpp" />
     <ClCompile Include="ui\form_windows\static.cpp" />
     <ClCompile Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.cpp" />
+    <ClCompile Include="ui\form_windows\story_manager_event_node.cpp" />
     <ClCompile Include="ui\form_windows\talking_activator.cpp" />
     <ClCompile Include="ui\form_windows\textureset.cpp" />
     <ClCompile Include="ui\form_windows\topic.cpp" />
@@ -1949,6 +1951,8 @@
     <QtMoc Include="ui\form_windows\actor_value_info.h" />
     <QtMoc Include="editor\subsystems\story_manager\story_manager_subsystem.h" />
     <ClInclude Include="editor\subsystems\story_manager\core.h" />
+    <QtMoc Include="editor\subsystems\story_manager\StoryManagerFormsModel.h" />
+    <ClInclude Include="editor\subsystems\story_manager\passkeys\core_controls_model.h" />
     <ClInclude Include="helpers\const_forwarding_ptr.h" />
     <ClInclude Include="helpers\optionals\finite_float.h" />
     <QtMoc Include="ui\form_windows\apparatus.h" />
@@ -2144,6 +2148,7 @@
     <QtMoc Include="ui\form_windows\sound_output_model.h" />
     <QtMoc Include="ui\form_windows\spell.h" />
     <QtMoc Include="ui\form_windows\talking_activator.h" />
+    <QtMoc Include="ui\form_windows\story_manager_event_node.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsFormFilter.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsModel.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoResponseTableviewModel.h" />
@@ -2983,7 +2988,6 @@
     <QtMoc Include="widgets\DKUnreadCountBadgePaneHeader.h" />
     <QtMoc Include="widgets\DKUnreadCountBadge.h" />
     <QtMoc Include="ui\main_window\_debug_hooks\widgets\collapsible_pane.h" />
-    <ClInclude Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\_base.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\_setup.h" />
     <QtMoc Include="dovahscript\qt\DovahscriptCheckbox.h" />
@@ -3993,6 +3997,10 @@
     <None Include="ui\form_windows\_base.inl" />
     <None Include="ui\models\DKGenericListModel.inl" />
     <None Include="ui\models\DKGenericTreeModel.inl" />
+    <None Include="ui\models\DKScopedProxyModel.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="ui\types\face_tints\layer.inl" />
     <None Include="ui\types\papyrus\property_value.inl" />
     <None Include="ui\_docs\form-editing dialogs.md" />

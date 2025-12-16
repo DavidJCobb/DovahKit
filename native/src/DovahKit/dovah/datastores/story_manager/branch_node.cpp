@@ -24,6 +24,6 @@ namespace dovah::datastores::impl::story_manager {
          this->_append_during_load(passkey, subject);
          return;
       }
-      this->_insert_during_load(passkey, subject, i);
+      this->_insert_during_load(passkey, subject, i + 1);
    }
 }

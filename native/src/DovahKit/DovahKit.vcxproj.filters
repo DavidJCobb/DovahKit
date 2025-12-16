@@ -3684,6 +3684,12 @@
     <ClCompile Include="ui\main_window\_debug_hooks\models\scoped_proxy_model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\story_manager\StoryManagerFormsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\story_manager_event_node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -4980,9 +4986,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\cpuinfo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ui\main_window\_debug_hooks\qt_paint_ellipse_tests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovahscript\core\specialized_traceback.h">
@@ -9062,6 +9065,9 @@
     <ClInclude Include="ui\main_window\_debug_hooks\models\scoped_proxy_model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\story_manager\passkeys\core_controls_model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -10455,6 +10461,12 @@
     <QtMoc Include="ui\models\DKScopedProxyModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="editor\subsystems\story_manager\StoryManagerFormsModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\story_manager_event_node.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -10955,6 +10967,7 @@
     <None Include="dovah\datastores\story_manager\branch_node.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="ui\models\DKScopedProxyModel.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

@@ -3,9 +3,13 @@
 #include "dovah/datastores/story_manager/node.h"
 #include "dovah/datastores/story_manager/branch_node.h"
 #include "dovah/datastores/story_manager/leaf_node.h"
+#include "./passkeys/core_controls_model.h"
+#include "./StoryManagerFormsModel.h"
 
 namespace dovahkit::subsystems::story_manager {
    core::core() {
+      this->_model = new StoryManagerFormsModel({}, this);
+
       this->_datastore.callbacks.form_data_modified.before = [](dovah::form_stub& stub) {
          emit DovahKitCore::get().formModificationImminent(&stub);
       };
@@ -15,7 +19,9 @@ namespace dovahkit::subsystems::story_manager {
 
       auto& editor = DovahKitCore::get();
       QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
+         this->_model->_on_before_datastore_reset({});
          this->_datastore.reset();
+         this->_model->_on_after_datastore_reset({}, false);
       });
       QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, &core::_rebuild_datastore);
       if (editor.has_data()) {
@@ -36,28 +42,62 @@ namespace dovahkit::subsystems::story_manager {
       };
 
       #pragma region Callbacks into signal emissions
-         this->_datastore.callbacks.reset.before = [this]() { emit resetImminent(); };
-         this->_datastore.callbacks.reset.after  = [this]() { emit resetComplete(); };
+         this->_datastore.callbacks.reset.before = [this]() {
+            this->_model->_on_before_datastore_reset({});
+         };
+         this->_datastore.callbacks.reset.after  = [this]() {
+            this->_model->_on_after_datastore_reset({}, false);
+         };
          
-         this->_datastore.callbacks.node_deleted.before = [this](const node& a) { emit nodeDeletionImminent(a); };
-         this->_datastore.callbacks.node_deleted.after  = [this](uint32_t form_id) { emit nodeDeletionComplete(); };
+         this->_datastore.callbacks.node_deleted.before = [this](const node& subject) {
+            this->_model->_on_node_deletion_imminent({}, subject);
+         };
+         this->_datastore.callbacks.node_deleted.after  = [this](uint32_t form_id) {
+            this->_model->_on_node_deletion_complete({});
+         };
          
-         this->_datastore.callbacks.node_placed.before = [this](const node& a, const branch_node& b, size_t c) { emit nodePlacementImminent(a, b, c); };
-         this->_datastore.callbacks.node_placed.after  = [this](const node& a) { emit nodePlacementComplete(a); };
+         this->_datastore.callbacks.node_placed.before = [this](const node& subject, const branch_node& dst_parent, size_t dst_pos) {
+            this->_model->_on_node_placement_imminent({}, subject, dst_parent, dst_pos);
+         };
+         this->_datastore.callbacks.node_placed.after  = [this](const node& subject) {
+            this->_model->_on_node_placement_complete({}, subject);
+         };
       #pragma endregion
+   }
+   core::~core() {
    }
 
    void core::_rebuild_datastore() {
+      this->_model->_on_before_datastore_reset({});
       auto* lo = DovahKitCore::get().get_file_load_order();
       if (!lo) {
          this->_datastore.reset();
+         this->_model->_on_after_datastore_reset({}, false);
          return;
       }
       this->_datastore.build(*lo);
       this->_datastore.normalize_for_editing();
+      this->_model->_on_after_datastore_reset({}, true);
       //
       // TODO: If we add warnings for the datastore to emit, then pass them to the Log Window here.
       //
+   }
+
+   dovah::form_stub* core::containing_event_node_of(const dovah::form_stub& stub) const noexcept {
+      switch (stub.form_type) {
+         case dovah::form_type::story_branch_node:
+         case dovah::form_type::story_quest_node:
+            break;
+         default:
+            return nullptr;
+      }
+      auto* node = this->_datastore.node_by_stub(stub);
+      if (!node)
+         return nullptr;
+      while (node = node->parent)
+         if (node->stub.form_type == dovah::form_type::story_event_node)
+            return &node->stub;
+      return nullptr;
    }
 
    void core::move_node(const node& subject, const branch_node& dst_parent, const node* dst_previous) {

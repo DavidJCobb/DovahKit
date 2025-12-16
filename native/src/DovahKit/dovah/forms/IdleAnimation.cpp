@@ -450,6 +450,7 @@ namespace dovah::loaded_forms {
             };
             _copy_candidacies(this->_as_action_root.masters, copy->_as_action_root.masters);
             _copy_candidacies(this->_as_action_root.active,  copy->_as_action_root.active);
+            copy->_first_seen_anam_position = this->_first_seen_anam_position;
          } else {
             //
             // We're duplicating this form. We should not preserve action root status: 

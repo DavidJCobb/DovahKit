@@ -1,6 +1,7 @@
 #include "./story_manager.h"
 #include <cassert>
 #include <memory>
+#include <set>
 #include "helpers/vectors/move_item_to_index.h"
 #include "helpers/vectors/move_item_within.h"
 #include "../data/hardcoded_form_ids.h"
@@ -107,63 +108,9 @@ namespace dovah::datastores {
                return form_stub_helpers::winning_record_loads_after(x->stub, y->stub);
             }
          );
+         std::set<node*> already_placed_nodes;
          for(auto* current_node : sorted) {
-            auto& bs     = current_node->_get_build_state({});
-            auto  loaded = current_node->stub.load();
-            if (auto* casted = dynamic_cast<loaded_forms::mixins::StoryManagerNode*>(&*loaded)) {
-               form_stub* parent_stub   = casted->parent.get_form_stub();
-               form_stub* previous_stub = casted->previous_sibling.get_form_stub();
-
-               bool previous_is_intentionally_null = !casted->has_previous_sibling;
-               bs.previous_intentionally_null = previous_is_intentionally_null;
-               bs.previous_ended_up_null      = false;
-
-               branch_node* parent_node   = nullptr;
-               node*        previous_node = nullptr;
-               if (parent_stub && _is_branch_node_type(parent_stub->form_type)) {
-                  auto* pn = this->node_by_stub(*parent_stub);
-                  if (pn) {
-                     parent_node = dynamic_cast<branch_node*>(pn);
-                     assert(parent_node != nullptr && "If the parent form's type is 'branch,' how is the parent node's type anything else?!");
-                  }
-               }
-               if (previous_stub) {
-                  if (_is_form_type_relevant(previous_stub->form_type))
-                     previous_node = this->node_by_stub(*previous_stub);
-                  else
-                     previous_stub = nullptr;
-               }
-               bs.previous_ended_up_null = previous_node == nullptr;
-
-               bool unordered = false;
-               if (loaded->stub.form_type == form_type::story_event_node) {
-                  if (this->root) {
-                     parent_node = this->root;
-                     unordered   = true;
-                  }
-               }
-               if (unordered) {
-                  //
-                  // TODO: Only append an event-node to the root if the event-node has a 
-                  // valid event ID. Otherwise, we'll need to put it somewhere else.
-                  //
-                  assert(this->root != nullptr);
-                  this->root->_append_during_load({}, *current_node);
-                  //
-                  // The CK would here also modify the previous-sibling relationships 
-                  // to match the insertion order. We're... not going to do that. No 
-                  // need.
-                  //
-               } else {
-                  if (previous_node) {
-                     parent_node->_insert_during_load({}, *current_node, *previous_node);
-                  } else if (previous_is_intentionally_null) {
-                     parent_node->_insert_during_load({}, *current_node, 0);
-                  } else {
-                     parent_node->_append_during_load({}, *current_node);
-                  }
-               }
-            }
+            this->_place_node(already_placed_nodes, *current_node);
          }
       }
    }
@@ -201,6 +148,82 @@ namespace dovah::datastores {
    }
    void story_manager::reset() {
       this->_clear();
+   }
+
+   void story_manager::_place_node(std::set<node*>& already_placed_nodes, node& current_node) {
+      if (already_placed_nodes.contains(&current_node))
+         return;
+      already_placed_nodes.insert(&current_node);
+
+      auto& bs     = current_node._get_build_state({});
+      auto  loaded = current_node.stub.load();
+      if (auto* casted = dynamic_cast<loaded_forms::mixins::StoryManagerNode*>(&*loaded)) {
+         form_stub* parent_stub   = casted->parent.get_form_stub();
+         form_stub* previous_stub = casted->previous_sibling.get_form_stub();
+
+         bool previous_is_intentionally_null = !casted->has_previous_sibling;
+         bs.previous_intentionally_null = previous_is_intentionally_null;
+         bs.previous_ended_up_null      = false;
+
+         branch_node* parent_node   = nullptr;
+         node*        previous_node = nullptr;
+         if (parent_stub && _is_branch_node_type(parent_stub->form_type)) {
+            auto* pn = this->node_by_stub(*parent_stub);
+            if (pn) {
+               parent_node = dynamic_cast<branch_node*>(pn);
+               assert(parent_node != nullptr && "If the parent form's type is 'branch,' how is the parent node's type anything else?!");
+            }
+         }
+         if (previous_stub) {
+            if (_is_form_type_relevant(previous_stub->form_type))
+               previous_node = this->node_by_stub(*previous_stub);
+            else
+               previous_stub = nullptr;
+         }
+         bs.previous_ended_up_null = previous_node == nullptr;
+
+         // Bethesda recursively calls TESForm::InitItemImpl, and this influences 
+         // how nodes are ordered.
+         if (parent_node) {
+            _place_node(already_placed_nodes, *parent_node);
+         }
+         if (previous_node) {
+            _place_node(already_placed_nodes, *previous_node);
+         }
+
+         bool unordered = false;
+         if (loaded->stub.form_type == form_type::story_event_node) {
+            if (this->root) {
+               parent_node = this->root;
+               unordered   = true;
+            }
+         }
+         if (unordered) {
+            //
+            // TODO: Only append an event-node to the root if the event-node has a 
+            // valid event ID. Otherwise, we'll need to put it somewhere else.
+            //
+            assert(this->root != nullptr);
+            this->root->_append_during_load({}, current_node);
+            //
+            // The CK would here also modify the previous-sibling relationships 
+            // to match the insertion order. We're... not going to do that. No 
+            // need.
+            //
+         } else if (parent_node) {
+            if (previous_node) {
+               parent_node->_insert_during_load({}, current_node, *previous_node);
+            } else if (previous_is_intentionally_null) {
+               parent_node->_insert_during_load({}, current_node, 0);
+            } else {
+               parent_node->_append_during_load({}, current_node);
+            }
+         } else {
+            //
+            // TODO: If `current_node != this->root`, warn.
+            //
+         }
+      }
    }
 
    #pragma region Handlers for events occurring outside the datastore

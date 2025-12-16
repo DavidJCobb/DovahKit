@@ -91,6 +91,7 @@
 #include "../ui/form_windows/sound_output_model.h"
 #include "../ui/form_windows/spell.h"
 #include "../ui/form_windows/static.h"
+#include "../ui/form_windows/story_manager_event_node.h"
 #include "../ui/form_windows/talking_activator.h"
 #include "../ui/form_windows/textureset.h"
 #include "../ui/form_windows/topic.h"
@@ -106,6 +107,10 @@
 #include "../ui/form_group_windows/camera_path/CameraPathsDialog.h"
 #include "../ui/form_group_windows/idle/IdleAnimationsDialog.h"
 #include "ui/main_window.h" // MainWindow::get
+
+// Opening the window for an SMQN or SMBN
+#include "editor/subsystems/story_manager/StoryManagerFormsModel.h"
+#include "editor/subsystems/story_manager/core.h"
 
 namespace {
    template<typename T> QDialog* _make(dovah::form_stub& f, QWidget* p) {
@@ -199,6 +204,7 @@ namespace {
       std::pair{ dovah::form_type::sound_output_model, _make<FormDialogSoundOutputModel> },
       std::pair{ dovah::form_type::spell,             _make<FormDialogSpell> },
       std::pair{ dovah::form_type::statik,            _make<FormDialogStatic> },
+      std::pair{ dovah::form_type::story_event_node,  _make<FormDialogStoryManagerNodes> },
       std::pair{ dovah::form_type::talking_activator, _make<FormDialogTalkingActivator> },
       std::pair{ dovah::form_type::texture_set,       _make<FormDialogTextureSet> },
       std::pair{ dovah::form_type::topic,             _make<FormDialogTopic> },
@@ -314,6 +320,36 @@ void open_edit_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
       }
       return nullptr;
    };
+
+   switch (stub.form_type) {
+      case dovah::form_type::story_branch_node:
+      case dovah::form_type::story_quest_node:
+         {
+            const auto& sm         = dovahkit::subsystems::story_manager::core::get_or_create();
+            auto*       event_stub = sm.containing_event_node_of(stub);
+            if (event_stub) {
+               open_edit_dialog_for_form(*event_stub);
+               auto* dialog = qobject_cast<FormDialogStoryManagerNodes*>(_get_extant_dialog(*event_stub));
+               if (dialog) {
+                  dialog->focusForm(stub);
+                  return;
+               } else {
+                  QMessageBox::information(
+                     parent,
+                     QObject::tr("Error"),
+                     QObject::tr("Failed to open the dialog for this form's containing Story Manager Event Node.")
+                  );
+               }
+            } else {
+               QMessageBox::information(
+                  parent,
+                  QObject::tr("Error"),
+                  QObject::tr("This form doesn't have a containing Story Manager Event Node. We don't have the UI needed to display it.")
+               );
+            }
+         }
+         return;
+   }
 
    //
    // First, let's check if there's already a window for this form. If so, we should just 

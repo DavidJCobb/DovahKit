@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include <unordered_map>
+#include <set>
 #include <string_view>
 #include <vector>
 #include "../form_types.h"
@@ -65,6 +66,10 @@ namespace dovah::datastores {
          void normalize_for_editing(); // call immediately after `build` if it suits your use case. does not emit callbacks.
          void reset();
          
+      protected:
+         void _place_node(std::set<node*>& already_placed_nodes, node&);
+
+      public:
          #pragma region Handlers for events occurring outside the datastore
             void on_before_form_fully_deleted(form_stub&); // only call if the form is actually deleted, not merely flagged as "deleted by override"
 
