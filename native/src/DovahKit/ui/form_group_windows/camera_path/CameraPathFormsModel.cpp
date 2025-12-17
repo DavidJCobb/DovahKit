@@ -86,13 +86,11 @@ CameraPathFormsModel::CameraPathFormsModel(QObject* parent) : QAbstractItemModel
             if (subject.parent) {
                auto&  parent_prior = *subject.parent;
                size_t from = parent_prior.index_of_child(subject);
-               auto to        = index;
                auto qmi_prior = _qmi_for_item(parent_prior);
                auto qmi_after = _qmi_for_item(parent_after);
-               if (to >= from)
-                  ++to;
                this->_callback_state.last_node_placement_was_an_insertion = false;
-               this->beginMoveRows(qmi_prior, from, from, qmi_after, to);
+               bool result = this->beginMoveRows(qmi_prior, from, from, qmi_after, index);
+               assert(result && "If we're allowing a change but Qt isn't, then something is going wrong.");
             } else {
                this->_callback_state.last_node_placement_was_an_insertion = true;
                this->beginInsertRows(_qmi_for_item(parent_after), index, index);

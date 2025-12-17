@@ -1,4 +1,9 @@
 #include "./StoryManagerFormsModel.h"
+#pragma region Drag and drop
+   #include <QByteArray>
+   #include <QDataStream>
+   #include <QMimeData>
+#pragma endregion
 #include "./story_manager_subsystem.h"
 #include "./passkeys/core_controls_model.h"
 #include "dovah/datastores/story_manager/branch_node.h"
@@ -12,6 +17,10 @@
 #include "editor/helpers/story_event_name.h"
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
+
+namespace {
+   constexpr const char* const mime_type = "application/dovah-kit.story-manager-forms-model.drag";
+}
 
 StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QObject* parent) : QAbstractItemModel(parent) {
    this->_make_icons();
@@ -318,6 +327,48 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
    }
 #pragma endregion
 
+void StoryManagerFormsModel::_extract_drag_content(const QMimeData& mime, drag_content& dst) const {
+   dst = {};
+
+   QByteArray  data = mime.data(mime_type);
+   QDataStream stream(&data, QIODevice::ReadOnly);
+   {  // Verify that this is an internal move.
+      std::intptr_t this_pointer;
+      stream >> this_pointer;
+      if ((StoryManagerFormsModel*)this_pointer != this)
+         return;
+   }
+
+   auto& ds = _get_datastore();
+
+   {
+      auto& editor = DovahKitCore::get();
+      while (!stream.atEnd()) {
+         bool is_quest = false;
+         stream >> is_quest;
+
+         const node* subject = nullptr;
+         {
+            uint32_t form_id = 0;
+            stream >> form_id;
+            if (form_id)
+               if (auto* stub = editor.get_form(form_id))
+                  subject = ds.node_by_stub(*stub);
+         }
+         if (is_quest) {
+            int row = 0;
+            stream >> row;
+            if (subject && row >= 0) {
+               dst.quests.push_back({ subject, (size_t)row });
+            }
+         } else {
+            if (subject)
+               dst.nodes.push_back(subject);
+         }
+      }
+   }
+}
+
 #pragma region QAbstractItemModel overrides
    #pragma region Hierarchy
       /*virtual*/ QModelIndex StoryManagerFormsModel::index(int row, int column, const QModelIndex& parent_qmi) const /*override*/ {
@@ -471,6 +522,185 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
       }
       return {};
    }
+   
+   #pragma region Drag and drop
+      #pragma region Whole-model queries
+         /*virtual*/ QStringList StoryManagerFormsModel::mimeTypes() const /*override*/ {
+            return { QString::fromLatin1(mime_type) };
+         }
+         /*virtual*/ Qt::DropActions StoryManagerFormsModel::supportedDropActions() const /*override*/ {
+            return Qt::DropAction::CopyAction | Qt::DropAction::MoveAction;
+         }
+      #pragma endregion
+      /*virtual*/ QMimeData* StoryManagerFormsModel::mimeData(const QModelIndexList& indices) const /*override*/ {
+         if (indices.count() <= 0)
+            return nullptr;
+         QByteArray  data;
+         QDataStream stream(&data, QIODevice::WriteOnly);
+         //
+         // Stream begins with our `this` pointer. The pointer is used only for equality 
+         // checks on drop (i.e. no moving/copying procedure data across packages) and is 
+         // never dereferenced.
+         //
+         stream << (intptr_t)this;
+         //
+         for (const QModelIndex& qmi : indices) {
+            if (!qmi.isValid())
+               continue;
+            const auto* n = _node_for_qmi(qmi);
+            if (n) {
+               stream << false;
+               stream << n->stub.formID;
+            } else {
+               auto* quest = _quest_for_qmi(qmi);
+               if (!quest)
+                  continue;
+               auto* parent = (const node*)qmi.internalPointer();
+               stream << true;
+               stream << parent->stub.formID;
+               stream << (int)qmi.row();
+            }
+         }
+         //
+         QMimeData* mime = new QMimeData();
+         mime->setData(mime_type, data);
+         return mime;
+      }
+      /*virtual*/ bool StoryManagerFormsModel::canDropMimeData(const QMimeData* mime, Qt::DropAction action, int row, int column, const QModelIndex& parent) const /*override*/ {
+         const auto* dst_parent_node = _node_for_qmi(parent);
+         if (!dst_parent_node)
+            return false;
+
+         drag_content dragged;
+         this->_extract_drag_content(*mime, dragged);
+         if (!dragged.nodes.size() && !dragged.quests.size())
+            return true;
+
+         if (!dragged.nodes.empty()) {
+            const auto* dst_branch_node = dynamic_cast<const branch_node*>(dst_parent_node);
+            if (!dst_branch_node)
+               return false;
+            auto& ds = _get_datastore();
+            for (const auto* subject : dragged.nodes) {
+               if (subject == ds.root)
+                  return false;
+               if (!ds.is_node_movement_legal(*subject, *dst_branch_node, nullptr))
+                  return false;
+            }
+         } else if (!dragged.quests.empty()) {
+            return dst_parent_node->stub.form_type == dovah::form_type::story_quest_node;
+         }
+
+         return true;
+      }
+      /*virtual*/ bool StoryManagerFormsModel::dropMimeData(const QMimeData* mime, Qt::DropAction action, int row, int column, const QModelIndex& parent) /*override*/ {
+         if (!this->canDropMimeData(mime, action, row, column, parent))
+            return false;
+
+         const auto* dst_parent_node = _node_for_qmi(parent);
+         if (!dst_parent_node)
+            return false;
+
+         drag_content dragged;
+         this->_extract_drag_content(*mime, dragged);
+         if (dragged.nodes.empty() && dragged.quests.empty())
+            return true;
+
+         if (dragged.nodes.empty()) {
+            //
+            // Drag quests.
+            //
+            if (dst_parent_node->stub.form_type != dovah::form_type::story_quest_node)
+               return false;
+            auto& dst_list = [this, dst_parent_node]() -> auto& {
+               auto& cached = this->_cache.nodes[(node*)dst_parent_node];
+               if (!std::holds_alternative<cached_quest_data>(cached.typed))
+                  cached.typed.emplace<cached_quest_data>();
+               return std::get<cached_quest_data>(cached.typed).quests;
+            }();
+
+            // We identify quests by their row. If we're moving multiple quests within a 
+            // single SMQN, the rows will change. I don't think QAbstractItemModel makes 
+            // any guarantees about the sorting of dragged items, so we'll decline to 
+            // rely on rows in favor of quest pointers.
+            struct single_drag {
+               const node*        quest_list_node = nullptr;
+               quest_node*        quest_form_node = nullptr;
+               cached_quest_data* list_node_data  = nullptr;
+            };
+            std::vector<single_drag> quests_to_move;
+            {
+               quests_to_move.reserve(dragged.quests.size());
+               for (auto& item : dragged.quests) {
+                  const node* src_parent = item.first;
+                  assert(src_parent != nullptr);
+                  auto*       src_cached = _get_cached_quest_data(*const_cast<node*>(src_parent));
+                  assert(src_cached != nullptr);
+                  const int   src_row    = item.second;
+
+                  auto& src_list = src_cached->quests;
+                  assert(src_row < src_list.size());
+                  quests_to_move.push_back({
+                     .quest_list_node = src_parent,
+                     .quest_form_node = src_list[src_row].get(),
+                     .list_node_data  = src_cached,
+                  });
+               }
+            }
+            for (auto& item : quests_to_move) {
+               auto* src_parent = item.quest_list_node;
+               auto& src_list   = item.list_node_data->quests;
+
+               int src_row = -1;
+               for (size_t i = 0; i < src_list.size(); ++i) {
+                  if (src_list[i].get() == item.quest_form_node) {
+                     src_row = i;
+                     break;
+                  }
+               }
+               assert(src_row >= 0);
+
+               int dst_row = row;
+               if (src_parent == dst_parent_node && dst_row > src_row) {
+                  --dst_row;
+               }
+               this->beginMoveRows(_qmi_for_node(*src_parent), src_row, src_row, parent, dst_row);
+               auto item_ptr = std::move(src_list[src_row]);
+               src_list.erase(src_list.begin() + src_row);
+               dst_list.insert(dst_list.begin() + dst_row, std::move(item_ptr));
+               this->endMoveRows();
+
+               ++row;
+            }
+         } else {
+            const auto* dst_branch_node = dynamic_cast<const branch_node*>(dst_parent_node);
+            if (!dst_branch_node)
+               return false;
+            assert(row <= dst_branch_node->children.size());
+            auto& sm = dovahkit::subsystems::story_manager::core::get();
+            for (auto it = dragged.nodes.rbegin(); it != dragged.nodes.rend(); ++it) {
+               const node*        subject    = *it;
+               const branch_node* src_parent = subject->parent;
+
+               int dst_row = row;
+               if (src_parent == dst_parent_node && dst_row > src_parent->index_of_child(*subject)) {
+                  --dst_row;
+               }
+
+               const node* previous = nullptr;
+               if (row < dst_branch_node->children.size()) {
+                  if (row > 0)
+                     previous = dst_branch_node->children[row - 1];
+               } else if (!dst_branch_node->children.empty()) {
+                  previous = dst_branch_node->children.back();
+               }
+               sm.move_node(*subject, *dst_branch_node, previous);
+               ++row;
+            }
+         }
+         return true;
+      }
+   #pragma endregion
 #pragma endregion
 
 bool StoryManagerFormsModel::canMoveUp(const QModelIndex& qmi) const noexcept {
@@ -756,10 +986,8 @@ void StoryManagerFormsModel::deleteNode(const QModelIndex& sm_node_qmi) {
          auto   src_parent_qmi = _qmi_for_node(*subject.parent);
          size_t from           = subject.parent->index_of_child(subject);
          assert(from != branch_node::index_of_none);
-         size_t to = dst_pos;
-         if (to > from)
-            --to;
-         this->beginMoveRows(src_parent_qmi, from, from, dst_parent_qmi, to);
+         bool result = this->beginMoveRows(src_parent_qmi, from, from, dst_parent_qmi, dst_pos);
+         assert(result && "If we're allowing a change but Qt isn't, then something is going wrong.");
       } else {
          this->_callback_state.last_placement_was_insertion = true;
          this->beginInsertRows(dst_parent_qmi, dst_pos, dst_pos);

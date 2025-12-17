@@ -49,6 +49,12 @@ FormDialogStoryManagerNodes::FormDialogStoryManagerNodes(dovah::form_stub& stub,
       this->ui.breadcrumbs->setModel(proxy);
       this->ui.breadcrumbs->setSegmentNameRole(StoryManagerFormsModel::EditorIDRole);
 
+      this->ui.tree->setDragDropMode(QAbstractItemView::DragDropMode::InternalMove);
+      this->ui.tree->setDragDropOverwriteMode(false);
+      this->ui.tree->setDragEnabled(true);
+      this->ui.tree->setAcceptDrops(true);
+      this->ui.tree->setDropIndicatorShown(true);
+
       auto* sel_model = this->ui.tree->selectionModel();
       QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &FormDialogStoryManagerNodes::_pull_selected_node_to_ui);
       QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this](const QItemSelection& sel) {

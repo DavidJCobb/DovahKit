@@ -80,6 +80,11 @@ class StoryManagerFormsModel : public QAbstractItemModel {
          > typed;
       };
 
+      struct drag_content {
+         std::vector<const node*> nodes;
+         std::vector<std::pair<const node*, size_t>> quests;
+      };
+
    public:
       StoryManagerFormsModel(passkeys::core_controls_model, QObject* parent = nullptr);
 
@@ -109,6 +114,8 @@ class StoryManagerFormsModel : public QAbstractItemModel {
          void _recache_node(const node&);
       #pragma endregion
 
+      void _extract_drag_content(const QMimeData&, drag_content&) const;
+
    public:
       #pragma region QAbstractItemModel overrides
          #pragma region Hierarchy
@@ -121,6 +128,16 @@ class StoryManagerFormsModel : public QAbstractItemModel {
          virtual Qt::ItemFlags flags(const QModelIndex&) const override;
 
          virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+         
+         #pragma region Drag and drop
+            #pragma region Whole-model queries
+               virtual QStringList mimeTypes() const override;
+               virtual Qt::DropActions supportedDropActions() const override;
+            #pragma endregion
+            virtual QMimeData* mimeData(const QModelIndexList&) const override;
+            virtual bool canDropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) const override;
+            virtual bool dropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) override;
+         #pragma endregion
       #pragma endregion
 
       bool canMoveUp(const QModelIndex&) const noexcept;
