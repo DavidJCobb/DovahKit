@@ -24,7 +24,16 @@ namespace dovah::loaded_forms {
             public:
                form_reference_t form; // NNAM -> QUST
                flags_t          flags = 0; // FNAM
-               float            hours_until_reset = 0; // RNAM
+               float            raw_hours_until_reset = 0; // RNAM
+
+               // I wonder if Bethesda intended to serialize this property as "days until reset," 
+               // but got the conversion backwards.
+               constexpr float get_hours_until_reset() const noexcept {
+                  return this->raw_hours_until_reset / 24.0F;
+               }
+               constexpr void set_hours_until_reset(float v) {
+                  this->raw_hours_until_reset = v * 24.0F;
+               }
          };
 
       public:

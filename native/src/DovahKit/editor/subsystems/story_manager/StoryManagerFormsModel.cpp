@@ -202,7 +202,7 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
                updated.stub                 = dst.stub;
                updated.editor_id            = QString::fromStdString(dst.stub->editorID);
                updated.reset_after_24_hours = src.flags & dovah::loaded_forms::StoryManagerQuestNode::quest_entry::flag::reset_after_24_hours;
-               updated.hours_until_reset    = src.hours_until_reset * 24.0F;
+               updated.hours_until_reset    = src.get_hours_until_reset();
                if (updated != dst) {
                   dst = updated;
 
@@ -239,7 +239,7 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
          dst.stub                 = src.form.get_form_stub();
          dst.editor_id            = QString::fromStdString(dst.stub->editorID);
          dst.reset_after_24_hours = src.flags & dovah::loaded_forms::StoryManagerQuestNode::quest_entry::flag::reset_after_24_hours;
-         dst.hours_until_reset    = src.hours_until_reset * 24.0F;
+         dst.hours_until_reset    = src.get_hours_until_reset();
       }
       if (!clobber_sans_signals) {
          this->beginInsertRows(parent_qmi, 0, cqd.quests.size() - 1);
@@ -575,7 +575,7 @@ void StoryManagerFormsModel::setQuestProperties(const QModelIndex& quest_qmi, co
 
          auto& src_item = dst;
          auto& dst_item = loaded->quests[quest_qmi.row()];
-         dst_item.hours_until_reset = src_item.hours_until_reset;
+         dst_item.set_hours_until_reset(src_item.hours_until_reset);
          cobb::edit_bit(dst_item.flags, dovah::loaded_forms::StoryManagerQuestNode::quest_entry::flag::reset_after_24_hours, src_item.reset_after_24_hours);
 
          n->stub.set_edited(true);
@@ -632,7 +632,7 @@ void StoryManagerFormsModel::_update_quest_node_quest_list(node& n) {
          auto& src_item = *src_list[i];
          auto& dst_item = dst_list[i];
          dst_item.form.set(*loaded, src_item.stub);
-         dst_item.hours_until_reset = src_item.hours_until_reset;
+         dst_item.set_hours_until_reset(src_item.hours_until_reset);
          cobb::edit_bit(dst_item.flags, dovah::loaded_forms::StoryManagerQuestNode::quest_entry::flag::reset_after_24_hours, src_item.reset_after_24_hours);
       }
       if (src_size < dst_size) {

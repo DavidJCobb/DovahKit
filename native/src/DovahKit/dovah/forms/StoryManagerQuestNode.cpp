@@ -46,7 +46,7 @@ namespace dovah::loaded_forms {
                record.next_subrecord();
             }
             if (auto& subrecord = record.get_current_subrecord(); subrecord.signature() == 'RNAM') {
-               subrecord.read(item.hours_until_reset);
+               subrecord.read(item.raw_hours_until_reset);
                record.next_subrecord();
             }
          }
@@ -99,7 +99,7 @@ namespace dovah::loaded_forms {
          for (size_t i = 0; i < size; ++i) {
             dst_list[i].form.set(*copy, src_list[i].form);
             dst_list[i].flags = src_list[i].flags;
-            dst_list[i].hours_until_reset = src_list[i].hours_until_reset;
+            dst_list[i].raw_hours_until_reset = src_list[i].raw_hours_until_reset;
          }
       }
    }
@@ -121,9 +121,9 @@ namespace dovah::loaded_forms {
                subrecord.write(item.flags);
                subrecord.close();
             }
-            if (item.hours_until_reset) {
+            if (item.raw_hours_until_reset) {
                auto& subrecord = record.open_next_subrecord('RNAM');
-               subrecord.write(item.hours_until_reset);
+               subrecord.write(item.raw_hours_until_reset);
                subrecord.close();
             }
          }
