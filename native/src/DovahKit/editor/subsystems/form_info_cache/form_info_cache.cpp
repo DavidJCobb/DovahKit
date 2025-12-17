@@ -50,6 +50,20 @@ namespace {
    >;
 }
 
+// Pass your macro name as an argument. The macro params should resemble:
+//    #define DO(name, signal_name, ...)
+// The macro should be variadic so we can add extra info without your macro choking.
+#define FOR_EACH_CACHED_FORM_TYPE(DO) \
+   DO(actor_base,   cachedActorBaseChanged) \
+   DO(faction,      cachedFactionChanged) \
+   DO(head_part,    cachedHeadPartChanged) \
+   DO(magic_effect, cachedMagicEffectChanged) \
+   DO(music_track,  cachedMusicTrackChanged) \
+   DO(quest,        cachedQuestChanged) \
+   DO(package,      cachedPackageChanged) \
+   DO(topic,        cachedTopicChanged) \
+   DO(voicetype,    cachedVoicetypeChanged)
+
 namespace {
    using all_form_classes_of_interest = dovah::all_loaded_form_types::filter_types<[]<typename Current>() -> bool {
       {
@@ -118,33 +132,21 @@ namespace {
       Functor&& functor
    ) {
       using core = dovahkit::subsystems::form_info_cache::core;
-      functor(cache.by_form_type.actor_bases,   &core::cachedActorBaseChanged);
-      functor(cache.by_form_type.factions,      &core::cachedFactionChanged);
-      functor(cache.by_form_type.head_parts,    &core::cachedHeadPartChanged);
-      functor(cache.by_form_type.magic_effects, &core::cachedMagicEffectChanged);
-      functor(cache.by_form_type.music_tracks,  &core::cachedMusicTrackChanged);
-      functor(cache.by_form_type.quests,        &core::cachedQuestChanged);
-      functor(cache.by_form_type.packages,      &core::cachedPackageChanged);
-      functor(cache.by_form_type.topics,        &core::cachedTopicChanged);
-      functor(cache.by_form_type.voicetypes,    &core::cachedVoicetypeChanged);
+      #pragma push_macro("X")
+      #undef X
+      #define X(name, signal_name, ...) functor(cache.by_form_type.name##s, &core::signal_name);
+      FOR_EACH_CACHED_FORM_TYPE(X)
+      #pragma pop_macro("X")
    }
 
    template<dovah::form_type FormType>
    auto& _cache_by_form_type(dovahkit::subsystems::form_info_cache::entire_cache& cache) {
-      #pragma push_macro("CASE")
-      #undef CASE
-      #define CASE(name) \
+      #pragma push_macro("X")
+      #undef X
+      #define X(name, ...) \
          if constexpr (FormType == dovah::form_type::name) return cache.by_form_type.name##s;
-      CASE(actor_base);
-      CASE(faction);
-      CASE(head_part);
-      CASE(magic_effect);
-      CASE(music_track);
-      CASE(quest);
-      CASE(package);
-      CASE(topic);
-      CASE(voicetype);
-      #pragma pop_macro("CASE")
+      FOR_EACH_CACHED_FORM_TYPE(X);
+      #pragma pop_macro("X")
       std::unreachable();
    }
 
@@ -627,21 +629,13 @@ namespace dovahkit::subsystems::form_info_cache {
    }
 
    #pragma push_macro("MAKE_GETTER")
-   #define MAKE_GETTER(name) \
+   #define MAKE_GETTER(name, ...) \
       const cached_data::by_form::name* core::get_##name##_info(const dovah::form_stub& stub) const { \
          if (stub.form_type != dovah::form_type::name) \
             return nullptr; \
          return this->_cache->by_form_type.name##s.get(stub); \
       }
-   MAKE_GETTER(actor_base);
-   MAKE_GETTER(faction);
-   MAKE_GETTER(head_part);
-   MAKE_GETTER(magic_effect);
-   MAKE_GETTER(music_track);
-   MAKE_GETTER(quest);
-   MAKE_GETTER(package);
-   MAKE_GETTER(topic);
-   MAKE_GETTER(voicetype);
+   FOR_EACH_CACHED_FORM_TYPE(MAKE_GETTER)
    #undef MAKE_GETTER
    #pragma pop_macro("MAKE_GETTER")
 
