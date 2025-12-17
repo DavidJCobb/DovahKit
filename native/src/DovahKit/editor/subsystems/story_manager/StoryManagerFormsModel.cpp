@@ -618,6 +618,13 @@ void StoryManagerFormsModel::_extract_drag_content(const QMimeData& mime, drag_c
                   cached.typed.emplace<cached_quest_data>();
                return std::get<cached_quest_data>(cached.typed).quests;
             }();
+            if (row < 0) {
+               //
+               // Dragged directly onto the SMQN.
+               //
+               row = dst_list.size();
+            }
+            assert(row <= dst_list.size());
 
             // We identify quests by their row. If we're moving multiple quests within a 
             // single SMQN, the rows will change. I don't think QAbstractItemModel makes 
@@ -676,6 +683,12 @@ void StoryManagerFormsModel::_extract_drag_content(const QMimeData& mime, drag_c
             const auto* dst_branch_node = dynamic_cast<const branch_node*>(dst_parent_node);
             if (!dst_branch_node)
                return false;
+            if (row < 0) {
+               //
+               // Dragged directly onto the SM*N.
+               //
+               row = dst_branch_node->children.size();
+            }
             assert(row <= dst_branch_node->children.size());
             auto& sm = dovahkit::subsystems::story_manager::core::get();
             for (auto it = dragged.nodes.rbegin(); it != dragged.nodes.rend(); ++it) {
