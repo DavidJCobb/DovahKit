@@ -378,6 +378,7 @@
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\music_track.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\package.cpp" />
+    <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\quest.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\topic.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\voicetype.cpp" />
     <ClCompile Include="editor\subsystems\form_info_cache\cached_data\by_form_type\_base.cpp" />
@@ -1077,6 +1078,7 @@
     <ClCompile Include="ui\form_windows\static.cpp" />
     <ClCompile Include="ui\form_windows\static\FormSubdialogStaticLODMeshes.cpp" />
     <ClCompile Include="ui\form_windows\story_manager_event_node.cpp" />
+    <ClCompile Include="ui\form_windows\story_manager_event_node\StoryManagerQuestNodeAddQuestsFilter.cpp" />
     <ClCompile Include="ui\form_windows\talking_activator.cpp" />
     <ClCompile Include="ui\form_windows\textureset.cpp" />
     <ClCompile Include="ui\form_windows\topic.cpp" />
@@ -1839,7 +1841,9 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\unexpected_subrecord_after_cnam.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\sound_descriptor\sound_file_path_too_long.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\static_collection\orphaned_instances.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\story_manager_event_node\unrecognized_event.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\story_manager_node\orphaned.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\story_manager_node\root_is_not_the_root.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\story_manager_quest_node\expected_quest_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_addendum_subrecord_too_early.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\topic_info\response_ids_are_not_unique.h" />
@@ -1932,6 +1936,7 @@
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\magic_effect.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\music_track.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\package.h" />
+    <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\quest.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\topic.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\by_form_type\_base.h" />
     <ClInclude Include="editor\subsystems\form_info_cache\cached_data\_base_macros.define.h" />
@@ -2149,6 +2154,7 @@
     <QtMoc Include="ui\form_windows\spell.h" />
     <QtMoc Include="ui\form_windows\talking_activator.h" />
     <QtMoc Include="ui\form_windows\story_manager_event_node.h" />
+    <ClInclude Include="ui\form_windows\story_manager_event_node\StoryManagerQuestNodeAddQuestsFilter.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsFormFilter.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoLinkedTopicsModel.h" />
     <ClInclude Include="ui\form_windows\topic_info\TopicInfoResponseTableviewModel.h" />

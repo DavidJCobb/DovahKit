@@ -8,6 +8,7 @@
       #include "../cached_data/by_form_type/head_part.h"
       #include "../cached_data/by_form_type/magic_effect.h"
       #include "../cached_data/by_form_type/music_track.h"
+      #include "../cached_data/by_form_type/quest.h"
       #include "../cached_data/by_form_type/package.h"
       #include "../cached_data/by_form_type/topic.h"
       #include "../cached_data/by_form_type/voicetype.h"
@@ -24,6 +25,7 @@ namespace dovahkit::subsystems::form_info_cache {
          data_cache<cached_data::by_form::head_part>    head_parts;
          data_cache<cached_data::by_form::magic_effect> magic_effects;
          data_cache<cached_data::by_form::music_track>  music_tracks;
+         data_cache<cached_data::by_form::quest>        quests;
          data_cache<cached_data::by_form::package>      packages;
          data_cache<cached_data::by_form::topic>        topics;
          data_cache<cached_data::by_form::voicetype>    voicetypes;

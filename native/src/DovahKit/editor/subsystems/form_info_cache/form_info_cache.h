@@ -23,6 +23,7 @@ namespace dovahkit::subsystems::form_info_cache {
          class head_part;
          class magic_effect;
          class music_track;
+         class quest;
          class package;
          class topic;
          class voicetype;
@@ -74,6 +75,7 @@ namespace dovahkit::subsystems::form_info_cache {
          void cachedMagicEffectChanged(dovah::form_stub&);
          void cachedModelPathChanged(dovah::form_stub&, QString old_value, QString new_value);
          void cachedMusicTrackChanged(dovah::form_stub&);
+         void cachedQuestChanged(dovah::form_stub&);
          void cachedQuestFilterChanged(dovah::form_stub&, QString old_value, QString new_value);
          void cachedPackageChanged(dovah::form_stub&);
          void cachedScriptsChanged(dovah::form_stub&);
@@ -89,6 +91,7 @@ namespace dovahkit::subsystems::form_info_cache {
          const cached_data::by_form::head_part*    get_head_part_info(const dovah::form_stub&) const;
          const cached_data::by_form::magic_effect* get_magic_effect_info(const dovah::form_stub&) const;
          const cached_data::by_form::music_track*  get_music_track_info(const dovah::form_stub&) const;
+         const cached_data::by_form::quest*        get_quest_info(const dovah::form_stub&) const;
          const cached_data::by_form::package*      get_package_info(const dovah::form_stub&) const;
          const cached_data::by_form::topic*        get_topic_info(const dovah::form_stub&) const;
          const cached_data::by_form::voicetype*    get_voicetype_info(const dovah::form_stub&) const;

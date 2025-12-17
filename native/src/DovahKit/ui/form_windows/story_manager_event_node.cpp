@@ -15,6 +15,8 @@
 #include "dovah/forms/StoryManagerEventNode.h"
 #include "dovah/forms/StoryManagerQuestNode.h"
 
+#include "./story_manager_event_node/StoryManagerQuestNodeAddQuestsFilter.h"
+
 #include "editor/open_window_for_form.h"
 
 FormDialogStoryManagerNodes::FormDialogStoryManagerNodes(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
@@ -448,14 +450,32 @@ void FormDialogStoryManagerNodes::_focus_qmi(const QModelIndex& qmi) {
 
       auto* dialog = new DKFormPickerDialog(this);
       dialog->setAllowedFormType(dovah::form_type::quest);
-      //
-      // TODO: Apply custom form filter to the dialog.
-      // 
-      //  - only allow adding a quest that's not already in the selected quest-node
-      // 
-      //  - only allow adding a quest with the correct event type? (means we need to 
-      //    add quests' events to the form-info-cache subsystem)
-      //
+      {
+         auto* filter = new StoryManagerQuestNodeAddQuestsFilter(dialog);
+         {
+            auto& sm   = dovahkit::subsystems::story_manager::core::get();
+            auto* smen = sm.containing_event_node_of(*form);
+            if (smen) {
+               auto et_opt = sm.event_type_for(*smen);
+               if (et_opt.has_value())
+                  filter->setEvent(et_opt.value());
+            }
+         }
+         {
+            auto*  model = dovahkit::subsystems::story_manager::core::get_or_create().model();
+            size_t count = model->rowCount(parent_qmi);
+            if (count > 0) {
+               std::vector<dovah::form_stub*> quests_already_present;
+               for (size_t i = 0; i < count; ++i) {
+                  auto* form = model->index(i, 0, parent_qmi).data(StoryManagerFormsModel::FormStubRole).value<dovah::form_stub*>();
+                  if (form)
+                     quests_already_present.push_back(form);
+               }
+               filter->setQuestsToExclude(std::move(quests_already_present));
+            }
+         }
+         dialog->setCustomFilter(filter);
+      }
       if (dialog->exec() == QDialog::Accepted) {
          auto* quest = dialog->formStub();
          if (quest) {

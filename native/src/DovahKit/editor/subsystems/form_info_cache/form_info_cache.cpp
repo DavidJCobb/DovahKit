@@ -38,6 +38,7 @@ namespace {
       dovahkit::subsystems::form_info_cache::cached_data::by_form::magic_effect,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::music_track,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::package,
+      dovahkit::subsystems::form_info_cache::cached_data::by_form::quest,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::topic,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::voicetype
    >;
@@ -93,6 +94,23 @@ namespace {
       return data_consuming_whole_records::for_each_until_true<[]<typename T>() {
          return T::form_type_is_of_interest(FormType);
       }>();
+   }
+
+   template<typename Functor>
+   void _for_each_form_type_cache(
+      dovahkit::subsystems::form_info_cache::entire_cache& cache,
+      Functor&& functor
+   ) {
+      using core = dovahkit::subsystems::form_info_cache::core;
+      functor(cache.by_form_type.actor_bases,   &core::cachedActorBaseChanged);
+      functor(cache.by_form_type.factions,      &core::cachedFactionChanged);
+      functor(cache.by_form_type.head_parts,    &core::cachedHeadPartChanged);
+      functor(cache.by_form_type.magic_effects, &core::cachedMagicEffectChanged);
+      functor(cache.by_form_type.music_tracks,  &core::cachedMusicTrackChanged);
+      functor(cache.by_form_type.quests,        &core::cachedQuestChanged);
+      functor(cache.by_form_type.packages,      &core::cachedPackageChanged);
+      functor(cache.by_form_type.topics,        &core::cachedTopicChanged);
+      functor(cache.by_form_type.voicetypes,    &core::cachedVoicetypeChanged);
    }
 
    template<dovah::form_type FormType>
@@ -352,15 +370,7 @@ namespace {
                }
             }
          };
-
-         _update_if_form(cache.by_form_type.actor_bases,   &core::cachedActorBaseChanged);
-         _update_if_form(cache.by_form_type.factions,      &core::cachedFactionChanged);
-         _update_if_form(cache.by_form_type.head_parts,    &core::cachedHeadPartChanged);
-         _update_if_form(cache.by_form_type.magic_effects, &core::cachedMagicEffectChanged);
-         _update_if_form(cache.by_form_type.music_tracks,  &core::cachedMusicTrackChanged);
-         _update_if_form(cache.by_form_type.packages,      &core::cachedPackageChanged);
-         _update_if_form(cache.by_form_type.topics,        &core::cachedTopicChanged);
-         _update_if_form(cache.by_form_type.voicetypes,    &core::cachedVoicetypeChanged);
+         _for_each_form_type_cache(cache, _update_if_form);
       }
 
       if constexpr (cacheable_traits::model_path::form_type_is_of_interest(LoadedForm::form_type)) {
@@ -504,12 +514,7 @@ namespace dovahkit::subsystems::form_info_cache {
                      dst.take(*stub);
                   }
                };
-               _update_if_form(cache.by_form_type.actor_bases, &core::cachedActorBaseChanged);
-               _update_if_form(cache.by_form_type.factions);
-               _update_if_form(cache.by_form_type.head_parts,  &core::cachedHeadPartChanged);
-               _update_if_form(cache.by_form_type.packages,    &core::cachedPackageChanged);
-               _update_if_form(cache.by_form_type.magic_effects);
-               _update_if_form(cache.by_form_type.voicetypes);
+               _for_each_form_type_cache(cache, _update_if_form);
             }
 
             if constexpr (cacheable_traits::model_path::form_type_is_of_interest(Current::form_type)) {
@@ -623,46 +628,24 @@ namespace dovahkit::subsystems::form_info_cache {
       return {};
    }
 
-   const cached_data::by_form::actor_base* core::get_actor_base_info(const dovah::form_stub& stub) const {
-      if (stub.form_type != dovah::form_type::actor_base)
-         return nullptr;
-      return this->_cache->by_form_type.actor_bases.get(stub);
-   }
-   const cached_data::by_form::faction* core::get_faction_info(const dovah::form_stub& stub) const {
-      if (stub.form_type != dovah::form_type::faction)
-         return nullptr;
-      return this->_cache->by_form_type.factions.get(stub);
-   }
-   const cached_data::by_form::head_part* core::get_head_part_info(const dovah::form_stub& stub) const {
-      if (stub.form_type != dovah::form_type::head_part)
-         return nullptr;
-      return this->_cache->by_form_type.head_parts.get(stub);
-   }
-   const cached_data::by_form::magic_effect* core::get_magic_effect_info(const dovah::form_stub& stub) const {
-      if (stub.form_type != dovah::form_type::magic_effect)
-         return nullptr;
-      return this->_cache->by_form_type.magic_effects.get(stub);
-   }
-   const cached_data::by_form::music_track* core::get_music_track_info(const dovah::form_stub& stub) const {
-      if (stub.form_type != dovah::form_type::music_track)
-         return nullptr;
-      return this->_cache->by_form_type.music_tracks.get(stub);
-   }
-   const cached_data::by_form::package* core::get_package_info(const dovah::form_stub& stub) const {
-      if (stub.form_type != dovah::form_type::package)
-         return nullptr;
-      return this->_cache->by_form_type.packages.get(stub);
-   }
-   const cached_data::by_form::topic* core::get_topic_info(const dovah::form_stub& stub) const {
-      if (stub.form_type != dovah::form_type::topic)
-         return nullptr;
-      return this->_cache->by_form_type.topics.get(stub);
-   }
-   const cached_data::by_form::voicetype* core::get_voicetype_info(const dovah::form_stub& stub) const {
-      if (stub.form_type != dovah::form_type::voicetype)
-         return nullptr;
-      return this->_cache->by_form_type.voicetypes.get(stub);
-   }
+   #pragma push_macro("MAKE_GETTER")
+   #define MAKE_GETTER(name) \
+      const cached_data::by_form::name* core::get_##name##_info(const dovah::form_stub& stub) const { \
+         if (stub.form_type != dovah::form_type::name) \
+            return nullptr; \
+         return this->_cache->by_form_type.name##s.get(stub); \
+      }
+   MAKE_GETTER(actor_base);
+   MAKE_GETTER(faction);
+   MAKE_GETTER(head_part);
+   MAKE_GETTER(magic_effect);
+   MAKE_GETTER(music_track);
+   MAKE_GETTER(quest);
+   MAKE_GETTER(package);
+   MAKE_GETTER(topic);
+   MAKE_GETTER(voicetype);
+   #undef MAKE_GETTER
+   #pragma pop_macro("MAKE_GETTER")
 
    script_attach_state core::form_script_attachment(const dovah::form_stub& stub, std::string_view scriptname) const {
       auto* item = this->_cache->attached_scripts.get(stub);
