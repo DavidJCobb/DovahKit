@@ -2,6 +2,7 @@
 #include <bitset>
 #include <cassert>
 #include <type_traits>
+#include <utility> // std::unreachable
 #include "helpers/class_array.h"
 #include "helpers/enum_flags.h"
 #include "dovah/form_stub.h"
@@ -42,6 +43,11 @@ namespace {
       dovahkit::subsystems::form_info_cache::cached_data::by_form::topic,
       dovahkit::subsystems::form_info_cache::cached_data::by_form::voicetype
    >;
+   using all_cacheable_traits = cobb::class_array<
+      dovahkit::subsystems::form_info_cache::cacheable_traits::attached_scripts,
+      dovahkit::subsystems::form_info_cache::cacheable_traits::model_path,
+      dovahkit::subsystems::form_info_cache::cacheable_traits::quest_filter
+   >;
 }
 
 namespace {
@@ -77,6 +83,9 @@ namespace {
    using data_with_multiple_subrecords = all_cacheable_form_data::filter_types<[]<typename Data>() -> bool {
       return Data::subrecords_of_interest.size() > 1 && !Data::read_entire_record;
    }>;
+   using data_with_one_subrecord = all_cacheable_form_data::filter_types < []<typename Data>() -> bool {
+      return Data::subrecords_of_interest.size() == 1 && !Data::read_entire_record;
+   } > ;
 
    using data_consuming_whole_records = all_cacheable_form_data::filter_types<[]<typename Data>() -> bool {
       return Data::read_entire_record;
@@ -85,6 +94,13 @@ namespace {
    template<dovah::form_type FormType>
    constexpr bool data_with_multiple_subrecords_includes() {
       return data_with_multiple_subrecords::for_each_until_true<[]<typename T>() {
+         return T::form_type_is_of_interest(FormType);
+      }>();
+   }
+
+   template<dovah::form_type FormType>
+   constexpr bool data_with_one_subrecord_includes() {
+      return data_with_one_subrecord::for_each_until_true<[]<typename T>() {
          return T::form_type_is_of_interest(FormType);
       }>();
    }
@@ -111,6 +127,25 @@ namespace {
       functor(cache.by_form_type.packages,      &core::cachedPackageChanged);
       functor(cache.by_form_type.topics,        &core::cachedTopicChanged);
       functor(cache.by_form_type.voicetypes,    &core::cachedVoicetypeChanged);
+   }
+
+   template<dovah::form_type FormType>
+   auto& _cache_by_form_type(dovahkit::subsystems::form_info_cache::entire_cache& cache) {
+      #pragma push_macro("CASE")
+      #undef CASE
+      #define CASE(name) \
+         if constexpr (FormType == dovah::form_type::name) return cache.by_form_type.name##s;
+      CASE(actor_base);
+      CASE(faction);
+      CASE(head_part);
+      CASE(magic_effect);
+      CASE(music_track);
+      CASE(quest);
+      CASE(package);
+      CASE(topic);
+      CASE(voicetype);
+      #pragma pop_macro("CASE")
+      std::unreachable();
    }
 
    template<dovah::form_type FormType>
@@ -171,14 +206,7 @@ namespace {
                //
                record.return_to_start();
 
-               if constexpr (FormType == dovah::form_type::package) {
-                  auto& dst = cache.by_form_type.packages;
-                  dst.threaded_insert(stub, std::move(info));
-               }
-               if constexpr (FormType == dovah::form_type::topic) {
-                  auto& dst = cache.by_form_type.topics;
-                  dst.threaded_insert(stub, std::move(info));
-               }
+               _cache_by_form_type<FormType>(cache).threaded_insert(stub, std::move(info));
             }
          });
       }
@@ -190,6 +218,14 @@ namespace {
             data_with_multiple_subrecords::for_each([&infos, &subrecord]<typename T>() {
                if constexpr (T::form_type_is_of_interest(FormType)) {
                   std::get<T>(infos).skim_subrecord(subrecord);
+               }
+            });
+         } else if constexpr (data_with_one_subrecord_includes<FormType>()) {
+            data_with_one_subrecord::for_each([&cache, &stub, &subrecord, signature]<typename T>() {
+               if (signature == T::subrecords_of_interest[0]) {
+                  T info;
+                  info.skim_subrecord(subrecord);
+                  _cache_by_form_type<T::form_types_of_interest[0]>(cache).threaded_insert(stub, info);
                }
             });
          }
@@ -239,43 +275,8 @@ namespace {
                continue;
             }
          }
-         if constexpr (cached_data::by_form::faction::form_type_is_of_interest(FormType)) {
-            //
-            // Factions: For now, we only care about the DATA subrecord.
-            //
-            if (signature == cached_data::by_form::faction::subrecords_of_interest[0]) {
-               cached_data::by_form::faction info;
-               info.skim_subrecord(subrecord);
-               cache.by_form_type.factions.threaded_insert(stub, info);
-            }
-         } else if constexpr (cached_data::by_form::magic_effect::form_type_is_of_interest(FormType)) {
-            //
-            // Magic Effects: We only care about the DATA subrecord.
-            //
-            if (signature == cached_data::by_form::magic_effect::subrecords_of_interest[0]) {
-               cached_data::by_form::magic_effect info;
-               info.skim_subrecord(subrecord);
-               cache.by_form_type.magic_effects.threaded_insert(stub, info);
-            }
-         } else if constexpr (cached_data::by_form::music_track::form_type_is_of_interest(FormType)) {
-            //
-            // Music Tracks: We only care about the CNAM subrecord.
-            //
-            if (signature == cached_data::by_form::music_track::subrecords_of_interest[0]) {
-               cached_data::by_form::music_track info;
-               info.skim_subrecord(subrecord);
-               cache.by_form_type.music_tracks.threaded_insert(stub, info);
-            }
-         } else if constexpr (cached_data::by_form::voicetype::form_type_is_of_interest(FormType)) {
-            //
-            // Voicetypes: We only care about the DNAM subrecord.
-            //
-            if (signature == cached_data::by_form::voicetype::subrecords_of_interest[0]) {
-               cached_data::by_form::voicetype info;
-               info.skim_subrecord(subrecord);
-               cache.by_form_type.voicetypes.threaded_insert(stub, info);
-            }
-         } else if constexpr (FormType == dovah::form_type::topic) {
+
+         if constexpr (FormType == dovah::form_type::topic) {
             using loaded_form_type = dovah::loaded_forms::Topic;
             //
             // SharedInfo topics
@@ -306,17 +307,14 @@ namespace {
       if constexpr (FormType == dovah::form_type::quest) {
          if (!quest_skimmer.empty())
             cache.attached_scripts.threaded_insert(stub, quest_skimmer.bake());
-      } else if constexpr (FormType == dovah::form_type::actor_base) {
-         auto& dst        = cache.by_form_type.actor_bases;
-         using value_type = std::decay_t<decltype(dst)>::value_type;
-         dst.threaded_insert(stub, std::move(std::get<value_type>(infos)));
-      } else if constexpr (FormType == dovah::form_type::head_part) {
-         auto& dst        = cache.by_form_type.head_parts;
-         using value_type = std::decay_t<decltype(dst)>::value_type;
-         dst.threaded_insert(stub, std::move(std::get<value_type>(infos)));
       } else if constexpr (FormType == dovah::form_type::topic) {
          if (topic_is_sharedinfo_topic)
             cache.sharedinfo_topics.threaded_insert(stub);
+      }
+      if constexpr (data_with_multiple_subrecords_includes<FormType>()) {
+         auto& dst        = _cache_by_form_type<FormType>(cache);
+         using value_type = std::decay_t<decltype(dst)>::value_type;
+         dst.threaded_insert(stub, std::move(std::get<value_type>(infos)));
       }
    }
 
