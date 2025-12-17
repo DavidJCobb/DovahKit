@@ -474,6 +474,8 @@ void StoryManagerFormsModel::_extract_drag_content(const QMimeData& mime, drag_c
       auto* cached = _get_cached_data(*n);
       switch (role) {
          case Qt::DisplayRole:
+            if (!cached)
+               break;
             return cached->display_string;
          case Qt::ToolTipRole:
             return _stub_summary(&n->stub);
@@ -490,6 +492,8 @@ void StoryManagerFormsModel::_extract_drag_content(const QMimeData& mime, drag_c
          case FormStubRole:
             return QVariant::fromValue(&n->stub);
          case EventTypeRole:
+            if (!cached)
+               break;
             if (n->stub.form_type == dovah::form_type::story_event_node) {
                if (std::holds_alternative<cached_event_data>(cached->typed)) {
                   return (int)std::get<cached_event_data>(cached->typed).event;
@@ -497,6 +501,8 @@ void StoryManagerFormsModel::_extract_drag_content(const QMimeData& mime, drag_c
             }
             break;
          case EditorIDRole:
+            if (!cached)
+               break;
             if (cached->editor_id.isEmpty()) {
                if (n->stub.form_type == dovah::form_type::story_event_node) {
                   if (std::holds_alternative<cached_event_data>(cached->typed)) {

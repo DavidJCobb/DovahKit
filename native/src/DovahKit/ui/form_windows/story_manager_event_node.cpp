@@ -19,6 +19,10 @@
 
 #include "editor/open_window_for_form.h"
 
+namespace {
+   constexpr const bool do_not_allow_creating_multiple_nodes_for_one_event = true;
+}
+
 FormDialogStoryManagerNodes::FormDialogStoryManagerNodes(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
 
@@ -31,10 +35,15 @@ FormDialogStoryManagerNodes::FormDialogStoryManagerNodes(dovah::form_stub& stub,
       auto* widget = this->ui.eventType;
       widget->clear();
       for (const auto event : dovah::all_story_event_codes) {
+         if (event == dovah::story_event_code::none)
+            continue;
+         if (event == dovah::story_event_code::undefined)
+            continue;
          auto name = editor_helpers::story_event_name(event);
          widget->addItem(name, (int)event);
       }
       widget->model()->sort(0);
+      widget->insertItem(0, tr("NONE"), 0);
    }
 
    {
@@ -188,9 +197,78 @@ void FormDialogStoryManagerNodes::_load_impl() {
 
    {
       auto* widget = this->ui.eventType;
-      widget->setEnabled(false);
 
+      bool has_event = true;
+      switch (working.event) {
+         case dovah::story_event_code::none:
+         case dovah::story_event_code::undefined:
+            has_event = false;
+            break;
+      }
+
+      if (has_event) {
+         widget->setEnabled(false);
+         this->ui.tree->setEnabled(true);
+      } else {
+         widget->setEnabled(true);
+         this->ui.tree->setEnabled(false);
+
+         if constexpr (do_not_allow_creating_multiple_nodes_for_one_event) {
+            //
+            // Remove from the combobox all event types that are already being 
+            // used by another form.
+            //
+            auto& editor = DovahKitCore::get();
+            auto& sm     = dovahkit::subsystems::story_manager::core::get();
+            editor.for_each_form_of_type(dovah::form_type::story_event_node, [&sm, widget](dovah::form_stub* stub) -> bool {
+               auto ev_opt = sm.event_type_for(*stub);
+               if (!ev_opt.has_value())
+                  return false;
+               auto ev = ev_opt.value();
+               if (ev == 0)
+                  return false;
+               auto i = widget->findData((int)ev_opt.value());
+               if (i >= 0)
+                  widget->removeItem(i);
+               return false;
+            });
+         }
+
+         QObject::connect(widget, qOverload<int>(&QComboBox::currentIndexChanged), this, [this]() {
+            auto et = this->ui.eventType->currentData().toInt();
+            if (!et)
+               return;
+
+            //
+            // We want to make this change immediately so that the SM event 
+            // subsystem can understand what's going on, given that all other 
+            // changes to SM nodes are immediate as well.
+            //
+
+            auto& editor = DovahKitCore::get();
+            emit editor.formModificationImminent(&this->form->stub);
+            //
+            this->form->event = et;
+            // `this->form` is just the working copy; we want to edit the "real" 
+            // form.
+            auto actual = this->form->stub.load().ptr_cast<loaded_form_type>();
+            actual->event = et;
+            //
+            this->form->stub.set_edited(true);
+            emit editor.formModified(&this->form->stub);
+
+            //
+            // Finally, disable changing the event type, and enable changing 
+            // the event contents.
+            //
+
+            this->ui.eventType->setEnabled(false);
+            this->ui.tree->setEnabled(true);
+         });
+      }
       auto i = widget->findData((int)working.event);
+      if (i < 0 && !has_event)
+         i = 0; // "NONE"
       widget->setCurrentIndex(i);
    }
 }
