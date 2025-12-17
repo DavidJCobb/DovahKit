@@ -24,6 +24,13 @@ namespace dovah::loaded_forms::mixins {
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
                break;
+            case 'CITC':
+               {
+                  uint32_t count = 0;
+                  if (subrecord.read(count))
+                     this->conditions.reserve(count);
+               }
+               break;
             case 'CTDA':
                this->conditions.read_next(subrecord.get_containing_record(), intfc);
                break;

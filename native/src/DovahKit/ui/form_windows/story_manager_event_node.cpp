@@ -26,10 +26,30 @@ namespace {
 FormDialogStoryManagerNodes::FormDialogStoryManagerNodes(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
 
-   // The form-dialog mixins require there to be a "cancel" button, but we can't 
-   // reasonably offer one because edits are made across forms and in real-time.
-   this->ui.buttonCancel->setEnabled(false);
-   this->ui.buttonCancel->setVisible(false);
+   // The form-dialog mixins require there to be both an "OK" button and a 
+   // "Cancel" button, but we can't reasonably offer a true "cancel" button 
+   // because edits are made across multiple forms and in real-time. So, 
+   // we have to hide the "OK" button.
+   //
+   // At the same time: we don't want the mere act of clicking "OK" on this 
+   // dialog to create an SMEN ITM. The SMEN should only be flagged as 
+   // "edited" if you actually edit it via this UI. (The nuance here is that 
+   // this UI is "dedicated" to a single form, the SMEN, but is used to edit 
+   // multiple forms which may or may not include that SMEN.)
+   //
+   // So here's the hack. We'll hide the "cancel" button, and rename "OK" 
+   // to say "cancel." That way, clicking the button won't blindly save 
+   // [a total lack of] changes to the SMEN (because under the hood, it 
+   // "cancels" changes), but the user will also see that there's no true 
+   // way to "cancel."
+   {
+      auto* cancel = this->ui.buttonCancel;
+      auto* commit = this->ui.buttonOK;
+      cancel->setText(commit->text());
+      commit->setEnabled(false);
+      commit->setVisible(false);
+      commit->setText(tr("Wait, what? How can you see this?"));
+   }
 
    {
       auto* widget = this->ui.eventType;

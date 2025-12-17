@@ -28,8 +28,7 @@ namespace dovah::loaded_forms {
          for (uint32_t i = 0; i < quest_count; ++i) {
             auto& item = this->quests.emplace_back();
             {
-               auto& subrecord = record.get_current_subrecord();
-               if (auto& subrecord = record.get_current_subrecord(); subrecord.signature() == 'NNAM') {
+               if (auto& subrecord = record.get_current_subrecord(); subrecord.signature() != 'NNAM') {
                   specific_load_warnings::expected_quest_subrecord notice(
                      this->stub,
                      i,

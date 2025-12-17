@@ -882,6 +882,7 @@ QModelIndex StoryManagerFormsModel::_create_node_in(const QModelIndex& parent_qm
    assert(stub != nullptr);
    const node* subject_node = _get_datastore().node_by_stub(*stub);
    assert(subject_node != nullptr);
+   this->_recache_node(*subject_node);
 
    const node* prev_node = nullptr;
    if (!parent_branch->children.empty())
