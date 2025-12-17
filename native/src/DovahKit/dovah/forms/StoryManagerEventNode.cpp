@@ -1,6 +1,15 @@
 #include "StoryManagerEventNode.h"
 #include "_common_cpp.h"
 
+#include "../data/story_manager.h"
+#include "../notices/form_load_warnings/by_form_type/story_manager_event_node/unrecognized_event.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_type::story_manager_event_node;
+   }
+}
+
 namespace dovah::loaded_forms {
    void StoryManagerEventNode::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
@@ -14,6 +23,23 @@ namespace dovah::loaded_forms {
          if (subrecord.signature() == 'ENAM') {
             subrecord.read_signature(this->event);
             record.next_subrecord();
+         }
+      }
+
+      if (this->event) {
+         bool found = false;
+         for (const auto i : all_story_event_codes) {
+            if (i == this->event) {
+               found = true;
+               break;
+            }
+         }
+         if (!found) {
+            specific_load_warnings::unrecognized_event notice(
+               this->stub,
+               this->event
+            );
+            intfc.log_load_warning(notice);
          }
       }
    }

@@ -1,7 +1,9 @@
 #include "StoryManagerNode.h"
 #include "../_common_cpp.h"
 
+#include "../../data/hardcoded_form_ids.h"
 #include "../../notices/form_load_warnings/by_form_type/story_manager_node/orphaned.h"
+#include "../../notices/form_load_warnings/by_form_type/story_manager_node/root_is_not_the_root.h"
 
 namespace {
    namespace specific_load_warnings {
@@ -77,6 +79,11 @@ namespace dovah::loaded_forms::mixins {
       if (!self.stub.is_hardcoded()) {
          if (!this->parent) {
             specific_load_warnings::orphaned notice(self.stub);
+            intfc.log_load_warning(notice);
+         }
+      } else if (self.stub.formID == dovah::hardcoded_form_ids::Root) {
+         if (this->parent) {
+            specific_load_warnings::root_is_not_the_root notice(self.stub);
             intfc.log_load_warning(notice);
          }
       }

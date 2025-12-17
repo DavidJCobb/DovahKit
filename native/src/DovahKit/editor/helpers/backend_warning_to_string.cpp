@@ -1949,6 +1949,30 @@ namespace editor_helpers {
                   ).arg(subject).arg(casted->count);
                }
             #pragma endregion
+            #pragma region story manager node (any)
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::story_manager_node::orphaned*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Story Manager Node %1 has no parent."
+                  ).arg(subject);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::story_manager_node::root_is_not_the_root*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Story Manager Node %1 is hardcoded and is supposed to act as the root of all story manager nodes. "
+                     "It's normally invisible in editors, but something was used to give it a parent node."
+                  ).arg(subject);
+               }
+            #pragma endregion
+            #pragma region story manager event node
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::story_manager_event_node::unrecognized_event*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString event   = cobb::qt::four_cc_to_string(casted->event);
+                  return QObject::tr(
+                     "Story Manager Event Node %1 had an unrecognized event code (%2)."
+                  ).arg(subject).arg(event);
+               }
+            #pragma endregion
             #pragma region story manager quest node
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::story_manager_quest_node::expected_quest_subrecord*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);
