@@ -142,6 +142,8 @@ namespace dovah::datastores {
             continue;
          if (!node.parent)
             continue;
+         if (!node.stub.is_edited_or_in_active_file())
+            continue;
          _update_form_data(node);
          bs = {};
       }
