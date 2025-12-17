@@ -116,7 +116,7 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
    void StoryManagerFormsModel::_recache_node_core_properties(const node& n) {
       auto& cached = this->_cache.nodes[(node*)&n]; // containers choke on const pointer keys -_-
       cached.editor_id      = QString::fromStdString(n.stub.editorID);
-      cached.display_string = cached.editor_id;
+      cached.display_string = tr("%1%2").arg(cached.editor_id);
       
       bool is_random   = false;
       auto loaded_base = n.stub.load();
@@ -131,17 +131,17 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
       switch (n.stub.form_type) {
          case dovah::form_type::story_quest_node:
             if (cached.is_random) {
-               cached.display_string = tr("Random Quest Node: %1");
+               cached.display_string = tr("Random Quest Node: %1%2");
             } else {
-               cached.display_string = tr("Stacked Quest Node: %1");
+               cached.display_string = tr("Stacked Quest Node: %1%2");
             }
             cached.display_string = cached.display_string.arg(cached.editor_id);
             break;
          case dovah::form_type::story_branch_node:
             if (cached.is_random) {
-               cached.display_string = tr("Random Branch Node: %1");
+               cached.display_string = tr("Random Branch Node: %1%2");
             } else {
-               cached.display_string = tr("Stacked Branch Node: %1");
+               cached.display_string = tr("Stacked Branch Node: %1%2");
             }
             cached.display_string = cached.display_string.arg(cached.editor_id);
             break;
@@ -156,15 +156,19 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
                auto name = editor_helpers::story_event_name((dovah::story_event_code::type)cqd.event);
                if (!name.isEmpty()) {
                   if (cached.is_random) {
-                     cached.display_string = tr("Random Event Node: %1");
+                     cached.display_string = tr("Random Event Node: %1%2");
                   } else {
-                     cached.display_string = tr("Stacked Event Node: %1");
+                     cached.display_string = tr("Stacked Event Node: %1%2");
                   }
                   cached.display_string = cached.display_string.arg(name);
                }
             }
             break;
       }
+      QString status;
+      if (n.stub.is_edited() || n.stub.is_deleted())
+         status += tr(" *", "edited form indicator");
+      cached.display_string = cached.display_string.arg(status);
    }
    void StoryManagerFormsModel::_recache_quest_data(const node& n, cached_node_data& cached) {
       assert(n.stub.form_type == dovah::form_type::story_quest_node);
@@ -433,6 +437,21 @@ void StoryManagerFormsModel::_extract_drag_content(const QMimeData& mime, drag_c
          return {};
       const node* n = _node_for_qmi(qmi);
 
+      auto _stub_summary = [](const dovah::form_stub* stub) -> QString {
+         if (!stub)
+            return {};
+         QString status;
+         if (stub->is_edited() || stub->is_deleted()) {
+            status = tr(" *", "edited form indicator");
+            if (stub->is_deleted())
+               status += tr(" D", "deleted form indicator");
+         }
+         return tr("%1 (%2%3)")
+            .arg(QString::fromStdString(stub->editorID))
+            .arg(editor_helpers::form_id_to_string(stub->formID))
+            .arg(status);
+      };
+
       if (!n) {
          const auto* q = _quest_for_qmi(qmi);
          if (!q)
@@ -441,15 +460,7 @@ void StoryManagerFormsModel::_extract_drag_content(const QMimeData& mime, drag_c
             case Qt::DisplayRole:
                return q->editor_id;
             case Qt::ToolTipRole:
-               {
-                  uint32_t form_id = 0;
-                  if (q->stub)
-                     form_id = q->stub->formID;
-                  return tr("%1 (%2)")
-                     .arg(q->editor_id)
-                     .arg(editor_helpers::form_id_to_string(form_id));
-               }
-               break;
+               return _stub_summary(q->stub);
             case Qt::DecorationRole:
                return this->_icons.quest_form;
             case FormStubRole:
@@ -465,9 +476,7 @@ void StoryManagerFormsModel::_extract_drag_content(const QMimeData& mime, drag_c
          case Qt::DisplayRole:
             return cached->display_string;
          case Qt::ToolTipRole:
-            return tr("%1 (%2)")
-               .arg(cached->editor_id)
-               .arg(editor_helpers::form_id_to_string(n->stub.formID));
+            return _stub_summary(&n->stub);
          case Qt::DecorationRole:
             switch (n->stub.form_type) {
                case dovah::form_type::story_event_node:
@@ -503,9 +512,11 @@ void StoryManagerFormsModel::_extract_drag_content(const QMimeData& mime, drag_c
       auto  flags = Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled;
       auto* node  = _node_for_qmi(qmi);
       if (!node) {
+         if (_quest_for_qmi(qmi))
+            flags |= Qt::ItemIsDragEnabled;
          return flags;
       }
-      if (node != _get_datastore().root) {
+      if (node != _get_datastore().root && node->stub.form_type != dovah::form_type::story_event_node) {
          flags |= Qt::ItemIsDragEnabled;
       }
       flags |= Qt::ItemIsDropEnabled;
@@ -636,6 +647,8 @@ void StoryManagerFormsModel::_extract_drag_content(const QMimeData& mime, drag_c
                cached_quest_data* list_node_data  = nullptr;
             };
             std::vector<single_drag> quests_to_move;
+            std::set<const node*> quest_nodes_to_update;
+            quest_nodes_to_update.insert(dst_parent_node);
             {
                quests_to_move.reserve(dragged.quests.size());
                for (auto& item : dragged.quests) {
@@ -652,6 +665,7 @@ void StoryManagerFormsModel::_extract_drag_content(const QMimeData& mime, drag_c
                      .quest_form_node = src_list[src_row].get(),
                      .list_node_data  = src_cached,
                   });
+                  quest_nodes_to_update.insert(src_parent);
                }
             }
             for (auto& item : quests_to_move) {
@@ -667,17 +681,33 @@ void StoryManagerFormsModel::_extract_drag_content(const QMimeData& mime, drag_c
                }
                assert(src_row >= 0);
 
-               int dst_row = row;
-               if (src_parent == dst_parent_node && dst_row > src_row) {
-                  --dst_row;
-               }
-               this->beginMoveRows(_qmi_for_node(*src_parent), src_row, src_row, parent, dst_row);
+               bool down_in_same_parent = false;
+               if (src_parent == dst_parent_node)
+                  down_in_same_parent = row > src_row;
+
+               bool allowed_by_qt = this->beginMoveRows(_qmi_for_node(*src_parent), src_row, src_row, parent, row);
+               assert(allowed_by_qt);
                auto item_ptr = std::move(src_list[src_row]);
                src_list.erase(src_list.begin() + src_row);
-               dst_list.insert(dst_list.begin() + dst_row, std::move(item_ptr));
+               // The parens on the iterator math in the next line are necessary.
+               // With plain array indexes, it wouldn't matter, but iterators do 
+               // bounds-checking in Debug, and they do it one operator at a time, 
+               // not at point-of-use. So if the addition in (a + row - 1) would 
+               // go one past the end, then the STL chokes, even if subtracting 
+               // would bring it back in bounds before the iterator is ever used.
+               dst_list.insert(dst_list.begin() + (row - (down_in_same_parent ? 1 : 0)), std::move(item_ptr));
                this->endMoveRows();
 
                ++row;
+            }
+            //
+            // Push the changes we just made to the SMQNs' form data.
+            //
+            for (auto* n : quest_nodes_to_update) {
+               this->_update_quest_node_quest_list(*const_cast<node*>(n));
+               this->_recache_node_core_properties(*n);
+               auto qmi = _qmi_for_node(*n);
+               emit dataChanged(qmi, qmi, { Qt::DisplayRole, Qt::ToolTipRole });
             }
          } else {
             const auto* dst_branch_node = dynamic_cast<const branch_node*>(dst_parent_node);
@@ -933,6 +963,10 @@ QModelIndex StoryManagerFormsModel::addQuestTo(const QModelIndex& smqn_qmi, dova
    this->_update_quest_node_quest_list(*parent_node);
 
    this->endInsertRows();
+
+   this->_recache_node_core_properties(*parent_node);
+   emit dataChanged(smqn_qmi, smqn_qmi, { Qt::DisplayRole, Qt::ToolTipRole });
+
    return this->createIndex(i, 0, parent_node);
 }
 void StoryManagerFormsModel::removeQuestFromNode(const QModelIndex& quest_form_qmi) {
@@ -952,6 +986,10 @@ void StoryManagerFormsModel::removeQuestFromNode(const QModelIndex& quest_form_q
    cached->quests.erase(cached->quests.begin() + i);
    this->_update_quest_node_quest_list(*parent_node);
    this->endRemoveRows();
+
+   this->_recache_node_core_properties(*parent_node);
+   auto parent_qmi = _qmi_for_node(*parent_node);
+   emit dataChanged(parent_qmi, parent_qmi, { Qt::DisplayRole, Qt::ToolTipRole });
 }
 void StoryManagerFormsModel::deleteNode(const QModelIndex& sm_node_qmi) {
    auto* subject = _node_for_qmi(sm_node_qmi);
