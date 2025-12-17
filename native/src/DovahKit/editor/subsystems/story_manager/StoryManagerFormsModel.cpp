@@ -403,6 +403,8 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
                return this->_icons.quest_form;
             case FormStubRole:
                return QVariant::fromValue(q->stub);
+            case EditorIDRole:
+               return q->editor_id;
          }
          return {};
       }
@@ -434,6 +436,15 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
                }
             }
             break;
+         case EditorIDRole:
+            if (cached->editor_id.isEmpty()) {
+               if (n->stub.form_type == dovah::form_type::story_event_node) {
+                  if (std::holds_alternative<cached_event_data>(cached->typed)) {
+                     return editor_helpers::story_event_name((dovah::story_event_code::type)std::get<cached_event_data>(cached->typed).event);
+                  }
+               }
+            }
+            return cached->editor_id;
       }
       return {};
    }

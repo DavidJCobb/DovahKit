@@ -81,6 +81,9 @@ class DKBreadcrumbBar : public QWidget {
       QModelIndex currentIndex() const noexcept;
       void setCurrentIndex(const QModelIndex&);
 
+      constexpr Qt::ItemDataRole segmentNameRole() const noexcept { return this->_data.name_role; }
+      void setSegmentNameRole(Qt::ItemDataRole);
+
       constexpr bool textEditingAllowed() const noexcept;
       void setTextEditingAllowed(bool);
 
@@ -167,6 +170,7 @@ class DKBreadcrumbBar : public QWidget {
       struct {
          QPointer<QAbstractItemModel> model;
          QPersistentModelIndex index;
+         Qt::ItemDataRole name_role = Qt::ItemDataRole::DisplayRole;
       } _data;
       struct {
          QPointer<QMenu> menu;

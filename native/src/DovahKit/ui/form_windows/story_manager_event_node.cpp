@@ -47,6 +47,7 @@ FormDialogStoryManagerNodes::FormDialogStoryManagerNodes(dovah::form_stub& stub,
       }
       this->ui.tree->setModel(proxy);
       this->ui.breadcrumbs->setModel(proxy);
+      this->ui.breadcrumbs->setSegmentNameRole(StoryManagerFormsModel::EditorIDRole);
 
       auto* sel_model = this->ui.tree->selectionModel();
       QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &FormDialogStoryManagerNodes::_pull_selected_node_to_ui);

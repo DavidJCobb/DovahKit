@@ -245,6 +245,31 @@ void DKBreadcrumbBar::setCurrentIndex(const QModelIndex& qmi) {
    }
 }
 
+void DKBreadcrumbBar::setSegmentNameRole(Qt::ItemDataRole v) {
+   if (this->_data.name_role == v)
+      return;
+   this->_data.name_role = v;
+   if (!this->_data.model)
+      return;
+   for (auto& seg : this->_segments) {
+      seg.text = seg.qmi.data(v).toString();
+      if (seg.text.isEmpty()) {
+         //
+         // Path is truncated due to an empty segment. Rebuild 
+         // everything.
+         //
+         const auto blocker = QSignalBlocker(this);
+         this->_on_navigated();
+         return;
+      }
+   }
+   //
+   // Segments just changed names, so we don't need to blow away 
+   // as much of our state. Just re-layout.
+   //
+   this->_re_layout();
+}
+
 void DKBreadcrumbBar::setTextEditingAllowed(bool v) {
    if (v == this->_text_editing.allowed)
       return;
@@ -404,7 +429,7 @@ void DKBreadcrumbBar::_on_navigated() {
       bool  basis = true;
       do {
          auto    flags = model->flags(qmi);
-         QString label = model->data(qmi, Qt::DisplayRole).toString();
+         QString label = model->data(qmi, this->_data.name_role).toString();
          if (label.isEmpty() && !qmi.isValid()) {
             break;
          }

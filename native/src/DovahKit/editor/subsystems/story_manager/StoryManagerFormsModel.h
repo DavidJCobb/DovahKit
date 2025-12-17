@@ -29,6 +29,7 @@ class StoryManagerFormsModel : public QAbstractItemModel {
    public:
       static constexpr const Qt::ItemDataRole FormStubRole  = Qt::UserRole;
       static constexpr const Qt::ItemDataRole EventTypeRole = (Qt::ItemDataRole)(Qt::UserRole + 1); // as an int
+      static constexpr const Qt::ItemDataRole EditorIDRole  = (Qt::ItemDataRole)(Qt::UserRole + 2);
 
       struct quest_properties {
          constexpr bool operator==(const quest_properties&) const noexcept = default;

@@ -18,47 +18,30 @@ class DKBreadcrumbBar : public QWidget {
 
       struct SegmentPalette {
          struct {
-            QBrush fill = QColor(255, 255, 255);
-            QPen   line = QPen(QColor(224, 224, 224), 0);
-            QPen   text = QPen(QColor(0, 0, 0), 0);
+            QBrush fill;
+            QPen   line;
+            QPen   text;
          } main_button;
          struct {
-            QBrush fill = QColor(255, 255, 255);
-            QPen   line = QPen(QColor(224, 224, 224), 0);
-            QPen   icon = QPen(QColor(128, 128, 128), 1.5, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin);
+            QBrush fill;
+            QPen   line;
+            QPen   icon;
          } menu_button;
       };
 
       struct Styles {
+         Styles();
+
          struct {
-            QMargins margins{ 5, 3, 5, 3 };
+            QMargins margins;
             struct {
                SegmentPalette normal;
-               SegmentPalette hovered = {
-                  .main_button = {
-                     .fill = QColor(229, 243, 255),
-                     .line = QPen(QColor(204, 232, 255), 0),
-                  },
-                  .menu_button = {
-                     .fill = QColor(229, 243, 255),
-                     .line = QPen(QColor(204, 232, 255), 0),
-                  },
-               };
-               SegmentPalette disabled{
-                  .main_button = {
-                     .fill = QColor(0, 0, 0, 0),
-                     .line = QColor(0, 0, 0, 0),
-                  },
-                  .menu_button = {
-                     .fill = QColor(0, 0, 0, 0),
-                     .line = QColor(0, 0, 0, 0),
-                     .icon = QPen(QColor(0, 0, 0), 1.5, Qt::SolidLine, Qt::SquareCap, Qt::MiterJoin),
-                  },
-               };
+               SegmentPalette hovered;
+               SegmentPalette disabled;
             } colors;
-            unsigned int menu_button_width = 15; // includes borders
+            unsigned int menu_button_width; // includes borders
          } segment;
-         unsigned int border_width = 1;
+         unsigned int border_width;
       };
 
    protected:
@@ -80,7 +63,7 @@ class DKBreadcrumbBar : public QWidget {
                } main_borders;
             } geometry;
             QString text;
-            QMenu*  menu = nullptr;
+            bool    has_menu = false;
             QPersistentModelIndex qmi;
 
          public:
@@ -91,43 +74,60 @@ class DKBreadcrumbBar : public QWidget {
       static constexpr const size_t index_of_none        = (size_t)-1;
       static constexpr const size_t index_of_root_button = (size_t)-2;
 
-   public: // properties
+   public:
       QAbstractItemModel* model() const noexcept;
       void setModel(QAbstractItemModel*);
 
       QModelIndex currentIndex() const noexcept;
       void setCurrentIndex(const QModelIndex&);
 
-      bool textEditingAllowed() const noexcept;
+      constexpr Qt::ItemDataRole segmentNameRole() const noexcept { return this->_data.name_role; }
+      void setSegmentNameRole(Qt::ItemDataRole);
+
+      constexpr bool textEditingAllowed() const noexcept;
       void setTextEditingAllowed(bool);
 
-      QChar textSeparator() const noexcept;
+      constexpr QChar textSeparator() const noexcept;
       void setTextSeparator(QChar);
 
-      Qt::CaseSensitivity caseSensitivity() const noexcept;
+      constexpr Qt::CaseSensitivity caseSensitivity() const noexcept;
       void setCaseSensitivity(Qt::CaseSensitivity);
 
+      constexpr bool areAnySegmentsHidden() const noexcept;
+      bool isEditingText() const noexcept;
+      constexpr size_t segmentCount() const noexcept;
+      constexpr size_t visibleSegmentCount() const noexcept;
+
       QString path() const noexcept;
+      bool setPath(QString); // returns a success bool
 
       QMenu* rootMenu() const noexcept;
       void setRootMenu(QMenu*); // does NOT take ownership
 
       constexpr const Styles& styles() const noexcept { return this->_styles; }
+      void setStyles(const Styles&);
 
    protected:
       void _on_navigated();
       void _on_data_changed(const QModelIndex&);
       bool _on_before_item_deleted(const QModelIndex&);
-      void _set_up_menu(QMenu&, const QModelIndex& qpmi);
+      void _on_items_moved(const QModelIndex& src_parent, int first, int last, const QModelIndex& dst_parent);
+      void _build_segment_menu(const QModelIndex& qpmi);
       void _re_layout(bool force = false);
 
       void _on_segment_hovered(size_t);
 
-      void _close_menu(size_t);
+      static int _guesstimate_menu_text_x_offset(const QMenu&);
+      QPoint _compute_menu_position(size_t segment_index) const;
       void _open_menu(size_t);
       void _start_menu_eavesdropping(QMenu&);
       bool _do_menu_eavesdropping(QMenu&, QEvent&); // returns true if the menu should NOT receive the event
+      void _on_root_menu_hidden();
+      void _on_segment_menu_item_selected(QAction*);
       void _on_segment_menu_hidden();
+      void _close_any_open_menu();
+
+      QAction* _segment_menu_action_by_qmi(const QModelIndex&);
 
       void _on_segment_clicked(const segment&);
       void _on_horizontal_arrow_key(bool left);
@@ -135,7 +135,6 @@ class DKBreadcrumbBar : public QWidget {
 
       void _begin_text_editing();
       void _update_textbox_value();
-      bool _navigate_to_path(QString);
 
       void _recache_icons();
 
@@ -159,12 +158,19 @@ class DKBreadcrumbBar : public QWidget {
 
    signals:
       void currentIndexChanged(const QModelIndex&) const;
+      void currentPathChanged(QString) const;
+
+   public slots:
+      void beginTextEditing();
+      void cancelTextEditing();
+      void finishTextEditing();
 
    protected:
       Styles _styles;
       struct {
          QPointer<QAbstractItemModel> model;
          QPersistentModelIndex index;
+         Qt::ItemDataRole name_role = Qt::ItemDataRole::DisplayRole;
       } _data;
       struct {
          QPointer<QMenu> menu;
@@ -177,6 +183,7 @@ class DKBreadcrumbBar : public QWidget {
          Qt::CaseSensitivity case_sensitivity = Qt::CaseSensitivity::CaseInsensitive;
       } _text_editing;
       struct {
+         QMenu      segment_menu;
          QLineEdit* textbox = nullptr;
       } _subwidgets;
       struct {
@@ -201,3 +208,5 @@ class DKBreadcrumbBar : public QWidget {
          bool next_mouseleave_is_from_menu_opening = false;
       } _state;
 };
+
+#include "./DKBreadcrumbBar.inl"
