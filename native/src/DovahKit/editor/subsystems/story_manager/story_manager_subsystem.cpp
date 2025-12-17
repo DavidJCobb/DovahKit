@@ -37,6 +37,9 @@ namespace dovahkit::subsystems::story_manager {
                break;
          }
       });
+      QObject::connect(&editor, &DovahKitCore::formCreated, this, [this](dovah::form_stub* stub) {
+         this->_datastore.on_form_created(*stub);
+      });
 
       this->_datastore.handlers.delete_form = [this](dovah::form_stub& stub) {
          DovahKitCore::get().delete_form(
@@ -130,6 +133,17 @@ namespace dovahkit::subsystems::story_manager {
          const_cast<branch_node&>(dst_parent),
          const_cast<node*>(dst_previous)
       );
+   }
+   void core::move_node(dovah::form_stub& subject, dovah::form_stub& dst_parent, dovah::form_stub* dst_previous) {
+      node* subj_node = this->_datastore.node_by_stub(subject);
+      assert(subj_node != nullptr);
+      auto* dstp_node = dynamic_cast<branch_node*>(this->_datastore.node_by_stub(dst_parent));
+      assert(dstp_node != nullptr);
+      node* prev_node = nullptr;
+      if (dst_previous)
+         prev_node = this->_datastore.node_by_stub(*dst_previous);
+      assert(dstp_node != nullptr);
+      this->_datastore.move_node(*subj_node, *dstp_node, prev_node);
    }
    void core::move_node_within_parent(const node& subject, int by) {
       assert(&subject.datastore == &this->_datastore);

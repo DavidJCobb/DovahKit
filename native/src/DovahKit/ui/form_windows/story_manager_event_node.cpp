@@ -1,4 +1,5 @@
 #include "./story_manager_event_node.h"
+#include <QInputDialog>
 #include "dovah/core.h"
 #include "dovah/data/story_manager.h"
 #include "editor/helpers/story_event_name.h"
@@ -7,10 +8,14 @@
 #include "editor/form_stub_meta_type.h"
 #include "ui/models/DKScopedProxyModel.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/set_custom_context_menu.h"
+#include "widgets/DKFormPickerDialog.h"
 
 #include "dovah/forms/StoryManagerBranchNode.h"
 #include "dovah/forms/StoryManagerEventNode.h"
 #include "dovah/forms/StoryManagerQuestNode.h"
+
+#include "editor/open_window_for_form.h"
 
 FormDialogStoryManagerNodes::FormDialogStoryManagerNodes(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    this->initialize(stub);
@@ -41,9 +46,16 @@ FormDialogStoryManagerNodes::FormDialogStoryManagerNodes(dovah::form_stub& stub,
             proxy->setScopeIndex(qmi);
       }
       this->ui.tree->setModel(proxy);
+      this->ui.breadcrumbs->setModel(proxy);
 
       auto* sel_model = this->ui.tree->selectionModel();
       QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, &FormDialogStoryManagerNodes::_pull_selected_node_to_ui);
+      QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this](const QItemSelection& sel) {
+         QModelIndex qmi;
+         if (!sel.empty())
+            qmi = sel[0].topLeft();
+         this->ui.breadcrumbs->setCurrentIndex(qmi);
+      });
 
       QObject::connect(this->ui.nodeFlagMaxConcurrent, &QCheckBox::toggled, this->ui.nodeMaxConcurrent, &QWidget::setEnabled);
       QObject::connect(this->ui.nodeFlagNumToRun,      &QCheckBox::toggled, this->ui.nodeNumToRun, &QWidget::setEnabled);
@@ -61,6 +73,84 @@ FormDialogStoryManagerNodes::FormDialogStoryManagerNodes(dovah::form_stub& stub,
       QObject::connect(this->ui.nodeNumToRun,               qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogStoryManagerNodes::_push_selected_node_from_ui);
       QObject::connect(this->ui.nodeMaxConcurrent,          qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogStoryManagerNodes::_push_selected_node_from_ui);
       QObject::connect(this->ui.nodeConditions,             &DKConditionList::changed,               this, &FormDialogStoryManagerNodes::_push_selected_node_from_ui);
+   }
+
+   // context menu
+   {
+      auto& menu    = this->context.menu;
+      auto& actions = this->context.actions;
+      ui::set_custom_context_menu(*this->ui.tree, menu);
+      {
+         auto* action = actions.node.branch.new_branch_node = new QAction(tr("Create branch node..."), this);
+         menu.addAction(action);
+         QObject::connect(action, &QAction::triggered, this, &FormDialogStoryManagerNodes::_context_branch_new_child_branch);
+      }
+      {
+         auto* action = actions.node.branch.new_quest_node = new QAction(tr("Create quest node..."), this);
+         menu.addAction(action);
+         QObject::connect(action, &QAction::triggered, this, &FormDialogStoryManagerNodes::_context_branch_new_child_quest_list);
+      }
+      {
+         auto* action = actions.node.quest.add_quests = new QAction(tr("Add quests..."), this);
+         menu.addAction(action);
+         QObject::connect(action, &QAction::triggered, this, &FormDialogStoryManagerNodes::_context_quest_list_add_quests);
+      }
+      {
+         auto* action = actions.node.delete_node = new QAction(tr("Delete node"), this);
+         menu.addAction(action);
+         QObject::connect(action, &QAction::triggered, this, &FormDialogStoryManagerNodes::_context_delete_node);
+      }
+
+      {
+         auto* action = actions.quest_form.edit = new QAction(tr("Edit quest..."), this);
+         menu.addAction(action);
+         QObject::connect(action, &QAction::triggered, this, &FormDialogStoryManagerNodes::_context_quest_form_edit);
+      }
+      {
+         auto* action = actions.quest_form.remove = new QAction(tr("Remove quest from node"), this);
+         menu.addAction(action);
+         QObject::connect(action, &QAction::triggered, this, &FormDialogStoryManagerNodes::_context_quest_form_remove);
+      }
+
+      {
+         auto* action = actions.use_info = new QAction(tr("Use Info"), this);
+         menu.addAction(action);
+         QObject::connect(action, &QAction::triggered, this, &FormDialogStoryManagerNodes::_context_use_info);
+      }
+
+      QObject::connect(&menu, &QMenu::aboutToShow, this, [this]() {
+         auto* model = dovahkit::subsystems::story_manager::core::get().model();
+         auto  qmi   = _selected_qmi();
+         auto* form  = model->data(qmi, StoryManagerFormsModel::FormStubRole).value<dovah::form_stub*>();
+
+         bool is_branch     = false;
+         bool is_quest_list = false;
+         bool is_quest_form = false;
+         if (form) {
+            switch (form->form_type) {
+               case dovah::form_type::story_event_node:
+               case dovah::form_type::story_branch_node:
+                  is_branch = true;
+                  break;
+               case dovah::form_type::story_quest_node:
+                  is_quest_list = true;
+                  break;
+               case dovah::form_type::quest:
+                  is_quest_form = true;
+                  break;
+            }
+         }
+
+         this->context.actions.node.branch.new_branch_node->setVisible(is_branch);
+         this->context.actions.node.branch.new_quest_node->setVisible(is_branch);
+         this->context.actions.node.quest.add_quests->setVisible(is_quest_list);
+         this->context.actions.node.delete_node->setVisible(form && !is_quest_form);
+
+         this->context.actions.quest_form.edit->setVisible(is_quest_form);
+         this->context.actions.quest_form.remove->setVisible(is_quest_form);
+
+         this->context.actions.use_info->setVisible(form != nullptr);
+      });
    }
 
    QObject::connect(this->ui.treeExpandAll, &QPushButton::clicked, this->ui.tree, &QTreeView::expandAll);
@@ -116,6 +206,12 @@ QModelIndex FormDialogStoryManagerNodes::_selected_qmi() const noexcept {
       return {};
    return ((QAbstractProxyModel*)this->ui.tree->model())->mapToSource(sel[0].topLeft());
 }
+std::pair<QModelIndex, dovah::form_stub*> FormDialogStoryManagerNodes::_selected_source_model_item() const noexcept {
+   auto  qmi  = _selected_qmi();
+   auto* stub = qmi.data(StoryManagerFormsModel::FormStubRole).value<dovah::form_stub*>();
+   return { qmi, stub };
+}
+
 void FormDialogStoryManagerNodes::_pull_selected_node_to_ui() {
    const auto* model    = dovahkit::subsystems::story_manager::core::get().model();
    const auto  blockers = std::array{
@@ -166,8 +262,12 @@ void FormDialogStoryManagerNodes::_pull_selected_node_to_ui() {
       this->ui.nodeEditorID->setEnabled(false);
       this->ui.itemFieldsTyped->setCurrentWidget(this->ui.questFields);
 
-      this->ui.questFieldHoursUntilReset->setValue(model->data(qmi, StoryManagerFormsModel::QuestHoursUntilResetRole).toInt());
-      this->ui.questFlagResetAfter24Hours->setChecked(model->data(qmi, StoryManagerFormsModel::QuestResetAfter24HoursRole).toBool());
+      auto v_opt = model->questProperties(qmi);
+      if (v_opt.has_value()) {
+         auto& v = v_opt.value();
+         this->ui.questFieldHoursUntilReset->setValue(v.hours_until_reset);
+         this->ui.questFlagResetAfter24Hours->setChecked(v.reset_after_24_hours);
+      }
    } else {
       this->ui.nodeEditorID->setEnabled(true);
       this->ui.itemFieldsTyped->setCurrentWidget(this->ui.nodeFields);
@@ -220,8 +320,11 @@ void FormDialogStoryManagerNodes::_push_selected_node_from_ui() {
       return;
 
    if (stub->form_type == dovah::form_type::quest) {
-      model->setData(qmi, this->ui.questFieldHoursUntilReset->value(), StoryManagerFormsModel::QuestHoursUntilResetRole);
-      model->setData(qmi, this->ui.questFlagResetAfter24Hours->isChecked(), StoryManagerFormsModel::QuestResetAfter24HoursRole);
+      StoryManagerFormsModel::quest_properties v = {
+         .hours_until_reset    = (float)this->ui.questFieldHoursUntilReset->value(),
+         .reset_after_24_hours = this->ui.questFlagResetAfter24Hours->isChecked(),
+      };
+      model->setQuestProperties(qmi, v);
       return;
    }
 
@@ -253,3 +356,145 @@ void FormDialogStoryManagerNodes::_push_selected_node_from_ui() {
    //
    emit editor.formModified(stub);
 }
+
+void FormDialogStoryManagerNodes::_focus_qmi(const QModelIndex& qmi) {
+   if (!qmi.isValid())
+      return;
+   auto* model = dovahkit::subsystems::story_manager::core::get().model();
+   auto* proxy = qobject_cast<QAbstractProxyModel*>(this->ui.tree->model());
+   assert(!!model);
+   assert(!!proxy);
+   assert(qmi.model() == proxy || qmi.model() == model);
+   if (qmi.model() == model) {
+      auto proxy_qmi = proxy->mapFromSource(qmi);
+      if (proxy_qmi.isValid()) {
+         this->ui.tree->scrollTo(proxy_qmi); // also expands the treeview as necessary
+         this->ui.tree->selectionModel()->select({ proxy_qmi, proxy_qmi }, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+      }
+   } else {
+      this->ui.tree->scrollTo(qmi); // also expands the treeview as necessary
+      this->ui.tree->selectionModel()->select({ qmi, qmi }, QItemSelectionModel::SelectionFlag::ClearAndSelect);
+   }
+}
+
+#pragma region Context menu
+   void FormDialogStoryManagerNodes::_context_branch_new_child_branch() {
+      auto [parent_qmi, form] = _selected_source_model_item();
+      if (!form)
+         return;
+      switch (form->form_type) {
+         case dovah::form_type::story_branch_node:
+         case dovah::form_type::story_event_node:
+            break;
+         default:
+            return;
+      }
+
+      bool ok;
+      auto edid = QInputDialog::getText(
+         this,
+         tr("New branch node"),
+         tr("Editor ID:"),
+         QLineEdit::Normal,
+         {},
+         &ok
+      );
+      if (!ok || edid.isEmpty())
+         return;
+
+      auto* model       = dovahkit::subsystems::story_manager::core::get().model();
+      auto  created_qmi = model->createBranchIn(parent_qmi, edid);
+      _focus_qmi(created_qmi);
+   }
+   void FormDialogStoryManagerNodes::_context_branch_new_child_quest_list() {
+      auto [parent_qmi, form] = _selected_source_model_item();
+      if (!form)
+         return;
+      switch (form->form_type) {
+         case dovah::form_type::story_branch_node:
+         case dovah::form_type::story_event_node:
+            break;
+         default:
+            return;
+      }
+
+      bool ok;
+      auto edid = QInputDialog::getText(
+         this,
+         tr("New quest node"),
+         tr("Editor ID:"),
+         QLineEdit::Normal,
+         {},
+         &ok
+      );
+      if (!ok || edid.isEmpty())
+         return;
+
+      auto* model       = dovahkit::subsystems::story_manager::core::get().model();
+      auto  created_qmi = model->createQuestListIn(parent_qmi, edid);
+      _focus_qmi(created_qmi);
+   }
+   void FormDialogStoryManagerNodes::_context_quest_list_add_quests() {
+      auto [parent_qmi, form] = _selected_source_model_item();
+      if (!form || form->form_type != dovah::form_type::story_quest_node)
+         return;
+
+      auto* dialog = new DKFormPickerDialog(this);
+      dialog->setAllowedFormType(dovah::form_type::quest);
+      //
+      // TODO: Apply custom form filter to the dialog.
+      // 
+      //  - only allow adding a quest that's not already in the selected quest-node
+      // 
+      //  - only allow adding a quest with the correct event type? (means we need to 
+      //    add quests' events to the form-info-cache subsystem)
+      //
+      if (dialog->exec() == QDialog::Accepted) {
+         auto* quest = dialog->formStub();
+         if (quest) {
+            auto* model     = dovahkit::subsystems::story_manager::core::get().model();
+            auto  quest_qmi = model->addQuestTo(parent_qmi, *quest);
+            _focus_qmi(quest_qmi);
+         }
+      }
+      dialog->deleteLater();
+   }
+   void FormDialogStoryManagerNodes::_context_delete_node() {
+      auto [qmi, form] = _selected_source_model_item();
+      if (!form)
+         return;
+      switch (form->form_type) {
+         case dovah::form_type::story_event_node:
+         case dovah::form_type::story_branch_node:
+         case dovah::form_type::story_quest_node:
+            break;
+         default:
+            return;
+      }
+      auto* model = dovahkit::subsystems::story_manager::core::get().model();
+      model->deleteNode(qmi);
+   }
+   void FormDialogStoryManagerNodes::_context_quest_form_edit() {
+      auto* model = dovahkit::subsystems::story_manager::core::get().model();
+      auto  qmi   = _selected_qmi();
+      if (!qmi.isValid())
+         return;
+      auto* form = model->data(qmi, StoryManagerFormsModel::FormStubRole).value<dovah::form_stub*>();
+      if (!form || form->form_type != dovah::form_type::quest)
+         return;
+      open_edit_dialog_for_form(*form);
+   }
+   void FormDialogStoryManagerNodes::_context_quest_form_remove() {
+      auto [qmi, form] = _selected_source_model_item();
+      if (!form || form->form_type != dovah::form_type::quest)
+         return;
+      auto* model = dovahkit::subsystems::story_manager::core::get().model();
+      model->removeQuestFromNode(qmi);
+   }
+   void FormDialogStoryManagerNodes::_context_use_info() {
+      auto [qmi, form] = _selected_source_model_item();
+      if (!form)
+         return;
+      open_use_info_dialog_for_form(*form);
+   }
+#pragma endregion

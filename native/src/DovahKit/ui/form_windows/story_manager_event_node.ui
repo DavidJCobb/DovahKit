@@ -63,6 +63,9 @@
     </layout>
    </item>
    <item>
+    <widget class="DKBreadcrumbBar" name="breadcrumbs"/>
+   </item>
+   <item>
     <widget class="QTreeView" name="tree"/>
    </item>
    <item>
@@ -373,6 +376,12 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>DKBreadcrumbBar</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKBreadcrumbBar.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
    <class>DKConditionList</class>
    <extends>QWidget</extends>
    <header>widgets/DKConditionList.h</header>
@@ -382,6 +391,7 @@
   <tabstop>eventType</tabstop>
   <tabstop>treeExpandAll</tabstop>
   <tabstop>treeCollapseAll</tabstop>
+  <tabstop>breadcrumbs</tabstop>
   <tabstop>tree</tabstop>
   <tabstop>nodeEditorID</tabstop>
   <tabstop>nodeFlagRandom</tabstop>
@@ -394,6 +404,7 @@
   <tabstop>nodeFlagMaxConcurrent</tabstop>
   <tabstop>nodeMaxConcurrent</tabstop>
   <tabstop>questFieldHoursUntilReset</tabstop>
+  <tabstop>questFlagResetAfter24Hours</tabstop>
   <tabstop>nodeConditions</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>

@@ -27,10 +27,15 @@ namespace dovahkit::subsystems::story_manager {
 class StoryManagerFormsModel : public QAbstractItemModel {
    Q_OBJECT;
    public:
-      static constexpr const Qt::ItemDataRole FormStubRole = Qt::UserRole;
-      static constexpr const Qt::ItemDataRole QuestResetAfter24HoursRole = (Qt::ItemDataRole)(Qt::UserRole + 1);
-      static constexpr const Qt::ItemDataRole QuestHoursUntilResetRole   = (Qt::ItemDataRole)(Qt::UserRole + 2);
-      static constexpr const Qt::ItemDataRole EventTypeRole = (Qt::ItemDataRole)(Qt::UserRole + 3); // as an int
+      static constexpr const Qt::ItemDataRole FormStubRole  = Qt::UserRole;
+      static constexpr const Qt::ItemDataRole EventTypeRole = (Qt::ItemDataRole)(Qt::UserRole + 1); // as an int
+
+      struct quest_properties {
+         constexpr bool operator==(const quest_properties&) const noexcept = default;
+         
+         float hours_until_reset    = 0.0F;
+         bool  reset_after_24_hours = false;
+      };
 
    protected:
       struct passkeys { // poor man's namespace
@@ -46,13 +51,11 @@ class StoryManagerFormsModel : public QAbstractItemModel {
       using leaf_node   = dovah::datastores::impl::story_manager::leaf_node;
 
       // Nodes for quest forms are owned by this model.
-      struct quest_node {
+      struct quest_node : public quest_properties {
          bool operator==(const quest_node&) const noexcept = default;
 
          dovah::form_stub* stub = nullptr;
          QString editor_id;
-         bool  reset_after_24_hours = false;
-         float hours_until_reset    = 0.0F;
       };
 
       struct cached_event_data {
@@ -94,7 +97,9 @@ class StoryManagerFormsModel : public QAbstractItemModel {
       #pragma endregion
       #pragma region Caching
          const cached_node_data* _get_cached_data(const node&) const noexcept;
+         cached_node_data* _get_cached_data(node&) noexcept;
          const cached_quest_data* _get_cached_quest_data(const node&) const noexcept;
+         cached_quest_data* _get_cached_quest_data(node&) noexcept;
 
          void _recache_node_core_properties(const node&);
          void _recache_quest_data(const node&, cached_node_data&);
@@ -117,7 +122,23 @@ class StoryManagerFormsModel : public QAbstractItemModel {
          virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
       #pragma endregion
 
+      bool canMoveUp(const QModelIndex&) const noexcept;
+      bool canMoveDown(const QModelIndex&) const noexcept;
       QModelIndex index(const dovah::form_stub&) const noexcept;
+
+      std::optional<quest_properties> questProperties(const QModelIndex&) const noexcept;
+      void setQuestProperties(const QModelIndex&, const quest_properties&) noexcept;
+
+   protected:
+      QModelIndex _create_node_in(const QModelIndex&, dovah::form_type ft, QString editor_id);
+      void _update_quest_node_quest_list(node&);
+   public:
+      // may throw `dovah::exceptions::form_creation_failed`
+      QModelIndex createBranchIn(const QModelIndex&, QString editorID);
+      QModelIndex createQuestListIn(const QModelIndex&, QString editorID);
+      QModelIndex addQuestTo(const QModelIndex& smqn_qmi, dovah::form_stub& quest);
+      void removeQuestFromNode(const QModelIndex& quest_form_qmi);
+      void deleteNode(const QModelIndex&); // only for SMEN, SMBN, and SMQN
 
    public: // passkeyed
       #pragma region Puppeteering by subsystem core
@@ -148,5 +169,6 @@ class StoryManagerFormsModel : public QAbstractItemModel {
       } _icons;
       struct {
          bool last_placement_was_insertion = false;
+         bool next_form_modify_is_us_changing_quest_list = false;
       } _callback_state;
 };

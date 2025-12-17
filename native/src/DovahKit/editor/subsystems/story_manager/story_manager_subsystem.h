@@ -40,6 +40,7 @@ namespace dovahkit::subsystems::story_manager {
          std::optional<dovah::story_event_code::type> event_type_for(const dovah::form_stub& event_node) const noexcept;
 
          void move_node(const node& subject, const branch_node& dst_parent, const node* dst_previous);
+         void move_node(dovah::form_stub& subject, dovah::form_stub& dst_parent, dovah::form_stub* dst_previous);
          void move_node_within_parent(const node&, int by);
          bool delete_node(const node&);
 

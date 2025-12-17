@@ -10,6 +10,7 @@
 #include "dovah/form_stub.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/helpers/story_event_name.h"
+#include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
 
 StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QObject* parent) : QAbstractItemModel(parent) {
@@ -88,6 +89,9 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
          return &it->second;
       return nullptr;
    }
+   StoryManagerFormsModel::cached_node_data* StoryManagerFormsModel::_get_cached_data(node& n) noexcept {
+      return const_cast<cached_node_data*>(std::as_const(*this)._get_cached_data(n));
+   }
    const StoryManagerFormsModel::cached_quest_data* StoryManagerFormsModel::_get_cached_quest_data(const node& n) const noexcept {
       const auto* cached = _get_cached_data(n);
       if (!cached)
@@ -95,6 +99,9 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
       if (!std::holds_alternative<cached_quest_data>(cached->typed))
          return nullptr;
       return &std::get<cached_quest_data>(cached->typed);
+   }
+   StoryManagerFormsModel::cached_quest_data* StoryManagerFormsModel::_get_cached_quest_data(node& n) noexcept {
+      return const_cast<cached_quest_data*>(std::as_const(*this)._get_cached_quest_data(n));
    }
 
    void StoryManagerFormsModel::_recache_node_core_properties(const node& n) {
@@ -277,9 +284,14 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
    void StoryManagerFormsModel::_on_form_modified(passkeys::core_controls_model, const dovah::form_stub& stub) {
       auto& ds = _get_datastore();
       switch (stub.form_type) {
+         case dovah::form_type::story_quest_node:
+            if (this->_callback_state.next_form_modify_is_us_changing_quest_list) {
+               this->_callback_state.next_form_modify_is_us_changing_quest_list = false;
+               break;
+            }
+            [[fallthrough]];
          case dovah::form_type::story_branch_node:
          case dovah::form_type::story_event_node:
-         case dovah::form_type::story_quest_node:
             if (auto* node = ds.node_by_stub(stub))
                this->_recache_node(*node);
             break;
@@ -450,6 +462,53 @@ StoryManagerFormsModel::StoryManagerFormsModel(passkeys::core_controls_model, QO
    }
 #pragma endregion
 
+bool StoryManagerFormsModel::canMoveUp(const QModelIndex& qmi) const noexcept {
+   if (!qmi.isValid())
+      return false;
+   const node* n = _node_for_qmi(qmi);
+   if (n) {
+      if (n->parent == nullptr)
+         return false;
+      switch (n->stub.form_type) {
+         case dovah::form_type::story_event_node:
+            return false;
+         case dovah::form_type::story_branch_node:
+         case dovah::form_type::story_quest_node:
+            break;
+      }
+      auto i = n->parent->index_of_child(*n);
+      return i > 0;
+   }
+   const node* smqn = (const node*)qmi.internalPointer();
+   if (!smqn)
+      return false;
+   return qmi.row() > 0;
+}
+bool StoryManagerFormsModel::canMoveDown(const QModelIndex& qmi) const noexcept {
+   if (!qmi.isValid())
+      return false;
+   const node* n = _node_for_qmi(qmi);
+   if (n) {
+      if (n->parent == nullptr)
+         return false;
+      switch (n->stub.form_type) {
+         case dovah::form_type::story_event_node:
+            return false;
+         case dovah::form_type::story_branch_node:
+         case dovah::form_type::story_quest_node:
+            break;
+      }
+      auto i = n->parent->index_of_child(*n);
+      return i + 1 < n->parent->children.size();
+   }
+   const node* smqn = (const node*)qmi.internalPointer();
+   if (!smqn)
+      return false;
+   auto* cached = _get_cached_quest_data(*smqn);
+   if (!cached)
+      return false;
+   return qmi.row() + 1 < cached->quests.size();
+}
 QModelIndex StoryManagerFormsModel::index(const dovah::form_stub& stub) const noexcept {
    switch (stub.form_type) {
       case dovah::form_type::story_branch_node:
@@ -464,6 +523,187 @@ QModelIndex StoryManagerFormsModel::index(const dovah::form_stub& stub) const no
    if (it == map.end())
       return {};
    return _qmi_for_node(*it->second);
+}
+
+std::optional<StoryManagerFormsModel::quest_properties> StoryManagerFormsModel::questProperties(const QModelIndex& quest_qmi) const noexcept {
+   auto* q = _quest_for_qmi(quest_qmi);
+   if (!q)
+      return {};
+   return *q;
+}
+void StoryManagerFormsModel::setQuestProperties(const QModelIndex& quest_qmi, const quest_properties& v) noexcept {
+   if (!quest_qmi.isValid())
+      return;
+   assert(quest_qmi.model() == this);
+   node* n = (node*)quest_qmi.internalPointer();
+   if (!n || n->stub.form_type != dovah::form_type::story_quest_node)
+      return;
+   auto* cached = _get_cached_quest_data(*n);
+   if (!cached || quest_qmi.row() >= cached->quests.size())
+      return;
+
+   auto& dst = *cached->quests[quest_qmi.row()];
+   dst.quest_properties::operator=(v); // overwrite just the superclass properties
+   {
+      auto loaded = n->stub.load().ptr_cast<dovah::loaded_forms::StoryManagerQuestNode>();
+      assert(!!loaded);
+      if (loaded->quests.size() != cached->quests.size()) {
+         //
+         // This shouldn't happen, but I feel like coding defensively. We have 
+         // enough indirection and layers of abstraction that it's giving me 
+         // the willies a little bit.
+         //
+         #if _DEBUG
+            __debugbreak(); // We're out of date?!
+         #endif
+         _update_quest_node_quest_list(*n);
+      } else {
+         auto& editor = DovahKitCore::get();
+         emit editor.formModificationImminent(&n->stub);
+         this->_callback_state.next_form_modify_is_us_changing_quest_list = true;
+
+         auto& src_item = dst;
+         auto& dst_item = loaded->quests[quest_qmi.row()];
+         dst_item.hours_until_reset = src_item.hours_until_reset;
+         cobb::edit_bit(dst_item.flags, dovah::loaded_forms::StoryManagerQuestNode::quest_entry::flag::reset_after_24_hours, src_item.reset_after_24_hours);
+
+         n->stub.set_edited(true);
+         emit editor.formModified(&n->stub);
+
+      }
+   }
+   emit dataChanged(quest_qmi, quest_qmi);
+}
+
+QModelIndex StoryManagerFormsModel::_create_node_in(const QModelIndex& parent_qmi, dovah::form_type ft, QString editor_id) {
+   const auto* parent_node = _node_for_qmi(parent_qmi);
+   if (!parent_node)
+      return {};
+   const auto* parent_branch = dynamic_cast<const branch_node*>(parent_node);
+   if (!parent_branch)
+      return {};
+
+   dovah::form_stub* stub = nullptr;
+   {
+      auto  request = DovahKitCore::get().request_form_creation(ft);
+      request.editorID = editor_id.toStdString();
+      stub = request.commit();
+   }
+   assert(stub != nullptr);
+   const node* subject_node = _get_datastore().node_by_stub(*stub);
+   assert(subject_node != nullptr);
+
+   const node* prev_node = nullptr;
+   if (!parent_branch->children.empty())
+      prev_node = parent_branch->children.back();
+
+   dovahkit::subsystems::story_manager::core::get().move_node(*subject_node, *parent_branch, prev_node);
+   return this->index(*stub);
+}
+void StoryManagerFormsModel::_update_quest_node_quest_list(node& n) {
+   auto& editor = DovahKitCore::get();
+   assert(n.stub.form_type == dovah::form_type::story_quest_node);
+   auto loaded = n.stub.load().ptr_cast<dovah::loaded_forms::StoryManagerQuestNode>();
+   assert(!!loaded);
+
+   emit editor.formModificationImminent(&n.stub);
+   this->_callback_state.next_form_modify_is_us_changing_quest_list = true;
+
+   auto& dst_list = loaded->quests;
+   if (auto* cached = _get_cached_quest_data(n)) {
+      const auto&  src_list = cached->quests;
+      const size_t src_size = src_list.size();
+      size_t       dst_size = dst_list.size();
+      if (src_size > dst_size) {
+         dst_list.resize(src_size);
+      }
+      for (size_t i = 0; i < src_size; ++i) {
+         auto& src_item = *src_list[i];
+         auto& dst_item = dst_list[i];
+         dst_item.form.set(*loaded, src_item.stub);
+         dst_item.hours_until_reset = src_item.hours_until_reset;
+         cobb::edit_bit(dst_item.flags, dovah::loaded_forms::StoryManagerQuestNode::quest_entry::flag::reset_after_24_hours, src_item.reset_after_24_hours);
+      }
+      if (src_size < dst_size) {
+         for (size_t i = src_size; i < dst_size; ++i) {
+            auto& dst_item = dst_list[i];
+            dst_item.form.set(*loaded, nullptr);
+         }
+         dst_list.resize(src_size);
+      }
+   } else {
+      for (auto& item : dst_list)
+         item.form.set(*loaded, nullptr);
+      dst_list.clear();
+   }
+
+   n.stub.set_edited(true);
+   emit editor.formModified(&n.stub);
+}
+
+QModelIndex StoryManagerFormsModel::createBranchIn(const QModelIndex& parent_qmi, QString editorID) {
+   return _create_node_in(parent_qmi, dovah::form_type::story_branch_node, editorID);
+}
+QModelIndex StoryManagerFormsModel::createQuestListIn(const QModelIndex& parent_qmi, QString editorID) {
+   return _create_node_in(parent_qmi, dovah::form_type::story_quest_node, editorID);
+}
+QModelIndex StoryManagerFormsModel::addQuestTo(const QModelIndex& smqn_qmi, dovah::form_stub& quest) {
+   if (!smqn_qmi.isValid())
+      return {};
+   if (quest.form_type != dovah::form_type::quest)
+      return {};
+   auto* parent_node = _node_for_qmi(smqn_qmi);
+   if (!parent_node)
+      return {};
+   if (parent_node->stub.form_type != dovah::form_type::story_quest_node)
+      return {};
+
+   auto& cached = this->_cache.nodes[parent_node];
+   if (!std::holds_alternative<cached_quest_data>(cached.typed)) {
+      cached.typed.emplace<cached_quest_data>();
+   }
+   auto& typed = std::get<cached_quest_data>(cached.typed);
+
+   // Verify that the quest isn't already in here.
+   for (auto& qust_ptr : typed.quests)
+      if (qust_ptr->stub == &quest)
+         return {};
+
+   auto i = typed.quests.size();
+   this->beginInsertRows(smqn_qmi, i, i);
+
+   auto& dst_ptr = typed.quests.emplace_back();
+   dst_ptr = std::make_unique<quest_node>();
+   dst_ptr->stub      = &quest;
+   dst_ptr->editor_id = QString::fromStdString(quest.editorID);
+   this->_update_quest_node_quest_list(*parent_node);
+
+   this->endInsertRows();
+   return this->createIndex(i, 0, parent_node);
+}
+void StoryManagerFormsModel::removeQuestFromNode(const QModelIndex& quest_form_qmi) {
+   if (!_qmi_is_quest_form(quest_form_qmi))
+      return;
+   auto* parent_node = (node*)quest_form_qmi.internalPointer();
+   assert(parent_node != nullptr);
+   auto* cached      = _get_cached_quest_data(*parent_node);
+   if (cached == nullptr)
+      return;
+
+   auto i = quest_form_qmi.row();
+   if (i >= cached->quests.size())
+      return;
+
+   this->beginRemoveRows(_qmi_for_node(*parent_node), i, i);
+   cached->quests.erase(cached->quests.begin() + i);
+   this->_update_quest_node_quest_list(*parent_node);
+   this->endRemoveRows();
+}
+void StoryManagerFormsModel::deleteNode(const QModelIndex& sm_node_qmi) {
+   auto* subject = _node_for_qmi(sm_node_qmi);
+   if (!subject)
+      return;
+   dovahkit::subsystems::story_manager::core::get().delete_node(*subject);
 }
 
 #pragma region Puppeteering by subsystem core
@@ -581,7 +821,14 @@ void StoryManagerFormsModel::_make_icons() {
       auto  painter = QPainter(&pixmap);
       painter.setPen(QPen(QColor(128, 128, 128), 0));
       painter.setBrush(QColor(255, 255, 255));
-      painter.drawEllipse(QPointF{ 8, 8 }, 2.5, 2.5);
+      {
+         auto  rect = pixmap.rect() - qt_border_jank;
+         qreal rw   = rect.width();
+         qreal cw   = rw / 2;
+         qreal rh   = rect.height();
+         qreal ch   = rh / 2;
+         painter.drawEllipse(QPointF{ cw, ch }, 2.5, 2.5);
+      }
       icon = pixmap;
    }
 }
