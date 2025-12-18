@@ -3699,6 +3699,9 @@
     <ClCompile Include="ui\form_windows\imagespace.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\types\imagespace_modifier\keyframe_collection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9089,6 +9092,15 @@
     <ClInclude Include="ui\form_windows\story_manager_event_node\StoryManagerQuestNodeAddQuestsFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\types\imagespace_modifier\keyframe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\imagespace_modifier\computed_keyframe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\imagespace_modifier\keyframe_collection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -9572,6 +9584,12 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\form_group_windows\camera_path\camera_path.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\imagespace_modifier.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\form_windows\location.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>

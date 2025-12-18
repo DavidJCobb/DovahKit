@@ -1172,6 +1172,7 @@
     <ClCompile Include="ui\types\face_tints\layer.cpp" />
     <ClCompile Include="ui\types\face_tints\preset.cpp" />
     <ClCompile Include="ui\types\game_file_path.cpp" />
+    <ClCompile Include="ui\types\imagespace_modifier\keyframe_collection.cpp" />
     <ClCompile Include="ui\types\logging\log_item.cpp" />
     <ClCompile Include="ui\types\nif_for_form.cpp" />
     <ClCompile Include="ui\types\packages\package_data_value.cpp" />
@@ -2190,6 +2191,9 @@
     <ClInclude Include="ui\types\face_tints\layer.h" />
     <ClInclude Include="ui\types\face_tints\preset.h" />
     <ClInclude Include="ui\types\game_file_path.h" />
+    <ClInclude Include="ui\types\imagespace_modifier\computed_keyframe.h" />
+    <ClInclude Include="ui\types\imagespace_modifier\keyframe.h" />
+    <ClInclude Include="ui\types\imagespace_modifier\keyframe_collection.h" />
     <ClInclude Include="ui\types\logging\log_item.h" />
     <ClInclude Include="ui\types\logging\log_item_context.h" />
     <ClInclude Include="ui\types\logging\log_item_type.h" />
@@ -3534,6 +3538,7 @@
     <QtUic Include="ui\form_group_windows\idle\FormSubdialogIdleNewActionRoot.ui" />
     <QtUic Include="ui\form_windows\idle_marker.ui" />
     <QtUic Include="ui\form_windows\imagespace.ui" />
+    <QtUic Include="ui\form_windows\imagespace_modifier.ui" />
     <QtUic Include="ui\form_windows\impact_data.ui" />
     <QtUic Include="ui\form_windows\impact_data_set.ui" />
     <QtUic Include="ui\form_windows\ingredient.ui" />
@@ -3546,6 +3551,7 @@
     <QtUic Include="ui\form_windows\leveled_spell.ui" />
     <QtUic Include="ui\form_windows\light.ui" />
     <QtUic Include="ui\form_windows\loading_screen.ui" />
+    <QtUic Include="ui\form_windows\location.ui" />
     <QtUic Include="ui\form_windows\magic_effect.ui" />
     <QtUic Include="ui\form_windows\material_object.ui" />
     <QtUic Include="ui\form_windows\material_type.ui" />
