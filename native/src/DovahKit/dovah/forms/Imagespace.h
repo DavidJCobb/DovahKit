@@ -42,7 +42,8 @@ namespace dovah::loaded_forms {
             float strength = 0;
             float distance = 0;
             float range    = 0;
-            float radius   = 2; // blur radius. also indicates whether the sky is affected?
+            unsigned int radius : 3 = 2;
+            bool  no_sky   = false;
          } depth_of_field;
 
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);

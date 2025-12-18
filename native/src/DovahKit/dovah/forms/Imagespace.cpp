@@ -68,7 +68,13 @@ namespace dovah::loaded_forms {
                subrecord.read(this->depth_of_field.strength);
                subrecord.read(this->depth_of_field.distance);
                subrecord.read(this->depth_of_field.range);
-               subrecord.read(this->depth_of_field.radius);
+               {
+                  float   stored  = 0;
+                  subrecord.read(stored);
+                  int32_t bitmask = stored;
+                  this->depth_of_field.radius = (bitmask >> 3);
+                  this->depth_of_field.no_sky = (bitmask >> 2) & 1;
+               }
                break;
 
             default:
@@ -140,7 +146,14 @@ namespace dovah::loaded_forms {
          subrecord.write(this->depth_of_field.strength);
          subrecord.write(this->depth_of_field.distance);
          subrecord.write(this->depth_of_field.range);
-         subrecord.write(this->depth_of_field.radius);
+         {
+            int32_t bitmask = 0;
+            bitmask |= (this->depth_of_field.radius << 3);
+            bitmask |= (this->depth_of_field.no_sky ? 1 : 0) << 2;
+            bitmask |= 2;
+            float stored = bitmask;
+            subrecord.write(stored);
+         }
          subrecord.close();
       }
    }

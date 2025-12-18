@@ -8,6 +8,9 @@
   <layout class="QGridLayout" name="gridLayout_4">
    <item row="0" column="0" rowspan="2">
     <widget class="QGroupBox" name="groupboxHDR">
+     <property name="whatsThis">
+      <string>Skyrim uses high dynamic range rendering. Put simply, the game's 3D renderer can produce colors that are brighter than white or darker than black, and the options here are used afterward to control how those visuals are shifted into the range of colors that an ordinary monitor can display.</string>
+     </property>
      <property name="title">
       <string>HDR</string>
      </property>
@@ -24,8 +27,18 @@
       </item>
       <item row="0" column="1">
        <widget class="QDoubleSpinBox" name="hdrEyeAdaptSpeed">
+        <property name="whatsThis">
+         <string>&lt;p&gt;Controls how quickly the adapted scene luminance chases the actual luminance. The value is the percentage of the difference, measured over thirtieths of a second (i.e. the percentage of the gap that is closed every frame at 30FPS). Typical values are in the range [2%, 5%], with the default being 3%.&lt;/p&gt;
+&lt;p&gt;A vale of 0 means that the adapted luminance will never change. A value of 100 means that the adapted luminance changes in real-time.&lt;/p&gt;</string>
+        </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="suffix">
+         <string>%</string>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -61,6 +74,12 @@
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
+        <property name="minimum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>7.000000000000000</double>
+        </property>
        </widget>
       </item>
       <item row="3" column="0">
@@ -75,6 +94,9 @@
       </item>
       <item row="3" column="1">
        <widget class="QDoubleSpinBox" name="hdrBloomThreshold">
+        <property name="whatsThis">
+         <string>Controls how bright a pixel in the scene has to be in order to bloom. Pixels darker than this threshold don't bloom, while pixels brighter than this value bloom more the further above the threshold they are.</string>
+        </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -219,6 +241,9 @@
       </item>
       <item row="1" column="1">
        <widget class="QDoubleSpinBox" name="cineSaturation">
+        <property name="whatsThis">
+         <string>Control the saturation of the scene. Negative values invert the scene colors. A zero value forces the scene to greyscale.</string>
+        </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -228,6 +253,9 @@
        <widget class="QDoubleSpinBox" name="cineTintAmount">
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="maximum">
+         <double>255.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -243,6 +271,9 @@
       </item>
       <item row="2" column="1">
        <widget class="QDoubleSpinBox" name="cineContrast">
+        <property name="whatsThis">
+         <string>&lt;p&gt;Values above 1 will make dark pixels darker and light pixels lighter. Positive values lower than one will instead soften the differences. Negative values invert the brightness of pixels, before then scaling brightness and darkness similarly to postiive values.&lt;/p&gt;</string>
+        </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -252,6 +283,9 @@
        <widget class="QDoubleSpinBox" name="cineBrightness">
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -303,15 +337,11 @@
         </property>
        </spacer>
       </item>
-      <item row="0" column="1">
-       <widget class="QDoubleSpinBox" name="dofRadius">
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="4">
        <widget class="QDoubleSpinBox" name="dofDistance">
+        <property name="whatsThis">
+         <string>The distance over which the blur is applied. Objects start to blur at &lt;var&gt;Range&lt;/var&gt; units away from the camera, and are maximally blurred at &lt;var&gt;Range&lt;/var&gt; + &lt;var&gt;Distance&lt;/var&gt; units away from the camera.</string>
+        </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -336,6 +366,9 @@
       </item>
       <item row="2" column="4">
        <widget class="QDoubleSpinBox" name="dofRange">
+        <property name="whatsThis">
+         <string>The distance at which the blur begins. Objects start to blur at &lt;var&gt;Range&lt;/var&gt; units away from the camera, and are maximally blurred at &lt;var&gt;Range&lt;/var&gt; + &lt;var&gt;Distance&lt;/var&gt; units away from the camera.</string>
+        </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
@@ -365,6 +398,16 @@
        <widget class="QCheckBox" name="dofFlagNoSky">
         <property name="text">
          <string>No Sky</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="dofRadius">
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="maximum">
+         <number>7</number>
         </property>
        </widget>
       </item>

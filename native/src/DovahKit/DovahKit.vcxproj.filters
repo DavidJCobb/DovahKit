@@ -3696,6 +3696,9 @@
     <ClCompile Include="ui\form_windows\story_manager_event_node\StoryManagerQuestNodeAddQuestsFilter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\imagespace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10483,6 +10486,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\story_manager_event_node.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\imagespace.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

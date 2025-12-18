@@ -49,6 +49,7 @@
 #include "../ui/form_windows/hazard.h"
 #include "../ui/form_windows/head_part.h"
 #include "../ui/form_windows/idle_marker.h"
+#include "../ui/form_windows/imagespace.h"
 #include "../ui/form_windows/impact_data.h"
 #include "../ui/form_windows/ingredient.h"
 #include "../ui/form_windows/key.h"
@@ -162,6 +163,7 @@ namespace {
       std::pair{ dovah::form_type::hazard,            _make<FormDialogHazard> },
       std::pair{ dovah::form_type::head_part,         _make<FormDialogHeadPart> },
       std::pair{ dovah::form_type::idle_marker,       _make<FormDialogIdleMarker> },
+      std::pair{ dovah::form_type::imagespace,        _make<FormDialogImagespace> },
       std::pair{ dovah::form_type::impact_data,       _make<FormDialogImpactData> },
       std::pair{ dovah::form_type::ingredient,        _make<FormDialogIngredient> },
       std::pair{ dovah::form_type::key,               _make<FormDialogKey> },

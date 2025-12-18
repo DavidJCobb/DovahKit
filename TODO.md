@@ -101,7 +101,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | Character      | QUST | Quest                     | ✅ | 🟩 | 🟨 |
 | Character      | RACE | Race                      | ✅ | ✅ | ⬛ |
 | Character      | RELA | Relationship              | ✅ | ✅ | ⬛ |
-| Character      | SMEN | SM Event Node             | ✅ | 🟨 | ⬛ | How do the game and CK cope with multiple forms for a single event type? |
+| Character      | SMEN | SM Event Node             | ✅ | ✅ | ⬛ | How do the game and CK cope with multiple forms for a single event type? |
 | Character      | VTYP | Voicetype                 | ✅ | ✅ | ✅ |
 | Items          | AMMO | Ammo                      | ✅ | ✅ | ⬛ |
 | Items          | ARMO | Armor                     | ✅ | ✅ | ⬛ |
@@ -148,7 +148,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | SpecialEffect  | FSTP | Footstep                  | ✅ | ✅ | ⬛ |
 | SpecialEffect  | FSTS | Footstep Set              | ✅ | ✅ | ⬛ |
 | SpecialEffect  | HAZD | Hazard                    | ✅ | ✅ | ⬛ |
-| SpecialEffect  | IMGS | Imagespace                | ✅ | 🟨 | ⬛ |
+| SpecialEffect  | IMGS | Imagespace                | ✅ | ✅ | ⬛ |
 | SpecialEffect  | IMAD | Imagespace Modifier       | ✅ | ⬛ | ⬛ |
 | SpecialEffect  | IPCT | ImpactData                | ✅ | ✅ | ⬛ |
 | SpecialEffect  | IPDS | ImpactDataSet             | ✅ | 🟨 | ⬛ |
