@@ -355,15 +355,18 @@ namespace dovah {
       // have a mismatched type; loaded_form_ptr<loaded_forms::Quest>, for example, 
       // will not store a stub whose formType is not form_type::quest.
       //
+      public:
+         using wrapped_type = loaded_form_t;
+
       protected:
          form_stub* wrapped = nullptr;
-         inline void _inc() {
+         void _inc() {
             if (auto* fs = this->wrapped) {
                assert(!fs->refcount_is_maxed_out() && "form_stub refcount is already at maximum!");
                ++fs->refcount;
             }
          }
-         inline void _dec() {
+         void _dec() {
             if (auto* fs = this->wrapped) {
                assert(fs->get_refcount() != 0 && "form_stub refcount is already zero!");
                --fs->refcount;
@@ -371,16 +374,22 @@ namespace dovah {
                   fs->_unload_form();
             }
          }
-         inline static form_stub* _type_check(form_stub* s) noexcept {
+         static form_stub* _type_check(form_stub* s) noexcept {
             if constexpr (std::is_same_v<loaded_form_t, loaded_forms::Form>)
                return s;
-            if (s && s->form_type == loaded_form_t::form_type)
-               return s;
+            if (!s)
+               return nullptr;
+            if constexpr (loaded_form_t::form_type == dovah::form_type::reference) {
+               if (form_type_is_reference(s->form_type))
+                  return s;
+            } else {
+               if (s->form_type == loaded_form_t::form_type)
+                  return s;
+            }
             return nullptr;
          }
+
       public:
-         using wrapped_type = loaded_form_t;
-         //
          loaded_form_ptr() {}
          loaded_form_ptr(form_stub* stub) : wrapped(_type_check(stub)) {
             this->_inc();
