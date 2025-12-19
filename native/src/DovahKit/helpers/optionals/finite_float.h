@@ -106,7 +106,7 @@ constexpr std::compare_three_way_result_t<float, Value> operator<=>(const cobb::
 
 template<> struct std::hash<cobb::optionals::finite_float> {
    std::size_t operator()(const cobb::optionals::finite_float& s) const noexcept {
-      return std::hash(s.value());
+      return std::hash<cobb::optionals::finite_float::value_type>{}(s.value());
    }
 };
 

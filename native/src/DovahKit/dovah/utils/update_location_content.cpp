@@ -59,7 +59,7 @@ namespace dovah::utils {
          return;
       }
    }
-   form_stub* update_location_content::_get_computed_location(form_stub& form) {
+   form_stub* update_location_content::_get_computed_location(form_stub& form) const {
       switch (form.form_type) {
          case form_type::cell:
             {
