@@ -94,6 +94,7 @@ DKFormListPane::DKFormListPane(QWidget* parent) : QWidget(parent) {
    view->setCornerButtonEnabled(false);
    view->setAcceptDrops(true);
    view->setDragDropOverwriteMode(false);
+   view->setWordWrap(false);
    {
       auto* header = new DKHeaderView(Qt::Horizontal, view);
       header->setFlexResizeEnabled(true);
