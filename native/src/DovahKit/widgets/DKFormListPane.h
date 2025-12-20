@@ -37,6 +37,14 @@ class DKFormListPane : public QWidget {
    Q_PROPERTY(bool showMoveButtons  READ showMoveButtons  WRITE setShowMoveButtons  DESIGNABLE true);
    Q_PROPERTY(bool showRemoveButton READ showRemoveButton WRITE setShowRemoveButton DESIGNABLE true);
    public:
+      enum NamelessRefDisplayMode {
+         Placement,
+         BaseFormEditorID,
+      };
+      Q_ENUM(NamelessRefDisplayMode);
+      Q_PROPERTY(NamelessRefDisplayMode namelessRefDisplayMode READ namelessRefDisplayMode WRITE setNamelessRefDisplayMode DESIGNABLE true);
+
+   public:
       #if !defined(QT_PLUGIN)
          //
          // You can add extra columns to the listview, with getters that take a form stub or 
@@ -63,6 +71,7 @@ class DKFormListPane : public QWidget {
       #endif
       constexpr bool allowDuplicates() const noexcept { return this->state.allow_duplicates; }
       constexpr bool allowMultiSelect() const noexcept { return this->state.allow_multi_select; }
+      constexpr NamelessRefDisplayMode namelessRefDisplayMode() const noexcept { return this->state.nameless_ref_display_mode; }
       constexpr bool readOnly() const noexcept { return this->state.read_only; }
       constexpr Qt::Orientation orientation() const noexcept { return this->state.orientation; }
       constexpr bool showFormTypes() const noexcept { return this->state.show_form_types; }
@@ -104,6 +113,7 @@ class DKFormListPane : public QWidget {
       void setOrientation(Qt::Orientation);
       void setShowMoveButtons(bool);
       void setShowRemoveButton(bool);
+      void setNamelessRefDisplayMode(NamelessRefDisplayMode);
       
    public: // Ensure these are not Qt slots; slots can't have moved&& parameters
       #if !defined(QT_PLUGIN)
@@ -140,6 +150,7 @@ class DKFormListPane : public QWidget {
       struct {
          bool allow_duplicates   = false;
          bool allow_multi_select = true;
+         NamelessRefDisplayMode nameless_ref_display_mode = NamelessRefDisplayMode::Placement;
          bool read_only          = false;
          bool show_form_types    = true;
          bool show_indices       = false;

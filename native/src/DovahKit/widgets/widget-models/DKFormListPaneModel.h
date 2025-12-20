@@ -69,6 +69,7 @@ class DKFormListPaneModel : public QAbstractTableModel, public DKCustomFormFilte
       bool allow_dupes  = false; // allow duplicate entries?
       bool allow_gaps   = true;
       bool show_indices = true;
+      bool nameless_refs_show_base_editor_id = false;
       struct {
          QVector<ExtraColumnInfo> list;
          bool any_getters_take_loaded_form = false;
@@ -151,6 +152,7 @@ class DKFormListPaneModel : public QAbstractTableModel, public DKCustomFormFilte
          void setAllowedFormTypes(QVector<dovah::form_type>);
          void setAllowGaps(bool);
          void setShowIndices(bool);
+         void setNamelessRefsShowBaseEditorID(bool);
       #pragma endregion
          
    public: // Ensure these are not Qt slots; slots can't have moved&& parameters

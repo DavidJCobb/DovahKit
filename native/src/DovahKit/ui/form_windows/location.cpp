@@ -153,6 +153,7 @@ FormDialogLocation::FormDialogLocation(dovah::form_stub& stub, QWidget* parent) 
    {
       auto* widget = this->ui.locRefTypes;
       widget->setAllowDuplicates(false);
+      widget->setNamelessRefDisplayMode(DKFormListPane::NamelessRefDisplayMode::BaseFormEditorID);
       widget->setReadOnly(true);
       widget->addExtraColumn(
          tr("Loc Ref Type"),
@@ -178,6 +179,7 @@ FormDialogLocation::FormDialogLocation(dovah::form_stub& stub, QWidget* parent) 
    {
       auto* widget = this->ui.actors;
       widget->setAllowDuplicates(false);
+      widget->setNamelessRefDisplayMode(DKFormListPane::NamelessRefDisplayMode::BaseFormEditorID);
       widget->setReadOnly(true);
       widget->addExtraColumn(
          tr("Loc Ref Type"),

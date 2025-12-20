@@ -337,6 +337,14 @@ void DKFormListPane::setShowRemoveButton(bool v) {
    this->state.show_remove_button = v;
    this->_updateButtonVisibility();
 }
+void DKFormListPane::setNamelessRefDisplayMode(NamelessRefDisplayMode m) {
+   if (this->namelessRefDisplayMode() == m)
+      return;
+   this->state.nameless_ref_display_mode = m;
+   #if !defined(QT_PLUGIN)
+      this->_model()->setNamelessRefsShowBaseEditorID(m == NamelessRefDisplayMode::BaseFormEditorID);
+   #endif
+}
 
 #if !defined(QT_PLUGIN)
    void DKFormListPane::addExtraColumn(QString header, ExtraColumnHandler&& handler) {
