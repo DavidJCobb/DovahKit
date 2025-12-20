@@ -65,6 +65,6 @@ namespace ui::types::imagespace_modifier {
             mult_add sky_scale;
             mult_add sunlight_scale;
          } hdr;
-         std::array<mult_add, 8> unknown; // base: DNAM+0x48,0x4C ... DNAM+0x88,0x8C; interp subrecord indices are mult:[0x08, 0x10] and add:[0x48, 0x50]
+         std::array<mult_add, 9> unknown; // base: DNAM+0x48,0x4C ... DNAM+0x88,0x8C; interp subrecord indices are mult:[0x08, 0x10] and add:[0x48, 0x50]
    };
 }

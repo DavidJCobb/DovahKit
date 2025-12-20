@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="cobb::optionals::finite_float">
+      <Intrinsic Name="_bits" Expression="*(uint32_t*)&amp;_value" />
+      <Intrinsic Name="_is_qnan" Expression="_bits() &amp; 0b11111111110000000000000000000000 == 0b01111111100000000000000000000000" />
+      <Intrinsic Name="_is_snan" Expression="_bits() &amp; 0b11111111110000000000000000000000 == 0b01111111110000000000000000000000" />
+      <Intrinsic Name="_is_pos_inf" Expression="_bits() == 0x7F800000" />
+      <Intrinsic Name="_is_neg_inf" Expression="_bits() == 0xFF800000" />
+      <Intrinsic Name="_has_value" Expression="!_is_qnan() &amp;&amp; !_is_snan() &amp;&amp; !_is_pos_inf() &amp;&amp; !_is_neg_inf()" />
+
+      <DisplayString Condition="_has_value()">nullopt</DisplayString>
+      <DisplayString>{_value}</DisplayString>
+      <Expand>
+         <Item Name="[value]">_value</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

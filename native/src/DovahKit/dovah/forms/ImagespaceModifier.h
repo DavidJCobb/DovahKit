@@ -103,7 +103,7 @@ namespace dovah::loaded_forms {
             interpolated_mult_add sky_scale;       // base: DNAM+0x40,0x44; interp subrecord indices: 0x07, 0x47
             interpolated_mult_add sunlight_scale;  // base: DNAM+0x38,0x3C; interp subrecord indices: 0x06, 0x46
          } hdr; // DATA+0x08
-         std::array<interpolated_mult_add, 8> unknown; // base: DNAM+0x48,0x4C ... DNAM+0x88,0x8C; interp subrecord indices are mult:[0x08, 0x10] and add:[0x48, 0x50]
+         std::array<interpolated_mult_add, 9> unknown; // base: DNAM+0x48,0x4C ... DNAM+0x88,0x8C; interp subrecord indices are mult:[0x08, 0x10] and add:[0x48, 0x50]
 
       public:
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);

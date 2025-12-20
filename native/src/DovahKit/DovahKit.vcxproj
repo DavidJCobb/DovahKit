@@ -1107,6 +1107,7 @@
     <ClCompile Include="ui\main_window\render_window.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\filter_object_selection_by_scriptname.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\form_info_cache.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\form_types\imagespace_modifier_keyframe_interp.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\idles_datastore.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\load_nif.cpp" />
@@ -2173,6 +2174,7 @@
     <QtMoc Include="ui\form_windows\volumetric_lighting.h" />
     <ClInclude Include="ui\form_windows\weather\WeatherIntpackedFloatEditor.h" />
     <ClInclude Include="ui\form_windows\weather\WeatherSoundsModel.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\form_types\imagespace_modifier_keyframe_interp.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\idles_datastore.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\models\scoped_proxy_model.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt\paint_ellipse_tests.h" />

@@ -33,6 +33,7 @@ namespace {
          offsetof(loaded_form_type, unknown) + sizeof(loaded_form_type::unknown[0]) * 5,
          offsetof(loaded_form_type, unknown) + sizeof(loaded_form_type::unknown[0]) * 6,
          offsetof(loaded_form_type, unknown) + sizeof(loaded_form_type::unknown[0]) * 7,
+         offsetof(loaded_form_type, unknown) + sizeof(loaded_form_type::unknown[0]) * 8,
          // [0x11, 0x14] and [0x51, 0x54]:
          offsetof(loaded_form_type, cinematic.saturation),
          offsetof(loaded_form_type, cinematic.brightness),

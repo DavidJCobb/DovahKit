@@ -55,7 +55,9 @@
    DO(unknown[6].mult) \
    DO(unknown[6].add) \
    DO(unknown[7].mult) \
-   DO(unknown[7].add)
+   DO(unknown[7].add) \
+   DO(unknown[8].mult) \
+   DO(unknown[8].add)
 
 namespace ui::types::imagespace_modifier {
    void keyframe_collection::import_data(const dovah::loaded_forms::ImagespaceModifier& src) {

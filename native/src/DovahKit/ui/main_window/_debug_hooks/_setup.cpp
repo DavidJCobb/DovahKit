@@ -21,6 +21,7 @@
 #include "filter_object_selection_by_scriptname.h"
 #include "ui_form_list_pane_extra_col.h"
 #include "idles_datastore.h"
+#include "./form_types/imagespace_modifier_keyframe_interp.h"
 #include "./models/scoped_proxy_model.h"
 #include "./renderwin/vulkan_renderer_instance.h"
 #include "./renderwin/worldinput2.h"
@@ -47,6 +48,9 @@
 #include "./widgets/yes_no_unset_widget.h"
 
 namespace DovahKitDebug {
+   using form_type_tests = cobb::class_list<
+      features::form_types::imagespace_modifier_keyframe_interp
+   >;
    using model_tests = cobb::class_list<
       features::models::scoped_proxy_model
    >;
@@ -122,6 +126,10 @@ namespace DovahKitDebug {
       auto* p = menu->parentWidget();
       if (p)
          p = p->window();
+      {
+         auto* submenu = menu->addMenu(QString("Form-type-specific tests"));
+         form_type_tests::for_each_with_args<_add_functor>(submenu, p);
+      }
       {
          auto* submenu = menu->addMenu(QString("Render Window and friends"));
          renderwin_tests::for_each_with_args<_add_functor>(submenu, p);

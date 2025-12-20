@@ -3705,6 +3705,9 @@
     <ClCompile Include="ui\form_windows\location.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\form_types\imagespace_modifier_keyframe_interp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9102,6 +9105,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\types\imagespace_modifier\keyframe_collection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\form_types\imagespace_modifier_keyframe_interp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
