@@ -23,4 +23,8 @@ class FormDialogLocation :
       virtual void _save_impl() override;
 
       void _update_contents_views();
+      void _on_actor_base_changed(dovah::form_stub&);
+      void _on_actor_changed(dovah::form_stub&);
+      void _on_cell_changed(dovah::form_stub&);
+      void _on_ref_changed(dovah::form_stub&);
 };
