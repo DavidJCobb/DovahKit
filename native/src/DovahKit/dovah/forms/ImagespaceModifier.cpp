@@ -94,9 +94,13 @@ namespace dovah::loaded_forms {
          for (; i < list.size(); ++i) {
             if (!subrecord.read(list[i].time))
                break;
-            if constexpr (std::is_same_v<T, color_t>) {
-               if (!list[i].value.load(subrecord))
+            if constexpr (std::is_same_v<T, color_float_t>) {
+               if (!subrecord.is_in_bounds(sizeof(float) * 4))
                   break;
+               subrecord.unchecked_read(list[i].value.r);
+               subrecord.unchecked_read(list[i].value.g);
+               subrecord.unchecked_read(list[i].value.b);
+               subrecord.unchecked_read(list[i].value.a);
             } else {
                if (!subrecord.read(list[i].value))
                   break;
@@ -316,8 +320,11 @@ namespace dovah::loaded_forms {
          auto& subrecord = record.open_next_subrecord(signature);
          for (auto& item : list) {
             subrecord.write(item.time);
-            if constexpr (std::is_same_v<T, color_t>) {
-               item.value.save(subrecord);
+            if constexpr (std::is_same_v<T, color_float_t>) {
+               subrecord.write(item.value.r);
+               subrecord.write(item.value.g);
+               subrecord.write(item.value.b);
+               subrecord.write(item.value.a);
             } else {
                subrecord.write(item.value);
             }

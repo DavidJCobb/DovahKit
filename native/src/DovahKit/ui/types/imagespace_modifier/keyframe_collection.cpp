@@ -73,7 +73,7 @@ namespace ui::types::imagespace_modifier {
             if constexpr (std::is_same_v<PropertyType, interpolated_color>) { \
                for (auto& frame : src_property) { \
                   auto& kf = this->get_or_create_keyframe(frame.time); \
-                  kf.prop = QColor(frame.value.r, frame.value.g, frame.value.b, frame.value.unused); \
+                  kf.prop = QColor::fromRgbF(frame.value.r, frame.value.g, frame.value.b, frame.value.a); \
                } \
             } else { \
                for (auto& frame : src_property) { \
@@ -105,10 +105,10 @@ namespace ui::types::imagespace_modifier {
                   if (src_property.has_value()) { \
                      auto& dst_frame   = dst_property.emplace_back(); \
                      dst_frame.time    = src_keyframe.timestamp; \
-                     dst_frame.value.r = src_property.value().red(); \
-                     dst_frame.value.g = src_property.value().green(); \
-                     dst_frame.value.b = src_property.value().blue(); \
-                     dst_frame.value.unused = src_property.value().alpha(); \
+                     dst_frame.value.r = src_property.value().redF(); \
+                     dst_frame.value.g = src_property.value().greenF(); \
+                     dst_frame.value.b = src_property.value().blueF(); \
+                     dst_frame.value.a = src_property.value().alphaF(); \
                   } \
                } else { \
                   if (src_property.has_value()) { \

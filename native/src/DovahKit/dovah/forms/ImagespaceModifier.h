@@ -28,13 +28,20 @@ namespace dovah::loaded_forms {
          };
          using radial_blur_flags_t = std::underlying_type_t<radial_blur_flag::type>;
 
+         struct color_float_t {
+            float r = 0;
+            float g = 0;
+            float b = 0;
+            float a = 1;
+         };
+
          template<typename T>
          struct keyframe {
             float time  = 0;
             T     value = {};
          };
          //
-         using interpolated_color = std::vector<keyframe<color_t>>;
+         using interpolated_color = std::vector<keyframe<color_float_t>>;
          using interpolated_float = std::vector<keyframe<float>>;
          //
          struct interpolated_mult_add {
