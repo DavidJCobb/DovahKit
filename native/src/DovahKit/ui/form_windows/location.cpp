@@ -9,13 +9,23 @@
 
 // Includes for contents list-view columns
 #include "dovah/data/hardcoded_form_ids.h"
+#include "dovah/form_stubs/helpers/for_each_child_form.h"
+#include "dovah/form_stubs/helpers/get_base_form.h"
+#include "dovah/forms/components/extra_data/encounter_zone.h"
 #include "dovah/forms/components/extra_data/location.h"
 #include "dovah/forms/components/extra_data/location_ref_type.h"
+#include "dovah/forms/ActorBase.h"
 #include "dovah/forms/Cell.h"
 #include "dovah/forms/EncounterZone.h"
 #include "dovah/forms/ObjectReference.h"
 #include "dovah/forms/Worldspace.h"
 
+namespace {
+   namespace extra_data {
+      using namespace dovah::loaded_forms::components::extra;
+   }
+   using extra_data_type = dovah::loaded_forms::components::extra_data_type;
+}
 namespace {
    static const dovah::loaded_forms::ObjectReference* _as_ref(const dovah::loaded_forms::Form& loaded) {
       return dynamic_cast<const dovah::loaded_forms::ObjectReference*>(&loaded);;
@@ -217,32 +227,23 @@ void FormDialogLocation::_save_impl() {
    this->ui.keywords->commitStubs(working.keywords.forms, working);
 }
 
-#include "dovah/forms/components/extra_data/encounter_zone.h"
-#include "dovah/forms/Cell.h"
-namespace {
-   namespace extra_data {
-      using namespace dovah::loaded_forms::components::extra;
-   }
-   using extra_data_type = dovah::loaded_forms::components::extra_data_type;
-}
 void FormDialogLocation::_update_contents_views() {
    auto& location_stub = this->form->stub;
+
+   this->ui.locRefTypes->clear();
+   this->ui.cells->clear();
+   this->ui.actors->clear();
 
    dovah::utils::update_location_content updater;
    updater.gather(location_stub);
 
-   {
-      auto* widget = this->ui.locRefTypes;
-      widget->clear();
-      for (dovah::form_stub* stub : updater.content.special_refs)
-         widget->addStub(stub);
+   for (dovah::form_stub* stub : updater.content.special_refs) {
+      this->ui.locRefTypes->addStub(stub);
    }
    {
-      auto* widget = this->ui.cells;
-      widget->clear();
       for (auto& item : updater.content.exterior_cell_lists) {
          for (dovah::form_stub* cell : item.cells)
-            widget->addStub(cell);
+            this->ui.cells->addStub(cell);
       }
       for (auto& pair : location_stub.inbound) {
          auto* using_stub = pair.second.other;
@@ -256,7 +257,28 @@ void FormDialogLocation::_update_contents_views() {
             continue;
          auto* extra = (extra_data::location*)loaded->extra_data.lookup_by_type(extra_data_type::location);
          if (extra && extra->form.get_form_stub() == &location_stub) {
-            widget->addStub(using_stub);
+            this->ui.cells->addStub(using_stub);
+
+            // We want to list all unique actors present in any cell tagged with this 
+            // location, even if this location is not the actors' Persist Location (i.e. 
+            // even if the Actor(Base) and Location do not use each other directly).
+            dovah::form_stub_helpers::for_each_child_form(
+               using_stub,
+               [this, &location_stub](dovah::form_stub* child) {
+                  if (child->form_type != dovah::form_type::actor)
+                     return;
+                  auto* base = dovah::form_stub_helpers::get_base_form(child);
+                  if (!base || base->form_type != dovah::form_type::actor_base)
+                     return;
+                  auto loaded = base->load().ptr_cast<dovah::loaded_forms::ActorBase>();
+                  if (!loaded)
+                     return;
+                  if ((loaded->actor_flags & dovah::loaded_forms::ActorBase::actor_flag::unique) != 0) {
+                     this->ui.actors->addStub(child);
+                  }
+               }
+            );
+
             continue;
          }
          //
@@ -265,13 +287,11 @@ void FormDialogLocation::_update_contents_views() {
          //
       }
    }
-   {
-      auto* widget = this->ui.actors;
-      widget->clear();
-      for (dovah::form_stub* stub : updater.content.unique_actors)
-         widget->addStub(stub);
-      //
-      // NOTE: This needs to include unique actors in child/descendant locations as well.
-      //
+
+   // In addition to listing all unique actors in any cell tagged with this Location, 
+   // we do also want to list unique actors who use this Location as their Persist 
+   // Location.
+   for (dovah::form_stub* stub : updater.content.unique_actors) {
+      this->ui.actors->addStub(stub);
    }
 }

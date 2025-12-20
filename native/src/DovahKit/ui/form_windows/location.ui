@@ -2,18 +2,10 @@
 <ui version="4.0">
  <class>FormDialogLocation</class>
  <widget class="QDialog" name="FormDialogLocation">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>688</width>
-    <height>698</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Location</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout_3">
+  <layout class="QGridLayout" name="gridLayout_3" columnstretch="0,1">
    <item row="0" column="0">
     <layout class="QGridLayout" name="gridLayout">
      <item row="4" column="0">
