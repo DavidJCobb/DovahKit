@@ -3708,6 +3708,9 @@
     <ClCompile Include="ui\main_window\_debug_hooks\form_types\imagespace_modifier_keyframe_interp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\imagespace_modifier.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10519,6 +10522,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\location.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\imagespace_modifier.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

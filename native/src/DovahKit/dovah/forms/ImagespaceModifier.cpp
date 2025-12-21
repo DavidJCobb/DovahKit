@@ -158,7 +158,14 @@ namespace dovah::loaded_forms {
                _read_single_counts(subrecord, this->depth_of_field.distance);
                _read_single_counts(subrecord, this->depth_of_field.range);
                subrecord.read(this->depth_of_field.use_target);
-               subrecord.read(this->depth_of_field.flags);
+               {
+                  uint8_t mask = 0;
+                  subrecord.read(mask);
+                  this->depth_of_field.mode.front  = (mask >> 0) & 1;
+                  this->depth_of_field.mode.back   = (mask >> 1) & 1;
+                  this->depth_of_field.no_sky      = (mask >> 2) & 1;
+                  this->depth_of_field.blur_radius = mask >> 3;
+               }
                subrecord.skip_bytes(2);
                _read_single_counts(subrecord, this->blurs.radial.ramp_down.value);
                _read_single_counts(subrecord, this->blurs.radial.ramp_down.start);
@@ -306,7 +313,17 @@ namespace dovah::loaded_forms {
          _write_single_count(this->depth_of_field.distance);
          _write_single_count(this->depth_of_field.range);
          subrecord.write(this->depth_of_field.use_target);
-         subrecord.write(this->depth_of_field.flags);
+         {
+            uint8_t mask = 0;
+            if (this->depth_of_field.mode.front)
+               mask |= (1 << 0);
+            if (this->depth_of_field.mode.back)
+               mask |= (1 << 1);
+            if (this->depth_of_field.no_sky)
+               mask |= (1 << 2);
+            mask |= this->depth_of_field.blur_radius << 3;
+            subrecord.write(mask);
+         }
          subrecord.skip_bytes(2);
          _write_single_count(this->blurs.radial.ramp_down.value);
          _write_single_count(this->blurs.radial.ramp_down.start);

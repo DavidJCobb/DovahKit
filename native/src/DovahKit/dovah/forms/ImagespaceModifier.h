@@ -91,7 +91,14 @@ namespace dovah::loaded_forms {
             interpolated_float distance; // base: DNAM+0xD8; interp: XNAM
             interpolated_float range;    // base: DNAM+0xDC; interp: YNAM
             bool     use_target = false;   // DNAM+0xE0
-            uint8_t  flags = 0;            // DNAM+0xE1
+            
+            // DNAM+0xE1
+            bool    no_sky          = false;
+            uint8_t blur_radius : 3 = 0;
+            struct {
+               bool front = false;
+               bool back  = false;
+            } mode;
          } depth_of_field;
          struct {
             interpolated_float strength; // base: DNAM+0xB8; interp: VNAM

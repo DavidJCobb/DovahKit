@@ -981,6 +981,7 @@
     <ClCompile Include="ui\form_group_windows\idle\IdleNewActionRootPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\idle_marker.cpp" />
     <ClCompile Include="ui\form_windows\imagespace.cpp" />
+    <ClCompile Include="ui\form_windows\imagespace_modifier.cpp" />
     <ClCompile Include="ui\form_windows\impact_data.cpp" />
     <ClCompile Include="ui\form_windows\ingredient.cpp" />
     <ClCompile Include="ui\form_windows\key.cpp" />
@@ -1992,6 +1993,7 @@
     <QtMoc Include="ui\form_group_windows\idle\FormSubdialogIdleNewActionRoot.h" />
     <ClInclude Include="ui\form_group_windows\idle\IdleNewActionRootPickerFilter.h" />
     <QtMoc Include="ui\form_windows\imagespace.h" />
+    <QtMoc Include="ui\form_windows\imagespace_modifier.h" />
     <ClInclude Include="ui\form_windows\lens_flare\LensFlareSpritesModel.h" />
     <QtMoc Include="ui\form_windows\location.h" />
     <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h" />
