@@ -8,7 +8,7 @@
       <Intrinsic Name="_is_neg_inf" Expression="_bits() == 0xFF800000" />
       <Intrinsic Name="_has_value" Expression="!_is_qnan() &amp;&amp; !_is_snan() &amp;&amp; !_is_pos_inf() &amp;&amp; !_is_neg_inf()" />
 
-      <DisplayString Condition="_has_value()">nullopt</DisplayString>
+      <DisplayString Condition="!_has_value()">nullopt</DisplayString>
       <DisplayString>{_value}</DisplayString>
       <Expand>
          <Item Name="[value]">_value</Item>

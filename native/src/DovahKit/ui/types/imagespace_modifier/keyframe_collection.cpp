@@ -68,20 +68,20 @@ namespace ui::types::imagespace_modifier {
       using interpolated_float    = dovah::loaded_forms::ImagespaceModifier::interpolated_float;
       using interpolated_mult_add = dovah::loaded_forms::ImagespaceModifier::interpolated_mult_add;
 
-      #define X(prop, ...) \
-         [this]<typename PropertyType>(const PropertyType& src_property) -> void { \
-            if constexpr (std::is_same_v<PropertyType, interpolated_color>) { \
-               for (auto& frame : src_property) { \
-                  auto& kf = this->get_or_create_keyframe(frame.time); \
-                  kf.prop = QColor::fromRgbF(frame.value.r, frame.value.g, frame.value.b, frame.value.a); \
-               } \
-            } else { \
-               for (auto& frame : src_property) { \
-                  auto& kf = this->get_or_create_keyframe(frame.time); \
-                  kf.prop = frame.value; \
-               } \
-            } \
-         }(src.prop);
+      auto _import_property = [this]<typename PropertyType>(const PropertyType& src_property, auto&& dst_getter) {
+         if constexpr (std::is_same_v<PropertyType, interpolated_color>) {
+            for (auto& frame : src_property) {
+               auto& kf = this->get_or_create_keyframe(frame.time);
+               dst_getter(kf) = QColor::fromRgbF(frame.value.r, frame.value.g, frame.value.b, frame.value.a);
+            }
+         } else {
+            for (auto& frame : src_property) {
+               auto& kf = this->get_or_create_keyframe(frame.time);
+               dst_getter(kf) = frame.value;
+            }
+         }
+      };
+      #define X(prop, ...) _import_property(src.prop, [](keyframe& kf) constexpr -> auto& { return kf.prop; });
       FOR_EACH_ANIMATED_PROPERTY(X);
       #undef X
    }
@@ -97,58 +97,57 @@ namespace ui::types::imagespace_modifier {
       FOR_EACH_ANIMATED_PROPERTY(X);
       #undef X
 
+      auto _export_property = []<typename PropertyType>(float position, const auto& src_property, PropertyType & dst_property) {
+         if constexpr (std::is_same_v<PropertyType, interpolated_color>) {
+            if (src_property.has_value()) {
+               auto& dst_frame   = dst_property.emplace_back();
+               dst_frame.time    = position;
+               dst_frame.value.r = src_property.value().redF();
+               dst_frame.value.g = src_property.value().greenF();
+               dst_frame.value.b = src_property.value().blueF();
+               dst_frame.value.a = src_property.value().alphaF();
+            }
+         } else {
+            if (src_property.has_value()) {
+               auto& dst_frame = dst_property.emplace_back();
+               dst_frame.time  = position;
+               dst_frame.value = src_property.value();
+            }
+         }
+      };
       for (const auto& src_keyframe : this->keyframes) {
-         #define X(prop, ...) \
-            [&src_keyframe]<typename PropertyType>(PropertyType& dst_property) -> void { \
-               const auto& src_property = src_keyframe.prop; \
-               if constexpr (std::is_same_v<PropertyType, interpolated_color>) { \
-                  if (src_property.has_value()) { \
-                     auto& dst_frame   = dst_property.emplace_back(); \
-                     dst_frame.time    = src_keyframe.timestamp; \
-                     dst_frame.value.r = src_property.value().redF(); \
-                     dst_frame.value.g = src_property.value().greenF(); \
-                     dst_frame.value.b = src_property.value().blueF(); \
-                     dst_frame.value.a = src_property.value().alphaF(); \
-                  } \
-               } else { \
-                  if (src_property.has_value()) { \
-                     auto& dst_frame = dst_property.emplace_back(); \
-                     dst_frame.time  = src_keyframe.timestamp; \
-                     dst_frame.value = src_property.value(); \
-                  } \
-               } \
-            }(dst.prop);
+         #define X(prop, ...) _export_property(src_keyframe.position, src_keyframe.prop, dst.prop);
          FOR_EACH_ANIMATED_PROPERTY(X);
          #undef X
       }
    }
 
-   keyframe& keyframe_collection::get_or_create_keyframe(float timestamp) {
+   keyframe& keyframe_collection::get_or_create_keyframe(float position) {
       if (!this->keyframes.empty()) {
          auto it = std::upper_bound(
             this->keyframes.begin(),
             this->keyframes.end(),
-            timestamp,
+            position,
             [](float desired, const keyframe& item) -> bool {
-               return desired <= item.timestamp;
+               return desired <= item.position;
             }
          );
          if (it != this->keyframes.end()) {
-            if (it->timestamp == timestamp)
+            if (it->position == position)
                return *it;
-            assert(it->timestamp > timestamp);
+            assert(it->position > position);
             it = this->keyframes.insert(it, {});
-            it->timestamp = timestamp;
+            it->position = position;
             return *it;
          }
       }
       auto& kf = this->keyframes.emplace_back();
-      kf.timestamp = timestamp;
+      kf.position = position;
       return kf;
    }
-   computed_keyframe keyframe_collection::get_computed_keyframe(float timestamp) const noexcept {
+   computed_keyframe keyframe_collection::get_computed_keyframe(float at, bool is_timestamp) const noexcept {
       computed_keyframe interpolated;
-      auto _interpolate_property = [this, timestamp, &interpolated](auto& dst_property, auto&& src_property_getter) {
+      auto _interpolate_property = [this, at, is_timestamp, &interpolated](auto& dst_property, auto&& src_property_getter) {
          using  dst_property_type = std::decay_t<decltype(dst_property)>;
          struct found {
             float time = 0;
@@ -162,12 +161,14 @@ namespace ui::types::imagespace_modifier {
             if (!src_value_opt.has_value())
                continue;
             const auto  src_value = src_value_opt.value();
-            auto src_time = src_keyframe.timestamp;
-            if (src_time <= timestamp) {
+            auto src_time = src_keyframe.position;
+            if (is_timestamp)
+               src_time *= this->duration;
+            if (src_time <= at) {
                if (!found_prev.has_value() || found_prev.value().time < src_time)
                   found_prev = found{ src_time, src_value };
             }
-            if (src_time <= timestamp) {
+            if (src_time >= at) {
                if (!found_next.has_value() || found_next.value().time > src_time)
                   found_next = found{ src_time, src_value };
             }
@@ -180,7 +181,7 @@ namespace ui::types::imagespace_modifier {
                return;
             }
             float timespan = b.time - a.time;
-            float factor = (timestamp - found_prev.value().time) / timespan;
+            float factor = (at - found_prev.value().time) / timespan;
             float inv_factor = 1.0F - factor;
             if constexpr (std::is_same_v<dst_property_type, float>) {
                dst_property = (b.value * factor) + (a.value * inv_factor);
@@ -190,6 +191,7 @@ namespace ui::types::imagespace_modifier {
                dst_property.setBlueF((b.value.blueF() * factor) + (a.value.blueF() * inv_factor));
                dst_property.setAlphaF((b.value.alphaF() * factor) + (a.value.alphaF() * inv_factor));
             }
+            return;
          }
          if (!found_prev.has_value() && !found_next.has_value())
             return;

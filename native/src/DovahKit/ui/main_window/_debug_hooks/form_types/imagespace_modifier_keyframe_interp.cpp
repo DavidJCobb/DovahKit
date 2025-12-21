@@ -62,7 +62,7 @@ namespace DovahKitDebug::features::form_types {
       if (!ok)
          return;
 
-      auto computed = collection.get_computed_keyframe(timestamp);
+      auto computed = collection.get_computed_keyframe(timestamp, true);
       #if _DEBUG
          __debugbreak();
       #endif

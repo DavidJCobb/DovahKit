@@ -14,7 +14,7 @@ namespace ui::types::imagespace_modifier {
          };
 
       public:
-         float timestamp = 0.0F;
+         float position = 0.0F; // [0, 1]. scale this with the duration to get the absolute time.
          //
          struct {
             struct {
