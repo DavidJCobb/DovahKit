@@ -4045,6 +4045,7 @@
     <Image Include="..\..\..\assets\papyrus-added.png" />
     <Image Include="..\..\..\assets\papyrus-inherited-edited.png" />
     <Image Include="..\..\..\assets\papyrus-inherited.png" />
+    <Image Include="DovahKit.ico" />
     <Image Include="shaders\ScreenShot278.bmp" />
     <Image Include="shaders\ScreenShot389.bmp" />
     <Image Include="shaders\Tamriel-Skyrim.esm.png" />
@@ -4103,6 +4104,7 @@
     <Natvis Include="helpers\grid.natvis" />
     <Natvis Include="helpers\keyboard\key.natvis" />
     <Natvis Include="helpers\multiheap.natvis" />
+    <Natvis Include="helpers\optionals\finite_float.natvis" />
     <Natvis Include="helpers\qt\keycodes.natvis" />
     <Natvis Include="helpers\resizable_grid.natvis" />
     <Natvis Include="helpers\tree\node.natvis" />

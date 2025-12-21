@@ -1,0 +1,73 @@
+<svg viewBox="-5 -5 10 10" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+   <defs>
+      <style><![CDATA[
+:root {
+   --creation-kit-color: rgb(156, 175, 179);
+}
+      ]]></style>
+      <mask id="gear-hole">
+         <rect x="-100%" y="-100%" width="200%" height="200%" fill="#FFF" />
+         <circle cx="0" cy="0" r="0" fill="#000" />
+      </mask>
+      <mask id="moon-mask">
+         <rect x="-100%" y="-100%" width="200%" height="200%" fill="#FFF" />
+         <circle cx=".59" cy="-.59" r="1.25" fill="#000" />
+      </mask>
+   </defs>
+   <path id="gear" mask="url(#gear-hole)" fill="var(--creation-kit-color)" />
+   <g transform="scale(0.9)">
+      <circle
+         fill="#221611"
+         r="2.25"
+      />
+      <circle id="moon"
+         mask="url(#moon-mask)"
+         fill="#FF7400"
+         r="2"
+      />
+   </g>
+   
+   <script>//<![CDATA[
+{
+   const RADIUS_OUTER = 5;
+   const RADIUS_INNER = 4;
+   const TEETH = 6;
+   const RADIUS_GEARHOLE = 2.5;
+   
+   // Teeth are positioned by their centerpoint. The "proportion" determines 
+   // how much of the arc, measured from one tooth's centerpoint to the next, 
+   // should be part of the tooth. If you use 0.5 or higher, you'll just get 
+   // a circle rather than a gear.
+   const PROPORTION_INNER = 0.3;
+   const PROPORTION_OUTER = 0.2;
+   
+   let path = "";
+   
+   const angle_per_tooth = 2 * Math.PI / TEETH;
+   for(let i = 0; i < TEETH; ++i) {
+      let angle_center = angle_per_tooth * i;
+      
+      let angle_start_inner = angle_center - angle_per_tooth * PROPORTION_INNER;
+      let angle_start_outer = angle_center - angle_per_tooth * PROPORTION_OUTER;
+      let angle_stop_inner  = angle_center + angle_per_tooth * PROPORTION_INNER;
+      let angle_stop_outer  = angle_center + angle_per_tooth * PROPORTION_OUTER;
+      
+      let angle_next  = angle_center + angle_per_tooth;
+      
+      if (i == 0) {
+         path += "M";
+      } else {
+         path += "L";
+      }
+      path +=  ` ${Math.cos(angle_start_inner)*RADIUS_INNER} ${Math.sin(angle_start_inner)*RADIUS_INNER} `;
+      path += `L ${Math.cos(angle_start_outer)*RADIUS_OUTER} ${Math.sin(angle_start_outer)*RADIUS_OUTER} `;
+      path += `A ${RADIUS_OUTER} ${RADIUS_OUTER} 0 0 1 ${Math.cos(angle_stop_outer)*RADIUS_OUTER} ${Math.sin(angle_stop_outer)*RADIUS_OUTER}`;
+      path += `L ${Math.cos(angle_stop_inner)*RADIUS_INNER} ${Math.sin(angle_stop_inner)*RADIUS_INNER} `;
+      path += `A ${RADIUS_INNER} ${RADIUS_INNER} 0 0 1 ${Math.cos(angle_next)*RADIUS_INNER} ${Math.sin(angle_next)*RADIUS_INNER}`;
+   }
+   document.getElementById("gear").setAttribute("d", path);
+   
+   document.querySelector("#gear-hole>circle").setAttribute("r", RADIUS_GEARHOLE);
+}
+   //]]></script>
+</svg>

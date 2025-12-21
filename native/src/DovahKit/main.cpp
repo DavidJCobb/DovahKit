@@ -22,10 +22,6 @@
 //     - If the user converts a file across games, and the existing file's name also 
 //       exists for the target game, then we should prompt to overwrite as well.
 //
-//  - The log window should have a "message type" column, differentiating between 
-//    notices from the initial stub build, notices from on-demand form loading, and 
-//    notices from saves.
-//
 //  - Form duplication can fail in complex ways: even if we successfully duplicate the 
 //    target form, we may fail to duplicate child or descendant forms. We should create 
 //    a custom dialog box that can show multiple sets of error details for this case.
@@ -77,21 +73,6 @@
 //    misplaced (e.g. WRLD/VTYP, WRLD/CELL/VTYP, etc.). We already log warnings for 
 //    misplaced records in top groups.
 //
-//  - Quick test: does saving a file as *.TES cause an assertion failure?
-//
-//     - The frontend doesn't allow it, but we should *probably* make sure it doesn't 
-//       cause the backend to choke.
-//
-//  - On-demand form loading should emit a warning when loading a reference to a none-
-//    stub. Remember to use the getter on form_stub; don't just check the form type, or 
-//    we'll false-positive on the hardcoded "persistence forms."
-//
-//     - The issue is, we have to load the reference in order to clear it, so that's 
-//       going to result in dumb errors.
-//
-//     - We actually already generate an error: this is detected as a type-mismatched 
-//       reference.
-//
 //  - Clean up the save process.
 //
 //     - If the user is converting the active file between games, and the active file 
@@ -121,8 +102,6 @@
 //
 //  - Esoteric records
 //
-//     - GMST renumbering: test all error cases.
-//
 //     - The GMST loader needs to warn on the following, and currently doesn't:
 //
 //        - Settings that share form IDs with each other
@@ -144,30 +123,11 @@
 //          record flags requires creating a new source file entry, no? And we use 
 //          the stub with the most such entries as the canonical stub.
 //
-//     - DOBJ records are coalesced into a singleton. That singleton subclasses the 
-//       TESForm class and so it does have a form ID.
-//
-//        = If there is no DOBJ form and we fail to create one due to there being 
-//          no form IDs available, then we don't emit any errors. That said, that 
-//          should be impossible since DOBJ is hardcoded to form ID 0x00000031 by 
-//          default.
-//
 //     - NAVI
 //
 //        - If files define their own NAVI with a different form ID, then what form 
 //          ID does the final loaded NAVI use? This doesn't matter for DovahKit, but 
 //          I'm curious.
-//
-//  - Reverse-engineering
-//
-//     - A worldspace's persistent cell is the first persistent-flagged child cell to load.
-//
-//     - The game reuses a single NavMeshInfoMap for all NAVI, even ones that don't override 
-//       a prior NAVI. However, non-overrides wouldn't go through the normal data-clearing 
-//       process that happens when overrides occur (though NAVI may just have that as no-ops 
-//       anyway). It's worth checking a few things, then: would a non-overriding NAVI change 
-//       the form ID of the baseline NAVI, and is there any data that should be cleared in 
-//       an override (that therefore wouldn't be cleared by a non-override)?
 //
 //  - Localized string support
 //
@@ -185,16 +145,6 @@
 //     - We should create a custom promoted widget for editing localized strings, so 
 //       that if we implement STRINGS file editing in the future, we can add a "..." 
 //       button that the user can click to edit localized string content.
-//
-//  - There is no UI path to view or edit use info or data for worldspaces.
-//
-//  - Support for REFR
-//
-//     - Test resaving REFR.
-//
-//     - All of the placed projectile records are just direct subclasses of REFR 
-//       and load all of the same things. Implement them the same way we implemented 
-//       ACHR.
 //
 // THINGS TO LOOK INTO:
 //
@@ -220,30 +170,6 @@
 //       a non-virtual function that checks the record flag and calls the appropriate 
 //
 //     - TESTopic::LoadPartial is a no-op and loads no data.
-//
-//  - Build a unit testing framework wherein we run automated correctness checks 
-//    on loaded data, use info, etc., for pre-chosen forms and compare the results 
-//    to data prepared in advance. We should run these tests periodically if not 
-//    regularly, in order to catch unexpected regressions.
-//
-//     - TESTS TO RUN:
-//
-//        - Change a REFR's base form in-editor and ensure that we properly update 
-//          use info. We know that the connection between the REFR and its old base 
-//          form will be severed, and a new connection between the REFR and its new 
-//          base form will be established, but we need to test to verify that the 
-//          new connection has the appropriate flags. When you view the use info 
-//          window on the new base form, the modified REFR should be listed in the 
-//          bottom pane (for references), not the top pane (for general uses).
-//
-//        - Create a file that overrides a DIAL, an interior CELL, and a WRLD, and 
-//          nothing else. Ensure that these forms, only these forms, and not any of 
-//          their children are saved to the file.
-//
-//        - Create a new file that overrides an INFO within a master's DIAL, a CELL 
-//          within a master's WRLD, a REFR within a different one of the master's 
-//          WRLDs, and an ACHR within an interior cell. Ensure that the overridden 
-//          forms and their parents/ancestors are both properly saved to the file.
 //
 // DISTANT TASKS:
 //
@@ -534,71 +460,6 @@
 //          cyclical reference? What happens if a donor is overridden and the 
 //          override doesn't donate?
 //
-//  - RefPickerWindow
-//
-//     - Current code is likely to break if the existing reference is not inside 
-//       of an interior cell. We need to handle that case for when we work on the 
-//       render window, so we may as well get to it sooner than later.
-//
-//     - Custom sorting for the comboboxes: always put NONE at the top; sort 
-//       references with no editor ID at the bottom
-//
-//     - Re-sort the comboboxes when we detect the creation of a form and add the 
-//       form to the comboboxes
-//
-//  - Container::_clone_impl
-//
-//  - Location::_clone_impl and other missing functions
-//
-//  - UI for editing Activators
-//
-//  - UI for editing Factions
-//
-//  - UI for editing FormLists
-//
-//     - Make it possible to reorder items in the FormList window by dragging them. 
-//       Ensure that this doesn't conflict with Object-Window-to-FormList drags (i.e. 
-//       ensure it doesn't duplicate items, allow dragging to other windows, etc.).
-//
-//        - That said, it should be possible to drag a form from one FormList window 
-//          to another to copy it to the latter FormList.
-//
-//  - Finish code for: DIAL, LCTN, MGEF, NPC_, QUST
-//
-//  - Test re-saving INFOs
-//
-//  - World viewing
-//
-//     - Loading and unloading cells on-demand (along with their contained references, 
-//       and the assets for those references)
-//
-//        = WE MUST IMPLEMENT SUPPORT FOR PARTIAL RECORDS FIRST.
-//
-//     - Rendering abstract elements
-//
-//        - Navmeshes
-//
-//        - Collision-primitive references
-//
-//     - Reference selection and browsing
-//
-//        - References selected in the Cell View window should show bounding boxes in 
-//          the Render Window. There should be both hotkeys and context menu options 
-//          for rendering references intangible or invisible (compare to the "1" key 
-//          in the Creation Kit).
-//
-//        - References in the Render Window should be clickable to control selection, 
-//          show context menus, and similar.
-//
-//           - The Render Window should offer an API, available to the rest of the 
-//             program, to allow the user to "pick" a reference, point in space, etc.. 
-//             This should involve forcibly focusing the Render Window, and then when 
-//             the user clicks on a valid target, returning focus to the API's caller 
-//             along with results. We'll need this for "Pick Reference from Render 
-//             Window" buttons akin to those in the CK.
-//
-//              - Edit RefPickerWindow to use this API.
-//
 //  - World editing
 //
 //     - ObjectReference friendly delete question: why are actors that are "deleted" 
@@ -794,26 +655,6 @@
 //  - Handle different locales. Complicated by the fact that ES[LPM] files use various 
 //    system locales instead of UTF-8 or specifying a locale explicitly.
 //
-//  - Saving an ESL should warn if the active file would have any CELL records, whether they 
-//    be new forms or overrides. Reportedly, CELLs in ESLs have issues, though I don't know 
-//    the source or the specific problems offhand.
-//
-//     = PER AERS, THERE IS A BUG WITH ESLs THAT DEFINE NEW CELLS. THE RESULT IS THAT IF THE 
-//       CELLS ARE OVERRIDDEN BY ANOTHER MOD, THE GAME WILL BECOME UNABLE TO LOAD TEMPORARY 
-//       REFS INSIDE OF THE CELL, APPARENTLY BECAUSE PART OF THE CELL-LOADING CODE MISHANDLES 
-//       LIGHT FORM IDs AND DOESN'T APPLY THE LIGHT INDEX (I.E. IT ALWAYS CHECKS FE000yyy 
-//       INSTEAD OF FExxxyyy, WHiCH ALSO MEANS THAT THIS BUG WON'T AFFECT THE FIRST ESL FILE 
-//       IN THE LOAD ORDER).
-//
-//        - We should probably warn on loading cells defined inside of ESLs, too, and double-
-//          warn if we load an override for any of them.
-//
-//     - GamerPoets here <https://youtu.be/g_urrHrGQOY?t=299> recommends against ESL-flagging 
-//       files that have interior cells, but gives no explanation as to why. Per aers, CELLs 
-//       in ESLs are always loaded as if they're in 0xFE000xxx, and per Parapets there is some 
-//       issue that occurs if an ESL edits a CELL that originates from another ESL. We'll 
-//       probably want to only warn when saving an ESL that overrides another ESL's cells.
-//
 // STUFF I'M PROBABLY NOT EVER GOING TO BOTHER WITH:
 //
 //  - Being able to load files as part of the current load order, without making them 
@@ -840,6 +681,7 @@
 
 int main(int argc, char* argv[]) {
    QApplication a(argc, argv);
+   a.setWindowIcon(QIcon(":/DovahKit.ico"));
    //
    #if _DEBUG
    {

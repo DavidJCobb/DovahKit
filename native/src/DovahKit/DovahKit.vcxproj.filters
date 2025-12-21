@@ -11045,6 +11045,9 @@
     <Image Include="..\..\..\assets\papyrus-inherited.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="DovahKit.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="helpers\resizable_grid.natvis" />
@@ -11126,5 +11129,6 @@
     <Natvis Include="dovah\datastores\idles\idle_node.natvis" />
     <Natvis Include="dovah\datastores\idles\action_node.natvis" />
     <Natvis Include="dovah\datastores\camera_paths\node.natvis" />
+    <Natvis Include="helpers\optionals\finite_float.natvis" />
   </ItemGroup>
 </Project>

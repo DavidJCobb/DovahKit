@@ -31,4 +31,7 @@
         <file>log-window-icons/context-file-save-16.png</file>
         <file>log-window-icons/context-file-save-64.png</file>
     </qresource>
+    <qresource prefix="/">
+        <file>DovahKit.ico</file>
+    </qresource>
 </RCC>
