@@ -145,6 +145,58 @@ namespace ui::types::imagespace_modifier {
       kf.position = position;
       return kf;
    }
+   keyframe& keyframe_collection::get_or_create_keyframe_at_timestamp(float timestamp) {
+      float position = timestamp / this->duration;
+      return this->get_or_create_keyframe(position);
+   }
+
+   void keyframe_collection::remove_keyframe_at_position(float position) {
+      std::erase_if(
+         this->keyframes,
+         [position](const keyframe& kf) {
+            return kf.position == position;
+         }
+      );
+   }
+
+   const keyframe* keyframe_collection::keyframe_at_position(float position) const noexcept {
+      for (auto& kf : this->keyframes)
+         if (kf.position == position)
+            return &kf;
+      return nullptr;
+   }
+   keyframe* keyframe_collection::keyframe_at_position(float position) noexcept {
+      return const_cast<keyframe*>(std::as_const(*this).keyframe_at_position(position));
+   }
+   const keyframe* keyframe_collection::keyframe_at_timestamp(float timestamp) const noexcept {
+      for (auto& kf : this->keyframes) {
+         auto kf_time = kf.position * this->duration;
+         if (kf_time == timestamp)
+            return &kf;
+      }
+      return nullptr;
+   }
+   keyframe* keyframe_collection::keyframe_at_timestamp(float timestamp) noexcept {
+      return const_cast<keyframe*>(std::as_const(*this).keyframe_at_timestamp(timestamp));
+   }
+
+   const keyframe* keyframe_collection::keyframe_before_position(float position) const noexcept {
+      const keyframe* match = nullptr;
+      for (auto& current : this->keyframes) {
+         if (current.position < position)
+            match = &current;
+         else if (current.position >= position)
+            break;
+      }
+      return match;
+   }
+   const keyframe* keyframe_collection::keyframe_after_position(float position) const noexcept {
+      for (auto& current : this->keyframes)
+         if (current.position > position)
+            return &current;
+      return nullptr;
+   }
+
    computed_keyframe keyframe_collection::get_computed_keyframe(float at, bool is_timestamp) const noexcept {
       computed_keyframe interpolated;
       auto _interpolate_property = [this, at, is_timestamp, &interpolated](auto& dst_property, auto&& src_property_getter) {

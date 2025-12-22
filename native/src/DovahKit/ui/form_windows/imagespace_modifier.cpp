@@ -298,8 +298,11 @@ void FormDialogImagespaceModifier::_save_keyframe(float position) {
 
       return false;
    }();
-   if (!any_properties_defined)
+   if (!any_properties_defined) {
+      if (position > 0 && position < 1)
+         this->keyframes.remove_keyframe_at_position(position);
       return;
+   }
 
    auto& kf = this->keyframes.get_or_create_keyframe(position);
    

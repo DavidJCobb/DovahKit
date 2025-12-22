@@ -17,6 +17,18 @@ namespace ui::types::imagespace_modifier {
          // keyframe's timestamp, multiply that value by the total duration.
          keyframe& get_or_create_keyframe(float position);
 
+         keyframe& get_or_create_keyframe_at_timestamp(float timestamp);
+
+         void remove_keyframe_at_position(float);
+
+         const keyframe* keyframe_at_position(float position) const noexcept;
+         keyframe* keyframe_at_position(float position) noexcept;
+         const keyframe* keyframe_at_timestamp(float timestamp) const noexcept;
+         keyframe* keyframe_at_timestamp(float timestamp) noexcept;
+
+         const keyframe* keyframe_before_position(float position) const noexcept;
+         const keyframe* keyframe_after_position(float position) const noexcept;
+
          // If `is_timestamp` is true, then `at` is a timestamp. Otherwise, 
          // `at` is a position.
          computed_keyframe get_computed_keyframe(float at, bool is_timestamp) const noexcept;
