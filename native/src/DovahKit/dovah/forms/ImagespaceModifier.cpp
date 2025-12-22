@@ -216,7 +216,12 @@ namespace dovah::loaded_forms {
                   constexpr const uint8_t index_base_mult = 0x00;
                   constexpr const uint8_t index_base_add  = 0x40;
 
-                  uint8_t index       = signature & 0xFF;
+                  uint8_t index;
+                  if constexpr (std::endian::native == std::endian::little) {
+                     index = signature >> 0x18;
+                  } else {
+                     index = signature & 0xFF;
+                  }
                   uint8_t based_index = index;
                   if (index >= interpolation_index_base_add) {
                      based_index -= interpolation_index_base_add;

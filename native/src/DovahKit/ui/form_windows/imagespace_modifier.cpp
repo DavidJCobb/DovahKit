@@ -86,6 +86,26 @@ FormDialogImagespaceModifier::FormDialogImagespaceModifier(dovah::form_stub& stu
    this->ui.flagDisplay->setVisible(false);
 
    this->ui.seek->setRange(0, slider_resolution);
+   QObject::connect(this->ui.duration, qOverload<double>(&QDoubleSpinBox::valueChanged), this, [this](double v) {
+      this->_set_duration(v);
+   });
+   QObject::connect(this->ui.currentTime, qOverload<double>(&QDoubleSpinBox::valueChanged), this, [this](double v) {
+      _set_current_timestamp(v);
+   });
+   QObject::connect(this->ui.seek, qOverload<int>(&QSlider::valueChanged), this, [this](int v) {
+      float position = (float)v / slider_resolution;
+      _set_current_position(position);
+   });
+   QObject::connect(this->ui.buttonToPrevKeyframe, &QPushButton::clicked, this, [this]() {
+      auto* prev = this->keyframes.keyframe_before_position(this->last_position);
+      if (prev)
+         this->_set_current_position(prev->position);
+   });
+   QObject::connect(this->ui.buttonToNextKeyframe, &QPushButton::clicked, this, [this]() {
+      auto* next = this->keyframes.keyframe_after_position(this->last_position);
+      if (next)
+         this->_set_current_position(next->position);
+   });
 
    {
       auto* widget = this->ui.dofMode;
@@ -179,26 +199,6 @@ void FormDialogImagespaceModifier::_load_impl() {
    this->_load_keyframe(0);
    this->ui.buttonToPrevKeyframe->setEnabled(false);
    this->ui.buttonToNextKeyframe->setEnabled(this->keyframes.keyframe_after_position(0) != nullptr);
-
-   QObject::connect(this->ui.duration, qOverload<double>(&QDoubleSpinBox::valueChanged), this, [this](double v) {
-      float prior_duration = this->keyframes.duration;
-      float prior_position = this->ui.currentTime->value() / prior_duration;
-
-      this->keyframes.duration = v;
-
-      const auto blocker = QSignalBlocker(this->ui.currentTime);
-      this->ui.currentTime->setValue(prior_position * v);
-   });
-   QObject::connect(this->ui.currentTime, qOverload<double>(&QDoubleSpinBox::valueChanged), this, [this](double v) {
-      _set_current_position(v);
-
-      const auto blocker = QSignalBlocker(this->ui.seek);
-      this->ui.seek->setValue(v * slider_resolution);
-   });
-   QObject::connect(this->ui.seek, qOverload<int>(&QSlider::valueChanged), this, [this](int v) {
-      float position = (float)v / slider_resolution;
-      _set_current_position(position);
-   });
 }
 void FormDialogImagespaceModifier::_save_impl() {
    //
@@ -224,6 +224,25 @@ void FormDialogImagespaceModifier::_set_current_position(float position) {
    auto* next = this->keyframes.keyframe_after_position(position);
    this->ui.buttonToPrevKeyframe->setEnabled(prev != nullptr);
    this->ui.buttonToNextKeyframe->setEnabled(next != nullptr);
+
+   const auto blockers = std::array{
+      QSignalBlocker(this->ui.currentTime),
+      QSignalBlocker(this->ui.seek),
+   };
+   this->ui.currentTime->setValue(position * this->keyframes.duration);
+   this->ui.seek->setValue(position * slider_resolution);
+}
+void FormDialogImagespaceModifier::_set_current_timestamp(float timestamp) {
+   this->_set_current_position(timestamp / this->keyframes.duration);
+}
+void FormDialogImagespaceModifier::_set_duration(float duration_after) {
+   float duration_prior = this->keyframes.duration;
+   float position_prior = this->ui.currentTime->value() / duration_prior;
+
+   this->keyframes.duration = duration_after;
+
+   const auto blocker = QSignalBlocker(this->ui.currentTime);
+   this->ui.currentTime->setValue(position_prior * duration_after);
 }
 
 void FormDialogImagespaceModifier::_load_keyframe(float position) {
@@ -265,6 +284,23 @@ void FormDialogImagespaceModifier::_load_keyframe(float position) {
    #undef PRESENT
 }
 void FormDialogImagespaceModifier::_save_keyframe(float position) {
+   //
+   // Exit if there are no changed properties.
+   //
+   bool any_properties_defined = [this]() -> bool {
+      #define X(field, control) if (this->ui.control##Reset->isEnabled()) return true;
+      FOR_EACH_ANIMATED_FLOAT(X)
+      #undef X
+
+      #define X(field, color, alpha, reset) if (this->ui.reset->isEnabled()) return true;
+      FOR_EACH_ANIMATED_COLOR(X)
+      #undef X
+
+      return false;
+   }();
+   if (!any_properties_defined)
+      return;
+
    auto& kf = this->keyframes.get_or_create_keyframe(position);
    
    auto _read_float_ui = [](QDoubleSpinBox* editor, QPushButton* reset_button) -> std::optional<float> {

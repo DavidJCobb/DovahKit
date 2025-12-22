@@ -23,6 +23,8 @@ class FormDialogImagespaceModifier :
       virtual void _save_impl() override;
 
       void _set_current_position(float position);
+      void _set_current_timestamp(float timestamp);
+      void _set_duration(float duration);
 
       void _load_keyframe(float position);
       void _save_keyframe(float position);
