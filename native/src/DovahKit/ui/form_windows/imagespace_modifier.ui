@@ -58,6 +58,11 @@
     <layout class="QVBoxLayout" name="rightCol">
      <item>
       <widget class="QGroupBox" name="cineGroupbox">
+       <property name="whatsThis">
+        <string>&lt;p&gt;The default values for Brightness, Saturation, and Contrast are 100%. You can use negative values for Saturation to invert the scene's hues, and negative values for Contrast to invert the brightness of pixels.&lt;/p&gt;
+
+&lt;p&gt;The Tint Color and Fade Color each have two parts: the color itself, and the color amount. The Tint Color is multiplied over each pixel, so at full intensity, any pixels that were originally white will be recolored to the Tint Color. The Fade Color is alpha-blended over each pixel, so at full intensity, all pixels will be set to the Fade Color.&lt;/p&gt;</string>
+       </property>
        <property name="title">
         <string>Cinematic</string>
        </property>
@@ -374,85 +379,40 @@
      </item>
      <item>
       <widget class="QGroupBox" name="radialBlurGroupbox">
+       <property name="whatsThis">
+        <string>&lt;p&gt;Radial blur effects apply to a donut-shaped region of the screen. You can control the inner radius, outer radius, maximum blur strength, and how quickly the amount of blur changes at each radius. This allows you to create a variety of circular blurs; for example, a &quot;donut with a zero-size donuthole&quot; is just a blurred ellipse.&lt;/p&gt;
+
+&lt;p&gt;The aspect ratio of the donut matches that of the screen. The centerpoint coordinates and radii are values in the range [0, 1] defined relative to the screen width and height. The Inner Radius defines the edge of the non-blurred area at the center of the blur — the &quot;donuthole.&quot; The Outer Radius defines the edge of the maximally-blurred area at the edge of the blur.&lt;/p&gt;
+
+&lt;p&gt;The &quot;Ramp-Up&quot; and &quot;Ramp-Down&quot; values are percentages which define how quickly the blur shifts from zero to maximum strength within the Inner Radius, and vice versa beyond the Outer Radius. A value of 0% means that the blur either never ramps up (and therefore nothing is blurred) or never ramps down (and therefore has no outer edge). &lt;em&gt;In theory&lt;/em&gt;, a value of 100% means that the blur &lt;em&gt;instantly&lt;/em&gt; ramps up or &lt;em&gt;instantly&lt;/em&gt; ramps down, creating sharp edges where the visuals switch from perfectly clear to maximally blurred.&lt;/p&gt;
+
+&lt;p&gt;In practice, the truth is... stranger. The &quot;Ramp-Up&quot; value applies from the Inner Radius onward. It isn't measured relative to &lt;em&gt;both&lt;/em&gt; radii; if the Outer Radius is too close to the Inner Radius, then the blur will never actually reach maximum strength. The &quot;Ramp-Down&quot; value, meanwhile, applies from the Outer Radius onward. The blur is ramping up and down at the same time, near the Outer Radius, but the two values don't perfectly cancel each other out. Ramp-Down &lt;em&gt;is&lt;/em&gt; stronger than Ramp-Up at and past the Outer Radius, so the blur &lt;em&gt;does&lt;/em&gt; decrease in intensity past the Outer Radius, but how quickly it decreases depends on the relative difference between Ramp-Down and Ramp-Up.&lt;/p&gt;</string>
+       </property>
        <property name="title">
         <string>Radial Blur</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_8">
-        <item row="4" column="0">
-         <widget class="QLabel" name="label_28">
-          <property name="text">
-           <string>Down-Start:</string>
-          </property>
-          <property name="buddy">
-           <cstring>radialBlurDownStart</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="QDoubleSpinBox" name="radialBlurDownStart">
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QPushButton" name="radialBlurRampUpReset">
-          <property name="maximumSize">
-           <size>
-            <width>32</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="accessibleName">
-           <string>Reset Multiplier</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources/resources.qrc">
-            <normaloff>:/icons/delete-16.png</normaloff>:/icons/delete-16.png</iconset>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0">
-         <widget class="QLabel" name="label_29">
-          <property name="text">
-           <string>Center:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_25">
-          <property name="text">
-           <string>Ramp-Up:</string>
-          </property>
-          <property name="buddy">
-           <cstring>radialBlurRampUp</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
-         <widget class="QPushButton" name="radialBlurStartReset">
-          <property name="maximumSize">
-           <size>
-            <width>32</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="accessibleName">
-           <string>Reset Multiplier</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="../resources/resources.qrc">
-            <normaloff>:/icons/delete-16.png</normaloff>:/icons/delete-16.png</iconset>
-          </property>
-         </widget>
-        </item>
         <item row="4" column="2">
+         <widget class="QPushButton" name="radialBlurRampDownReset">
+          <property name="maximumSize">
+           <size>
+            <width>32</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="accessibleName">
+           <string>Reset Multiplier</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="../resources/resources.qrc">
+            <normaloff>:/icons/delete-16.png</normaloff>:/icons/delete-16.png</iconset>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
          <widget class="QPushButton" name="radialBlurDownStartReset">
           <property name="maximumSize">
            <size>
@@ -472,22 +432,63 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
-         <widget class="QDoubleSpinBox" name="radialBlurRampDown">
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        <item row="5" column="1" colspan="2">
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QDoubleSpinBox" name="radialBlurCenterX">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="radialBlurCenterY">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="label_29">
+          <property name="text">
+           <string>Center:</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QDoubleSpinBox" name="radialBlurStrength">
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_25">
+          <property name="text">
+           <string>Ramp-Up:</string>
+          </property>
+          <property name="buddy">
+           <cstring>radialBlurRampUp</cstring>
           </property>
          </widget>
         </item>
         <item row="0" column="2">
          <widget class="QPushButton" name="radialBlurStrengthReset">
+          <property name="maximumSize">
+           <size>
+            <width>32</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="accessibleName">
+           <string>Reset Multiplier</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="../resources/resources.qrc">
+            <normaloff>:/icons/delete-16.png</normaloff>:/icons/delete-16.png</iconset>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="radialBlurStartReset">
           <property name="maximumSize">
            <size>
             <width>32</width>
@@ -516,17 +517,34 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label_26">
-          <property name="text">
-           <string>Start:</string>
-          </property>
-          <property name="buddy">
-           <cstring>radialBlurStart</cstring>
+        <item row="0" column="1">
+         <widget class="QDoubleSpinBox" name="radialBlurStrength">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
-        <item row="3" column="0">
+        <item row="2" column="1">
+         <widget class="QDoubleSpinBox" name="radialBlurRampUp">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="suffix">
+           <string>%</string>
+          </property>
+          <property name="maximum">
+           <double>100.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="0">
+         <widget class="QCheckBox" name="radialBlurUseTarget">
+          <property name="text">
+           <string>Use Target</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
          <widget class="QLabel" name="label_27">
           <property name="text">
            <string>Ramp-Down:</string>
@@ -536,33 +554,45 @@
           </property>
          </widget>
         </item>
-        <item row="5" column="1" colspan="2">
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <widget class="QDoubleSpinBox" name="radialBlurCenterX">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QDoubleSpinBox" name="radialBlurCenterY">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="1" column="1">
-         <widget class="QDoubleSpinBox" name="radialBlurRampUp">
+        <item row="3" column="1">
+         <widget class="QDoubleSpinBox" name="radialBlurDownStart">
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
-        <item row="3" column="2">
-         <widget class="QPushButton" name="radialBlurRampDownReset">
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_26">
+          <property name="text">
+           <string>Inner Radius:</string>
+          </property>
+          <property name="buddy">
+           <cstring>radialBlurStart</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QDoubleSpinBox" name="radialBlurRampDown">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="suffix">
+           <string>%</string>
+          </property>
+          <property name="maximum">
+           <double>100.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QDoubleSpinBox" name="radialBlurStart">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QPushButton" name="radialBlurRampUpReset">
           <property name="maximumSize">
            <size>
             <width>32</width>
@@ -581,17 +611,13 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QDoubleSpinBox" name="radialBlurStart">
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="0">
-         <widget class="QCheckBox" name="radialBlurUseTarget">
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_28">
           <property name="text">
-           <string>Use Target</string>
+           <string>Outer Radius:</string>
+          </property>
+          <property name="buddy">
+           <cstring>radialBlurDownStart</cstring>
           </property>
          </widget>
         </item>
@@ -1666,14 +1692,14 @@
   <tabstop>cineFadeReset</tabstop>
   <tabstop>radialBlurStrength</tabstop>
   <tabstop>radialBlurStrengthReset</tabstop>
-  <tabstop>radialBlurRampUp</tabstop>
-  <tabstop>radialBlurRampUpReset</tabstop>
   <tabstop>radialBlurStart</tabstop>
   <tabstop>radialBlurStartReset</tabstop>
-  <tabstop>radialBlurRampDown</tabstop>
-  <tabstop>radialBlurRampDownReset</tabstop>
+  <tabstop>radialBlurRampUp</tabstop>
+  <tabstop>radialBlurRampUpReset</tabstop>
   <tabstop>radialBlurDownStart</tabstop>
   <tabstop>radialBlurDownStartReset</tabstop>
+  <tabstop>radialBlurRampDown</tabstop>
+  <tabstop>radialBlurRampDownReset</tabstop>
   <tabstop>radialBlurCenterX</tabstop>
   <tabstop>radialBlurCenterY</tabstop>
   <tabstop>radialBlurUseTarget</tabstop>

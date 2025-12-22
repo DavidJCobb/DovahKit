@@ -2,6 +2,7 @@
 #include <limits>
 #include "dovah/core.h"
 #include "ui/utils/bind.h"
+#include "ui/utils/set_range.h"
 
 namespace {
    constexpr const int slider_resolution = 100;
@@ -85,6 +86,74 @@ FormDialogImagespaceModifier::FormDialogImagespaceModifier(dovah::form_stub& stu
    // render imagespaces at all, much less render their animations.
    this->ui.flagDisplay->setVisible(false);
 
+   #pragma region Value ranges
+   {
+      for (QDoubleSpinBox* spinbox : std::array{
+         this->ui.hdrBloomBlurRadiusMult,
+         this->ui.hdrBloomScaleMult,
+         this->ui.hdrBloomThresholdMult,
+         this->ui.hdrEyeAdaptSpeedMult,
+         this->ui.hdrSkyScaleMult,
+         this->ui.hdrSunlightScaleMult,
+         this->ui.hdrTargetLumMinMult,
+         this->ui.hdrTargetLumMaxMult,
+         //
+         this->ui.hdrBloomBlurRadiusAdd,
+         this->ui.hdrBloomScaleAdd,
+         this->ui.hdrBloomThresholdAdd,
+         this->ui.hdrEyeAdaptSpeedAdd,
+         this->ui.hdrSkyScaleAdd,
+         this->ui.hdrSunlightScaleAdd,
+         this->ui.hdrTargetLumMinAdd,
+         this->ui.hdrTargetLumMaxAdd,
+      }) {
+         ui::set_range<float>(spinbox);
+         spinbox->setDecimals(3);
+      }
+      this->ui.hdrBloomBlurRadiusAdd->setRange(1, 7);
+
+      ui::set_range<float>(this->ui.cineBrightnessMult);
+      ui::set_range<float>(this->ui.cineBrightnessAdd);
+      ui::set_range<float>(this->ui.cineSaturationMult);
+      ui::set_range<float>(this->ui.cineSaturationAdd);
+      ui::set_range<float>(this->ui.cineContrastMult);
+      ui::set_range<float>(this->ui.cineContrastAdd);
+      //
+      this->ui.cineFadeAmount->setRange(0, 1);
+      this->ui.cineTintAmount->setRange(0, 1);
+
+      this->ui.blurRadius->setRange(0, 7);
+      this->ui.blurRadius->setDecimals(3);
+      this->ui.doubleVision->setRange(0, 1);
+      this->ui.doubleVision->setDecimals(5);
+      this->ui.motionBlur->setRange(0, 10);
+      this->ui.motionBlur->setDecimals(5);
+      
+      ui::set_unsigned_range<float>(this->ui.radialBlurStrength); // unknown upper bound
+      this->ui.radialBlurRampUp->setRange(0, 100);
+      this->ui.radialBlurStart->setRange(0, 1);
+      this->ui.radialBlurRampDown->setRange(0, 100);
+      this->ui.radialBlurDownStart->setRange(0, 1);
+      for (QDoubleSpinBox* spinbox : std::array{
+         this->ui.radialBlurRampUp,
+         this->ui.radialBlurStart,
+         this->ui.radialBlurRampDown,
+         this->ui.radialBlurDownStart,
+      }) {
+         spinbox->setDecimals(4);
+      }
+      this->ui.radialBlurCenterX->setRange(0, 1);
+      this->ui.radialBlurCenterY->setRange(0, 1);
+      this->ui.radialBlurCenterX->setDecimals(3);
+      this->ui.radialBlurCenterY->setDecimals(3);
+
+      ui::set_unsigned_range<float>(this->ui.dofStrength);
+      ui::set_unsigned_range<float>(this->ui.dofDistance);
+      ui::set_unsigned_range<float>(this->ui.dofRange);
+      this->ui.dofRadius->setRange(0, 7);
+   }
+   #pragma endregion
+
    this->ui.seek->setRange(0, slider_resolution);
    QObject::connect(this->ui.duration, qOverload<double>(&QDoubleSpinBox::valueChanged), this, [this](double v) {
       this->_set_duration(v);
@@ -114,6 +183,11 @@ FormDialogImagespaceModifier::FormDialogImagespaceModifier(dovah::form_stub& stu
       widget->addItem(tr("Back"), 2);
       widget->addItem(tr("Front/Back"), 3);
    }
+
+   //
+   // Set up value ranges.
+   //
+
 
    //
    // Set up reset buttons. As a cheap hack, we use the enable state of the 
