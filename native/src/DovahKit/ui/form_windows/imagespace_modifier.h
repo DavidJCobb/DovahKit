@@ -26,6 +26,8 @@ class FormDialogImagespaceModifier :
       void _set_current_timestamp(float timestamp);
       void _set_duration(float duration);
 
+      ui::types::imagespace_modifier::computed_keyframe _get_current_computed_keyframe() const;
+
       void _load_keyframe(float position);
       void _save_keyframe(float position);
 };

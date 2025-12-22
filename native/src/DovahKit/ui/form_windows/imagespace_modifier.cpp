@@ -123,7 +123,8 @@ FormDialogImagespaceModifier::FormDialogImagespaceModifier(dovah::form_stub& stu
    auto _set_up_color = [this](
       DKColorPickerButton* diffuse,
       QDoubleSpinBox* alpha,
-      QPushButton* reset_button
+      QPushButton* reset_button,
+      auto&& value_getter
    ) {
       QObject::connect(diffuse, &DKColorPickerButton::colorChanged, reset_button, [reset_button]() {
          reset_button->setEnabled(true);
@@ -131,24 +132,39 @@ FormDialogImagespaceModifier::FormDialogImagespaceModifier(dovah::form_stub& stu
       QObject::connect(alpha, qOverload<double>(&QDoubleSpinBox::valueChanged), reset_button, [reset_button]() {
          reset_button->setEnabled(true);
       });
-      QObject::connect(reset_button, &QPushButton::clicked, reset_button, [reset_button]() {
+      QObject::connect(reset_button, &QPushButton::clicked, reset_button, [diffuse, alpha, reset_button, value_getter]() {
          reset_button->setEnabled(false);
+         QColor value = value_getter();
+         alpha->setValue(value.alphaF());
+         value.setAlpha(255);
+         diffuse->setColor(value);
+
+         // focus will move from the reset button to the next control, once the button 
+         // is disabled. we instead want focus to move to the control to which the 
+         // button pertains.
+         diffuse->setFocus();
       });
    };
-   auto _set_up_float = [this](QDoubleSpinBox* editor, QPushButton* reset_button) {
+   auto _set_up_float = [this](QDoubleSpinBox* editor, QPushButton* reset_button, auto&& property_getter) {
       QObject::connect(editor, qOverload<double>(&QDoubleSpinBox::valueChanged), reset_button, [reset_button]() {
          reset_button->setEnabled(true);
       });
-      QObject::connect(reset_button, &QPushButton::clicked, reset_button, [reset_button]() {
+      QObject::connect(reset_button, &QPushButton::clicked, reset_button, [editor, reset_button, property_getter]() {
          reset_button->setEnabled(false);
+         editor->setValue(property_getter());
+
+         // focus will move from the reset button to the next control, once the button 
+         // is disabled. we instead want focus to move to the control to which the 
+         // button pertains.
+         editor->setFocus();
       });
    };
    
-   #define X(field, control) _set_up_float(this->ui.control, this->ui.control##Reset);
+   #define X(field, control) _set_up_float(this->ui.control, this->ui.control##Reset, [this]() -> float { return _get_current_computed_keyframe().field; });
    FOR_EACH_ANIMATED_FLOAT(X)
    #undef X
 
-   #define X(field, color, alpha, reset) _set_up_color(this->ui.color, this->ui.alpha, this->ui.reset);
+   #define X(field, color, alpha, reset) _set_up_color(this->ui.color, this->ui.alpha, this->ui.reset, [this]() -> QColor { return _get_current_computed_keyframe().field; });
    FOR_EACH_ANIMATED_COLOR(X)
    #undef X
 
@@ -243,6 +259,11 @@ void FormDialogImagespaceModifier::_set_duration(float duration_after) {
 
    const auto blocker = QSignalBlocker(this->ui.currentTime);
    this->ui.currentTime->setValue(position_prior * duration_after);
+}
+
+ui::types::imagespace_modifier::computed_keyframe FormDialogImagespaceModifier::_get_current_computed_keyframe() const {
+   float timestamp = this->ui.currentTime->value();
+   return this->keyframes.get_computed_keyframe(timestamp, true);
 }
 
 void FormDialogImagespaceModifier::_load_keyframe(float position) {
