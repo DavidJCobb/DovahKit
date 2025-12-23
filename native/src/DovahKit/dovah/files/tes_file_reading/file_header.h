@@ -17,6 +17,7 @@ namespace dovah::tes_file_reading {
          
       public:
          std::string name;
+         float       file_version = 0;
          uint32_t    flags = 0;
          uint32_t    record_and_group_count = 0;
          uint16_t    header_record_version  = 0;

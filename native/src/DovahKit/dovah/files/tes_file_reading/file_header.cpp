@@ -152,7 +152,7 @@ namespace dovah::tes_file_reading {
       while (subrecord.open()) {
          switch (subrecord.signature) {
             case 'HEDR':
-               subrecord.skip_bytes(4);
+               subrecord.read(this->file_version);
                subrecord.read(this->record_and_group_count);
                break;
             case 'CNAM': // creator

@@ -1496,6 +1496,7 @@
     <ClInclude Include="dovah\exceptions\invalid_load_order\cyclical_dependency_between_files.h" />
     <ClInclude Include="dovah\exceptions\invalid_load_order\desired_active_file_is_a_dependency.h" />
     <ClInclude Include="dovah\exceptions\invalid_load_order\load_order_would_have_too_many_files.h" />
+    <ClInclude Include="dovah\exceptions\invalid_load_order\some_files_are_too_new.h" />
     <ClInclude Include="dovah\exceptions\object_reference_move_failed.h" />
     <ClInclude Include="dovah\files\pex\parsers\function_collector.h" />
     <ClInclude Include="dovah\files\pex\parsers\util\file_string_table.h" />

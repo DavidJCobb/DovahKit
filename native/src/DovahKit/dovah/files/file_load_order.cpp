@@ -26,6 +26,7 @@
 #include <fstream>
 
 #include "../exceptions/invalid_load_order/active_file_is_master_and_there_are_plugins.h"
+#include "../exceptions/invalid_load_order/some_files_are_too_new.h"
 #include "../exceptions/file_load_failed.h"
 #include "../exceptions/file_save_failed.h"
 #include "../exceptions/form_creation_failed.h"
@@ -343,6 +344,23 @@ namespace dovah {
       this->normalizer.target_game = this->current_game;
       for (auto it = this->queued_load.files.begin(); it != this->queued_load.files.end(); ++it) {
          this->normalizer.add(*it);
+      }
+      {  // Check all files to ensure they aren't too new.
+         const auto max_version = game_feature_support::max_file_version(this->current_game);
+
+         std::vector<std::string> too_new_files;
+         //
+         for (auto* header : this->normalizer.masters)
+            if (header->file_version > max_version)
+               too_new_files.push_back(header->name);
+         for (auto* header : this->normalizer.plugins)
+            if (header->file_version > max_version)
+               too_new_files.push_back(header->name);
+
+         if (!too_new_files.empty()) {
+            auto ex = exceptions::invalid_load_order_exceptions::some_files_are_too_new(std::move(too_new_files));
+            throw ex;
+         }
       }
       if (!this->queued_load.active_file.empty()) {  // Force the active file to the end of the load order
          //

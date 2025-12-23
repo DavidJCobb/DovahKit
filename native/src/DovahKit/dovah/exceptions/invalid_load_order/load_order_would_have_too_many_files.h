@@ -2,11 +2,12 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include "../invalid_load_order.h"
 
 namespace dovah::exceptions::invalid_load_order_exceptions {
-   class load_order_would_have_too_many_files : public std::runtime_error {
+   class load_order_would_have_too_many_files : public invalid_load_order {
       public:
-         load_order_would_have_too_many_files() : std::runtime_error("Accounting for files' dependencies, this load order would contain too many files.") {}
+         load_order_would_have_too_many_files() : invalid_load_order("Accounting for files' dependencies, this load order would contain too many files.") {}
 
          struct {
             std::optional<size_t> active_file_dependencies;

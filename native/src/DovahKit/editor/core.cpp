@@ -41,6 +41,7 @@
 #include "dovah/exceptions/invalid_load_order/cyclical_dependency_between_files.h"
 #include "dovah/exceptions/invalid_load_order/desired_active_file_is_a_dependency.h"
 #include "dovah/exceptions/invalid_load_order/load_order_would_have_too_many_files.h"
+#include "dovah/exceptions/invalid_load_order/some_files_are_too_new.h"
 #include "dovah/exceptions/file_load_failed.h"
 #include "dovah/exceptions/form_creation_failed.h"
 #include "dovah/exceptions/form_deletion_failed.h"
@@ -252,6 +253,17 @@ namespace {
             "The load order contains too many files: %1 light and %2 heavy. The cap is 254 "
             "heavy plug-ins and 4096 light plug-ins."
          ).arg(casted->file_counts.light).arg(casted->file_counts.heavy);
+      } else if (auto* casted = dynamic_cast<const some_files_are_too_new*>(&ex)) {
+         QString list_html = "<ul>";
+         for (auto& filename : casted->files) {
+            list_html += "<li>" + QString::fromStdString(filename) + "</li>";
+         }
+         list_html += "</ul>";
+
+         return QObject::tr(
+            "<p>Some files in the load order have header version numbers (TES4/HEDR) that are "
+            "too new. The game would reject these files.</p>\n\n%1"
+         ).arg(list_html);
       }
       return QObject::tr("Unknown problem with the requested load order.");
    }

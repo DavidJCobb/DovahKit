@@ -9113,6 +9113,9 @@
     <ClInclude Include="ui\main_window\_debug_hooks\form_types\imagespace_modifier_keyframe_interp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\exceptions\invalid_load_order\some_files_are_too_new.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
