@@ -623,6 +623,11 @@ void FormDialogPackage::_load_impl() {
          this->ui.buttonPackdataNew->setEnabled(false);
          this->ui.selectedProcedureGroupbox->setEnabled(false);
       }
+      QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) {
+         if (stub == this->ui.templateForm->formStub()) {
+            this->_set_package_template(stub);
+         }
+      });
 
       #pragma region Public Package Data
       {
