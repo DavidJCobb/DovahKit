@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>908</width>
+    <width>912</width>
     <height>655</height>
    </rect>
   </property>
@@ -2023,55 +2023,112 @@
       <attribute name="title">
        <string>Effects</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout_19" rowstretch="0,1">
-       <item row="0" column="1">
-        <widget class="QGroupBox" name="groupBox_8">
-         <property name="title">
-          <string>Aurora</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_18">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_54">
-            <property name="text">
-             <string>Model:</string>
-            </property>
-            <property name="buddy">
-             <cstring>aurora</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="DKFormNIFPicker" name="aurora"/>
-          </item>
-          <item row="2" column="0" colspan="2">
-           <widget class="QCheckBox" name="flagAuroraFollowsSun">
-            <property name="text">
-             <string>Follows Sun Position</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0" colspan="2">
-           <widget class="QCheckBox" name="flagAuroraAlwaysVisible">
-            <property name="text">
-             <string>Always Visible</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <spacer name="verticalSpacer_7">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>0</width>
-              <height>0</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </widget>
+      <layout class="QGridLayout" name="gridLayout_19" rowstretch="0,0">
+       <item row="1" column="0" colspan="2">
+        <layout class="QGridLayout" name="gridLayout_22">
+         <item row="0" column="1">
+          <widget class="QGroupBox" name="volumetricGroupbox">
+           <property name="title">
+            <string>Volumetric Lighting</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_21">
+            <item row="3" column="0">
+             <widget class="QLabel" name="label_58">
+              <property name="text">
+               <string>Nighttime:</string>
+              </property>
+              <property name="buddy">
+               <cstring>volumetricNighttime</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_55">
+              <property name="text">
+               <string>Sunrise:</string>
+              </property>
+              <property name="buddy">
+               <cstring>volumetricSunrise</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <spacer name="verticalSpacer_8">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_57">
+              <property name="text">
+               <string>Sunset:</string>
+              </property>
+              <property name="buddy">
+               <cstring>volumetricSunset</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_56">
+              <property name="text">
+               <string>Daytime:</string>
+              </property>
+              <property name="buddy">
+               <cstring>volumetricDaytime</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="DKFormPicker" name="volumetricSunrise"/>
+            </item>
+            <item row="1" column="1">
+             <widget class="DKFormPicker" name="volumetricDaytime"/>
+            </item>
+            <item row="2" column="1">
+             <widget class="DKFormPicker" name="volumetricSunset"/>
+            </item>
+            <item row="3" column="1">
+             <widget class="DKFormPicker" name="volumetricNighttime"/>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QGroupBox" name="lensFlareGroupbox">
+           <property name="title">
+            <string>Lens Flare</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_23">
+            <item row="0" column="0">
+             <widget class="DKFormPicker" name="lensFlare"/>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="0" column="0" rowspan="2">
+          <widget class="QGroupBox" name="groupBox_9">
+           <property name="title">
+            <string>Sky Statics</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_20">
+            <item row="0" column="0">
+             <widget class="DKFormListPane" name="skyStatics">
+              <property name="showFormTypes">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item row="0" column="0">
         <widget class="QGroupBox" name="vfxGroupbox">
@@ -2163,99 +2220,54 @@
          </layout>
         </widget>
        </item>
-       <item row="1" column="0" colspan="2">
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QGroupBox" name="groupBox_9">
-           <property name="title">
-            <string>Sky Statics</string>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_20">
-            <item row="0" column="0">
-             <widget class="DKFormListPane" name="skyStatics">
-              <property name="showFormTypes">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QGroupBox" name="volumetricGroupbox">
-           <property name="title">
-            <string>Volumetric Lighting</string>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_21">
-            <item row="3" column="0">
-             <widget class="QLabel" name="label_58">
-              <property name="text">
-               <string>Nighttime:</string>
-              </property>
-              <property name="buddy">
-               <cstring>volumetricNighttime</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_55">
-              <property name="text">
-               <string>Sunrise:</string>
-              </property>
-              <property name="buddy">
-               <cstring>volumetricSunrise</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <spacer name="verticalSpacer_8">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_57">
-              <property name="text">
-               <string>Sunset:</string>
-              </property>
-              <property name="buddy">
-               <cstring>volumetricSunset</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLabel" name="label_56">
-              <property name="text">
-               <string>Daytime:</string>
-              </property>
-              <property name="buddy">
-               <cstring>volumetricDaytime</cstring>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="DKFormPicker" name="volumetricSunrise"/>
-            </item>
-            <item row="1" column="1">
-             <widget class="DKFormPicker" name="volumetricDaytime"/>
-            </item>
-            <item row="2" column="1">
-             <widget class="DKFormPicker" name="volumetricSunset"/>
-            </item>
-            <item row="3" column="1">
-             <widget class="DKFormPicker" name="volumetricNighttime"/>
-            </item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
+       <item row="0" column="1">
+        <widget class="QGroupBox" name="groupBox_8">
+         <property name="title">
+          <string>Aurora</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_18">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_54">
+            <property name="text">
+             <string>Model:</string>
+            </property>
+            <property name="buddy">
+             <cstring>aurora</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="DKFormNIFPicker" name="aurora"/>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagAuroraFollowsSun">
+            <property name="text">
+             <string>Follows Sun Position</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QCheckBox" name="flagAuroraAlwaysVisible">
+            <property name="text">
+             <string>Always Visible</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <spacer name="verticalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -2517,6 +2529,7 @@
   <tabstop>volumetricDaytime</tabstop>
   <tabstop>volumetricSunset</tabstop>
   <tabstop>volumetricNighttime</tabstop>
+  <tabstop>lensFlare</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
  </tabstops>

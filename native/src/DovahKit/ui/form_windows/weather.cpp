@@ -257,6 +257,8 @@ FormDialogWeather::FormDialogWeather(dovah::form_stub& stub, QWidget* parent) : 
       this->ui.volumetricDaytime->setAllowedFormType(dovah::form_type::volumetric_lighting);
       this->ui.volumetricSunset->setAllowedFormType(dovah::form_type::volumetric_lighting);
       this->ui.volumetricNighttime->setAllowedFormType(dovah::form_type::volumetric_lighting);
+
+      this->ui.lensFlare->setAllowedFormType(dovah::form_type::lens_flare);
    #pragma endregion
 
    this->load(); // this creates the working copy.
@@ -500,6 +502,9 @@ void FormDialogWeather::_load_impl() {
             this->ui.volumetricNighttime->setFormStub(val.night.get_form_stub());
          }
       #pragma endregion
+      #pragma region Lens Flare
+         ui::bind(this->ui.lensFlare, working.sun.lens_flare, working);
+      #pragma endregion
    #pragma endregion
 
    QObject::connect(this->ui.currentCloudLayerIndex, qOverload<int>(&QSpinBox::valueChanged), this, &FormDialogWeather::_pull_cloud_layer);
@@ -627,6 +632,7 @@ void FormDialogWeather::_pull_cloud_layer(int which) {
 }
 
 void FormDialogWeather::_update_ui_by_game() {
-   bool no_volumetric = DovahKitCore::get().get_current_game() == dovah::game::skyrim_classic;
-   this->ui.volumetricGroupbox->setVisible(!no_volumetric);
+   bool no_sse = DovahKitCore::get().get_current_game() == dovah::game::skyrim_classic;
+   this->ui.volumetricGroupbox->setVisible(!no_sse);
+   this->ui.lensFlareGroupbox->setVisible(!no_sse);
 }
