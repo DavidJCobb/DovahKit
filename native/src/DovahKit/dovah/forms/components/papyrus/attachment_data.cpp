@@ -4,9 +4,13 @@
 #include "./attachment_header.h"
 #include "./attached_script.h"
 
+#include "../../../notices/form_load_warnings/by_form_component/papyrus/vmad_too_large.h"
 #include "../../../notices/form_save_errors/by_form_component/papyrus/too_many_scripts.h"
 
 namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_component::papyrus;
+   }
    namespace specific_save_errors {
       using namespace dovah::notices::form_save_errors::by_component::papyrus;
    }
@@ -14,6 +18,13 @@ namespace {
 
 namespace dovah::loaded_forms::components::papyrus {
    bool attachment_data::load(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
+      if (subrecord.size() > 1 * 1024 * 1024) {
+         specific_load_warnings::vmad_too_large notice(
+            const_cast<form_stub&>(intfc.target_stub),
+            subrecord.size()
+         );
+         intfc.log_load_warning(notice);
+      }
       if (!this->header.load(subrecord))
          return false;
       serialized_script_count_type count;

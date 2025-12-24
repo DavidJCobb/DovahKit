@@ -17,6 +17,7 @@
    #include "./by_form_component/extra_data/room_ref_data_insufficient_rooms.h"
    #include "./by_form_component/extra_data/room_ref_data_swallowed_subrecord.h"
    #include "./by_form_component/package_event_dialogue/unrecognized_subrecord.h"
+   #include "./by_form_component/papyrus/vmad_too_large.h"
 #pragma endregion
 #pragma region by form type
    #include "./by_form_type/actor_value_info/unexpected_subrecord_in_perk_tree_node.h"

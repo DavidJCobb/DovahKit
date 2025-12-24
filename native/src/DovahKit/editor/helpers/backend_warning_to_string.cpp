@@ -740,6 +740,17 @@ namespace editor_helpers {
                   ).arg(subject).arg(subrecord);
                }
             #pragma endregion
+            #pragma region papyrus
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::papyrus::vmad_too_large*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "%1 has too much script data. Its VMAD subrecord is %2 MB (%3 bytes) large. The "
+                     "maximum is 1 MB. This data will not be loaded in-game.",
+                     disambig
+                  ).arg(subject).arg(casted->size / 1024 / 1024).arg(casted->size);
+               }
+            #pragma endregion
          #pragma endregion
          #pragma region by form type
             #pragma region actor value info
