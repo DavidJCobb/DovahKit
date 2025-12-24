@@ -11,7 +11,6 @@
 #include "../file_load_order.h"
 
 namespace dovah {
-   class file_load_order;
    class form_stub;
    namespace tes_file_writing {
       class file_writer;

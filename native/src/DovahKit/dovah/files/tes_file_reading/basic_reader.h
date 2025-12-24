@@ -1,7 +1,10 @@
 #pragma once
+#include <array>
+#include <optional>
 #include "elements.h"
 
 namespace dovah {
+   enum class game;
    class localized_string_store;
 }
 
@@ -69,9 +72,10 @@ namespace dovah::tes_file_reading {
          file_loader*    loader      = nullptr; // optional. needed for loading content that requires a load order
          struct {
             bool allow_suspicious_record_signatures = false;
-            bool allow_unknown_record_signatures    = true;
+            bool allow_unknown_record_signatures    = false;
             bool log_file_syntax_errors             = true;  // for on-demand form loading, perf boost from disabling this after the initial file load
             bool uses_string_table                  = false; // only used when no (file_loader) is supplied; otherwise you must set this based on the file header's flags
+            std::optional<game> current_game;
          } options;
          //
          void     set_position(uint32_t);

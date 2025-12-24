@@ -16,6 +16,12 @@ namespace {
    namespace form_save_errors {
       using namespace dovah::notices::form_save_errors;
    }
+
+   static QString _hex_offset_to_string(size_t offset) {
+      return QObject::tr("0x%1", "hex prefix").arg(
+         QString::number(offset, 16).toUpper()
+      );
+   }
 }
 
 namespace editor_helpers {
@@ -94,7 +100,7 @@ namespace editor_helpers {
             if (auto* casted = cobb::dynamic_fast_cast<const file_load_errors::form_id_is_invalid*>(&warning)) {
                auto type = form_type_name_to_string(casted->form.type);
                auto id   = form_id_to_string(casted->form.local_id);
-               auto pos  = QString("0x%1").arg(casted->file_offset, 0, 16).toUpper();
+               auto pos  = _hex_offset_to_string(casted->file_offset);
 
                switch (casted->problem) {
                   using enum std::decay_t<decltype(*casted)>::problem_code;
@@ -150,21 +156,21 @@ namespace editor_helpers {
                ).arg(type).arg(id);
             }
             if (auto* casted = cobb::dynamic_fast_cast<const file_load_errors::interior_cell_block_group_badly_nested*>(&warning)) {
-               auto pos = QString("0x%1").arg(casted->file_offset, 0, 16).toUpper();
+               auto pos = _hex_offset_to_string(casted->file_offset);
                return QObject::tr(
                   "The file is malformed: an interior cell block located near %1 is nested under a group of the wrong type or hierarchy.",
                   disambig
                ).arg(pos);
             }
             if (auto* casted = cobb::dynamic_fast_cast<const file_load_errors::interior_cell_block_has_no_parent_group*>(&warning)) {
-               auto pos = QString("0x%1").arg(casted->file_offset, 0, 16).toUpper();
+               auto pos = _hex_offset_to_string(casted->file_offset);
                return QObject::tr(
                   "The file is malformed: an interior cell block located near %1 has no parent group.",
                   disambig
                ).arg(pos);
             }
             if (auto* casted = cobb::dynamic_fast_cast<const file_load_errors::malformed_file_header*>(&warning)) {
-               auto pos = QString("0x%1").arg(casted->file_offset, 0, 16).toUpper();
+               auto pos = _hex_offset_to_string(casted->file_offset);
                return QObject::tr(
                   "This is not a game data file, or the file header is malformed. A problem was encountered at file offset %1.",
                   disambig
@@ -240,7 +246,7 @@ namespace editor_helpers {
                }
 
                auto local_id = form_id_to_string(casted->record.local_form_id);
-               auto pos      = QString("0x%1").arg(casted->file_offset, 0, 16).toUpper();
+               auto pos      = _hex_offset_to_string(casted->file_offset);
 
                return QObject::tr(
                   "The record with file-local form ID %1, at offset %2, had an unrecognized signature: %3.",
@@ -250,7 +256,7 @@ namespace editor_helpers {
             if (auto* casted = cobb::dynamic_fast_cast<const file_load_errors::record_is_too_large*>(&warning)) {
                auto signature = cobb::qt::four_cc_to_string(casted->record.signature);
                auto local_id  = form_id_to_string(casted->record.local_form_id);
-               auto pos       = QString("0x%1").arg(casted->file_offset, 0, 16).toUpper();
+               auto pos       = _hex_offset_to_string(casted->file_offset);
 
                return QObject::tr(
                   "The %1 record with file-local form ID %2, at file offset %3, was too large to load.",
@@ -258,7 +264,7 @@ namespace editor_helpers {
                ).arg(signature).arg(local_id).arg(pos);
             }
             if (auto* casted = cobb::dynamic_fast_cast<const file_load_errors::unexpected_nested_group_in_simple_top_group*>(&warning)) {
-               auto pos = QString("0x%1").arg(casted->file_offset, 0, 16).toUpper();
+               auto pos = _hex_offset_to_string(casted->file_offset);
                return QObject::tr(
                   "The file is malformed: a nested record group was found inside of a top-level record group that should not have nesting.",
                   disambig

@@ -88,9 +88,19 @@ namespace dovah::tes_file_reading {
          }
       }
       if (!this->options.allow_unknown_record_signatures) {
-         if (form_type_info::signature_to_form_type(signature) == form_type::none) {
+         auto ft = form_type_info::signature_to_form_type(signature);
+         if (ft == form_type::none) {
             auto error = std::make_unique<dovah::notices::file_load_errors::record_has_invalid_signature>();
             _throw_file_read_error(*this, error);
+         }
+         if (this->options.current_game.has_value()) {
+            if (this->options.current_game.value() == game::skyrim_classic) {
+               const auto& info = form_type_info::lookup(ft);
+               if (info.flags & form_type_info::flag::is_skyrim_special) {
+                  auto error = std::make_unique<dovah::notices::file_load_errors::record_has_invalid_signature>();
+                  _throw_file_read_error(*this, error);
+               }
+            }
          }
       }
       return;

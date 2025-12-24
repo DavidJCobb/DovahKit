@@ -10,9 +10,11 @@
 namespace dovah::tes_file_reading {
    file_or_file_part_loader::file_or_file_part_loader(file_loader& f) : load_interface(f.get_load_interface(*this)) {
       this->loader = &f;
+      this->options.current_game = this->load_interface.owner.get_current_game();
    }
    file_or_file_part_loader::file_or_file_part_loader(file_loader& self, lo_interface_t& i) : load_interface(i) {
       this->loader = &self;
+      this->options.current_game = this->load_interface.owner.get_current_game();
    }
    
    void file_or_file_part_loader::log_load_warning(notices::base_file_load_warning& notice) {
