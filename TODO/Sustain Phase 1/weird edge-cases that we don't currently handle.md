@@ -26,6 +26,47 @@ After the game calls `TESForm::Load`, it checks whether the current record comes
 
 ## Form-type-specific edge cases
 
+### Placed projectile forms
+
+**BLUF:** Rename the `dovah::form_type` constants for placed projectile forms. When designing editing features, e.g. Render Window features, be mindful that REFR subclasses are not interchangeable: you should not allow: an `ACHR` to have a base form that isn't an actor; nor a `PHZD` to have a base form that isnt' a hazard; nor a `PGRE` or similar to have a base form that isn't a projectile; nor a plain `REFR` to have a base form that *is* an actor, projectile, or hazard.
+
+These forms are:
+
+| Signature | Name | Constant | Notes |
+| :- | :- | :- | :- |
+| PARW | PlacedArrow | `arrow` | A fired arrow. |
+| PBAR | PlacedBarrier | `barrier` |
+| PBEA | PlacedBeam | `beam` |
+| PCON | PlacedCone | `cone` |
+| PFLA | PlacedFlame | `flame` |
+| PGRE | PlacedGrenade | `grenade` | A thrown grenade or armed landmine. Note that the traps created by rune spells count as landmines. |
+| PHZD | PlacedHazard | `placed_hazard` |
+| PMIS | PlacedMissile | `missile` |
+
+There's one obvious change we should make: all of the "placed projectile" form type constants should be renamed to be explicit about what the forms are.
+
+* `placed_projectile_arrow`
+* `placed_projectile_barrier`
+* `placed_projectile_beam`
+* `placed_projectile_cone`
+* `placed_projectile_flame`
+* `placed_projectile_grenade`
+* `placed_projectile_missile`
+
+Additionally, however, we currently define dummy loaded-form classes for these that just subclass `ObjectReference` while adding nothing and retaining all of its behaviors. This is sufficient for now, but it invites the possibility for jank in the future. What if, in the Render Window, someone uses the "change this ref's base form" feature to change a ref between a projectile and non-projectile base? (For that matter, what if they do the same for a placed `Actor`?)
+
+It'd be nice if we could have all of these form types map to the `ObjectReference` loaded-form class, and have some means of deciding, at load and save time, what form type, signature, etc., to save the form with. In particular, it'd be nice if the `ObjectReference` loader could check the signature that the record has, in order to validate that the base form is of the correct type.
+
+The problem with doing things that way, of course, is that Bethesda's form-type-override checks (to ensure that you don't override a form with data of the wrong type) don't allow reference types to be interchangeable. If something is defined as a `PHZD`, you cannot override it with a plain `REFR`, much less a `PMIS` or `ACHR` or something else. This means that we just have to be restrictive:
+
+* Continue using separate loaded-form classes for each of these ref form types.
+
+* If a ref is defined outside the active file, don't allow changing its base form to a category that would require a different ref form type.
+
+* If a ref is defined inside the active file, allow these cross-form-type changes, but warn the user and ask them to confirm before proceeding. (If their active file is some other mod's master, then they'll break any incoming overrides of the ref from that other mod.)
+
+
+
 ### Sibling landscapes override each other
 
 If multiple `LAND` forms are children of the same `CELL`, then the later-loaded siblings will override the first-loaded sibling. This is because the logic for loading landscapes is special-cased as follows:

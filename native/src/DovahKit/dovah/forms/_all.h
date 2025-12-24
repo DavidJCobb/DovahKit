@@ -88,6 +88,14 @@
    #include "Outfit.h"
    #include "Package.h"
    #include "Perk.h"
+   #include "PlacedArrow.h"
+   #include "PlacedBarrier.h"
+   #include "PlacedBeam.h"
+   #include "PlacedCone.h"
+   #include "PlacedFlame.h"
+   #include "PlacedGrenade.h"
+   #include "PlacedHazard.h"
+   #include "PlacedMissile.h"
    #include "Potion.h"
    #include "Projectile.h"
    #include "Quest.h"
@@ -213,6 +221,14 @@ namespace dovah {
       loaded_forms::Outfit,
       loaded_forms::Package,
       loaded_forms::Perk,
+      loaded_forms::PlacedArrow,
+      loaded_forms::PlacedBarrier,
+      loaded_forms::PlacedBeam,
+      loaded_forms::PlacedCone,
+      loaded_forms::PlacedFlame,
+      loaded_forms::PlacedGrenade,
+      loaded_forms::PlacedHazard,
+      loaded_forms::PlacedMissile,
       loaded_forms::Potion,
       loaded_forms::Projectile,
       loaded_forms::Quest,
