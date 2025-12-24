@@ -289,6 +289,11 @@ void ObjectWindowTreeItem::sort() {
             }
          }
       });
+
+      auto& editor = DovahKitCore::get();
+      QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, &ObjectWindowTreeModel::_onGameMaybeChanged);
+      QObject::connect(&editor, &DovahKitCore::dataAbandonComplete, this, &ObjectWindowTreeModel::_onGameMaybeChanged);
+      QObject::connect(&editor, &DovahKitCore::dataSaveComplete, this, &ObjectWindowTreeModel::_onGameMaybeChanged);
    }
    ObjectWindowTreeModel::~ObjectWindowTreeModel() {
       this->_nodes.all    = nullptr;
@@ -416,6 +421,21 @@ void ObjectWindowTreeItem::sort() {
       Qt::ItemFlags ObjectWindowTreeModel::flags(const QModelIndex& index) const {
          if (!index.isValid())
             return Qt::NoItemFlags;
+         auto* item = _itemFromIndex(index);
+         if (item && item != this->_nodes.all) {
+            //
+            // Disable the treeview items for SSE forms, when in LE mode.
+            //
+            auto ft = item->form_type;
+            if (ft.has_value()) {
+               auto& info = dovah::form_type_info::lookup(ft.value());
+               if (info.flags & dovah::form_type_info::flag::is_skyrim_special) {
+                  if (DovahKitCore::get().get_current_game() == dovah::game::skyrim_classic) {
+                     return Qt::NoItemFlags;
+                  }
+               }
+            }
+         }
          return Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsSelectable;
       }
       QVariant ObjectWindowTreeModel::data(const QModelIndex& index, int role) const {
@@ -801,6 +821,36 @@ void ObjectWindowTreeItem::sort() {
          emit this->layoutAboutToBeChanged({ this->_indexOfItem(node) }, LayoutChangeHint::VerticalSortHint);
          this->_sortChildrenOf(node);
          emit this->layoutChanged({ this->_indexOfItem(node) }, LayoutChangeHint::VerticalSortHint);
+      }
+   }
+   void ObjectWindowTreeModel::_onGameMaybeChanged() {
+      auto& editor    = DovahKitCore::get();
+      bool  allow_sse = true;
+      if (editor.has_data()) {
+         allow_sse = editor.get_current_game() != dovah::game::skyrim_classic;
+      }
+
+      constexpr const auto sse_form_types = []() {
+         constexpr const auto count = []() -> size_t {
+            size_t i = 0;
+            for (const auto& info : dovah::form_types)
+               if (info.flags & dovah::form_type_info::flag::is_skyrim_special)
+                  ++i;
+            return i;
+         }();
+         std::array<dovah::form_type, count> values = {};
+         size_t i = 0;
+         for (const auto& info : dovah::form_types)
+            if (info.flags & dovah::form_type_info::flag::is_skyrim_special)
+               values[i++] = info.form_type;
+         return values;
+      }();
+
+      for (const auto ft : sse_form_types) {
+         if (auto* item = _findFormTypeItem(ft)) {
+            auto qmi = _indexOfItem(item);
+            emit dataChanged(qmi, qmi);
+         }
       }
    }
 #pragma endregion

@@ -90,6 +90,7 @@ class ObjectWindowTreeModel : public QAbstractItemModel {
       void _clearFilters(item_type* root);
       void _removeFilter(item_type* root, const QString& full);
       void _addFilter(item_type* root, const QString& full, bool include_trailing = true);
+      void _onGameMaybeChanged();
       //
    public:
       ObjectWindowTreeModel(QObject* parent = nullptr);
