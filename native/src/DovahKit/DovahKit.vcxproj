@@ -983,6 +983,8 @@
     <ClCompile Include="ui\form_windows\imagespace.cpp" />
     <ClCompile Include="ui\form_windows\imagespace_modifier.cpp" />
     <ClCompile Include="ui\form_windows\impact_data.cpp" />
+    <ClCompile Include="ui\form_windows\impact_data_set.cpp" />
+    <ClCompile Include="ui\form_windows\impact_data_set\ImpactDataSetContentsModel.cpp" />
     <ClCompile Include="ui\form_windows\ingredient.cpp" />
     <ClCompile Include="ui\form_windows\key.cpp" />
     <ClCompile Include="ui\form_windows\keyword.cpp" />
@@ -1529,6 +1531,14 @@
     <ClInclude Include="dovah\forms\LensFlare.h" />
     <ClInclude Include="dovah\forms\mixins\StoryManagerNode.h" />
     <ClInclude Include="dovah\forms\Navmesh.h" />
+    <ClInclude Include="dovah\forms\PlacedArrow.h" />
+    <ClInclude Include="dovah\forms\PlacedBarrier.h" />
+    <ClInclude Include="dovah\forms\PlacedBeam.h" />
+    <ClInclude Include="dovah\forms\PlacedCone.h" />
+    <ClInclude Include="dovah\forms\PlacedFlame.h" />
+    <ClInclude Include="dovah\forms\PlacedGrenade.h" />
+    <ClInclude Include="dovah\forms\PlacedHazard.h" />
+    <ClInclude Include="dovah\forms\PlacedMissile.h" />
     <ClInclude Include="dovah\forms\Region.h" />
     <ClInclude Include="dovah\forms\StoryManagerBranchNode.h" />
     <ClInclude Include="dovah\forms\StoryManagerEventNode.h" />
@@ -1752,6 +1762,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\navmesh_pathing_cell\bad_crc.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\navmesh_pathing_cell\improper_exterior.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\package_event_dialogue\unrecognized_subrecord.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\papyrus\vmad_too_large.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\actor_value_info\unexpected_subrecord_in_perk_tree_node.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\actor_value_info\unterminated_perk_tree_node.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\cell\cell_type_not_yet_known.h" />
@@ -1995,6 +2006,8 @@
     <ClInclude Include="ui\form_group_windows\idle\IdleNewActionRootPickerFilter.h" />
     <QtMoc Include="ui\form_windows\imagespace.h" />
     <QtMoc Include="ui\form_windows\imagespace_modifier.h" />
+    <QtMoc Include="ui\form_windows\impact_data_set\ImpactDataSetContentsModel.h" />
+    <QtMoc Include="ui\form_windows\impact_data_set.h" />
     <ClInclude Include="ui\form_windows\lens_flare\LensFlareSpritesModel.h" />
     <QtMoc Include="ui\form_windows\location.h" />
     <ClInclude Include="ui\form_windows\magic_effect\MagicEffectSummonableActorPickerFilter.h" />
