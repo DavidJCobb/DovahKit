@@ -22,6 +22,10 @@ class ActiveFileSaveDialog : public QDialog {
       // user never actually loaded a file and is making a new file with no masters.
       void _force_current_editor_base_path(dovah::game);
 
+      // When converting across games, verify that the same masters exist in the 
+      // destination game's Data directory.
+      bool _check_cross_game_masters_exist(dovah::game);
+
       // These functions either pop up error messages, or pop up confirmation prompts 
       // as appropriate. They return true if the save should proceed, or false if the 
       // save should abort.

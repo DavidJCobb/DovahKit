@@ -5,6 +5,7 @@
 #include "dovah/data/game/max_file_version.h"
 #include "dovah/data/game.h"
 #include "dovah/files/file_header.h"
+#include "dovah/files/tes_file_reading/file_loader.h"
 #include "dovah/files/tes_file_writing/config.h"
 #include "dovah/files/tes_file_writing/results.h"
 #include "editor/core.h"
@@ -182,6 +183,58 @@ void ActiveFileSaveDialog::_force_current_editor_base_path(dovah::game game) {
    editor.get_game_path(install_path, game);
    install_path.append("Data");
    editor.set_load_order_folder(install_path);
+}
+
+bool ActiveFileSaveDialog::_check_cross_game_masters_exist(dovah::game game) {
+   std::filesystem::path dst_path;
+   auto& editor = DovahKitCore::get();
+   if (!editor.get_game_path(dst_path, game))
+      return true;
+
+   std::vector<std::string> missing_files;
+   {
+      auto  files         = editor.get_loaded_files();
+      auto* active_header = editor.get_active_file_header();
+      for (auto* file : files) {
+         auto filename      = file->get_filename();
+         auto matching_file = dst_path / filename;
+         if (!std::filesystem::exists(matching_file))
+            missing_files.push_back(std::move(filename));
+      }
+   }
+   if (missing_files.empty())
+      return true;
+
+   QString file_list = "<ul>";
+   for (auto& filename : missing_files) {
+      file_list += "<li>";
+      file_list += QString::fromStdString(filename);
+      file_list += "</li>";
+      filename.clear();
+   }
+   missing_files.clear();
+   file_list += "</ul>";
+   
+   auto message = QMessageBox(
+      QMessageBox::Warning,
+      tr("Warning"),
+      tr(
+         "<p>You are converting the active file across games, but some of the active file's masters "
+         "don't exist in the destination game's Data directory. Specifically, the following files "
+         "appear to be missing:</p>"
+         "%1"
+         "<p>Are you sure you want to proceed and save a converted file?</p>"
+      ).arg(file_list),
+      QMessageBox::StandardButtons(QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No),
+      this
+   );
+   message.setDefaultButton(QMessageBox::StandardButton::No);
+
+   message.exec();
+   if (message.clickedButton() != message.button(QMessageBox::StandardButton::Yes))
+      return false;
+
+   return true;
 }
 
 bool ActiveFileSaveDialog::_enforce_form_id_ranges(bool allow_bees, bool allow_non_esl) {
@@ -370,6 +423,11 @@ void ActiveFileSaveDialog::commit() {
          config.use_file_version = 1.70F;
       }
    }
+
+   if (game != game_prior)
+      if (!_check_cross_game_masters_exist(game))
+         return;
+
    if (!this->_enforce_form_id_ranges(
       this->ui.flagUse1Point71FormIDSpace->isChecked(),
       (config.file_flags & dovah::tes_file_flag::light) == 0
