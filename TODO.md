@@ -149,9 +149,9 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | SpecialEffect  | FSTS | Footstep Set              | ✅ | ✅ | ⬛ |
 | SpecialEffect  | HAZD | Hazard                    | ✅ | ✅ | ⬛ |
 | SpecialEffect  | IMGS | Imagespace                | ✅ | ✅ | ⬛ |
-| SpecialEffect  | IMAD | Imagespace Modifier       | ✅ | 🟨 | ⬛ |
+| SpecialEffect  | IMAD | Imagespace Modifier       | ✅ | ✅ | ⬛ |
 | SpecialEffect  | IPCT | ImpactData                | ✅ | ✅ | ⬛ |
-| SpecialEffect  | IPDS | ImpactDataSet             | ✅ | 🟨 | ⬛ |
+| SpecialEffect  | IPDS | ImpactDataSet             | ✅ | ✅ | ⬛ |
 | SpecialEffect  | MATT | Material Type             | ✅ | ✅ | ⬛ |
 | SpecialEffect  | PROJ | Projectile                | ✅ | ✅ | ⬛ |
 | WorldData      | CLMT | Climate                   | ✅ | ✅ | ⬛ |
