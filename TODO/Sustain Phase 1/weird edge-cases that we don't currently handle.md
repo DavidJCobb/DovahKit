@@ -98,3 +98,14 @@ I don't think we should *always* perform this overriding behavior. It should be 
 * If the affected cell and landscapes are originally defined in a non-active file, then we have to make sure that the form IDs for the override-via-sibling landscape records are filled by none-stubs, so that the end user can't inject other forms into that ID.
 
 We also need to double-check which form ID the landscape ends up with (that of the earliest-loaded or latest-loaded sibling).
+
+
+## Editor logistics
+
+### Converting files across games
+
+* When we convert an active file across games, we check whether its masters exist in the destination game's Data directory, but we don't check that those destination-game masters have equivalent content (or, more generally, that the active file would properly override those masters without errors).
+
+* When we convert an active file across games, we continue loading data from the source-game masters, rather than loading data from the destination-game masters. This is necessary if the user decides to save despite missing masters in the destination game, and it'd be necessary if the destination game's masters are incompatible (see previous bullet point); but even if the destination-game masters are correct, we still load data from the source-game masters until such time as the user reloads all involved files from scratch.
+
+  This is obviously more efficient, compared to having to do a full reload, but it *does* give me pause, a little bit.
