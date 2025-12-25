@@ -8,12 +8,16 @@ namespace dovah::loaded_forms::components::extra_data_types {
       public:
          static constexpr uint32_t signature = 'XLKR';
 
+         struct link { // XLKR
+            form_reference_t keyword; // optional; struct can be 8 bytes (KYWD, ref) or 4 bytes (ref)
+            form_reference_t ref;
+         };
+
       public:
          linked_ref() : extra_data(all_extra_data_types::index_of_type<linked_ref>) {}
 
       public:
-         form_reference_t keyword; // optional; struct can be 8 bytes (KYWD, ref) or 4 bytes (ref)
-         form_reference_t ref;
+         std::vector<link> links; // XLKR[] -> link[]
 
       public:
          virtual subrecord_load_result load(tes_file_reading::subrecord&, load_interface_t&) override;

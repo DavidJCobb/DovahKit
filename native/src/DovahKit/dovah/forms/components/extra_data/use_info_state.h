@@ -30,10 +30,6 @@ namespace dovah::loaded_forms::components {
                form_id_t horse;
                form_id_t interior_lock_list;
                form_id_t leveled_item_base;
-               struct {
-                  form_id_t keyword;
-                  form_id_t ref;
-               } linked_ref;
                form_id_t location;
                form_id_t location_ref_type;
                struct {
@@ -66,7 +62,7 @@ namespace dovah::loaded_forms::components {
                   form_id_t cell;
                } water_current_zone_data;
             } by_name;
-            std::array<form_id_t, 34> list = {};
+            std::array<form_id_t, 32> list = {};
          } form_ids;
          std::vector<form_id_t> cell_region_list;
          loaded_forms::components::package_event_dialogue::use_info_state patrol_ref_data;
