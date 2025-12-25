@@ -9,7 +9,7 @@
 #include "../forms/factories/hardcoded.h"
 #include "../forms/ObjectReference.h"
 
-#include "../forms/components/extra_data/location.h"
+#include "../forms/components/extra_data/types/l/location.h"
 #include "../forms/Activator.h"
 #include "../forms/ActorBase.h"
 #include "../forms/DefaultObjectManager.h"
@@ -143,7 +143,7 @@ namespace dovah {
          if (refr.outbound.contains(ploc->formID)) {
             auto loaded_refr = refr.load_even_if_unsafe({}).ptr_cast<loaded_forms::ObjectReference>();
             if (loaded_refr) {
-               auto* extra = loaded_refr->extra_data.lookup<loaded_forms::components::extra::location>(loaded_forms::components::extra_data_type::location);
+               auto* extra = loaded_refr->extra_data.get<loaded_forms::components::extra_data_types::location>();
                if (extra && extra->form == ploc)
                   return true;
             }

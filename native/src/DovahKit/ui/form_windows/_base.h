@@ -135,7 +135,7 @@ class FormEditDialogMixin : public FormEditDialogInterface {
       #pragma region Helpers
       void write_form_ref(dovah::form_reference_t&, dovah::form_stub*);
       
-      template<dovah::loaded_forms::components::extra_data_type>
+      template<typename ExtraData>
       void write_extra_form_ref(
          dovah::loaded_forms::components::extra_data_list&,
          dovah::form_stub*,

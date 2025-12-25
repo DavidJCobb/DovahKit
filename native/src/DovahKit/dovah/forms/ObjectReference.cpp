@@ -2,12 +2,12 @@
 #include "_common_cpp.h"
 #include "../data/hardcoded_form_ids.h"
 #include "../form_stubs/helpers/get_worldspace_cell_by_grid.h"
-#include "components/extra_data/enable_state_parent.h"
-#include "components/extra_data/scale.h"
-#include "components/extra_data/_use_info.h"
+#include "components/extra_data/types/e/enable_state_parent.h"
+#include "components/extra_data/types/s/scale.h"
+#include "components/extra_data/use_info_state.h"
 
 // persistence checks
-#include "./components/extra_data/location.h"
+#include "./components/extra_data/types/l/location.h"
 #include "./Activator.h"
 #include "./DefaultObjectManager.h"
 #include "./Door.h"
@@ -129,7 +129,7 @@ namespace dovah::loaded_forms {
    
    float ObjectReference::get_scale() const {
       float scale = 1.0F;
-      if (auto* extra = this->extra_data.lookup<dovah::loaded_forms::components::extra::scale>(dovah::loaded_forms::components::extra_data_type::scale)) {
+      if (auto* extra = this->extra_data.get<dovah::loaded_forms::components::extra_data_types::scale>()) {
          scale = extra->value;
          if (scale < 0.01F)
             scale = 0.01F;
@@ -142,7 +142,7 @@ namespace dovah::loaded_forms {
       return scale;
    }
    float ObjectReference::get_raw_scale() const {
-      if (auto* extra = this->extra_data.lookup<dovah::loaded_forms::components::extra::scale>(dovah::loaded_forms::components::extra_data_type::scale)) {
+      if (auto* extra = this->extra_data.get<dovah::loaded_forms::components::extra_data_types::scale>()) {
          return extra->value;
       }
       return 1.0F;
@@ -156,7 +156,7 @@ namespace dovah::loaded_forms {
          else
             v -= std::fmod(v, 0.01F);
       }
-      auto* extra = this->extra_data.get_or_create< dovah::loaded_forms::components::extra::scale>(dovah::loaded_forms::components::extra_data_type::scale);
+      auto* extra = this->extra_data.get_or_create<dovah::loaded_forms::components::extra_data_types::scale>();
       if (extra->value == v)
          return;
       extra->value = v;
@@ -192,7 +192,7 @@ namespace dovah::loaded_forms {
                this->script_data.load(subrecord, intfc);
                break;
             default:
-               if (this->extra_data.load(record, intfc) == components::extra_data_load_result::unrecognized) {
+               if (this->extra_data.load(record, intfc) == components::extra_data_list::load_result::unrecognized) {
                   //
                   // Subrecord is not extra-data.
                   //
@@ -209,7 +209,7 @@ namespace dovah::loaded_forms {
          //
          return;
       //
-      extra_data_use_info_state eduis;
+      components::extra_data_use_info_state eduis;
       form_id_t base_form;
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
@@ -224,7 +224,7 @@ namespace dovah::loaded_forms {
             case 'DATA':
                break;
             default:
-               if (components::extra_data_list::generate_use_info(record, uib, eduis) == components::extra_data_load_result::unrecognized) {
+               if (!components::extra_data_list::generate_use_info(record, uib, eduis)) {
                   //
                   // If execution reaches this spot, then the subrecord is not extra-data.
                   //
@@ -289,8 +289,8 @@ namespace dovah::loaded_forms {
       //
       auto* player_ref = load_order.get_form(hardcoded_form_ids::PlayerRef);
       assert(player_ref && "ObjectReference::_friendly_delete_impl: Why is the PlayerRef form not reachable by ID?");
-      auto* extra = this->extra_data.get_or_create<components::extra::enable_state_parent>(components::extra_data_type::enable_state_parent);
-      extra->flags = components::extra::enable_state_parent::flag::opposite;
+      auto* extra = this->extra_data.get_or_create<components::extra_data_types::enable_state_parent>();
+      extra->flags = components::extra_data_types::enable_state_parent::flag::opposite;
       extra->ref.set(*this, player_ref);
 
       //

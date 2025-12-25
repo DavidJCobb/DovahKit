@@ -36,8 +36,8 @@
    #pragma endregion
 
    #pragma region Includes for rendered_light
-      #include "dovah/forms/components/extra_data/light.h"
-      #include "dovah/forms/components/extra_data/radius.h"
+      #include "dovah/forms/components/extra_data/types/l/light.h"
+      #include "dovah/forms/components/extra_data/types/r/radius.h"
       #include "dovah/forms/Light.h"
    #pragma endregion
 
@@ -348,11 +348,11 @@ namespace vulkanDK {
          .fov     = loaded_base->fov,
          .radius  = (float)loaded_base->radius,
       };
-      if (auto* ex = (dovah::loaded_forms::components::extra::light*)refr.extra_data.lookup_by_type(dovah::loaded_forms::components::extra_data_type::light)) {
+      if (auto* ex = refr.extra_data.get<dovah::loaded_forms::components::extra_data_types::light>()) {
          params.fade += ex->fade;
          params.fov  += ex->fov;
       }
-      if (auto* ex = (dovah::loaded_forms::components::extra::radius*)refr.extra_data.lookup_by_type(dovah::loaded_forms::components::extra_data_type::radius)) {
+      if (auto* ex = refr.extra_data.get<dovah::loaded_forms::components::extra_data_types::radius>()) {
          params.radius += ex->value;
       }
       //

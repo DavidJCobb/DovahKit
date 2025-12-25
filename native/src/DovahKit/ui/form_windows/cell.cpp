@@ -4,18 +4,18 @@
 #include "helpers/bitwise.h"
 #include "helpers/miscellaneous.h"
 #include "dovah/data/hardcoded_form_ids.h"
-#include "dovah/forms/components/extra_data/cell_acoustic_space.h"
-#include "dovah/forms/components/extra_data/cell_climate.h"
-#include "dovah/forms/components/extra_data/cell_imagespace.h"
-#include "dovah/forms/components/extra_data/cell_music_override.h"
-#include "dovah/forms/components/extra_data/cell_water_type.h"
-#include "dovah/forms/components/extra_data/encounter_zone.h"
-#include "dovah/forms/components/extra_data/interior_lock_list.h"
-#include "dovah/forms/components/extra_data/location.h"
-#include "dovah/forms/components/extra_data/ownership.h"
-#include "dovah/forms/components/extra_data/rank.h"
-#include "dovah/forms/components/extra_data/water_data.h"
-#include "dovah/forms/components/extra_data/water_environment_map.h"
+#include "dovah/forms/components/extra_data/types/c/cell_acoustic_space.h"
+#include "dovah/forms/components/extra_data/types/c/cell_climate.h"
+#include "dovah/forms/components/extra_data/types/c/cell_imagespace.h"
+#include "dovah/forms/components/extra_data/types/c/cell_music_override.h"
+#include "dovah/forms/components/extra_data/types/c/cell_water_type.h"
+#include "dovah/forms/components/extra_data/types/e/encounter_zone.h"
+#include "dovah/forms/components/extra_data/types/i/interior_lock_list.h"
+#include "dovah/forms/components/extra_data/types/l/location.h"
+#include "dovah/forms/components/extra_data/types/o/ownership.h"
+#include "dovah/forms/components/extra_data/types/r/rank.h"
+#include "dovah/forms/components/extra_data/types/w/water_data.h"
+#include "dovah/forms/components/extra_data/types/w/water_environment_map.h"
 
 namespace {
    using form_flag = dovah::loaded_forms::Cell::form_flag;
@@ -23,13 +23,12 @@ namespace {
    using land_flag = dovah::loaded_forms::Cell::land_flag;
    using inherit_flag = dovah::loaded_forms::structs::cell_lighting::inherit_flag;
 
-   using extra_data_type = dovah::loaded_forms::components::extra_data_type;
-   namespace extra {
-      using namespace dovah::loaded_forms::components::extra;
+   namespace extra_data_types {
+      using namespace dovah::loaded_forms::components::extra_data_types;
    }
 
-   template<class ec, extra_data_type et, class widget_t> void _load_extra_formID(widget_t* widget, dovah::loaded_forms::components::extra_data_list& extra) {
-      if (auto* data = extra.lookup<ec>(et)) {
+   template<typename T, class widget_t> void _load_extra_formID(widget_t* widget, dovah::loaded_forms::components::extra_data_list& extra) {
+      if (auto* data = extra.get<T>()) {
          widget->setFormStub(data->form.get_form_stub());
       } else {
          widget->setFormStub(nullptr);
@@ -198,12 +197,12 @@ void FormDialogCell::_load_impl() {
    //
    #pragma region General
       this->ui.editorID->setText(QString::fromStdString(this->form->stub.get_editor_id()));
-      _load_extra_formID<extra::location, extra_data_type::location>(this->ui.location, extra);
+      _load_extra_formID<extra_data_types::location>(this->ui.location, extra);
       this->ui.flagCantTravel->setChecked(this->form->cell_flags & cell_flag::cant_travel_from_here);
       this->ui.flagHandChanged->setChecked(this->form->cell_flags & cell_flag::hand_changed);
-      _load_extra_formID<extra::cell_acoustic_space, extra_data_type::cell_acoustic_space>(this->ui.acousticSpace, extra);
-      _load_extra_formID<extra::cell_imagespace,     extra_data_type::cell_imagespace>    (this->ui.imagespace, extra);
-      if (auto* data = extra.lookup<extra::cell_music_override>(extra_data_type::cell_music_override)) {
+      _load_extra_formID<extra_data_types::cell_acoustic_space>(this->ui.acousticSpace, extra);
+      _load_extra_formID<extra_data_types::cell_imagespace>    (this->ui.imagespace, extra);
+      if (auto* data = extra.get<extra_data_types::cell_music_override>()) {
          this->ui.musicType->setFormStub(data->form.get_form_stub());
       } else {
          this->ui.musicType->setFormStub(nullptr);
@@ -216,7 +215,7 @@ void FormDialogCell::_load_impl() {
          this->ui.waterEnabled->setEnabled(false);
       }
       this->ui.flagNoLODWater->setChecked(this->form->cell_flags& cell_flag::no_lod_water);
-      _load_extra_formID<extra::cell_water_type, extra_data_type::cell_water_type>(this->ui.waterType, extra); // only serialized if Has Water is enabled
+      _load_extra_formID<extra_data_types::cell_water_type>(this->ui.waterType, extra); // only serialized if Has Water is enabled
       this->ui.waterHeight->setValue(this->form->water.height); // only serialized if Has Water is enabled
       //
       this->ui.waterLinearVelocityX->setValue(0.0); // only serialized if Has Water is enabled
@@ -225,7 +224,7 @@ void FormDialogCell::_load_impl() {
       this->ui.waterAngularVelocityX->setValue(0.0); // only serialized if Has Water is enabled
       this->ui.waterAngularVelocityY->setValue(0.0);
       this->ui.waterAngularVelocityZ->setValue(0.0);
-      if (auto* data = extra.lookup<extra::water_data>(extra_data_type::water_data)) {
+      if (auto* data = extra.get<extra_data_types::water_data>()) {
          auto size = data->data.size();
          if (size > 0) {
             auto& vector4 = data->data[0];
@@ -273,7 +272,7 @@ void FormDialogCell::_load_impl() {
          //
          this->ui.skyVisible->setChecked(this->form->cell_flags & cell_flag::show_sky);
          this->ui.skyLighting->setChecked(this->form->cell_flags & cell_flag::use_sky_lighting);
-         _load_extra_formID<extra::cell_climate, extra_data_type::cell_climate>(this->ui.skyRegion, extra);
+         _load_extra_formID<extra_data_types::cell_climate>(this->ui.skyRegion, extra);
          //
          this->ui.lightingFadeDistanceStart->setValue(lighting.light_fade_distance.start);
          this->ui.lightingFadeDistanceEnd->setValue(lighting.light_fade_distance.end);
@@ -288,19 +287,19 @@ void FormDialogCell::_load_impl() {
       #pragma endregion
       #pragma region Interior Data
          this->ui.name->setText(editor.convert_localized_string(this->form->name));
-         _load_extra_formID<extra::encounter_zone, extra_data_type::encounter_zone>(this->ui.encounterZone, extra);
-         if (auto* data = extra.lookup<extra::water_environment_map>(extra_data_type::water_environment_map)) {
+         _load_extra_formID<extra_data_types::encounter_zone>(this->ui.encounterZone, extra);
+         if (auto* data = extra.get<extra_data_types::water_environment_map>()) {
             this->ui.waterEnvironmentMap->setValue(data->value.c_str());
          }
          this->ui.ownerFactionRequiredRank->clear();
-         if (auto* data = extra.lookup<extra::ownership>(extra_data_type::ownership)) {
+         if (auto* data = extra.get<extra_data_types::ownership>()) {
             this->working_ownership.form = data->form.get_form_stub();
          }
-         if (auto* data = extra.lookup<extra::rank>(extra_data_type::rank)) {
+         if (auto* data = extra.get<extra_data_types::rank>()) {
             this->working_ownership.rank = data->value;
          }
          this->_update_ownership_widgets();
-         _load_extra_formID<extra::interior_lock_list, extra_data_type::interior_lock_list>(this->ui.interiorLockList, extra);
+         _load_extra_formID<extra_data_types::interior_lock_list>(this->ui.interiorLockList, extra);
          this->ui.flagPublicArea->setChecked(this->form->cell_flags & cell_flag::public_area);
          this->ui.flagOffLimits->setChecked(this->stub->test_record_flags(form_flag::off_limits));
          this->ui.flagCantWait->setChecked(this->stub->test_record_flags(form_flag::cant_wait));
@@ -308,6 +307,7 @@ void FormDialogCell::_load_impl() {
    }
 }
 void FormDialogCell::_save_impl() {
+   auto& working  = *this->form;
    auto& extra    = this->form->extra_data;
    auto& lighting = this->form->interior.lighting;
    auto& editor   = DovahKitCore::get();
@@ -317,21 +317,21 @@ void FormDialogCell::_save_impl() {
    #pragma region General
       this->stub->editorID = this->ui.editorID->text().toStdString();
       //
-      this->write_extra_form_ref<extra_data_type::location>(extra, this->ui.location->formStub());
+      this->write_extra_form_ref<extra_data_types::location>(extra, this->ui.location->formStub());
       cobb::edit_bit(this->form->cell_flags, cell_flag::cant_travel_from_here, this->ui.flagCantTravel->isChecked());
       cobb::edit_bit(this->form->cell_flags, cell_flag::hand_changed,          this->ui.flagHandChanged->isChecked());
-      this->write_extra_form_ref<extra_data_type::cell_acoustic_space>(extra, this->ui.acousticSpace->formStub());
-      this->write_extra_form_ref<extra_data_type::cell_imagespace>(    extra, this->ui.imagespace->formStub());
-      this->write_extra_form_ref<extra_data_type::cell_music_override>(extra, this->ui.musicType->formStub());
+      this->write_extra_form_ref<extra_data_types::cell_acoustic_space>(extra, this->ui.acousticSpace->formStub());
+      this->write_extra_form_ref<extra_data_types::cell_imagespace>(    extra, this->ui.imagespace->formStub());
+      this->write_extra_form_ref<extra_data_types::cell_music_override>(extra, this->ui.musicType->formStub());
       //
       bool has_water = is_exterior || this->ui.waterEnabled->isChecked();
       cobb::edit_bit(this->form->cell_flags, cell_flag::has_water,    has_water);
       cobb::edit_bit(this->form->cell_flags, cell_flag::no_lod_water, this->ui.flagNoLODWater->isChecked());
       if (has_water) {
-         this->write_extra_form_ref<extra_data_type::cell_water_type>(extra, this->ui.waterType->formStub());
+         this->write_extra_form_ref<extra_data_types::cell_water_type>(extra, this->ui.waterType->formStub());
          this->form->water.height = this->ui.waterHeight->value();
          //
-         auto* data = extra.get_or_create<extra::water_data>(extra_data_type::water_data);
+         auto* data = extra.get_or_create<extra_data_types::water_data>();
          if (data) {
             data->data.resize(3);
             //
@@ -350,8 +350,8 @@ void FormDialogCell::_save_impl() {
             unknown.unk0C      = 0.0F;
          }
       } else {
-         extra.remove_by_type(extra_data_type::cell_water_type);
-         extra.remove_by_type(extra_data_type::water_data);
+         extra.remove<extra_data_types::cell_water_type>(working);
+         extra.remove<extra_data_types::water_data>(working);
       }
       //
       cobb::edit_bit(this->form->land_flags, land_flag::force_hide_quad_1, this->ui.hideLandQuad1->isChecked());
@@ -390,7 +390,7 @@ void FormDialogCell::_save_impl() {
          //
          cobb::edit_bit(this->form->cell_flags, cell_flag::show_sky,         this->ui.skyVisible->isChecked());
          cobb::edit_bit(this->form->cell_flags, cell_flag::use_sky_lighting, this->ui.skyLighting->isChecked());
-         this->write_extra_form_ref<extra_data_type::cell_climate>(extra, this->ui.skyRegion->formStub());
+         this->write_extra_form_ref<extra_data_types::cell_climate>(extra, this->ui.skyRegion->formStub());
          //
          lighting.light_fade_distance.start = this->ui.lightingFadeDistanceStart->value();
          lighting.light_fade_distance.end   = this->ui.lightingFadeDistanceEnd->value();
@@ -405,29 +405,29 @@ void FormDialogCell::_save_impl() {
       #pragma endregion
       #pragma region Interior Data
          editor.assign_localized_string(this->form->name, this->ui.name->text());
-         this->write_extra_form_ref<extra_data_type::encounter_zone>(extra, this->ui.encounterZone->formStub());
+         this->write_extra_form_ref<extra_data_types::encounter_zone>(extra, this->ui.encounterZone->formStub());
          {
             auto path = this->ui.waterEnvironmentMap->value().to_string();
             if (path.isEmpty()) {
-               extra.remove_by_type(extra_data_type::water_environment_map);
+               extra.remove<extra_data_types::water_environment_map>(working);
             } else {
-               auto* data = extra.get_or_create<extra::water_environment_map>(extra_data_type::water_environment_map);
+               auto* data = extra.get_or_create<extra_data_types::water_environment_map>();
                data->value = path.toStdString();
             }
          }
-         extra.remove_by_type(extra_data_type::ownership);
-         extra.remove_by_type(extra_data_type::rank);
+         extra.remove<extra_data_types::ownership>(working);
+         extra.remove<extra_data_types::rank>(working);
          if (auto* stub = this->working_ownership.form) {
-            auto* data = extra.get_or_create<extra::ownership>(extra_data_type::ownership);
+            auto* data = extra.get_or_create<extra_data_types::ownership>();
             if (data) {
                this->write_form_ref(data->form, stub);
                if (stub->form_type == dovah::form_type::faction) {
-                  auto* data = extra.get_or_create<extra::rank>(extra_data_type::rank);
+                  auto* data = extra.get_or_create<extra_data_types::rank>();
                   data->value = this->working_ownership.rank;
                }
             }
          }
-         this->write_extra_form_ref<extra_data_type::interior_lock_list>(extra, this->ui.interiorLockList->formStub());
+         this->write_extra_form_ref<extra_data_types::interior_lock_list>(extra, this->ui.interiorLockList->formStub());
          cobb::edit_bit(this->form->cell_flags, cell_flag::public_area, this->ui.flagPublicArea->isChecked());
          this->stub->edit_record_flags(form_flag::off_limits, this->ui.flagOffLimits->isChecked());
          this->stub->edit_record_flags(form_flag::cant_wait,  this->ui.flagCantWait->isChecked());
@@ -440,13 +440,13 @@ void FormDialogCell::_save_impl() {
          this->write_form_ref(this->form->interior.lighting_template, nullptr);
          cobb::edit_bit(this->form->cell_flags, cell_flag::show_sky,         false);
          cobb::edit_bit(this->form->cell_flags, cell_flag::use_sky_lighting, false);
-         extra.remove_by_type(extra_data_type::cell_climate);
+         extra.remove<extra_data_types::cell_climate>(working);
       #pragma endregion
       #pragma region Interior Data
-         extra.remove_by_type(extra_data_type::encounter_zone);
-         extra.remove_by_type(extra_data_type::ownership);
-         extra.remove_by_type(extra_data_type::rank);
-         extra.remove_by_type(extra_data_type::interior_lock_list);
+         extra.remove<extra_data_types::encounter_zone>(working);
+         extra.remove<extra_data_types::ownership>(working);
+         extra.remove<extra_data_types::rank>(working);
+         extra.remove<extra_data_types::interior_lock_list>(working);
          cobb::edit_bit(this->form->cell_flags, cell_flag::public_area, false);
          this->stub->edit_record_flags(form_flag::off_limits, false);
          this->stub->edit_record_flags(form_flag::cant_wait,  false);

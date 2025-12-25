@@ -11,9 +11,9 @@
 #include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/form_stubs/helpers/for_each_child_form.h"
 #include "dovah/form_stubs/helpers/get_base_form.h"
-#include "dovah/forms/components/extra_data/encounter_zone.h"
-#include "dovah/forms/components/extra_data/location.h"
-#include "dovah/forms/components/extra_data/location_ref_type.h"
+#include "dovah/forms/components/extra_data/types/e/encounter_zone.h"
+#include "dovah/forms/components/extra_data/types/l/location.h"
+#include "dovah/forms/components/extra_data/types/l/location_ref_type.h"
 #include "dovah/forms/ActorBase.h"
 #include "dovah/forms/Cell.h"
 #include "dovah/forms/EncounterZone.h"
@@ -21,10 +21,9 @@
 #include "dovah/forms/Worldspace.h"
 
 namespace {
-   namespace extra_data {
-      using namespace dovah::loaded_forms::components::extra;
+   namespace extra_data_types {
+      using namespace dovah::loaded_forms::components::extra_data_types;
    }
-   using extra_data_type = dovah::loaded_forms::components::extra_data_type;
 }
 namespace {
    static constexpr bool _is_valid_zone(dovah::form_stub* zone) {
@@ -44,7 +43,7 @@ namespace {
       return dynamic_cast<const dovah::loaded_forms::ObjectReference*>(&loaded);
    }
    static dovah::form_stub* _loc_ref_type_of(const dovah::loaded_forms::ObjectReference& loaded) {
-      auto* extra = (extra_data::location_ref_type*) loaded.extra_data.lookup_by_type(extra_data_type::location_ref_type);
+      auto* extra = loaded.extra_data.get<extra_data_types::location_ref_type>();
       if (!extra)
          return nullptr;
       auto* stub = extra->form.get_form_stub();
@@ -82,7 +81,7 @@ namespace {
       //
       // Pull whatever Location the containing Encounter Zone was tagged with.
       //
-      if (auto* extra = (extra_data::encounter_zone*)loaded_cell->extra_data.lookup_by_type(extra_data_type::encounter_zone)) {
+      if (auto* extra = loaded_cell->extra_data.get<extra_data_types::encounter_zone>()) {
          auto* zone = extra->form.get_form_stub();
          if (_is_valid_zone(zone))
             if (auto* stub = _location_of_zone(*zone))
@@ -101,7 +100,7 @@ namespace {
       //
       // Pull whatever Location the Cell or World were tagged with.
       //
-      if (auto* extra = (extra_data::location*) loaded_cell->extra_data.lookup_by_type(extra_data_type::location)) {
+      if (auto* extra = loaded_cell->extra_data.get<extra_data_types::location>()) {
          auto* stub = extra->form.get_form_stub();
          if (_is_valid_location(stub))
             return stub;
@@ -121,7 +120,7 @@ namespace {
       return nullptr;
    }
    static dovah::form_stub* _persist_location_of(const dovah::loaded_forms::ObjectReference& loaded) {
-      auto* extra = (extra_data::location*) loaded.extra_data.lookup_by_type(extra_data_type::location);
+      auto* extra = loaded.extra_data.get<extra_data_types::location>();
       if (!extra)
          return nullptr;
       auto* stub = extra->form.get_form_stub();
@@ -291,7 +290,7 @@ void FormDialogLocation::_update_contents_views() {
          auto loaded = using_stub->load().ptr_cast<dovah::loaded_forms::Cell>();
          if (!loaded)
             continue;
-         auto* extra = (extra_data::location*)loaded->extra_data.lookup_by_type(extra_data_type::location);
+         auto* extra = loaded->extra_data.get<extra_data_types::location>();
          if (extra && extra->form.get_form_stub() == &location_stub) {
             this->ui.cells->addStub(using_stub);
 

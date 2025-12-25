@@ -4,7 +4,6 @@
 #include <QDialog>
 #include <QMetaMethod> // for wildcard QObject::disconnect
 #include <QPushButton> // for buttonOK and buttonCancel handlers
-#include "dovah/forms/components/extra_data/_templates.h"
 #include "dovah/form_stub.h"
 #include "editor/core.h"
 
@@ -245,20 +244,18 @@ void CLASS_NAME::save() {
    }
 
    CLASS_TEMPLATE_PARAMS
-   template<dovah::loaded_forms::components::extra_data_type ExtraType>
+   template<typename ExtraData>
    void CLASS_NAME::write_extra_form_ref(
       dovah::loaded_forms::components::extra_data_list& extra,
       dovah::form_stub* value,
       bool remove_if_empty
    ) {
-      using dummy_t = dovah::loaded_forms::components::formID_extra_data<0, dovah::loaded_forms::components::extra_data_type::action>;
-      
-      if (stub || !remove_if_empty) {
-         auto* data = extra.get_or_create_by_type(ExtraType);
+      if (value || !remove_if_empty) {
+         auto* data = extra.get_or_create<ExtraData>();
          if (data)
-            this->write_form_ref(((dummy_t*)data)->form, stub);
+            this->write_form_ref(data->form, value);
       } else {
-         extra.remove_by_type(ExtraType);
+         extra.remove<ExtraData>(*this->form);
       }
    }
 #pragma endregion

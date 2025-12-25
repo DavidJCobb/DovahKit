@@ -216,121 +216,7 @@
     <ClCompile Include="dovah\forms\Cell.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\poison.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\_factory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\alpha_cutoff.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\linked_ref.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\lock.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\ragdoll_data.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\distant_data.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\portal_origin_and_destination.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\activate_parent_data.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\collision_data.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\light.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\patrol_ref_data.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\rank.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\map_marker.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\teleport.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\leveled_creature_modifier.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\water_current_zone_data.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\package_start_location.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\portal.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\cell_region_list.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\primitive.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\water_data.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\multibound_bounds.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\enable_state_parent.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\occlusion_plane.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\navmesh_door_portal.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\health_percent.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\activate_ref.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\room_ref_data.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\reflector_refs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\ammo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\action.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\count.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\lit_water.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\health.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="dovah\forms\components\package_event_dialogue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\linked_ref_color.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\_unknown.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\main_window\cell_view.cpp">
@@ -535,9 +421,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovah\forms\components\extra_data\_use_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\generic\QStandardItemModelDKEx.cpp">
@@ -3717,6 +3600,165 @@
     <ClCompile Include="ui\form_windows\impact_data_set.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\a\action.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\a\activate_parents.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\a\alpha_cutoff.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\a\ammo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\a\attach_ref.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\c\cell_acoustic_space.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\c\cell_climate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\c\cell_imagespace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\c\cell_music_override.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\c\cell_region_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\c\cell_water_type.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\d\distant_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\e\emittance_source.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\e\enable_state_parent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\e\encounter_zone.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\g\global.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\h\horse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\i\interior_lock_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\l\leveled_creature_modifier.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\l\leveled_item_base.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\l\light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\l\linked_ref.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\l\linked_ref_color.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\l\lit_water.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\l\location.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\l\location_ref_type.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\l\lock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\m\map_marker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\m\merchant_container.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\m\multibound_bounds.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\m\multibound_ref.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\n\navmesh_door_portal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\o\occlusion_plane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\o\ownership.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\p\package_start_location.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\p\patrol_ref_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\p\poison.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\p\portal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\p\portal_origin_and_destination.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\p\primitive.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\r\ragdoll_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\r\random_teleport_marker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\r\reflector_refs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\r\room_ref_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\s\spawn_container.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\t\teleport.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\t\teleport_name.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\w\water_current_zone_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\types\w\water_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\extra_data_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\factories\construct_for_subrecord.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\factories\generate_use_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\use_info_state.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -3911,214 +3953,10 @@
     <ClInclude Include="dovah\forms\components\extra_data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\poison.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\radius.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\favor_cost.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\charge.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\scale.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\global.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\teleport_name.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\cell_water_type.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\ownership.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\cell_acoustic_space.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\cell_music_override.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\location.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\encounter_zone.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\cell_climate.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\cell_imagespace.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\_factory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\alpha_cutoff.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\linked_ref.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\emittance_source.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\occlusion_plane_ref_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\leveled_item_base.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\ignored_by_sandbox.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\ammo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\lock.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\spawn_container.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\ragdoll_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\cell_grass_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\distant_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\portal_origin_and_destination.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\activate_parent_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\interior_lock_list.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\collision_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\light.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\patrol_ref_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\rank.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\map_marker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\teleport.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\leveled_creature_modifier.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\water_current_zone_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\package_start_location.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\portal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\water_environment_map.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\time_left.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\cell_region_list.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\primitive.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\water_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\multibound_bounds.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\enable_state_parent.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\occlusion_plane.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\navmesh_door_portal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\health_percent.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\multibound_ref.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\activate_ref.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\room_ref_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\horse.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\attach_ref.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\reflector_refs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\location_ref_type.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\action.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\count.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\headtracking_weight.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\lit_water.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\health.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\forms\components\package_event_dialogue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\random_teleport_marker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\merchant_container.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\_unknown.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\linked_ref_color.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\forms\Actor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\_templates.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\qt\spinbox.h">
@@ -4308,9 +4146,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\main_window\_debug_hooks\debug_target_form_papyrus.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\forms\components\extra_data\_use_info.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\generic\QStandardItemModelDKEx.h">
@@ -9149,6 +8984,249 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\papyrus\vmad_too_large.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\a\action.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\class_array.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\extra_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\a\activate_parents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\a\alpha_cutoff.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\a\ammo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\common_form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\a\attach_ref.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\c\cell_acoustic_space.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\c\cell_climate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\common_binary.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\c\cell_grass_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\c\cell_imagespace.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\c\cell_music_override.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\c\cell_region_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\c\cell_water_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\common_fundamental.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\c\charge.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\c\collision_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\c\count.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\d\distant_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\e\emittance_source.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\e\enable_state_parent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\e\encounter_zone.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\f\favor_cost.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\g\global.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\h\headtracking_weight.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\h\health.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\h\health_percent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\h\horse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\common_empty.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\i\ignored_by_sandbox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\i\interior_lock_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\l\leveled_creature_modifier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\l\leveled_item_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\l\light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\l\linked_ref.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\l\linked_ref_color.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\l\lit_water.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\l\location.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\l\location_ref_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\l\lock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\m\map_marker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\m\merchant_container.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\m\multibound_bounds.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\m\multibound_ref.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\n\navmesh_door_portal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\o\occlusion_plane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\o\occlusion_plane_ref_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\common_buffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\o\ownership.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\p\package_start_location.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\p\patrol_ref_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\p\poison.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\p\portal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\p\portal_origin_and_destination.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\p\primitive.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\r\radius.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\r\ragdoll_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\r\rank.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\r\random_teleport_marker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\r\reflector_refs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\r\room_ref_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\s\scale.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\s\spawn_container.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\t\teleport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\t\teleport_name.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\t\time_left.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\w\water_current_zone_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\w\water_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\water_data_swallowed_subrecord.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\common_string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\w\water_environment_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\all_deprecated.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\water_current_zone_data_swallowed_subrecord.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\extra_data_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\factories\construct_for_subrecord.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\factories\generate_use_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\use_info_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -11070,6 +11148,27 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="ui\models\DKScopedProxyModel.md" />
+    <None Include="dovah\forms\components\extra_data\types\common_form.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\forms\components\extra_data\types\common_binary.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\forms\components\extra_data\types\common_fundamental.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\forms\components\extra_data\types\common_empty.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\forms\components\extra_data\types\common_buffer.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\forms\components\extra_data\types\common_string.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="dovah\forms\components\extra_data\extra_data_list.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

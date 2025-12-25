@@ -11,16 +11,15 @@
 #include "../forms/Location.h"
 #include "../forms/ObjectReference.h"
 #include "../forms/Worldspace.h"
-#include "../forms/components/extra_data/enable_state_parent.h"
-#include "../forms/components/extra_data/encounter_zone.h"
-#include "../forms/components/extra_data/location.h"
-#include "../forms/components/extra_data/location_ref_type.h"
+#include "../forms/components/extra_data/types/e/enable_state_parent.h"
+#include "../forms/components/extra_data/types/e/encounter_zone.h"
+#include "../forms/components/extra_data/types/l/location.h"
+#include "../forms/components/extra_data/types/l/location_ref_type.h"
 
 namespace {
-   namespace extra_data {
-      using namespace dovah::loaded_forms::components::extra;
+   namespace extra_data_types {
+      using namespace dovah::loaded_forms::components::extra_data_types;
    }
-   using extra_data_type = dovah::loaded_forms::components::extra_data_type;
 }
 
 namespace dovah::utils {
@@ -94,7 +93,7 @@ namespace dovah::utils {
    /*static*/ form_stub* update_location_content::_get_encounter_zone(form_stub& form) {
       if (form.form_type == form_type::cell) {
          if (auto loaded = form.load().ptr_cast<loaded_forms::Cell>()) {
-            auto* extra = (extra_data::encounter_zone*)loaded->extra_data.lookup_by_type(extra_data_type::encounter_zone);
+            auto* extra = loaded->extra_data.get<extra_data_types::encounter_zone>();
             if (extra && extra->form)
                return extra->form.get_form_stub();
          }
@@ -111,7 +110,7 @@ namespace dovah::utils {
          auto loaded = form.load().ptr_cast<loaded_forms::ObjectReference>();
          if (!loaded)
             return nullptr;
-         auto* extra = (extra_data::location*)loaded->extra_data.lookup_by_type(extra_data_type::location);
+         auto* extra = loaded->extra_data.get<extra_data_types::location>();
          if (!extra)
             return nullptr;
          return extra->form.get_form_stub();
@@ -122,7 +121,7 @@ namespace dovah::utils {
                auto loaded = form.load().ptr_cast<loaded_forms::Cell>();
                if (!loaded)
                   break;
-               auto* extra = (extra_data::location*)loaded->extra_data.lookup_by_type(extra_data_type::location);
+               auto* extra = loaded->extra_data.get<extra_data_types::location>();
                if (!extra)
                   break;
                return extra->form.get_form_stub();
@@ -149,7 +148,7 @@ namespace dovah::utils {
       auto loaded_refr = ref.load().ptr_cast<loaded_forms::ObjectReference>();
       if (!loaded_refr)
          return nullptr;
-      auto* extra = (extra_data::location_ref_type*)loaded_refr->extra_data.lookup_by_type(extra_data_type::location_ref_type);
+      auto* extra = loaded_refr->extra_data.get<extra_data_types::location_ref_type>();
       if (!extra)
          return nullptr;
       return extra->form.get_form_stub();
@@ -321,7 +320,7 @@ namespace dovah::utils {
             auto loaded_refr = refr.load().ptr_cast<loaded_forms::ObjectReference>();
             if (!loaded_refr)
                return;
-            auto* extra = (extra_data::enable_state_parent*)loaded_refr->extra_data.lookup_by_type(extra_data_type::enable_state_parent);
+            auto* extra = loaded_refr->extra_data.get<extra_data_types::enable_state_parent>();
             if (!extra)
                return;
             auto& item = list.emplace_back();

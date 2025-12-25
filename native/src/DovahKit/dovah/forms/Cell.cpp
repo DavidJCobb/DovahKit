@@ -1,7 +1,7 @@
 #include "Cell.h"
 #include "_common_cpp.h"
 #include "../form_stub_addenda.h"
-#include "components/extra_data/_use_info.h"
+#include "components/extra_data/use_info_state.h"
 
 #include "../notices/form_load_warnings/by_form_type/cell/cell_type_not_yet_known.h"
 #include "../notices/form_load_warnings/by_form_type/cell/data_for_wrong_cell_type.h"
@@ -117,7 +117,7 @@ namespace dovah::loaded_forms {
                this->script_data.load(subrecord, intfc);
                break;
             default:
-               if (this->extra_data.load(record, intfc) == components::extra_data_load_result::unrecognized) {
+               if (this->extra_data.load(record, intfc) == components::extra_data_list::load_result::unrecognized) {
                   //
                   // Subrecord is not extra-data.
                   //
@@ -137,7 +137,7 @@ namespace dovah::loaded_forms {
          return;
       //
       form_id_t lighting_template;
-      extra_data_use_info_state eduis;
+      components::extra_data_use_info_state eduis;
       while (auto& subrecord = record.next_subrecord()) {
          if (Form::subrecord_is_handled_elsewhere(subrecord.signature()))
             continue;
@@ -160,7 +160,7 @@ namespace dovah::loaded_forms {
             case 'XNAM':
                break;
             default:
-               if (components::extra_data_list::generate_use_info(record, uib, eduis) == components::extra_data_load_result::unrecognized) {
+               if (!components::extra_data_list::generate_use_info(record, uib, eduis)) {
                   //
                   // Subrecord is not extra-data.
                   //
