@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>FormDialogObjectReference</class>
  <widget class="QDialog" name="FormDialogObjectReference">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>586</width>
-    <height>598</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Reference</string>
   </property>
@@ -18,7 +10,7 @@
     <number>12</number>
    </property>
    <item row="2" column="0" colspan="2">
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="buttonsLayout">
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
@@ -90,10 +82,13 @@
          <layout class="QGridLayout" name="gridLayout_3" columnstretch="1,1">
           <item row="0" column="1">
            <widget class="QGroupBox" name="groupBox_4">
+            <property name="whatsThis">
+             <string>Control the ref's position in 3D space. X is the pitch (forward/backward) axis, Y is the tilt (left/right) axis, and Z is the yaw (spin) axis. Each coordinate has two spinboxes: one for its actual value, and another to control the current snap along that axis.</string>
+            </property>
             <property name="title">
              <string>Rotation</string>
             </property>
-            <layout class="QGridLayout" name="gridLayout_5">
+            <layout class="QGridLayout" name="gridLayout_5" columnstretch="0,3,1">
              <item row="2" column="0">
               <widget class="QLabel" name="label_6">
                <property name="text">
@@ -125,6 +120,12 @@
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
+               <property name="minimum">
+                <double>-360.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>360.000000000000000</double>
+               </property>
               </widget>
              </item>
              <item row="1" column="0">
@@ -139,8 +140,17 @@
              </item>
              <item row="0" column="2">
               <widget class="QDoubleSpinBox" name="rotationXSnap">
+               <property name="accessibleName">
+                <string>X Snap</string>
+               </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="minimum">
+                <double>-360.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>360.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -149,12 +159,27 @@
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
+               <property name="minimum">
+                <double>-360.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>360.000000000000000</double>
+               </property>
               </widget>
              </item>
              <item row="1" column="2">
               <widget class="QDoubleSpinBox" name="rotationYSnap">
+               <property name="accessibleName">
+                <string>Y Snap</string>
+               </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="minimum">
+                <double>-360.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>360.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -163,12 +188,27 @@
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                </property>
+               <property name="minimum">
+                <double>-360.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>360.000000000000000</double>
+               </property>
               </widget>
              </item>
              <item row="2" column="2">
               <widget class="QDoubleSpinBox" name="rotationZSnap">
+               <property name="accessibleName">
+                <string>Z Snap</string>
+               </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="minimum">
+                <double>-360.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>360.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -177,14 +217,26 @@
           </item>
           <item row="0" column="0">
            <widget class="QGroupBox" name="groupBox_3">
+            <property name="whatsThis">
+             <string>Control the ref's position in 3D space. The X and Y axes are lateral; the Z axis is vertical. Each coordinate has two spinboxes: one for its actual value, and another to control the current snap along that axis.</string>
+            </property>
             <property name="title">
              <string>Position</string>
             </property>
-            <layout class="QGridLayout" name="gridLayout_4">
+            <layout class="QGridLayout" name="gridLayout_4" columnstretch="0,3,1">
              <item row="0" column="2">
               <widget class="QDoubleSpinBox" name="positionXSnap">
+               <property name="accessibleName">
+                <string>X Snap</string>
+               </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="minimum">
+                <double>-256.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>256.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -240,8 +292,17 @@
              </item>
              <item row="1" column="2">
               <widget class="QDoubleSpinBox" name="positionYSnap">
+               <property name="accessibleName">
+                <string>Y Snap</string>
+               </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="minimum">
+                <double>-256.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>256.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -254,8 +315,17 @@
              </item>
              <item row="2" column="2">
               <widget class="QDoubleSpinBox" name="positionZSnap">
+               <property name="accessibleName">
+                <string>Z Snap</string>
+               </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="minimum">
+                <double>-256.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>256.000000000000000</double>
                </property>
               </widget>
              </item>
@@ -263,9 +333,9 @@
            </widget>
           </item>
           <item row="1" column="0" colspan="2">
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1">
             <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_4">
+             <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,3,1">
               <item>
                <widget class="QLabel" name="label_8">
                 <property name="text">
@@ -287,12 +357,42 @@
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                 </property>
+                <property name="decimals">
+                 <number>3</number>
+                </property>
+                <property name="minimum">
+                 <double>0.001000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>65.534999999999997</double>
+                </property>
+                <property name="singleStep">
+                 <double>0.010000000000000</double>
+                </property>
+                <property name="value">
+                 <double>1.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item>
                <widget class="QDoubleSpinBox" name="scaleSnap">
+                <property name="accessibleName">
+                 <string>Scale Snap</string>
+                </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>3</number>
+                </property>
+                <property name="minimum">
+                 <double>0.001000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>1000.000000000000000</double>
+                </property>
+                <property name="value">
+                 <double>0.100000000000000</double>
                 </property>
                </widget>
               </item>
@@ -312,6 +412,10 @@
               </item>
               <item>
                <widget class="QDoubleSpinBox" name="testRadius">
+                <property name="whatsThis">
+                 <string>&lt;p&gt;If you set this to a non-zero value, the Creation Kit will display rings (with the given radius) around this ref. This is useful for estimating distances for packages and scripts.&lt;/p&gt;
+&lt;p&gt;Under the hood, this uses the same data as a placed light's maximum distance, and a map marker's radius.&lt;/p&gt;</string>
+                </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                 </property>
@@ -332,6 +436,9 @@
          <layout class="QGridLayout" name="gridLayout_2">
           <item row="7" column="0">
            <widget class="QCheckBox" name="flagMotionBlur">
+            <property name="whatsThis">
+             <string>Unused.</string>
+            </property>
             <property name="text">
              <string>Motion Blur</string>
             </property>
@@ -339,6 +446,9 @@
           </item>
           <item row="3" column="0">
            <widget class="QCheckBox" name="flagIgnoredBySandbox">
+            <property name="whatsThis">
+             <string>If checked, NPCs running a &quot;Sandbox&quot; AI procedure will ignore this ref instead of interacting with it.</string>
+            </property>
             <property name="text">
              <string>Ignored By Sandbox</string>
             </property>
@@ -346,6 +456,10 @@
           </item>
           <item row="0" column="0">
            <widget class="QCheckBox" name="flagDontHavokSettle">
+            <property name="whatsThis">
+             <string>&lt;p&gt;By default, refs will undergo physics simulation from the moment they spawn. Checking this box will delay the ref's physics simulation until any objects undergo physics interactions near the ref.&lt;/p&gt;
+&lt;p&gt;If you want to completely lock a ref in place, then attach the &lt;code&gt;defaultDisableHavokOnLoad&lt;/code&gt; script to it.&lt;/p&gt;</string>
+            </property>
             <property name="text">
              <string>Don't Havok Settle</string>
             </property>
@@ -353,6 +467,9 @@
           </item>
           <item row="6" column="0">
            <widget class="QCheckBox" name="flagIsFullLOD">
+            <property name="whatsThis">
+             <string>If checked, this ref won't fade out from a distance. This is primarily useful for large refs and lighting to prevent awkward LOD transitions, but using this too much can impact performance.</string>
+            </property>
             <property name="text">
              <string>Is Full LOD</string>
             </property>
@@ -360,6 +477,9 @@
           </item>
           <item row="4" column="0">
            <widget class="QCheckBox" name="flagDoorInaccessible">
+            <property name="whatsThis">
+             <string>Only applicable to doors. If checked, the door will be impossible to unlock or open, displaying &quot;Requires Key&quot; as its lock status. (In the Fallout games, it would've displayed &quot;Inaccessible.&quot;) This overrides any lock-related options set on the door.</string>
+            </property>
             <property name="text">
              <string>Inaccessible</string>
             </property>
@@ -367,6 +487,10 @@
           </item>
           <item row="1" column="0">
            <widget class="QCheckBox" name="flagHiddenFromLocalMap">
+            <property name="whatsThis">
+             <string>&lt;p&gt;If checked, this ref won't be rendered on the Local Map's top-down view.&lt;/p&gt;
+&lt;p&gt;This is most useful for hiding clutter from the Local Map to keep it readable. If you want to hide large areas, an easier method is to place &lt;code&gt;BlackPlane01&lt;/code&gt; refs above them.&lt;/p&gt;</string>
+            </property>
             <property name="text">
              <string>Hidden from Local Map</string>
             </property>
@@ -374,6 +498,9 @@
           </item>
           <item row="5" column="0">
            <widget class="QCheckBox" name="flagDisabled">
+            <property name="whatsThis">
+             <string>A &quot;disabled&quot; ref is not simulated or rendered by the game world; it is effectively &quot;not there.&quot; Refs can be disabled and later enabled by scripts and game events.</string>
+            </property>
             <property name="text">
              <string>Initially Disabled</string>
             </property>
@@ -381,6 +508,9 @@
           </item>
           <item row="0" column="1">
            <widget class="QCheckBox" name="flagNoAIAcquire">
+            <property name="whatsThis">
+             <string>NPCs won't try to pick up items, or loot containers, that have this option enabled.</string>
+            </property>
             <property name="text">
              <string>No AI Acquire</string>
             </property>
@@ -388,6 +518,9 @@
           </item>
           <item row="1" column="1">
            <widget class="QCheckBox" name="flagOpenByDefault">
+            <property name="whatsThis">
+             <string>Only applicable to containers and doors. If enabled, the container or door will initially be open.</string>
+            </property>
             <property name="text">
              <string>Open by Default</string>
             </property>
@@ -395,6 +528,9 @@
           </item>
           <item row="3" column="1">
            <widget class="QCheckBox" name="flagReflectedByAutoWater">
+            <property name="whatsThis">
+             <string>Unused in Skyrim. In previous games, this controlled whether a ref could be seen in reflections on the surface of exterior cells' water planes (&quot;auto water&quot;).</string>
+            </property>
             <property name="text">
              <string>Reflected by Auto Water</string>
             </property>
@@ -402,6 +538,9 @@
           </item>
           <item row="4" column="1">
            <widget class="QCheckBox" name="flagRespawns">
+            <property name="whatsThis">
+             <string>If unchecked, the game engine will &lt;em&gt;try&lt;/em&gt; to prevent the object from respawning even if the cell it's inside of should reset.</string>
+            </property>
             <property name="text">
              <string>Respawns</string>
             </property>
@@ -409,6 +548,9 @@
           </item>
           <item row="5" column="1">
            <widget class="QCheckBox" name="flagStartsDead">
+            <property name="whatsThis">
+             <string>Only applicable to actors. Makes the actor spawn as a corpse rather than as a living character. (Simply spawning them with zero health is not sufficient to achieve the same effect.)</string>
+            </property>
             <property name="text">
              <string>Starts Dead</string>
             </property>
@@ -436,16 +578,6 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_10">
-           <property name="text">
-            <string>Encounter Zone:</string>
-           </property>
-           <property name="buddy">
-            <cstring>encounterZone</cstring>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="0">
           <widget class="QLabel" name="label_15">
            <property name="text">
@@ -456,14 +588,78 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
-          <widget class="DKFormPicker" name="persistLocation"/>
-         </item>
          <item row="2" column="1">
-          <widget class="DKFormPicker" name="locRefType"/>
+          <widget class="DKFormPicker" name="locRefType">
+           <property name="whatsThis">
+            <string>&lt;p&gt;When a ref is present in a Location and is tagged with a Location Ref Type, the game's fill-in-the-blank Radiant Story system can use that Location Ref Type to find the ref, even when the ref isn't in the game's loaded area. Quest aliases can dynamically select a Location based on what Location Ref Types are used within it, and then dynamically select refs within that Location by their Location Ref Types. For example, a location can be given an actor with the &quot;Boss&quot; Location Ref Type, and then if a quest happens to target that location, the quest can dynamically offer a quest objective directing the player to kill that actor.&lt;/p&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="DKFormPicker" name="persistLocation">
+           <property name="whatsThis">
+            <string>Only applicable to actors, normal or leveled.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>Encounter Zone:</string>
+           </property>
+           <property name="buddy">
+            <cstring>encounterZone</cstring>
+           </property>
+          </widget>
          </item>
          <item row="0" column="1">
-          <widget class="DKFormPicker" name="encounterZone"/>
+          <widget class="DKFormPicker" name="encounterZone">
+           <property name="whatsThis">
+            <string>Encounter Zones are primarily used by leveled lists to calculate what object should spawn. By default, refs belong to whatever Encounter Zone their containing cell belongs to, but you can override that here.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="xLevCreaModLabel">
+           <property name="text">
+            <string>Level Modifier:</string>
+           </property>
+           <property name="buddy">
+            <cstring>xLevCreaMod</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QComboBox" name="xLevCreaMod">
+           <property name="whatsThis">
+            <string>Only applicable to leveled actors. Scales the actor's level relative to that of the surrounding Encounter Zone.</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>Easy</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Medium</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Hard</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Very Hard</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>None</string>
+            </property>
+           </item>
+          </widget>
          </item>
         </layout>
        </item>
@@ -474,8 +670,8 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>32</width>
-           <height>67</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
@@ -494,13 +690,13 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="1">
-        <widget class="QSpinBox" name="xHealth">
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="xChargePresent">
+         <property name="whatsThis">
+          <string>Only applicable to enchanted weapons. Controls the amount of charge present on the weapon. If absent, the weapon is fully charged.</string>
          </property>
-         <property name="maximum">
-          <number>99999999</number>
+         <property name="text">
+          <string>Charge</string>
          </property>
         </widget>
        </item>
@@ -509,15 +705,8 @@
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_23">
-         <property name="text">
-          <string>Charge:</string>
-         </property>
-         <property name="buddy">
-          <cstring>xCharge</cstring>
+         <property name="value">
+          <double>1.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -548,11 +737,11 @@
          </property>
         </widget>
        </item>
-       <item row="7" column="1">
-        <widget class="DKCompactObjectReferencePicker" name="xHorse"/>
-       </item>
        <item row="0" column="1">
         <widget class="QSpinBox" name="xAlphaCutoff">
+         <property name="whatsThis">
+          <string>This value can override the alpha-testing threshold used by the ref's 3D model. The typical use case for this is to make banners and carpets appear more tattered than usual.</string>
+         </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
@@ -571,6 +760,13 @@
          </property>
         </widget>
        </item>
+       <item row="6" column="1">
+        <widget class="QDoubleSpinBox" name="xHealth">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
        <item row="3" column="0">
         <widget class="QLabel" name="label_17">
          <property name="text">
@@ -583,13 +779,20 @@
        </item>
        <item row="9" column="1">
         <widget class="QDoubleSpinBox" name="xTimeLeft">
+         <property name="whatsThis">
+          <string>Only applicable to lights. For lights that are capable of burning out, this is the amount of time remaining until this specific ref burns out.</string>
+         </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="DKCompactObjectReferencePicker" name="xAttachRef"/>
+        <widget class="DKCompactObjectReferencePicker" name="xAttachRef">
+         <property name="whatsThis">
+          <string>You can optionally synchronize this ref's movement to that of some other ref. This is useful when the latter ref has animations created for the purpose. This functionality isn't used in Skyrim.</string>
+         </property>
+        </widget>
        </item>
        <item row="7" column="0">
         <widget class="QLabel" name="xHorseLabel">
@@ -613,6 +816,9 @@
        </item>
        <item row="2" column="1">
         <widget class="QDoubleSpinBox" name="xCharge">
+         <property name="whatsThis">
+          <string>Only applicable to enchanted weapons. Controls the amount of charge present on the weapon. If absent, the weapon is fully charged.</string>
+         </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
@@ -626,15 +832,22 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>208</height>
+           <height>205</height>
           </size>
          </property>
         </spacer>
        </item>
        <item row="3" column="1">
         <widget class="QSpinBox" name="xCount">
+         <property name="whatsThis">
+          <string>&lt;p&gt;A single ref can represent a single item, or multiple of an item. For example, if the player drops ten Iron Ingots all at once, the game will spawn just one ref. When the player aims at it, they'll see &quot;Iron Ingot (10).&quot; You can control how many items this ref represents here.&lt;/p&gt;
+&lt;p&gt;If this ref is an Ammo, then its 3D model will change depending on whether the count is 1 or more. This special behavior is hardcoded for Ammo forms only, and is used by the vanilla game to switch between rendering a single arrow or rendering a quiver full of them. There exists at least one SKSE64 mod as of this writing (Dynamic Stacked Object Models) which extends this functionality to arbitrary base forms.&lt;/p&gt;</string>
+         </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="minimum">
+          <number>1</number>
          </property>
          <property name="maximum">
           <number>99999999</number>
@@ -651,8 +864,28 @@
          </property>
         </widget>
        </item>
-       <item row="8" column="0" colspan="2">
+       <item row="9" column="2">
+        <widget class="QPushButton" name="xTimeLeftReset">
+         <property name="whatsThis">
+          <string>Reset &quot;Time Left&quot; to the default value: the max lifespan of the ref's base Light form.</string>
+         </property>
+         <property name="text">
+          <string>Reset</string>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="1" colspan="2">
+        <widget class="DKCompactObjectReferencePicker" name="xHorse">
+         <property name="whatsThis">
+          <string>Only applicable to actors. You can assign to any placed actor a horse ref for them to ride.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0" colspan="3">
         <widget class="QCheckBox" name="flagIsSkyMarker">
+         <property name="whatsThis">
+          <string>Only applicable to &lt;code&gt;XMarkerHeading&lt;/code&gt; refs. Indicates that the marker is a point in the air that can be used in a dragon's flight path.</string>
+         </property>
          <property name="text">
           <string>Is Sky Marker</string>
          </property>
@@ -685,7 +918,12 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="DKFormPicker" name="owner"/>
+        <widget class="DKFormPicker" name="owner">
+         <property name="whatsThis">
+          <string>&lt;p&gt;This ref can be made to belong to an ActorBase or a Faction. If no owner is set here, then the ref will belong to whatever Actor or Faction, if any, owns its containing cell.&lt;/p&gt;
+&lt;p&gt;Furniture with an owner can only be used by its owner. Items with an owner can be picked up by anyone, but if someone who doesn't own them picks them up, that individual will be committing theft.&lt;/p&gt;</string>
+         </property>
+        </widget>
        </item>
        <item row="2" column="0">
         <spacer name="verticalSpacer_2">
@@ -711,7 +949,11 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QComboBox" name="ownerRank"/>
+        <widget class="QComboBox" name="ownerRank">
+         <property name="whatsThis">
+          <string>&lt;p&gt;If this ref is owned by a Faction, you can specify the minimum rank that a faction member must have in order to be regarded as sharing ownership of this ref. (Skyrim's factions don't use the rank system.)&lt;/p&gt;</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -743,7 +985,11 @@
         </spacer>
        </item>
        <item row="0" column="1">
-        <widget class="DKFormPicker" name="xLeveledItemBase"/>
+        <widget class="DKFormPicker" name="xLeveledItemBase">
+         <property name="whatsThis">
+          <string>&lt;p&gt;Leveled Item forms aren't base forms, and can't be placed directly in the game world. The necessary approach is to place an ordinary item, and then use this option so that the ref spawns as the desired leveled item instead of as its actual base form. Bethesda has created a bunch of &quot;dummy&quot; forms, e.g. &lt;code&gt;DummyPotion&lt;/code&gt;, for use as the base forms of leveled item spawn points.&lt;/p&gt;</string>
+         </property>
+        </widget>
        </item>
        <item row="0" column="0">
         <widget class="QLabel" name="label_32">
@@ -766,7 +1012,12 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="DKCompactObjectReferencePicker" name="xSpawnContainer"/>
+        <widget class="DKCompactObjectReferencePicker" name="xSpawnContainer">
+         <property name="whatsThis">
+          <string>&lt;p&gt;If you set a container here, then this ref will be moved into the container when spawned.&lt;/p&gt;
+&lt;p&gt;This is useful for adding bespoke items to a specific container ref without having to define a new Container base form. For example, in the base game, a traumatized war veteran named Salvanius lives in the Riften Ratway, and he stores his Imperial Cuirass and Imperial Gauntlets in a nearby chest. The chest itself uses a typical container base form with leveled loot; these two pieces of Salvanius's old armor are refs placed out of bounds, set to use that chest as their Spawn Container. This avoids the need to create an entire new Container base form just to spawn Salvanius's armor.&lt;/p&gt;</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -823,6 +1074,9 @@
             </item>
             <item>
              <widget class="QCheckBox" name="xLockIsLeveled">
+              <property name="whatsThis">
+               <string>A leveled lock starts with the specified lock level when the player is Level 1. As the player levels up, the lock will, too: if the player finds the lock later in their adventure, it'll be harder to unlock.</string>
+              </property>
               <property name="text">
                <string>Leveled</string>
               </property>
@@ -877,6 +1131,9 @@
        </property>
        <item>
         <widget class="QGroupBox" name="xTeleportGroupbox">
+         <property name="whatsThis">
+          <string>If this option is enabled, then this ref will be a load door, and activating it will teleport the player to the other door that you specify here.</string>
+         </property>
          <property name="title">
           <string>Teleport destination</string>
          </property>
@@ -918,7 +1175,11 @@
              </widget>
             </item>
             <item>
-             <widget class="DKFormPicker" name="xTeleportName"/>
+             <widget class="DKFormPicker" name="xTeleportName">
+              <property name="whatsThis">
+               <string>When the player aims at a load door, their HUD show the destination that the door leads to. You can override the displayed destination with the text of any Message form.</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -1072,7 +1333,7 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
-       <item row="0" column="0">
+       <item row="3" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout_5">
          <item>
           <widget class="QTableView" name="linkedRefs"/>
@@ -1111,6 +1372,16 @@
         </layout>
        </item>
        <item row="1" column="0">
+        <widget class="QLabel" name="label_47">
+         <property name="text">
+          <string>&lt;p&gt;&lt;dfn&gt;Linked refs&lt;/dfn&gt; are a convenience feature for associating refs together. AI packages, condition functions, script functions, and similar can read linked refs. Each link can be &quot;named&quot; with an identifying Keyword, but only one link per Keyword (and one link without any Keyword) is allowed.&lt;/p&gt;</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
           <string>Selected entry</string>
@@ -1145,6 +1416,13 @@
          </layout>
         </widget>
        </item>
+       <item row="2" column="0">
+        <widget class="Line" name="line_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="pageLinkedFrom">
@@ -1161,8 +1439,11 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
-       <item row="0" column="0">
+       <item row="2" column="0">
         <widget class="DKFormListPane" name="linkedFrom">
+         <property name="whatsThis">
+          <string>This list pane shows all refs that list this ref as one of their Linked Refs.</string>
+         </property>
          <property name="showFormTypes">
           <bool>false</bool>
          </property>
@@ -1171,6 +1452,23 @@
          </property>
          <property name="showRemoveButton">
           <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_48">
+         <property name="text">
+          <string>&lt;p&gt;This is a list of all refs that list this ref as one of their linked refs.&lt;/p&gt;</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="Line" name="line_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>
@@ -1190,45 +1488,7 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
-       <item row="0" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_6">
-         <item>
-          <widget class="QTableView" name="activateParents"/>
-         </item>
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout_3">
-           <item>
-            <widget class="QPushButton" name="buttonActivateParentNew">
-             <property name="text">
-              <string>Add...</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="buttonActivateParentDelete">
-             <property name="text">
-              <string>Remove</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="verticalSpacer_5">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </item>
-       <item row="1" column="0">
+       <item row="4" column="0">
         <widget class="QGroupBox" name="groupBox_2">
          <property name="title">
           <string>Selected entry</string>
@@ -1267,10 +1527,68 @@
          </layout>
         </widget>
        </item>
-       <item row="2" column="0">
+       <item row="5" column="0">
         <widget class="QCheckBox" name="flagOnlyAllowActivateViaParent">
+         <property name="whatsThis">
+          <string>If checked, the player can't activate this ref directly; they can only activate it via an activate parent. Note that this option doesn't affect scripts, console commands, and so on, which can always activate this ref.</string>
+         </property>
          <property name="text">
           <string>Only allow activation via a parent</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_23">
+         <property name="text">
+          <string>&lt;p&gt;If this ref is given any &lt;dfn&gt;activate parents&lt;/dfn&gt;, then activating those refs will cause them to activate this ref. (For scripting purposes, e.g. &lt;code&gt;OnActivate&lt;/code&gt;, the activate parent is the entity credited with activating this ref.) Each activate parent can optionally be given a delay in seconds before they trigger activation of this ref.&lt;/p&gt;</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <item>
+          <widget class="QTableView" name="activateParents"/>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <item>
+            <widget class="QPushButton" name="buttonActivateParentNew">
+             <property name="text">
+              <string>Add...</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="buttonActivateParentDelete">
+             <property name="text">
+              <string>Remove</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_5">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0">
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>
@@ -1317,7 +1635,11 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_16">
           <item row="0" column="0">
-           <widget class="DKObjectReferencePicker" name="xEnableParentRef"/>
+           <widget class="DKObjectReferencePicker" name="xEnableParentRef">
+            <property name="showViewRefButton">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -1390,6 +1712,9 @@
           </item>
           <item row="2" column="1">
            <widget class="QDoubleSpinBox" name="xLightEndDistanceCap">
+            <property name="whatsThis">
+             <string>This option limits the distance that a &quot;spotlight&quot;-type light extends over.</string>
+            </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
@@ -1448,6 +1773,9 @@
            <layout class="QGridLayout" name="gridLayout_20">
             <item row="0" column="0">
              <widget class="QCheckBox" name="flagDisableShadows">
+              <property name="whatsThis">
+               <string>Settings on a Light base form determine whether any given kind of light is theoretically capable of casting shadows. You can selectively disable shadows for specific refs as well.</string>
+              </property>
               <property name="text">
                <string>Disable shadows</string>
               </property>
@@ -1495,6 +1823,9 @@
        </item>
        <item>
         <widget class="QGroupBox" name="xEmitGroupbox">
+         <property name="whatsThis">
+          <string>Placed lights, and refs whose models have emissive bits on them, can be made to mimic the lighting parameters of a Light form (&quot;Interior Light&quot;) or a Region form (&quot;Exterior Light&quot;). In the latter case, the light color and intensity will vary based on the time of day.</string>
+         </property>
          <property name="title">
           <string>Emittance Source</string>
          </property>
@@ -1544,6 +1875,167 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="pageWaterCurrents">
+      <layout class="QGridLayout" name="gridLayout_33">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="xWaterCurrentsVelLinear">
+         <property name="title">
+          <string>Linear Velocity</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_31" columnstretch="0,1">
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_43">
+            <property name="text">
+             <string>Z:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xWaterCurrentsVelLinearZ</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="xWaterCurrentsVelLinearX">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_41">
+            <property name="text">
+             <string>X:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xWaterCurrentsVelLinearX</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="xWaterCurrentsVelLinearY">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_42">
+            <property name="text">
+             <string>Y:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xWaterCurrentsVelLinearY</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="xWaterCurrentsVelLinearZ">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QGroupBox" name="xWaterCurrentsVelAngular">
+         <property name="title">
+          <string>Angular Velocity</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_32" columnstretch="0,1">
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_44">
+            <property name="text">
+             <string>Z:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xWaterCurrentsVelAngularZ</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_45">
+            <property name="text">
+             <string>X:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xWaterCurrentsVelAngularX</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_46">
+            <property name="text">
+             <string>Y:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xWaterCurrentsVelAngularY</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="xWaterCurrentsVelAngularX">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="xWaterCurrentsVelAngularY">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="xWaterCurrentsVelAngularZ">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <spacer name="verticalSpacer_13">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>378</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="pageRendering">
       <layout class="QGridLayout" name="gridLayout_23">
        <property name="leftMargin">
@@ -1560,6 +2052,9 @@
        </property>
        <item row="0" column="0">
         <widget class="QGroupBox" name="xMultiboundRefGroupbox">
+         <property name="whatsThis">
+          <string>Some in-game environments are divided into &quot;multibounds&quot; or &quot;roombounds,&quot; such thata ref will only be rendered if the camera is inside of whatever bound the ref is associated with. By default, refs are associated with whatever bound their pivot point lies inside of. You can override that and associate this ref with a specific bound.</string>
+         </property>
          <property name="title">
           <string>Override multibound ref</string>
          </property>
@@ -1585,6 +2080,9 @@
        </item>
        <item row="1" column="0">
         <widget class="QGroupBox" name="xRoomboundGroupbox">
+         <property name="whatsThis">
+          <string>These options are only applicable to roombound markers. You can set different lighting parameters for each room in an in-game environment.</string>
+         </property>
          <property name="title">
           <string>Roombound Options</string>
          </property>
@@ -1705,7 +2203,7 @@
      </item>
      <item>
       <property name="text">
-       <string>Activation</string>
+       <string>Activate Parents</string>
       </property>
      </item>
      <item>
@@ -1716,6 +2214,11 @@
      <item>
       <property name="text">
        <string>Lighting and Emittance</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Water Currents</string>
       </property>
      </item>
      <item>
@@ -1731,7 +2234,7 @@
     </widget>
    </item>
    <item row="0" column="0" colspan="2">
-    <layout class="QGridLayout" name="gridLayout_7">
+    <layout class="QGridLayout" name="topLayout">
      <item row="0" column="0">
       <widget class="QLabel" name="label_11">
        <property name="text">
@@ -1851,8 +2354,10 @@
   <tabstop>encounterZone</tabstop>
   <tabstop>persistLocation</tabstop>
   <tabstop>locRefType</tabstop>
+  <tabstop>xLevCreaMod</tabstop>
   <tabstop>xAlphaCutoff</tabstop>
   <tabstop>xAttachRef</tabstop>
+  <tabstop>xChargePresent</tabstop>
   <tabstop>xCharge</tabstop>
   <tabstop>xCount</tabstop>
   <tabstop>xFavorCost</tabstop>
@@ -1861,6 +2366,7 @@
   <tabstop>xHorse</tabstop>
   <tabstop>flagIsSkyMarker</tabstop>
   <tabstop>xTimeLeft</tabstop>
+  <tabstop>xTimeLeftReset</tabstop>
   <tabstop>owner</tabstop>
   <tabstop>ownerRank</tabstop>
   <tabstop>xLeveledItemBase</tabstop>
@@ -1914,6 +2420,14 @@
   <tabstop>xEmitLIGH</tabstop>
   <tabstop>xEmitTypeREGN</tabstop>
   <tabstop>xEmitREGN</tabstop>
+  <tabstop>xWaterCurrentsVelLinear</tabstop>
+  <tabstop>xWaterCurrentsVelLinearX</tabstop>
+  <tabstop>xWaterCurrentsVelLinearY</tabstop>
+  <tabstop>xWaterCurrentsVelLinearZ</tabstop>
+  <tabstop>xWaterCurrentsVelAngular</tabstop>
+  <tabstop>xWaterCurrentsVelAngularX</tabstop>
+  <tabstop>xWaterCurrentsVelAngularY</tabstop>
+  <tabstop>xWaterCurrentsVelAngularZ</tabstop>
   <tabstop>xMultiboundRef</tabstop>
   <tabstop>xRoomboundImagespace</tabstop>
   <tabstop>xRoomboundLightingTemplate</tabstop>
