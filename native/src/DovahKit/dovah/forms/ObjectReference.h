@@ -25,6 +25,7 @@ namespace dovah::loaded_forms {
                doesnt_light_water      = 0x00000100, // LIGH
                inaccessible            = 0x00000100, // DOOR
                hide_from_local_map_b   = 0x00000200, // ACTI, STAT, TREE
+               disable_shadow_casting  = 0x00000200, // LIGH
                motion_blur             = 0x00000200, // MSTT
                starts_dead             = 0x00000200, // ACHR
                persistent              = 0x00000400,

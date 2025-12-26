@@ -63,11 +63,12 @@ namespace dovah::loaded_forms::components::extra_data_types {
          );
          intfc.log_load_warning(notice);
       }
-      if (ref.has_value()) {
+      if (ref.has_value()) { // if we're reading XCZR+XCZA...
          auto& ref_use = ref.value();
-         bool found = false;
+         bool  found   = false;
          for (auto& item : this->refs) {
             if (item.ref == ref_use) {
+               subrecord.read(item.action);
                found = true;
                break;
             }
@@ -77,7 +78,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
             item.ref = std::move(ref_use);
             subrecord.read(item.action);
          }
-      } else {
+      } else { // ...else we're reading XCZC+XCZA
          //
          // NOTE: The CK doesn't read XCZA if XCZC is None.
          //
@@ -87,16 +88,26 @@ namespace dovah::loaded_forms::components::extra_data_types {
       return record_load_result::complete;
    }
    /*virtual*/ void water_current_zone_data::save(tes_file_writing::record& record, save_interface_t& intfc) /*override*/ {
-      auto& XCVL = record.open_next_subrecord(signature_vel_linear);
-      XCVL.write(this->velocity.linear.x);
-      XCVL.write(this->velocity.linear.y);
-      XCVL.write(this->velocity.linear.z);
-      XCVL.close();
-      auto& XCVR = record.open_next_subrecord(signature_vel_rotational);
-      XCVR.write(this->velocity.angular.x);
-      XCVR.write(this->velocity.angular.y);
-      XCVR.write(this->velocity.angular.z);
-      XCVR.close();
+      {
+         auto& v = this->velocity.linear;
+         if (v.x || v.y || v.z) {
+            auto& XCVL = record.open_next_subrecord(signature_vel_linear);
+            XCVL.write(v.x);
+            XCVL.write(v.y);
+            XCVL.write(v.z);
+            XCVL.close();
+         }
+      }
+      {
+         auto& v = this->velocity.angular;
+         if (v.x || v.y || v.z) {
+            auto& XCVL = record.open_next_subrecord(signature_vel_rotational);
+            XCVL.write(v.x);
+            XCVL.write(v.y);
+            XCVL.write(v.z);
+            XCVL.close();
+         }
+      }
       if (this->cell) {
          record.write_formID_subrecord(signature_zone_cell, this->cell);
          auto& XCZA = record.open_next_subrecord(signature_zone_action);
@@ -106,7 +117,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
       for (auto& item : this->refs) {
          record.write_formID_subrecord(signature_zone_ref, item.ref);
          auto& XCZA = record.open_next_subrecord(signature_zone_action);
-         XCZA.write(this->action);
+         XCZA.write(item.action);
          XCZA.close();
       }
    }

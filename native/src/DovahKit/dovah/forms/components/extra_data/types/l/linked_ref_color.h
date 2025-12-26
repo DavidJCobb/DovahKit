@@ -6,7 +6,7 @@
 namespace dovah::loaded_forms::components::extra_data_types {
    class linked_ref_color : public extra_data {
       public:
-         static constexpr uint32_t signature = 'XCLP';
+         static constexpr uint32_t signature = 'XCLP'; // Extra Color Link Pair
 
       public:
          linked_ref_color() : extra_data(all_extra_data_types::index_of_type<linked_ref_color>) {}
