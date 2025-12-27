@@ -12,8 +12,8 @@ namespace dovah::loaded_forms::components::extra_data_types {
          struct flag {
             flag() = delete;
             enum : uint8_t {
-               has_imagespace        = 0x04,
-               has_lighting_template = 0x08,
+               has_imagespace        = 0x04, // only used during load
+               has_lighting_template = 0x08, // only used during load
             };
          };
 
@@ -23,7 +23,8 @@ namespace dovah::loaded_forms::components::extra_data_types {
          room_ref_data() : extra_data(all_extra_data_types::index_of_type<room_ref_data>) {}
 
       public:
-         uint8_t flags = 0;
+         uint8_t flags     = 0;
+         bool    is_master = false;
          form_reference_t lighting_template;
          form_reference_t imagespace;
          std::vector<form_reference_t> linked_rooms;

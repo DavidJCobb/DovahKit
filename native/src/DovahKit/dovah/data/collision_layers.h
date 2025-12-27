@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 
 namespace dovah {
    enum class collision_layer {
@@ -50,5 +51,19 @@ namespace dovah {
       spell_explosion        = 45,
       dropping_pick          = 46,
       null                   = 47,
+      trigger_falling_trap   = 48,
+      navcut                 = 49,
+      critter                = 50,
+      spell_trigger          = 51,
+      living_and_dead_actors = 52,
+      detection              = 53,
+      trap_trigger           = 54,
    };
+
+   static constexpr const auto all_collision_layers = []() {
+      std::array<collision_layer, 55> out = {};
+      for (size_t i = 0; i < out.size(); ++i)
+         out[i] = (collision_layer)i;
+      return out;
+   }();
 }

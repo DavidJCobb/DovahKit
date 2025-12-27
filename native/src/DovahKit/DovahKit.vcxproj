@@ -392,6 +392,7 @@
     <ClCompile Include="dovah\load_order_requests\form_renumber_request.cpp" />
     <ClCompile Include="dovah\load_order_requests\game_setting_edit_request.cpp" />
     <ClCompile Include="dovah\load_order_requests\game_setting_renumber_request.cpp" />
+    <ClCompile Include="dovah\utils\default_light_emitter_shadow_depth_bias.cpp" />
     <ClCompile Include="dovah\utils\subrecord_data_position.cpp" />
     <ClCompile Include="dovah\utils\update_location_content.cpp" />
     <ClCompile Include="dovah\utils\compute_classed_stat_points.cpp" />
@@ -407,6 +408,7 @@
     <ClCompile Include="editor\helpers\form_stub_drag_drop.cpp" />
     <ClCompile Include="editor\helpers\backend_warning_to_string.cpp" />
     <ClCompile Include="editor\helpers\is_form_type_legal_to_create.cpp" />
+    <ClCompile Include="editor\localize\collision_layer.cpp" />
     <ClCompile Include="editor\localize\dialogue_topic_subtype.cpp" />
     <ClCompile Include="editor\localize\entry_point_function.cpp" />
     <ClCompile Include="editor\localize\magic_casting_type.cpp" />
@@ -1067,6 +1069,10 @@
     <ClCompile Include="ui\form_windows\race\RacePresetActorFormFilter.cpp" />
     <ClCompile Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\race\RaceTintLayerModel.cpp" />
+    <ClCompile Include="ui\form_windows\reference.cpp" />
+    <ClCompile Include="ui\form_windows\reference\ObjectReferenceActivateParentsModel.cpp" />
+    <ClCompile Include="ui\form_windows\reference\ObjectReferenceLinkedRefsModel.cpp" />
+    <ClCompile Include="ui\form_windows\reference\ObjectReferenceNewLinkedRefDialog.cpp" />
     <ClCompile Include="ui\form_windows\relationship.cpp" />
     <ClCompile Include="ui\form_windows\reverb_parameters.cpp" />
     <ClCompile Include="ui\form_windows\scene\FormSubdialogSceneActionBase.cpp" />
@@ -1080,6 +1086,7 @@
     <ClCompile Include="ui\form_windows\scroll.cpp" />
     <ClCompile Include="ui\form_windows\shader_particle_geometry_data.cpp" />
     <ClCompile Include="ui\form_windows\shared\BipedObjectSlotsToggleModel.cpp" />
+    <ClCompile Include="ui\form_windows\shared\DKFormPickerExcludeListedFormFilter.cpp" />
     <ClCompile Include="ui\form_windows\shared\DKFormPickerExcludeSingleFormFilter.cpp" />
     <ClCompile Include="ui\form_windows\shared\FaceBaseHeadPartsModel.cpp" />
     <ClCompile Include="ui\form_windows\shared\FaceExtraHeadPartsModel.cpp" />
@@ -1994,6 +2001,7 @@
     <ClInclude Include="dovah\notices\_util.define.h" />
     <ClInclude Include="dovah\notices\_util.undef.h" />
     <ClInclude Include="dovah\use_info_entry.h" />
+    <ClInclude Include="dovah\utils\default_light_emitter_shadow_depth_bias.h" />
     <ClInclude Include="dovah\utils\magic_effect_list_item_cost_calculator.h" />
     <ClInclude Include="dovah\utils\cell_grid_position.h" />
     <ClInclude Include="dovah\utils\compute_classed_stat_points.h" />
@@ -2025,6 +2033,7 @@
     <QtMoc Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.h" />
     <QtMoc Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.h" />
     <ClInclude Include="editor\helpers\is_form_type_legal_to_create.h" />
+    <ClInclude Include="editor\localize\collision_layer.h" />
     <ClInclude Include="editor\localize\dialogue_topic_subtype.h" />
     <ClInclude Include="editor\localize\entry_point_function.h" />
     <ClInclude Include="editor\localize\magic_delivery_type.h" />
@@ -2128,6 +2137,10 @@
     <QtMoc Include="ui\form_windows\projectile.h" />
     <ClInclude Include="ui\form_windows\quest\alias_subdialog_helpers.h" />
     <QtMoc Include="ui\form_windows\reverb_parameters.h" />
+    <QtMoc Include="ui\form_windows\reference.h" />
+    <QtMoc Include="ui\form_windows\reference\ObjectReferenceLinkedRefsModel.h" />
+    <QtMoc Include="ui\form_windows\reference\ObjectReferenceNewLinkedRefDialog.h" />
+    <QtMoc Include="ui\form_windows\reference\ObjectReferenceActivateParentsModel.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Action.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\ActionType.h" />
     <ClInclude Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Actor.h" />
@@ -2255,6 +2268,7 @@
     <QtMoc Include="ui\form_windows\scroll.h" />
     <QtMoc Include="ui\form_windows\shared\BipedObjectSlotsToggleModel.h" />
     <QtMoc Include="ui\form_windows\shader_particle_geometry_data.h" />
+    <ClInclude Include="ui\form_windows\shared\DKFormPickerExcludeListedFormsFilter.h" />
     <ClInclude Include="ui\form_windows\shared\DKFormPickerExcludeSingleFormFilter.h" />
     <ClInclude Include="ui\form_windows\shared\FormPickerFromFormListPaneFilter.h" />
     <ClInclude Include="ui\form_windows\shared\HeadPartPickerFilter.h" />
@@ -3626,6 +3640,7 @@
     <QtUic Include="ui\form_windows\quest\quest_dialogue_tab_body.ui" />
     <QtUic Include="ui\form_windows\race.ui" />
     <QtUic Include="ui\form_windows\reference.ui" />
+    <QtUic Include="ui\form_windows\reference\ObjectReferenceNewLinkedRefDialog.ui" />
     <QtUic Include="ui\form_windows\relationship.ui" />
     <QtUic Include="ui\form_windows\reverb_parameters.ui" />
     <QtUic Include="ui\form_windows\scene\FormSubdialogSceneDialogueAction.ui" />
@@ -3840,6 +3855,10 @@
     <None Include="dovah\_docs\common form flags.md" />
     <None Include="dovah\_docs\compiled script files.md" />
     <None Include="dovah\_docs\enchanting.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\extra data - full reference.md">
       <SubType>
       </SubType>
     </None>

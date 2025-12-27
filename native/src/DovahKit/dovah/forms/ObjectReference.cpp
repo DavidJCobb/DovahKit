@@ -149,12 +149,12 @@ namespace dovah::loaded_forms {
    }
    void ObjectReference::set_scale(float v, bool with_limits) {
       if (with_limits) {
-         if (v < 0.01F)
-            v = 0.01F;
-         else if (v > 100.0F)
-            v = 100.0F;
-         else
-            v -= std::fmod(v, 0.01F);
+         v = std::roundf(v * 100.0F);
+         if (v < 1)
+            v = 1;
+         else if (v > 100)
+            v = 100;
+         v /= 100.0F;
       }
       auto* extra = this->extra_data.get_or_create<dovah::loaded_forms::components::extra_data_types::scale>();
       if (extra->value == v)

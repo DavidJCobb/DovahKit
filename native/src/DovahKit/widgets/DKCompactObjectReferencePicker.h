@@ -1,4 +1,7 @@
 #pragma once
+#if !defined(QT_PLUGIN)
+   #include <functional>
+#endif
 #include <string>
 #include <string_view>
 #include <QPushButton>
@@ -32,6 +35,9 @@ class DKCompactObjectReferencePicker : public QWidget {
       #if !defined(QT_PLUGIN)
          void setRef(dovah::form_stub*);
 
+         void setValidationFunction(std::function<bool(dovah::form_stub*)>&&);
+         void setValidationFunction(const std::function<bool(dovah::form_stub*)>&);
+
          const std::string& requiredScriptname() const;
          void setRequiredScriptname(QString);
          void setRequiredScriptname(std::string_view);
@@ -53,6 +59,8 @@ class DKCompactObjectReferencePicker : public QWidget {
 
          #if !defined(QT_PLUGIN)
             dovah::form_stub* value = nullptr;
+
+            std::function<bool(dovah::form_stub*)> validation_function;
          #endif
       } state;
 

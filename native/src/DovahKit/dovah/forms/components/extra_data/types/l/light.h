@@ -13,7 +13,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
       public:
          float   fov  = 90;
          float   fade = 1;
-         float   end_distance_cap  = 0;
+         float   end_distance_cap  = 0; // 0 = use the Radius from the Light base form
          float   shadow_depth_bias = 1.0F;
          uint8_t unk10;
          uint8_t unk11[3];

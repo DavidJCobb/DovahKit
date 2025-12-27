@@ -8,11 +8,14 @@ namespace dovah::loaded_forms::components::extra_data_types {
       public:
          static constexpr uint32_t signature = Signature;
 
+         using value_type = ValueType;
+         static constexpr const ValueType default_value = DefaultValue;
+
       public:
          common_fundamental() : extra_data(all_extra_data_types::index_of_type<Self>) {}
 
       public:
-         ValueType value = DefaultValue;
+         ValueType value = default_value;
 
       public:
          virtual subrecord_load_result load(tes_file_reading::subrecord&, load_interface_t&) override;

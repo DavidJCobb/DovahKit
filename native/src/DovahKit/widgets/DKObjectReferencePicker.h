@@ -1,4 +1,7 @@
 #pragma once
+#if !defined(QT_PLUGIN)
+   #include <functional>
+#endif
 #include <string_view>
 #include <QComboBox>
 #include <QLabel>
@@ -41,6 +44,9 @@ class DKObjectReferencePicker : public QWidget {
       #if !defined(QT_PLUGIN)
          void setCell(dovah::form_stub*);
          void setRef(dovah::form_stub*);
+
+         void setValidationFunction(std::function<bool(dovah::form_stub*)>&&);
+         void setValidationFunction(const std::function<bool(dovah::form_stub*)>&);
       #endif
 
       void setRefFilterString(QString);
@@ -86,6 +92,10 @@ class DKObjectReferencePicker : public QWidget {
 
          QString          ref_filter_string;
          dovah::form_type required_form_type = dovah::form_type::reference;
+
+         #if !defined(QT_PLUGIN)
+            std::function<bool(dovah::form_stub*)> validation_function;
+         #endif
       } state;
 
       void _rebuildLayout();

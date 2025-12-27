@@ -300,7 +300,9 @@ Indicates the poison type and dose applied to a weapon ref.
 
 #### `ExtraPortalRefData` (`XPOD`: eXtra Portal Origin and Destination)
 
-**Used on:** REFR
+**Used on:** REFR[PortalMarker]
+
+Indicates the two `RoomMarker` refs that this portal connects.
 
 #### `ExtraPrimitive` (`XPRM`: eXtra PRiMitive)
 

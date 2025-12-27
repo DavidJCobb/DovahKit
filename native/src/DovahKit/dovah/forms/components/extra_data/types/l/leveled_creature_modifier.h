@@ -12,6 +12,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
             normal,
             hard,
             very_hard,
+            none,
          };
 
       public:

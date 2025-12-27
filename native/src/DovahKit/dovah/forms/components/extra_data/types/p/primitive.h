@@ -12,8 +12,8 @@ namespace dovah::loaded_forms::components::extra_data_types {
             none,
             box,
             sphere,
-            portal_box,
-            unknown,
+            portal_box, // Technically a plane, except that it's 2 units thick on its local Y-axis, not flat.
+            line,
          };
 
       public:

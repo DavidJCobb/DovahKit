@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormDialogObjectReference</class>
  <widget class="QDialog" name="FormDialogObjectReference">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>639</width>
+    <height>595</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Reference</string>
   </property>
@@ -401,7 +409,7 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_3">
               <item>
-               <widget class="QLabel" name="label_7">
+               <widget class="QLabel" name="testRadiusLabel">
                 <property name="text">
                  <string>Test Radius:</string>
                 </property>
@@ -413,8 +421,7 @@
               <item>
                <widget class="QDoubleSpinBox" name="testRadius">
                 <property name="whatsThis">
-                 <string>&lt;p&gt;If you set this to a non-zero value, the Creation Kit will display rings (with the given radius) around this ref. This is useful for estimating distances for packages and scripts.&lt;/p&gt;
-&lt;p&gt;Under the hood, this uses the same data as a placed light's maximum distance, and a map marker's radius.&lt;/p&gt;</string>
+                 <string>&lt;p&gt;If you set this to a non-zero value, the Creation Kit will display rings (with the given radius) around this ref. This is useful for estimating distances for packages and scripts. This value is not saved.&lt;/p&gt;</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1382,7 +1389,7 @@
         </widget>
        </item>
        <item row="4" column="0">
-        <widget class="QGroupBox" name="groupBox">
+        <widget class="QGroupBox" name="currentLinkedRefGroupbox">
          <property name="title">
           <string>Selected entry</string>
          </property>
@@ -1772,12 +1779,12 @@
           <item row="4" column="0" colspan="5">
            <layout class="QGridLayout" name="gridLayout_20">
             <item row="0" column="0">
-             <widget class="QCheckBox" name="flagDisableShadows">
+             <widget class="QCheckBox" name="flagCastShadows">
               <property name="whatsThis">
                <string>Settings on a Light base form determine whether any given kind of light is theoretically capable of casting shadows. You can selectively disable shadows for specific refs as well.</string>
               </property>
               <property name="text">
-               <string>Disable shadows</string>
+               <string>Can cast shadows</string>
               </property>
              </widget>
             </item>
@@ -2411,7 +2418,7 @@
   <tabstop>xLightDepthBiasSlider</tabstop>
   <tabstop>xLightDepthBiasSpinbox</tabstop>
   <tabstop>xLightDepthBiasReset</tabstop>
-  <tabstop>flagDisableShadows</tabstop>
+  <tabstop>flagCastShadows</tabstop>
   <tabstop>flagDoesntLightLandscape</tabstop>
   <tabstop>flagNeverFades</tabstop>
   <tabstop>flagDoesntLightWater</tabstop>

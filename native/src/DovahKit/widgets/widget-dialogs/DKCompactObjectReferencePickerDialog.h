@@ -1,5 +1,6 @@
 #pragma once
 #include "ui_DKCompactObjectReferencePickerDialog.h" // generated
+#include <functional>
 #include <string>
 #include <QDialog>
 
@@ -21,6 +22,8 @@ class DKCompactObjectReferencePickerDialog : public QDialog {
       const std::string& requiredScriptname() const;
       void setRequiredScriptname(QString);
       void setRequiredScriptname(std::string_view);
+
+      void setValidationFunction(const std::function<bool(dovah::form_stub*)>&);
 
    protected:
       Ui::DKCompactObjectReferencePickerDialog ui;

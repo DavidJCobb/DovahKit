@@ -254,6 +254,9 @@ void DKObjectReferencePicker::_updatePrependedRefs() {
       if (stub) {
          if (!dovah::form_type_is_reference(stub->form_type))
             return;
+         if (auto& f = this->state.validation_function)
+            if (!f(stub))
+               return;
          auto* cell = stub->get_parent_form();
          if (cell && cell->form_type == dovah::form_type::cell) {
             this->setCell(cell);
@@ -263,6 +266,19 @@ void DKObjectReferencePicker::_updatePrependedRefs() {
       auto  i      = widget->findData(QVariant::fromValue<void*>(stub), DKRefsInCellModel::FormStubRole);
       if (i >= 0)
          widget->setCurrentIndex(i);
+   }
+
+   void DKObjectReferencePicker::setValidationFunction(std::function<bool(dovah::form_stub*)>&& func) {
+      this->state.validation_function = std::move(func);
+      if (auto& f = this->state.validation_function)
+         if (!f(this->ref()))
+            this->setRef(nullptr);
+   }
+   void DKObjectReferencePicker::setValidationFunction(const std::function<bool(dovah::form_stub*)>& func) {
+      this->state.validation_function = func;
+      if (auto& f = this->state.validation_function)
+         if (!f(this->ref()))
+            this->setRef(nullptr);
    }
 #endif
 

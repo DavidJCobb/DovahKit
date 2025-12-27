@@ -36,11 +36,13 @@ namespace dovah::loaded_forms::components::extra_data_types {
          // The game reads a uint32_t and manually splits it up into:
          //  - uint8_t  linked_room_count;
          //  - uint8_t  flags;
-         //  - uint16_t pad02;
+         //  - bool     is_master;
+         //  - uint8_t  pad03;
          //
          subrecord.read(linked_room_count);
          subrecord.read(this->flags);
-         subrecord.skip_bytes(2);
+         subrecord.read(this->is_master);
+         subrecord.skip_bytes(1);
       }
 
       if (this->flags & flag::has_lighting_template) {
@@ -73,6 +75,13 @@ namespace dovah::loaded_forms::components::extra_data_types {
          size_t i = 0;
          for (; i < linked_room_count; ++i) {
             auto& subrecord = record.next_subrecord();
+            if (subrecord.signature() == signature) {
+               //
+               // What was Bethesda cooking here, and why does it smell so burnt?
+               //
+               --i;
+               continue;
+            }
             if (subrecord.signature() != 'XLRM') {
                bool would_just_be_skipped = subrecord.signature() == signature;
 
@@ -130,7 +139,8 @@ namespace dovah::loaded_forms::components::extra_data_types {
       auto& XRMR = record.open_next_subrecord(signature);
       XRMR.write(linked_room_count);
       XRMR.write(this->flags);
-      XRMR.skip_bytes(2);
+      XRMR.write(this->is_master);
+      XRMR.skip_bytes(1);
       XRMR.close();
       if (this->lighting_template)
          record.write_formID_subrecord('LNAM', this->lighting_template);
@@ -167,11 +177,10 @@ namespace dovah::loaded_forms::components::extra_data_types {
       if (linked_room_count > 0) {
          for (size_t i = 0; i < linked_room_count; ++i) {
             auto& subrecord = record.next_subrecord();
-            //
-            // The game expects XLRM here. It checks for XRMR, but otherwise never 
-            // actually validates the signature.
-            //
             if (subrecord.signature() == signature) {
+               //
+               // What was Bethesda cooking here, and why does it smell so burnt?
+               //
                --i;
                continue;
             }
