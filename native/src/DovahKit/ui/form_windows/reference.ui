@@ -933,16 +933,6 @@
           <item row="0" column="0">
            <widget class="DKNavmeshGenerationImportOptionPicker" name="navmeshGen"/>
           </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_62">
-            <property name="text">
-             <string>This option is only available for some form types. Please be aware that due to an oversight in the game engine's design, it conflicts with the &quot;Respawns&quot; checkbox: using this option will change the value of the &quot;Respawns&quot; checkbox in strange ways, after you click &quot;OK.&quot;</string>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
          </layout>
         </widget>
        </item>
