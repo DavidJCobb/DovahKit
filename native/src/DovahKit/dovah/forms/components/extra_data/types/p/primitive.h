@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "helpers/vector3.h"
 #include "../../extra_data.h"
+#include "../../../../structs/color_floats.h"
 
 namespace dovah::loaded_forms::components::extra_data_types {
    class primitive : public extra_data {
@@ -9,10 +10,18 @@ namespace dovah::loaded_forms::components::extra_data_types {
          static constexpr uint32_t signature = 'XPRM';
          
          enum class shape : uint32_t {
+            // Legal for: triggers.
             none,
+
+            // Legal for: multibounds, occlusion planes, roombounds, triggers.
             box,
+
+            // Legal for: multibounds, triggers.
             sphere,
+
+            // Legal for: occlusion planes, portals.
             portal_box, // Technically a plane, except that it's 2 units thick on its local Y-axis, not flat.
+
             line,
          };
 
@@ -21,13 +30,8 @@ namespace dovah::loaded_forms::components::extra_data_types {
 
       public:
          cobb::vector3<float> bounds;
-         struct {
-            float r = 1;
-            float g = 1;
-            float b = 1;
-         } color;
-         float unknown = 0;
-         enum shape shape = shape::box;
+         color_floats color = { 1, 1, 1, 0.15 };
+         enum shape   shape = shape::box;
 
       public:
          virtual subrecord_load_result load(tes_file_reading::subrecord&, load_interface_t&) override;

@@ -22,8 +22,9 @@ namespace nifDK::block_types {
       this->blending.destination = (blend_mode)((data >> 5) & 0b1111);
       //
       reader.read(this->testing.threshold);
-      this->testing.enabled   = (data & (1 << 9)) != 0;
-      this->testing.mode      = (test_mode)((data >> 10) & 0b111);
-      this->testing.no_sorter = (data & (1 << 13)) != 0;
+      this->testing.enabled      = (data & (1 << 9)) != 0;
+      this->testing.mode         = (test_mode)((data >> 10) & 0b111);
+      this->testing.no_sorter    = (data & (1 << 13)) != 0;
+      this->testing.configurable = (data & (1 << 15)) != 0;
    }
 }

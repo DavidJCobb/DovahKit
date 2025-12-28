@@ -36,10 +36,11 @@ namespace nifDK::block_types {
             blend_mode destination = blend_mode::one_minus_source_color;
          } blending;
          struct {
-            bool      enabled   = false;
-            test_mode mode      = test_mode::less;
-            uint8_t   threshold = 128;
-            bool      no_sorter = false;
+            bool      enabled      = false;
+            bool      configurable = false; // control whether a ref's ExtraAlphaCutoff can override the threshold
+            test_mode mode         = test_mode::less;
+            uint8_t   threshold    = 128;
+            bool      no_sorter    = false;
          } testing;
 
          virtual void parse(file_reader&) override;

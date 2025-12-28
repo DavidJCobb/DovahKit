@@ -3,19 +3,24 @@
 #include "dovah/core.h"
 #include "dovah/form_stubs/helpers/get_base_form.h"
 #include "editor/helpers/form_identifiers_to_string.h"
+#include "editor/localize/collision_layer.h"
 #include "editor/subsystems/message_log/core.h"
 #include "editor/subsystems/worldedit/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
 #include "ui/utils/typical_tableview_config.h"
+#include "./reference/ObjectReferenceActivateParentsModel.h"
 #include "./reference/ObjectReferenceLinkedRefsModel.h"
 #include "./reference/ObjectReferenceNewLinkedRefDialog.h"
+#include "widgets/widget-dialogs/DKCompactObjectReferencePickerDialog.h"
 
 #include "dovah/data/all_carryable_form_types.h"
+#include "dovah/data/collision_layers.h"
 #include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/forms/components/model.h"
 #include "dovah/forms/_component_access.h"
 #include "dovah/utils/default_light_emitter_shadow_depth_bias.h"
+#include "dovah/utils/default_primitive_color_for_base_form.h"
 
 namespace {
    constexpr bool render_window_displays_teleport_markers = false;
@@ -25,9 +30,12 @@ namespace {
 #include "dovah/forms/Faction.h"
 #include "dovah/forms/Light.h"
 #pragma region Extra data includes
+   #include "dovah/forms/components/extra_data/types/a/action.h"
+   #include "dovah/forms/components/extra_data/types/a/activate_parents.h"
    #include "dovah/forms/components/extra_data/types/a/alpha_cutoff.h"
    #include "dovah/forms/components/extra_data/types/a/attach_ref.h"
    #include "dovah/forms/components/extra_data/types/c/charge.h"
+   #include "dovah/forms/components/extra_data/types/c/collision_data.h"
    #include "dovah/forms/components/extra_data/types/c/count.h"
    #include "dovah/forms/components/extra_data/types/e/emittance_source.h"
    #include "dovah/forms/components/extra_data/types/e/enable_state_parent.h"
@@ -47,6 +55,7 @@ namespace {
    #include "dovah/forms/components/extra_data/types/m/map_marker.h"
    #include "dovah/forms/components/extra_data/types/m/multibound_ref.h"
    #include "dovah/forms/components/extra_data/types/o/ownership.h"
+   #include "dovah/forms/components/extra_data/types/p/primitive.h"
    #include "dovah/forms/components/extra_data/types/r/radius.h"
    #include "dovah/forms/components/extra_data/types/r/rank.h"
    #include "dovah/forms/components/extra_data/types/r/room_ref_data.h"
@@ -62,6 +71,8 @@ namespace {
    namespace extra_data_types {
       using namespace dovah::loaded_forms::components::extra_data_types;
    }
+
+   constexpr const dovah::collision_layer layer_for_player_activate_primitives = dovah::collision_layer::non_collidable;
 
    static bool can_rescale_ref(dovah::form_stub& ref) {
       auto* base = dovah::form_stub_helpers::get_base_form(&ref);
@@ -213,6 +224,29 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
    #pragma region Ownership
       this->ui.owner->setAllowedFormTypes({ dovah::form_type::actor_base, dovah::form_type::faction });
    #pragma endregion
+   #pragma region Primitive
+      {
+         using extra_data = extra_data_types::primitive;
+         using shape_type = enum extra_data::shape;
+         QComboBox* widget = this->ui.xPrimitiveShape;
+         widget->clear();
+         widget->addItem(tr("None"), (int)shape_type::none);
+         widget->addItem(tr("Box"), (int)shape_type::box);
+         widget->addItem(tr("Plane"), (int)shape_type::portal_box);
+         widget->addItem(tr("Sphere"), (int)shape_type::sphere);
+         widget->addItem(tr("Line"), (int)shape_type::line);
+      }
+      {
+         QComboBox* widget = this->ui.xPrimitiveCollLayer;
+         widget->clear();
+         for (auto cl : dovah::all_collision_layers) {
+            widget->addItem(
+               editor::localize::collision_layer(cl),
+               (int)cl
+            );
+         }
+      }
+   #pragma endregion
    #pragma region Item
       this->ui.xLeveledItemBase->setAllowedFormType(dovah::form_type::leveled_item);
    #pragma endregion
@@ -239,40 +273,29 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
       this->ui.reflectedBy->setReadOnly(true);
    #pragma endregion
    #pragma region Linked Refs
+      this->ui.currentLinkedRefKYWD->setAllowedFormType(dovah::form_type::keyword);
       {
          using model_type = ObjectReferenceLinkedRefsModel;
 
          auto* listview = this->ui.linkedRefs;
          auto* model    = this->models.linked_refs = new model_type(listview);
          listview->setModel(model);
-
          ui::typical_tableview_config(listview);
 
          auto* sel_model = listview->selectionModel();
-         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this, model, sel_model](const QItemSelection& sel) {
-            if (sel.empty()) {
-               this->ui.currentLinkedRefGroupbox->setEnabled(false);
+         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this, sel_model](const QItemSelection& sel) {
+            bool no_selection = sel.empty();
+            this->ui.currentLinkedRefGroupbox->setDisabled(no_selection);
+            if (no_selection)
                return;
-            }
             QModelIndex qmi = sel[0].topLeft();
-            this->ui.currentLinkedRefGroupbox->setEnabled(true);
 
             const auto blockers = std::array{
                QSignalBlocker(this->ui.currentLinkedRefKYWD),
                QSignalBlocker(this->ui.currentLinkedRefREFR),
             };
-            this->ui.currentLinkedRefKYWD->setFormStub(
-               model->data(
-                  qmi.siblingAtColumn(model_type::Column::KeywordName),
-                  model_type::FormStubRole
-               ).value<dovah::form_stub*>()
-            );
-            this->ui.currentLinkedRefREFR->setRef(
-               model->data(
-                  qmi.siblingAtColumn(model_type::Column::RefName),
-                  model_type::FormStubRole
-               ).value<dovah::form_stub*>()
-            );
+            this->ui.currentLinkedRefKYWD->setFormStub(qmi.data(model_type::KeywordRole).value<dovah::form_stub*>());
+            this->ui.currentLinkedRefREFR->setRef(     qmi.data(model_type::RefRole).value<dovah::form_stub*>());
          });
 
          QObject::connect(this->ui.buttonLinkedRefNew, &QPushButton::clicked, this, [this, model]() {
@@ -293,11 +316,22 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
             if (sel.empty())
                return;
             auto  qmi  = sel[0];
-            auto* kywd = model->data(qmi.siblingAtColumn(model_type::Column::KeywordName), model_type::FormStubRole).value<dovah::form_stub*>();
+            auto* kywd = qmi.data(model_type::KeywordRole).value<dovah::form_stub*>();
             model->setLink(kywd, nullptr);
          });
+         
+         auto* ref_picker     = this->ui.currentLinkedRefREFR;
+         auto* keyword_picker = this->ui.currentLinkedRefKYWD;
+         auto  on_changed = [ref_picker, keyword_picker, sel_model, model]() {
+            auto sel = sel_model->selectedRows();
+            if (sel.empty())
+               return;
+            if (auto* ref = ref_picker->ref())
+               model->setRow(sel[0].row(), keyword_picker->formStub(), ref);
+         };
+         QObject::connect(ref_picker,     &DKCompactObjectReferencePicker::refChanged, this, on_changed);
+         QObject::connect(keyword_picker, &DKFormPicker::formChanged, this, on_changed);
       }
-      this->ui.currentLinkedRefKYWD->setAllowedFormType(dovah::form_type::keyword);
       this->ui.currentLinkedRefREFR->setValidationFunction([this](dovah::form_stub* ref) -> bool {
          return ref != &this->form->stub;
       });
@@ -306,9 +340,91 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
       this->ui.linkedFrom->setReadOnly(true);
    #pragma endregion
    #pragma region Activate Parents
-      this->ui.currentActivateParentRef->setValidationFunction([this](dovah::form_stub* ref) -> bool {
-         return ref != &this->form->stub;
-      });
+      {
+         using model_type = ObjectReferenceActivateParentsModel;
+
+         auto* listview = this->ui.activateParents;
+         auto* model    = this->models.activate_parents = new model_type(listview);
+         listview->setModel(model);
+         ui::typical_tableview_config(listview);
+         
+         auto* sel_model = listview->selectionModel();
+         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this, model, sel_model](const QItemSelection& sel) {
+            if (sel.empty()) {
+               this->ui.currentActivateParentGroupbox->setEnabled(false);
+               return;
+            }
+            QModelIndex qmi = sel[0].topLeft();
+            this->ui.currentActivateParentGroupbox->setEnabled(true);
+
+            const auto blockers = std::array{
+               QSignalBlocker(this->ui.currentActivateParentRef),
+               QSignalBlocker(this->ui.currentActivateParentDelay),
+            };
+            this->ui.currentActivateParentDelay->setValue(
+               model->data(qmi, model_type::DelayRole).value<float>()
+            );
+            this->ui.currentActivateParentRef->setRef(
+               model->data(qmi, model_type::FormStubRole).value<dovah::form_stub*>()
+            );
+         });
+
+         QObject::connect(this->ui.buttonActivateParentNew, &QPushButton::clicked, this, [this, model, sel_model]() {
+            auto* dialog = new DKCompactObjectReferencePickerDialog(this);
+            QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
+            {
+               auto all_refs = model->allRefs();
+               dialog->setValidationFunction([all_refs](dovah::form_stub* ref) {
+                  auto it = std::find(all_refs.begin(), all_refs.end(), ref);
+                  if (it == all_refs.end())
+                     return false;
+                  return true;
+               });
+            }
+            if (dialog->exec() == QDialog::Accepted) {
+               auto* ref = dialog->value();
+               if (ref) {
+                  auto qmi = model->setRefDelay(*ref, 0);
+                  if (qmi.isValid()) {
+                     sel_model->select(
+                        {
+                           qmi.siblingAtColumn(0),
+                           qmi.siblingAtColumn(model->columnCount({}) - 1)
+                        },
+                        QItemSelectionModel::SelectionFlag::ClearAndSelect
+                     );
+                  }
+               }
+            }
+         });
+         QObject::connect(this->ui.buttonActivateParentDelete, &QPushButton::clicked, this, [this, sel_model, model]() {
+            auto sel = sel_model->selectedRows();
+            if (sel.empty())
+               return;
+            model->removeRow(sel[0].row());
+         });
+
+         auto* ref_picker = this->ui.currentActivateParentRef;
+         auto* delay_edit = this->ui.currentActivateParentDelay;
+         auto  on_changed = [ref_picker, delay_edit, sel_model, model]() {
+            auto sel = sel_model->selectedRows();
+            if (sel.empty())
+               return;
+            auto* ref = ref_picker->ref();
+            if (!ref)
+               return;
+            model->setRow(sel[0].row(), *ref, delay_edit->value());
+         };
+         QObject::connect(ref_picker, &DKCompactObjectReferencePicker::refChanged, this, on_changed);
+         QObject::connect(delay_edit, qOverload<double>(&QDoubleSpinBox::valueChanged), this, on_changed);
+         ref_picker->setValidationFunction([this, model, ref_picker](dovah::form_stub* ref) -> bool {
+            if (ref == ref_picker->ref())
+               return true;
+            if (!ref)
+               return true;
+            return !model->containsRef(*ref);
+         });
+      }
    #pragma endregion
    #pragma region Enable Parent
       this->ui.xEnableParentRef->setValidationFunction([this](dovah::form_stub* ref) -> bool {
@@ -399,6 +515,19 @@ void FormDialogObjectReference::_load_impl() {
       }
    }
 
+   bool has_navmesh_import_option = false;
+   switch (base_type) {
+      case dovah::form_type::activator:
+      case dovah::form_type::container:
+      case dovah::form_type::movable_static:
+      case dovah::form_type::statik:
+      case dovah::form_type::static_collection:
+         has_navmesh_import_option = true;
+         break;
+   }
+
+   const bool is_a_primitive = _is_primitive();
+
    bool is_an_item = false;
    for (auto ft : dovah::all_carryable_form_types) {
       if (ft == base_type) {
@@ -421,8 +550,14 @@ void FormDialogObjectReference::_load_impl() {
       add_page(tr("Basic Properties", "page names"), this->ui.pageBasics);
       add_page(tr("Extra", "page names"), this->ui.pageExtra);
       add_page(tr("Ownership", "page names"), this->ui.pageOwnership);
+      if (is_a_primitive) {
+         add_page(tr("Primitive", "page names"), this->ui.pagePrimitive);
+      }
       if (is_an_item) {
          add_page(tr("Item Properties", "page names"), this->ui.pageItem);
+      }
+      if (_can_be_a_patrol_marker()) {
+         static_assert(false, "TODO: Add tab: Patrol Data");
       }
       switch (base_type) {
          case dovah::form_type::container:
@@ -436,6 +571,9 @@ void FormDialogObjectReference::_load_impl() {
       if (base_form && base_form->formID == dovah::hardcoded_form_ids::MapMarker) {
          add_page(tr("Map Marker", "page names"), this->ui.pageMapMarker);
       }
+      if (has_navmesh_import_option) {
+         static_assert(false, "TODO: Add tab: Navmesh Generation");
+      }
       add_page(tr("Reflected By", "page names"), this->ui.pageReflectedBy);
       add_page(tr("Linked Refs", "page names"), this->ui.pageLinkedRefs);
       add_page(tr("Linked From", "page names"), this->ui.pageLinkedFrom);
@@ -447,6 +585,20 @@ void FormDialogObjectReference::_load_impl() {
       }
       add_page(tr("Rendering", "page names"), this->ui.pageRendering);
       add_page(tr("Scripts", "page names"), this->ui.pageScripts);
+
+      QObject::connect(nav->selectionModel(), &QItemSelectionModel::selectionChanged, this, [this, nav](const QItemSelection& sel) {
+         if (sel.empty())
+            return;
+         auto  qmi    = sel[0].topLeft();
+         auto* item   = nav->item(qmi.row());
+         if (!item)
+            return;
+         auto* widget = item->data(Qt::UserRole).value<QWidget*>();
+         if (!widget)
+            return;
+         this->ui.stack->setCurrentWidget(widget);
+      });
+      this->ui.stack->setCurrentWidget(this->ui.pageBasics);
    }
    #pragma endregion
 
@@ -494,37 +646,20 @@ void FormDialogObjectReference::_load_impl() {
          #pragma region Left column
             ui::bind(this->ui.flagDontHavokSettle, record_flags(), record_flag::dont_havok_settle);
             {
-               auto* widget = this->ui.flagHiddenFromLocalMap;
-               switch (base_type) {
-                  case dovah::form_type::activator:
-                  case dovah::form_type::door:
-                  case dovah::form_type::statik:
-                  case dovah::form_type::tree:
-                     widget->setEnabled(true);
-                     break;
-                  default:
-                     widget->setEnabled(false);
-                     break;
+               auto*    widget = this->ui.flagHiddenFromLocalMap;
+               uint32_t mask   = _get_hide_from_local_map_flags_mask();;
+               if (mask) {
+                  widget->setEnabled(true);
+                  widget->setChecked(this->record_flags()& mask);
+                  QObject::connect(widget, &QCheckBox::toggled, this, [this, &working](bool checked) {
+                     uint32_t mask = _get_hide_from_local_map_flags_mask();
+                     if (!mask)
+                        return;
+                     cobb::edit_bit(this->record_flags(), mask, checked);
+                  });
+               } else {
+                  widget->setEnabled(false);
                }
-               QObject::connect(widget, &QCheckBox::toggled, this, [this, &working](bool checked) {
-                  auto* base = working.base_form.get_form_stub();
-                  if (!base)
-                     return;
-                  uint32_t mask = 0;
-                  switch (base->form_type) {
-                     case dovah::form_type::door:
-                        mask = record_flag::hide_from_local_map_a;
-                        break;
-                     case dovah::form_type::activator:
-                     case dovah::form_type::statik:
-                     case dovah::form_type::tree:
-                        mask = record_flag::hide_from_local_map_b;
-                        break;
-                  }
-                  if (!mask)
-                     return;
-                  cobb::edit_bit(this->record_flags(), mask, checked);
-               });
             }
             {
                auto* widget = this->ui.flagIgnoredBySandbox;
@@ -533,26 +668,65 @@ void FormDialogObjectReference::_load_impl() {
             }
             bind_typed_checkbox.operator()<dovah::form_type::door, record_flag::inaccessible>(this->ui.flagDoorInaccessible);
             ui::bind(this->ui.flagDisabled, record_flags(), record_flag::disabled);
-            bind_typed_checkbox.operator()<dovah::form_type::light, record_flag::is_full_lod>(this->ui.flagIsFullLOD);
-            ui::bind(this->ui.flagMotionBlur, record_flags(), record_flag::motion_blur);
+            {
+               auto* widget = this->ui.flagIsFullLOD;
+               switch (base_type) {
+                  case dovah::form_type::actor_base:
+                  case dovah::form_type::light:
+                     widget->setEnabled(false);
+                     break;
+                  default:
+                     bind_typed_checkbox.operator()<dovah::form_type::light, record_flag::is_full_lod>(widget);
+                     break;
+               }
+            }
+            bind_typed_checkbox.operator() <dovah::form_type::movable_static, record_flag::motion_blur>(this->ui.flagMotionBlur);
          #pragma endregion
          #pragma region Right column
-            ui::bind(this->ui.flagNoAIAcquire, record_flags(), record_flag::no_ai_acquire);
+            {
+               auto* widget = this->ui.flagNoAIAcquire;
+               if (is_an_item || base_type == dovah::form_type::container || base_type == dovah::form_type::actor_base) {
+                  ui::bind(widget, record_flags(), record_flag::no_ai_acquire);
+                  widget->setEnabled(true);
+               } else {
+                  widget->setEnabled(false);
+               }
+            }
             {
                auto* widget = this->ui.flagOpenByDefault;
                switch (base_type) {
                   case dovah::form_type::container:
                   case dovah::form_type::door:
                      widget->setEnabled(true);
+                     if (auto* extra = working.extra_data.get<extra_data_types::action>()) {
+                        widget->setChecked(extra->get_door_is_open_by_default());
+                     } else {
+                        widget->setChecked(false);
+                     }
+                     QObject::connect(widget, &QCheckBox::toggled, this, [this, &working](bool checked) {
+                        auto* extra = working.extra_data.get_or_create<extra_data_types::action>();
+                        extra->set_door_is_open_by_default(checked);
+                     });
                      break;
                   default:
                      widget->setEnabled(false);
                      break;
                }
-               static_assert(false, "TODO: How is this state stored?");
             }
             ui::bind(this->ui.flagReflectedByAutoWater, record_flags(), record_flag::reflected_by_auto_water);
-            ui::bind_inverse(this->ui.flagRespawns, record_flags(), record_flag::no_respawn);
+            {
+               auto* widget = this->ui.flagRespawns;
+               switch (base_type) {
+                  case dovah::form_type::actor_base:
+                  case dovah::form_type::container:
+                     widget->setEnabled(false);
+                     break;
+                  default:
+                     widget->setEnabled(true);
+                     ui::bind_inverse(widget, record_flags(), record_flag::no_respawn);
+                     break;
+               }
+            }
             bind_typed_checkbox.operator()<dovah::form_type::actor_base, record_flag::starts_dead>(this->ui.flagStartsDead);
             static_assert(false, "TODO: Turn Off Fire");
          #pragma endregion
@@ -578,7 +752,11 @@ void FormDialogObjectReference::_load_impl() {
    #pragma endregion
    #pragma region Extra
       bind_fundamental_extra_data<extra_data_types::alpha_cutoff>(working, *this->ui.xAlphaCutoff);
-      bind_single_ref_extra_data<extra_data_types::attach_ref>(working, *this->ui.xAttachRef);
+      if (_can_have_attach_ref()) {
+         bind_single_ref_extra_data<extra_data_types::attach_ref>(working, *this->ui.xAttachRef);
+      } else {
+         this->ui.xAttachRef->setEnabled(false);
+      }
       {
          using extra_data = extra_data_types::charge;
          auto* enable = this->ui.xChargePresent;
@@ -618,7 +796,12 @@ void FormDialogObjectReference::_load_impl() {
             widget->setEnabled(false);
          }
       }
-      static_assert(false, "TODO: Is Sky Marker");
+      if (base_form && base_form->formID == dovah::hardcoded_form_ids::XMarkerHeading) {
+         this->ui.flagIsSkyMarker->setEnabled(true);
+         ui::bind(this->ui.flagIsSkyMarker, record_flags(), loaded_form_type::form_flag::is_sky_marker);
+      } else {
+         this->ui.flagIsSkyMarker->setEnabled(false);
+      }
       {
          using extra_data = extra_data_types::time_left;
          auto* editor = this->ui.xTimeLeft;
@@ -675,7 +858,7 @@ void FormDialogObjectReference::_load_impl() {
       }
       QObject::connect(form_picker, &DKFormPicker::formChanged, this, [this, &working, rank_picker](dovah::form_stub* stub) {
          if (stub) {
-            working.extra_data.get_or_create<form_extra_data>()->form.set_form_stub(working, stub);
+            working.extra_data.get_or_create<form_extra_data>()->form.set(working, stub);
          } else {
             working.extra_data.remove<form_extra_data>(working);
          }
@@ -688,6 +871,125 @@ void FormDialogObjectReference::_load_impl() {
          this->_update_ownership_rank_picker();
       });
    }
+   #pragma endregion
+   #pragma region Primitive
+      if (is_a_primitive) {
+         bool is_typically_flat = false;
+
+         this->ui.xPrimitiveFunction->setText(tr("Static", "primitive function"));
+         switch (base_type) {
+            case dovah::form_type::acoustic_space:
+               this->ui.xPrimitiveFunction->setText(tr("Acoustic Space", "primitive function"));
+               break;
+            case dovah::form_type::sound:
+               this->ui.xPrimitiveFunction->setText(tr("Sound Emitter", "primitive function"));
+               break;
+            default:
+               if (!base_form)
+                  break;
+               if (base_type == dovah::form_type::activator) {
+                  this->ui.xPrimitiveFunction->setText(tr("Trigger", "primitive function"));
+                  break;
+               }
+               switch (base_form->formID) {
+                  case dovah::hardcoded_form_ids::CollisionMarker:
+                     this->ui.xPrimitiveFunction->setText(tr("Collision Object", "primitive function"));
+                     break;
+                  case dovah::hardcoded_form_ids::MultiBoundMarker:
+                     this->ui.xPrimitiveFunction->setText(tr("Multibound", "primitive function"));
+                     break;
+                  case dovah::hardcoded_form_ids::PlaneMarker:
+                     is_typically_flat = true;
+                     this->ui.xPrimitiveFunction->setText(tr("Occlusion Plane", "primitive function"));
+                     break;
+                  case dovah::hardcoded_form_ids::PortalMarker:
+                     is_typically_flat = true;
+                     this->ui.xPrimitiveFunction->setText(tr("Portal", "primitive function"));
+                     break;
+                  case dovah::hardcoded_form_ids::RoomMarker:
+                     {
+                        auto* extra = working.extra_data.get<extra_data_types::room_ref_data>();
+                        if (extra && extra->is_master) {
+                           this->ui.xPrimitiveFunction->setText(tr("Room (master)", "primitive function"));
+                        } else {
+                           // This is Bethesda's terminology. Can we figure out a better word? 
+                           // When does the CK even decide to make a roombound a "master?"
+                           this->ui.xPrimitiveFunction->setText(tr("Room (slave)", "primitive function"));
+                        }
+                     }
+                     break;
+               }
+               break;
+         }
+
+         QObject::connect(this->ui.xPrimitiveCenterX, qOverload<double>(&QDoubleSpinBox::valueChanged), this->ui.positionX, &QDoubleSpinBox::setValue);
+         QObject::connect(this->ui.xPrimitiveCenterY, qOverload<double>(&QDoubleSpinBox::valueChanged), this->ui.positionY, &QDoubleSpinBox::setValue);
+         QObject::connect(this->ui.xPrimitiveCenterZ, qOverload<double>(&QDoubleSpinBox::valueChanged), this->ui.positionZ, &QDoubleSpinBox::setValue);
+         extra_data_types::primitive* extra = nullptr;
+         if (extra = working.extra_data.get<extra_data_types::primitive>()) {
+            this->ui.xPrimitiveSizeX->setValue(extra->bounds.x);
+            this->ui.xPrimitiveSizeY->setValue(extra->bounds.y);
+            this->ui.xPrimitiveSizeZ->setValue(extra->bounds.z);
+            static_assert(false, "TODO: If this is also a multibound, sync with the multibound half-extents. Warn if they and XPRM don't match.");
+         } else {
+            extra = working.extra_data.get_or_create<extra_data_types::primitive>();
+            if (is_typically_flat) {
+               extra->shape = extra_data_types::primitive::shape::portal_box;
+            } else {
+               extra->shape = extra_data_types::primitive::shape::box;
+            }
+            if (base_form) {
+               extra->color = dovah::utils::default_primitive_color_for_base_form(*base_form);
+            }
+            static_assert(false, "TODO: If this is also a multibound, sync with the multibound half-extents.");
+         }
+         this->ui.xPrimitiveColor->setColor(QColor::fromRgbF(extra->color.r, extra->color.g, extra->color.b));
+         this->ui.xPrimitiveShape->setCurrentIndex(this->ui.xPrimitiveShape->findData((int)extra->shape));
+         this->ui.xPrimitiveShape->setEnabled(_can_change_primitive_shape());
+         //
+         // The "Player Activation" checkbox just changes the layer type to L_NONCOLLIDABLE. 
+         // If the base form is an Activator, then this enables an activation prompt on the 
+         // primitive.
+         //
+         {
+            QComboBox* widget = this->ui.xPrimitiveCollLayer;
+            if (auto* extra = working.extra_data.get<extra_data_types::collision_data>()) {
+               auto i = widget->findData((int)extra->value);
+               if (i < 0)
+                  i = widget->findData((int)dovah::collision_layer::unidentified);
+               widget->setCurrentIndex(i);
+            } else {
+               widget->setCurrentIndex(widget->findData((int)dovah::collision_layer::null));
+            }
+
+            auto _update_layer = [this, widget]() {
+               auto layer = (dovah::collision_layer)widget->currentData().toInt();
+               if (layer == layer_for_player_activate_primitives) {
+                  auto* base_form = this->form->base_form.get_form_stub();
+                  if (base_form && base_form->form_type == dovah::form_type::activator) {
+                     this->ui.xPrimitivePlayerActivation->setChecked(true);
+                  }
+               } else {
+                  this->state.primitive.prior_layer = layer;
+               }
+            };
+            _update_layer();
+            QObject::connect(widget, qOverload<int>(&QComboBox::currentIndexChanged), this, _update_layer);
+         }
+         this->ui.xPrimitivePlayerActivation->setEnabled(base_type == dovah::form_type::activator);
+         QObject::connect(this->ui.xPrimitivePlayerActivation, &QCheckBox::toggled, this, [this](bool checked) {
+            QComboBox* widget  = this->ui.xPrimitiveCollLayer;
+            const auto blocker = QSignalBlocker(widget);
+
+            dovah::collision_layer layer;
+            if (checked) {
+               layer = layer_for_player_activate_primitives;
+            } else {
+               layer = this->state.primitive.prior_layer;
+            }
+            widget->setCurrentIndex(widget->findData((int)layer));
+         });
+      }
    #pragma endregion
    #pragma region Item Options
       bind_single_form_extra_data<extra_data_types::leveled_item_base>(working, *this->ui.xLeveledItemBase);
@@ -772,6 +1074,9 @@ void FormDialogObjectReference::_load_impl() {
       } else {
          enable->setChecked(false);
       }
+
+      if (auto* extra = working.extra_data.get<extra_data_types::radius>())
+         this->ui.xMapMarkerRadius->setValue(extra->value);
    }
    #pragma endregion
    #pragma region Reflected By
@@ -784,19 +1089,15 @@ void FormDialogObjectReference::_load_impl() {
       static_assert(false, "TODO: Linked From");
    #pragma endregion
    #pragma region Activate Parents
-      static_assert(false, "TODO: Activate Parents");
+      this->models.activate_parents->importData(working);
    #pragma endregion
    #pragma region Enable Parent
    {
       using extra_data = extra_data_types::enable_state_parent;
-      auto* ref = this->ui.xEnableParentRef->ref();
-      if (ref) {
-         auto* extra = working.extra_data.get_or_create<extra_data>();
-         extra->ref.set(working, ref);
-         cobb::edit_bit(extra->flags, extra_data::flag::opposite, this->ui.xEnableParentOpposite->isChecked());
-         cobb::edit_bit(extra->flags, extra_data::flag::pop_in,   this->ui.xEnableParentPopIn->isChecked());
-      } else {
-         working.extra_data.remove<extra_data>(working);
+      if (auto* extra = working.extra_data.get<extra_data>()) {
+         this->ui.xEnableParentRef->setRef(extra->ref.get_form_stub());
+         this->ui.xEnableParentOpposite->setChecked(extra->flags & extra_data::flag::opposite);
+         this->ui.xEnableParentPopIn->setChecked(extra->flags & extra_data::flag::pop_in);
       }
    }
    #pragma endregion
@@ -821,6 +1122,9 @@ void FormDialogObjectReference::_load_impl() {
          }
       }
       if (base_type == dovah::form_type::light) {
+         if (auto* extra = working.extra_data.get<extra_data_types::radius>())
+            this->ui.xLightRadius->setValue(extra->value);
+
          this->ui.xLightGroupbox->setEnabled(true);
          QObject::connect(this->ui.xLightFOVReset, &QPushButton::clicked, [this, &working]() {
             auto loaded = _base_loaded_as_type<dovah::loaded_forms::Light>();
@@ -878,7 +1182,34 @@ void FormDialogObjectReference::_load_impl() {
       #pragma endregion
    #pragma endregion
    #pragma region Water Currents
-      static_assert(false, "TODO: Water Currents");
+      if (_can_have_water_currents()) {
+         cobb::vector3<float> vel_linear;
+         cobb::vector3<float> vel_angular;
+
+         if (base_form && base_form->formID == dovah::hardcoded_form_ids::WaterCurrentZoneMarker) {
+            if (auto* extra = working.extra_data.get<extra_data_types::water_current_zone_data>()) {
+               vel_linear  = extra->velocity.linear;
+               vel_angular = extra->velocity.angular;
+            }
+         } else {
+            if (auto* extra = working.extra_data.get<extra_data_types::water_data>()) {
+               const auto size = extra->data.size();
+               if (size >= 1) {
+                  vel_linear = extra->data[0].velocity;
+                  if (size >= 2) {
+                     vel_angular = extra->data[1].velocity;
+                  }
+               }
+            }
+         }
+
+         this->ui.xWaterCurrentsVelLinearX->setValue(vel_linear.x);
+         this->ui.xWaterCurrentsVelLinearY->setValue(vel_linear.y);
+         this->ui.xWaterCurrentsVelLinearZ->setValue(vel_linear.z);
+         this->ui.xWaterCurrentsVelAngularX->setValue(vel_angular.x);
+         this->ui.xWaterCurrentsVelAngularY->setValue(vel_angular.y);
+         this->ui.xWaterCurrentsVelAngularZ->setValue(vel_angular.z);
+      }
    #pragma endregion
    #pragma region Rendering
       #pragma region Override multibound ref
@@ -955,7 +1286,38 @@ void FormDialogObjectReference::_save_impl() {
          }
       }
    }
+   
+   #pragma region Primitive
+      if (_is_primitive()) {
+         auto* extra_prim = working.extra_data.get_or_create<extra_data_types::primitive>();
+         extra_prim->bounds = {
+            this->ui.xPrimitiveSizeX->value(),
+            this->ui.xPrimitiveSizeY->value(),
+            this->ui.xPrimitiveSizeZ->value(),
+         };
+         {
+            auto color = this->ui.xPrimitiveColor->color();
+            extra_prim->color = {
+               .r = (float)color.redF(),
+               .g = (float)color.greenF(),
+               .b = (float)color.blueF(),
+               .a = extra_prim->color.a,
+            };
+         }
+         if (_can_change_primitive_shape()) {
+            extra_prim->shape = (enum extra_data_types::primitive::shape) this->ui.xPrimitiveShape->currentData().toInt();
+         }
 
+         auto layer = (dovah::collision_layer) this->ui.xPrimitiveCollLayer->currentData().toInt();
+         if (layer == dovah::collision_layer::unidentified) {
+            working.extra_data.remove<extra_data_types::collision_data>(working);
+         } else {
+            working.extra_data.get_or_create<extra_data_types::collision_data>()->set_layer_id(layer);
+         }
+
+         static_assert(false, "TODO: If this is also a multibound, sync with the multibound half-extents.");
+      }
+   #pragma endregion
    #pragma region Lock
    {
       using extra_data = extra_data_types::lock;
@@ -1062,20 +1424,81 @@ void FormDialogObjectReference::_save_impl() {
          cobb::edit_bit(extra->flags, extra_data::flag::can_travel_to, this->ui.xMapMarkerCanTravel->isChecked());
          cobb::edit_bit(extra->flags, extra_data::flag::show_all_hidden, this->ui.xMapMarkerShowAllHidden->isChecked());
       }
+      
+      float radius = this->ui.xMapMarkerRadius->value();
+      if (radius) {
+         working.extra_data.get_or_create<extra_data_types::radius>()->value = radius;
+      } else {
+         working.extra_data.remove<extra_data_types::radius>(working);
+      }
    }
    #pragma endregion
    #pragma region Linked Refs
       this->models.linked_refs->exportData(working);
    #pragma endregion
    #pragma region Activate Parents
-      static_assert(false, "TODO: Activate Parents");
+      this->models.activate_parents->exportData(working);
+      {
+         using extra_data = extra_data_types::activate_parents;
+
+         bool parent_only = this->ui.flagOnlyAllowActivateViaParent->isChecked();
+         if (parent_only) {
+            auto* extra = working.extra_data.get_or_create<extra_data>();
+            extra->flags |= extra_data::flag::parent_activate_only;
+         } else {
+            if (auto* extra = working.extra_data.get<extra_data>())
+               extra->flags &= ~extra_data::flag::parent_activate_only;
+         }
+      }
    #pragma endregion
    #pragma region Enable Parent
-      static_assert(false, "TODO: Enable Parent");
+   {
+      using extra_data = extra_data_types::enable_state_parent;
+      auto* ref = this->ui.xEnableParentRef->ref();
+      if (ref) {
+         auto* extra = working.extra_data.get_or_create<extra_data>();
+         extra->ref.set(working, ref);
+         cobb::edit_bit(extra->flags, extra_data::flag::opposite, this->ui.xEnableParentOpposite->isChecked());
+         cobb::edit_bit(extra->flags, extra_data::flag::pop_in,   this->ui.xEnableParentPopIn->isChecked());
+      } else {
+         working.extra_data.remove<extra_data>(working);
+      }
+   }
    #pragma endregion
    #pragma region Lighting and Emittance
       #pragma region ExtraLightData
-         static_assert(false, "TODO");
+         if (base_type == dovah::form_type::light) {
+            const float radius = this->ui.xLightRadius->value();
+            const float fov    = this->ui.xLightFOV->value();
+            const float fade   = this->ui.xLightFade->value();
+            const float cap    = this->ui.xLightEndDistanceCap->value();
+            const float bias   = this->ui.xLightDepthBiasSpinbox->value();
+
+            bool any_changed = true;
+            {
+               auto loaded = _base_loaded_as_type<dovah::loaded_forms::Light>();
+               if (loaded) {
+                  any_changed = false;
+                  if (loaded->radius != radius
+                   || loaded->fade != fade
+                   || loaded->fov  != fov
+                  ) {
+                     any_changed = true;
+                  }
+               }
+            }
+            if (any_changed) {
+               auto* extra = working.extra_data.get_or_create<extra_data_types::light>();
+               extra->fade = fade;
+               extra->fov  = fov;
+               extra->end_distance_cap  = cap;
+               extra->shadow_depth_bias = bias;
+            } else {
+               working.extra_data.remove<extra_data_types::light>(working);
+            }
+
+            working.extra_data.get_or_create<extra_data_types::radius>()->value = radius;
+         }
       #pragma endregion
       #pragma region EmittanceSource
       {
@@ -1095,7 +1518,31 @@ void FormDialogObjectReference::_save_impl() {
       #pragma endregion
    #pragma endregion
    #pragma region Water Currents
-      static_assert(false, "TODO: Water Currents");
+      if (_can_have_water_currents()) {
+         cobb::vector3<float> vel_linear = {
+            this->ui.xWaterCurrentsVelLinearX->value(),
+            this->ui.xWaterCurrentsVelLinearY->value(),
+            this->ui.xWaterCurrentsVelLinearZ->value(),
+         };
+         cobb::vector3<float> vel_angular = {
+            this->ui.xWaterCurrentsVelAngularX->value(),
+            this->ui.xWaterCurrentsVelAngularY->value(),
+            this->ui.xWaterCurrentsVelAngularZ->value(),
+         };
+
+         if (base_form && base_form->formID == dovah::hardcoded_form_ids::WaterCurrentZoneMarker) {
+            auto* extra = working.extra_data.get_or_create<extra_data_types::water_current_zone_data>();
+            extra->velocity.linear  = vel_linear;
+            extra->velocity.angular = vel_angular;
+         } else {
+            auto* extra = working.extra_data.get_or_create<extra_data_types::water_data>();
+            if (extra->data.size() < 2) {
+               extra->data.resize(2);
+            }
+            extra->data[0].velocity = vel_linear;
+            extra->data[1].velocity = vel_angular;
+         }
+      }
    #pragma endregion
    #pragma region Rendering
       #pragma region Override multibound ref
@@ -1123,6 +1570,43 @@ void FormDialogObjectReference::_save_impl() {
    #pragma endregion
 }
 
+uint32_t FormDialogObjectReference::_get_hide_from_local_map_flags_mask() const {
+   auto* base = this->form->base_form.get_form_stub();
+   if (!base)
+      return 0;
+   switch (base->form_type) {
+      case dovah::form_type::door:
+         return loaded_form_type::form_flag::hide_from_local_map_a;
+      case dovah::form_type::activator:
+      case dovah::form_type::statik:
+      case dovah::form_type::tree:
+         return loaded_form_type::form_flag::hide_from_local_map_b;
+   }
+   return 0;
+}
+
+bool FormDialogObjectReference::_is_primitive() const noexcept {
+   dovah::form_stub* base_form = this->form->base_form.get_form_stub();
+   if (!base_form)
+      return false;
+
+   switch (base_form->form_type) {
+      case dovah::form_type::acoustic_space:
+      case dovah::form_type::sound:
+         return true;
+      case dovah::form_type::activator:
+         return this->form->extra_data.get<extra_data_types::primitive>() != nullptr;
+   }
+   switch (base_form->formID) {
+      case dovah::hardcoded_form_ids::CollisionMarker:
+      case dovah::hardcoded_form_ids::MultiBoundMarker:
+      case dovah::hardcoded_form_ids::PlaneMarker:
+      case dovah::hardcoded_form_ids::PortalMarker:
+      case dovah::hardcoded_form_ids::RoomMarker:
+         return true;
+   }
+   return false;
+}
 bool FormDialogObjectReference::_is_roombound() const noexcept {
    auto* base = this->form->base_form.get_form_stub();
    if (!base)
@@ -1210,7 +1694,36 @@ void FormDialogObjectReference::_update_ownership_rank_picker() {
    }
 }
 
-bool FormDialogObjectReference::_can_have_water_currents() const;
+bool FormDialogObjectReference::_can_be_a_patrol_marker() const {
+   dovah::form_stub* base_form = this->form->base_form.get_form_stub();
+   if (!base_form)
+      return false;
+   switch (base_form->form_type) {
+      case dovah::form_type::furniture:
+      case dovah::form_type::idle_marker:
+         return true;
+   }
+   switch (base_form->formID) {
+      case dovah::hardcoded_form_ids::XMarker:
+      case dovah::hardcoded_form_ids::XMarkerHeading:
+         return true;
+   }
+   return false;
+}
+bool FormDialogObjectReference::_can_change_primitive_shape() const {
+   dovah::form_stub* base_form = this->form->base_form.get_form_stub();
+   if (!base_form)
+      return false;
+   return base_form->form_type == dovah::form_type::activator;
+}
+bool FormDialogObjectReference::_can_have_attach_ref() const;
+bool FormDialogObjectReference::_can_have_water_currents() const {
+   dovah::form_stub* base_form = this->form->base_form.get_form_stub();
+   if (!base_form)
+      return false;
+
+   return base_form->test_record_flags(1 << 19);
+}
 bool FormDialogObjectReference::_is_legal_teleport_destination(dovah::form_stub& ref) const {
    auto* base = dovah::form_stub_helpers::get_base_form(&ref);
    if (!base || base->form_type != dovah::form_type::door) {

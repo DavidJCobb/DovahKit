@@ -17,44 +17,52 @@
    <property name="horizontalSpacing">
     <number>12</number>
    </property>
-   <item row="2" column="0" colspan="2">
-    <layout class="QHBoxLayout" name="buttonsLayout">
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="buttonOK">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
+   <item row="0" column="0" colspan="2">
+    <layout class="QGridLayout" name="topLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_11">
        <property name="text">
-        <string>OK</string>
+        <string>Ref Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="QPushButton" name="buttonCancel">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_12">
        <property name="text">
-        <string>Cancel</string>
+        <string>Base Form:</string>
+       </property>
+       <property name="buddy">
+        <cstring>baseForm</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="baseForm">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QPushButton" name="buttonEditBaseForm">
+       <property name="text">
+        <string>Edit Base...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="formID">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
        </property>
       </widget>
      </item>
@@ -900,6 +908,250 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="pagePrimitive">
+      <layout class="QGridLayout" name="gridLayout_34">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item row="0" column="0" colspan="2">
+        <layout class="QGridLayout" name="gridLayout_7">
+         <item row="0" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QLabel" name="xPrimitiveFunction">
+             <property name="text">
+              <string>???</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="xPrimitivePlayerActivation">
+             <property name="whatsThis">
+              <string>Only applicable to trigger activators. If checked, the player will get an activation prompt when they aim at the trigger, displaying the name of the Activator base form.</string>
+             </property>
+             <property name="text">
+              <string>Player Activation</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_51">
+           <property name="text">
+            <string>Shape:</string>
+           </property>
+           <property name="buddy">
+            <cstring>xPrimitiveShape</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="xPrimitiveShape"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_52">
+           <property name="text">
+            <string>Collision Layer:</string>
+           </property>
+           <property name="buddy">
+            <cstring>xPrimitiveCollLayer</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_50">
+           <property name="text">
+            <string>Function:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_53">
+           <property name="text">
+            <string>Color:</string>
+           </property>
+           <property name="buddy">
+            <cstring>xPrimitiveColor</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1" alignment="Qt::AlignLeft">
+          <widget class="DKColorPickerButton" name="xPrimitiveColor"/>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="xPrimitiveCollLayer">
+           <property name="whatsThis">
+            <string>&lt;p&gt;For Collision Objects, this controls what types of objects can collide with the primitive.&lt;/p&gt;
+&lt;p&gt;For Triggers, this controls what types of objects send trigger events when they enter and exit the primitive.&lt;/p&gt;</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="whatsThis">
+          <string>The primitive's centerpoint. This is the same as the ref's position.</string>
+         </property>
+         <property name="title">
+          <string>Origin</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_35" columnstretch="0,1">
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_57">
+            <property name="text">
+             <string>Z:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xPrimitiveCenterZ</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_56">
+            <property name="text">
+             <string>Y:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xPrimitiveCenterY</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_54">
+            <property name="text">
+             <string>X:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xPrimitiveCenterX</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="xPrimitiveCenterX">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="xPrimitiveCenterY">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="xPrimitiveCenterZ">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="whatsThis">
+          <string>The primitive's size along each axis.</string>
+         </property>
+         <property name="title">
+          <string>Bounds</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_36" columnstretch="0,1">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_55">
+            <property name="text">
+             <string>X:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xPrimitiveSizeX</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_58">
+            <property name="text">
+             <string>Y:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xPrimitiveSizeY</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_59">
+            <property name="text">
+             <string>Z:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xPrimitiveSizeZ</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="xPrimitiveSizeX">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="xPrimitiveSizeY">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="xPrimitiveSizeZ">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <spacer name="verticalSpacer_14">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>264</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="pageOwnership">
       <layout class="QGridLayout" name="gridLayout_8">
        <property name="leftMargin">
@@ -1234,19 +1486,6 @@
           <item row="1" column="1">
            <widget class="QComboBox" name="xMapMarkerType"/>
           </item>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="xMapMarkerName"/>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_37">
-            <property name="text">
-             <string>Icon:</string>
-            </property>
-            <property name="buddy">
-             <cstring>xMapMarkerType</cstring>
-            </property>
-           </widget>
-          </item>
           <item row="0" column="0">
            <widget class="QLabel" name="label_36">
             <property name="text">
@@ -1257,7 +1496,7 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="0" colspan="2">
+          <item row="3" column="0" colspan="2">
            <layout class="QGridLayout" name="gridLayout_28">
             <item row="0" column="0">
              <widget class="QCheckBox" name="xMapMarkerVisible">
@@ -1281,6 +1520,36 @@
              </widget>
             </item>
            </layout>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="xMapMarkerName"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_37">
+            <property name="text">
+             <string>Icon:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xMapMarkerType</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>Radius:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xMapMarkerRadius</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1" alignment="Qt::AlignLeft">
+           <widget class="QDoubleSpinBox" name="xMapMarkerRadius">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -1496,7 +1765,7 @@
         <number>0</number>
        </property>
        <item row="4" column="0">
-        <widget class="QGroupBox" name="groupBox_2">
+        <widget class="QGroupBox" name="currentActivateParentGroupbox">
          <property name="title">
           <string>Selected entry</string>
          </property>
@@ -1675,160 +1944,6 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QGroupBox" name="xLightGroupbox">
-         <property name="title">
-          <string>Light properties</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_19">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_28">
-            <property name="text">
-             <string>FOV:</string>
-            </property>
-            <property name="buddy">
-             <cstring>xLightFOV</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_29">
-            <property name="text">
-             <string>Fade:</string>
-            </property>
-            <property name="buddy">
-             <cstring>xLightFade</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_30">
-            <property name="text">
-             <string>End Distance Cap:</string>
-            </property>
-            <property name="buddy">
-             <cstring>xLightEndDistanceCap</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QDoubleSpinBox" name="xLightFOV">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QDoubleSpinBox" name="xLightEndDistanceCap">
-            <property name="whatsThis">
-             <string>This option limits the distance that a &quot;spotlight&quot;-type light extends over.</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QDoubleSpinBox" name="xLightFade">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="2" colspan="2">
-           <widget class="QCheckBox" name="xLightEndDistanceSameAsRadius">
-            <property name="text">
-             <string>Same as radius</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1" colspan="3">
-           <layout class="QHBoxLayout" name="horizontalLayout_7">
-            <item>
-             <widget class="DKFloatSlider" name="xLightDepthBiasSlider">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="xLightDepthBiasSpinbox">
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_31">
-            <property name="text">
-             <string>Shadow Depth Bias:</string>
-            </property>
-            <property name="buddy">
-             <cstring>xLightDepthBiasSlider</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="4">
-           <widget class="QPushButton" name="xLightDepthBiasReset">
-            <property name="text">
-             <string>Reset</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0" colspan="5">
-           <layout class="QGridLayout" name="gridLayout_20">
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="flagCastShadows">
-              <property name="whatsThis">
-               <string>Settings on a Light base form determine whether any given kind of light is theoretically capable of casting shadows. You can selectively disable shadows for specific refs as well.</string>
-              </property>
-              <property name="text">
-               <string>Can cast shadows</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
-             <widget class="QCheckBox" name="flagDoesntLightLandscape">
-              <property name="text">
-               <string>Doesn't light landscape</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QCheckBox" name="flagNeverFades">
-              <property name="text">
-               <string>Never fades</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QCheckBox" name="flagDoesntLightWater">
-              <property name="text">
-               <string>Doesn't light water</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item row="0" column="4">
-           <widget class="QPushButton" name="xLightFOVReset">
-            <property name="text">
-             <string>Reset</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="4">
-           <widget class="QPushButton" name="xLightFadeReset">
-            <property name="text">
-             <string>Reset</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
         <widget class="QGroupBox" name="xEmitGroupbox">
          <property name="whatsThis">
           <string>Placed lights, and refs whose models have emissive bits on them, can be made to mimic the lighting parameters of a Light form (&quot;Interior Light&quot;) or a Region form (&quot;Exterior Light&quot;). In the latter case, the light color and intensity will vary based on the time of day.</string>
@@ -1863,6 +1978,184 @@
           </item>
           <item row="2" column="1">
            <widget class="DKFormPicker" name="xEmitREGN"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="xLightGroupbox">
+         <property name="title">
+          <string>Light properties</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_19">
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_31">
+            <property name="text">
+             <string>Shadow Depth Bias:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xLightDepthBiasSlider</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="xLightFOV">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="xLightFade">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2" colspan="2">
+           <widget class="QCheckBox" name="xLightEndDistanceSameAsRadius">
+            <property name="text">
+             <string>Same as radius</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QDoubleSpinBox" name="xLightEndDistanceCap">
+            <property name="whatsThis">
+             <string>This option limits the distance that a &quot;spotlight&quot;-type light extends over.</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="4">
+           <widget class="QPushButton" name="xLightDepthBiasReset">
+            <property name="text">
+             <string>Reset</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1" colspan="3">
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <item>
+             <widget class="DKFloatSlider" name="xLightDepthBiasSlider">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDoubleSpinBox" name="xLightDepthBiasSpinbox">
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="5" column="0" colspan="5">
+           <layout class="QGridLayout" name="gridLayout_20">
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="flagCastShadows">
+              <property name="whatsThis">
+               <string>Settings on a Light base form determine whether any given kind of light is theoretically capable of casting shadows. You can selectively disable shadows for specific refs as well.</string>
+              </property>
+              <property name="text">
+               <string>Can cast shadows</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QCheckBox" name="flagDoesntLightLandscape">
+              <property name="text">
+               <string>Doesn't light landscape</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QCheckBox" name="flagNeverFades">
+              <property name="text">
+               <string>Never fades</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QCheckBox" name="flagDoesntLightWater">
+              <property name="text">
+               <string>Doesn't light water</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="1" column="4">
+           <widget class="QPushButton" name="xLightFadeReset">
+            <property name="text">
+             <string>Reset</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_30">
+            <property name="text">
+             <string>End Distance Cap:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xLightEndDistanceCap</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_29">
+            <property name="text">
+             <string>Fade:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xLightFade</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_28">
+            <property name="text">
+             <string>FOV:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xLightFOV</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QPushButton" name="xLightFOVReset">
+            <property name="text">
+             <string>Reset</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_49">
+            <property name="text">
+             <string>Radius:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xLightRadius</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="xLightRadius">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="4">
+           <widget class="QPushButton" name="xLightRadiusReset">
+            <property name="text">
+             <string>Reset</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -2150,6 +2443,49 @@
      </widget>
     </widget>
    </item>
+   <item row="2" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
    <item row="1" column="0">
     <widget class="QListWidget" name="nav">
      <property name="sizePolicy">
@@ -2158,138 +2494,7 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <item>
-      <property name="text">
-       <string>Basic Properties</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Extra</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Ownership</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Item Options</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Lock</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Teleport</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Map Marker</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Reflected By</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Linked Refs</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Linked From</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Activate Parents</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Enable Parent</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Lighting and Emittance</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Water Currents</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Rendering</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Scripts</string>
-      </property>
-     </item>
     </widget>
-   </item>
-   <item row="0" column="0" colspan="2">
-    <layout class="QGridLayout" name="topLayout">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_11">
-       <property name="text">
-        <string>Ref Editor ID:</string>
-       </property>
-       <property name="buddy">
-        <cstring>editorID</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="editorID"/>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_12">
-       <property name="text">
-        <string>Base Form:</string>
-       </property>
-       <property name="buddy">
-        <cstring>baseForm</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="baseForm">
-       <property name="readOnly">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="2">
-      <widget class="QPushButton" name="buttonEditBaseForm">
-       <property name="text">
-        <string>Edit Base...</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="2">
-      <widget class="QLabel" name="formID">
-       <property name="text">
-        <string/>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-    </layout>
    </item>
   </layout>
  </widget>
@@ -2298,6 +2503,11 @@
    <class>DKFloatSlider</class>
    <extends>QWidget</extends>
    <header>widgets/DKFloatSlider.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKColorPickerButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKColorPickerButton.h</header>
   </customwidget>
   <customwidget>
    <class>DKFormPicker</class>
@@ -2374,6 +2584,16 @@
   <tabstop>flagIsSkyMarker</tabstop>
   <tabstop>xTimeLeft</tabstop>
   <tabstop>xTimeLeftReset</tabstop>
+  <tabstop>xPrimitivePlayerActivation</tabstop>
+  <tabstop>xPrimitiveShape</tabstop>
+  <tabstop>xPrimitiveCollLayer</tabstop>
+  <tabstop>xPrimitiveColor</tabstop>
+  <tabstop>xPrimitiveCenterX</tabstop>
+  <tabstop>xPrimitiveCenterY</tabstop>
+  <tabstop>xPrimitiveCenterZ</tabstop>
+  <tabstop>xPrimitiveSizeX</tabstop>
+  <tabstop>xPrimitiveSizeY</tabstop>
+  <tabstop>xPrimitiveSizeZ</tabstop>
   <tabstop>owner</tabstop>
   <tabstop>ownerRank</tabstop>
   <tabstop>xLeveledItemBase</tabstop>
@@ -2390,6 +2610,7 @@
   <tabstop>xMapMarkerGroupbox</tabstop>
   <tabstop>xMapMarkerName</tabstop>
   <tabstop>xMapMarkerType</tabstop>
+  <tabstop>xMapMarkerRadius</tabstop>
   <tabstop>xMapMarkerVisible</tabstop>
   <tabstop>xMapMarkerCanTravel</tabstop>
   <tabstop>xMapMarkerShowAllHidden</tabstop>
@@ -2409,10 +2630,17 @@
   <tabstop>xEnableParentRef</tabstop>
   <tabstop>xEnableParentOpposite</tabstop>
   <tabstop>xEnableParentPopIn</tabstop>
+  <tabstop>xEmitTypeNONE</tabstop>
+  <tabstop>xEmitTypeLIGH</tabstop>
+  <tabstop>xEmitLIGH</tabstop>
+  <tabstop>xEmitTypeREGN</tabstop>
+  <tabstop>xEmitREGN</tabstop>
   <tabstop>xLightFOV</tabstop>
   <tabstop>xLightFOVReset</tabstop>
   <tabstop>xLightFade</tabstop>
   <tabstop>xLightFadeReset</tabstop>
+  <tabstop>xLightRadius</tabstop>
+  <tabstop>xLightRadiusReset</tabstop>
   <tabstop>xLightEndDistanceCap</tabstop>
   <tabstop>xLightEndDistanceSameAsRadius</tabstop>
   <tabstop>xLightDepthBiasSlider</tabstop>
@@ -2422,11 +2650,6 @@
   <tabstop>flagDoesntLightLandscape</tabstop>
   <tabstop>flagNeverFades</tabstop>
   <tabstop>flagDoesntLightWater</tabstop>
-  <tabstop>xEmitTypeNONE</tabstop>
-  <tabstop>xEmitTypeLIGH</tabstop>
-  <tabstop>xEmitLIGH</tabstop>
-  <tabstop>xEmitTypeREGN</tabstop>
-  <tabstop>xEmitREGN</tabstop>
   <tabstop>xWaterCurrentsVelLinear</tabstop>
   <tabstop>xWaterCurrentsVelLinearX</tabstop>
   <tabstop>xWaterCurrentsVelLinearY</tabstop>

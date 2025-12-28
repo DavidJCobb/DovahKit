@@ -4,8 +4,10 @@
 #include <QDialog>
 #include "helpers/vector3.h"
 #include "./_base.h"
+#include "dovah/data/collision_layers.h"
 #include "dovah/forms/ObjectReference.h"
 #include "ui_reference.h"
+class ObjectReferenceActivateParentsModel;
 class ObjectReferenceLinkedRefsModel;
 
 class FormDialogObjectReference :
@@ -21,6 +23,9 @@ class FormDialogObjectReference :
       Ui::FormDialogObjectReference ui;
       struct {
          struct {
+            dovah::collision_layer prior_layer = dovah::collision_layer::null;
+         } primitive;
+         struct {
             // Used so we know if we need to recalculate the teleport marker 
             // position on save.
             bool ever_changed = false;
@@ -30,7 +35,8 @@ class FormDialogObjectReference :
          } teleport;
       } state;
       struct {
-         ObjectReferenceLinkedRefsModel* linked_refs = nullptr;
+         ObjectReferenceActivateParentsModel* activate_parents = nullptr;
+         ObjectReferenceLinkedRefsModel*      linked_refs      = nullptr;
       } models;
       
       virtual void _load_impl() override;
@@ -51,6 +57,9 @@ class FormDialogObjectReference :
          return {};
       }
 
+      uint32_t _get_hide_from_local_map_flags_mask() const;
+
+      bool _is_primitive() const noexcept;
       bool _is_roombound() const noexcept;
 
       bool _get_ignored_by_sandbox() const;
@@ -59,6 +68,9 @@ class FormDialogObjectReference :
       void _reset_time_left();
       void _update_ownership_rank_picker();
 
+      bool _can_be_a_patrol_marker() const;
+      bool _can_change_primitive_shape() const;
+      bool _can_have_attach_ref() const;
       bool _can_have_water_currents() const;
       bool _is_legal_teleport_destination(dovah::form_stub&) const;
       static std::pair<cobb::vector3<float>, cobb::vector3<float>> _calc_teleport_marker_position(const loaded_form_type& in_front_of);
