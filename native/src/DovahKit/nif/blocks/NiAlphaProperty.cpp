@@ -25,6 +25,7 @@ namespace nifDK::block_types {
       this->testing.enabled      = (data & (1 << 9)) != 0;
       this->testing.mode         = (test_mode)((data >> 10) & 0b111);
       this->testing.no_sorter    = (data & (1 << 13)) != 0;
+      this->testing.clone_unique = (data & (1 << 14)) != 0;
       this->testing.configurable = (data & (1 << 15)) != 0;
    }
 }

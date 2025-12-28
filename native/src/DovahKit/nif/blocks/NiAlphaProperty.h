@@ -37,6 +37,7 @@ namespace nifDK::block_types {
          } blending;
          struct {
             bool      enabled      = false;
+            bool      clone_unique = false;
             bool      configurable = false; // control whether a ref's ExtraAlphaCutoff can override the threshold
             test_mode mode         = test_mode::less;
             uint8_t   threshold    = 128;
