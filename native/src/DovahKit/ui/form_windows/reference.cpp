@@ -55,6 +55,7 @@ namespace {
    #include "dovah/forms/components/extra_data/types/m/map_marker.h"
    #include "dovah/forms/components/extra_data/types/m/multibound_ref.h"
    #include "dovah/forms/components/extra_data/types/o/ownership.h"
+   #include "dovah/forms/components/extra_data/types/p/patrol_ref_data.h"
    #include "dovah/forms/components/extra_data/types/p/primitive.h"
    #include "dovah/forms/components/extra_data/types/r/radius.h"
    #include "dovah/forms/components/extra_data/types/r/rank.h"
@@ -268,6 +269,9 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
          this->ui.buttonTeleportViewMarker->setEnabled(false);
       }
       this->ui.xTeleportName->setAllowedFormType(dovah::form_type::message);
+   #pragma endregion
+   #pragma region Patrol Data
+      ui::set_unsigned_range<float>(this->ui.xPatrolIdleTime);
    #pragma endregion
    #pragma region Reflected By
       this->ui.reflectedBy->setReadOnly(true);
@@ -557,13 +561,10 @@ void FormDialogObjectReference::_load_impl() {
          add_page(tr("Item Properties", "page names"), this->ui.pageItem);
       }
       if (_can_be_a_patrol_marker()) {
-         static_assert(false, "TODO: Add tab: Patrol Data");
+         add_page(tr("Patrol Data", "page names"), this->ui.pagePatrolData);
       }
-      switch (base_type) {
-         case dovah::form_type::container:
-         case dovah::form_type::door:
-            add_page(tr("Lock", "page names"), this->ui.pageLock);
-            break;
+      if (_can_be_locked()) {
+         add_page(tr("Lock", "page names"), this->ui.pageLock);
       }
       if (base_type == dovah::form_type::door) {
          add_page(tr("Teleport", "page names"), this->ui.pageTeleport);
@@ -676,7 +677,7 @@ void FormDialogObjectReference::_load_impl() {
                      widget->setEnabled(false);
                      break;
                   default:
-                     bind_typed_checkbox.operator()<dovah::form_type::light, record_flag::is_full_lod>(widget);
+                     ui::bind(widget, record_flags(), record_flag::is_full_lod);
                      break;
                }
             }
@@ -716,15 +717,19 @@ void FormDialogObjectReference::_load_impl() {
             ui::bind(this->ui.flagReflectedByAutoWater, record_flags(), record_flag::reflected_by_auto_water);
             {
                auto* widget = this->ui.flagRespawns;
-               switch (base_type) {
-                  case dovah::form_type::actor_base:
-                  case dovah::form_type::container:
-                     widget->setEnabled(false);
-                     break;
-                  default:
-                     widget->setEnabled(true);
-                     ui::bind_inverse(widget, record_flags(), record_flag::no_respawn);
-                     break;
+               if (_can_override_navmesh_gen()) {
+                  widget->setEnabled(false);
+               } else {
+                  switch (base_type) {
+                     case dovah::form_type::actor_base:
+                     case dovah::form_type::container:
+                        widget->setEnabled(false);
+                        break;
+                     default:
+                        widget->setEnabled(true);
+                        ui::bind_inverse(widget, record_flags(), record_flag::no_respawn);
+                        break;
+                  }
                }
             }
             bind_typed_checkbox.operator()<dovah::form_type::actor_base, record_flag::starts_dead>(this->ui.flagStartsDead);
@@ -822,6 +827,50 @@ void FormDialogObjectReference::_load_impl() {
             bind_fundamental_extra_data<extra_data_types::time_left>(working, *this->ui.xTimeLeft);
          }
       }
+      //
+      // Not extra-data but I don't have a better place to stash it:
+      //
+      {
+         QGroupBox* groupbox = this->ui.navmeshGenOverride;
+         auto*      navmesh  = this->ui.navmeshGen;
+         if (_can_override_navmesh_gen()) {
+            using ui_value_type = DKNavmeshGenerationImportOptionPicker::Value;
+
+            constexpr const auto all_navmesh_flags = (
+               loaded_form_type::form_flag::navmesh_generation_obb |
+               loaded_form_type::form_flag::navmesh_generation_filter |
+               loaded_form_type::form_flag::navmesh_generation_ground
+            );
+            constexpr const auto flags_for_collision_geo = (
+               loaded_form_type::form_flag::navmesh_generation_filter |
+               loaded_form_type::form_flag::navmesh_generation_ground
+            );
+
+            groupbox->setEnabled(true);
+            if (record_flags() & all_navmesh_flags) {
+               groupbox->setChecked(true);
+               uint32_t mask = record_flags() & all_navmesh_flags;
+               if (mask == flags_for_collision_geo) {
+                  navmesh->setValue(ui_value_type::CollisionGeometry);
+               } else {
+                  navmesh->setValueByMask(mask);
+               }
+            } else {
+               groupbox->setChecked(false);
+            }
+
+            QObject::connect(navmesh, &DKNavmeshGenerationImportOptionPicker::valueChanged, this, [this](ui_value_type v) {
+               record_flags() &= ~all_navmesh_flags;
+               if (v == ui_value_type::CollisionGeometry)
+                  record_flags() |= flags_for_collision_geo;
+               else
+                  record_flags() |= (uint32_t)v;
+            });
+         } else {
+            groupbox->setEnabled(false);
+            groupbox->setChecked(false);
+         }
+      }
    #pragma endregion
    #pragma region Ownership
    {
@@ -874,141 +923,35 @@ void FormDialogObjectReference::_load_impl() {
    #pragma endregion
    #pragma region Primitive
       if (is_a_primitive) {
-         bool is_typically_flat = false;
-
-         this->ui.xPrimitiveFunction->setText(tr("Static", "primitive function"));
-         switch (base_type) {
-            case dovah::form_type::acoustic_space:
-               this->ui.xPrimitiveFunction->setText(tr("Acoustic Space", "primitive function"));
-               break;
-            case dovah::form_type::sound:
-               this->ui.xPrimitiveFunction->setText(tr("Sound Emitter", "primitive function"));
-               break;
-            default:
-               if (!base_form)
-                  break;
-               if (base_type == dovah::form_type::activator) {
-                  this->ui.xPrimitiveFunction->setText(tr("Trigger", "primitive function"));
-                  break;
-               }
-               switch (base_form->formID) {
-                  case dovah::hardcoded_form_ids::CollisionMarker:
-                     this->ui.xPrimitiveFunction->setText(tr("Collision Object", "primitive function"));
-                     break;
-                  case dovah::hardcoded_form_ids::MultiBoundMarker:
-                     this->ui.xPrimitiveFunction->setText(tr("Multibound", "primitive function"));
-                     break;
-                  case dovah::hardcoded_form_ids::PlaneMarker:
-                     is_typically_flat = true;
-                     this->ui.xPrimitiveFunction->setText(tr("Occlusion Plane", "primitive function"));
-                     break;
-                  case dovah::hardcoded_form_ids::PortalMarker:
-                     is_typically_flat = true;
-                     this->ui.xPrimitiveFunction->setText(tr("Portal", "primitive function"));
-                     break;
-                  case dovah::hardcoded_form_ids::RoomMarker:
-                     {
-                        auto* extra = working.extra_data.get<extra_data_types::room_ref_data>();
-                        if (extra && extra->is_master) {
-                           this->ui.xPrimitiveFunction->setText(tr("Room (master)", "primitive function"));
-                        } else {
-                           // This is Bethesda's terminology. Can we figure out a better word? 
-                           // When does the CK even decide to make a roombound a "master?"
-                           this->ui.xPrimitiveFunction->setText(tr("Room (slave)", "primitive function"));
-                        }
-                     }
-                     break;
-               }
-               break;
+         for (const auto& pair : std::array{
+            std::pair{ this->ui.xPrimitiveCenterX, this->ui.positionX },
+            std::pair{ this->ui.xPrimitiveCenterY, this->ui.positionY },
+            std::pair{ this->ui.xPrimitiveCenterZ, this->ui.positionZ },
+         }) {
+            //
+            // Have the Primitive Origin and World Coordinates Position spinboxes mirror each other.
+            //
+            auto* prm_coord = pair.first;
+            auto* ref_coord = pair.second;
+            QObject::connect(ref_coord, qOverload<double>(&QDoubleSpinBox::valueChanged), prm_coord, [prm_coord](double v) {
+               const auto blocker = QSignalBlocker(prm_coord);
+               prm_coord->setValue(v);
+            });
+            QObject::connect(prm_coord, qOverload<double>(&QDoubleSpinBox::valueChanged), ref_coord, [ref_coord](double v) {
+               const auto blocker = QSignalBlocker(ref_coord);
+               ref_coord->setValue(v);
+            });
          }
-
-         QObject::connect(this->ui.xPrimitiveCenterX, qOverload<double>(&QDoubleSpinBox::valueChanged), this->ui.positionX, &QDoubleSpinBox::setValue);
-         QObject::connect(this->ui.xPrimitiveCenterY, qOverload<double>(&QDoubleSpinBox::valueChanged), this->ui.positionY, &QDoubleSpinBox::setValue);
-         QObject::connect(this->ui.xPrimitiveCenterZ, qOverload<double>(&QDoubleSpinBox::valueChanged), this->ui.positionZ, &QDoubleSpinBox::setValue);
-         extra_data_types::primitive* extra = nullptr;
-         if (extra = working.extra_data.get<extra_data_types::primitive>()) {
-            this->ui.xPrimitiveSizeX->setValue(extra->bounds.x);
-            this->ui.xPrimitiveSizeY->setValue(extra->bounds.y);
-            this->ui.xPrimitiveSizeZ->setValue(extra->bounds.z);
-            static_assert(false, "TODO: If this is also a multibound, sync with the multibound half-extents. Warn if they and XPRM don't match.");
-         } else {
-            extra = working.extra_data.get_or_create<extra_data_types::primitive>();
-            if (is_typically_flat) {
-               extra->shape = extra_data_types::primitive::shape::portal_box;
-            } else {
-               extra->shape = extra_data_types::primitive::shape::box;
-            }
-            if (base_form) {
-               extra->color = dovah::utils::default_primitive_color_for_base_form(*base_form);
-            }
-            static_assert(false, "TODO: If this is also a multibound, sync with the multibound half-extents.");
-         }
-         this->ui.xPrimitiveColor->setColor(QColor::fromRgbF(extra->color.r, extra->color.g, extra->color.b));
-         this->ui.xPrimitiveShape->setCurrentIndex(this->ui.xPrimitiveShape->findData((int)extra->shape));
-         this->ui.xPrimitiveShape->setEnabled(_can_change_primitive_shape());
-         //
-         // The "Player Activation" checkbox just changes the layer type to L_NONCOLLIDABLE. 
-         // If the base form is an Activator, then this enables an activation prompt on the 
-         // primitive.
-         //
-         {
-            QComboBox* widget = this->ui.xPrimitiveCollLayer;
-            if (auto* extra = working.extra_data.get<extra_data_types::collision_data>()) {
-               auto i = widget->findData((int)extra->value);
-               if (i < 0)
-                  i = widget->findData((int)dovah::collision_layer::unidentified);
-               widget->setCurrentIndex(i);
-            } else {
-               widget->setCurrentIndex(widget->findData((int)dovah::collision_layer::null));
-            }
-
-            auto _update_layer = [this, widget]() {
-               auto layer = (dovah::collision_layer)widget->currentData().toInt();
-               if (layer == layer_for_player_activate_primitives) {
-                  auto* base_form = this->form->base_form.get_form_stub();
-                  if (base_form && base_form->form_type == dovah::form_type::activator) {
-                     this->ui.xPrimitivePlayerActivation->setChecked(true);
-                  }
-               } else {
-                  this->state.primitive.prior_layer = layer;
-               }
-            };
-            _update_layer();
-            QObject::connect(widget, qOverload<int>(&QComboBox::currentIndexChanged), this, _update_layer);
-         }
-         this->ui.xPrimitivePlayerActivation->setEnabled(base_type == dovah::form_type::activator);
-         QObject::connect(this->ui.xPrimitivePlayerActivation, &QCheckBox::toggled, this, [this](bool checked) {
-            QComboBox* widget  = this->ui.xPrimitiveCollLayer;
-            const auto blocker = QSignalBlocker(widget);
-
-            dovah::collision_layer layer;
-            if (checked) {
-               layer = layer_for_player_activate_primitives;
-            } else {
-               layer = this->state.primitive.prior_layer;
-            }
-            widget->setCurrentIndex(widget->findData((int)layer));
-         });
+         QObject::connect(this->ui.xPrimitiveCollLayer, qOverload<int>(&QComboBox::currentIndexChanged), this, &FormDialogObjectReference::_on_primitive_collision_layer_changed);
+         QObject::connect(this->ui.xPrimitivePlayerActivation, &QCheckBox::toggled, this, &FormDialogObjectReference::_on_primitive_player_activation_toggled);
+         this->_load_primitive();
       }
    #pragma endregion
    #pragma region Item Options
       bind_single_form_extra_data<extra_data_types::leveled_item_base>(working, *this->ui.xLeveledItemBase);
       bind_single_ref_extra_data<extra_data_types::spawn_container>(working, *this->ui.xSpawnContainer);
    #pragma endregion
-   #pragma region Lock
-   {
-      using extra_data = extra_data_types::lock;
-      auto* enable = this->ui.xLockGroupbox;
-      if (auto* extra = working.extra_data.get<extra_data>()) {
-         enable->setChecked(true);
-         this->ui.xLockKey->setFormStub(extra->key.get_form_stub());
-         this->ui.xLockLevel->setCurrentIndex(this->ui.xLockLevel->findData((int)extra->level));
-         this->ui.xLockIsLeveled->setChecked(extra->flags & extra_data::flag::leveled);
-      } else {
-         enable->setChecked(false);
-      }
-   }
-   #pragma endregion
+   _load_lock();
    #pragma region Teleport
       {
          using extra_data = extra_data_types::teleport;
@@ -1060,6 +1003,7 @@ void FormDialogObjectReference::_load_impl() {
       }
       bind_single_form_extra_data<extra_data_types::teleport_name> (working, *this->ui.xTeleportName);
    #pragma endregion
+   _load_patrol();
    #pragma region Map Marker
    {
       using extra_data = extra_data_types::map_marker;
@@ -1287,50 +1231,8 @@ void FormDialogObjectReference::_save_impl() {
       }
    }
    
-   #pragma region Primitive
-      if (_is_primitive()) {
-         auto* extra_prim = working.extra_data.get_or_create<extra_data_types::primitive>();
-         extra_prim->bounds = {
-            this->ui.xPrimitiveSizeX->value(),
-            this->ui.xPrimitiveSizeY->value(),
-            this->ui.xPrimitiveSizeZ->value(),
-         };
-         {
-            auto color = this->ui.xPrimitiveColor->color();
-            extra_prim->color = {
-               .r = (float)color.redF(),
-               .g = (float)color.greenF(),
-               .b = (float)color.blueF(),
-               .a = extra_prim->color.a,
-            };
-         }
-         if (_can_change_primitive_shape()) {
-            extra_prim->shape = (enum extra_data_types::primitive::shape) this->ui.xPrimitiveShape->currentData().toInt();
-         }
-
-         auto layer = (dovah::collision_layer) this->ui.xPrimitiveCollLayer->currentData().toInt();
-         if (layer == dovah::collision_layer::unidentified) {
-            working.extra_data.remove<extra_data_types::collision_data>(working);
-         } else {
-            working.extra_data.get_or_create<extra_data_types::collision_data>()->set_layer_id(layer);
-         }
-
-         static_assert(false, "TODO: If this is also a multibound, sync with the multibound half-extents.");
-      }
-   #pragma endregion
-   #pragma region Lock
-   {
-      using extra_data = extra_data_types::lock;
-      if (this->ui.xLockGroupbox->isChecked()) {
-         working.extra_data.remove<extra_data>(working);
-      } else {
-         auto* extra = working.extra_data.get_or_create<extra_data>();
-         extra->key.set(working, this->ui.xLockKey->formStub());
-         extra->level = this->ui.xLockLevel->currentData().toInt();
-         cobb::edit_bit(extra->flags, extra_data::flag::leveled, this->ui.xLockIsLeveled->isChecked());
-      }
-   }
-   #pragma endregion
+   _save_primitive();
+   _save_lock();
    #pragma region Teleport
    {
       using extra_data = extra_data_types::teleport;
@@ -1411,6 +1313,7 @@ void FormDialogObjectReference::_save_impl() {
       }
    }
    #pragma endregion
+   _save_patrol();
    #pragma region Map Marker
    {
       using extra_data = extra_data_types::map_marker;
@@ -1585,24 +1488,301 @@ uint32_t FormDialogObjectReference::_get_hide_from_local_map_flags_mask() const 
    return 0;
 }
 
-bool FormDialogObjectReference::_is_primitive() const noexcept {
+#pragma region Lock
+   bool FormDialogObjectReference::_can_be_locked() const noexcept {
+      auto* base_form = this->form->base_form.get_form_stub();
+      if (!base_form)
+         return false;
+      switch (base_form->form_type) {
+         case dovah::form_type::container:
+         case dovah::form_type::door:
+            return true;
+      }
+      return false;
+   }
+   void FormDialogObjectReference::_load_lock() {
+      using extra_data = extra_data_types::lock;
+      auto& working    = *this->form;
+      if (this->ui.xLockGroupbox->isChecked()) {
+         working.extra_data.remove<extra_data>(working);
+      } else {
+         auto* extra = working.extra_data.get_or_create<extra_data>();
+         extra->key.set(working, this->ui.xLockKey->formStub());
+         extra->level = this->ui.xLockLevel->currentData().toInt();
+         cobb::edit_bit(extra->flags, extra_data::flag::leveled, this->ui.xLockIsLeveled->isChecked());
+      }
+   }
+   void FormDialogObjectReference::_save_lock() {
+      using extra_data = extra_data_types::lock;
+      auto& working    = *this->form;
+      if (this->ui.xLockGroupbox->isChecked()) {
+         working.extra_data.remove<extra_data>(working);
+      } else {
+         auto* extra = working.extra_data.get_or_create<extra_data>();
+         extra->key.set(working, this->ui.xLockKey->formStub());
+         extra->level = this->ui.xLockLevel->currentData().toInt();
+         cobb::edit_bit(extra->flags, extra_data::flag::leveled, this->ui.xLockIsLeveled->isChecked());
+      }
+   }
+#pragma endregion
+#pragma region Patrol
+   bool FormDialogObjectReference::_can_be_a_patrol_marker() const {
+      dovah::form_stub* base_form = this->form->base_form.get_form_stub();
+      if (!base_form)
+         return false;
+      switch (base_form->form_type) {
+         case dovah::form_type::furniture:
+         case dovah::form_type::idle_marker:
+            return true;
+      }
+      switch (base_form->formID) {
+         case dovah::hardcoded_form_ids::XMarker:
+         case dovah::hardcoded_form_ids::XMarkerHeading:
+            return true;
+      }
+      return false;
+   }
+   void FormDialogObjectReference::_load_patrol() {
+      if (!_can_be_a_patrol_marker())
+         return;
+      auto& working = *this->form;
+      if (auto* extra = working.extra_data.get<extra_data_types::patrol_ref_data>()) {
+         this->ui.xPatrolGroupbox->setChecked(true);
+         this->ui.xPatrolIdleTime->setValue(extra->idle_time);
+         if (extra->event.type == dovah::loaded_forms::components::package_event_dialogue::topic_type::ref) {
+            this->ui.xPatrolTopic->setTopic(extra->event.topic.get_form_stub());
+         } else {
+            this->ui.xPatrolTopic->setSubtype(extra->event.topic_subtype);
+         }
+      } else {
+         this->ui.xPatrolGroupbox->setChecked(false);
+      }
+   }
+   void FormDialogObjectReference::_save_patrol() {
+      auto& working = *this->form;
+      if (this->ui.xPatrolGroupbox->isChecked()) {
+         auto* extra = working.extra_data.get_or_create<extra_data_types::patrol_ref_data>();
+         extra->idle_time = this->ui.xPatrolIdleTime->value();
+         if (auto* form = this->ui.xPatrolTopic->topic()) {
+            extra->event.topic.set(working, form);
+            extra->event.type = dovah::loaded_forms::components::package_event_dialogue::topic_type::ref;
+         } else {
+            extra->event.topic.set(working, nullptr);
+            extra->event.topic_subtype = this->ui.xPatrolTopic->subtype();
+            extra->event.type = dovah::loaded_forms::components::package_event_dialogue::topic_type::subtype;
+         }
+      } else {
+         working.extra_data.remove<extra_data_types::patrol_ref_data>(working);
+      }
+   }
+#pragma endregion
+#pragma region Primitive
+   bool FormDialogObjectReference::_is_primitive() const noexcept {
+      dovah::form_stub* base_form = this->form->base_form.get_form_stub();
+      if (!base_form)
+         return false;
+
+      switch (base_form->form_type) {
+         case dovah::form_type::acoustic_space:
+         case dovah::form_type::sound:
+            return true;
+         case dovah::form_type::activator:
+            return this->form->extra_data.get<extra_data_types::primitive>() != nullptr;
+      }
+      switch (base_form->formID) {
+         case dovah::hardcoded_form_ids::CollisionMarker:
+         case dovah::hardcoded_form_ids::MultiBoundMarker:
+         case dovah::hardcoded_form_ids::PlaneMarker:
+         case dovah::hardcoded_form_ids::PortalMarker:
+         case dovah::hardcoded_form_ids::RoomMarker:
+            return true;
+      }
+      return false;
+   }
+   bool FormDialogObjectReference::_can_change_primitive_shape() const {
+      return _base_stub_of_type<dovah::form_type::activator>() != nullptr;
+   }
+
+   QString FormDialogObjectReference::_primitive_type(const dovah::form_stub* base_form) const {
+      if (!base_form)
+         return tr("???", "primitive function");
+      const auto base_type = base_form->form_type;
+      switch (base_type) {
+         case dovah::form_type::acoustic_space:
+            return tr("Acoustic Space", "primitive function");
+         case dovah::form_type::activator:
+            return tr("Trigger", "primitive function");
+         case dovah::form_type::sound:
+            return tr("Sound Emitter", "primitive function");
+         default:
+            switch (base_form->formID) {
+               case dovah::hardcoded_form_ids::CollisionMarker:
+                  return tr("Collision Object", "primitive function");
+               case dovah::hardcoded_form_ids::MultiBoundMarker:
+                  return tr("Multibound", "primitive function");
+               case dovah::hardcoded_form_ids::PlaneMarker:
+                  return tr("Occlusion Plane", "primitive function");
+               case dovah::hardcoded_form_ids::PortalMarker:
+                  return tr("Portal", "primitive function");
+               case dovah::hardcoded_form_ids::RoomMarker:
+                  {
+                     auto& working = *this->form;
+                     auto* extra   = working.extra_data.get<extra_data_types::room_ref_data>();
+                     if (extra && extra->is_master) {
+                        return tr("Room (master)", "primitive function");
+                     }
+                  }
+                  // This is Bethesda's terminology. Can we figure out a better word? 
+                  // When does the CK even decide to make a roombound a "master?"
+                  return tr("Room (slave)", "primitive function");
+            }
+            break;
+      }
+      return tr("Static", "primitive function");
+   }
+   void FormDialogObjectReference::_load_primitive() {
+      auto& working   = *this->form;
+      auto* base_form = working.base_form.get_form_stub();
+      auto  base_type = base_form ? base_form->form_type : dovah::form_type::none;
+      if (!_is_primitive())
+         return;
+      const auto blockers = std::array{
+         QSignalBlocker(this->ui.xPrimitiveCenterX),
+         QSignalBlocker(this->ui.xPrimitiveCenterY),
+         QSignalBlocker(this->ui.xPrimitiveCenterZ),
+         QSignalBlocker(this->ui.xPrimitiveCollLayer),
+         QSignalBlocker(this->ui.xPrimitiveColor),
+         QSignalBlocker(this->ui.xPrimitivePlayerActivation),
+         QSignalBlocker(this->ui.xPrimitiveShape),
+      };
+
+      this->ui.xPrimitiveFunction->setText(_primitive_type(base_form));
+
+      bool is_typically_flat = false;
+      if (base_form) {
+         switch (base_form->formID) {
+            case dovah::hardcoded_form_ids::PlaneMarker:
+            case dovah::hardcoded_form_ids::PortalMarker:
+               is_typically_flat = true;
+               break;
+         }
+      }
+
+      extra_data_types::primitive* extra = nullptr;
+      if (extra = working.extra_data.get<extra_data_types::primitive>()) {
+         this->ui.xPrimitiveSizeX->setValue(extra->bounds.x);
+         this->ui.xPrimitiveSizeY->setValue(extra->bounds.y);
+         this->ui.xPrimitiveSizeZ->setValue(extra->bounds.z);
+         static_assert(false, "TODO: If this is also a multibound, sync with the multibound half-extents. Warn if they and XPRM don't match.");
+      } else {
+         extra = working.extra_data.get_or_create<extra_data_types::primitive>();
+         if (is_typically_flat) {
+            extra->shape = extra_data_types::primitive::shape::portal_box;
+         } else {
+            extra->shape = extra_data_types::primitive::shape::box;
+         }
+         if (base_form) {
+            extra->color = dovah::utils::default_primitive_color_for_base_form(*base_form);
+         }
+         static_assert(false, "TODO: If this is also a multibound, sync with the multibound half-extents.");
+      }
+      this->ui.xPrimitiveColor->setColor(QColor::fromRgbF(extra->color.r, extra->color.g, extra->color.b));
+      this->ui.xPrimitiveShape->setCurrentIndex(this->ui.xPrimitiveShape->findData((int)extra->shape));
+      this->ui.xPrimitiveShape->setEnabled(_can_change_primitive_shape());
+      //
+      // The "Player Activation" checkbox just changes the layer type to L_NONCOLLIDABLE. 
+      // If the base form is an Activator, then this enables an activation prompt on the 
+      // primitive.
+      //
+      {
+         QComboBox* widget = this->ui.xPrimitiveCollLayer;
+         if (auto* extra = working.extra_data.get<extra_data_types::collision_data>()) {
+            auto i = widget->findData((int)extra->value);
+            if (i < 0)
+               i = widget->findData((int)dovah::collision_layer::unidentified);
+            widget->setCurrentIndex(i);
+         } else {
+            widget->setCurrentIndex(widget->findData((int)dovah::collision_layer::null));
+         }
+
+         _on_primitive_collision_layer_changed();
+      }
+      this->ui.xPrimitivePlayerActivation->setEnabled(base_type == dovah::form_type::activator);
+   }
+   void FormDialogObjectReference::_save_primitive() {
+      if (!_is_primitive())
+         return;
+      auto& working    = *this->form;
+      auto* extra_prim = working.extra_data.get_or_create<extra_data_types::primitive>();
+      extra_prim->bounds = {
+         this->ui.xPrimitiveSizeX->value(),
+         this->ui.xPrimitiveSizeY->value(),
+         this->ui.xPrimitiveSizeZ->value(),
+      };
+      {
+         auto color = this->ui.xPrimitiveColor->color();
+         extra_prim->color = {
+            .r = (float)color.redF(),
+            .g = (float)color.greenF(),
+            .b = (float)color.blueF(),
+            .a = extra_prim->color.a,
+         };
+      }
+      if (_can_change_primitive_shape()) {
+         extra_prim->shape = (enum extra_data_types::primitive::shape) this->ui.xPrimitiveShape->currentData().toInt();
+      }
+
+      auto layer = (dovah::collision_layer) this->ui.xPrimitiveCollLayer->currentData().toInt();
+      if (layer == dovah::collision_layer::unidentified) {
+         working.extra_data.remove<extra_data_types::collision_data>(working);
+      } else {
+         working.extra_data.get_or_create<extra_data_types::collision_data>()->set_layer_id(layer);
+      }
+
+      static_assert(false, "TODO: If this is also a multibound, sync with the multibound half-extents.");
+   }
+
+   void FormDialogObjectReference::_on_primitive_collision_layer_changed() {
+      auto* widget = this->ui.xPrimitiveCollLayer;
+      auto  layer  = (dovah::collision_layer)widget->currentData().toInt();
+      if (layer == layer_for_player_activate_primitives) {
+         auto* base_form = this->form->base_form.get_form_stub();
+         if (base_form && base_form->form_type == dovah::form_type::activator) {
+            this->ui.xPrimitivePlayerActivation->setChecked(true);
+         }
+      } else {
+         this->state.primitive.prior_layer = layer;
+      }
+   }
+   void FormDialogObjectReference::_on_primitive_player_activation_toggled(bool checked) {
+      //
+      // The "Player Activation" checkbox just changes the layer type to L_NONCOLLIDABLE. 
+      // If the base form is an Activator, then this enables an activation prompt on the 
+      // primitive.
+      //
+      QComboBox* widget  = this->ui.xPrimitiveCollLayer;
+      const auto blocker = QSignalBlocker(widget);
+
+      dovah::collision_layer layer;
+      if (checked) {
+         layer = layer_for_player_activate_primitives;
+      } else {
+         layer = this->state.primitive.prior_layer;
+      }
+      widget->setCurrentIndex(widget->findData((int)layer));
+   }
+#pragma endregion
+
+bool FormDialogObjectReference::_can_override_navmesh_gen() const noexcept {
    dovah::form_stub* base_form = this->form->base_form.get_form_stub();
    if (!base_form)
       return false;
-
    switch (base_form->form_type) {
-      case dovah::form_type::acoustic_space:
-      case dovah::form_type::sound:
-         return true;
       case dovah::form_type::activator:
-         return this->form->extra_data.get<extra_data_types::primitive>() != nullptr;
-   }
-   switch (base_form->formID) {
-      case dovah::hardcoded_form_ids::CollisionMarker:
-      case dovah::hardcoded_form_ids::MultiBoundMarker:
-      case dovah::hardcoded_form_ids::PlaneMarker:
-      case dovah::hardcoded_form_ids::PortalMarker:
-      case dovah::hardcoded_form_ids::RoomMarker:
+      case dovah::form_type::container:
+      case dovah::form_type::movable_static:
+      case dovah::form_type::statik:
+      case dovah::form_type::static_collection:
          return true;
    }
    return false;
@@ -1694,29 +1874,22 @@ void FormDialogObjectReference::_update_ownership_rank_picker() {
    }
 }
 
-bool FormDialogObjectReference::_can_be_a_patrol_marker() const {
+bool FormDialogObjectReference::_can_have_attach_ref() const {
    dovah::form_stub* base_form = this->form->base_form.get_form_stub();
    if (!base_form)
       return false;
    switch (base_form->form_type) {
-      case dovah::form_type::furniture:
-      case dovah::form_type::idle_marker:
-         return true;
-   }
-   switch (base_form->formID) {
-      case dovah::hardcoded_form_ids::XMarker:
-      case dovah::hardcoded_form_ids::XMarkerHeading:
+      case dovah::form_type::activator:
+      case dovah::form_type::container:
+      case dovah::form_type::door:
+      case dovah::form_type::flora:
+      case dovah::form_type::movable_static:
+      case dovah::form_type::statik:
+      case dovah::form_type::tree:
          return true;
    }
    return false;
 }
-bool FormDialogObjectReference::_can_change_primitive_shape() const {
-   dovah::form_stub* base_form = this->form->base_form.get_form_stub();
-   if (!base_form)
-      return false;
-   return base_form->form_type == dovah::form_type::activator;
-}
-bool FormDialogObjectReference::_can_have_attach_ref() const;
 bool FormDialogObjectReference::_can_have_water_currents() const {
    dovah::form_stub* base_form = this->form->base_form.get_form_stub();
    if (!base_form)

@@ -21,28 +21,28 @@ namespace dovah::loaded_forms {
                // value is relevant. If the same value is given two different names and only one has a list 
                // of signatures, then the other value applies to all form types not covered by the first.
                //
-               hide_from_local_map_a   = 0x00000040, // DOOR
-               doesnt_light_water      = 0x00000100, // LIGH
-               inaccessible            = 0x00000100, // DOOR
-               hide_from_local_map_b   = 0x00000200, // ACTI, STAT, TREE
-               casts_shadows           = 0x00000200, // LIGH
-               motion_blur             = 0x00000200, // MSTT
-               starts_dead             = 0x00000200, // ACHR
-               persistent              = 0x00000400,
-               disabled                = 0x00000800,
-               is_sky_marker           = 0x00002000, // XMarkerHeading
-               visible_when_distant    = 0x00008000, // ACTI, STAT, TREE
-               is_full_lod             = 0x00010000, // everything except LIGH. if ref is in an exterior, then setting this should also set "persistent"
-               never_fades             = 0x00010000, // LIGH
-               doesnt_light_landscape  = 0x00020000, // LIGH
-               no_ai_acquire           = 0x02000000, // ACHR, CONT, LIGH, all items
-               filter                  = 0x04000000, // related to collision geometry? navmeshing?
-               bounding_box            = 0x08000000, // related to collision geometry? navmeshing?
-               reflected_by_auto_water = 0x10000000,
-               dont_havok_settle       = 0x20000000, // ACHR, ACTI, ADON, DOOR, LIGH, MSTT, STAT, TREE, all items
-               ground                  = 0x40000000, // CONT, general
-               no_respawn              = 0x40000000, // ACTI, ADON, DOOR, LIGH, MSTT, STAT, TREE, all items
-               multibound              = 0x80000000,
+               hide_from_local_map_a     = 0x00000040, // DOOR
+               doesnt_light_water        = 0x00000100, // LIGH
+               inaccessible              = 0x00000100, // DOOR
+               hide_from_local_map_b     = 0x00000200, // ACTI, STAT, TREE
+               casts_shadows             = 0x00000200, // LIGH
+               motion_blur               = 0x00000200, // MSTT
+               starts_dead               = 0x00000200, // ACHR
+               persistent                = 0x00000400,
+               disabled                  = 0x00000800,
+               is_sky_marker             = 0x00002000, // XMarkerHeading
+               visible_when_distant      = 0x00008000, // ACTI, STAT, TREE
+               is_full_lod               = 0x00010000, // everything except LIGH. if ref is in an exterior, then setting this should also set "persistent"
+               never_fades               = 0x00010000, // LIGH
+               doesnt_light_landscape    = 0x00020000, // LIGH
+               no_ai_acquire             = 0x02000000, // ACHR, CONT, LIGH, all items
+               navmesh_generation_filter = 0x04000000,
+               navmesh_generation_obb    = 0x08000000,
+               reflected_by_auto_water   = 0x10000000,
+               dont_havok_settle         = 0x20000000, // ACHR, ACTI, ADON, DOOR, LIGH, MSTT, STAT, TREE, all items
+               navmesh_generation_ground = 0x40000000, // ACTI (accidentally overlaps `no_respawn`), CONT, general
+               no_respawn                = 0x40000000, // ACTI, ADON, DOOR, LIGH, MSTT, STAT, TREE, all items
+               multibound                = 0x80000000,
             };
          };
 

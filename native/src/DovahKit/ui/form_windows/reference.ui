@@ -695,13 +695,25 @@
      </widget>
      <widget class="QWidget" name="pageExtra">
       <layout class="QGridLayout" name="gridLayout_9">
-       <item row="9" column="0">
-        <widget class="QLabel" name="label_19">
-         <property name="text">
-          <string>Time Left:</string>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item row="9" column="1">
+        <widget class="QDoubleSpinBox" name="xTimeLeft">
+         <property name="whatsThis">
+          <string>Only applicable to lights. For lights that are capable of burning out, this is the amount of time remaining until this specific ref burns out.</string>
          </property>
-         <property name="buddy">
-          <cstring>xTimeLeft</cstring>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
@@ -715,26 +727,6 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="1">
-        <widget class="QDoubleSpinBox" name="xHeadtrackingWeight">
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="value">
-          <double>1.000000000000000</double>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="label_20">
-         <property name="text">
-          <string>Headtracking Weight:</string>
-         </property>
-         <property name="buddy">
-          <cstring>xHeadtrackingWeight</cstring>
-         </property>
-        </widget>
-       </item>
        <item row="6" column="0">
         <widget class="QLabel" name="label_18">
          <property name="text">
@@ -745,23 +737,23 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
-        <widget class="QDoubleSpinBox" name="xFavorCost">
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       <item row="9" column="0">
+        <widget class="QLabel" name="label_19">
+         <property name="text">
+          <string>Time Left:</string>
+         </property>
+         <property name="buddy">
+          <cstring>xTimeLeft</cstring>
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QSpinBox" name="xAlphaCutoff">
-         <property name="whatsThis">
-          <string>This value can override the alpha-testing threshold used by the ref's 3D model. The typical use case for this is to make banners and carpets appear more tattered than usual.</string>
-         </property>
+       <item row="5" column="1">
+        <widget class="QDoubleSpinBox" name="xHeadtrackingWeight">
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
-         <property name="maximum">
-          <number>255</number>
+         <property name="value">
+          <double>1.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -775,10 +767,47 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="1">
-        <widget class="QDoubleSpinBox" name="xHealth">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_16">
+         <property name="text">
+          <string>Alpha Cutoff:</string>
+         </property>
+         <property name="buddy">
+          <cstring>xAlphaCutoff</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="7" column="1" colspan="2">
+        <widget class="DKCompactObjectReferencePicker" name="xHorse">
+         <property name="whatsThis">
+          <string>Only applicable to actors. You can assign to any placed actor a horse ref for them to ride.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="2">
+        <widget class="QPushButton" name="xTimeLeftReset">
+         <property name="whatsThis">
+          <string>Reset &quot;Time Left&quot; to the default value: the max lifespan of the ref's base Light form.</string>
+         </property>
+         <property name="text">
+          <string>Reset</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QDoubleSpinBox" name="xFavorCost">
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_22">
+         <property name="text">
+          <string>Attach Ref:</string>
+         </property>
+         <property name="buddy">
+          <cstring>xAttachRef</cstring>
          </property>
         </widget>
        </item>
@@ -792,65 +821,25 @@
          </property>
         </widget>
        </item>
-       <item row="9" column="1">
-        <widget class="QDoubleSpinBox" name="xTimeLeft">
-         <property name="whatsThis">
-          <string>Only applicable to lights. For lights that are capable of burning out, this is the amount of time remaining until this specific ref burns out.</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="DKCompactObjectReferencePicker" name="xAttachRef">
-         <property name="whatsThis">
-          <string>You can optionally synchronize this ref's movement to that of some other ref. This is useful when the latter ref has animations created for the purpose. This functionality isn't used in Skyrim.</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="0">
-        <widget class="QLabel" name="xHorseLabel">
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_20">
          <property name="text">
-          <string>Horse:</string>
+          <string>Headtracking Weight:</string>
          </property>
          <property name="buddy">
-          <cstring>xHorse</cstring>
+          <cstring>xHeadtrackingWeight</cstring>
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_16">
-         <property name="text">
-          <string>Alpha Cutoff:</string>
-         </property>
-         <property name="buddy">
-          <cstring>xAlphaCutoff</cstring>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QDoubleSpinBox" name="xCharge">
+       <item row="8" column="0" colspan="3">
+        <widget class="QCheckBox" name="flagIsSkyMarker">
          <property name="whatsThis">
-          <string>Only applicable to enchanted weapons. Controls the amount of charge present on the weapon. If absent, the weapon is fully charged.</string>
+          <string>Only applicable to &lt;code&gt;XMarkerHeading&lt;/code&gt; refs. Indicates that the marker is a point in the air that can be used in a dragon's flight path.</string>
          </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         <property name="text">
+          <string>Is Sky Marker</string>
          </property>
         </widget>
-       </item>
-       <item row="10" column="0">
-        <spacer name="verticalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>205</height>
-          </size>
-         </property>
-        </spacer>
        </item>
        <item row="3" column="1">
         <widget class="QSpinBox" name="xCount">
@@ -869,41 +858,92 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_22">
+       <item row="6" column="1">
+        <widget class="QDoubleSpinBox" name="xHealth">
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QSpinBox" name="xAlphaCutoff">
+         <property name="whatsThis">
+          <string>This value can override the alpha-testing threshold used by the ref's 3D model. The typical use case for this is to make banners and carpets appear more tattered than usual.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="maximum">
+          <number>255</number>
+         </property>
+        </widget>
+       </item>
+       <item row="11" column="0">
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>205</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="7" column="0">
+        <widget class="QLabel" name="xHorseLabel">
          <property name="text">
-          <string>Attach Ref:</string>
+          <string>Horse:</string>
          </property>
          <property name="buddy">
-          <cstring>xAttachRef</cstring>
+          <cstring>xHorse</cstring>
          </property>
         </widget>
        </item>
-       <item row="9" column="2">
-        <widget class="QPushButton" name="xTimeLeftReset">
+       <item row="1" column="1">
+        <widget class="DKCompactObjectReferencePicker" name="xAttachRef">
          <property name="whatsThis">
-          <string>Reset &quot;Time Left&quot; to the default value: the max lifespan of the ref's base Light form.</string>
-         </property>
-         <property name="text">
-          <string>Reset</string>
+          <string>You can optionally synchronize this ref's movement to that of some other ref. This is useful when the latter ref has animations created for the purpose. This functionality isn't used in Skyrim.</string>
          </property>
         </widget>
        </item>
-       <item row="7" column="1" colspan="2">
-        <widget class="DKCompactObjectReferencePicker" name="xHorse">
+       <item row="2" column="1">
+        <widget class="QDoubleSpinBox" name="xCharge">
          <property name="whatsThis">
-          <string>Only applicable to actors. You can assign to any placed actor a horse ref for them to ride.</string>
+          <string>Only applicable to enchanted weapons. Controls the amount of charge present on the weapon. If absent, the weapon is fully charged.</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
-       <item row="8" column="0" colspan="3">
-        <widget class="QCheckBox" name="flagIsSkyMarker">
-         <property name="whatsThis">
-          <string>Only applicable to &lt;code&gt;XMarkerHeading&lt;/code&gt; refs. Indicates that the marker is a point in the air that can be used in a dragon's flight path.</string>
+       <item row="10" column="0" colspan="3">
+        <widget class="QGroupBox" name="navmeshGenOverride">
+         <property name="title">
+          <string>Override navmesh generation import option</string>
          </property>
-         <property name="text">
-          <string>Is Sky Marker</string>
+         <property name="checkable">
+          <bool>true</bool>
          </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_38">
+          <item row="0" column="0">
+           <widget class="DKNavmeshGenerationImportOptionPicker" name="navmeshGen"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_62">
+            <property name="text">
+             <string>This option is only available for some form types. Please be aware that due to an oversight in the game engine's design, it conflicts with the &quot;Respawns&quot; checkbox: using this option will change the value of the &quot;Respawns&quot; checkbox in strange ways, after you click &quot;OK.&quot;</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
@@ -1454,6 +1494,80 @@
           <size>
            <width>20</width>
            <height>316</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="pagePatrolData">
+      <layout class="QVBoxLayout" name="verticalLayout_7">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QGroupBox" name="xPatrolGroupbox">
+         <property name="title">
+          <string>Patrol Data</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_37" columnstretch="0,1">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_60">
+            <property name="text">
+             <string>Idle Time:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xPatrolIdleTime</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_61">
+            <property name="text">
+             <string>Say Topic:</string>
+            </property>
+            <property name="buddy">
+             <cstring>xPatrolTopic</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="DKTopicOrSubtypePicker" name="xPatrolTopic"/>
+          </item>
+          <item row="0" column="1" alignment="Qt::AlignLeft">
+           <widget class="QDoubleSpinBox" name="xPatrolIdleTime">
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_15">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>401</height>
           </size>
          </property>
         </spacer>
@@ -2534,6 +2648,16 @@
    <extends>QWidget</extends>
    <header>widgets/DKPapyrusBoundScriptListPane.h</header>
   </customwidget>
+  <customwidget>
+   <class>DKNavmeshGenerationImportOptionPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKNavmeshGenerationImportOptionPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKTopicOrSubtypePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKTopicOrSubtypePicker.h</header>
+  </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>editorID</tabstop>
@@ -2607,6 +2731,9 @@
   <tabstop>buttonTeleportViewLinkedDoor</tabstop>
   <tabstop>buttonTeleportViewMarker</tabstop>
   <tabstop>xTeleportName</tabstop>
+  <tabstop>xPatrolGroupbox</tabstop>
+  <tabstop>xPatrolIdleTime</tabstop>
+  <tabstop>xPatrolTopic</tabstop>
   <tabstop>xMapMarkerGroupbox</tabstop>
   <tabstop>xMapMarkerName</tabstop>
   <tabstop>xMapMarkerType</tabstop>
