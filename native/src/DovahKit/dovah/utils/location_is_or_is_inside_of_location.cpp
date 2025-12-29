@@ -1,4 +1,5 @@
 #include "./location_is_or_is_inside_of_location.h"
+#include <vector>
 #include "../forms/Location.h"
 
 namespace dovah::utils {
@@ -9,6 +10,10 @@ namespace dovah::utils {
          return false;
       if (&subject == &desired)
          return true;
+
+      std::vector<form_stub*> seen; // guard against cyclical links
+      seen.reserve(8); // locations in Skyrim.esm are never nested more than 4 levels deep
+      seen.push_back(&subject);
       
       loaded_form_ptr<loaded_forms::Location> loaded_loc = subject.load().ptr_cast<loaded_forms::Location>();
       while (loaded_loc) {
@@ -17,6 +22,12 @@ namespace dovah::utils {
             break;
          if (parent == &desired)
             return true;
+         {
+            auto it = std::find(seen.begin(), seen.end(), parent);
+            if (it != seen.end()) // cyclical!
+               return false;
+            seen.push_back(parent);
+         }
          loaded_loc = parent->load().ptr_cast<loaded_forms::Location>();
       }
       return false;
