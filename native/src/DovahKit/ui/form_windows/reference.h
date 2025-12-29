@@ -42,6 +42,12 @@ class FormDialogObjectReference :
       virtual void _load_impl() override;
       virtual void _save_impl() override;
 
+      // Validation steps that require checking data across multiple loaded forms.
+      // I didn't want to jam these into ObjectReference::_load_impl. I don't much 
+      // like the idea that loading one form could automatically load another; I 
+      // don't want to have to worry about cycles.
+      void _emit_warnings_on_load();
+
       template<dovah::form_type FT>
       dovah::form_stub* _base_stub_of_type() const {
          auto* base = this->form->base_form.get_form_stub();

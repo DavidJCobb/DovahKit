@@ -143,6 +143,8 @@ One last note: the enums for flags **must not** be `#include`d by the headers fo
   * **DIAL/QNAM (Parent Quest):** Used when deleting the parent quest, as part of an option to automatically delete all dialogue forms therein. Also used by the `DIAL` UI to prevent adding multiple topics with the same subtype to the same branch/quest.
 * DLBR (Dialogue Branch)
   * **DLBR/QNAM (Parent Quest):** Used when deleting the parent quest, as part of an option to automatically delete all dialogue forms therein.
+* DOBJ (Default Object Manager)
+  * **PLOC: Persist Location:** To optimize determining what Location an Encounter Zone, Cell, or Worldspace belongs to.
 * ECZN (Encounter Zone)
   * **ECZN/DATA+0x04 (Location):** To optimize gathering a Location's contents.[^location-gather]
 * NPC_ (ActorBase)

@@ -15,6 +15,7 @@
 #include "../forms/components/extra_data/types/e/encounter_zone.h"
 #include "../forms/components/extra_data/types/l/location.h"
 #include "../forms/components/extra_data/types/l/location_ref_type.h"
+#include "./get_computed_location.h"
 
 namespace {
    namespace extra_data_types {
@@ -44,7 +45,7 @@ namespace dovah::utils {
          //
          auto* pcell = form_stub_helpers::get_worldspace_persistent_cell(&cell_or_world);
          if (pcell && !form_stub_helpers::is_persistent(pcell)) {
-            if (!this->location || _get_computed_location(*pcell) == this->location)
+            if (!this->location || get_computed_location(*pcell) == this->location)
                this->_crawl_special_refs(*pcell);
          }
          form_stub_helpers::for_each_child_form(&cell_or_world, [this](form_stub* cell) {
@@ -52,43 +53,11 @@ namespace dovah::utils {
                return;
             if (form_stub_helpers::is_persistent(cell))
                return;
-            if (!this->location || _get_computed_location(*cell) == this->location)
+            if (!this->location || get_computed_location(*cell) == this->location)
                this->_crawl_special_refs(*cell);
          });
          return;
       }
-   }
-   form_stub* update_location_content::_get_computed_location(form_stub& form) const {
-      switch (form.form_type) {
-         case form_type::cell:
-            {
-               auto* zone = _get_encounter_zone(form);
-               if (zone && zone != this->_cache.NoZoneZone) {
-                  auto* loc = _get_explicit_location(*zone);
-                  if (loc)
-                     return loc;
-               }
-               if (auto* loc = _get_explicit_location(form))
-                  return loc;
-               if (auto* world = _get_containing_world(form))
-                  return _get_computed_location(*world);
-            }
-            break;
-         case form_type::worldspace:
-            {
-               auto loaded = form.load().ptr_cast<loaded_forms::Worldspace>();
-               if (loaded) {
-                  if (loaded->location)
-                     return loaded->location.get_form_stub();
-                  auto* zone = loaded->encounter_zone.get_form_stub();
-                  if (!zone || zone == this->_cache.NoZoneZone)
-                     break;
-                  return _get_explicit_location(*zone);
-               }
-            }
-            break;
-      }
-      return nullptr;
    }
    /*static*/ form_stub* update_location_content::_get_encounter_zone(form_stub& form) {
       if (form.form_type == form_type::cell) {
@@ -217,10 +186,10 @@ namespace dovah::utils {
             //
             if (!stub->is_exterior_cell())
                continue;
-            if (_get_computed_location(*stub) != &location)
+            if (get_computed_location(*stub) != &location)
                continue;
             auto* world = _get_containing_world(*stub);
-            if (!world || _get_computed_location(*world) != &location)
+            if (!world || get_computed_location(*world) != &location)
                continue;
             //
             // Below: *CEC.

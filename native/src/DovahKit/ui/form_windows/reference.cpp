@@ -17,16 +17,24 @@
 #include "dovah/data/all_carryable_form_types.h"
 #include "dovah/data/collision_layers.h"
 #include "dovah/data/hardcoded_form_ids.h"
+#include "dovah/forms/components/keyword_list.h"
 #include "dovah/forms/components/model.h"
 #include "dovah/forms/_component_access.h"
+#include "dovah/utils/form_component_accessors/keyword_list.h"
+#include "dovah/utils/auto_door_envelopes_teleport_marker.h"
 #include "dovah/utils/default_light_emitter_shadow_depth_bias.h"
 #include "dovah/utils/default_primitive_color_for_base_form.h"
+#include "dovah/utils/get_computed_location.h"
+#include "dovah/utils/location_is_or_is_inside_of_location.h"
 
 namespace {
    constexpr bool render_window_displays_teleport_markers = false;
    constexpr bool render_window_displays_test_radii       = false;
 }
 
+#include "dovah/forms/Cell.h"
+#include "dovah/forms/DefaultObjectManager.h"
+#include "dovah/forms/Door.h"
 #include "dovah/forms/Faction.h"
 #include "dovah/forms/Light.h"
 #pragma region Extra data includes
@@ -53,6 +61,7 @@ namespace {
    #include "dovah/forms/components/extra_data/types/l/location_ref_type.h"
    #include "dovah/forms/components/extra_data/types/l/lock.h"
    #include "dovah/forms/components/extra_data/types/m/map_marker.h"
+   #include "dovah/forms/components/extra_data/types/m/multibound_bounds.h"
    #include "dovah/forms/components/extra_data/types/m/multibound_ref.h"
    #include "dovah/forms/components/extra_data/types/o/ownership.h"
    #include "dovah/forms/components/extra_data/types/p/patrol_ref_data.h"
@@ -504,6 +513,8 @@ void FormDialogObjectReference::_load_impl() {
    auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
 
+   this->_emit_warnings_on_load();
+
    dovah::form_stub* base_form = working.base_form.get_form_stub();
    dovah::form_type  base_type = dovah::form_type::none;
    if (base_form)
@@ -517,17 +528,6 @@ void FormDialogObjectReference::_load_impl() {
             has_bounds = true;
             break;
       }
-   }
-
-   bool has_navmesh_import_option = false;
-   switch (base_type) {
-      case dovah::form_type::activator:
-      case dovah::form_type::container:
-      case dovah::form_type::movable_static:
-      case dovah::form_type::statik:
-      case dovah::form_type::static_collection:
-         has_navmesh_import_option = true;
-         break;
    }
 
    const bool is_a_primitive = _is_primitive();
@@ -571,9 +571,6 @@ void FormDialogObjectReference::_load_impl() {
       }
       if (base_form && base_form->formID == dovah::hardcoded_form_ids::MapMarker) {
          add_page(tr("Map Marker", "page names"), this->ui.pageMapMarker);
-      }
-      if (has_navmesh_import_option) {
-         static_assert(false, "TODO: Add tab: Navmesh Generation");
       }
       add_page(tr("Reflected By", "page names"), this->ui.pageReflectedBy);
       add_page(tr("Linked Refs", "page names"), this->ui.pageLinkedRefs);
@@ -1046,6 +1043,38 @@ void FormDialogObjectReference::_load_impl() {
    }
    #pragma endregion
    #pragma region Lighting and Emittance
+      #pragma region EmittanceSource
+      {
+         using extra_data = extra_data_types::emittance_source;
+         if (auto* extra = working.extra_data.get<extra_data>()) {
+            auto* form = extra->form.get_form_stub();
+            if (form && form->form_type != dovah::form_type::light && form->form_type != dovah::form_type::region)
+               form = nullptr;
+
+            if (form) {
+               if (form->form_type == dovah::form_type::light) {
+                  this->ui.xEmitTypeLIGH->setChecked(true);
+                  this->ui.xEmitLIGH->setEnabled(true);
+                  this->ui.xEmitREGN->setEnabled(false);
+                  this->ui.xEmitLIGH->setFormStub(form);
+               } else {
+                  this->ui.xEmitTypeREGN->setChecked(true);
+                  this->ui.xEmitLIGH->setEnabled(false);
+                  this->ui.xEmitREGN->setEnabled(true);
+                  this->ui.xEmitREGN->setFormStub(form);
+               }
+            } else {
+               this->ui.xEmitTypeNONE->setChecked(true);
+               this->ui.xEmitLIGH->setEnabled(false);
+               this->ui.xEmitREGN->setEnabled(false);
+            }
+         } else {
+            this->ui.xEmitTypeNONE->setChecked(true);
+            this->ui.xEmitLIGH->setEnabled(false);
+            this->ui.xEmitREGN->setEnabled(false);
+         }
+      }
+      #pragma endregion
       #pragma region ExtraLightData
       {
          using extra_data = extra_data_types::light;
@@ -1092,37 +1121,16 @@ void FormDialogObjectReference::_load_impl() {
          this->ui.xLightGroupbox->setEnabled(false);
       }
       #pragma endregion
-      #pragma region EmittanceSource
-      {
-         using extra_data = extra_data_types::emittance_source;
-         if (auto* extra = working.extra_data.get<extra_data>()) {
-            auto* form = extra->form.get_form_stub();
-            if (form && form->form_type != dovah::form_type::light && form->form_type != dovah::form_type::region)
-               form = nullptr;
-
-            if (form) {
-               if (form->form_type == dovah::form_type::light) {
-                  this->ui.xEmitTypeLIGH->setChecked(true);
-                  this->ui.xEmitLIGH->setEnabled(true);
-                  this->ui.xEmitREGN->setEnabled(false);
-                  this->ui.xEmitLIGH->setFormStub(form);
-               } else {
-                  this->ui.xEmitTypeREGN->setChecked(true);
-                  this->ui.xEmitLIGH->setEnabled(false);
-                  this->ui.xEmitREGN->setEnabled(true);
-                  this->ui.xEmitREGN->setFormStub(form);
-               }
-            } else {
-               this->ui.xEmitTypeNONE->setChecked(true);
-               this->ui.xEmitLIGH->setEnabled(false);
-               this->ui.xEmitREGN->setEnabled(false);
-            }
-         } else {
-            this->ui.xEmitTypeNONE->setChecked(true);
-            this->ui.xEmitLIGH->setEnabled(false);
-            this->ui.xEmitREGN->setEnabled(false);
-         }
-      }
+      #pragma region Lit Water
+         static_assert(false, "TODO");
+      #pragma endregion
+   #pragma endregion
+   #pragma region Water
+      #pragma region Reflects
+         static_assert(false, "TODO");
+      #pragma endregion
+      #pragma region Water Lights
+         static_assert(false, "TODO");
       #pragma endregion
    #pragma endregion
    #pragma region Water Currents
@@ -1473,6 +1481,213 @@ void FormDialogObjectReference::_save_impl() {
    #pragma endregion
 }
 
+void FormDialogObjectReference::_emit_warnings_on_load() {
+   auto& working = *this->form;
+   auto& logger  = dovahkit::subsystems::message_log::core::get();
+
+   auto* base_form = working.base_form.get_form_stub();
+
+   //
+   // If the ref has a Persist Location, warn if its parent cell isn't part of 
+   // that location.
+   //
+   [&working, &logger]() {
+      auto* extra = working.extra_data.get<extra_data_types::location>();
+      if (!extra)
+         return;
+      dovah::form_stub* persist_loc = extra->form.get_form_stub();
+      if (!persist_loc || persist_loc->form_type != dovah::form_type::location)
+         return;
+
+      dovah::form_stub* computed_loc = nullptr;
+      dovah::form_stub* failed_loc   = nullptr;
+      [&working, &computed_loc, &failed_loc]() {
+         auto* parent_cell = working.stub.get_parent_form();
+         if (!parent_cell || parent_cell->form_type != dovah::form_type::cell)
+            return;
+         auto loaded_cell = parent_cell->load().ptr_cast<dovah::loaded_forms::Cell>();
+         if (!loaded_cell)
+            return;
+         computed_loc = dovah::utils::get_computed_location(*loaded_cell);
+         if (auto* extra = loaded_cell->extra_data.get<extra_data_types::location>()) {
+            failed_loc = extra->form.get_form_stub();
+            if (failed_loc && failed_loc->form_type != dovah::form_type::location)
+               failed_loc = nullptr;
+         }
+      }();
+      if (computed_loc == persist_loc)
+         return;
+      QString message;
+      if (failed_loc) {
+         message = tr(
+            "Ref %1 is not in its persist location %2. (Parent cell %3 attempts to tag itself with "
+            "that location, but also tags itself with an encounter zone. An encounter zone's location "
+            "overrides the locations of cells and worldspaces belonging to the zone.)"
+         )
+            .arg(editor_helpers::form_identifiers_to_string(&working.stub))
+            .arg(editor_helpers::form_identifiers_to_string(persist_loc))
+            .arg(editor_helpers::form_identifiers_to_string(failed_loc))
+         ;
+      } else {
+         message = tr("Ref %1 is not in its persist location %2.")
+            .arg(editor_helpers::form_identifiers_to_string(&working.stub))
+            .arg(editor_helpers::form_identifiers_to_string(persist_loc))
+         ;
+      }
+      logger.addLogItem(ui::types::log_item(
+         message,
+         ui::types::log_item_type::warning,
+         ui::types::log_item_context::form_load
+      ));
+   }();
+
+   //
+   // If the ref is a dummy item, warn if it sets no Leveled Item Base.
+   //
+   [&working, &logger, &base_form]() {
+      if (!base_form)
+         return;
+      auto* keywords = dovah::utils::form_component_accessors::keyword_list(*base_form);
+      if (!keywords)
+         return;
+
+      const auto* dummy_keyword = []() -> dovah::form_stub* {
+         auto& editor   = DovahKitCore::get();
+         auto* dobj_man = editor.get_singleton_form(dovah::form_type::default_object_manager);
+         if (!dobj_man)
+            return nullptr;
+         auto loaded = dobj_man->load().ptr_cast<dovah::loaded_forms::DefaultObjectManager>();
+         if (loaded)
+            return loaded->get_entry('KWDM');
+         return nullptr;
+      }();
+      if (!dummy_keyword)
+         return;
+
+      bool is_dummy = false;
+      for (auto& use : keywords->forms) {
+         if (use == dummy_keyword) {
+            is_dummy = true;
+            break;
+         }
+      }
+      if (is_dummy) {
+         auto* extra = working.extra_data.get<extra_data_types::leveled_item_base>();
+         if (!extra || !extra->form) {
+            logger.addLogItem(ui::types::log_item(
+               tr("Ref %1 is a dummy object but has no Leveled Item Base. The ref will never be visible in-game."),
+               ui::types::log_item_type::warning,
+               ui::types::log_item_context::form_load
+            ));
+         }
+      }
+   }();
+
+   //
+   // If the ref is a primitive and a multibound, warn if those two sets of 
+   // sizes don't match.
+   //
+   [&working, &logger]() {
+      auto* extra_prim = working.extra_data.get<extra_data_types::primitive>();
+      auto* extra_mbnd = working.extra_data.get<extra_data_types::multibound_bounds>();
+      if (extra_prim && extra_mbnd) {
+         if (extra_prim->bounds != extra_mbnd->halfwidths * 2) {
+            logger.addLogItem(ui::types::log_item(
+               tr(
+                  "Multibound %1 has internally inconsistent size values. These will be "
+                  "corrected when you click \"OK.\""
+               ),
+               ui::types::log_item_type::warning,
+               ui::types::log_item_context::form_load
+            ));
+         }
+      }
+   }();
+
+   if (base_form) {
+      //
+      // If the ref is a load door, validate its teleport marker setup.
+      //
+      [&working, &logger, &base_form]() {
+         if (base_form->form_type != dovah::form_type::door)
+            return;
+         auto loaded_door = base_form->load().ptr_cast<dovah::loaded_forms::Door>();
+         if (!loaded_door)
+            return;
+         const auto* teleport_data = working.extra_data.get<extra_data_types::teleport>();
+         const bool  is_randomized = !loaded_door->random_destinations.empty();
+         if (is_randomized) {
+            if (teleport_data) {
+               logger.addLogItem(ui::types::log_item(
+                  tr(
+                     "Ref %1 is a randomized load door (base %2). Randomized doors "
+                     "cannot have pre-existing teleport data."
+                  )
+                     .arg(editor_helpers::form_identifiers_to_string(&working.stub))
+                     .arg(editor_helpers::form_identifiers_to_string(base_form))
+                  ,
+                  ui::types::log_item_type::warning,
+                  ui::types::log_item_context::form_load
+               ));
+            }
+            if (!working.extra_data.get<extra_data_types::random_teleport_marker>()) {
+               logger.addLogItem(ui::types::log_item(
+                  tr(
+                     "Ref %1 is a randomized load door (base %2), but it doesn't "
+                     "have a random-teleport marker."
+                  )
+                     .arg(editor_helpers::form_identifiers_to_string(&working.stub))
+                     .arg(editor_helpers::form_identifiers_to_string(base_form))
+                  ,
+                  ui::types::log_item_type::warning,
+                  ui::types::log_item_context::form_load
+               ));
+            }
+         }
+         bool is_automatic   = loaded_door->door_flags & dovah::loaded_forms::Door::door_flag::automatic;
+         bool auto_is_locked = is_automatic && (working.extra_data.get<extra_data_types::lock>() != nullptr);
+         if (teleport_data) {
+            dovah::form_stub* destination_ref = teleport_data->target_door.get_form_stub();
+            if (destination_ref && !dovah::form_type_is_reference(destination_ref->form_type))
+               destination_ref = nullptr;
+
+            if (destination_ref) {
+               auto loaded_dst = destination_ref->load().ptr_cast<loaded_form_type>();
+               if (dovah::utils::auto_door_envelopes_teleport_marker(working.stub)) {
+                  logger.addLogItem(ui::types::log_item(
+                     tr(
+                        "Ref %1 leads to an Automatic door, and the teleport marker lies "
+                        "within that door's area of effect (i.e. fAutoDoorActivateDistance)."
+                     )
+                        .arg(editor_helpers::form_identifiers_to_string(&working.stub))
+                     ,
+                     ui::types::log_item_type::warning,
+                     ui::types::log_item_context::form_load
+                  ));
+               }
+
+               if (is_automatic && !auto_is_locked && loaded_dst) {
+                  auto_is_locked = loaded_dst->extra_data.get<extra_data_types::lock>() != nullptr;
+               }
+            }
+         }
+         if (auto_is_locked) {
+            //
+            // Automatic doors should not be locked (whether locally or via lock data 
+            // on the destination door).
+            //
+            logger.addLogItem(ui::types::log_item(
+               tr("Ref %1 is an automatic door and needs to have its lock data removed.")
+                  .arg(editor_helpers::form_identifiers_to_string(&working.stub))
+               ,
+               ui::types::log_item_type::warning,
+               ui::types::log_item_context::form_load
+            ));
+         }
+      }();
+   }
+}
+
 uint32_t FormDialogObjectReference::_get_hide_from_local_map_flags_mask() const {
    auto* base = this->form->base_form.get_form_stub();
    if (!base)
@@ -1495,7 +1710,15 @@ uint32_t FormDialogObjectReference::_get_hide_from_local_map_flags_mask() const 
          return false;
       switch (base_form->form_type) {
          case dovah::form_type::container:
+            return true;
          case dovah::form_type::door:
+            {
+               auto loaded = base_form->load().ptr_cast<dovah::loaded_forms::Door>();
+               if (!loaded)
+                  break;
+               if (loaded->door_flags & dovah::loaded_forms::Door::door_flag::automatic)
+                  return false;
+            }
             return true;
       }
       return false;
@@ -1515,6 +1738,11 @@ uint32_t FormDialogObjectReference::_get_hide_from_local_map_flags_mask() const 
    void FormDialogObjectReference::_save_lock() {
       using extra_data = extra_data_types::lock;
       auto& working    = *this->form;
+      if (!_can_be_locked()) {
+         this->ui.xLockGroupbox->setChecked(false);
+         working.extra_data.remove<extra_data>(working);
+         return;
+      }
       if (this->ui.xLockGroupbox->isChecked()) {
          working.extra_data.remove<extra_data>(working);
       } else {
@@ -1670,10 +1898,14 @@ uint32_t FormDialogObjectReference::_get_hide_from_local_map_flags_mask() const 
 
       extra_data_types::primitive* extra = nullptr;
       if (extra = working.extra_data.get<extra_data_types::primitive>()) {
-         this->ui.xPrimitiveSizeX->setValue(extra->bounds.x);
-         this->ui.xPrimitiveSizeY->setValue(extra->bounds.y);
-         this->ui.xPrimitiveSizeZ->setValue(extra->bounds.z);
-         static_assert(false, "TODO: If this is also a multibound, sync with the multibound half-extents. Warn if they and XPRM don't match.");
+         if (auto* extra_bound = working.extra_data.get<extra_data_types::multibound_bounds>()) {
+            if (extra->bounds != extra_bound->halfwidths) {
+               //
+               // We've already warned the user about this, so just correct it now.
+               //
+               extra_bound->halfwidths = extra->bounds / 2;
+            }
+         }
       } else {
          extra = working.extra_data.get_or_create<extra_data_types::primitive>();
          if (is_typically_flat) {
@@ -1684,11 +1916,16 @@ uint32_t FormDialogObjectReference::_get_hide_from_local_map_flags_mask() const 
          if (base_form) {
             extra->color = dovah::utils::default_primitive_color_for_base_form(*base_form);
          }
-         static_assert(false, "TODO: If this is also a multibound, sync with the multibound half-extents.");
+         if (auto* extra_bound = working.extra_data.get<extra_data_types::multibound_bounds>()) {
+            extra->bounds = extra_bound->halfwidths * 2;
+         }
       }
       this->ui.xPrimitiveColor->setColor(QColor::fromRgbF(extra->color.r, extra->color.g, extra->color.b));
       this->ui.xPrimitiveShape->setCurrentIndex(this->ui.xPrimitiveShape->findData((int)extra->shape));
       this->ui.xPrimitiveShape->setEnabled(_can_change_primitive_shape());
+      this->ui.xPrimitiveSizeX->setValue(extra->bounds.x);
+      this->ui.xPrimitiveSizeY->setValue(extra->bounds.y);
+      this->ui.xPrimitiveSizeZ->setValue(extra->bounds.z);
       //
       // The "Player Activation" checkbox just changes the layer type to L_NONCOLLIDABLE. 
       // If the base form is an Activator, then this enables an activation prompt on the 
@@ -1739,7 +1976,9 @@ uint32_t FormDialogObjectReference::_get_hide_from_local_map_flags_mask() const 
          working.extra_data.get_or_create<extra_data_types::collision_data>()->set_layer_id(layer);
       }
 
-      static_assert(false, "TODO: If this is also a multibound, sync with the multibound half-extents.");
+      if (auto* extra_bound = working.extra_data.get<extra_data_types::multibound_bounds>()) {
+         extra_bound->halfwidths = extra_prim->bounds / 2;
+      }
    }
 
    void FormDialogObjectReference::_on_primitive_collision_layer_changed() {

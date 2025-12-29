@@ -75,7 +75,11 @@ Defines the amount of enchanting charge remaining on an enchanted weapon. If abs
 
 #### `ExtraCollisionData` (`XTRI`)
 
-The value is a collision layer ID.
+**Used on:** REFR
+
+The value is a collision layer ID. See `ExtraPrimitive`.
+
+When the primitive base form is an Activator, the primitive is a trigger, and layer `L_NONCOLLIDABLE` gives it an activation prompt.
 
 #### `ExtraCount`
 
@@ -133,7 +137,9 @@ Unused.
 
 The health of an item that has condition (i.e. an armor or weapon), as an absolute value rather than a percentage. Value -1 is a sentinel for "unset."
 
-#### `ExtraHealthPercent` (`XHLP`)
+If this is present on a REFR, the CK will warn that the ref "contains old style health data" and that it's being replaced with `ExtraHealthPerc`. Bethesda originally intended for the health percentage to be computed by dividing the `XHLT` by the base form's max health, but the max health getter has been stubbed out and always returns zero. Therefore, the computed health percentage is NaN, which I assume means nothing gets written: `XHLT` gets stripped and no `XHLP` gets added.
+
+#### `ExtraHealthPerc` (`XHLP`)
 
 **Used on:** REFR[ARMO|WEAP]
 
@@ -242,6 +248,8 @@ In Fallout 3 and Fallout: New Vegas, this is applied to merchant NPCs. Items tha
 
 **Used on:** REFR
 
+Half-extents of a roombound. See `ExtraPrimitive`.
+
 #### `ExtraMultiBoundRef` (`XMBR`: eXtra MultiBound Ref)
 
 **Used on:** REFR
@@ -310,6 +318,26 @@ Indicates the two `RoomMarker` refs that this portal connects.
 
 Defines a collision primitive. If a ref has the `CollisionMarker01` base form and an `ExtraPrimitive`, then when it has its 3D loaded, said 3D will be synthesized from the `ExtraPrimitive` parameters.
 
+When the primitive is a roombound, `ExtraMultiBound` will also be present, specifying half-extents that exactly match the extents of `ExtraPrimitive` (i.e. `XMBO` will have the `XPRM` sizes divided by two).
+
+The collision layer is set via `ExtraCollisionLayer`.
+
+##### Notes on primitives
+
+The Creation Kit will create primitives of the following types, via buttons in its toolbar:
+
+* **Acoustic Space:** Base form is a user-selected Acoustic Space. Shape is always a box, and cannot be changed after creation.
+* **Collision Object:** Base form is `CollisionMarker`. Shape can be a box, sphere, or plane, and cannot be changed after creation. Collision layer is configurable (see `ExtraCollisionData`).
+* **Multibound:** Base form is `MultiBoundMarker`. Shape is always a box or sphere, and cannot be changed after creation. CK warns on closing the REFR dialog if the Bound Data half-extents (in `ExtraMultiBound`) don't match the Primitive full-extents.
+* **OcclusionPlane:** Base form is `PlaneMarker`. Shape is always a box or plane, and cannot be changed after creation.
+* **Portal:** Base form is `PortalMarker`. Shape is always a plane, and cannot be changed after creation.
+* **Room:** Base form is `RoomMarker`. Shape is always a box, and cannot be changed after creation.
+* **Trigger:** Base form is a user-selected activator. Shape can be changed to a box or sphere at any point after creation. Collision layer is configurable (see `ExtraCollisionData`).
+* **Water Current Zone:** Base form is `WaterCurrentZoneMarker`. Shape is always a box, plane, or sphere, and cannot be changed after creation.
+  * The Creation Kit will attempt to modify water refs that overlap the primitive. However, I can't find where the modification takes place, and so don't know *how* they're modified. I've only found code that runs at the moment you attempt to create the primitive, which makes primitive creation fail with an error message if any refs within the intended area are checked out (i.e. Version Control) by "the Region system" or by any user other than you. The precise text of the error message is "Can't alter all water references that this primitive would affect" with no mention of VC made.
+
+No other kinds of primitive are known to be valid.
+
 ### R
 
 #### `ExtraRadius` (`XRDS`: eXtra RaDiuS)
@@ -332,6 +360,12 @@ Used to store a pose for actors that are flagged as Starts Dead.
 
 #### `ExtraRandomTeleportMarker` (`XRTM`)
 
+**Used on:** REFR
+
+The teleport marker for a door ref, when the base form is a Door that selects a random destination.
+
+When dealing with a pair of non-random load doors, each door's teleport marker is located in the opposite door's space, in front of that opposite door. When a door is randomized, however, it's randomized at run-time, which means that its teleport marker can't be placed on the other side: you don't know where the "other side" is. Instead, the teleport marker must be on the same side, and so this extra-data is used instead of `ExtraTeleport`.
+
 #### `ExtraRank` (`XRNK`)
 
 **Used on:** CELL, REFR
@@ -344,7 +378,11 @@ Value -1 is a sentinel for "unset."
 
 **Used on:** REFR[LIGH]
 
-A list of water plane references that reflect this light.
+A list of water plane references that reflect this light. Displayed in the "Reflected by" tab on the Reference dialog, when that tab is present.
+
+Refs must be persistent in order to reflect or refract other refs. Non-persistent refs will not be added to the dynamically-computed `ExtraWaterLightRefs`.
+
+The CK warns if an Actor has this extra-data. (Message varies depending on whether the actor is "Actor is reflected by placeable water.")
 
 #### `ExtraRoomRefData` (`XRMR+LNAM?+INAM?+XLRM[]`)
 
@@ -546,3 +584,13 @@ In both the game and CK, the `CELL` and `REFR` loaders forward subrecords with t
 ## Run-time-only types
 
 Currently outside the scope of our documentation.
+
+### `ExtraReflectedRefs`
+
+A list of refs. Present on water activator refs, and displayed in the "Reflects" tab of the Reference dialog when present, with the column header "Reflects."
+
+This is dynamically constructed: when <var>A</var> is added to <var>B</var>'s `ExtraReflectorRefs`, <var>B</var> is added to <var>A</var>'s `ExtraReflectedRef`.
+
+### `ExtraWaterLightRefs`
+
+A list of refs. Displayed in the "Water Lights" tab of the Reference dialog, when that tab is present. It's a list of light refs that the current (water activator) ref reflects.

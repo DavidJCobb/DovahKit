@@ -72,6 +72,10 @@ ObjectReferenceLinkedRefsModel::ObjectReferenceLinkedRefsModel(QObject* parent) 
                      return QVariant::fromValue(src.ref);
                }
                break;
+            case KeywordRole:
+               return QVariant::fromValue(src.keyword);
+            case RefRole:
+               return QVariant::fromValue(src.ref);
          }
          return {};
       }
@@ -195,6 +199,26 @@ void ObjectReferenceLinkedRefsModel::setLink(dovah::form_stub* keyword, dovah::f
    this->beginInsertRows({}, i, i);
    this->_data.insert(it, link);
    this->endInsertRows();
+}
+void ObjectReferenceLinkedRefsModel::setRow(size_t i, dovah::form_stub* keyword, dovah::form_stub* refr) {
+   if (i >= this->_data.size())
+      return;
+   
+   for (size_t j = 0; j < this->_data.size(); ++j) {
+      if (j == i)
+         continue;
+      if (this->_data[j].keyword == keyword)
+         return;
+   }
+   if (!refr) {
+      this->beginRemoveRows({}, i, i);
+      this->_data.erase(this->_data.begin() + i);
+      this->endRemoveRows();
+      return;
+   }
+   this->_data[i].keyword = keyword;
+   this->_data[i].ref     = refr;
+   emit dataChanged(this->index(i, 0, {}), this->index(i, ColumnCount - 1, {}));
 }
 
 std::vector<dovah::form_stub*> ObjectReferenceLinkedRefsModel::allKeywords() const {

@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
+#include "dovah/data/spaces/interior_cell_max_sane_bounds.h"
 #include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/exceptions/form_creation_failed.h"
 #include "dovah/files/bsa/bsa_archived_file.h"
@@ -77,8 +78,6 @@ namespace {
 
    static constexpr const size_t minimum_grids_to_load = 5;
    static_assert(minimum_grids_to_load >= 1);
-
-   constexpr const float interior_cell_lateral_constraint = 30000;
 }
 
 namespace dovahkit::subsystems::worldedit {
@@ -1323,7 +1322,7 @@ namespace dovahkit::subsystems::worldedit {
          if (!cell || cell->is_exterior_cell()) {
             return false;
          }
-         if (fabs(x) > interior_cell_lateral_constraint || fabs(y) > interior_cell_lateral_constraint) {
+         if (fabs(x) > dovah::spaces::interior_cell_max_sane_bounds || fabs(y) > dovah::spaces::interior_cell_max_sane_bounds) {
             return true;
          }
       } else {

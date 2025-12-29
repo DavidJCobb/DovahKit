@@ -1,10 +1,30 @@
 #include "ObjectReference.h"
+#include <cmath>
 #include "_common_cpp.h"
+#include "../data/spaces/interior_cell_max_sane_bounds.h"
 #include "../data/hardcoded_form_ids.h"
 #include "../form_stubs/helpers/get_worldspace_cell_by_grid.h"
 #include "components/extra_data/types/e/enable_state_parent.h"
+#include "components/extra_data/types/p/primitive.h"
+#include "components/extra_data/types/r/radius.h"
+#include "components/extra_data/types/r/reflector_refs.h"
 #include "components/extra_data/types/s/scale.h"
 #include "components/extra_data/use_info_state.h"
+
+#include "../notices/form_load_warnings/by_form_type/reference/actor_reflected_by_cell_water.h"
+#include "../notices/form_load_warnings/by_form_type/reference/actor_reflected_by_water_refs.h"
+#include "../notices/form_load_warnings/by_form_type/reference/corrupt_coordinates.h"
+#include "../notices/form_load_warnings/by_form_type/reference/lateral_position_too_far_from_interior_origin.h"
+#include "../notices/form_load_warnings/by_form_type/reference/light_emitter_radius_is_too_small.h"
+#include "../notices/form_load_warnings/by_form_type/reference/map_marker_has_no_data.h"
+#include "../notices/form_load_warnings/by_form_type/reference/occlusion_box_should_be_a_plane.h"
+#include "../notices/form_load_warnings/by_form_type/reference/suspiciously_low_z_position.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_type::reference;
+   }
+}
 
 // persistence checks
 #include "./components/extra_data/types/l/location.h"
@@ -87,7 +107,7 @@ namespace dovah::loaded_forms {
       this->position = position;
    }
    void ObjectReference::set_position_and_world(cobb::vector3<float> position, form_stub& world) {
-      using exception  = exceptions::object_reference_move_failed;
+      using exception = exceptions::object_reference_move_failed;
       using error_code = exception::error_code;
 
       if (this->is_working_copy) {
@@ -126,7 +146,7 @@ namespace dovah::loaded_forms {
       this->stub.set_parent_form(move_to_cell);
       this->position = position;
    }
-   
+
    float ObjectReference::get_scale() const {
       float scale = 1.0F;
       if (auto* extra = this->extra_data.get<dovah::loaded_forms::components::extra_data_types::scale>()) {
@@ -186,7 +206,16 @@ namespace dovah::loaded_forms {
                this->is_open = true;
                break;
             case 'NAME': // base form (subrecord signature is vestigial from Morrowind, which used editor IDs instead of form IDs)
-               subrecord.read(this->base_form);
+               if (subrecord.read(this->base_form)) {
+                  //
+                  // NOTE: The CK warns if the base form is a Leveled Actor. The wording of the warning 
+                  //       message suggests that it's an Oblivion-era warning: "Invalid base object. 
+                  //       Leveled Character/Creature refs no longer allowed. Create a template instead."
+                  //
+                  // NOTE: The CK warns if the base form is Grass, saying that refs to TESGrass are not 
+                  //       allowed.
+                  //
+               }
                break;
             case 'VMAD':
                this->script_data.load(subrecord, intfc);
@@ -199,6 +228,103 @@ namespace dovah::loaded_forms {
                   intfc.warn_on_unrecognized_subrecord(subrecord);
                }
                break;
+         }
+      }
+
+      bool position_corrupt = false;
+      bool rotation_corrupt = false;
+      for (size_t i = 0; i < 3; ++i) {
+         if (!std::isfinite(this->position[i])) {
+            position_corrupt = true;
+            break;
+         }
+      }
+      for (size_t i = 0; i < 3; ++i) {
+         if (!std::isfinite(this->rotation[i])) {
+            rotation_corrupt = true;
+            break;
+         }
+      }
+      if (position_corrupt || rotation_corrupt) {
+         specific_load_warnings::corrupt_coordinates notice(
+            this->stub,
+            position_corrupt,
+            rotation_corrupt
+         );
+         intfc.log_load_warning(notice);
+      }
+      if (!position_corrupt) {
+         if (this->position.z < -30000.0F) {
+            specific_load_warnings::suspiciously_low_z_position notice(
+               this->stub,
+               -30000.0F,
+               this->position.z
+            );
+            intfc.log_load_warning(notice);
+         }
+         if (auto* cell = this->stub.get_parent_form()) {
+            if (cell->form_type == dovah::form_type::cell && !cell->is_exterior_cell()) {
+               bool x_too_far = fabs(this->position.x) > dovah::spaces::interior_cell_max_sane_bounds;
+               bool y_too_far = fabs(this->position.y) > dovah::spaces::interior_cell_max_sane_bounds;
+               if (x_too_far || y_too_far) {
+                  specific_load_warnings::lateral_position_too_far_from_interior_origin notice(
+                     this->stub,
+                     x_too_far,
+                     y_too_far
+                  );
+                  intfc.log_load_warning(notice);
+               }
+            }
+         }
+      }
+
+      if (auto* base = this->base_form.get_form_stub()) {
+         if (base->form_type == dovah::form_type::actor) {
+            if (const auto* extra = this->extra_data.get<components::extra_data_types::reflector_refs>()) {
+               if (!extra->entries.empty()) {
+                  specific_load_warnings::actor_reflected_by_water_refs notice(
+                     this->stub,
+                     extra->entries.size()
+                  );
+                  intfc.log_load_warning(notice);
+               }
+            }
+            if (this->stub.test_record_flags(form_flag::reflected_by_auto_water)) {
+               specific_load_warnings::actor_reflected_by_cell_water notice(this->stub);
+               intfc.log_load_warning(notice);
+            }
+         } else if (base->form_type == dovah::form_type::light) {
+            if (const auto* extra = this->extra_data.get<components::extra_data_types::radius>()) {
+               if (extra->value < 20.0F) {
+                  specific_load_warnings::light_emitter_radius_is_too_small notice(
+                     this->stub,
+                     20.0F,
+                     extra->value
+                  );
+                  intfc.log_load_warning(notice);
+               }
+            }
+         } else if (base->formID == hardcoded_form_ids::MapMarker) {
+            if (!this->extra_data.get<components::extra_data_types::map_marker>()) {
+               specific_load_warnings::map_marker_has_no_data notice(this->stub);
+               intfc.log_load_warning(notice);
+            }
+         } else if (base->formID == hardcoded_form_ids::PlaneMarker) {
+            if (const auto* extra = this->extra_data.get<components::extra_data_types::primitive>()) {
+               if (extra->shape == components::extra_data_types::primitive::shape::box) {
+                  bool tiny = false;
+                  for (size_t i = 0; i < 3; ++i) {
+                     if (extra->bounds[i] < 16.0F) {
+                        tiny = true;
+                        break;
+                     }
+                  }
+                  if (tiny) {
+                     specific_load_warnings::occlusion_box_should_be_a_plane notice(this->stub);
+                     intfc.log_load_warning(notice);
+                  }
+               }
+            }
          }
       }
    }

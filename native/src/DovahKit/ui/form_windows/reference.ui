@@ -613,7 +613,8 @@
          <item row="1" column="1">
           <widget class="DKFormPicker" name="persistLocation">
            <property name="whatsThis">
-            <string>Only applicable to actors, normal or leveled.</string>
+            <string>&lt;p&gt;Only applicable to actors, normal or leveled. The actor will be considered persistent while the player is anywhere inside the specified Location.&lt;/p&gt;
+&lt;p&gt;Unique actors &lt;em&gt;must&lt;/em&gt; have this field set so that the game engine can find them and keep track of them. When a quest alias is set to fill from a unique ActorBase, the game will rely on the Persist Location to find the Actor ref.&lt;/p&gt;</string>
            </property>
           </widget>
          </item>

@@ -4,39 +4,38 @@
 namespace dovah {
    namespace loaded_forms {
       namespace components::extra_data_types {
-         class linked_ref;
+         class activate_parents;
       }
       class ObjectReference;
    }
    class form_stub;
 }
 
-class ObjectReferenceLinkedRefsModel : public QAbstractItemModel {
+class ObjectReferenceActivateParentsModel : public QAbstractItemModel {
    Q_OBJECT;
    public:
-      ObjectReferenceLinkedRefsModel(QObject* parent = nullptr);
+      ObjectReferenceActivateParentsModel(QObject* parent = nullptr);
 
       struct Column {
          Column() = delete;
          enum {
-            KeywordName,
             RefName,
             RefFormID,
+            Delay,
          };
       };
       static constexpr const size_t ColumnCount = 3;
 
       static constexpr const Qt::ItemDataRole FormStubRole = Qt::UserRole;
-      static constexpr const Qt::ItemDataRole KeywordRole  = (Qt::ItemDataRole)(Qt::UserRole + 1);
-      static constexpr const Qt::ItemDataRole RefRole      = (Qt::ItemDataRole)(Qt::UserRole + 2);
+      static constexpr const Qt::ItemDataRole DelayRole    = (Qt::ItemDataRole)(Qt::UserRole + 1);
       
       using backend_form_type = dovah::loaded_forms::ObjectReference;
-      using extra_data_type   = dovah::loaded_forms::components::extra_data_types::linked_ref;
+      using extra_data_type   = dovah::loaded_forms::components::extra_data_types::activate_parents;
 
    protected:
       struct Mapping {
-         dovah::form_stub* keyword = nullptr;
-         dovah::form_stub* ref     = nullptr;
+         dovah::form_stub* ref = nullptr;
+         float delay = 0;
          struct {
             QString keyword;
             QString ref;
@@ -57,18 +56,20 @@ class ObjectReferenceLinkedRefsModel : public QAbstractItemModel {
             virtual Qt::ItemFlags flags(const QModelIndex& index) const override;
          #pragma endregion
          virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+         #pragma region Editing
+            virtual bool removeRows(int row, int count, const QModelIndex& parent = {}) override;
+         #pragma endregion
       #pragma endregion
 
    public:
       void importData(const backend_form_type&);
       void exportData(backend_form_type&) const;
 
-      QModelIndex index(const dovah::form_stub& keyword) const;
-      void setLink(dovah::form_stub* keyword, dovah::form_stub* refr);
-      void setRow(size_t, dovah::form_stub* keyword, dovah::form_stub* refr);
+      QModelIndex setRefDelay(dovah::form_stub&, float);
+      void setRow(size_t i, dovah::form_stub& ref, float delay);
 
-      // Includes nullptr, if there exists a keywordless linked ref.
-      [[nodiscard]] std::vector<dovah::form_stub*> allKeywords() const;
+      [[nodiscard]] std::vector<dovah::form_stub*> allRefs() const;
+      bool containsRef(const dovah::form_stub&) const;
 
    protected:
       std::vector<Mapping> _data;
@@ -78,9 +79,6 @@ class ObjectReferenceLinkedRefsModel : public QAbstractItemModel {
       void _on_form_modified(dovah::form_stub&);
       void _on_form_renumbered(dovah::form_stub&);
       void _on_all_forms_renumbered();
-
-      decltype(_data)::iterator _insertion_point_for(const Mapping&);
-      void _re_sort_item(size_t index);
 
       static QString _name_of(const dovah::form_stub&);
 };
