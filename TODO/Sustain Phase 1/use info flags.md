@@ -136,7 +136,7 @@ One last note: the enums for flags **must not** be `#include`d by the headers fo
 * ACTI (Activator)
   * **ACTI/WNAM (Water Type):** For rapidly checking whether refs need persistence. If the base form is an Activator with a water type, then the CK says it needs persistence.
 * CELL (Cell)
-  * **CELL/ECZN:** To optimize gathering a Location's contents.[^location-gather]
+  * **CELL/XEZN:** To optimize gathering a Location's contents.[^location-gather]
   * **CELL/XLCN:** To optimize gathering a Location's contents.[^location-gather]
 * DIAL (Topic)
   * **DIAL/BNAM (Parent Branch):** Used when deleting the parent branch, as part of an option to automatically delete all dialogue forms therein. Also used by the `DIAL` UI to prevent adding multiple topics with the same subtype to the same branch/quest.
@@ -147,13 +147,16 @@ One last note: the enums for flags **must not** be `#include`d by the headers fo
   * **PLOC: Persist Location:** To optimize determining what Location an Encounter Zone, Cell, or Worldspace belongs to.
 * ECZN (Encounter Zone)
   * **ECZN/DATA+0x04 (Location):** To optimize gathering a Location's contents.[^location-gather]
+* LCTN (Location)
+  * **LCTN/PNAM (Parent):** For rapidly querying location hierarchies, and checking if some location is inside of some other location.
 * NPC_ (ActorBase)
   * **NPC_/TPLT (Template Form):** For rapidly gathering all template actors that influence the contents of a templated actor. Templating can be daisy-chained, and different properties can be inherited by each successive actor, so you may need to consult several templates to determine the final properties of some templated actor.
 * REFR (ObjectReference)
   * **REFR/XLRT:** To optimize gathering a Location's contents.[^location-gather]
   * **REFR/XLCN:** To optimize gathering a Location's contents.[^location-gather]
+  * **REFR/XTEL+0x00 (Teleport Destination Door):** For more optimal processing of load doors.
 * WRLD (Worldspace)
-  * **WRLD/ECZN:** To optimize gathering a Location's contents.[^location-gather]
+  * **WRLD/XEZN:** To optimize gathering a Location's contents.[^location-gather]
   * **WRLD/XLCN:** To optimize gathering a Location's contents.[^location-gather]
 
 [^child-forms]: CELL, LAND, NAVM, REFR, and subclasses of REFR.

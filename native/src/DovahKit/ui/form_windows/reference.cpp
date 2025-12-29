@@ -1,6 +1,7 @@
 #include "./reference.h"
 #include <QMessageBox>
 #include "dovah/core.h"
+#include "dovah/form_stubs/helpers/get_activator_water_type.h"
 #include "dovah/form_stubs/helpers/get_base_form.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/localize/collision_layer.h"
@@ -10,8 +11,11 @@
 #include "ui/utils/set_range.h"
 #include "ui/utils/typical_tableview_config.h"
 #include "./reference/ObjectReferenceActivateParentsModel.h"
+#include "./reference/ObjectReferenceLinkedFromModel.h"
 #include "./reference/ObjectReferenceLinkedRefsModel.h"
 #include "./reference/ObjectReferenceNewLinkedRefDialog.h"
+#include "./reference/ObjectReferenceReflectedObjectsModel.h"
+#include "./reference/ObjectReferenceWaterLightsModel.h"
 #include "widgets/widget-dialogs/DKCompactObjectReferencePickerDialog.h"
 
 #include "dovah/data/all_carryable_form_types.h"
@@ -284,6 +288,7 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
    #pragma endregion
    #pragma region Reflected By
       this->ui.reflectedBy->setReadOnly(true);
+      static_assert(false, "TODO: It needs to be possible to add/remove entries via the context menu");
    #pragma endregion
    #pragma region Linked Refs
       this->ui.currentLinkedRefKYWD->setAllowedFormType(dovah::form_type::keyword);
@@ -350,7 +355,14 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
       });
    #pragma endregion
    #pragma region Linked From
-      this->ui.linkedFrom->setReadOnly(true);
+   {
+      using model_type = ObjectReferenceLinkedFromModel;
+
+      auto* listview = this->ui.linkedFrom;
+      auto* model    = this->models.linked_from = new model_type(listview);
+      listview->setModel(model);
+      ui::typical_tableview_config(listview);
+   }
    #pragma endregion
    #pragma region Activate Parents
       {
@@ -445,21 +457,6 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
       });
    #pragma endregion
    #pragma region Lighting and Emittance
-      #pragma region Light properties
-         this->ui.xLightFOV->setRange(0, 179.9);
-         ui::set_unsigned_range<float>(this->ui.xLightFade);
-         ui::set_unsigned_range<float>(this->ui.xLightEndDistanceCap);
-         this->ui.xLightDepthBiasSlider->setRange(0, 50);
-         this->ui.xLightDepthBiasSpinbox->setRange(0, 50);
-
-         QObject::connect(this->ui.xLightDepthBiasSlider, &DKFloatSlider::valueChanged, this, [this](float v) {
-            this->ui.xLightDepthBiasSpinbox->setValue(v);
-         });
-         QObject::connect(this->ui.xLightDepthBiasSpinbox, qOverload<double>(&QDoubleSpinBox::valueChanged), this, [this](double v) {
-            const auto blocker = QSignalBlocker(this->ui.xLightDepthBiasSlider);
-            this->ui.xLightDepthBiasSlider->setValue(v);
-         });
-      #pragma endregion
       #pragma region Emittance Source
          this->ui.xEmitLIGH->setAllowedFormType(dovah::form_type::light);
          this->ui.xEmitREGN->setAllowedFormType(dovah::form_type::region);
@@ -483,22 +480,67 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
             }
          });
       #pragma endregion
+      #pragma region Light properties
+         this->ui.xLightFOV->setRange(0, 179.9);
+         ui::set_unsigned_range<float>(this->ui.xLightFade);
+         ui::set_unsigned_range<float>(this->ui.xLightEndDistanceCap);
+         this->ui.xLightDepthBiasSlider->setRange(0, 50);
+         this->ui.xLightDepthBiasSpinbox->setRange(0, 50);
+
+         QObject::connect(this->ui.xLightDepthBiasSlider, &DKFloatSlider::valueChanged, this, [this](float v) {
+            this->ui.xLightDepthBiasSpinbox->setValue(v);
+         });
+         QObject::connect(this->ui.xLightDepthBiasSpinbox, qOverload<double>(&QDoubleSpinBox::valueChanged), this, [this](double v) {
+            const auto blocker = QSignalBlocker(this->ui.xLightDepthBiasSlider);
+            this->ui.xLightDepthBiasSlider->setValue(v);
+         });
+      #pragma endregion
+      #pragma region Lights Water
+         static_assert(false, "TODO: ExtraLitWater");
+         static_assert(false, "TODO: It needs to be possible to add/remove entries via the context menu");
+      #pragma endregion
    #pragma endregion
-   #pragma region Water Currents
-      for (auto* spinbox : std::array{
-         this->ui.xWaterCurrentsVelLinearX,
-         this->ui.xWaterCurrentsVelLinearY,
-         this->ui.xWaterCurrentsVelLinearZ
-      }) {
-         ui::set_range<float>(spinbox);
+   #pragma region Water
+      #pragma region Water Currents
+         for (auto* spinbox : std::array{
+            this->ui.xWaterCurrentsVelLinearX,
+            this->ui.xWaterCurrentsVelLinearY,
+            this->ui.xWaterCurrentsVelLinearZ
+         }) {
+            ui::set_range<float>(spinbox);
+         }
+         for (auto* spinbox : std::array{
+            this->ui.xWaterCurrentsVelAngularX,
+            this->ui.xWaterCurrentsVelAngularY,
+            this->ui.xWaterCurrentsVelAngularZ
+         }) {
+            spinbox->setRange(-360, 360);
+         }
+      #pragma endregion
+      #pragma region Reflected Refs
+      {
+         using model_type = ObjectReferenceReflectedObjectsModel;
+
+         auto* listview = this->ui.reflectedObjects;
+         auto* model    = this->models.reflected_objects = new model_type(listview);
+         listview->setModel(model);
+         ui::typical_tableview_config(listview);
+
+         static_assert(false, "TODO: It needs to be possible to add/remove entries via the context menu");
       }
-      for (auto* spinbox : std::array{
-         this->ui.xWaterCurrentsVelAngularX,
-         this->ui.xWaterCurrentsVelAngularY,
-         this->ui.xWaterCurrentsVelAngularZ
-      }) {
-         spinbox->setRange(-360, 360);
+      #pragma endregion
+      #pragma region Water Lights
+      {
+         using model_type = ObjectReferenceWaterLightsModel;
+
+         auto* listview = this->ui.waterLights;
+         auto* model    = this->models.water_lights = new model_type(listview);
+         listview->setModel(model);
+         ui::typical_tableview_config(listview);
+
+         static_assert(false, "TODO: It needs to be possible to add/remove entries via the context menu");
       }
+      #pragma endregion
    #pragma endregion
    #pragma region Rendering
       #pragma region Roombound Options
@@ -529,8 +571,10 @@ void FormDialogObjectReference::_load_impl() {
             break;
       }
    }
-
-   const bool is_a_primitive = _is_primitive();
+   
+   const bool can_have_currents    = _can_have_water_currents();
+   const bool is_a_primitive       = _is_primitive();
+   const bool is_a_water_activator = _is_water_activator();
 
    bool is_an_item = false;
    for (auto ft : dovah::all_carryable_form_types) {
@@ -578,8 +622,8 @@ void FormDialogObjectReference::_load_impl() {
       add_page(tr("Activate Parents", "page names"), this->ui.pageActivateParents);
       add_page(tr("Enable State Parent", "page names"), this->ui.pageEnableParent);
       add_page(tr("Lighting and Emittance", "page names"), this->ui.pageEmittance);
-      if (_can_have_water_currents()) {
-         add_page(tr("Water Currents", "page names"), this->ui.pageWaterCurrents);
+      if (can_have_currents || is_a_water_activator) {
+         add_page(tr("Water", "page names"), this->ui.pageWater);
       }
       add_page(tr("Rendering", "page names"), this->ui.pageRendering);
       add_page(tr("Scripts", "page names"), this->ui.pageScripts);
@@ -711,7 +755,15 @@ void FormDialogObjectReference::_load_impl() {
                      break;
                }
             }
-            ui::bind(this->ui.flagReflectedByAutoWater, record_flags(), record_flag::reflected_by_auto_water);
+            {
+               auto* widget = this->ui.flagReflectedByAutoWater;
+               if (base_type == dovah::form_type::actor_base) {
+                  widget->setEnabled(false);
+               } else {
+                  widget->setEnabled(true);
+                  ui::bind(widget, record_flags(), record_flag::reflected_by_auto_water);
+               }
+            }
             {
                auto* widget = this->ui.flagRespawns;
                if (_can_override_navmesh_gen()) {
@@ -1027,7 +1079,7 @@ void FormDialogObjectReference::_load_impl() {
       this->models.linked_refs->importData(working);
    #pragma endregion
    #pragma region Linked From
-      static_assert(false, "TODO: Linked From");
+      this->models.linked_from->setSubject(&working.stub);
    #pragma endregion
    #pragma region Activate Parents
       this->models.activate_parents->importData(working);
@@ -1076,92 +1128,98 @@ void FormDialogObjectReference::_load_impl() {
       }
       #pragma endregion
       #pragma region ExtraLightData
-      {
-         using extra_data = extra_data_types::light;
-         if (auto* extra = working.extra_data.get<extra_data>()) {
-            this->ui.xLightFOV->setValue(extra->fov);
-            this->ui.xLightFade->setValue(extra->fade);
-            this->ui.xLightEndDistanceCap->setValue(extra->end_distance_cap);
-            this->ui.xLightDepthBiasSpinbox->setValue(extra->shadow_depth_bias);
-         } else {
-            if (base_type == dovah::form_type::light) {
-               auto loaded = base_form->load().ptr_cast<dovah::loaded_forms::Light>();
-               if (loaded) {
-                  this->ui.xLightFOV->setValue(loaded->fov);
-                  this->ui.xLightFade->setValue(loaded->fade);
-                  this->ui.xLightEndDistanceCap->setValue(loaded->radius); // TODO: is this correct?
+         {
+            using extra_data = extra_data_types::light;
+            if (auto* extra = working.extra_data.get<extra_data>()) {
+               this->ui.xLightFOV->setValue(extra->fov);
+               this->ui.xLightFade->setValue(extra->fade);
+               this->ui.xLightEndDistanceCap->setValue(extra->end_distance_cap);
+               this->ui.xLightDepthBiasSpinbox->setValue(extra->shadow_depth_bias);
+            } else {
+               if (base_type == dovah::form_type::light) {
+                  auto loaded = base_form->load().ptr_cast<dovah::loaded_forms::Light>();
+                  if (loaded) {
+                     this->ui.xLightFOV->setValue(loaded->fov);
+                     this->ui.xLightFade->setValue(loaded->fade);
+                     this->ui.xLightEndDistanceCap->setValue(loaded->radius); // TODO: is this correct?
+                  }
                }
             }
          }
-      }
-      if (base_type == dovah::form_type::light) {
-         if (auto* extra = working.extra_data.get<extra_data_types::radius>())
-            this->ui.xLightRadius->setValue(extra->value);
+         if (base_type == dovah::form_type::light) {
+            if (auto* extra = working.extra_data.get<extra_data_types::radius>())
+               this->ui.xLightRadius->setValue(extra->value);
 
-         this->ui.xLightGroupbox->setEnabled(true);
-         QObject::connect(this->ui.xLightFOVReset, &QPushButton::clicked, [this, &working]() {
-            auto loaded = _base_loaded_as_type<dovah::loaded_forms::Light>();
-            if (loaded)
-               this->ui.xLightFOV->setValue(loaded->fov);
-         });
-         QObject::connect(this->ui.xLightFadeReset, &QPushButton::clicked, [this, &working]() {
-            auto loaded = _base_loaded_as_type<dovah::loaded_forms::Light>();
-            if (loaded)
-               this->ui.xLightFade->setValue(loaded->fade);
-         });
-         QObject::connect(this->ui.xLightDepthBiasReset, &QPushButton::clicked, [this, &working]() {
-            float bias = dovah::utils::default_light_emitter_shadow_depth_bias(this->form->stub, true);
-            this->ui.xLightDepthBiasSpinbox->setValue(bias);
-         });
-         ui::bind(this->ui.flagCastShadows,          record_flags(), loaded_form_type::form_flag::casts_shadows);
-         ui::bind(this->ui.flagDoesntLightLandscape, record_flags(), loaded_form_type::form_flag::doesnt_light_landscape);
-         ui::bind(this->ui.flagDoesntLightWater,     record_flags(), loaded_form_type::form_flag::doesnt_light_water);
-         ui::bind(this->ui.flagNeverFades,           record_flags(), loaded_form_type::form_flag::never_fades);
-      } else {
-         this->ui.xLightGroupbox->setEnabled(false);
-      }
+            this->ui.xLightGroupbox->setEnabled(true);
+            QObject::connect(this->ui.xLightFOVReset, &QPushButton::clicked, [this, &working]() {
+               auto loaded = _base_loaded_as_type<dovah::loaded_forms::Light>();
+               if (loaded)
+                  this->ui.xLightFOV->setValue(loaded->fov);
+            });
+            QObject::connect(this->ui.xLightFadeReset, &QPushButton::clicked, [this, &working]() {
+               auto loaded = _base_loaded_as_type<dovah::loaded_forms::Light>();
+               if (loaded)
+                  this->ui.xLightFade->setValue(loaded->fade);
+            });
+            QObject::connect(this->ui.xLightDepthBiasReset, &QPushButton::clicked, [this, &working]() {
+               float bias = dovah::utils::default_light_emitter_shadow_depth_bias(this->form->stub, true);
+               this->ui.xLightDepthBiasSpinbox->setValue(bias);
+            });
+            ui::bind(this->ui.flagCastShadows,          record_flags(), loaded_form_type::form_flag::casts_shadows);
+            ui::bind(this->ui.flagDoesntLightLandscape, record_flags(), loaded_form_type::form_flag::doesnt_light_landscape);
+            ui::bind(this->ui.flagDoesntLightWater,     record_flags(), loaded_form_type::form_flag::doesnt_light_water);
+            ui::bind(this->ui.flagNeverFades,           record_flags(), loaded_form_type::form_flag::never_fades);
+         } else {
+            this->ui.xLightGroupbox->setEnabled(false);
+         }
       #pragma endregion
       #pragma region Lit Water
          static_assert(false, "TODO");
       #pragma endregion
    #pragma endregion
    #pragma region Water
-      #pragma region Reflects
-         static_assert(false, "TODO");
-      #pragma endregion
-      #pragma region Water Lights
-         static_assert(false, "TODO");
-      #pragma endregion
-   #pragma endregion
-   #pragma region Water Currents
-      if (_can_have_water_currents()) {
-         cobb::vector3<float> vel_linear;
-         cobb::vector3<float> vel_angular;
+      #pragma region Water Currents
+         if (can_have_currents) {
+            cobb::vector3<float> vel_linear;
+            cobb::vector3<float> vel_angular;
 
-         if (base_form && base_form->formID == dovah::hardcoded_form_ids::WaterCurrentZoneMarker) {
-            if (auto* extra = working.extra_data.get<extra_data_types::water_current_zone_data>()) {
-               vel_linear  = extra->velocity.linear;
-               vel_angular = extra->velocity.angular;
-            }
-         } else {
-            if (auto* extra = working.extra_data.get<extra_data_types::water_data>()) {
-               const auto size = extra->data.size();
-               if (size >= 1) {
-                  vel_linear = extra->data[0].velocity;
-                  if (size >= 2) {
-                     vel_angular = extra->data[1].velocity;
+            if (base_form && base_form->formID == dovah::hardcoded_form_ids::WaterCurrentZoneMarker) {
+               if (auto* extra = working.extra_data.get<extra_data_types::water_current_zone_data>()) {
+                  vel_linear  = extra->velocity.linear;
+                  vel_angular = extra->velocity.angular;
+               }
+            } else {
+               if (auto* extra = working.extra_data.get<extra_data_types::water_data>()) {
+                  const auto size = extra->data.size();
+                  if (size >= 1) {
+                     vel_linear = extra->data[0].velocity;
+                     if (size >= 2) {
+                        vel_angular = extra->data[1].velocity;
+                     }
                   }
                }
             }
-         }
 
-         this->ui.xWaterCurrentsVelLinearX->setValue(vel_linear.x);
-         this->ui.xWaterCurrentsVelLinearY->setValue(vel_linear.y);
-         this->ui.xWaterCurrentsVelLinearZ->setValue(vel_linear.z);
-         this->ui.xWaterCurrentsVelAngularX->setValue(vel_angular.x);
-         this->ui.xWaterCurrentsVelAngularY->setValue(vel_angular.y);
-         this->ui.xWaterCurrentsVelAngularZ->setValue(vel_angular.z);
-      }
+            this->ui.xWaterCurrentsVelLinearX->setValue(vel_linear.x);
+            this->ui.xWaterCurrentsVelLinearY->setValue(vel_linear.y);
+            this->ui.xWaterCurrentsVelLinearZ->setValue(vel_linear.z);
+            this->ui.xWaterCurrentsVelAngularX->setValue(vel_angular.x);
+            this->ui.xWaterCurrentsVelAngularY->setValue(vel_angular.y);
+            this->ui.xWaterCurrentsVelAngularZ->setValue(vel_angular.z);
+         } else {
+            this->ui.xWaterCurrentsGroupbox->setEnabled(false);
+         }
+      #pragma endregion
+      #pragma region Reflected Objects
+         this->models.reflected_objects->setSubject(&working.stub);
+         if (!is_a_water_activator)
+            this->ui.reflectedObjectsGroupbox->setEnabled(false);
+      #pragma endregion
+      #pragma region Water Lights
+         this->models.water_lights->setSubject(&working.stub);
+         if (!is_a_water_activator)
+            this->ui.waterLightsGroupbox->setEnabled(false);
+      #pragma endregion
    #pragma endregion
    #pragma region Rendering
       #pragma region Override multibound ref
@@ -2135,6 +2193,12 @@ bool FormDialogObjectReference::_can_have_water_currents() const {
       return false;
 
    return base_form->test_record_flags(1 << 19);
+}
+bool FormDialogObjectReference::_is_water_activator() const {
+   dovah::form_stub* base_form = this->form->base_form.get_form_stub();
+   if (!base_form)
+      return false;
+   return dovah::form_stub_helpers::get_activator_water_type(*base_form) != nullptr;
 }
 bool FormDialogObjectReference::_is_legal_teleport_destination(dovah::form_stub& ref) const {
    auto* base = dovah::form_stub_helpers::get_base_form(&ref);

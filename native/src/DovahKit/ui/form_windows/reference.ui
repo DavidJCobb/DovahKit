@@ -544,7 +544,7 @@
           <item row="3" column="1">
            <widget class="QCheckBox" name="flagReflectedByAutoWater">
             <property name="whatsThis">
-             <string>Unused in Skyrim. In previous games, this controlled whether a ref could be seen in reflections on the surface of exterior cells' water planes (&quot;auto water&quot;).</string>
+             <string>&lt;p&gt;Unused in Skyrim. In previous games, this controlled whether a ref could be seen in reflections on the surface of exterior cells' water planes (&quot;auto water&quot;).&lt;/p&gt;</string>
             </property>
             <property name="text">
              <string>Reflected by Auto Water</string>
@@ -1821,18 +1821,9 @@
         <number>0</number>
        </property>
        <item row="2" column="0">
-        <widget class="DKFormListPane" name="linkedFrom">
-         <property name="whatsThis">
-          <string>This list pane shows all refs that list this ref as one of their Linked Refs.</string>
-         </property>
-         <property name="showFormTypes">
-          <bool>false</bool>
-         </property>
-         <property name="showMoveButtons">
-          <bool>false</bool>
-         </property>
-         <property name="showRemoveButton">
-          <bool>false</bool>
+        <widget class="Line" name="line_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>
@@ -1847,11 +1838,7 @@
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="Line" name="line_3">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
+        <widget class="QTableView" name="linkedFrom"/>
        </item>
       </layout>
      </widget>
@@ -2280,7 +2267,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="pageWaterCurrents">
+     <widget class="QWidget" name="pageWater">
       <layout class="QGridLayout" name="gridLayout_33">
        <property name="leftMargin">
         <number>0</number>
@@ -2294,150 +2281,180 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
-       <item row="0" column="0">
-        <widget class="QGroupBox" name="xWaterCurrentsVelLinear">
+       <item row="1" column="0" colspan="2">
+        <widget class="QGroupBox" name="xWaterCurrentsGroupbox">
          <property name="title">
-          <string>Linear Velocity</string>
+          <string>Water currents</string>
          </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_31" columnstretch="0,1">
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_43">
-            <property name="text">
-             <string>Z:</string>
+         <layout class="QHBoxLayout" name="horizontalLayout_11">
+          <item>
+           <widget class="QGroupBox" name="xWaterCurrentsVelLinear">
+            <property name="title">
+             <string>Linear Velocity</string>
             </property>
-            <property name="buddy">
-             <cstring>xWaterCurrentsVelLinearZ</cstring>
+            <property name="checkable">
+             <bool>true</bool>
             </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_31" columnstretch="0,1">
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_43">
+               <property name="text">
+                <string>Z:</string>
+               </property>
+               <property name="buddy">
+                <cstring>xWaterCurrentsVelLinearZ</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="xWaterCurrentsVelLinearX">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_41">
+               <property name="text">
+                <string>X:</string>
+               </property>
+               <property name="buddy">
+                <cstring>xWaterCurrentsVelLinearX</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="xWaterCurrentsVelLinearY">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_42">
+               <property name="text">
+                <string>Y:</string>
+               </property>
+               <property name="buddy">
+                <cstring>xWaterCurrentsVelLinearY</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="xWaterCurrentsVelLinearZ">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QDoubleSpinBox" name="xWaterCurrentsVelLinearX">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          <item>
+           <widget class="QGroupBox" name="xWaterCurrentsVelAngular">
+            <property name="title">
+             <string>Angular Velocity</string>
             </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_41">
-            <property name="text">
-             <string>X:</string>
+            <property name="checkable">
+             <bool>true</bool>
             </property>
-            <property name="buddy">
-             <cstring>xWaterCurrentsVelLinearX</cstring>
+            <property name="checked">
+             <bool>false</bool>
             </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QDoubleSpinBox" name="xWaterCurrentsVelLinearY">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_42">
-            <property name="text">
-             <string>Y:</string>
-            </property>
-            <property name="buddy">
-             <cstring>xWaterCurrentsVelLinearY</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QDoubleSpinBox" name="xWaterCurrentsVelLinearZ">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
+            <layout class="QGridLayout" name="gridLayout_32" columnstretch="0,1">
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_44">
+               <property name="text">
+                <string>Z:</string>
+               </property>
+               <property name="buddy">
+                <cstring>xWaterCurrentsVelAngularZ</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_45">
+               <property name="text">
+                <string>X:</string>
+               </property>
+               <property name="buddy">
+                <cstring>xWaterCurrentsVelAngularX</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_46">
+               <property name="text">
+                <string>Y:</string>
+               </property>
+               <property name="buddy">
+                <cstring>xWaterCurrentsVelAngularY</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="xWaterCurrentsVelAngularX">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QDoubleSpinBox" name="xWaterCurrentsVelAngularY">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QDoubleSpinBox" name="xWaterCurrentsVelAngularZ">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QGroupBox" name="xWaterCurrentsVelAngular">
+       <item row="2" column="0" colspan="2">
+        <widget class="QGroupBox" name="reflectedObjectsGroupbox">
+         <property name="whatsThis">
+          <string>&lt;p&gt;This list controls functionality that is unused and unnecessary in &lt;i&gt;Skyrim&lt;/i&gt;.&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;Water can take two forms: the &quot;auto&quot; water planes attached to exterior cells (and those interior cells that opt into having them), or &quot;placed&quot; water refs. In games prior to &lt;i&gt;Skyrim&lt;/i&gt;, you would only be able to see a scenery ref's reflection in a chunk of placed water if you explicitly configured the placed water ref to reflect the scenery ref. Similarly, a scenery ref located below placed water would only be visible from above-water, and refracted by the water, if you configured the placed water to refract that scenery ref. You could define these associations — between scenery refs and placed water refs — by editing a listview on either ref.&lt;/p&gt;</string>
+         </property>
          <property name="title">
-          <string>Angular Velocity</string>
+          <string>Reflected refs</string>
          </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_32" columnstretch="0,1">
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_44">
-            <property name="text">
-             <string>Z:</string>
-            </property>
-            <property name="buddy">
-             <cstring>xWaterCurrentsVelAngularZ</cstring>
-            </property>
-           </widget>
-          </item>
+         <layout class="QGridLayout" name="gridLayout_39">
           <item row="0" column="0">
-           <widget class="QLabel" name="label_45">
-            <property name="text">
-             <string>X:</string>
-            </property>
-            <property name="buddy">
-             <cstring>xWaterCurrentsVelAngularX</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_46">
-            <property name="text">
-             <string>Y:</string>
-            </property>
-            <property name="buddy">
-             <cstring>xWaterCurrentsVelAngularY</cstring>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QDoubleSpinBox" name="xWaterCurrentsVelAngularX">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QDoubleSpinBox" name="xWaterCurrentsVelAngularY">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QDoubleSpinBox" name="xWaterCurrentsVelAngularZ">
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
+           <widget class="QTableWidget" name="reflectedObjects"/>
           </item>
          </layout>
         </widget>
        </item>
-       <item row="1" column="0">
-        <spacer name="verticalSpacer_13">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+       <item row="3" column="0" colspan="2">
+        <widget class="QGroupBox" name="waterLightsGroupbox">
+         <property name="whatsThis">
+          <string>&lt;p&gt;This list controls functionality that is unused and unnecessary in &lt;i&gt;Skyrim&lt;/i&gt;.&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;Water can take two forms: the &quot;auto&quot; water planes attached to exterior cells (and those interior cells that opt into having them), or &quot;placed&quot; water refs. In games prior to &lt;i&gt;Skyrim&lt;/i&gt;, you would only be able to see a light ref's reflection in a chunk of placed water if you explicitly configured the placed water ref to reflect the scenery ref.&lt;/p&gt;</string>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>378</height>
-          </size>
+         <property name="title">
+          <string>Water lights</string>
          </property>
-        </spacer>
+         <layout class="QGridLayout" name="gridLayout_40">
+          <item row="0" column="0">
+           <widget class="QTableWidget" name="waterLights"/>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -2699,6 +2716,8 @@
   <tabstop>flagIsSkyMarker</tabstop>
   <tabstop>xTimeLeft</tabstop>
   <tabstop>xTimeLeftReset</tabstop>
+  <tabstop>navmeshGenOverride</tabstop>
+  <tabstop>navmeshGen</tabstop>
   <tabstop>xPrimitivePlayerActivation</tabstop>
   <tabstop>xPrimitiveShape</tabstop>
   <tabstop>xPrimitiveCollLayer</tabstop>
@@ -2776,6 +2795,8 @@
   <tabstop>xWaterCurrentsVelAngularX</tabstop>
   <tabstop>xWaterCurrentsVelAngularY</tabstop>
   <tabstop>xWaterCurrentsVelAngularZ</tabstop>
+  <tabstop>reflectedObjects</tabstop>
+  <tabstop>waterLights</tabstop>
   <tabstop>xMultiboundRef</tabstop>
   <tabstop>xRoomboundImagespace</tabstop>
   <tabstop>xRoomboundLightingTemplate</tabstop>

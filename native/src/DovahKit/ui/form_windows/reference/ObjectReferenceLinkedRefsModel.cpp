@@ -280,7 +280,7 @@ void ObjectReferenceLinkedRefsModel::_on_form_modified(dovah::form_stub& stub) {
             continue;
          if (cached.isEmpty())
             cached = _name_of(stub);
-         item.cached.keyword = cached;
+         item.cached.ref = cached;
          auto qmi = this->index(i, Column::RefName, {});
          emit dataChanged(qmi, qmi);
       }

@@ -8,7 +8,10 @@
 #include "dovah/forms/ObjectReference.h"
 #include "ui_reference.h"
 class ObjectReferenceActivateParentsModel;
+class ObjectReferenceLinkedFromModel;
 class ObjectReferenceLinkedRefsModel;
+class ObjectReferenceReflectedObjectsModel;
+class ObjectReferenceWaterLightsModel;
 
 class FormDialogObjectReference :
    public QDialog,
@@ -35,8 +38,11 @@ class FormDialogObjectReference :
          } teleport;
       } state;
       struct {
-         ObjectReferenceActivateParentsModel* activate_parents = nullptr;
-         ObjectReferenceLinkedRefsModel*      linked_refs      = nullptr;
+         ObjectReferenceActivateParentsModel*  activate_parents  = nullptr;
+         ObjectReferenceLinkedFromModel*       linked_from       = nullptr;
+         ObjectReferenceLinkedRefsModel*       linked_refs       = nullptr;
+         ObjectReferenceReflectedObjectsModel* reflected_objects = nullptr;
+         ObjectReferenceWaterLightsModel*      water_lights      = nullptr;
       } models;
       
       virtual void _load_impl() override;
@@ -98,6 +104,7 @@ class FormDialogObjectReference :
 
       bool _can_have_attach_ref() const;
       bool _can_have_water_currents() const;
+      bool _is_water_activator() const;
       bool _is_legal_teleport_destination(dovah::form_stub&) const;
       static std::pair<cobb::vector3<float>, cobb::vector3<float>> _calc_teleport_marker_position(const loaded_form_type& in_front_of);
 };
