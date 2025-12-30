@@ -15,6 +15,7 @@
 #include "./reference/fragments/teleport.h"
 #include "./reference/fragments/water_currents.h"
 #include "./reference/fragments/water_lights.h"
+#include "./reference/fragments/water_reflectee.h"
 class ObjectReferenceActivateParentsModel;
 class ObjectReferenceLinkedFromModel;
 
@@ -41,6 +42,7 @@ class FormDialogObjectReference :
          ui::reference::fragments::teleport         teleport;
          ui::reference::fragments::water_currents   water_currents;
          ui::reference::fragments::water_lights     water_lights;
+         ui::reference::fragments::water_reflectee  water_reflectee;
       } fragments;
       struct {
          ObjectReferenceActivateParentsModel*  activate_parents  = nullptr;

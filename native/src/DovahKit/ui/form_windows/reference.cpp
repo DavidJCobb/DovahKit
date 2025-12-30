@@ -5,7 +5,6 @@
 #include "dovah/form_stubs/helpers/get_base_form.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/subsystems/message_log/core.h"
-#include "editor/subsystems/worldedit/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
 #include "ui/utils/typical_tableview_config.h"
@@ -19,19 +18,16 @@
 #include "dovah/forms/components/model.h"
 #include "dovah/forms/_component_access.h"
 #include "dovah/utils/form_component_accessors/keyword_list.h"
-#include "dovah/utils/auto_door_envelopes_teleport_marker.h"
 #include "dovah/utils/get_computed_location.h"
 #include "dovah/utils/location_is_or_is_inside_of_location.h"
 
 namespace {
-   constexpr bool render_window_displays_teleport_markers = false;
-   constexpr bool render_window_displays_test_radii       = false;
+   constexpr bool render_window_displays_test_radii = false;
 }
 
 #include "dovah/forms/Cell.h"
 #include "dovah/forms/DefaultObjectManager.h"
-#include "dovah/forms/Door.h"
-#include "dovah/forms/Light.h"
+#include "dovah/forms/Light.h" // for dealing with ExtraTimeLeft
 #pragma region Extra data includes
    #include "dovah/forms/components/extra_data/types/a/action.h"
    #include "dovah/forms/components/extra_data/types/a/activate_parents.h"
@@ -48,24 +44,15 @@ namespace {
    #include "dovah/forms/components/extra_data/types/i/ignored_by_sandbox.h"
    #include "dovah/forms/components/extra_data/types/l/leveled_creature_modifier.h"
    #include "dovah/forms/components/extra_data/types/l/leveled_item_base.h"
-   #include "dovah/forms/components/extra_data/types/l/light.h"
    #include "dovah/forms/components/extra_data/types/l/location.h"
    #include "dovah/forms/components/extra_data/types/l/location_ref_type.h"
-   #include "dovah/forms/components/extra_data/types/l/lock.h"
-   #include "dovah/forms/components/extra_data/types/m/map_marker.h"
    #include "dovah/forms/components/extra_data/types/m/multibound_bounds.h"
    #include "dovah/forms/components/extra_data/types/m/multibound_ref.h"
-   #include "dovah/forms/components/extra_data/types/o/ownership.h"
    #include "dovah/forms/components/extra_data/types/p/patrol_ref_data.h"
    #include "dovah/forms/components/extra_data/types/r/radius.h"
-   #include "dovah/forms/components/extra_data/types/r/rank.h"
    #include "dovah/forms/components/extra_data/types/r/room_ref_data.h"
    #include "dovah/forms/components/extra_data/types/s/spawn_container.h"
-   #include "dovah/forms/components/extra_data/types/t/teleport.h"
-   #include "dovah/forms/components/extra_data/types/t/teleport_name.h"
    #include "dovah/forms/components/extra_data/types/t/time_left.h"
-   #include "dovah/forms/components/extra_data/types/w/water_current_zone_data.h"
-   #include "dovah/forms/components/extra_data/types/w/water_data.h"
 #pragma endregion
 
 namespace {
@@ -288,10 +275,6 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
    #pragma region Patrol Data
       ui::set_unsigned_range<float>(this->ui.xPatrolIdleTime);
    #pragma endregion
-   #pragma region Reflected By
-      this->ui.reflectedBy->setReadOnly(true);
-      static_assert(false, "TODO: It needs to be possible to add/remove entries via the context menu");
-   #pragma endregion
    #pragma region Linked Refs
       this->fragments.linked_refs.setup(*this, {
          .buttons = {
@@ -456,10 +439,6 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
             },
          });
       #pragma endregion
-      #pragma region Lights Water
-         static_assert(false, "TODO: ExtraLitWater");
-         static_assert(false, "TODO: It needs to be possible to add/remove entries via the context menu");
-      #pragma endregion
    #pragma endregion
    #pragma region Water
       #pragma region Water Currents
@@ -494,6 +473,16 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
          });
       #pragma endregion
    #pragma endregion
+   #pragma region Water (reflectee)
+      this->fragments.water_reflectee.setup(*this, {
+         .buttons  = {
+            .add    = this->ui.xReflectorsButtonInsert,
+            .remove = this->ui.xReflectorsButtonRemove,
+         },
+         .groupbox = this->ui.xReflectorsGroupbox,
+         .view     = this->ui.xReflectors,
+      });
+   #pragma endregion
    #pragma region Rendering
       #pragma region Roombound Options
          this->ui.xRoomboundImagespace->setAllowedFormType(dovah::form_type::imagespace);
@@ -524,7 +513,7 @@ void FormDialogObjectReference::_load_impl() {
       }
    }
    
-   const bool can_have_currents    = this->fragments.water_currents.can_have_currents();
+   const bool can_have_currents    = this->fragments.water_currents.can_have_currents(working);
    const bool is_a_primitive       = this->fragments.primitive.is_primitive(working);
    const bool is_a_water_activator = _is_water_activator();
 
@@ -568,7 +557,6 @@ void FormDialogObjectReference::_load_impl() {
       if (this->fragments.map_marker.is_map_marker(working)) {
          add_page(tr("Map Marker", "page names"), this->ui.pageMapMarker);
       }
-      add_page(tr("Reflected By", "page names"), this->ui.pageReflectedBy);
       add_page(tr("Linked Refs", "page names"), this->ui.pageLinkedRefs);
       add_page(tr("Linked From", "page names"), this->ui.pageLinkedFrom);
       add_page(tr("Activate Parents", "page names"), this->ui.pageActivateParents);
@@ -576,6 +564,8 @@ void FormDialogObjectReference::_load_impl() {
       add_page(tr("Lighting and Emittance", "page names"), this->ui.pageEmittance);
       if (can_have_currents || is_a_water_activator) {
          add_page(tr("Water", "page names"), this->ui.pageWater);
+      } else {
+         add_page(tr("Water", "page names"), this->ui.pageWaterReflectee);
       }
       add_page(tr("Rendering", "page names"), this->ui.pageRendering);
       add_page(tr("Scripts", "page names"), this->ui.pageScripts);
@@ -893,9 +883,6 @@ void FormDialogObjectReference::_load_impl() {
    this->fragments.teleport.load(working);
    _load_patrol();
    this->fragments.map_marker.load(working);
-   #pragma region Reflected By
-      static_assert(false, "TODO: Reflected By");
-   #pragma endregion
    this->fragments.linked_refs.load(working);
    #pragma region Linked From
       this->models.linked_from->setSubject(&working.stub);
@@ -916,15 +903,13 @@ void FormDialogObjectReference::_load_impl() {
    #pragma region Lighting and Emittance
       this->fragments.emittance_source.load(working);
       this->fragments.light.load(working, record_flags());
-      #pragma region Lit Water
-         static_assert(false, "TODO");
-      #pragma endregion
    #pragma endregion
    #pragma region Water
       this->fragments.water_currents.load(working);
       this->fragments.reflected_refs.load(working);
       this->fragments.water_lights.load(working);
    #pragma endregion
+   this->fragments.water_reflectee.load(working);
    #pragma region Rendering
       #pragma region Override multibound ref
          bind_single_ref_extra_data<extra_data_types::multibound_ref>(working, *this->ui.xMultiboundRef);
@@ -1040,15 +1025,13 @@ void FormDialogObjectReference::_save_impl() {
    #pragma region Lighting and Emittance
       this->fragments.emittance_source.save(working);
       this->fragments.light.save(working, record_flags());
-      #pragma region Lit Water
-         static_assert(false, "TODO");
-      #pragma endregion
    #pragma endregion
    #pragma region Water
       this->fragments.water_currents.save(working);
       this->fragments.reflected_refs.load(working);
       this->fragments.water_lights.load(working);
    #pragma endregion
+   this->fragments.water_reflectee.save(working);
    #pragma region Rendering
       #pragma region Override multibound ref
       {
@@ -1178,89 +1161,7 @@ void FormDialogObjectReference::_emit_warnings_on_load() {
    }();
 
    this->fragments.primitive.issue_initial_warnings(working);
-
-   if (base_form) {
-      //
-      // If the ref is a load door, validate its teleport marker setup.
-      //
-      [&working, &logger, &base_form]() {
-         if (base_form->form_type != dovah::form_type::door)
-            return;
-         auto loaded_door = base_form->load().ptr_cast<dovah::loaded_forms::Door>();
-         if (!loaded_door)
-            return;
-         const auto* teleport_data = working.extra_data.get<extra_data_types::teleport>();
-         const bool  is_randomized = !loaded_door->random_destinations.empty();
-         if (is_randomized) {
-            if (teleport_data) {
-               logger.addLogItem(ui::types::log_item(
-                  tr(
-                     "Ref %1 is a randomized load door (base %2). Randomized doors "
-                     "cannot have pre-existing teleport data."
-                  )
-                     .arg(editor_helpers::form_identifiers_to_string(&working.stub))
-                     .arg(editor_helpers::form_identifiers_to_string(base_form))
-                  ,
-                  ui::types::log_item_type::warning,
-                  ui::types::log_item_context::form_load
-               ));
-            }
-            if (!working.extra_data.get<extra_data_types::random_teleport_marker>()) {
-               logger.addLogItem(ui::types::log_item(
-                  tr(
-                     "Ref %1 is a randomized load door (base %2), but it doesn't "
-                     "have a random-teleport marker."
-                  )
-                     .arg(editor_helpers::form_identifiers_to_string(&working.stub))
-                     .arg(editor_helpers::form_identifiers_to_string(base_form))
-                  ,
-                  ui::types::log_item_type::warning,
-                  ui::types::log_item_context::form_load
-               ));
-            }
-         }
-         bool is_automatic   = loaded_door->door_flags & dovah::loaded_forms::Door::door_flag::automatic;
-         bool auto_is_locked = is_automatic && (working.extra_data.get<extra_data_types::lock>() != nullptr);
-         if (teleport_data) {
-            dovah::form_stub* destination_ref = teleport_data->target_door.get_form_stub();
-            if (destination_ref && !dovah::form_type_is_reference(destination_ref->form_type))
-               destination_ref = nullptr;
-
-            if (destination_ref) {
-               auto loaded_dst = destination_ref->load().ptr_cast<loaded_form_type>();
-               if (dovah::utils::auto_door_envelopes_teleport_marker(working.stub)) {
-                  logger.addLogItem(ui::types::log_item(
-                     tr(
-                        "Ref %1 leads to an Automatic door, and the teleport marker lies "
-                        "within that door's area of effect (i.e. fAutoDoorActivateDistance)."
-                     )
-                        .arg(editor_helpers::form_identifiers_to_string(&working.stub))
-                     ,
-                     ui::types::log_item_type::warning,
-                     ui::types::log_item_context::form_load
-                  ));
-               }
-
-               if (is_automatic && !auto_is_locked && loaded_dst) {
-                  auto_is_locked = loaded_dst->extra_data.get<extra_data_types::lock>() != nullptr;
-               }
-            }
-         }
-         if (auto_is_locked) {
-            //
-            // Automatic doors should not be locked (whether locally or via lock data 
-            // on the destination door).
-            //
-            logger.addLogItem(ui::types::log_item(
-               tr("Ref %1 is an automatic door and needs to have its lock data removed.")
-                  .arg(editor_helpers::form_identifiers_to_string(&working.stub))
-               ,
-               ui::types::log_item_type::warning,
-               ui::types::log_item_context::form_load
-            ));
-         }
-      }();
-   }
+   this->fragments.teleport.issue_initial_warnings(working);
 }
 
 uint32_t FormDialogObjectReference::_get_hide_from_local_map_flags_mask() const {

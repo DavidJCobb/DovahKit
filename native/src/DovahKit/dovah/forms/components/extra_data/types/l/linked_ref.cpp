@@ -38,11 +38,13 @@ namespace dovah::loaded_forms::components::extra_data_types {
    /*static*/ void linked_ref::generate_use_info(tes_file_reading::record& record, form_stub_use_info_builder& uib, extra_data_use_info_state& uis) {
       auto& subrecord = record.get_current_subrecord();
       if (subrecord.is_in_bounds(8)) {
-         subrecord.read(uis.form_ids.by_name.linked_ref.keyword);
-         subrecord.read(uis.form_ids.by_name.linked_ref.ref);
-         return;
+         form_id_t keyword;
+         if (subrecord.read(keyword) && keyword)
+            uib.add_outbound_reference(keyword);
       }
-      subrecord.read(uis.form_ids.by_name.linked_ref.ref);
+      form_id_t ref;
+      if (subrecord.read(ref) && ref)
+         uib.add_outbound_reference(ref);
    }
    /*virtual*/ void linked_ref::clear_contained_formIDs(loaded_forms::Form& my_owner) /*override*/ {
       for (auto& link : this->links) {

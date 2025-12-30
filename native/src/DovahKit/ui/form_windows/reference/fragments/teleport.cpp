@@ -12,6 +12,9 @@
 #include "dovah/forms/components/extra_data/types/t/teleport_name.h"
 #include "dovah/forms/Door.h"
 #include "dovah/forms/ObjectReference.h"
+#include "dovah/utils/auto_door_envelopes_teleport_marker.h"
+#include "editor/helpers/form_identifiers_to_string.h"
+#include "editor/subsystems/message_log/core.h"
 #include "editor/subsystems/worldedit/core.h"
 namespace {
    constexpr const bool render_window_displays_teleport_markers = false;
@@ -34,6 +37,95 @@ namespace ui::reference::fragments {
 
       QObject::connect(this->controls.ref, &DKObjectReferencePicker::refChanged, &owner, std::mem_fn(&_on_ref_picked));
       this->controls.ref->setValidationFunction([this](dovah::form_stub* ref) { return this->_validate_picked_ref(ref); });
+   }
+   void teleport::issue_initial_warnings(loaded_form_type& working) {
+      auto* base_form = working.base_form.get_form_stub();
+      if (!base_form || base_form->form_type != dovah::form_type::door)
+         return;
+      auto loaded_door = base_form->load().ptr_cast<dovah::loaded_forms::Door>();
+      if (!loaded_door)
+         return;
+      auto& logger = dovahkit::subsystems::message_log::core::get();
+      const auto* teleport_data = working.extra_data.get<extra_data_types::teleport>();
+      const bool  is_randomized = !loaded_door->random_destinations.empty();
+      if (is_randomized) {
+         if (teleport_data) {
+            logger.addLogItem(ui::types::log_item(
+               QCoreApplication::translate(
+                  "frontend REFR load warnings",
+                  //
+                  "Ref %1 is a randomized load door (base %2). Randomized doors "
+                  "cannot have pre-existing teleport data."
+               )
+                  .arg(editor_helpers::form_identifiers_to_string(&working.stub))
+                  .arg(editor_helpers::form_identifiers_to_string(base_form))
+               ,
+               ui::types::log_item_type::warning,
+               ui::types::log_item_context::form_load
+            ));
+         }
+         if (!working.extra_data.get<extra_data_types::random_teleport_marker>()) {
+            logger.addLogItem(ui::types::log_item(
+               QCoreApplication::translate(
+                  "frontend REFR load warnings",
+                  //
+                  "Ref %1 is a randomized load door (base %2), but it doesn't "
+                  "have a random-teleport marker."
+               )
+                  .arg(editor_helpers::form_identifiers_to_string(&working.stub))
+                  .arg(editor_helpers::form_identifiers_to_string(base_form))
+               ,
+               ui::types::log_item_type::warning,
+               ui::types::log_item_context::form_load
+            ));
+         }
+      }
+      bool is_automatic   = loaded_door->door_flags & dovah::loaded_forms::Door::door_flag::automatic;
+      bool auto_is_locked = is_automatic && (working.extra_data.get<extra_data_types::lock>() != nullptr);
+      if (teleport_data) {
+         dovah::form_stub* destination_ref = teleport_data->target_door.get_form_stub();
+         if (destination_ref && !dovah::form_type_is_reference(destination_ref->form_type))
+            destination_ref = nullptr;
+
+         if (destination_ref) {
+            auto loaded_dst = destination_ref->load().ptr_cast<loaded_form_type>();
+            if (dovah::utils::auto_door_envelopes_teleport_marker(working.stub)) {
+               logger.addLogItem(ui::types::log_item(
+                  QCoreApplication::translate(
+                     "frontend REFR load warnings",
+                     //
+                     "Ref %1 leads to an Automatic door, and the teleport marker lies "
+                     "within that door's area of effect (i.e. fAutoDoorActivateDistance)."
+                  )
+                     .arg(editor_helpers::form_identifiers_to_string(&working.stub))
+                  ,
+                  ui::types::log_item_type::warning,
+                  ui::types::log_item_context::form_load
+               ));
+            }
+
+            if (is_automatic && !auto_is_locked && loaded_dst) {
+               auto_is_locked = loaded_dst->extra_data.get<extra_data_types::lock>() != nullptr;
+            }
+         }
+      }
+      if (auto_is_locked) {
+         //
+         // Automatic doors should not be locked (whether locally or via lock data 
+         // on the destination door).
+         //
+         logger.addLogItem(ui::types::log_item(
+            QCoreApplication::translate(
+               "frontend REFR load warnings",
+               //
+               "Ref %1 is an automatic door and needs to have its lock data removed."
+            )
+               .arg(editor_helpers::form_identifiers_to_string(&working.stub))
+            ,
+            ui::types::log_item_type::warning,
+            ui::types::log_item_context::form_load
+         ));
+      }
    }
    void teleport::load(loaded_form_type& form) {
       this->stub = &form.stub;

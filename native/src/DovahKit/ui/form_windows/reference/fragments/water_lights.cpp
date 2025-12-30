@@ -14,8 +14,6 @@ namespace ui::reference::fragments {
       this->model = new model_type(controls.view);
       controls.view->setModel(this->model);
       ui::typical_tableview_config(controls.view);
-
-      static_assert(false, "TODO: It needs to be possible to add/remove entries via the context menu");
    }
    void water_lights::load(loaded_form_type& form) {
       this->stub = &form.stub;

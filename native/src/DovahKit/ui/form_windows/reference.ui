@@ -1674,32 +1674,6 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="pageReflectedBy">
-      <layout class="QGridLayout" name="gridLayout_10">
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <item row="0" column="0">
-        <widget class="DKFormListPane" name="reflectedBy">
-         <property name="showMoveButtons">
-          <bool>false</bool>
-         </property>
-         <property name="showRemoveButton">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
      <widget class="QWidget" name="pageLinkedRefs">
       <layout class="QGridLayout" name="gridLayout_11">
        <property name="leftMargin">
@@ -2458,6 +2432,83 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="pageWaterReflectee">
+      <layout class="QGridLayout" name="gridLayout_41">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="xReflectorsGroupbox">
+         <property name="title">
+          <string>Reflected by</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_42">
+          <item row="2" column="1">
+           <layout class="QVBoxLayout" name="verticalLayout_8">
+            <item>
+             <widget class="QPushButton" name="xReflectorsButtonInsert">
+              <property name="text">
+               <string>Add...</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="xReflectorsButtonRemove">
+              <property name="text">
+               <string>Remove</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_13">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item row="2" column="0">
+           <widget class="QTableWidget" name="xReflectors"/>
+          </item>
+          <item row="0" column="0" colspan="2">
+           <widget class="QLabel" name="label_62">
+            <property name="text">
+             <string>&lt;p&gt;This data is  unused in &lt;i&gt;Skyrim&lt;/i&gt;.&lt;/p&gt;
+&lt;p&gt;In previous games, every placed water ref had a baked-in list of the scenery objects that it reflected or refracted. An object would only be reflected on the surface of the water if it was in the water's reflection list; and parts of an object that were below the water's surface would only be visible from above the surface if the object was in the water's refraction list. Level designers had to maintain these lists by hand.&lt;/p&gt;</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="Line" name="line_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
      <widget class="QWidget" name="pageRendering">
       <layout class="QGridLayout" name="gridLayout_23">
        <property name="leftMargin">
@@ -2637,11 +2688,6 @@
    <header>widgets/DKFormPicker.h</header>
   </customwidget>
   <customwidget>
-   <class>DKFormListPane</class>
-   <extends>QWidget</extends>
-   <header>widgets/DKFormListPane.h</header>
-  </customwidget>
-  <customwidget>
    <class>DKObjectReferencePicker</class>
    <extends>QWidget</extends>
    <header>widgets/DKObjectReferencePicker.h</header>
@@ -2751,7 +2797,6 @@
   <tabstop>xMapMarkerVisible</tabstop>
   <tabstop>xMapMarkerCanTravel</tabstop>
   <tabstop>xMapMarkerShowAllHidden</tabstop>
-  <tabstop>reflectedBy</tabstop>
   <tabstop>linkedRefs</tabstop>
   <tabstop>buttonLinkedRefNew</tabstop>
   <tabstop>buttonLinkedRefDelete</tabstop>
@@ -2797,6 +2842,9 @@
   <tabstop>xWaterCurrentsVelAngularZ</tabstop>
   <tabstop>reflectedObjects</tabstop>
   <tabstop>waterLights</tabstop>
+  <tabstop>xReflectors</tabstop>
+  <tabstop>xReflectorsButtonInsert</tabstop>
+  <tabstop>xReflectorsButtonRemove</tabstop>
   <tabstop>xMultiboundRef</tabstop>
   <tabstop>xRoomboundImagespace</tabstop>
   <tabstop>xRoomboundLightingTemplate</tabstop>
