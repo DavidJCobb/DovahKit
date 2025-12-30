@@ -50,7 +50,9 @@
 #include "../ui/form_windows/head_part.h"
 #include "../ui/form_windows/idle_marker.h"
 #include "../ui/form_windows/imagespace.h"
+#include "../ui/form_windows/imagespace_modifier.h"
 #include "../ui/form_windows/impact_data.h"
+#include "../ui/form_windows/impact_data_set.h"
 #include "../ui/form_windows/ingredient.h"
 #include "../ui/form_windows/key.h"
 #include "../ui/form_windows/keyword.h"
@@ -81,6 +83,7 @@
 #include "../ui/form_windows/projectile.h"
 #include "../ui/form_windows/quest.h"
 #include "../ui/form_windows/race.h"
+#include "../ui/form_windows/reference.h"
 #include "../ui/form_windows/relationship.h"
 #include "../ui/form_windows/reverb_parameters.h"
 #include "../ui/form_windows/scroll.h"
@@ -123,6 +126,7 @@ namespace {
       std::pair{ dovah::form_type::acoustic_space,    _make<FormDialogAcousticSpace> },
       std::pair{ dovah::form_type::activator,         _make<FormDialogActivator> },
       std::pair{ dovah::form_type::action,            _make<FormDialogActorAction> },
+      std::pair{ dovah::form_type::actor,             _make<FormDialogObjectReference> },
       std::pair{ dovah::form_type::actor_base,        _make<FormDialogActorBase> },
       std::pair{ dovah::form_type::actor_value_info,  _make<FormDialogActorValueInfo> },
       std::pair{ dovah::form_type::addon_node,        _make<FormDialogAddOnNode> },
@@ -165,7 +169,9 @@ namespace {
       std::pair{ dovah::form_type::head_part,         _make<FormDialogHeadPart> },
       std::pair{ dovah::form_type::idle_marker,       _make<FormDialogIdleMarker> },
       std::pair{ dovah::form_type::imagespace,        _make<FormDialogImagespace> },
+      std::pair{ dovah::form_type::imagespace_modifier, _make<FormDialogImagespaceModifier> },
       std::pair{ dovah::form_type::impact_data,       _make<FormDialogImpactData> },
+      std::pair{ dovah::form_type::impact_data_set,   _make<FormDialogImpactDataSet> },
       std::pair{ dovah::form_type::ingredient,        _make<FormDialogIngredient> },
       std::pair{ dovah::form_type::key,               _make<FormDialogKey> },
       std::pair{ dovah::form_type::keyword,           _make<FormDialogKeyword> },
@@ -192,10 +198,20 @@ namespace {
       std::pair{ dovah::form_type::outfit,            _make<FormDialogOutfit> },
       std::pair{ dovah::form_type::package,           _make<FormDialogPackage> },
       std::pair{ dovah::form_type::perk,              _make<FormDialogPerk> },
+      #pragma region "Placed X" forms
+      std::pair{ dovah::form_type::barrier,           _make<FormDialogObjectReference> },
+      std::pair{ dovah::form_type::beam,              _make<FormDialogObjectReference> },
+      std::pair{ dovah::form_type::cone,              _make<FormDialogObjectReference> },
+      std::pair{ dovah::form_type::flame,             _make<FormDialogObjectReference> },
+      std::pair{ dovah::form_type::grenade,           _make<FormDialogObjectReference> },
+      std::pair{ dovah::form_type::placed_hazard,     _make<FormDialogObjectReference> },
+      std::pair{ dovah::form_type::missile,           _make<FormDialogObjectReference> },
+      #pragma endregion
       std::pair{ dovah::form_type::potion,            _make<FormDialogPotion> },
       std::pair{ dovah::form_type::projectile,        _make<FormDialogProjectile> },
       std::pair{ dovah::form_type::quest,             _make<FormDialogQuest> },
       std::pair{ dovah::form_type::race,              _make<FormDialogRace> },
+      std::pair{ dovah::form_type::reference,         _make<FormDialogObjectReference> },
       std::pair{ dovah::form_type::relationship,      _make<FormDialogRelationship> },
       std::pair{ dovah::form_type::reverb_parameters, _make<FormDialogReverbParameters> },
       std::pair{ dovah::form_type::scroll,            _make<FormDialogScroll> },

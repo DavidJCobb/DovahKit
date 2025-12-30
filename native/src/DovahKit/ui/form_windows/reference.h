@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <optional>
 #include <QDialog>
 #include "./_base.h"
 #include "dovah/forms/ObjectReference.h"
@@ -91,4 +92,6 @@ class FormDialogObjectReference :
 
       bool _can_have_attach_ref() const;
       bool _is_water_activator() const;
+
+      std::optional<uint8_t> _default_alpha_threshold() const;
 };

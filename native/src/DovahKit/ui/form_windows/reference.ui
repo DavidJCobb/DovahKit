@@ -768,16 +768,6 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_16">
-         <property name="text">
-          <string>Alpha Cutoff:</string>
-         </property>
-         <property name="buddy">
-          <cstring>xAlphaCutoff</cstring>
-         </property>
-        </widget>
-       </item>
        <item row="7" column="1" colspan="2">
         <widget class="DKCompactObjectReferencePicker" name="xHorse">
          <property name="whatsThis">
@@ -935,6 +925,13 @@
            <widget class="DKNavmeshGenerationImportOptionPicker" name="navmeshGen"/>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="xAlphaCutoffPresent">
+         <property name="text">
+          <string>Alpha Cutoff:</string>
+         </property>
         </widget>
        </item>
       </layout>
@@ -2483,9 +2480,6 @@
             </item>
            </layout>
           </item>
-          <item row="2" column="0">
-           <widget class="QTableWidget" name="xReflectors"/>
-          </item>
           <item row="0" column="0" colspan="2">
            <widget class="QLabel" name="label_62">
             <property name="text">
@@ -2503,6 +2497,9 @@
              <enum>Qt::Horizontal</enum>
             </property>
            </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QTableView" name="xReflectors"/>
           </item>
          </layout>
         </widget>
@@ -2750,6 +2747,7 @@
   <tabstop>persistLocation</tabstop>
   <tabstop>locRefType</tabstop>
   <tabstop>xLevCreaMod</tabstop>
+  <tabstop>xAlphaCutoffPresent</tabstop>
   <tabstop>xAlphaCutoff</tabstop>
   <tabstop>xAttachRef</tabstop>
   <tabstop>xChargePresent</tabstop>
