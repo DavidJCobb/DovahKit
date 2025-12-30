@@ -4,7 +4,6 @@
 #include "dovah/form_stubs/helpers/get_activator_water_type.h"
 #include "dovah/form_stubs/helpers/get_base_form.h"
 #include "editor/helpers/form_identifiers_to_string.h"
-#include "editor/localize/collision_layer.h"
 #include "editor/subsystems/message_log/core.h"
 #include "editor/subsystems/worldedit/core.h"
 #include "ui/utils/bind.h"
@@ -12,22 +11,15 @@
 #include "ui/utils/typical_tableview_config.h"
 #include "./reference/ObjectReferenceActivateParentsModel.h"
 #include "./reference/ObjectReferenceLinkedFromModel.h"
-#include "./reference/ObjectReferenceLinkedRefsModel.h"
-#include "./reference/ObjectReferenceNewLinkedRefDialog.h"
-#include "./reference/ObjectReferenceReflectedObjectsModel.h"
-#include "./reference/ObjectReferenceWaterLightsModel.h"
 #include "widgets/widget-dialogs/DKCompactObjectReferencePickerDialog.h"
 
 #include "dovah/data/all_carryable_form_types.h"
-#include "dovah/data/collision_layers.h"
 #include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/forms/components/keyword_list.h"
 #include "dovah/forms/components/model.h"
 #include "dovah/forms/_component_access.h"
 #include "dovah/utils/form_component_accessors/keyword_list.h"
 #include "dovah/utils/auto_door_envelopes_teleport_marker.h"
-#include "dovah/utils/default_light_emitter_shadow_depth_bias.h"
-#include "dovah/utils/default_primitive_color_for_base_form.h"
 #include "dovah/utils/get_computed_location.h"
 #include "dovah/utils/location_is_or_is_inside_of_location.h"
 
@@ -39,7 +31,6 @@ namespace {
 #include "dovah/forms/Cell.h"
 #include "dovah/forms/DefaultObjectManager.h"
 #include "dovah/forms/Door.h"
-#include "dovah/forms/Faction.h"
 #include "dovah/forms/Light.h"
 #pragma region Extra data includes
    #include "dovah/forms/components/extra_data/types/a/action.h"
@@ -47,9 +38,7 @@ namespace {
    #include "dovah/forms/components/extra_data/types/a/alpha_cutoff.h"
    #include "dovah/forms/components/extra_data/types/a/attach_ref.h"
    #include "dovah/forms/components/extra_data/types/c/charge.h"
-   #include "dovah/forms/components/extra_data/types/c/collision_data.h"
    #include "dovah/forms/components/extra_data/types/c/count.h"
-   #include "dovah/forms/components/extra_data/types/e/emittance_source.h"
    #include "dovah/forms/components/extra_data/types/e/enable_state_parent.h"
    #include "dovah/forms/components/extra_data/types/e/encounter_zone.h"
    #include "dovah/forms/components/extra_data/types/f/favor_cost.h"
@@ -60,7 +49,6 @@ namespace {
    #include "dovah/forms/components/extra_data/types/l/leveled_creature_modifier.h"
    #include "dovah/forms/components/extra_data/types/l/leveled_item_base.h"
    #include "dovah/forms/components/extra_data/types/l/light.h"
-   #include "dovah/forms/components/extra_data/types/l/linked_ref.h"
    #include "dovah/forms/components/extra_data/types/l/location.h"
    #include "dovah/forms/components/extra_data/types/l/location_ref_type.h"
    #include "dovah/forms/components/extra_data/types/l/lock.h"
@@ -69,7 +57,6 @@ namespace {
    #include "dovah/forms/components/extra_data/types/m/multibound_ref.h"
    #include "dovah/forms/components/extra_data/types/o/ownership.h"
    #include "dovah/forms/components/extra_data/types/p/patrol_ref_data.h"
-   #include "dovah/forms/components/extra_data/types/p/primitive.h"
    #include "dovah/forms/components/extra_data/types/r/radius.h"
    #include "dovah/forms/components/extra_data/types/r/rank.h"
    #include "dovah/forms/components/extra_data/types/r/room_ref_data.h"
@@ -85,8 +72,6 @@ namespace {
    namespace extra_data_types {
       using namespace dovah::loaded_forms::components::extra_data_types;
    }
-
-   constexpr const dovah::collision_layer layer_for_player_activate_primitives = dovah::collision_layer::non_collidable;
 
    static bool can_rescale_ref(dovah::form_stub& ref) {
       auto* base = dovah::form_stub_helpers::get_base_form(&ref);
@@ -236,52 +221,69 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
       ui::set_unsigned_range<float>(this->ui.xTimeLeft);
    #pragma endregion
    #pragma region Ownership
-      this->ui.owner->setAllowedFormTypes({ dovah::form_type::actor_base, dovah::form_type::faction });
+      this->fragments.ownership.setup(*this, {
+         .owner_form = this->ui.owner,
+         .owner_rank = this->ui.ownerRank,
+      });
    #pragma endregion
    #pragma region Primitive
-      {
-         using extra_data = extra_data_types::primitive;
-         using shape_type = enum extra_data::shape;
-         QComboBox* widget = this->ui.xPrimitiveShape;
-         widget->clear();
-         widget->addItem(tr("None"), (int)shape_type::none);
-         widget->addItem(tr("Box"), (int)shape_type::box);
-         widget->addItem(tr("Plane"), (int)shape_type::portal_box);
-         widget->addItem(tr("Sphere"), (int)shape_type::sphere);
-         widget->addItem(tr("Line"), (int)shape_type::line);
-      }
-      {
-         QComboBox* widget = this->ui.xPrimitiveCollLayer;
-         widget->clear();
-         for (auto cl : dovah::all_collision_layers) {
-            widget->addItem(
-               editor::localize::collision_layer(cl),
-               (int)cl
-            );
-         }
-      }
+      this->fragments.primitive.setup(*this, {
+         .color   = this->ui.xPrimitiveColor,
+         .extents = {
+            this->ui.xPrimitiveSizeX,
+            this->ui.xPrimitiveSizeY,
+            this->ui.xPrimitiveSizeZ,
+         },
+         .function = this->ui.xPrimitiveFunction,
+         .layer    = this->ui.xPrimitiveCollLayer,
+         .origin   = {
+            this->ui.xPrimitiveCenterX,
+            this->ui.xPrimitiveCenterY,
+            this->ui.xPrimitiveCenterZ,
+         },
+         .player_activation = this->ui.xPrimitivePlayerActivation,
+         .ref_position = {
+            this->ui.positionX,
+            this->ui.positionY,
+            this->ui.positionZ,
+         },
+         .shape = this->ui.xPrimitiveShape,
+      });
    #pragma endregion
    #pragma region Item
       this->ui.xLeveledItemBase->setAllowedFormType(dovah::form_type::leveled_item);
    #pragma endregion
    #pragma region Lock
-      {
-         auto* widget = this->ui.xLockLevel;
-         widget->clear();
-         widget->addItem(tr("Novice", "lock levels"), 1);
-         widget->addItem(tr("Apprentice", "lock levels"), 25);
-         widget->addItem(tr("Adept", "lock levels"), 50);
-         widget->addItem(tr("Expert", "lock levels"), 75);
-         widget->addItem(tr("Master", "lock levels"), 100);
-         widget->addItem(tr("Requires Key", "lock levels"), 255);
-      }
-      this->ui.xLockKey->setAllowedFormType(dovah::form_type::key);
+      this->fragments.lock.setup(*this, {
+         .groupbox   = this->ui.xLockGroupbox,
+         .is_leveled = this->ui.xLockIsLeveled,
+         .key        = this->ui.xLockKey,
+         .level      = this->ui.xLockLevel,
+      });
    #pragma endregion
    #pragma region Teleport
-      if constexpr (!render_window_displays_teleport_markers) {
-         this->ui.buttonTeleportViewMarker->setEnabled(false);
-      }
-      this->ui.xTeleportName->setAllowedFormType(dovah::form_type::message);
+      this->fragments.teleport.setup(*this, {
+         .buttons = {
+            .view_marker = this->ui.buttonTeleportViewMarker,
+            .view_ref    = this->ui.buttonTeleportViewLinkedDoor,
+         },
+         .groupbox = this->ui.xTeleportGroupbox,
+         .name     = this->ui.xTeleportName,
+         .ref      = this->ui.xTeleportDoor,
+      });
+   #pragma endregion
+   #pragma region Map Marker
+      this->fragments.map_marker.setup(*this, {
+         .flags = {
+            .can_be_fast_traveled_to   = this->ui.xMapMarkerCanTravel,
+            .is_unaffected_by_show_all = this->ui.xMapMarkerShowAllHidden,
+            .is_visible                = this->ui.xMapMarkerVisible,
+         },
+         .groupbox = this->ui.xMapMarkerGroupbox,
+         .icon     = this->ui.xMapMarkerType,
+         .name     = this->ui.xMapMarkerName,
+         .radius   = this->ui.xMapMarkerRadius,
+      });
    #pragma endregion
    #pragma region Patrol Data
       ui::set_unsigned_range<float>(this->ui.xPatrolIdleTime);
@@ -291,67 +293,17 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
       static_assert(false, "TODO: It needs to be possible to add/remove entries via the context menu");
    #pragma endregion
    #pragma region Linked Refs
-      this->ui.currentLinkedRefKYWD->setAllowedFormType(dovah::form_type::keyword);
-      {
-         using model_type = ObjectReferenceLinkedRefsModel;
-
-         auto* listview = this->ui.linkedRefs;
-         auto* model    = this->models.linked_refs = new model_type(listview);
-         listview->setModel(model);
-         ui::typical_tableview_config(listview);
-
-         auto* sel_model = listview->selectionModel();
-         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this, sel_model](const QItemSelection& sel) {
-            bool no_selection = sel.empty();
-            this->ui.currentLinkedRefGroupbox->setDisabled(no_selection);
-            if (no_selection)
-               return;
-            QModelIndex qmi = sel[0].topLeft();
-
-            const auto blockers = std::array{
-               QSignalBlocker(this->ui.currentLinkedRefKYWD),
-               QSignalBlocker(this->ui.currentLinkedRefREFR),
-            };
-            this->ui.currentLinkedRefKYWD->setFormStub(qmi.data(model_type::KeywordRole).value<dovah::form_stub*>());
-            this->ui.currentLinkedRefREFR->setRef(     qmi.data(model_type::RefRole).value<dovah::form_stub*>());
-         });
-
-         QObject::connect(this->ui.buttonLinkedRefNew, &QPushButton::clicked, this, [this, model]() {
-            auto* dialog = new ObjectReferenceNewLinkedRefDialog(this);
-            QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
-            dialog->setDisallowedKeywords(model->allKeywords());
-            dialog->setDisallowedRef(this->form->stub);
-            if (dialog->exec() == QDialog::Accepted) {
-               auto* keyword = dialog->keyword();
-               auto* ref     = dialog->ref();
-               if (ref) {
-                  model->setLink(keyword, ref);
-               }
-            }
-         });
-         QObject::connect(this->ui.buttonLinkedRefDelete, &QPushButton::clicked, this, [this, sel_model, model]() {
-            auto sel = sel_model->selectedRows();
-            if (sel.empty())
-               return;
-            auto  qmi  = sel[0];
-            auto* kywd = qmi.data(model_type::KeywordRole).value<dovah::form_stub*>();
-            model->setLink(kywd, nullptr);
-         });
-         
-         auto* ref_picker     = this->ui.currentLinkedRefREFR;
-         auto* keyword_picker = this->ui.currentLinkedRefKYWD;
-         auto  on_changed = [ref_picker, keyword_picker, sel_model, model]() {
-            auto sel = sel_model->selectedRows();
-            if (sel.empty())
-               return;
-            if (auto* ref = ref_picker->ref())
-               model->setRow(sel[0].row(), keyword_picker->formStub(), ref);
-         };
-         QObject::connect(ref_picker,     &DKCompactObjectReferencePicker::refChanged, this, on_changed);
-         QObject::connect(keyword_picker, &DKFormPicker::formChanged, this, on_changed);
-      }
-      this->ui.currentLinkedRefREFR->setValidationFunction([this](dovah::form_stub* ref) -> bool {
-         return ref != &this->form->stub;
+      this->fragments.linked_refs.setup(*this, {
+         .buttons = {
+            .add    = this->ui.buttonLinkedRefNew,
+            .remove = this->ui.buttonLinkedRefDelete,
+         },
+         .edit = {
+            .groupbox = this->ui.currentLinkedRefGroupbox,
+            .keyword  = this->ui.currentLinkedRefKYWD,
+            .ref      = this->ui.currentLinkedRefREFR,
+         },
+         .view = this->ui.linkedRefs
       });
    #pragma endregion
    #pragma region Linked From
@@ -457,42 +409,51 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
       });
    #pragma endregion
    #pragma region Lighting and Emittance
-      #pragma region Emittance Source
-         this->ui.xEmitLIGH->setAllowedFormType(dovah::form_type::light);
-         this->ui.xEmitREGN->setAllowedFormType(dovah::form_type::region);
-         
-         QObject::connect(this->ui.xEmitTypeNONE, &QAbstractButton::toggled, this, [this](bool checked) {
-            if (checked) {
-               this->ui.xEmitLIGH->setEnabled(false);
-               this->ui.xEmitREGN->setEnabled(false);
-            }
-         });
-         QObject::connect(this->ui.xEmitTypeLIGH, &QAbstractButton::toggled, this, [this](bool checked) {
-            if (checked) {
-               this->ui.xEmitLIGH->setEnabled(true);
-               this->ui.xEmitREGN->setEnabled(false);
-            }
-         });
-         QObject::connect(this->ui.xEmitTypeREGN, &QAbstractButton::toggled, this, [this](bool checked) {
-            if (checked) {
-               this->ui.xEmitLIGH->setEnabled(false);
-               this->ui.xEmitREGN->setEnabled(true);
-            }
+      #pragma region ExtraEmittanceSource
+         this->fragments.emittance_source.setup(*this, {
+            .none = {
+               .radio = this->ui.xEmitTypeNONE,
+            },
+            .light = {
+               .radio = this->ui.xEmitTypeLIGH,
+               .form  = this->ui.xEmitLIGH,
+            },
+            .region = {
+               .radio = this->ui.xEmitTypeREGN,
+               .form = this->ui.xEmitREGN,
+            },
          });
       #pragma endregion
       #pragma region Light properties
-         this->ui.xLightFOV->setRange(0, 179.9);
-         ui::set_unsigned_range<float>(this->ui.xLightFade);
-         ui::set_unsigned_range<float>(this->ui.xLightEndDistanceCap);
-         this->ui.xLightDepthBiasSlider->setRange(0, 50);
-         this->ui.xLightDepthBiasSpinbox->setRange(0, 50);
-
-         QObject::connect(this->ui.xLightDepthBiasSlider, &DKFloatSlider::valueChanged, this, [this](float v) {
-            this->ui.xLightDepthBiasSpinbox->setValue(v);
-         });
-         QObject::connect(this->ui.xLightDepthBiasSpinbox, qOverload<double>(&QDoubleSpinBox::valueChanged), this, [this](double v) {
-            const auto blocker = QSignalBlocker(this->ui.xLightDepthBiasSlider);
-            this->ui.xLightDepthBiasSlider->setValue(v);
+         this->fragments.light.setup(*this, {
+            .depth_bias = {
+               .reset   = this->ui.xLightDepthBiasReset,
+               .slider  = this->ui.xLightDepthBiasSlider,
+               .spinbox = this->ui.xLightDepthBiasSpinbox,
+            },
+            .end_cap = {
+               .same_as_radius = this->ui.xLightEndDistanceSameAsRadius,
+               .spinbox        = this->ui.xLightEndDistanceCap,
+            },
+            .fade = {
+               .reset   = this->ui.xLightFadeReset,
+               .spinbox = this->ui.xLightFade,
+            },
+            .flags = {
+               .can_cast_shadows     = this->ui.flagCastShadows,
+               .does_not_light_land  = this->ui.flagDoesntLightLandscape,
+               .does_not_light_water = this->ui.flagDoesntLightWater,
+               .never_fades          = this->ui.flagNeverFades,
+            },
+            .fov = {
+               .reset   = this->ui.xLightFOVReset,
+               .spinbox = this->ui.xLightFOV,
+            },
+            .groupbox = this->ui.xLightGroupbox,
+            .radius = {
+               .reset   = this->ui.xLightRadiusReset,
+               .spinbox = this->ui.xLightRadius,
+            },
          });
       #pragma endregion
       #pragma region Lights Water
@@ -502,44 +463,35 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
    #pragma endregion
    #pragma region Water
       #pragma region Water Currents
-         for (auto* spinbox : std::array{
-            this->ui.xWaterCurrentsVelLinearX,
-            this->ui.xWaterCurrentsVelLinearY,
-            this->ui.xWaterCurrentsVelLinearZ
-         }) {
-            ui::set_range<float>(spinbox);
-         }
-         for (auto* spinbox : std::array{
-            this->ui.xWaterCurrentsVelAngularX,
-            this->ui.xWaterCurrentsVelAngularY,
-            this->ui.xWaterCurrentsVelAngularZ
-         }) {
-            spinbox->setRange(-360, 360);
-         }
+         this->fragments.water_currents.setup(*this, {
+            .groupbox = this->ui.xWaterCurrentsGroupbox,
+            .velocity = {
+               .angular = {
+                  this->ui.xWaterCurrentsVelAngularX,
+                  this->ui.xWaterCurrentsVelAngularY,
+                  this->ui.xWaterCurrentsVelAngularZ
+               },
+               .angular_groupbox = this->ui.xWaterCurrentsVelAngular,
+               .linear = {
+                  this->ui.xWaterCurrentsVelLinearX,
+                  this->ui.xWaterCurrentsVelLinearY,
+                  this->ui.xWaterCurrentsVelLinearZ
+               },
+               .linear_groupbox = this->ui.xWaterCurrentsVelLinear,
+            },
+         });
       #pragma endregion
       #pragma region Reflected Refs
-      {
-         using model_type = ObjectReferenceReflectedObjectsModel;
-
-         auto* listview = this->ui.reflectedObjects;
-         auto* model    = this->models.reflected_objects = new model_type(listview);
-         listview->setModel(model);
-         ui::typical_tableview_config(listview);
-
-         static_assert(false, "TODO: It needs to be possible to add/remove entries via the context menu");
-      }
+         this->fragments.reflected_refs.setup(*this, {
+            .groupbox = this->ui.reflectedObjectsGroupbox,
+            .view     = this->ui.reflectedObjects,
+         });
       #pragma endregion
       #pragma region Water Lights
-      {
-         using model_type = ObjectReferenceWaterLightsModel;
-
-         auto* listview = this->ui.waterLights;
-         auto* model    = this->models.water_lights = new model_type(listview);
-         listview->setModel(model);
-         ui::typical_tableview_config(listview);
-
-         static_assert(false, "TODO: It needs to be possible to add/remove entries via the context menu");
-      }
+         this->fragments.water_lights.setup(*this, {
+            .groupbox = this->ui.waterLightsGroupbox,
+            .view     = this->ui.waterLights,
+         });
       #pragma endregion
    #pragma endregion
    #pragma region Rendering
@@ -572,8 +524,8 @@ void FormDialogObjectReference::_load_impl() {
       }
    }
    
-   const bool can_have_currents    = _can_have_water_currents();
-   const bool is_a_primitive       = _is_primitive();
+   const bool can_have_currents    = this->fragments.water_currents.can_have_currents();
+   const bool is_a_primitive       = this->fragments.primitive.is_primitive(working);
    const bool is_a_water_activator = _is_water_activator();
 
    bool is_an_item = false;
@@ -607,13 +559,13 @@ void FormDialogObjectReference::_load_impl() {
       if (_can_be_a_patrol_marker()) {
          add_page(tr("Patrol Data", "page names"), this->ui.pagePatrolData);
       }
-      if (_can_be_locked()) {
+      if (this->fragments.lock.can_be_locked(working)) {
          add_page(tr("Lock", "page names"), this->ui.pageLock);
       }
       if (base_type == dovah::form_type::door) {
          add_page(tr("Teleport", "page names"), this->ui.pageTeleport);
       }
-      if (base_form && base_form->formID == dovah::hardcoded_form_ids::MapMarker) {
+      if (this->fragments.map_marker.is_map_marker(working)) {
          add_page(tr("Map Marker", "page names"), this->ui.pageMapMarker);
       }
       add_page(tr("Reflected By", "page names"), this->ui.pageReflectedBy);
@@ -650,11 +602,9 @@ void FormDialogObjectReference::_load_impl() {
          ui::bind(this->ui.positionX, working.position.x);
          ui::bind(this->ui.positionY, working.position.y);
          ui::bind(this->ui.positionZ, working.position.z);
-         static_assert(false, "TODO: position snap spinboxes");
          ui::bind(this->ui.rotationX, working.rotation.x);
          ui::bind(this->ui.rotationY, working.rotation.y);
          ui::bind(this->ui.rotationZ, working.rotation.z);
-         static_assert(false, "TODO: rotation snap spinboxes");
          if (can_rescale_ref(working.stub)) {  // Scale
             this->ui.scale->setEnabled(true);
             this->ui.scaleSnap->setEnabled(true);
@@ -665,10 +615,22 @@ void FormDialogObjectReference::_load_impl() {
                const auto blocker = QSignalBlocker(this->ui.scale);
                this->ui.scale->setValue(working.get_scale());
             });
-            static_assert(false, "TODO: scale snap spinbox");
          } else {
             this->ui.scale->setEnabled(false);
             this->ui.scaleSnap->setEnabled(false);
+         }
+         {
+            auto _hook_up_snap = [](QDoubleSpinBox* target, QDoubleSpinBox* snap) {
+               snap->setValue(target->singleStep());
+               QObject::connect(snap, qOverload<double>(&QDoubleSpinBox::valueChanged), target, &QDoubleSpinBox::setSingleStep);
+            };
+            _hook_up_snap(this->ui.positionX, this->ui.positionXSnap);
+            _hook_up_snap(this->ui.positionY, this->ui.positionYSnap);
+            _hook_up_snap(this->ui.positionZ, this->ui.positionZSnap);
+            _hook_up_snap(this->ui.rotationX, this->ui.rotationXSnap);
+            _hook_up_snap(this->ui.rotationY, this->ui.rotationYSnap);
+            _hook_up_snap(this->ui.rotationZ, this->ui.rotationZSnap);
+            _hook_up_snap(this->ui.scale, this->ui.scaleSnap);
          }
          static_assert(!render_window_displays_test_radii, "TODO: If the Render Window can display Test Radii, then we need to implement them.");
       #pragma endregion
@@ -782,7 +744,7 @@ void FormDialogObjectReference::_load_impl() {
                }
             }
             bind_typed_checkbox.operator()<dovah::form_type::actor_base, record_flag::starts_dead>(this->ui.flagStartsDead);
-            static_assert(false, "TODO: Turn Off Fire");
+            ui::bind(this->ui.flagStartsDead, record_flags(), record_flag::turn_off_fire);
          #pragma endregion
       }
       #pragma endregion
@@ -921,163 +883,20 @@ void FormDialogObjectReference::_load_impl() {
          }
       }
    #pragma endregion
-   #pragma region Ownership
-   {
-      using form_extra_data = extra_data_types::ownership;
-      using rank_extra_data = extra_data_types::rank;
-      auto* form_picker = this->ui.owner;
-      auto* rank_picker = this->ui.ownerRank;
-      if (const auto* extra = working.extra_data.get<form_extra_data>()) {
-         dovah::form_stub* owner = extra->form.get_form_stub();
-         form_picker->setFormStub(owner);
-         if (owner && owner->form_type == dovah::form_type::faction) {
-            rank_picker->setEnabled(true);
-
-            const auto blocker = QSignalBlocker(rank_picker);
-            this->_update_ownership_rank_picker();
-
-            if (auto* extra_rank = working.extra_data.get<rank_extra_data>()) {
-               auto i = rank_picker->findData(extra_rank->value);
-               if (i >= 0) {
-                  rank_picker->setCurrentIndex(i);
-               } else {
-                  rank_picker->setCurrentIndex(rank_picker->findData(rank_extra_data::sentinel_value_for_unset));
-                  working.extra_data.remove<rank_extra_data>(working);
-               }
-            } else {
-               rank_picker->setCurrentIndex(rank_picker->findData(rank_extra_data::sentinel_value_for_unset));
-            }
-         } else {
-            rank_picker->setEnabled(false);
-         }
-      } else {
-         form_picker->setFormStub(nullptr);
-         rank_picker->setEnabled(false);
-      }
-      QObject::connect(form_picker, &DKFormPicker::formChanged, this, [this, &working, rank_picker](dovah::form_stub* stub) {
-         if (stub) {
-            working.extra_data.get_or_create<form_extra_data>()->form.set(working, stub);
-         } else {
-            working.extra_data.remove<form_extra_data>(working);
-         }
-         this->_update_ownership_rank_picker();
-      });
-
-      QObject::connect(&DovahKitCore::get(), &DovahKitCore::formModified, this, [this, form_picker, rank_picker](dovah::form_stub* stub) {
-         if (stub != form_picker->formStub())
-            return;
-         this->_update_ownership_rank_picker();
-      });
-   }
-   #pragma endregion
-   #pragma region Primitive
-      if (is_a_primitive) {
-         for (const auto& pair : std::array{
-            std::pair{ this->ui.xPrimitiveCenterX, this->ui.positionX },
-            std::pair{ this->ui.xPrimitiveCenterY, this->ui.positionY },
-            std::pair{ this->ui.xPrimitiveCenterZ, this->ui.positionZ },
-         }) {
-            //
-            // Have the Primitive Origin and World Coordinates Position spinboxes mirror each other.
-            //
-            auto* prm_coord = pair.first;
-            auto* ref_coord = pair.second;
-            QObject::connect(ref_coord, qOverload<double>(&QDoubleSpinBox::valueChanged), prm_coord, [prm_coord](double v) {
-               const auto blocker = QSignalBlocker(prm_coord);
-               prm_coord->setValue(v);
-            });
-            QObject::connect(prm_coord, qOverload<double>(&QDoubleSpinBox::valueChanged), ref_coord, [ref_coord](double v) {
-               const auto blocker = QSignalBlocker(ref_coord);
-               ref_coord->setValue(v);
-            });
-         }
-         QObject::connect(this->ui.xPrimitiveCollLayer, qOverload<int>(&QComboBox::currentIndexChanged), this, &FormDialogObjectReference::_on_primitive_collision_layer_changed);
-         QObject::connect(this->ui.xPrimitivePlayerActivation, &QCheckBox::toggled, this, &FormDialogObjectReference::_on_primitive_player_activation_toggled);
-         this->_load_primitive();
-      }
-   #pragma endregion
+   this->fragments.ownership.load(working);
+   this->fragments.primitive.load(working);
    #pragma region Item Options
       bind_single_form_extra_data<extra_data_types::leveled_item_base>(working, *this->ui.xLeveledItemBase);
       bind_single_ref_extra_data<extra_data_types::spawn_container>(working, *this->ui.xSpawnContainer);
    #pragma endregion
-   _load_lock();
-   #pragma region Teleport
-      {
-         using extra_data = extra_data_types::teleport;
-         auto* enable = this->ui.xTeleportGroupbox;
-         if (auto* extra = working.extra_data.get<extra_data>()) {
-            enable->setChecked(true);
-
-            auto* ref = extra->target_door.get_form_stub();
-            if (ref && !dovah::form_type_is_reference(ref->form_type))
-               ref = nullptr;
-
-            this->state.teleport.prior_destination = ref;
-            this->ui.xTeleportDoor->setRef(ref);
-            this->ui.buttonTeleportViewLinkedDoor->setEnabled(ref != nullptr);
-            if constexpr (render_window_displays_teleport_markers) {
-               this->ui.buttonTeleportViewMarker->setEnabled(ref != nullptr);
-            }
-         } else {
-            enable->setChecked(false);
-            this->ui.buttonTeleportViewLinkedDoor->setEnabled(false);
-            this->ui.buttonTeleportViewMarker->setEnabled(false);
-         }
-         QObject::connect(this->ui.buttonTeleportViewLinkedDoor, &QPushButton::clicked, this, [this]() {
-            auto* ref = this->ui.xTeleportDoor->ref();
-            if (!ref)
-               return;
-            dovahkit::subsystems::worldedit::core::get().center_on_refr(*ref);
-         });
-         static_assert(!render_window_displays_teleport_markers, "TODO: If the Render Window can display teleport markers, then the View Teleport Marker button should be implemented!");
-
-         QObject::connect(this->ui.xTeleportDoor, &DKObjectReferencePicker::refChanged, this, [this](dovah::form_stub* ref) {
-            if (!ref) {
-               this->state.teleport.ever_changed = true;
-               this->state.teleport.prior_destination = ref;
-               this->ui.buttonTeleportViewLinkedDoor->setEnabled(false);
-               this->ui.buttonTeleportViewMarker->setEnabled(false);
-               return;
-            }
-            if (!_is_legal_teleport_destination(*ref)) {
-               const auto blocker = QSignalBlocker(this->ui.xTeleportDoor);
-               this->ui.xTeleportDoor->setRef(this->state.teleport.prior_destination);
-               return;
-            }
-            this->state.teleport.ever_changed = true;
-            this->state.teleport.prior_destination = ref;
-            this->ui.buttonTeleportViewLinkedDoor->setEnabled(true);
-            this->ui.buttonTeleportViewMarker->setEnabled(true);
-         });
-      }
-      bind_single_form_extra_data<extra_data_types::teleport_name> (working, *this->ui.xTeleportName);
-   #pragma endregion
+   this->fragments.lock.load(working);
+   this->fragments.teleport.load(working);
    _load_patrol();
-   #pragma region Map Marker
-   {
-      using extra_data = extra_data_types::map_marker;
-      auto* enable = this->ui.xMapMarkerGroupbox;
-      if (auto* extra = working.extra_data.get<extra_data>()) {
-         enable->setChecked(true);
-         this->ui.xMapMarkerName->setText(DovahKitCore::get().convert_localized_string(extra->name));
-         this->ui.xMapMarkerType->setCurrentIndex(this->ui.xMapMarkerType->findData((int)extra->type));
-         this->ui.xMapMarkerVisible->setChecked(extra->flags & extra_data::flag::visible);
-         this->ui.xMapMarkerCanTravel->setChecked(extra->flags & extra_data::flag::can_travel_to);
-         this->ui.xMapMarkerShowAllHidden->setChecked(extra->flags & extra_data::flag::show_all_hidden);
-      } else {
-         enable->setChecked(false);
-      }
-
-      if (auto* extra = working.extra_data.get<extra_data_types::radius>())
-         this->ui.xMapMarkerRadius->setValue(extra->value);
-   }
-   #pragma endregion
+   this->fragments.map_marker.load(working);
    #pragma region Reflected By
       static_assert(false, "TODO: Reflected By");
    #pragma endregion
-   #pragma region Linked Refs
-      this->models.linked_refs->importData(working);
-   #pragma endregion
+   this->fragments.linked_refs.load(working);
    #pragma region Linked From
       this->models.linked_from->setSubject(&working.stub);
    #pragma endregion
@@ -1095,131 +914,16 @@ void FormDialogObjectReference::_load_impl() {
    }
    #pragma endregion
    #pragma region Lighting and Emittance
-      #pragma region EmittanceSource
-      {
-         using extra_data = extra_data_types::emittance_source;
-         if (auto* extra = working.extra_data.get<extra_data>()) {
-            auto* form = extra->form.get_form_stub();
-            if (form && form->form_type != dovah::form_type::light && form->form_type != dovah::form_type::region)
-               form = nullptr;
-
-            if (form) {
-               if (form->form_type == dovah::form_type::light) {
-                  this->ui.xEmitTypeLIGH->setChecked(true);
-                  this->ui.xEmitLIGH->setEnabled(true);
-                  this->ui.xEmitREGN->setEnabled(false);
-                  this->ui.xEmitLIGH->setFormStub(form);
-               } else {
-                  this->ui.xEmitTypeREGN->setChecked(true);
-                  this->ui.xEmitLIGH->setEnabled(false);
-                  this->ui.xEmitREGN->setEnabled(true);
-                  this->ui.xEmitREGN->setFormStub(form);
-               }
-            } else {
-               this->ui.xEmitTypeNONE->setChecked(true);
-               this->ui.xEmitLIGH->setEnabled(false);
-               this->ui.xEmitREGN->setEnabled(false);
-            }
-         } else {
-            this->ui.xEmitTypeNONE->setChecked(true);
-            this->ui.xEmitLIGH->setEnabled(false);
-            this->ui.xEmitREGN->setEnabled(false);
-         }
-      }
-      #pragma endregion
-      #pragma region ExtraLightData
-         {
-            using extra_data = extra_data_types::light;
-            if (auto* extra = working.extra_data.get<extra_data>()) {
-               this->ui.xLightFOV->setValue(extra->fov);
-               this->ui.xLightFade->setValue(extra->fade);
-               this->ui.xLightEndDistanceCap->setValue(extra->end_distance_cap);
-               this->ui.xLightDepthBiasSpinbox->setValue(extra->shadow_depth_bias);
-            } else {
-               if (base_type == dovah::form_type::light) {
-                  auto loaded = base_form->load().ptr_cast<dovah::loaded_forms::Light>();
-                  if (loaded) {
-                     this->ui.xLightFOV->setValue(loaded->fov);
-                     this->ui.xLightFade->setValue(loaded->fade);
-                     this->ui.xLightEndDistanceCap->setValue(loaded->radius); // TODO: is this correct?
-                  }
-               }
-            }
-         }
-         if (base_type == dovah::form_type::light) {
-            if (auto* extra = working.extra_data.get<extra_data_types::radius>())
-               this->ui.xLightRadius->setValue(extra->value);
-
-            this->ui.xLightGroupbox->setEnabled(true);
-            QObject::connect(this->ui.xLightFOVReset, &QPushButton::clicked, [this, &working]() {
-               auto loaded = _base_loaded_as_type<dovah::loaded_forms::Light>();
-               if (loaded)
-                  this->ui.xLightFOV->setValue(loaded->fov);
-            });
-            QObject::connect(this->ui.xLightFadeReset, &QPushButton::clicked, [this, &working]() {
-               auto loaded = _base_loaded_as_type<dovah::loaded_forms::Light>();
-               if (loaded)
-                  this->ui.xLightFade->setValue(loaded->fade);
-            });
-            QObject::connect(this->ui.xLightDepthBiasReset, &QPushButton::clicked, [this, &working]() {
-               float bias = dovah::utils::default_light_emitter_shadow_depth_bias(this->form->stub, true);
-               this->ui.xLightDepthBiasSpinbox->setValue(bias);
-            });
-            ui::bind(this->ui.flagCastShadows,          record_flags(), loaded_form_type::form_flag::casts_shadows);
-            ui::bind(this->ui.flagDoesntLightLandscape, record_flags(), loaded_form_type::form_flag::doesnt_light_landscape);
-            ui::bind(this->ui.flagDoesntLightWater,     record_flags(), loaded_form_type::form_flag::doesnt_light_water);
-            ui::bind(this->ui.flagNeverFades,           record_flags(), loaded_form_type::form_flag::never_fades);
-         } else {
-            this->ui.xLightGroupbox->setEnabled(false);
-         }
-      #pragma endregion
+      this->fragments.emittance_source.load(working);
+      this->fragments.light.load(working, record_flags());
       #pragma region Lit Water
          static_assert(false, "TODO");
       #pragma endregion
    #pragma endregion
    #pragma region Water
-      #pragma region Water Currents
-         if (can_have_currents) {
-            cobb::vector3<float> vel_linear;
-            cobb::vector3<float> vel_angular;
-
-            if (base_form && base_form->formID == dovah::hardcoded_form_ids::WaterCurrentZoneMarker) {
-               if (auto* extra = working.extra_data.get<extra_data_types::water_current_zone_data>()) {
-                  vel_linear  = extra->velocity.linear;
-                  vel_angular = extra->velocity.angular;
-               }
-            } else {
-               if (auto* extra = working.extra_data.get<extra_data_types::water_data>()) {
-                  const auto size = extra->data.size();
-                  if (size >= 1) {
-                     vel_linear = extra->data[0].velocity;
-                     if (size >= 2) {
-                        vel_angular = extra->data[1].velocity;
-                     }
-                  }
-               }
-            }
-
-            this->ui.xWaterCurrentsVelLinearX->setValue(vel_linear.x);
-            this->ui.xWaterCurrentsVelLinearY->setValue(vel_linear.y);
-            this->ui.xWaterCurrentsVelLinearZ->setValue(vel_linear.z);
-            this->ui.xWaterCurrentsVelAngularX->setValue(vel_angular.x);
-            this->ui.xWaterCurrentsVelAngularY->setValue(vel_angular.y);
-            this->ui.xWaterCurrentsVelAngularZ->setValue(vel_angular.z);
-         } else {
-            this->ui.xWaterCurrentsGroupbox->setEnabled(false);
-         }
-      #pragma endregion
-      #pragma region Reflected Objects
-         this->models.reflected_objects->setSubject(&working.stub);
-         if (!is_a_water_activator)
-            this->ui.reflectedObjectsGroupbox->setEnabled(false);
-      #pragma endregion
-      #pragma region Water Lights
-         this->models.water_lights->setSubject(&working.stub);
-         if (!is_a_water_activator)
-            this->ui.waterLightsGroupbox->setEnabled(false);
-      #pragma endregion
+      this->fragments.water_currents.load(working);
+      this->fragments.reflected_refs.load(working);
+      this->fragments.water_lights.load(working);
    #pragma endregion
    #pragma region Rendering
       #pragma region Override multibound ref
@@ -1296,115 +1000,14 @@ void FormDialogObjectReference::_save_impl() {
          }
       }
    }
-   
-   _save_primitive();
-   _save_lock();
-   #pragma region Teleport
-   {
-      using extra_data = extra_data_types::teleport;
 
-      dovah::form_stub* prior_destination = nullptr;
-      bool disconnect_prior_destination = false;
-      if (auto* extra = working.extra_data.get<extra_data>()) {
-         prior_destination = extra->target_door.get_form_stub();
-      }
-
-      if (this->ui.xTeleportGroupbox->isChecked()) {
-         working.extra_data.remove<extra_data>(working);
-         disconnect_prior_destination = true;
-      } else if (base_type == dovah::form_type::door) {
-         auto* destination = this->ui.xTeleportDoor->ref();
-         if (destination && !_is_legal_teleport_destination(*destination)) {
-            QMessageBox::critical(
-               this,
-               tr("Error"),
-               tr(
-                  "The destination that you selected for this load door was edited at some "
-                  "point between you selecting it and you clicking OK. Those edits have "
-                  "caused it to no longer be a valid destination (e.g. because it's not a "
-                  "door anymore, or because it's been connected to another load door. This "
-                  "ref will not be connected to that destination."
-               )
-            );
-            destination = nullptr;
-         }
-         auto* extra = working.extra_data.get_or_create<extra_data>();
-         extra->target_door.set(working, destination);
-
-         if (destination) {
-            auto loaded = destination->load().ptr_cast<loaded_form_type>();
-            if (loaded) {
-               if (this->state.teleport.ever_changed) {
-                  //
-                  // Try to automatically position this door's teleport marker in front of 
-                  // the destination door, and facing away from it.
-                  //
-                  auto coords = _calc_teleport_marker_position(*loaded);
-                  extra->position = coords.first;
-                  extra->rotation = coords.second;
-               }
-               //
-               // Create teleport data on the destination door, so that the connection 
-               // between these doors is bidirectional.
-               //
-               auto* extra = loaded->extra_data.get_or_create<extra_data>();
-               if (extra->target_door != &this->form->stub) {
-                  extra->target_door.set(*loaded, &this->form->stub);
-                  //
-                  // Try to automatically position the destination's teleport marker in 
-                  // front of this door, and facing away from it.
-                  //
-                  auto coords = _calc_teleport_marker_position(working);
-                  extra->position = coords.first;
-                  extra->rotation = coords.second;
-               }
-            }
-         }
-         disconnect_prior_destination = destination != prior_destination;
-      }
-      if (disconnect_prior_destination && prior_destination) {
-         //
-         // This door was previously connected to some other door. We've broken that 
-         // connection, so delete the old destination's teleport data.
-         //
-         auto loaded = prior_destination->load().ptr_cast<loaded_form_type>();
-         if (loaded) {
-            if (auto* extra = loaded->extra_data.get<extra_data>()) {
-               if (extra->target_door == &this->form->stub) {
-                  loaded->extra_data.remove<extra_data>(*loaded);
-                  prior_destination->set_edited(true);
-               }
-            }
-         }
-      }
-   }
-   #pragma endregion
+   this->fragments.ownership.save(working);
+   this->fragments.primitive.save(working);
+   this->fragments.lock.save(working);
+   this->fragments.teleport.save(working);
    _save_patrol();
-   #pragma region Map Marker
-   {
-      using extra_data = extra_data_types::map_marker;
-      if (this->ui.xMapMarkerGroupbox->isChecked()) {
-         working.extra_data.remove<extra_data>(working);
-      } else {
-         auto* extra = working.extra_data.get_or_create<extra_data>();
-         editor.assign_localized_string(extra->name, this->ui.xMapMarkerName->text());
-         extra->type  = this->ui.xMapMarkerType->currentData().toInt();
-         cobb::edit_bit(extra->flags, extra_data::flag::visible, this->ui.xMapMarkerVisible->isChecked());
-         cobb::edit_bit(extra->flags, extra_data::flag::can_travel_to, this->ui.xMapMarkerCanTravel->isChecked());
-         cobb::edit_bit(extra->flags, extra_data::flag::show_all_hidden, this->ui.xMapMarkerShowAllHidden->isChecked());
-      }
-      
-      float radius = this->ui.xMapMarkerRadius->value();
-      if (radius) {
-         working.extra_data.get_or_create<extra_data_types::radius>()->value = radius;
-      } else {
-         working.extra_data.remove<extra_data_types::radius>(working);
-      }
-   }
-   #pragma endregion
-   #pragma region Linked Refs
-      this->models.linked_refs->exportData(working);
-   #pragma endregion
+   this->fragments.map_marker.save(working);
+   this->fragments.linked_refs.save(working);
    #pragma region Activate Parents
       this->models.activate_parents->exportData(working);
       {
@@ -1435,83 +1038,16 @@ void FormDialogObjectReference::_save_impl() {
    }
    #pragma endregion
    #pragma region Lighting and Emittance
-      #pragma region ExtraLightData
-         if (base_type == dovah::form_type::light) {
-            const float radius = this->ui.xLightRadius->value();
-            const float fov    = this->ui.xLightFOV->value();
-            const float fade   = this->ui.xLightFade->value();
-            const float cap    = this->ui.xLightEndDistanceCap->value();
-            const float bias   = this->ui.xLightDepthBiasSpinbox->value();
-
-            bool any_changed = true;
-            {
-               auto loaded = _base_loaded_as_type<dovah::loaded_forms::Light>();
-               if (loaded) {
-                  any_changed = false;
-                  if (loaded->radius != radius
-                   || loaded->fade != fade
-                   || loaded->fov  != fov
-                  ) {
-                     any_changed = true;
-                  }
-               }
-            }
-            if (any_changed) {
-               auto* extra = working.extra_data.get_or_create<extra_data_types::light>();
-               extra->fade = fade;
-               extra->fov  = fov;
-               extra->end_distance_cap  = cap;
-               extra->shadow_depth_bias = bias;
-            } else {
-               working.extra_data.remove<extra_data_types::light>(working);
-            }
-
-            working.extra_data.get_or_create<extra_data_types::radius>()->value = radius;
-         }
-      #pragma endregion
-      #pragma region EmittanceSource
-      {
-         using extra_data = extra_data_types::emittance_source;
-         dovah::form_stub* form = nullptr;
-         if (this->ui.xEmitTypeLIGH->isChecked()) {
-            form = this->ui.xEmitLIGH->formStub();
-         } else if (this->ui.xEmitTypeREGN->isChecked()) {
-            form = this->ui.xEmitREGN->formStub();
-         }
-         if (form) {
-            working.extra_data.get_or_create<extra_data>()->form.set(working, form);
-         } else {
-            working.extra_data.remove<extra_data>(working);
-         }
-      }
+      this->fragments.emittance_source.save(working);
+      this->fragments.light.save(working, record_flags());
+      #pragma region Lit Water
+         static_assert(false, "TODO");
       #pragma endregion
    #pragma endregion
-   #pragma region Water Currents
-      if (_can_have_water_currents()) {
-         cobb::vector3<float> vel_linear = {
-            this->ui.xWaterCurrentsVelLinearX->value(),
-            this->ui.xWaterCurrentsVelLinearY->value(),
-            this->ui.xWaterCurrentsVelLinearZ->value(),
-         };
-         cobb::vector3<float> vel_angular = {
-            this->ui.xWaterCurrentsVelAngularX->value(),
-            this->ui.xWaterCurrentsVelAngularY->value(),
-            this->ui.xWaterCurrentsVelAngularZ->value(),
-         };
-
-         if (base_form && base_form->formID == dovah::hardcoded_form_ids::WaterCurrentZoneMarker) {
-            auto* extra = working.extra_data.get_or_create<extra_data_types::water_current_zone_data>();
-            extra->velocity.linear  = vel_linear;
-            extra->velocity.angular = vel_angular;
-         } else {
-            auto* extra = working.extra_data.get_or_create<extra_data_types::water_data>();
-            if (extra->data.size() < 2) {
-               extra->data.resize(2);
-            }
-            extra->data[0].velocity = vel_linear;
-            extra->data[1].velocity = vel_angular;
-         }
-      }
+   #pragma region Water
+      this->fragments.water_currents.save(working);
+      this->fragments.reflected_refs.load(working);
+      this->fragments.water_lights.load(working);
    #pragma endregion
    #pragma region Rendering
       #pragma region Override multibound ref
@@ -1641,26 +1177,7 @@ void FormDialogObjectReference::_emit_warnings_on_load() {
       }
    }();
 
-   //
-   // If the ref is a primitive and a multibound, warn if those two sets of 
-   // sizes don't match.
-   //
-   [&working, &logger]() {
-      auto* extra_prim = working.extra_data.get<extra_data_types::primitive>();
-      auto* extra_mbnd = working.extra_data.get<extra_data_types::multibound_bounds>();
-      if (extra_prim && extra_mbnd) {
-         if (extra_prim->bounds != extra_mbnd->halfwidths * 2) {
-            logger.addLogItem(ui::types::log_item(
-               tr(
-                  "Multibound %1 has internally inconsistent size values. These will be "
-                  "corrected when you click \"OK.\""
-               ),
-               ui::types::log_item_type::warning,
-               ui::types::log_item_context::form_load
-            ));
-         }
-      }
-   }();
+   this->fragments.primitive.issue_initial_warnings(working);
 
    if (base_form) {
       //
@@ -1761,56 +1278,6 @@ uint32_t FormDialogObjectReference::_get_hide_from_local_map_flags_mask() const 
    return 0;
 }
 
-#pragma region Lock
-   bool FormDialogObjectReference::_can_be_locked() const noexcept {
-      auto* base_form = this->form->base_form.get_form_stub();
-      if (!base_form)
-         return false;
-      switch (base_form->form_type) {
-         case dovah::form_type::container:
-            return true;
-         case dovah::form_type::door:
-            {
-               auto loaded = base_form->load().ptr_cast<dovah::loaded_forms::Door>();
-               if (!loaded)
-                  break;
-               if (loaded->door_flags & dovah::loaded_forms::Door::door_flag::automatic)
-                  return false;
-            }
-            return true;
-      }
-      return false;
-   }
-   void FormDialogObjectReference::_load_lock() {
-      using extra_data = extra_data_types::lock;
-      auto& working    = *this->form;
-      if (this->ui.xLockGroupbox->isChecked()) {
-         working.extra_data.remove<extra_data>(working);
-      } else {
-         auto* extra = working.extra_data.get_or_create<extra_data>();
-         extra->key.set(working, this->ui.xLockKey->formStub());
-         extra->level = this->ui.xLockLevel->currentData().toInt();
-         cobb::edit_bit(extra->flags, extra_data::flag::leveled, this->ui.xLockIsLeveled->isChecked());
-      }
-   }
-   void FormDialogObjectReference::_save_lock() {
-      using extra_data = extra_data_types::lock;
-      auto& working    = *this->form;
-      if (!_can_be_locked()) {
-         this->ui.xLockGroupbox->setChecked(false);
-         working.extra_data.remove<extra_data>(working);
-         return;
-      }
-      if (this->ui.xLockGroupbox->isChecked()) {
-         working.extra_data.remove<extra_data>(working);
-      } else {
-         auto* extra = working.extra_data.get_or_create<extra_data>();
-         extra->key.set(working, this->ui.xLockKey->formStub());
-         extra->level = this->ui.xLockLevel->currentData().toInt();
-         cobb::edit_bit(extra->flags, extra_data::flag::leveled, this->ui.xLockIsLeveled->isChecked());
-      }
-   }
-#pragma endregion
 #pragma region Patrol
    bool FormDialogObjectReference::_can_be_a_patrol_marker() const {
       dovah::form_stub* base_form = this->form->base_form.get_form_stub();
@@ -1860,213 +1327,6 @@ uint32_t FormDialogObjectReference::_get_hide_from_local_map_flags_mask() const 
       } else {
          working.extra_data.remove<extra_data_types::patrol_ref_data>(working);
       }
-   }
-#pragma endregion
-#pragma region Primitive
-   bool FormDialogObjectReference::_is_primitive() const noexcept {
-      dovah::form_stub* base_form = this->form->base_form.get_form_stub();
-      if (!base_form)
-         return false;
-
-      switch (base_form->form_type) {
-         case dovah::form_type::acoustic_space:
-         case dovah::form_type::sound:
-            return true;
-         case dovah::form_type::activator:
-            return this->form->extra_data.get<extra_data_types::primitive>() != nullptr;
-      }
-      switch (base_form->formID) {
-         case dovah::hardcoded_form_ids::CollisionMarker:
-         case dovah::hardcoded_form_ids::MultiBoundMarker:
-         case dovah::hardcoded_form_ids::PlaneMarker:
-         case dovah::hardcoded_form_ids::PortalMarker:
-         case dovah::hardcoded_form_ids::RoomMarker:
-            return true;
-      }
-      return false;
-   }
-   bool FormDialogObjectReference::_can_change_primitive_shape() const {
-      return _base_stub_of_type<dovah::form_type::activator>() != nullptr;
-   }
-
-   QString FormDialogObjectReference::_primitive_type(const dovah::form_stub* base_form) const {
-      if (!base_form)
-         return tr("???", "primitive function");
-      const auto base_type = base_form->form_type;
-      switch (base_type) {
-         case dovah::form_type::acoustic_space:
-            return tr("Acoustic Space", "primitive function");
-         case dovah::form_type::activator:
-            return tr("Trigger", "primitive function");
-         case dovah::form_type::sound:
-            return tr("Sound Emitter", "primitive function");
-         default:
-            switch (base_form->formID) {
-               case dovah::hardcoded_form_ids::CollisionMarker:
-                  return tr("Collision Object", "primitive function");
-               case dovah::hardcoded_form_ids::MultiBoundMarker:
-                  return tr("Multibound", "primitive function");
-               case dovah::hardcoded_form_ids::PlaneMarker:
-                  return tr("Occlusion Plane", "primitive function");
-               case dovah::hardcoded_form_ids::PortalMarker:
-                  return tr("Portal", "primitive function");
-               case dovah::hardcoded_form_ids::RoomMarker:
-                  {
-                     auto& working = *this->form;
-                     auto* extra   = working.extra_data.get<extra_data_types::room_ref_data>();
-                     if (extra && extra->is_master) {
-                        return tr("Room (master)", "primitive function");
-                     }
-                  }
-                  // This is Bethesda's terminology. Can we figure out a better word? 
-                  // When does the CK even decide to make a roombound a "master?"
-                  return tr("Room (slave)", "primitive function");
-            }
-            break;
-      }
-      return tr("Static", "primitive function");
-   }
-   void FormDialogObjectReference::_load_primitive() {
-      auto& working   = *this->form;
-      auto* base_form = working.base_form.get_form_stub();
-      auto  base_type = base_form ? base_form->form_type : dovah::form_type::none;
-      if (!_is_primitive())
-         return;
-      const auto blockers = std::array{
-         QSignalBlocker(this->ui.xPrimitiveCenterX),
-         QSignalBlocker(this->ui.xPrimitiveCenterY),
-         QSignalBlocker(this->ui.xPrimitiveCenterZ),
-         QSignalBlocker(this->ui.xPrimitiveCollLayer),
-         QSignalBlocker(this->ui.xPrimitiveColor),
-         QSignalBlocker(this->ui.xPrimitivePlayerActivation),
-         QSignalBlocker(this->ui.xPrimitiveShape),
-      };
-
-      this->ui.xPrimitiveFunction->setText(_primitive_type(base_form));
-
-      bool is_typically_flat = false;
-      if (base_form) {
-         switch (base_form->formID) {
-            case dovah::hardcoded_form_ids::PlaneMarker:
-            case dovah::hardcoded_form_ids::PortalMarker:
-               is_typically_flat = true;
-               break;
-         }
-      }
-
-      extra_data_types::primitive* extra = nullptr;
-      if (extra = working.extra_data.get<extra_data_types::primitive>()) {
-         if (auto* extra_bound = working.extra_data.get<extra_data_types::multibound_bounds>()) {
-            if (extra->bounds != extra_bound->halfwidths) {
-               //
-               // We've already warned the user about this, so just correct it now.
-               //
-               extra_bound->halfwidths = extra->bounds / 2;
-            }
-         }
-      } else {
-         extra = working.extra_data.get_or_create<extra_data_types::primitive>();
-         if (is_typically_flat) {
-            extra->shape = extra_data_types::primitive::shape::portal_box;
-         } else {
-            extra->shape = extra_data_types::primitive::shape::box;
-         }
-         if (base_form) {
-            extra->color = dovah::utils::default_primitive_color_for_base_form(*base_form);
-         }
-         if (auto* extra_bound = working.extra_data.get<extra_data_types::multibound_bounds>()) {
-            extra->bounds = extra_bound->halfwidths * 2;
-         }
-      }
-      this->ui.xPrimitiveColor->setColor(QColor::fromRgbF(extra->color.r, extra->color.g, extra->color.b));
-      this->ui.xPrimitiveShape->setCurrentIndex(this->ui.xPrimitiveShape->findData((int)extra->shape));
-      this->ui.xPrimitiveShape->setEnabled(_can_change_primitive_shape());
-      this->ui.xPrimitiveSizeX->setValue(extra->bounds.x);
-      this->ui.xPrimitiveSizeY->setValue(extra->bounds.y);
-      this->ui.xPrimitiveSizeZ->setValue(extra->bounds.z);
-      //
-      // The "Player Activation" checkbox just changes the layer type to L_NONCOLLIDABLE. 
-      // If the base form is an Activator, then this enables an activation prompt on the 
-      // primitive.
-      //
-      {
-         QComboBox* widget = this->ui.xPrimitiveCollLayer;
-         if (auto* extra = working.extra_data.get<extra_data_types::collision_data>()) {
-            auto i = widget->findData((int)extra->value);
-            if (i < 0)
-               i = widget->findData((int)dovah::collision_layer::unidentified);
-            widget->setCurrentIndex(i);
-         } else {
-            widget->setCurrentIndex(widget->findData((int)dovah::collision_layer::null));
-         }
-
-         _on_primitive_collision_layer_changed();
-      }
-      this->ui.xPrimitivePlayerActivation->setEnabled(base_type == dovah::form_type::activator);
-   }
-   void FormDialogObjectReference::_save_primitive() {
-      if (!_is_primitive())
-         return;
-      auto& working    = *this->form;
-      auto* extra_prim = working.extra_data.get_or_create<extra_data_types::primitive>();
-      extra_prim->bounds = {
-         this->ui.xPrimitiveSizeX->value(),
-         this->ui.xPrimitiveSizeY->value(),
-         this->ui.xPrimitiveSizeZ->value(),
-      };
-      {
-         auto color = this->ui.xPrimitiveColor->color();
-         extra_prim->color = {
-            .r = (float)color.redF(),
-            .g = (float)color.greenF(),
-            .b = (float)color.blueF(),
-            .a = extra_prim->color.a,
-         };
-      }
-      if (_can_change_primitive_shape()) {
-         extra_prim->shape = (enum extra_data_types::primitive::shape) this->ui.xPrimitiveShape->currentData().toInt();
-      }
-
-      auto layer = (dovah::collision_layer) this->ui.xPrimitiveCollLayer->currentData().toInt();
-      if (layer == dovah::collision_layer::unidentified) {
-         working.extra_data.remove<extra_data_types::collision_data>(working);
-      } else {
-         working.extra_data.get_or_create<extra_data_types::collision_data>()->set_layer_id(layer);
-      }
-
-      if (auto* extra_bound = working.extra_data.get<extra_data_types::multibound_bounds>()) {
-         extra_bound->halfwidths = extra_prim->bounds / 2;
-      }
-   }
-
-   void FormDialogObjectReference::_on_primitive_collision_layer_changed() {
-      auto* widget = this->ui.xPrimitiveCollLayer;
-      auto  layer  = (dovah::collision_layer)widget->currentData().toInt();
-      if (layer == layer_for_player_activate_primitives) {
-         auto* base_form = this->form->base_form.get_form_stub();
-         if (base_form && base_form->form_type == dovah::form_type::activator) {
-            this->ui.xPrimitivePlayerActivation->setChecked(true);
-         }
-      } else {
-         this->state.primitive.prior_layer = layer;
-      }
-   }
-   void FormDialogObjectReference::_on_primitive_player_activation_toggled(bool checked) {
-      //
-      // The "Player Activation" checkbox just changes the layer type to L_NONCOLLIDABLE. 
-      // If the base form is an Activator, then this enables an activation prompt on the 
-      // primitive.
-      //
-      QComboBox* widget  = this->ui.xPrimitiveCollLayer;
-      const auto blocker = QSignalBlocker(widget);
-
-      dovah::collision_layer layer;
-      if (checked) {
-         layer = layer_for_player_activate_primitives;
-      } else {
-         layer = this->state.primitive.prior_layer;
-      }
-      widget->setCurrentIndex(widget->findData((int)layer));
    }
 #pragma endregion
 
@@ -2120,56 +1380,6 @@ void FormDialogObjectReference::_reset_time_left() {
    }
    widget->setValue(0);
 }
-void FormDialogObjectReference::_update_ownership_rank_picker() {
-   auto& editor  = DovahKitCore::get();
-   auto& working = *this->form;
-
-   auto* form_picker = this->ui.owner;
-   auto* rank_picker = this->ui.ownerRank;
-
-   auto* form = form_picker->formStub();
-   if (!form || form->form_type != dovah::form_type::faction) {
-      rank_picker->clear();
-      working.extra_data.remove<extra_data_types::rank>(working);
-      return;
-   }
-
-   int prior_value = extra_data_types::rank::sentinel_value_for_unset;
-   {
-      auto data = rank_picker->currentData();
-      if (data.isValid())
-         prior_value = data.toInt();
-   }
-   const auto blocker = QSignalBlocker(rank_picker);
-   rank_picker->clear();
-   rank_picker->addItem(tr("Any Rank", "ownership: no faction rank"), -1);
-
-   auto loaded = form->load().ptr_cast<dovah::loaded_forms::Faction>();
-   if (!loaded) {
-      working.extra_data.remove<extra_data_types::rank>(working);
-      return;
-   }
-   for (auto& rank : loaded->ranks) {
-      QString text;
-      {
-         auto masc = editor.convert_localized_string(rank.title_masc);
-         auto fem = editor.convert_localized_string(rank.title_fem);
-         if (masc == fem) {
-            text = fem;
-         } else {
-            text = tr("%1 / %2", "ownership: faction rank names").arg(masc).arg(fem);
-         }
-      }
-      rank_picker->addItem(text, rank.id);
-   }
-   auto i = rank_picker->findData(prior_value);
-   if (i >= 0) {
-      rank_picker->setCurrentIndex(i);
-   } else {
-      rank_picker->setCurrentIndex(0);
-      working.extra_data.remove<extra_data_types::rank>(working);
-   }
-}
 
 bool FormDialogObjectReference::_can_have_attach_ref() const {
    dovah::form_stub* base_form = this->form->base_form.get_form_stub();
@@ -2187,66 +1397,9 @@ bool FormDialogObjectReference::_can_have_attach_ref() const {
    }
    return false;
 }
-bool FormDialogObjectReference::_can_have_water_currents() const {
-   dovah::form_stub* base_form = this->form->base_form.get_form_stub();
-   if (!base_form)
-      return false;
-
-   return base_form->test_record_flags(1 << 19);
-}
 bool FormDialogObjectReference::_is_water_activator() const {
    dovah::form_stub* base_form = this->form->base_form.get_form_stub();
    if (!base_form)
       return false;
    return dovah::form_stub_helpers::get_activator_water_type(*base_form) != nullptr;
-}
-bool FormDialogObjectReference::_is_legal_teleport_destination(dovah::form_stub& ref) const {
-   auto* base = dovah::form_stub_helpers::get_base_form(&ref);
-   if (!base || base->form_type != dovah::form_type::door) {
-      return false;
-   }
-
-   auto loaded = ref.load().ptr_cast<loaded_form_type>();
-   if (loaded) {
-      auto* extra = loaded->extra_data.get<extra_data_types::teleport>();
-      if (extra) {
-         if (extra->target_door.get_form_stub() != &this->form->stub) {
-            //
-            // The desired door is already a teleporter to somewhere else!
-            //
-            return false;
-         }
-      }
-   }
-   return true;
-}
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/euler_angles.hpp>
-#include "vulkan/helpers/glm_transform_from_beth.h"
-/*static*/ std::pair<cobb::vector3<float>, cobb::vector3<float>> FormDialogObjectReference::_calc_teleport_marker_position(const loaded_form_type& in_front_of) {
-   constexpr float distance = 128;
-
-   std::pair<cobb::vector3<float>, cobb::vector3<float>> out;
-   auto& [pos, rot] = out;
-
-   pos = in_front_of.position;
-
-   auto transform = vulkanDK::glm_transform_from_beth(in_front_of.position, in_front_of.rotation, 1);
-   auto forward   = transform[0];
-   pos += forward * distance;
-
-   rot.x = 0;
-   rot.y = 0;
-   rot.z = atan2(forward.y, forward.x);
-
-   static_assert(
-      !render_window_displays_teleport_markers,
-      "Hey, now that we can actually see teleport markers in the Render Window, "
-      "maybe we should actually test this function and verify that it's producing "
-      "correct results! Just a thought for later, yeah?"
-   );
-
-   return out;
 }

@@ -27,6 +27,7 @@ class DKFormPicker : public QWidget {
    Q_PROPERTY(QString overrideTextForNone     READ overrideTextForNone     WRITE setOverrideTextForNone     DESIGNABLE true);
    Q_PROPERTY(QString requiredScriptname      READ requiredScriptname      WRITE setRequiredScriptname      DESIGNABLE true);
    Q_PROPERTY(QString requiredAliasScriptname READ requiredAliasScriptname WRITE setRequiredAliasScriptname DESIGNABLE true);
+   Q_PROPERTY(bool    alwaysSplitTypes        READ alwaysSplitTypes        WRITE setAlwaysSplitTypes        DESIGNABLE true);
    Q_PROPERTY(bool    splitTypesWhenMany      READ splitTypesWhenMany      WRITE setSplitTypesWhenMany      DESIGNABLE true);
    public:
       #if !defined(QT_PLUGIN)
@@ -66,6 +67,9 @@ class DKFormPicker : public QWidget {
       constexpr bool splitTypesWhenMany() const noexcept { return this->_properties.split_types_when_many; }
       void setSplitTypesWhenMany(bool) noexcept;
 
+      constexpr bool alwaysSplitTypes() const noexcept { return this->_properties.split_types_always; }
+      void setAlwaysSplitTypes(bool) noexcept;
+
       #if !defined(QT_PLUGIN)
          constexpr dovah::form_stub* formStub() const noexcept { return this->_value; }
          void setFormStub(dovah::form_stub*) noexcept;
@@ -89,6 +93,7 @@ class DKFormPicker : public QWidget {
       struct {
          bool allow_none = true;
          QList<dovah::form_type> allowed_form_types;
+         bool split_types_always    = false;
          bool split_types_when_many = true;
 
          QString scriptname_on_alias;

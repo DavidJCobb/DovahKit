@@ -220,6 +220,14 @@ void DKFormPicker::setSplitTypesWhenMany(bool b) noexcept {
       this->_setIsSplittingTypes(should);
 }
 
+void DKFormPicker::setAlwaysSplitTypes(bool b) noexcept {
+   this->_properties.split_types_always = b;
+   bool now    = this->isSplittingTypes();
+   bool should = this->_shouldSplitTypes();
+   if (now != should)
+      this->_setIsSplittingTypes(should);
+}
+
 void DKFormPicker::setAllowNone(bool b) noexcept {
    if (b == this->allowNone())
       return;
@@ -369,6 +377,8 @@ void DKFormPicker::_setSubwidgetEnableState(bool s) {
    this->_subwidgets.form->setEnabled(s);
 }
 bool DKFormPicker::_shouldSplitTypes() const noexcept {
+   if (this->alwaysSplitTypes())
+      return true;
    if (!this->splitTypesWhenMany())
       return false;
    if (this->_properties.allowed_form_types.isEmpty())

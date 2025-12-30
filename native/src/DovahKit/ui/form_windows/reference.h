@@ -1,17 +1,22 @@
 #pragma once
 #include <cstdint>
-#include <utility> // std::pair
 #include <QDialog>
-#include "helpers/vector3.h"
 #include "./_base.h"
-#include "dovah/data/collision_layers.h"
 #include "dovah/forms/ObjectReference.h"
 #include "ui_reference.h"
+#include "./reference/fragments/emittance_source.h"
+#include "./reference/fragments/light.h"
+#include "./reference/fragments/linked_refs.h"
+#include "./reference/fragments/lock.h"
+#include "./reference/fragments/map_marker.h"
+#include "./reference/fragments/ownership.h"
+#include "./reference/fragments/primitive.h"
+#include "./reference/fragments/reflected_refs.h"
+#include "./reference/fragments/teleport.h"
+#include "./reference/fragments/water_currents.h"
+#include "./reference/fragments/water_lights.h"
 class ObjectReferenceActivateParentsModel;
 class ObjectReferenceLinkedFromModel;
-class ObjectReferenceLinkedRefsModel;
-class ObjectReferenceReflectedObjectsModel;
-class ObjectReferenceWaterLightsModel;
 
 class FormDialogObjectReference :
    public QDialog,
@@ -25,24 +30,21 @@ class FormDialogObjectReference :
    protected:
       Ui::FormDialogObjectReference ui;
       struct {
-         struct {
-            dovah::collision_layer prior_layer = dovah::collision_layer::null;
-         } primitive;
-         struct {
-            // Used so we know if we need to recalculate the teleport marker 
-            // position on save.
-            bool ever_changed = false;
-
-            // Used if the user picks an invalid ref, to undo their choice.
-            dovah::form_stub* prior_destination = nullptr;
-         } teleport;
-      } state;
+         ui::reference::fragments::emittance_source emittance_source;
+         ui::reference::fragments::light            light;
+         ui::reference::fragments::linked_refs      linked_refs;
+         ui::reference::fragments::lock             lock;
+         ui::reference::fragments::map_marker       map_marker;
+         ui::reference::fragments::ownership        ownership;
+         ui::reference::fragments::primitive        primitive;
+         ui::reference::fragments::reflected_refs   reflected_refs;
+         ui::reference::fragments::teleport         teleport;
+         ui::reference::fragments::water_currents   water_currents;
+         ui::reference::fragments::water_lights     water_lights;
+      } fragments;
       struct {
          ObjectReferenceActivateParentsModel*  activate_parents  = nullptr;
          ObjectReferenceLinkedFromModel*       linked_from       = nullptr;
-         ObjectReferenceLinkedRefsModel*       linked_refs       = nullptr;
-         ObjectReferenceReflectedObjectsModel* reflected_objects = nullptr;
-         ObjectReferenceWaterLightsModel*      water_lights      = nullptr;
       } models;
       
       virtual void _load_impl() override;
@@ -71,26 +73,10 @@ class FormDialogObjectReference :
 
       uint32_t _get_hide_from_local_map_flags_mask() const;
 
-      #pragma region Lock
-         bool _can_be_locked() const noexcept;
-         void _load_lock();
-         void _save_lock();
-      #pragma endregion
       #pragma region Patrol
          bool _can_be_a_patrol_marker() const;
          void _load_patrol();
          void _save_patrol();
-      #pragma endregion
-      #pragma region Primitive
-         bool _is_primitive() const noexcept;
-         bool _can_change_primitive_shape() const;
-
-         QString _primitive_type(const dovah::form_stub* base_form) const;
-         void _load_primitive();
-         void _save_primitive();
-         //
-         void _on_primitive_collision_layer_changed();
-         void _on_primitive_player_activation_toggled(bool);
       #pragma endregion
 
       bool _can_override_navmesh_gen() const noexcept;
@@ -100,11 +86,7 @@ class FormDialogObjectReference :
       void _set_ignored_by_sandbox(bool);
 
       void _reset_time_left();
-      void _update_ownership_rank_picker();
 
       bool _can_have_attach_ref() const;
-      bool _can_have_water_currents() const;
       bool _is_water_activator() const;
-      bool _is_legal_teleport_destination(dovah::form_stub&) const;
-      static std::pair<cobb::vector3<float>, cobb::vector3<float>> _calc_teleport_marker_position(const loaded_form_type& in_front_of);
 };

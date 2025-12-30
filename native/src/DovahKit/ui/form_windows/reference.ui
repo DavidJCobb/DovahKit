@@ -2434,7 +2434,7 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_39">
           <item row="0" column="0">
-           <widget class="QTableWidget" name="reflectedObjects"/>
+           <widget class="QTableView" name="reflectedObjects"/>
           </item>
          </layout>
         </widget>
@@ -2451,7 +2451,7 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_40">
           <item row="0" column="0">
-           <widget class="QTableWidget" name="waterLights"/>
+           <widget class="QTableView" name="waterLights"/>
           </item>
          </layout>
         </widget>
