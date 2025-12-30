@@ -40,7 +40,6 @@ class ObjectReferenceReflectingWaterModel final : public QAbstractItemModel {
       using backend_form_type = dovah::loaded_forms::ObjectReference;
       
       class ReflectionTypeItemDelegate : public QStyledItemDelegate {
-         Q_OBJECT;
          public:
             using QStyledItemDelegate::QStyledItemDelegate;
 

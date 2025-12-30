@@ -93,7 +93,20 @@ ObjectReferenceActivateParentsModel::ObjectReferenceActivateParentsModel(QObject
       return {};
    }
    #pragma region Editing
-      /*virtual*/ bool removeRows(int row, int count, const QModelIndex& parent) /*override*/;
+      /*virtual*/ bool ObjectReferenceActivateParentsModel::removeRows(int row, int count, const QModelIndex& parent) /*override*/ {
+         if (row < 0 || count <= 0)
+            return false;
+         if (row + count >= this->_data.size())
+            return false;
+         if (parent.isValid()) // items can't have children
+            return false;
+         this->beginRemoveRows(parent, row, row + count - 1);
+         auto bit = this->_data.begin() + row;
+         auto eit = bit + count;
+         this->_data.erase(bit, eit);
+         this->endRemoveRows();
+         return true;
+      }
    #pragma endregion
 #pragma endregion
 

@@ -1,12 +1,11 @@
 #include "./primitive.h"
 #include <cassert>
-#include <functional>
 #include <QCheckBox>
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QDoubleSpinBox>
 #include <QLabel>
-#include <QVariant>
+#include "helpers/bound_mem_fn.h"
 #include "widgets/DKColorPickerButton.h"
 #include "dovah/data/collision_layers.h"
 #include "dovah/data/hardcoded_form_ids.h"
@@ -30,7 +29,7 @@ namespace ui::reference::fragments {
       this->controls = controls;
       
       {
-         using shape_type = enum extra_data_type::shape;
+         using shape_type = extra_data_type::shape_enum;
          QComboBox* widget = this->controls.shape;
          widget->clear();
          widget->addItem(owner.tr("None"),   (int)shape_type::none);
@@ -49,8 +48,8 @@ namespace ui::reference::fragments {
             );
          }
       }
-      QObject::connect(this->controls.layer,             qOverload<int>(&QComboBox::currentIndexChanged), &owner, std::mem_fn(&_on_collision_layer_changed));
-      QObject::connect(this->controls.player_activation, &QCheckBox::toggled, &owner, std::mem_fn(&_set_player_activation));
+      QObject::connect(this->controls.layer,             qOverload<int>(&QComboBox::currentIndexChanged), &owner, cobb__bound_this_fn(_on_collision_layer_changed));
+      QObject::connect(this->controls.player_activation, &QCheckBox::toggled, &owner, cobb__bound_this_fn(_set_player_activation));
 
       //
       // Have the Primitive Origin and World Coordinates Position spinboxes mirror each other.

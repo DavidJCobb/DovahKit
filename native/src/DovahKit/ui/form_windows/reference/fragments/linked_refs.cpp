@@ -1,13 +1,14 @@
 #include "./linked_refs.h"
 #include <array>
-#include <functional>
 #include <QGroupBox>
 #include <QPushButton>
 #include <QTableView>
 #include <QVariant>
+#include "helpers/bound_mem_fn.h"
 #include "widgets/DKCompactObjectReferencePicker.h"
 #include "widgets/DKFormPicker.h"
 #include "dovah/forms/ObjectReference.h"
+#include "editor/form_stub_meta_type.h"
 #include "../ObjectReferenceLinkedRefsModel.h"
 #include "../ObjectReferenceNewLinkedRefDialog.h"
 #include "ui/utils/typical_tableview_config.h"
@@ -25,12 +26,12 @@ namespace ui::reference::fragments {
          listview->setModel(this->model);
          ui::typical_tableview_config(listview);
 
-         QObject::connect(listview->selectionModel(), &QItemSelectionModel::selectionChanged, &owner, std::mem_fn(&_on_selection_changed));
+         QObject::connect(listview->selectionModel(), &QItemSelectionModel::selectionChanged, &owner, cobb__bound_this_fn(_on_selection_changed));
 
-         QObject::connect(this->controls.buttons.add,    &QPushButton::clicked, &owner, std::mem_fn(&_try_add_link));
-         QObject::connect(this->controls.buttons.remove, &QPushButton::clicked, &owner, std::mem_fn(&_remove_selected_link));
+         QObject::connect(this->controls.buttons.add,    &QPushButton::clicked, &owner, cobb__bound_this_fn(_try_add_link));
+         QObject::connect(this->controls.buttons.remove, &QPushButton::clicked, &owner, cobb__bound_this_fn(_remove_selected_link));
          
-         auto on_changed = std::mem_fn(&_update_selected_link);
+         auto on_changed = cobb__bound_this_fn(_update_selected_link);
          QObject::connect(this->controls.edit.ref,     &DKCompactObjectReferencePicker::refChanged, &owner, on_changed);
          QObject::connect(this->controls.edit.keyword, &DKFormPicker::formChanged, &owner, on_changed);
       }

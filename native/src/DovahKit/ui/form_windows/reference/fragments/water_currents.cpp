@@ -1,7 +1,6 @@
 #include "./water_currents.h"
 #include <QGroupBox>
 #include <QDoubleSpinBox>
-#include <QVariant>
 #include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/forms/components/extra_data/types/w/water_current_zone_data.h"
 #include "dovah/forms/components/extra_data/types/w/water_data.h"

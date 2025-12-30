@@ -15,6 +15,7 @@ namespace dovah::loaded_forms {
       constexpr color_floats& operator=(const color_floats&) noexcept = default;
       constexpr color_floats& operator=(const std::array<float, 4>& v) noexcept {
          this->values = v;
+         return *this;
       }
       constexpr bool operator==(const color_floats&) const noexcept = default;
       constexpr bool operator==(const std::array<float, 4>& v) const noexcept { return this->values == v; }

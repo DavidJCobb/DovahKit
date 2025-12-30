@@ -1,5 +1,6 @@
 #pragma once
 #include "./common_fundamental.h"
+#include "../../../_common_cpp.h"
 
 #define TEMPLATE_PARAMS template<typename Self, uint32_t Signature, typename ValueType, ValueType DefaultValue>
 #define CLASS_NAME common_fundamental<Self, Signature, ValueType, DefaultValue>

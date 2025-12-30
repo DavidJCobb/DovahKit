@@ -127,7 +127,7 @@ namespace {
          _flag_definition{ "reflected_by_cell_water", wrapped_type::form_flag::reflected_by_auto_water },
          _flag_definition{ "dont_havok_settle",       wrapped_type::form_flag::dont_havok_settle,        concatenate_form_type_lists(all_item_types, std::array{ ft::actor, ft::activator, ft::addon_node, ft::door, ft::movable_static, ft::statik, ft::tree }) },
          _flag_definition{ "no_respawn",              wrapped_type::form_flag::no_respawn,               concatenate_form_type_lists(all_item_types, std::array{ ft::activator, ft::addon_node, ft::door, ft::movable_static, ft::statik, ft::tree }) },
-         _flag_definition{ "ground",                  wrapped_type::form_flag::ground },
+         //_flag_definition{ "ground",                  wrapped_type::form_flag::ground },
          //_flag_definition{ "multibound",              wrapped_type::form_flag::multibound },  // expose this only once we're sure what it even friggin' does
       };
       static constexpr size_t type_specific_flag_count = ([]() {

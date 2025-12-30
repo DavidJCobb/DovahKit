@@ -1,7 +1,6 @@
 #include "./water_lights.h"
 #include <QGroupBox>
 #include <QTableView>
-#include <QVariant>
 #include "dovah/forms/ObjectReference.h"
 #include "ui/utils/typical_tableview_config.h"
 #include "../ObjectReferenceWaterLightsModel.h"

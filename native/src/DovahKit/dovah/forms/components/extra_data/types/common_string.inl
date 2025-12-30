@@ -1,5 +1,6 @@
 #pragma once
 #include "./common_string.h"
+#include "../../../_common_cpp.h"
 
 #define TEMPLATE_PARAMS template<typename Self, uint32_t Signature>
 #define CLASS_NAME common_string<Self, Signature>

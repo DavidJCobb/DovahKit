@@ -3,7 +3,7 @@
 #include <QGroupBox>
 #include <QMessageBox>
 #include <QPushButton>
-#include <QVariant>
+#include "helpers/bound_mem_fn.h"
 #include "widgets/DKFormPicker.h"
 #include "widgets/DKObjectReferencePicker.h"
 #include "dovah/form_stubs/helpers/get_base_form.h"
@@ -16,6 +16,7 @@
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/subsystems/message_log/core.h"
 #include "editor/subsystems/worldedit/core.h"
+#include "vulkan/helpers/glm_transform_from_beth.h"
 namespace {
    constexpr const bool render_window_displays_teleport_markers = false;
 }
@@ -32,10 +33,10 @@ namespace ui::reference::fragments {
       
       controls.name->setAllowedFormType(dovah::form_type::message);
 
-      QObject::connect(this->controls.buttons.view_marker, &QPushButton::clicked, &owner, std::mem_fn(&_view_linked_marker));
-      QObject::connect(this->controls.buttons.view_ref,    &QPushButton::clicked, &owner, std::mem_fn(&_view_linked_door));
+      QObject::connect(this->controls.buttons.view_marker, &QPushButton::clicked, &owner, cobb__bound_this_fn(_view_linked_marker));
+      QObject::connect(this->controls.buttons.view_ref,    &QPushButton::clicked, &owner, cobb__bound_this_fn(_view_linked_door));
 
-      QObject::connect(this->controls.ref, &DKObjectReferencePicker::refChanged, &owner, std::mem_fn(&_on_ref_picked));
+      QObject::connect(this->controls.ref, &DKObjectReferencePicker::refChanged, &owner, cobb__bound_this_fn(_on_ref_picked));
       this->controls.ref->setValidationFunction([this](dovah::form_stub* ref) { return this->_validate_picked_ref(ref); });
    }
    void teleport::issue_initial_warnings(loaded_form_type& working) {
@@ -346,11 +347,7 @@ namespace ui::reference::fragments {
          extra->rotation = coords.second;
       }
    }
-   
-   #include <glm/glm.hpp>
-   #include <glm/gtc/matrix_transform.hpp>
-   #include <glm/gtx/euler_angles.hpp>
-   #include "vulkan/helpers/glm_transform_from_beth.h"
+
    /*static*/ std::pair<cobb::vector3<float>, cobb::vector3<float>> teleport::_calc_teleport_marker_position(const loaded_form_type& in_front_of) {
       constexpr float distance = 128;
 
@@ -359,13 +356,12 @@ namespace ui::reference::fragments {
 
       pos = in_front_of.position;
 
-      auto transform = vulkanDK::glm_transform_from_beth(in_front_of.position, in_front_of.rotation, 1);
-      auto forward   = transform[0];
-      pos += forward * distance;
+      ::glm::mat4 transform = vulkanDK::glm_transform_from_beth(in_front_of.position, in_front_of.rotation, 1);
+      pos += transform[0] * distance;
 
       rot.x = 0;
       rot.y = 0;
-      rot.z = atan2(forward.y, forward.x);
+      rot.z = atan2(transform[0].y, transform[0].x);
 
       static_assert(
          !render_window_displays_teleport_markers,

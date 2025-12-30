@@ -3,7 +3,6 @@
 #include <QDoubleSpinBox>
 #include <QGroupBox>
 #include <QPushButton>
-#include <QVariant>
 #include "widgets/DKFloatSlider.h"
 #include "dovah/forms/components/extra_data/types/l/light.h"
 #include "dovah/forms/components/extra_data/types/r/radius.h"

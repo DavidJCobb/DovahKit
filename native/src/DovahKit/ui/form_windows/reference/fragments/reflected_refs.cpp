@@ -1,7 +1,6 @@
 #include "./reflected_refs.h"
 #include <QGroupBox>
 #include <QTableView>
-#include <QVariant>
 #include "dovah/form_stubs/helpers/get_activator_water_type.h"
 #include "dovah/forms/ObjectReference.h"
 #include "ui/utils/typical_tableview_config.h"

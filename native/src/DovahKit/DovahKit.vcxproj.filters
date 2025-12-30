@@ -9413,6 +9413,9 @@
     <ClInclude Include="ui\form_windows\reference\fragments\water_reflectee.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\bound_mem_fn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

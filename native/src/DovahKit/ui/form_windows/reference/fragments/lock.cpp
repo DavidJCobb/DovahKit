@@ -2,7 +2,6 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QGroupBox>
-#include <QVariant>
 #include "widgets/DKFormPicker.h"
 #include "dovah/forms/components/extra_data/types/l/lock.h"
 #include "dovah/forms/ObjectReference.h"

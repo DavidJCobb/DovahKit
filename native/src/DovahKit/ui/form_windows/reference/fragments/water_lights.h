@@ -6,7 +6,7 @@ namespace dovah {
    class form_stub;
 }
 class ObjectReferenceWaterLightsModel;
-class groupbox;
+class QGroupBox;
 class QTableView;
 class QWidget;
 

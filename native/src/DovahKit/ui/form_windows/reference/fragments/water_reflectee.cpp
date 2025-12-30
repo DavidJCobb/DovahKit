@@ -1,10 +1,12 @@
 #include "./water_reflectee.h"
-#include <functional>
 #include <QGroupBox>
 #include <QPushButton>
 #include <QTableView>
+#include <QVariant>
+#include "helpers/bound_mem_fn.h"
 #include "widgets/widget-dialogs/DKCompactObjectReferencePickerDialog.h"
 #include "dovah/forms/ObjectReference.h"
+#include "editor/form_stub_meta_type.h"
 #include "../ObjectReferenceReflectingWaterModel.h"
 #include "ui/utils/typical_tableview_config.h"
 
@@ -23,10 +25,10 @@ namespace ui::reference::fragments {
          listview->setItemDelegateForColumn(model_type::Column::Type, delegate);
       }
 
-      QObject::connect(listview->selectionModel(), &QItemSelectionModel::selectionChanged, &owner, std::mem_fn(&_on_selection_changed));
+      QObject::connect(listview->selectionModel(), &QItemSelectionModel::selectionChanged, &owner, cobb__bound_this_fn(_on_selection_changed));
 
-      QObject::connect(this->controls.buttons.add,    &QPushButton::clicked, &owner, std::mem_fn(&_try_add_water));
-      QObject::connect(this->controls.buttons.remove, &QPushButton::clicked, &owner, std::mem_fn(&_try_remove_water));
+      QObject::connect(this->controls.buttons.add,    &QPushButton::clicked, &owner, cobb__bound_this_fn(_try_add_water));
+      QObject::connect(this->controls.buttons.remove, &QPushButton::clicked, &owner, cobb__bound_this_fn(_try_remove_water));
    }
    void water_reflectee::load(loaded_form_type& form) {
       this->stub = &form.stub;

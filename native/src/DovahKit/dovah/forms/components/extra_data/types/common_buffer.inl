@@ -1,5 +1,6 @@
 #pragma once
 #include "./common_buffer.h"
+#include "../../../_common_cpp.h"
 
 #define TEMPLATE_PARAMS template<typename Self, uint32_t Signature, size_t Size>
 #define CLASS_NAME common_buffer<Self, Signature, Size>

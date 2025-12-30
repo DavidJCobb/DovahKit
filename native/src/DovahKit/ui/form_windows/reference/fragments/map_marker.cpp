@@ -5,7 +5,6 @@
 #include <QDoubleSpinBox>
 #include <QGroupBox>
 #include <QLineEdit>
-#include <QVariant>
 #include "widgets/DKFormPicker.h"
 #include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/forms/components/extra_data/types/m/map_marker.h"

@@ -2,7 +2,6 @@
 #include <cassert>
 #include <QComboBox>
 #include <QCoreApplication>
-#include <QVariant>
 #include "widgets/DKFormPicker.h"
 #include "dovah/forms/components/extra_data/types/o/ownership.h"
 #include "dovah/forms/components/extra_data/types/r/rank.h"

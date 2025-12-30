@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 namespace dovah {
    namespace loaded_forms {
       namespace components::extra_data_types {

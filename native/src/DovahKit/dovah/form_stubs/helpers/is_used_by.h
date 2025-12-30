@@ -1,8 +1,14 @@
 #pragma once
+#include <version>
 #include "../../form_stub.h"
 
 namespace dovah::form_stub_helpers {
-   constexpr bool is_used_by(const form_stub& used, const form_stub& user) {
+   #if __cpp_lib_constexpr_map >= 202502L
+      constexpr
+   #else
+      inline
+   #endif
+   bool is_used_by(const form_stub& used, const form_stub& user) {
       if (used.inbound.size() < user.outbound.size()) {
          for (const auto& [_, use] : used.inbound)
             if (use.other == &user)

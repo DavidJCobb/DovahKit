@@ -5,6 +5,7 @@
 #include "dovah/form_stubs/helpers/get_base_form.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/subsystems/message_log/core.h"
+#include "editor/form_stub_meta_type.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
 #include "ui/utils/typical_tableview_config.h"
@@ -110,7 +111,7 @@ namespace {
       } else {
          picker.setAllowedFormTypes(QList{ ExtraData::allowed_form_types.begin(), ExtraData::allowed_form_types.end() });
       }
-      if (const auto* extra = working.exta_data.get<ExtraData>()) {
+      if (const auto* extra = working.extra_data.get<ExtraData>()) {
          picker.setFormStub(extra->form.get_form_stub());
       }
       QObject::connect(&picker, &DKFormPicker::formChanged, [&working](dovah::form_stub* stub) {
@@ -124,7 +125,7 @@ namespace {
    }
    template<typename ExtraData, typename RefPickerWidget> requires (!ExtraData::allowed_form_types.empty())
    void bind_single_ref_extra_data(FormDialogObjectReference::loaded_form_type& working, RefPickerWidget& picker) {
-      if (const auto* extra = working.exta_data.get<ExtraData>()) {
+      if (const auto* extra = working.extra_data.get<ExtraData>()) {
          picker.setRef(extra->form.get_form_stub());
       }
       QObject::connect(&picker, &RefPickerWidget::refChanged, [&working](dovah::form_stub* stub) {
@@ -145,7 +146,7 @@ namespace {
          widget.setValue(ExtraData::default_value);
       }
       QObject::connect(&widget, qOverload<double>(&QDoubleSpinBox::valueChanged), [&working](double v) {
-         working.extra_data.get_or_create<ExtraData>().value = v;
+         working.extra_data.get_or_create<ExtraData>()->value = v;
       });
    }
    template<typename ExtraData>
@@ -155,8 +156,8 @@ namespace {
       } else {
          widget.setValue(ExtraData::default_value);
       }
-      QObject::connect(&widget, qOverload<double>(&QSpinBox::valueChanged), [&working](int v) {
-         working.extra_data.get_or_create<ExtraData>().value = v;
+      QObject::connect(&widget, qOverload<int>(&QSpinBox::valueChanged), [&working](int v) {
+         working.extra_data.get_or_create<ExtraData>()->value = v;
       });
    }
 }
@@ -757,7 +758,18 @@ void FormDialogObjectReference::_load_impl() {
       }
    #pragma endregion
    #pragma region Extra
-      bind_fundamental_extra_data<extra_data_types::alpha_cutoff>(working, *this->ui.xAlphaCutoff);
+      {
+         this->ui.xAlphaCutoffPresent->setChecked(false);
+         if (auto* extra = working.extra_data.get<extra_data_types::alpha_cutoff>()) {
+            this->ui.xAlphaCutoffPresent->setChecked(true);
+            this->ui.xAlphaCutoff->setValue(extra->cutoff);
+         } else {
+            auto def = _default_alpha_threshold();
+            this->ui.xAlphaCutoff->setValue(def.has_value() ? def.value() : 0xFF);
+         }
+         this->ui.xAlphaCutoff->setEnabled(this->ui.xAlphaCutoffPresent->isChecked());
+         QObject::connect(this->ui.xAlphaCutoffPresent, &QCheckBox::toggled, this->ui.xAlphaCutoff, &QWidget::setEnabled);
+      }
       if (_can_have_attach_ref()) {
          bind_single_ref_extra_data<extra_data_types::attach_ref>(working, *this->ui.xAttachRef);
       } else {
@@ -986,6 +998,27 @@ void FormDialogObjectReference::_save_impl() {
       }
    }
 
+   #pragma region Extra
+   {
+      if (this->ui.xAlphaCutoffPresent->isChecked()) {
+         auto* extra           = working.extra_data.get<extra_data_types::alpha_cutoff>();
+         bool  already_present = extra != nullptr;
+         if (!extra) {
+            extra = working.extra_data.get_or_create<extra_data_types::alpha_cutoff>();
+         }
+         extra->cutoff = this->ui.xAlphaCutoff->value();
+         //
+         auto base = _default_alpha_threshold();
+         if (base.has_value()) {
+            extra->base = base.value();
+         } else if (!already_present) {
+            extra->base = 0xFF;
+         }
+      } else {
+         working.extra_data.remove<extra_data_types::alpha_cutoff>(working);
+      }
+   }
+   #pragma endregion
    this->fragments.ownership.save(working);
    this->fragments.primitive.save(working);
    this->fragments.lock.save(working);
@@ -1303,4 +1336,58 @@ bool FormDialogObjectReference::_is_water_activator() const {
    if (!base_form)
       return false;
    return dovah::form_stub_helpers::get_activator_water_type(*base_form) != nullptr;
+}
+
+#include <memory>
+#include "dovah/files/bsa/bsa_archived_file.h"
+#include "editor/subsystems/assets.h"
+#include "nif/blocks/NiAVObject.h"
+#include "nif/blocks/NiAlphaProperty.h"
+#include "nif/blocks/NiGeometry.h"
+#include "nif/blocks/NiNode.h"
+#include "nif/file.h"
+std::optional<uint8_t> FormDialogObjectReference::_default_alpha_threshold() const {
+   constexpr const uint8_t threshold_if_no_alpha = 0xFF;
+
+   auto* model = dovah::loaded_forms::component_access::get_model(this->form);
+   if (!model)
+      return {};
+   
+   std::filesystem::path path = std::string("meshes") + (model->model_path[0] == '/' || model->model_path[0] == '\\' ? "" : "\\") + model->model_path;
+
+   std::unique_ptr<dovah::bsa_archived_file> file(dovahkit::subsystems::assets::get().lookup_game_asset(path));
+   if (!file)
+      return {};
+
+   auto nif = std::make_unique<nifDK::file>();
+   nif->read((void*)file->data(), file->size());
+   auto& error = nif->read_error();
+   if (error.code != nifDK::default_notice_code) {
+      return {};
+   }
+
+   if (!nif->root_node)
+      return {};
+
+   std::optional<uint8_t> alpha;
+   nif->root_node->walk_tree(
+      true,
+      [&alpha](nifDK::block_types::NiNode* node, bool dummy) {
+         return !alpha.has_value();
+      },
+      [&alpha](nifDK::block_types::NiAVObject* child, bool dummy) {
+         if (alpha.has_value())
+            return false;
+         auto* geom = dynamic_cast<nifDK::block_types::NiGeometry*>(child);
+         if (!geom)
+            return true;
+         auto* prop = geom->properties.alpha;
+         if (!prop)
+            return true;
+         
+         alpha = prop->testing.threshold;
+         return false;
+      }
+   );
+   return alpha;
 }

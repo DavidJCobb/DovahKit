@@ -2119,6 +2119,7 @@
     <ClInclude Include="editor\subsystems\story_manager\core.h" />
     <QtMoc Include="editor\subsystems\story_manager\StoryManagerFormsModel.h" />
     <ClInclude Include="editor\subsystems\story_manager\passkeys\core_controls_model.h" />
+    <ClInclude Include="helpers\bound_mem_fn.h" />
     <ClInclude Include="helpers\const_forwarding_ptr.h" />
     <ClInclude Include="helpers\optionals\finite_float.h" />
     <QtMoc Include="ui\form_windows\apparatus.h" />

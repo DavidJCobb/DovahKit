@@ -17,7 +17,7 @@ namespace {
 
    template<has_component T>
    component_type* get_component(dovah::loaded_forms::Form& form) {
-      return static_cast<T&>(form).keywords;
+      return &static_cast<T&>(form).keywords;
    }
    using getter_type = component_type* (*)(dovah::loaded_forms::Form&);
 

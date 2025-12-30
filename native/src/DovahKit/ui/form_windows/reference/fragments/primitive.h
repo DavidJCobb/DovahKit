@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <QString>
 #include "dovah/data/collision_layers.h"
 namespace dovah {
    namespace loaded_forms {
