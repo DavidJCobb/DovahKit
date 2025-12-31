@@ -1,6 +1,8 @@
 #pragma once
 #include <chrono>
+#include <QBasicTimer>
 #include <QWidget>
+#include <QWindow>
 #if !defined(QT_PLUGIN)
    #include "vulkan/scene_entity_handle.h"
 #endif
@@ -18,13 +20,13 @@ class DKVulkanView : public QWidget {
       virtual QPaintEngine* paintEngine() const override;
 
       inline QString preferredGPUName() const noexcept { return this->preferred_gpu.name; }
-      inline bool requireExactGPUMatch() const noexcept { return this->preferred_gpu.exactMatch; }
+      constexpr bool requireExactGPUMatch() const noexcept { return this->preferred_gpu.exactMatch; }
 
-      inline uint desiredFrameDelay() const noexcept { return this->desired_frame_delay_ms; }
+      constexpr uint desiredFrameDelay() const noexcept { return this->desired_frame_delay_ms; }
 
-      inline vulkanDK::surface_renderer* surfaceRenderer() const { return this->renderer; }
+      constexpr vulkanDK::surface_renderer* surfaceRenderer() const { return this->renderer; }
 
-      inline bool isListeningForInput() const {
+      constexpr bool isListeningForInput() const {
          return this->input_handling.enabled && this->input_handling.focused;
       }
 
@@ -56,7 +58,7 @@ class DKVulkanView : public QWidget {
          QString name;
       } preferred_gpu;
       uint desired_frame_delay_ms = 0;
-      int  timerID = 0;
+      QBasicTimer timer;
       struct {
          bool enabled = false;
          bool focused = false;

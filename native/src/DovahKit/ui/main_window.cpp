@@ -60,13 +60,28 @@ void MainWindow::_subwindow_base::_open(QMdiArea* parent) {
          parent->addSubWindow(win, this->flags);
       }
       win->show();
+      {
+         //
+         // The implementation of QMdiSubWindow has a bug. QMdiSubWindow::close 
+         // calls QWidget::close on the wrapped widget, in part so the widget 
+         // can receive `closeEvent` and potentially reject the close operation. 
+         // The default implementation of QWidget::close will hide the widget if 
+         // the event is accepted (which, by default, it is).
+         // 
+         // QMdiSubWindow::showEvent doesn't *un-hide* the widget. So if you 
+         // close and reopen a subwindow, it just ends up blank.
+         //
+         this->_widget->show(); // ...unless you do this.
+      }
       win->raise();
       win->activateWindow();
       return;
    }
    QMdiSubWindow* win = this->_window = new QMdiSubWindow(parent);
    win->setWidget(this->_widget);
+   win->setOption((QMdiSubWindow::SubWindowOption)(int)this->options, true);
    parent->addSubWindow(this->_window, this->flags);
+   win->show(); // needed for Render Window when it's not open by default, for whatever reason
 }
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
@@ -96,6 +111,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    this->subwindows.cell_view.open(this->ui.mdi);
    this->subwindows.log.open(this->ui.mdi);
    this->subwindows.render.flags = Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowCloseButtonHint;
+   this->subwindows.render.options |= QMdiSubWindow::SubWindowOption::RubberBandResize;
    //this->subwindows.render.open(this->ui.mdi);
    // // don't open by default; Render Window performance currently sucks
    // // (high frame rates, but bogs down CPU. actual CPU usage isn't that 

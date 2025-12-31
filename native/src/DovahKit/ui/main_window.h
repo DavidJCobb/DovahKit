@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <QLabel>
 #include <QMainWindow>
+#include <QMdiSubWindow>
 #include <QtWinExtras/qwintaskbarbutton.h> // this probably isn't the right way to include this, but Visual Studio and Qt Tools are not being cooperative.
 #include "ui_main_window.h"
 
@@ -36,6 +37,7 @@ class MainWindow : public QMainWindow {
          QWidget*        _widget = nullptr;
          QMdiSubWindow*  _window = nullptr;
          Qt::WindowFlags flags;
+         QMdiSubWindow::SubWindowOptions options;
          //
          void _open(QMdiArea* parent);
       };

@@ -19,9 +19,70 @@ namespace {
 }
 
 DKVulkanView::DKVulkanView(QWidget* parent) : QWidget(parent) {
+   /*
+   
+      A brief reminder about low-level GUI programming concepts, before we begin.
+
+      Computer users think of a "window" as a dialog or similar visual container, 
+      with a title bar. In the context of low-level GUI programming, however, a 
+      "window" is any rectangular area that can be painted to independently. In 
+      Win32, basically every GUI control is its own window, or a conglomeration 
+      of multiple windows.
+
+      There are some limitations associated with giving every GUI control its own 
+      OS-level window, so Qt tries to avoid doing so. It gives each dialog a real 
+      window, but then treats the controls therein as "virtual"/"alien" controls 
+      that are all painted into that one shared window. Qt has a lot of systems 
+      to manage this, such as a "backing store" to cache drawn content and avoid 
+      unnecessary software-based re-renders of individual controls. Within Qt's 
+      model, a UI control (including what you would think of as "a window") is a 
+      QWidget object, and OS-level windows are wrapped as QWindow objects.
+
+      This system is, of course, not strictly compatible with Vulkan, which wants 
+      to draw directly to an OS-level window (by way of an abstraction called a 
+      "surface").
+
+      As such, DKVulkanView reconfigures itself based on whether it's drawing via 
+      Vulkan or via Qt. We draw via Vulkan to render a 3D scene; when rendering 
+      fails, we draw via Qt to display an error icon.
+
+      We begin by asking Qt for our window ID i.e. our OS-level window handle. 
+      This forces Qt to *give* us an OS-level window -- to convert this control 
+      from "alien" to "real" -- so that it has an ID it can return. We then grab 
+      the QWindow to which that handle refers (confusingly, Qt's API describes 
+      the QWindow itself as the "window handle") and mark it as a Vulkan-type 
+      surface: we are telling Qt that this widget is *not* displayed via software-
+      based raster rendering.
+
+      We'll then pass this widget to our Vulkan "surface renderer," which will 
+      pull the OS-level window handle and set up a Vulkan surfae to wrap it. At 
+      this point, the renderer is now capable of painting directly to the window 
+      whenever it is asked to produce a frame. We'll use Qt's timer system both to 
+      poll for input and to display frames at a desired rate.
+
+      (This is not as clean a solution as Qt's designers intended. They'd rather 
+      we wrap our VkInstance in a QVulkanInstance, pass that to our QWindow to 
+      create the Vulkan surface *via Qt*, and then feed that into our renderer. 
+      But I'd prefer to keep the renderer internals as independent from Qt as is 
+      possible, so I'm deliberately choosing to ignore what Qt wants.)
+
+      Of course, there's one more step we need to take to disable Qt's software-
+      based raster rendering. We need to set the "paint on screen" window attribute 
+      on our widget, and ensure that our widget returns a nullptr "paint engine." 
+      (And of course, whenever we switch back to rendering via Qt, we must undo 
+      these changes.)
+
+   */
    this->setAttribute(Qt::WA_OpaquePaintEvent, true);
    this->setAttribute(Qt::WA_PaintOnScreen,    true);
    this->winId(); // force the widget to have a unique HWND
+   if (auto* window = this->windowHandle()) {
+      //
+      // Tell Qt that we're not doing software-based raster rendering 
+      // as would be usual for QWidgets.
+      //
+      window->setSurfaceType(QSurface::SurfaceType::VulkanSurface);
+   }
    //
    // Get instance; set up surface:
    //
@@ -51,9 +112,9 @@ QPaintEngine* DKVulkanView::paintEngine() const {
 
 void DKVulkanView::setDesiredFrameDelay(uint ms) {
    this->desired_frame_delay_ms = ms;
-   if (this->timerID) {
-      this->killTimer(this->timerID);
-      this->timerID = this->startTimer(this->desiredFrameDelay(), Qt::PreciseTimer);
+   if (this->timer.isActive()) {
+      this->timer.stop();
+      this->timer.start(this->desiredFrameDelay(), Qt::PreciseTimer, this);
    }
 }
 void DKVulkanView::setPreferredGPUName(const QString& name) {
@@ -164,6 +225,9 @@ void DKVulkanView::_killRendererDueToError() {
    this->renderer = nullptr;
    this->setAttribute(Qt::WA_OpaquePaintEvent, false);
    this->setAttribute(Qt::WA_PaintOnScreen,    false);
+   if (auto* window = this->windowHandle()) {
+      window->setSurfaceType(QSurface::SurfaceType::RasterSurface);
+   }
    emit this->rendererKilledDueToError();
 }
 #endif
@@ -180,9 +244,7 @@ bool DKVulkanView::event(QEvent* event) {
    return QWidget::event(event);
 }
 void DKVulkanView::hideEvent(QHideEvent* event) {
-   this->killTimer(this->timerID);
-   this->timerID = 0;
-   //
+   this->timer.stop();
    if (auto* s = this->renderer) {
       s->_on_visibility_change(QSize(), false);
    }
@@ -236,7 +298,7 @@ void DKVulkanView::resizeEvent(QResizeEvent* event) {
    #endif
 }
 void DKVulkanView::showEvent(QShowEvent* event) {
-   this->timerID = this->startTimer(this->desiredFrameDelay(), Qt::PreciseTimer);
+   this->timer.start(this->desiredFrameDelay(), Qt::PreciseTimer, this);
    //
    #if !defined(QT_PLUGIN)
    if (auto* s = this->renderer) {
@@ -246,7 +308,19 @@ void DKVulkanView::showEvent(QShowEvent* event) {
 }
 void DKVulkanView::timerEvent(QTimerEvent* event) {
    #if !defined(QT_PLUGIN)
-   this->_inputPoll();
+      this->_inputPoll();
+      if (this->renderer) {
+         try {
+            this->renderer->_on_repaint();
+            //
+            // If rendering via Vulkan worked, then we do not need to go 
+            // through Qt's paint system, so just return here.
+            //
+            return;
+         } catch (vulkanDK::exception& e) {
+            this->_killRendererDueToError();
+         }
+      }
    #endif
    this->repaint();
 }
