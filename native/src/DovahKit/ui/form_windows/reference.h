@@ -5,8 +5,10 @@
 #include "./_base.h"
 #include "dovah/forms/ObjectReference.h"
 #include "ui_reference.h"
+#include "./reference/fragments/activate_parents.h"
 #include "./reference/fragments/emittance_source.h"
 #include "./reference/fragments/light.h"
+#include "./reference/fragments/linked_from.h"
 #include "./reference/fragments/linked_refs.h"
 #include "./reference/fragments/lock.h"
 #include "./reference/fragments/map_marker.h"
@@ -18,7 +20,6 @@
 #include "./reference/fragments/water_lights.h"
 #include "./reference/fragments/water_reflectee.h"
 class ObjectReferenceActivateParentsModel;
-class ObjectReferenceLinkedFromModel;
 
 class FormDialogObjectReference :
    public QDialog,
@@ -32,8 +33,10 @@ class FormDialogObjectReference :
    protected:
       Ui::FormDialogObjectReference ui;
       struct {
+         ui::reference::fragments::activate_parents activate_parents;
          ui::reference::fragments::emittance_source emittance_source;
          ui::reference::fragments::light            light;
+         ui::reference::fragments::linked_from      linked_from;
          ui::reference::fragments::linked_refs      linked_refs;
          ui::reference::fragments::lock             lock;
          ui::reference::fragments::map_marker       map_marker;
@@ -46,8 +49,7 @@ class FormDialogObjectReference :
          ui::reference::fragments::water_reflectee  water_reflectee;
       } fragments;
       struct {
-         ObjectReferenceActivateParentsModel*  activate_parents  = nullptr;
-         ObjectReferenceLinkedFromModel*       linked_from       = nullptr;
+         ObjectReferenceActivateParentsModel* activate_parents = nullptr;
       } models;
       
       virtual void _load_impl() override;

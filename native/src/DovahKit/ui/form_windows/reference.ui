@@ -631,7 +631,7 @@
          <item row="0" column="1">
           <widget class="DKFormPicker" name="encounterZone">
            <property name="whatsThis">
-            <string>Encounter Zones are primarily used by leveled lists to calculate what object should spawn. By default, refs belong to whatever Encounter Zone their containing cell belongs to, but you can override that here.</string>
+            <string>Encounter Zones are primarily used by leveled lists to calculate what object should spawn. They also influence a few other properties, such as default ownership and whether refs reset after time has passed. By default, refs belong to whatever Encounter Zone their containing cell belongs to, but you can override that here.</string>
            </property>
           </widget>
          </item>
@@ -1027,7 +1027,11 @@
           </widget>
          </item>
          <item row="3" column="1" alignment="Qt::AlignLeft">
-          <widget class="DKColorPickerButton" name="xPrimitiveColor"/>
+          <widget class="DKColorPickerButton" name="xPrimitiveColor">
+           <property name="hasAlpha">
+            <bool>true</bool>
+           </property>
+          </widget>
          </item>
          <item row="2" column="1">
           <widget class="QComboBox" name="xPrimitiveCollLayer">
@@ -1792,11 +1796,7 @@
         <number>0</number>
        </property>
        <item row="2" column="0">
-        <widget class="Line" name="line_3">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
+        <widget class="QTableView" name="linkedFrom"/>
        </item>
        <item row="0" column="0">
         <widget class="QLabel" name="label_48">
@@ -1809,7 +1809,11 @@
         </widget>
        </item>
        <item row="1" column="0">
-        <widget class="QTableView" name="linkedFrom"/>
+        <widget class="Line" name="line_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -2523,7 +2527,7 @@
        <item row="0" column="0">
         <widget class="QGroupBox" name="xMultiboundRefGroupbox">
          <property name="whatsThis">
-          <string>Some in-game environments are divided into &quot;multibounds&quot; or &quot;roombounds,&quot; such thata ref will only be rendered if the camera is inside of whatever bound the ref is associated with. By default, refs are associated with whatever bound their pivot point lies inside of. You can override that and associate this ref with a specific bound.</string>
+          <string>Some in-game environments are divided into &quot;multibounds&quot; or &quot;roombounds,&quot; such that a ref will only be rendered if the camera is inside of whatever bound the ref is associated with. By default, refs are associated with whatever bound their pivot point lies inside of. You can override that and associate this ref with a specific bound.</string>
          </property>
          <property name="title">
           <string>Override multibound ref</string>
@@ -2663,6 +2667,12 @@
        <horstretch>1</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>200</width>
+       <height>0</height>
+      </size>
      </property>
     </widget>
    </item>

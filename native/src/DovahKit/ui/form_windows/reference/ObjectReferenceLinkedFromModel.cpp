@@ -127,6 +127,8 @@ void ObjectReferenceLinkedFromModel::setSubject(dovah::form_stub* ref) {
       if (!extra)
          continue;
       for (auto& link : extra->links) {
+         if (!link.ref)
+            continue;
          if (link.ref.get_form_stub() != this->_subject)
             continue;
          Row row;
@@ -398,7 +400,7 @@ void ObjectReferenceLinkedFromModel::_re_sort_item(size_t from) {
 }
 /*static*/ bool ObjectReferenceLinkedFromModel::_sort_comparator(const Row& a, const Row& b) {
    if (!a.keyword)
-      return true;
+      return b.keyword != nullptr;
    if (!b.keyword)
       return false;
    if (a.keyword == b.keyword) {

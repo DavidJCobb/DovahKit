@@ -138,7 +138,7 @@ void ObjectReferenceLinkedRefsModel::importData(const backend_form_type& form) {
       this->_data.end(),
       [](const Mapping& a, const Mapping& b) {
          if (!a.keyword)
-            return true;
+            return b.keyword != nullptr;
          if (!b.keyword)
             return false;
          return a.cached.keyword.localeAwareCompare(b.cached.keyword) < 0;
@@ -316,7 +316,7 @@ decltype(ObjectReferenceLinkedRefsModel::_data)::iterator ObjectReferenceLinkedR
       item,
       [](const Mapping& a, const Mapping& b) {
          if (!a.keyword)
-            return true;
+            return b.keyword != nullptr;
          if (!b.keyword)
             return false;
          return a.cached.keyword.localeAwareCompare(b.cached.keyword) < 0;

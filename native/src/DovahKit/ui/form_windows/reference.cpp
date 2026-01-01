@@ -167,6 +167,7 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
 
    this->ui.baseForm->setEnabled(false);
 
+
    #pragma region Basic Properties
       for (auto* spinbox : std::array{
          this->ui.positionX,
@@ -291,101 +292,26 @@ FormDialogObjectReference::FormDialogObjectReference(dovah::form_stub& stub, QWi
       });
    #pragma endregion
    #pragma region Linked From
-   {
-      using model_type = ObjectReferenceLinkedFromModel;
-
-      auto* listview = this->ui.linkedFrom;
-      auto* model    = this->models.linked_from = new model_type(listview);
-      listview->setModel(model);
-      ui::typical_tableview_config(listview);
-   }
+      this->fragments.linked_from.setup(*this, {
+         .view = this->ui.linkedFrom,
+      });
    #pragma endregion
    #pragma region Activate Parents
-      {
-         using model_type = ObjectReferenceActivateParentsModel;
-
-         auto* listview = this->ui.activateParents;
-         auto* model    = this->models.activate_parents = new model_type(listview);
-         listview->setModel(model);
-         ui::typical_tableview_config(listview);
-         
-         auto* sel_model = listview->selectionModel();
-         QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this, model, sel_model](const QItemSelection& sel) {
-            if (sel.empty()) {
-               this->ui.currentActivateParentGroupbox->setEnabled(false);
-               return;
-            }
-            QModelIndex qmi = sel[0].topLeft();
-            this->ui.currentActivateParentGroupbox->setEnabled(true);
-
-            const auto blockers = std::array{
-               QSignalBlocker(this->ui.currentActivateParentRef),
-               QSignalBlocker(this->ui.currentActivateParentDelay),
-            };
-            this->ui.currentActivateParentDelay->setValue(
-               model->data(qmi, model_type::DelayRole).value<float>()
-            );
-            this->ui.currentActivateParentRef->setRef(
-               model->data(qmi, model_type::FormStubRole).value<dovah::form_stub*>()
-            );
-         });
-
-         QObject::connect(this->ui.buttonActivateParentNew, &QPushButton::clicked, this, [this, model, sel_model]() {
-            auto* dialog = new DKCompactObjectReferencePickerDialog(this);
-            QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
-            {
-               auto all_refs = model->allRefs();
-               dialog->setValidationFunction([all_refs](dovah::form_stub* ref) {
-                  auto it = std::find(all_refs.begin(), all_refs.end(), ref);
-                  if (it == all_refs.end())
-                     return false;
-                  return true;
-               });
-            }
-            if (dialog->exec() == QDialog::Accepted) {
-               auto* ref = dialog->value();
-               if (ref) {
-                  auto qmi = model->setRefDelay(*ref, 0);
-                  if (qmi.isValid()) {
-                     sel_model->select(
-                        {
-                           qmi.siblingAtColumn(0),
-                           qmi.siblingAtColumn(model->columnCount({}) - 1)
-                        },
-                        QItemSelectionModel::SelectionFlag::ClearAndSelect
-                     );
-                  }
-               }
-            }
-         });
-         QObject::connect(this->ui.buttonActivateParentDelete, &QPushButton::clicked, this, [this, sel_model, model]() {
-            auto sel = sel_model->selectedRows();
-            if (sel.empty())
-               return;
-            model->removeRow(sel[0].row());
-         });
-
-         auto* ref_picker = this->ui.currentActivateParentRef;
-         auto* delay_edit = this->ui.currentActivateParentDelay;
-         auto  on_changed = [ref_picker, delay_edit, sel_model, model]() {
-            auto sel = sel_model->selectedRows();
-            if (sel.empty())
-               return;
-            auto* ref = ref_picker->ref();
-            if (!ref)
-               return;
-            model->setRow(sel[0].row(), *ref, delay_edit->value());
-         };
-         QObject::connect(ref_picker, &DKCompactObjectReferencePicker::refChanged, this, on_changed);
-         QObject::connect(delay_edit, qOverload<double>(&QDoubleSpinBox::valueChanged), this, on_changed);
-         ref_picker->setValidationFunction([this, model, ref_picker](dovah::form_stub* ref) -> bool {
-            if (ref == ref_picker->ref())
-               return true;
-            if (!ref)
-               return true;
-            return !model->containsRef(*ref);
-         });
-      }
+      this->fragments.activate_parents.setup(*this, {
+         .buttons = {
+            .add    = this->ui.buttonActivateParentNew,
+            .remove = this->ui.buttonActivateParentDelete,
+         },
+         .edit = {
+            .delay    = this->ui.currentActivateParentDelay,
+            .groupbox = this->ui.currentActivateParentGroupbox,
+            .ref      = this->ui.currentActivateParentRef,
+         },
+         .flags = {
+            .parent_activate_only = this->ui.flagOnlyAllowActivateViaParent,
+         },
+         .view = this->ui.activateParents
+      });
    #pragma endregion
    #pragma region Enable Parent
       this->ui.xEnableParentRef->setValidationFunction([this](dovah::form_stub* ref) -> bool {
@@ -499,10 +425,18 @@ void FormDialogObjectReference::_load_impl() {
 
    this->_emit_warnings_on_load();
 
+   // Optimization. Some of our fragments will need to fully load the base form 
+   // to check its properties, but they'll be doing so using RAII. We'll do the 
+   // same from out here, so that we're not repeatedly loading and unloading a 
+   // form. We'll keep it loaded until we're done.
+   dovah::loaded_form_ptr<dovah::loaded_forms::Form> loaded_base;
+
    dovah::form_stub* base_form = working.base_form.get_form_stub();
    dovah::form_type  base_type = dovah::form_type::none;
-   if (base_form)
-      base_type = base_form->form_type;
+   if (base_form) {
+      base_type   = base_form->form_type;
+      loaded_base = base_form->load();
+   }
 
    bool has_bounds = false;
    if (base_form) {
@@ -750,6 +684,8 @@ void FormDialogObjectReference::_load_impl() {
             widget->setCurrentIndex(widget->findData((int)extra->value));
          } else {
             widget->setCurrentIndex(widget->findData((int)enumeration::none));
+            if (base_type != dovah::form_type::actor)
+               widget->setEnabled(false);
          }
          QObject::connect(widget, qOverload<int>(&QComboBox::currentIndexChanged), this, [widget, &working]() {
             auto v = widget->currentData().toInt();
@@ -896,12 +832,8 @@ void FormDialogObjectReference::_load_impl() {
    _load_patrol();
    this->fragments.map_marker.load(working);
    this->fragments.linked_refs.load(working);
-   #pragma region Linked From
-      this->models.linked_from->setSubject(&working.stub);
-   #pragma endregion
-   #pragma region Activate Parents
-      this->models.activate_parents->importData(working);
-   #pragma endregion
+   this->fragments.linked_from.load(working);
+   this->fragments.activate_parents.load(working);
    #pragma region Enable Parent
    {
       using extra_data = extra_data_types::enable_state_parent;
@@ -1025,22 +957,9 @@ void FormDialogObjectReference::_save_impl() {
    this->fragments.teleport.save(working);
    _save_patrol();
    this->fragments.map_marker.save(working);
+   this->fragments.linked_from.save(working);
    this->fragments.linked_refs.save(working);
-   #pragma region Activate Parents
-      this->models.activate_parents->exportData(working);
-      {
-         using extra_data = extra_data_types::activate_parents;
-
-         bool parent_only = this->ui.flagOnlyAllowActivateViaParent->isChecked();
-         if (parent_only) {
-            auto* extra = working.extra_data.get_or_create<extra_data>();
-            extra->flags |= extra_data::flag::parent_activate_only;
-         } else {
-            if (auto* extra = working.extra_data.get<extra_data>())
-               extra->flags &= ~extra_data::flag::parent_activate_only;
-         }
-      }
-   #pragma endregion
+   this->fragments.activate_parents.save(working);
    #pragma region Enable Parent
    {
       using extra_data = extra_data_types::enable_state_parent;
