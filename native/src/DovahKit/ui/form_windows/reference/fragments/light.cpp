@@ -24,6 +24,7 @@ namespace ui::reference::fragments {
       controls.fov.spinbox->setRange(0, 179.9);
       ui::set_unsigned_range<float>(controls.fade.spinbox);
       ui::set_unsigned_range<float>(controls.end_cap.spinbox);
+      ui::set_unsigned_range<float>(controls.radius.spinbox);
       controls.depth_bias.slider->setRange(0, 50);
       controls.depth_bias.spinbox->setRange(0, 50);
 

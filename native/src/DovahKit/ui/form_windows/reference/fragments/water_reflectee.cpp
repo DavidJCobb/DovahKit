@@ -5,9 +5,11 @@
 #include <QVariant>
 #include "helpers/bound_mem_fn.h"
 #include "widgets/widget-dialogs/DKCompactObjectReferencePickerDialog.h"
+#include "widgets/DKHeaderView.h"
 #include "dovah/forms/ObjectReference.h"
 #include "editor/form_stub_meta_type.h"
 #include "../ObjectReferenceReflectingWaterModel.h"
+#include "ui/utils/set_tableview_column_flex.h"
 #include "ui/utils/typical_tableview_config.h"
 
 namespace ui::reference::fragments {
@@ -20,6 +22,16 @@ namespace ui::reference::fragments {
       this->model = new model_type(listview);
       listview->setModel(this->model);
       ui::typical_tableview_config(listview);
+      ui::set_tableview_column_flex(controls.view, [this](DKHeaderView& header, const QFontMetrics& metrics) {
+         for (int col : std::array{
+            model_type::Column::RefName,
+            model_type::Column::Type,
+         }) {
+            auto title = this->model->headerData(col, header.orientation(), Qt::DisplayRole).toString();
+            header.setColumnFlex(col, 1, 1, metrics.horizontalAdvance(title) * 1.5F + 4);
+         }
+         header.setColumnFlex(model_type::Column::RefFormID, 0, 0, 4);
+      });
       {
          auto* delegate = new model_type::ReflectionTypeItemDelegate(this->model);
          listview->setItemDelegateForColumn(model_type::Column::Type, delegate);

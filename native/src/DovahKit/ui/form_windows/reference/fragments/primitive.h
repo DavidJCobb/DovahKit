@@ -69,6 +69,7 @@ namespace ui::reference::fragments {
 
          static bool is_primitive(const loaded_form_type&);
          static bool can_change_shape(const loaded_form_type&);
+         static bool has_collision_layer(const loaded_form_type&);
 
       protected:
          QString _primitive_function_text(dovah::form_stub* base_form);

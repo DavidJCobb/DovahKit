@@ -1077,8 +1077,10 @@
     <ClCompile Include="ui\form_windows\race\RaceTintDefaultColorPickerFilter.cpp" />
     <ClCompile Include="ui\form_windows\race\RaceTintLayerModel.cpp" />
     <ClCompile Include="ui\form_windows\reference.cpp" />
+    <ClCompile Include="ui\form_windows\reference\fragments\activate_parents.cpp" />
     <ClCompile Include="ui\form_windows\reference\fragments\emittance_source.cpp" />
     <ClCompile Include="ui\form_windows\reference\fragments\light.cpp" />
+    <ClCompile Include="ui\form_windows\reference\fragments\linked_from.cpp" />
     <ClCompile Include="ui\form_windows\reference\fragments\linked_refs.cpp" />
     <ClCompile Include="ui\form_windows\reference\fragments\lock.cpp" />
     <ClCompile Include="ui\form_windows\reference\fragments\map_marker.cpp" />
@@ -2185,8 +2187,10 @@
     <QtMoc Include="ui\form_windows\reference\ObjectReferenceLinkedFromModel.h" />
     <QtMoc Include="ui\form_windows\reference\ObjectReferenceReflectedObjectsModel.h" />
     <QtMoc Include="ui\form_windows\reference\ObjectReferenceWaterLightsModel.h" />
+    <ClInclude Include="ui\form_windows\reference\fragments\activate_parents.h" />
     <ClInclude Include="ui\form_windows\reference\fragments\emittance_source.h" />
     <ClInclude Include="ui\form_windows\reference\fragments\light.h" />
+    <ClInclude Include="ui\form_windows\reference\fragments\linked_from.h" />
     <ClInclude Include="ui\form_windows\reference\fragments\linked_refs.h" />
     <ClInclude Include="ui\form_windows\reference\fragments\lock.h" />
     <ClInclude Include="ui\form_windows\reference\fragments\map_marker.h" />

@@ -1,15 +1,13 @@
-#include "./reflected_refs.h"
-#include <QGroupBox>
+#include "./linked_from.h"
 #include <QTableView>
 #include "widgets/DKHeaderView.h"
-#include "dovah/form_stubs/helpers/get_activator_water_type.h"
 #include "dovah/forms/ObjectReference.h"
 #include "ui/utils/set_tableview_column_flex.h"
 #include "ui/utils/typical_tableview_config.h"
-#include "../ObjectReferenceReflectedObjectsModel.h"
+#include "../ObjectReferenceLinkedFromModel.h"
 
 namespace ui::reference::fragments {
-   void reflected_refs::setup(QWidget& owner, const control_collection& controls) {
+   void linked_from::setup(QWidget& owner, const control_collection& controls) {
       this->controls = controls;
       this->model    = new model_type(controls.view);
       
@@ -17,8 +15,8 @@ namespace ui::reference::fragments {
       ui::typical_tableview_config(controls.view);
       ui::set_tableview_column_flex(controls.view, [this](DKHeaderView& header, const QFontMetrics& metrics) {
          for (int col : std::array{
+            model_type::Column::KeywordName,
             model_type::Column::RefName,
-            model_type::Column::Type,
          }) {
             auto title = this->model->headerData(col, header.orientation(), Qt::DisplayRole).toString();
             header.setColumnFlex(col, 1, 1, metrics.horizontalAdvance(title) * 1.5F + 4);
@@ -26,19 +24,11 @@ namespace ui::reference::fragments {
          header.setColumnFlex(model_type::Column::RefFormID, 0, 0, 4);
       });
    }
-   void reflected_refs::load(loaded_form_type& form) {
+   void linked_from::load(loaded_form_type& form) {
       this->stub = &form.stub;
 
       this->model->setSubject(&form.stub);
-      if (!is_placed_water(form))
-         this->controls.groupbox->setEnabled(false);
    }
-   void reflected_refs::save(loaded_form_type& form) {
-   }
-   bool reflected_refs::is_placed_water(loaded_form_type& form) {
-      dovah::form_stub* base_form = form.base_form.get_form_stub();
-      if (!base_form)
-         return false;
-      return dovah::form_stub_helpers::get_activator_water_type(*base_form) != nullptr;
+   void linked_from::save(loaded_form_type& form) {
    }
 }

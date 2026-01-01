@@ -32,6 +32,12 @@ namespace ui::reference::fragments {
    void emittance_source::load(loaded_form_type& form) {
       this->stub = &form.stub;
 
+      const auto blockers = std::array{
+         QSignalBlocker(this->controls.light.radio),
+         QSignalBlocker(this->controls.region.radio),
+         QSignalBlocker(this->controls.none.radio),
+      };
+
       if (auto* extra = form.extra_data.get<extra_data_type>()) {
          auto* form = extra->form.get_form_stub();
          if (form && form->form_type != dovah::form_type::light && form->form_type != dovah::form_type::region)
@@ -40,15 +46,19 @@ namespace ui::reference::fragments {
          if (form) {
             if (form->form_type == dovah::form_type::light) {
                this->set_type(emittance_type::internal);
+               this->controls.light.radio->setChecked(true);
                this->controls.light.form->setFormStub(form);
             } else {
                this->set_type(emittance_type::external);
+               this->controls.region.radio->setChecked(true);
                this->controls.region.form->setFormStub(form);
             }
          } else {
+            this->controls.none.radio->setChecked(true);
             this->set_type(emittance_type::none);
          }
       } else {
+         this->controls.none.radio->setChecked(true);
          this->set_type(emittance_type::none);
       }
    }

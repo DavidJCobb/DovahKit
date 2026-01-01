@@ -18,6 +18,7 @@
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/localize/collision_layer.h"
 #include "editor/subsystems/message_log/core.h"
+#include "ui/utils/set_range.h"
 namespace {
    namespace extra_data_types {
       using namespace dovah::loaded_forms::components::extra_data_types;
@@ -27,6 +28,11 @@ namespace {
 namespace ui::reference::fragments {
    void primitive::setup(QWidget& owner, const control_collection& controls) {
       this->controls = controls;
+
+      for (auto* spinbox : controls.extents.all)
+         ui::set_range<float>(spinbox);
+      for (auto* spinbox : controls.origin.all)
+         ui::set_range<float>(spinbox);
       
       {
          using shape_type = extra_data_type::shape_enum;
@@ -137,7 +143,7 @@ namespace ui::reference::fragments {
             extra->bounds = extra_bound->halfwidths * 2;
          }
       }
-      this->controls.color->setColor(QColor::fromRgbF(extra->color.r, extra->color.g, extra->color.b));
+      this->controls.color->setColor(QColor::fromRgbF(extra->color.r, extra->color.g, extra->color.b, extra->color.a));
       this->controls.shape->setCurrentIndex(this->controls.shape->findData((int)extra->shape));
       this->controls.shape->setEnabled(can_change_shape(form));
       for (size_t i = 0; i < this->controls.extents.all.size(); ++i) {
@@ -158,7 +164,10 @@ namespace ui::reference::fragments {
                i = widget->findData((int)dovah::collision_layer::unidentified);
             widget->setCurrentIndex(i);
          } else {
-            widget->setCurrentIndex(widget->findData((int)dovah::collision_layer::null));
+            widget->setCurrentIndex(widget->findData((int)dovah::collision_layer::unidentified));
+         }
+         if (!has_collision_layer(form)) {
+            widget->setEnabled(false);
          }
          _on_collision_layer_changed();
       }
@@ -176,7 +185,7 @@ namespace ui::reference::fragments {
             .r = (float)color.redF(),
             .g = (float)color.greenF(),
             .b = (float)color.blueF(),
-            .a = extra_prim->color.a,
+            .a = (float)color.alphaF(),
          };
       }
       if (can_change_shape(form)) {
@@ -222,6 +231,16 @@ namespace ui::reference::fragments {
       if (!base_form)
          return false;
       return base_form->form_type == dovah::form_type::activator;
+   }
+   bool primitive::has_collision_layer(const loaded_form_type& form) {
+      dovah::form_stub* base_form = form.base_form.get_form_stub();
+      if (!base_form)
+         return true;
+      if (base_form->form_type == dovah::form_type::activator)
+         return true;
+      if (base_form->formID == dovah::hardcoded_form_ids::CollisionMarker)
+         return true;
+      return false;
    }
 
    QString primitive::_primitive_function_text(dovah::form_stub* base_form) {

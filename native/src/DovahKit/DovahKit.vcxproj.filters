@@ -3849,6 +3849,12 @@
     <ClCompile Include="ui\form_windows\reference\fragments\water_reflectee.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\reference\fragments\linked_from.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\reference\fragments\activate_parents.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9414,6 +9420,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\bound_mem_fn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\reference\fragments\linked_from.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_windows\reference\fragments\activate_parents.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
