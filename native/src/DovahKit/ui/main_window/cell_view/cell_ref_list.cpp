@@ -347,6 +347,14 @@ CellRefList::CellRefList(QWidget* parent) : QTableView(parent) {
       header->setStretchLastSection(false);
    }
 
+   //
+   // Qt sorting APIs are flaky as hell; we have to do these specific steps 
+   // in this specific order.
+   // <https://forum.qt.io/topic/94977/default-sort-indicator-order-in-qheaderview/7>
+   //
+   this->horizontalHeader()->setSortIndicator(0, Qt::AscendingOrder);
+   this->setSortingEnabled(true);
+
    // forward signal to outside world
    QObject::connect(underlying, &model_type::editedFormNoLongerFiltered, this, &CellRefList::editedFormNoLongerFiltered);
 

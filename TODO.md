@@ -52,11 +52,6 @@ I was in the middle of working on scene editing at the time I switched to other 
   * WEAP (Weapon)
 * UI designs lacking an implementation:
   * FURN (Furniture)
-  * MATO (Material Object)
-  * MATT (Material Type)
-  * PROJ (Projectile)
-  * REFR (Reference)
-  * TREE (Tree)
 
 ### Table
 
