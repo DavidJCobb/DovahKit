@@ -11,12 +11,13 @@ namespace vulkanDK::asset_loading {
          //
          // Write in error data: a single purple pixel.
          //
-         dds::texture error;
-         error.data = malloc(4);
-         ((uint8_t*)error.data)[0] = 255;
-         ((uint8_t*)error.data)[1] = 0;
-         ((uint8_t*)error.data)[2] = 255;
-         ((uint8_t*)error.data)[3] = 255;
+         constexpr const auto error_pixel_data = std::array{
+            (uint8_t)255,
+            (uint8_t)0,
+            (uint8_t)255,
+            (uint8_t)255,
+         };
+         auto error = dds::texture::from_r8g8b8a8(error_pixel_data.data(), error_pixel_data.size(), 1, 1);
          //
          auto vulkan_metadata = image_metadata{
             .extent = { .width = 1, .height = 1, .depth = 1 },

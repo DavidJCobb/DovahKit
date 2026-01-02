@@ -12,6 +12,8 @@
 #include "nif/blocks/NiAVObject.h"
 #include "nif/blocks/NiNode.h"
 #include "nif/blocks/NiObjectNET.h"
+#include "nif/blocks/NiSkinInstance.h"
+#include "nif/blocks/NiSkinPartition.h"
 #include "nif/blocks/NiSwitchNode.h"
 #include "nif/blocks/NiTriShape.h"
 #include "nif/blocks/NiTriShapeData.h"
@@ -20,7 +22,7 @@
 namespace vulkanDK::asset_loading {
    namespace {
       void _queue_mesh_for_delete(surface_renderer& sr, rendered_mesh& mesh) {
-         assert(!mesh.owning_nif);
+         mesh.owning_nif = nullptr;
          if (mesh.lifetime.life_state == scene_entities::life_state::active_pending_upload) {
             --sr.uploading.pending_upload_counts.value_for<rendered_mesh>();
          }
@@ -198,8 +200,37 @@ namespace vulkanDK::asset_loading {
             _queue_mesh_for_delete(sr, mesh);
             return;
          }
-         auto size = data->vertices.size();
-         if (!size || !data->triangles.size()) {
+         const auto vertex_count = data->vertices.size();
+         if (!vertex_count) {
+            //
+            // Empty mesh. Skip it.
+            //
+            geom.vulkan_state.mesh_handle = {};
+            _queue_mesh_for_delete(sr, mesh);
+            return;
+         }
+         //
+         // The triangle list is typically stored on the NiTriShapeData. However, for 
+         // skinned meshes, the NiTriShapeData may lack a triangle list entirely, with 
+         // triangles instead stored on the model's NiSkinPartition.
+         //
+         bool has_any_triangles   = !data->triangles.empty();
+         bool has_skin_partitions = false;
+         if (auto* skin_inst = geom.skin) {
+            if (auto* skin_part = skin_inst->partition) {
+               has_skin_partitions = !skin_part->partitions.empty();
+               for (auto& part : skin_part->partitions) {
+                  if (!part.triangles.empty()) {
+                     has_any_triangles = true;
+                     break;
+                  }
+               }
+            }
+         }
+         if (!has_any_triangles) {
+            //
+            // Empty mesh. Skip it.
+            //
             geom.vulkan_state.mesh_handle = {};
             _queue_mesh_for_delete(sr, mesh);
             return;
@@ -213,21 +244,61 @@ namespace vulkanDK::asset_loading {
          bool enable_vertex_alpha = false;
          bool enable_vertex_color = false;
          _handle_ni_shader_properties(mesh, geom.properties.alpha, geom.properties.shader, enable_vertex_alpha, enable_vertex_color);
-         {  // Triangles
+         //
+         // Triangles:
+         //
+         if (!data->triangles.empty()) {
+            //
+            // Use triangles from the NiGeometryData.
+            //
             _ni_triangles_to_mesh_triangles(data->triangles, mesh);
-            if constexpr (false) {
-               qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded %u triangles...", data->triangles.size());
+         } else if (has_skin_partitions) {
+            //
+            // Use triangles from the skin partitions. There may be multiple partitions 
+            // covering different parts of the model; Dragon Priest character models are 
+            // one example of this. Doesn't seem like it makes sense to have a single 
+            // triangle defined in multiple partitions, so I don't think we'll ever need 
+            // to de-duplicate the triangle lists.
+            //
+            for (auto& partition : geom.skin->partition->partitions) {
+               if (partition.vertex_map.size()) {
+                  //
+                  // This partition remaps vertices.
+                  //
+                  const size_t tri_count = partition.triangles.size();
+                  mesh.mesh_data.indices = vertex_index_list(tri_count * 3, uint16_t(0));
+                  for (size_t i = 0; i < tri_count; ++i) {
+                     auto& src_tri = partition.triangles[i];
+                     auto* dst_tri = &mesh.mesh_data.indices.as_thin_range()[i * 3];
+                     for (size_t j = 0; j < 3; ++j) {
+                        if (src_tri.vertex_indices[j] >= partition.vertex_map.size()) {
+                           //
+                           // Invalid data. Skip it.
+                           //
+                           geom.vulkan_state.mesh_handle = {};
+                           _queue_mesh_for_delete(sr, mesh);
+                           return;
+                        }
+                        dst_tri[j] = partition.vertex_map[src_tri.vertex_indices[j]];
+                     }
+                  }
+               } else {
+                  _ni_triangles_to_mesh_triangles(partition.triangles, mesh);
+               }
             }
          }
-         {  // Vertices
-            mesh.mesh_data.vertices.resize(size);
+         //
+         // Vertices:
+         //
+         {
+            mesh.mesh_data.vertices.resize(vertex_count);
             auto& vl = data->vertices;
             auto& nl = data->normals;
             auto& tl = data->tangents;
             auto& bl = data->bitangents;
             auto& cl = data->vertex_colors;
             auto& ul = data->uv_sets;
-            for (size_t i = 0; i < size; ++i) {
+            for (size_t i = 0; i < vertex_count; ++i) {
                auto& vert = mesh.mesh_data.vertices[i];
                vert.pos = data->vertices[i];
                if (enable_vertex_color && cl.size()) {
@@ -265,7 +336,7 @@ namespace vulkanDK::asset_loading {
             }
          }
          if constexpr (false) {
-            qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded %u vertices...", size);
+            qDebug("[surface_renderer::add_NiGeometry_mesh] Loaded %u vertices...", vertex_count);
          }
          {  // Bounding sphere
             auto& dst = mesh.mesh_data.bounding_sphere;
@@ -344,6 +415,13 @@ namespace vulkanDK::asset_loading {
                } else if (auto* geom = dynamic_cast<BSTriShape*>(object)) {
                   mesh = geom->vulkan_state.mesh_handle.entity();
                   _load_BSTriShape(this->owner, *geom->vulkan_state.mesh_handle, *geom, state.transform);
+               }
+               if (mesh && mesh->lifetime.life_state == scene_entities::life_state::pending_delete) {
+                  //
+                  // We'll get here if one of the above "load" functions determines that this mesh 
+                  // doesn't actually have any content to load.
+                  //
+                  mesh = nullptr;
                }
                //
                if (mesh) {
