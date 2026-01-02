@@ -182,7 +182,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | Dialogue       | INFO | TopicInfo                 | ✅ | ✅ | 🟨 |
 | Cell Children  | LAND | Landscape                 | ✅ |   | 🟨 |
 | Cell Children  | NAVM | Navmesh                   | ✅ |   | ⬛ | Should add Dovahscript support, and then test the backend by drawing top-down and side views of navmeshes to a canvas. |
-| Cell Children  | REFR | Reference                 | ✅ | 🟨 | 🟨 |
+| Cell Children  | REFR | Reference                 | ✅ | ✅ | 🟨 |
 | Singletons     | DOBJ | Default Object Manager    | ✅ | ✅ | ⬛ |
 | Singletons     | NAVI | Navmesh Info Map          | 🟩 |   | ⬛ | Can load and re-save; can't update/regenerate. |
 |                | CELL | Cell                      | ✅ | ✅ | 🟨 |
