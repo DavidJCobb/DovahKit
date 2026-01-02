@@ -222,6 +222,7 @@ namespace ui::reference::fragments {
          case dovah::hardcoded_form_ids::PlaneMarker:
          case dovah::hardcoded_form_ids::PortalMarker:
          case dovah::hardcoded_form_ids::RoomMarker:
+         case dovah::hardcoded_form_ids::WaterCurrentZoneMarker:
             return true;
       }
       return false;
@@ -274,6 +275,8 @@ namespace ui::reference::fragments {
                   // This is Bethesda's terminology. Can we figure out a better word? 
                   // When does the CK even decide to make a roombound a "master?"
                   return QCoreApplication::translate("BGSPrimitive purpose", "Room (slave)");
+               case dovah::hardcoded_form_ids::WaterCurrentZoneMarker:
+                  return QCoreApplication::translate("BGSPrimitive purpose", "Water Current Zone");
             }
             break;
       }

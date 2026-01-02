@@ -1211,8 +1211,16 @@
        <item row="0" column="1">
         <widget class="DKFormPicker" name="owner">
          <property name="whatsThis">
-          <string>&lt;p&gt;This ref can be made to belong to an ActorBase or a Faction. If no owner is set here, then the ref will belong to whatever Actor or Faction, if any, owns its containing cell.&lt;/p&gt;
-&lt;p&gt;Furniture with an owner can only be used by its owner. Items with an owner can be picked up by anyone, but if someone who doesn't own them picks them up, that individual will be committing theft.&lt;/p&gt;</string>
+          <string>&lt;p&gt;This ref can be made to belong to an ActorBase or a Faction. The effects of ownership vary depending on what kind of ref this is.&lt;/p&gt;
+&lt;ul&gt;
+   &lt;li&gt;&lt;p&gt;If an activator has an owner, then it can only legally be used by that owner. If the player is seen activating an activator that someone else owns, they will be committing a crime. (In the vanilla game, this is used for the Business Ledger objects that are involved in the Thieves Guild quest &quot;The Numbers Job.&quot; If the quest is running, the Business Ledger that is the player's current objective will send a scripted &quot;steal alarm&quot; when activated, but the player can incur bounty via hardcoded ownership behaviors even when the quest isn't running.)&lt;/p&gt;&lt;/li&gt;
+   &lt;li&gt;&lt;p&gt;If a bed is owned, then whether the player is capable of sleeping on that ref will depend on whether the owners of the bed's containing cell are still alive. If any cell owner is alive, or if the cell is unowned, then the player can't use the bed, even if the bed and the cell aren't owned by any of the same people. Additionally, the player gains a small bonus (Well Rested) when they sleep in a bed that they currently own (e.g. a bed in a purchased home, or a bed in a rented inn room).&lt;/p&gt;&lt;/li&gt;
+   &lt;li&gt;&lt;p&gt;If a container has an owner, then that will be the default owner for any items inside the container.&lt;/p&gt;&lt;/li&gt;
+   &lt;li&gt;&lt;p&gt;If a door has an owner (other than the player) and the player picks the lock, then they will be committing a crime. (Unlocking the door with the key is legal.) The most obvious use case for this is the load doors leading in and out of characters' houses, but this can also be applied to things like display cases.&lt;/p&gt;&lt;/li&gt;
+   &lt;li&gt;&lt;p&gt;If an idle marker has an owner, then only that owner will be able to use the marker. This is helpful for preventing sandboxing NPCs from using the marker; for example, &quot;sweep the floor&quot; markers in Haelga's Bunkhouse are owned by staff so that tenants and player followers don't start sweeping the floor.&lt;/p&gt;&lt;/li&gt;
+   &lt;li&gt;&lt;p&gt;If an item has an owner, then that owner will be considered the item's rightful possessor: if the player picks up an item that's owned by someone else, they will be committing a crime.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;If a container or item ref has no owner, then it'll default to being owned by whatever party, if any, owns the containing cell.&lt;/p&gt;</string>
          </property>
         </widget>
        </item>

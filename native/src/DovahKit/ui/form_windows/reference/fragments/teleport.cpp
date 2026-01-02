@@ -275,7 +275,7 @@ namespace ui::reference::fragments {
          return true;
       } else {
          if (!ref)
-            return true;
+            return false;
          return _is_legal_teleport_destination(*ref);
       }
    }

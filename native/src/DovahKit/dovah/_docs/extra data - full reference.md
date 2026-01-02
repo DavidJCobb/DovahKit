@@ -75,7 +75,7 @@ Defines the amount of enchanting charge remaining on an enchanted weapon. If abs
 
 #### `ExtraCollisionData` (`XTRI`)
 
-**Used on:** REFR
+**Used on:** REFR[ACTI|CollisionMarker]
 
 The value is a collision layer ID. See `ExtraPrimitive`.
 
@@ -121,7 +121,7 @@ Sets the encounter zone that the cell or ref is associated with. If a ref lacks 
 
 **Used on:** CELL, REFR
 
-Associated with `ExtraOwnership`. Apparently unused; there's no UI you can use to set it. Probably related to how `ExtraOwnership` is presented for container inventory entries.
+Associated with `ExtraOwnership`. Apparently unused; there's no UI you can use to set it. Probably related to how `ExtraOwnership` is presented for container inventory entries; those allow you to set a global as part of the container's ownership data, though no one knows what that global is for.
 
 ### H
 
@@ -280,13 +280,21 @@ Associates a load door with a navmesh form in its containing cell, and a triangl
 
 Defines the owning faction or NPC of a reference or cell.
 
-* The owner of a cell is the default owner of any refs within that cell which can be owned.
+* Activating an activator owned by someone else is a crime. (This is used e.g. for the Business Ledgers in the Thieves Guild quest "The Numbers Job.")
 
-* The owner of a furniture is the only party allowed to use the furniture.
+* The owner of a cell is the default owner of any containers and items within that cell.
+
+* The owner of a container ref is the default owner of any items in that container.
+
+* Picking the lock on a door owned by someone else is a crime.
+
+* If a furniture ref is owned, and any of its owners are still alive, then the player will be incapable of sleeping on that furniture.
 
 * The owner of an item is considered the item's rightful possessor; if the player is not an owner (nor friends with the owner), they will be regarded as a thief if they take the item.
 
-This only defines the owning form. When the owning form is a faction and ownership is gated out to a minimum rank, that rank is stored via `XRNK`.
+This only defines the owning form. When the owning form is a faction and ownership is gated out to a minimum rank, that rank is stored via `ExtraRank` (`XRNK`).
+
+`ExtraGlobal` (`XGLB`) is related to this and concerns scrapped functionality.
 
 ### P
 
@@ -294,9 +302,11 @@ This only defines the owning form. When the owning form is a faction and ownersh
 
 #### `ExtraPatrolRefData` (`XPRD`, `XPPA`)
 
-**Used on:** REFR
+**Used on:** REFR[FURN|IDLM|XMarker|XMarkerHeading]
 
 Influences the behavior of any actor running a Patrol procedure, when they stop at this ref. You can control how long they wait at the ref, and direct them to play an idle and/or say a line of dialogue.
+
+In Skyrim.esm, this data is present on some Leveled Actor refs, even though it shouldn't be. The CK doesn't display it for them, and it should have no effect on them. I'm not sure how the data got there.
 
 #### `ExtraPoison` (`XPSN`, `XPSC`: eXtra PoiSoN, eXtra PoiSon Count)
 
@@ -314,13 +324,13 @@ Indicates the two `RoomMarker` refs that this portal connects.
 
 #### `ExtraPrimitive` (`XPRM`: eXtra PRiMitive)
 
-**Used on:** REFR[CollisionMarker01]
+**Used on:** REFR[ACSP|ACTI|CollisionMarker|MultiBoundMarker|PlaneMarker|PortalMarker|RoomMarker|WaterCurrentZoneMarker]
 
-Defines a collision primitive. If a ref has the `CollisionMarker01` base form and an `ExtraPrimitive`, then when it has its 3D loaded, said 3D will be synthesized from the `ExtraPrimitive` parameters.
+Defines a collision primitive; overrides loading of the ref so that its 3D model is synthesized from the primitive data. Activators become trigger volumes; specific Static base forms produce areas with hardcoded behaviors.
 
 When the primitive is a roombound, `ExtraMultiBound` will also be present, specifying half-extents that exactly match the extents of `ExtraPrimitive` (i.e. `XMBO` will have the `XPRM` sizes divided by two).
 
-The collision layer is set via `ExtraCollisionLayer`.
+The collision layer is set via `ExtraCollisionData`.
 
 ##### Notes on primitives
 
@@ -366,6 +376,8 @@ The teleport marker for a door ref, when the base form is a Door that selects a 
 
 When dealing with a pair of non-random load doors, each door's teleport marker is located in the opposite door's space, in front of that opposite door. When a door is randomized, however, it's randomized at run-time, which means that its teleport marker can't be placed on the other side: you don't know where the "other side" is. Instead, the teleport marker must be on the same side, and so this extra-data is used instead of `ExtraTeleport`.
 
+There are no uses of this in the vanilla game, because the CK UI for creating and editing randomized door base forms is broken.
+
 #### `ExtraRank` (`XRNK`)
 
 **Used on:** CELL, REFR
@@ -378,7 +390,9 @@ Value -1 is a sentinel for "unset."
 
 **Used on:** REFR[LIGH]
 
-A list of water plane references that reflect this light. Displayed in the "Reflected by" tab on the Reference dialog, when that tab is present.
+A list of water plane references that reflect this ref. Displayed in the "Reflected by" tab on the Reference dialog, when that tab is present.
+
+Refs must be added to this list manually; the user can do this while viewing either a water plane or something to be reflected in a water plane, by right-clicking the listview. (Note that the CK has a bug wherein when you right-click a water plane's listview and add a static, it updates `ExtraReflectorRefs` on the static, but not the run-time-only `ExtraReflectedRefs` on the water, and so the water plane's listview never updates.)
 
 Refs must be persistent in order to reflect or refract other refs. Non-persistent refs will not be added to the dynamically-computed `ExtraWaterLightRefs`.
 
