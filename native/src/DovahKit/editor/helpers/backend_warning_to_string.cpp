@@ -539,6 +539,16 @@ namespace editor_helpers {
                }
             #pragma endregion
             #pragma region extra data
+               #pragma region primitive
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::extra_data::primitive_is_zero_size*>(&warning)) {
+                     QString subject = form_identifiers_to_string(&casted->subject);
+                     //
+                     return QObject::tr(
+                        "%1 is a primitive, but its size is zero or very nearly zero.",
+                        disambig
+                     ).arg(subject);
+                  }
+               #pragma endregion
                #pragma region room_ref_data
                   if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::extra_data::room_ref_data_insufficient_rooms*>(&warning)) {
                      QString subject = form_identifiers_to_string(&casted->subject);
@@ -594,6 +604,30 @@ namespace editor_helpers {
                         "doesn't double-check the signature, so it will blindly swallow the found subrecord.",
                         disambig
                      ).arg(subject).arg(expected).arg(signature);
+                  }
+               #pragma endregion
+               #pragma region water_current_zone_data
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::extra_data::water_current_zone_data_swallowed_subrecord*>(&warning)) {
+                     QString subject   = form_identifiers_to_string(&casted->subject);
+                     QString signature = cobb::qt::four_cc_to_string(casted->signature_seen);
+
+                     return QObject::tr(
+                        "The water current zone data for %1 is malformed. Subrecord %2 was present where an XCZA subrecord should've "
+                        "been. The game doesn't double-check the signature, so it will blindly swallow the found subrecord for use as XCZA.",
+                        disambig
+                     ).arg(subject).arg(signature);
+                  }
+               #pragma endregion
+               #pragma region water_data
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::extra_data::water_data_swallowed_subrecord*>(&warning)) {
+                     QString subject   = form_identifiers_to_string(&casted->subject);
+                     QString signature = cobb::qt::four_cc_to_string(casted->signature_seen);
+
+                     return QObject::tr(
+                        "The water data for %1 is malformed. Subrecord %2 was present where the XWCU subrecord should've been. The game "
+                        "doesn't double-check the signature, so it will blindly swallow the found subrecord for use as XWCU.",
+                        disambig
+                     ).arg(subject).arg(signature);
                   }
                #pragma endregion
             #pragma endregion
@@ -1726,6 +1760,106 @@ namespace editor_helpers {
                      "race only defines %4 weights to use for lip synching.",
                      disambig
                   ).arg(subject).arg(phoneme).arg(casted->count).arg(casted->desired_count);
+               }
+            #pragma endregion
+            #pragma region reference
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::reference::actor_reflected_by_cell_water*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Actor %1 is reflected by cell water."
+                  ).arg(subject);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::reference::actor_reflected_by_water_refs*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Actor %1 is reflected by %2 placeable water refs."
+                  ).arg(subject).arg(casted->count);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::reference::corrupt_coordinates*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString format;
+                  if (casted->position) {
+                     if (casted->rotation) {
+                        format = QObject::tr(
+                           "%1 has a corrupt position and a corrupt rotation."
+                        );
+                     } else {
+                        format = QObject::tr(
+                           "%1 has a corrupt position."
+                        );
+                     }
+                  } else if (casted->rotation) {
+                     format = QObject::tr(
+                        "%1 has a corrupt rotation."
+                     );
+                  } else {
+                     //
+                     // Neither value is corrupt. This should never happen; the warning should never 
+                     // be emitted in that case.
+                     //
+                     format = QObject::tr(
+                        "DovahKit seems to be a bit conflicted on whether or not %1 has corrupt "
+                        "coordinates. Please report this to DovahKit's developer."
+                     );
+                  }
+                  return format.arg(subject);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::reference::light_emitter_radius_is_too_small*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Light emitter %1 has a radius (%2) that is too small (the minimum that the Creation Kit warns about is %3)."
+                  ).arg(subject).arg(casted->actual).arg(casted->minimum);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::reference::map_marker_has_no_data*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Map marker ref %1 has no map marker data."
+                  ).arg(subject);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::reference::lateral_position_too_far_from_interior_origin*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString format;
+                  if (casted->x_far) {
+                     if (casted->y_far) {
+                        format = QObject::tr(
+                           "Ref %1 is placed in an interior cell, but is too far from the cell origin "
+                           "along the X- and Y-axes."
+                        );
+                     } else {
+                        format = QObject::tr(
+                           "Ref %1 is placed in an interior cell, but is too far from the cell origin "
+                           "along the X-axis."
+                        );
+                     }
+                  } else if (casted->y_far) {
+                     format = QObject::tr(
+                        "Ref %1 is placed in an interior cell, but is too far from the cell origin "
+                        "along the Y-axis."
+                     );
+                  } else {
+                     //
+                     // Neither value is corrupt. This should never happen; the warning should never 
+                     // be emitted in that case.
+                     //
+                     format = QObject::tr(
+                        "DovahKit seems to be a bit conflicted on whether or not %1's coordinates "
+                        "are too far from the origin of its containing interior cell. Please report "
+                        "this to DovahKit's developer."
+                     );
+                  }
+                  return format.arg(subject);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::reference::occlusion_box_should_be_a_plane*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Occlusion box %1 has a half-extent smaller than 16 units. This should be an occlusion plane instead."
+                  ).arg(subject);
+               }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::reference::suspiciously_low_z_position*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  return QObject::tr(
+                     "Ref %1 has a potentially invalid Z-position (%2; we and the Creation Kit warn below %3)."
+                  ).arg(subject).arg(casted->actual).arg(casted->sus_threshold);
                }
             #pragma endregion
             #pragma region region

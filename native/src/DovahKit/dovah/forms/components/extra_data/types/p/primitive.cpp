@@ -7,6 +7,14 @@ namespace {
    using record_load_result    = extra_data::record_load_result;
 }
 
+#include "../../../../../notices/form_load_warnings/by_form_component/extra_data/primitive_is_zero_size.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_component::extra_data;
+   }
+}
+
 namespace dovah::loaded_forms::components::extra_data_types {
    /*virtual*/ subrecord_load_result primitive::load(tes_file_reading::subrecord& subrecord, load_interface_t& intfc) /*override*/ {
       if (subrecord.signature() != signature)
@@ -16,6 +24,12 @@ namespace dovah::loaded_forms::components::extra_data_types {
       subrecord.read(this->bounds.z);
       this->color.load(subrecord);
       subrecord.read(this->shape);
+
+      if (this->bounds.length() < 0.001F) { // same warning threshold as the CK
+         specific_load_warnings::primitive_is_zero_size notice(intfc.target_stub);
+         intfc.log_load_warning(notice);
+      }
+
       return subrecord_load_result::succeeded;
    }
    /*virtual*/ record_load_result primitive::load(tes_file_reading::record& record, load_interface_t& intfc) /*override*/ {
