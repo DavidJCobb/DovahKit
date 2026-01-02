@@ -1,6 +1,7 @@
 #include "cell_ref_list.h"
 #include <QHeaderView>
 #include <QMetaMethod>
+#include <QScrollBar>
 #include "helpers/qt/strings.h"
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
@@ -554,6 +555,12 @@ void CellRefList::rebuildModel() {
          stub = nullptr;
    }
    m->rebuild(stub);
+   //
+   // Scroll to the top when the list is completely rebuilt. Qt does not 
+   // have this behavior built in even when you reset the model.
+   //
+   if (auto* scrollbar = this->verticalScrollBar())
+      scrollbar->setValue(0);
 }
 void CellRefList::clear() {
    auto m = this->unwrappedModel();
