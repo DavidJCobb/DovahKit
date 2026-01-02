@@ -24,6 +24,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
 
             line,
          };
+         using shape_enum = shape;
 
       public:
          primitive() : extra_data(all_extra_data_types::index_of_type<primitive>) {}

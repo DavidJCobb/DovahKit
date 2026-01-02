@@ -14,20 +14,14 @@ namespace dovah::loaded_forms::components::extra_data_types {
          uint32_t flags = 0;
 
       public:
-         constexpr bool get_door_is_open_by_default(bool strict = true) const noexcept {
-            if (strict)
-               return flags == 8;
+         constexpr bool get_door_is_open_by_default() const noexcept {
             return flags & 8;
          }
-         constexpr void set_door_is_open_by_default(bool value, bool strict = true) noexcept {
-            if (strict)
-               flags = value ? 8 : 0;
-            else {
-               if (value)
-                  flags |=  8;
-               else
-                  flags &= ~8;
-            }
+         constexpr void set_door_is_open_by_default(bool value) noexcept {
+            if (value)
+               flags |=  8;
+            else
+               flags &= ~8;
          }
 
       public:

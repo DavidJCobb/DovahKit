@@ -4,6 +4,7 @@
 #include "../data/spaces/interior_cell_max_sane_bounds.h"
 #include "../data/hardcoded_form_ids.h"
 #include "../form_stubs/helpers/get_worldspace_cell_by_grid.h"
+#include "components/extra_data/types/a/action.h"
 #include "components/extra_data/types/e/enable_state_parent.h"
 #include "components/extra_data/types/p/primitive.h"
 #include "components/extra_data/types/r/radius.h"
@@ -203,7 +204,10 @@ namespace dovah::loaded_forms {
                subrecord.read(this->rotation.z);
                break;
             case 'ONAM':
-               this->is_open = true;
+               {
+                  auto* extra = this->extra_data.get_or_create<components::extra_data_types::action>();
+                  extra->set_door_is_open_by_default(true);
+               }
                break;
             case 'NAME': // base form (subrecord signature is vestigial from Morrowind, which used editor IDs instead of form IDs)
                if (subrecord.read(this->base_form)) {
@@ -368,7 +372,6 @@ namespace dovah::loaded_forms {
       copy->extra_data.clone_from(this->extra_data, *copy);
       copy->script_data.clone_from(this->script_data, *copy);
       copy->base_form.set(*copy, this->base_form);
-      copy->is_open  = this->is_open;
       copy->position = this->position;
       copy->rotation = this->rotation;
    }
@@ -380,10 +383,11 @@ namespace dovah::loaded_forms {
       NAME.close();
       //
       this->extra_data.save(record, intfc);
-      //
-      if (this->is_open) {
-         record.open_next_subrecord('ONAM').close();
+      if (auto* extra = this->extra_data.get<components::extra_data_types::action>()) {
+         if (extra->get_door_is_open_by_default())
+            record.open_next_subrecord('ONAM').close();
       }
+      //
       auto& DATA = record.open_next_subrecord('DATA');
       DATA.write(this->position.x);
       DATA.write(this->position.y);
@@ -403,7 +407,6 @@ namespace dovah::loaded_forms {
       this->extra_data.clear(*this);
       this->script_data.clear(*this);
       this->base_form.set(*this, nullptr);
-      this->is_open = false;
       //this->position = { 0, 0, 0 }; // don't reset this as that might change the parent cell
       this->rotation = { 0, 0, 0 };
    }

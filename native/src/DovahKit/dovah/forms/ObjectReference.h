@@ -22,6 +22,7 @@ namespace dovah::loaded_forms {
                // of signatures, then the other value applies to all form types not covered by the first.
                //
                hide_from_local_map_a     = 0x00000040, // DOOR
+               turn_off_fire             = 0x00000080, // any form whose model has BSX flag 1 << 4 set
                doesnt_light_water        = 0x00000100, // LIGH
                inaccessible              = 0x00000100, // DOOR
                hide_from_local_map_b     = 0x00000200, // ACTI, STAT, TREE
@@ -49,7 +50,6 @@ namespace dovah::loaded_forms {
          components::extra_data_list         extra_data;
          components::papyrus_attachment_data script_data; // VMAD
          base_form_reference_t base_form; // NAME
-         bool is_open = false; // ONAM (empty record; acts as sentinel)
          cobb::vector3<float> position; // DATA
          cobb::vector3<float> rotation; // DATA // radians
 
