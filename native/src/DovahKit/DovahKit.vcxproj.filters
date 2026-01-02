@@ -9440,6 +9440,9 @@
     <ClInclude Include="editor\subsystems\worldedit\passkeys\attempt_pick_ref.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\primitive_is_zero_size.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

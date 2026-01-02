@@ -1882,6 +1882,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\attack_data\expected_event_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\container\item_has_bad_owner_form_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\destruction\stage_serialized_index_out_of_bounds.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\primitive_is_zero_size.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data_insufficient_rooms.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data_swallowed_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\water_current_zone_data_swallowed_subrecord.h" />
