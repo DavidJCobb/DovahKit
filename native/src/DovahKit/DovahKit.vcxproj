@@ -460,6 +460,7 @@
     <ClCompile Include="editor\subsystems\story_manager\story_manager_subsystem.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\edit_gizmo_color_scheme_manager.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\hardcoded.cpp" />
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_pick_ref.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_landscape_details.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\debug_dump_raycast.cpp" />
@@ -2121,6 +2122,9 @@
     <ClInclude Include="editor\subsystems\story_manager\core.h" />
     <QtMoc Include="editor\subsystems\story_manager\StoryManagerFormsModel.h" />
     <ClInclude Include="editor\subsystems\story_manager\passkeys\core_controls_model.h" />
+    <ClInclude Include="editor\subsystems\worldedit\passkeys\attempt_pick_ref.h" />
+    <ClInclude Include="editor\subsystems\worldedit\ref_pick_task.h" />
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_pick_ref.h" />
     <ClInclude Include="helpers\bound_mem_fn.h" />
     <ClInclude Include="helpers\const_forwarding_ptr.h" />
     <ClInclude Include="helpers\optionals\finite_float.h" />
@@ -3966,6 +3970,7 @@
     <None Include="editor\subsystems\papyrus\known_script.inl" />
     <None Include="editor\subsystems\papyrus\_docs\known scripts.md" />
     <None Include="editor\subsystems\papyrus\_docs\thread-safety.md" />
+    <None Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_pick_ref.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_selection.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\debug_print.inl" />
     <None Include="editor\subsystems\worldedit\tool_system\tools\modify_camera_speed_flags.inl" />

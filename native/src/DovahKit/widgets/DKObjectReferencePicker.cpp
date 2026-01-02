@@ -7,6 +7,7 @@
    #include "dovah/form_stub.h"
    #include "editor/subsystems/papyrus/core.h"
    #include "editor/subsystems/worldedit/core.h"
+   #include "editor/subsystems/worldedit/ref_pick_task.h"
    #include "editor/core.h"
 #endif
 
@@ -34,8 +35,23 @@ DKObjectReferencePicker::DKObjectReferencePicker(QWidget* parent) : QWidget(pare
       auto* widget = this->subwidgets.render_window_pick = new QPushButton(tr("Pick Reference in Render Window"), this);
       #if !defined(QT_PLUGIN)
          QObject::connect(widget, &QPushButton::clicked, this, [this]() {
-            static_assert(!require_render_window_pick_hook, "TODO: click handler: coordinate with Worldedit/Worldinput to pick the ref");
-            static_assert(!require_render_window_pick_hook, "TODO: enforce required scriptname here too!");
+            auto& worldedit = dovahkit::subsystems::worldedit::core::get();
+            auto* task      = new dovahkit::subsystems::worldedit::ref_pick_task;
+            task->cancel_on_non_matching_ref = true;
+            task->ref_filter = [this](dovah::form_stub* ref) {
+               if (auto& f = this->state.validation_function)
+                  if (!f(ref))
+                     return false;
+               return ((DKRefsInCellModel*)this->subwidgets.refr->model())->refMatchesHardFilters(ref);
+            };
+            task->callbacks.on_complete = [this](dovah::form_stub* ref) {
+               this->setRef(ref);
+               this->setFocus();
+            };
+            task->callbacks.on_canceled = [this]() {
+               this->setFocus();
+            };
+            worldedit.begin_pick_ref(task);
          });
       #endif
    }

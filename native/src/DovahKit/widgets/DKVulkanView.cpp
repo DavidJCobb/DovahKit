@@ -330,5 +330,6 @@ void DKVulkanView::focusInEvent(QFocusEvent* event) {
 }
 void DKVulkanView::focusOutEvent(QFocusEvent* event) {
    this->input_handling.focused = false;
+   emit focusLost();
 }
 #pragma endregion

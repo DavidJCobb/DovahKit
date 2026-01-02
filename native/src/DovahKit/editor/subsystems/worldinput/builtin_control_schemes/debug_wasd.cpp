@@ -169,6 +169,7 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
          auto* node_selections = control_scheme_node::from_data(control_scheme_condition{
             .name = "When anything is selected...",
             .data = {
+               .editor_modes    = decltype(condition_set::editor_modes)::value_type::from<editor_mode::objects, editor_mode::navmesh>(),
                .selection_count = condition_set::selection_count_comparison_set{
                   .comparisons = {
                      { comparison_operator::greater, 0 },
@@ -309,6 +310,32 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
                   },
                };
             }
+         }
+      }
+      {  // Editor Mode: Pick Ref
+         auto* em_node = control_scheme_node::from_data(control_scheme_condition{
+            .name = "When picking a ref",
+            .data = {
+               .editor_modes = editor_mode::picking_ref,
+            }
+         });
+         out.top_level_nodes.push_back(em_node);
+         
+         {  // Pick Ref
+            auto* node = control_scheme_node::from_data(control_scheme_action{
+               .name = "Pick ref",
+               //
+               .button_press_type = button_press_type::press,
+               //
+               .tool = _tool_sans_options<tools::attempt_on_screen_pick_ref>()
+            });
+            em_node->append_child(*node);
+
+            auto& data = node->data;
+
+            auto* g = data.input_sequence.root = new input_sequence::group;
+            g->type   = input_sequence::group_type::single_control;
+            g->button = inputs::button{ .mouse = Qt::MouseButton::LeftButton };
          }
       }
       {  // Editor Mode: Objects

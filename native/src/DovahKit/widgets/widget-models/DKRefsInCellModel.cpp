@@ -85,7 +85,7 @@ bool DKRefsInCellModel::_item_matches_filter(const Item& item) const {
       if (!papyrus.form_has_script_attached(*item.stub, this->required_scriptname))
          return false;
    }
-   return true;;
+   return true;
 }
 bool DKRefsInCellModel::_stub_allowed_in_model(const dovah::form_stub& stub) const {
    if (!dovah::form_type_is_reference(stub.form_type))
@@ -696,6 +696,35 @@ dovah::form_stub* DKRefsInCellModel::ref(QModelIndex qmi) const {
    if (qmi.row() >= this->children.size())
       return nullptr;
    return this->children[qmi.row()]->stub;
+}
+
+bool DKRefsInCellModel::refMatchesHardFilters(dovah::form_stub* ref) const {
+   //
+   // Prepended items always match.
+   //
+   for (auto& item : this->children) {
+      if (!item->is_prepended)
+         break;
+      if (ref == item->stub)
+         return true;
+   }
+   //
+   // Otherwise, apply the usual constraints EXCEPT for the filter string. The 
+   // filter string is used to have the user narrow down matching refs, not to 
+   // determine what refs are legal.
+   //
+   if (!ref)
+      return false;
+   if (this->filter_form_type != dovah::form_type::none && this->filter_form_type != dovah::form_type::reference) {
+      if (ref->form_type != this->filter_form_type)
+         return false;
+   }
+   if (!this->required_scriptname.empty()) {
+      const auto& papyrus = dovahkit::subsystems::papyrus::core::get();
+      if (!papyrus.form_has_script_attached(*ref, this->required_scriptname))
+         return false;
+   }
+   return true;
 }
 
 #pragma region Editor core hooks

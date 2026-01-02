@@ -3855,6 +3855,9 @@
     <ClCompile Include="ui\form_windows\reference\fragments\activate_parents.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_pick_ref.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9428,6 +9431,15 @@
     <ClInclude Include="ui\form_windows\reference\fragments\activate_parents.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\ref_pick_task.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_pick_ref.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="editor\subsystems\worldedit\passkeys\attempt_pick_ref.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -11398,6 +11410,9 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\_docs\extra data - full reference.md" />
+    <None Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_pick_ref.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

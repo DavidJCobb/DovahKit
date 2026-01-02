@@ -38,6 +38,7 @@ namespace dovahkit::subsystems::worldedit::tools {
       class turn_camera,
       class orbit_camera,
 
+      class attempt_on_screen_pick_ref,
       class attempt_on_screen_selection,
       class debug_dump_landscape_details,
       class debug_dump_raycast,

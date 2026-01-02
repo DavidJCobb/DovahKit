@@ -4,6 +4,7 @@
 namespace dovahkit::subsystems::worldedit::tools {
    // Forward-declarations only, here.
    using all_tools = cobb::class_array<
+      class attempt_on_screen_pick_ref,
       class attempt_on_screen_selection,
       class debug_dump_landscape_details,
       class debug_dump_raycast,

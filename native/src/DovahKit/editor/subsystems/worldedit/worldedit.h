@@ -36,6 +36,12 @@ namespace vulkanDK {
    class surface_renderer;
 }
 
+namespace dovahkit::subsystems::worldedit {
+   namespace passkeys {
+      class attempt_pick_ref;
+   }
+   class ref_pick_task;
+}
 namespace dovahkit::subsystems::worldedit::tools {
    namespace tandem {
       class adjust_camera;
@@ -144,7 +150,12 @@ namespace dovahkit::subsystems::worldedit {
 
             // for "Orbit Camera" tool
             cobb::vector3<float> previous_selection_pivot;
+
+            // for ref-pick tasks
+            dovah::form_stub* valid_pick_target_ref = nullptr;
          } state;
+         //
+         ref_pick_task* current_pick_task = nullptr;
 
          void _update_grid_size_from_inis();
 
@@ -204,6 +215,8 @@ namespace dovahkit::subsystems::worldedit {
          }
 
          constexpr editor_mode get_editor_mode() const {
+            if (this->current_pick_task)
+               return editor_mode::picking_ref;
             return this->state.mode;
          }
 
@@ -228,6 +241,13 @@ namespace dovahkit::subsystems::worldedit {
 
          #pragma region Passkeyed functions for tools
          void _debug_dump_landscape_raycast(cobb::passkey<core, class tools::debug_dump_landscape_details>, const dovah::form_stub& landscape, const glm::vec3& hit_position);
+         #pragma endregion
+
+         #pragma region Pick ref
+         void begin_pick_ref(ref_pick_task*); // takes ownership of the task
+         void cancel_pick_ref();
+
+         void attempt_pick_ref(passkeys::attempt_pick_ref);
          #pragma endregion
 
       protected:

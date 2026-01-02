@@ -51,6 +51,8 @@ class DKVulkanView : public QWidget {
       void rendererErrorKillImminent(vulkanDK::surface_renderer&);
       void rendererKilledDueToError();
 
+      void focusLost();
+
    protected:
       vulkanDK::surface_renderer* renderer = nullptr; // owns
       struct {

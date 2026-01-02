@@ -36,6 +36,9 @@
 #include "vulkan/surface_renderer.h"
 #include "widgets/DKVulkanView.h"
 
+#include "./passkeys/attempt_pick_ref.h"
+#include "./ref_pick_task.h"
+
 #include "editor/subsystems/options/core.h"
 #include "editor/ini/main.h"
 namespace {
@@ -255,6 +258,8 @@ namespace dovahkit::subsystems::worldedit {
 
    void core::_unload_refr(refr& refr, bool handle_deselection) {
       auto* stub = refr.stub;
+      if (stub == this->state.valid_pick_target_ref)
+         this->state.valid_pick_target_ref = nullptr;
       if (handle_deselection) {
          //
          // This function can optionally handle deselection as well. There are cases 
@@ -290,6 +295,8 @@ namespace dovahkit::subsystems::worldedit {
       refr.form = nullptr;
    }
    void core::_unload_refr(dovah::form_stub& stub) {
+      if (&stub == this->state.valid_pick_target_ref)
+         this->state.valid_pick_target_ref = nullptr;
       auto&  list = this->loaded_refs;
       size_t size = list.size();
       size_t i    = 0;
@@ -1081,35 +1088,82 @@ namespace dovahkit::subsystems::worldedit {
          //
          this->_on_renderer_lost();
       });
+      QObject::connect(&view, &DKVulkanView::focusLost, this, [this]() {
+         this->cancel_pick_ref();
+      });
    }
 
    void core::view_input_poll_handler(DKVulkanView& view) {
       bool scaled_refs_last_frame    = this->state.scaled_refs_this_input_poll;
       bool any_input_processing_done = false;
       this->state.scaled_refs_this_input_poll = false;
+      this->state.valid_pick_target_ref = nullptr;
 
       if (&view != this->target_view)
          return;
       if (!view.isListeningForInput())
          return;
-      //
-      // Update edit gizmo mouseover state.
-      //
+
       auto* sr = view.surfaceRenderer();
       if (sr) {
-         auto cursor_pos = view.mapFromGlobal(QCursor::pos());
+         //
+         // Update edit gizmo mouseover state, and cursor if the user is picking a 
+         // ref and there are constraints on what they're allowed to pick.
+         //
+         if (view.underMouse()) {
+            auto cursor_pos = view.mapFromGlobal(QCursor::pos());
+            {
+               vulkanDK::raycast rc(*sr);
+               rc.test_flags = vulkanDK::raycast::test_flag::edit_gizmo;
+               rc.set_screen_relative_raycast(cursor_pos.x(), cursor_pos.y());
 
-         vulkanDK::raycast rc(*sr);
-         rc.test_flags = vulkanDK::raycast::test_flag::edit_gizmo;
-         rc.set_screen_relative_raycast(cursor_pos.x(), cursor_pos.y());
+               sr->do_raycast(rc);
+               if (rc.result.hit) {
+                  sr->replace_gizmo_axis_highlighted(rc.result.gizmo.axis);
+               } else {
+                  sr->clear_all_gizmo_axis_highlighting();
+               }
+            }
+            if (auto* task = this->current_pick_task) {
+               //
+               // Update the cursor based on whether the user is aiming at a ref they're 
+               // allowed to pick.
+               //
+               if (task->ref_filter && view.underMouse()) {
+                  vulkanDK::raycast rc(*sr);
+                  rc.test_flags = vulkanDK::raycast::test_flag::meshes;
+                  rc.set_screen_relative_raycast(cursor_pos.x(), cursor_pos.y());
 
-         sr->do_raycast(rc);
-         if (rc.result.hit) {
-            sr->replace_gizmo_axis_highlighted(rc.result.gizmo.axis);
+                  sr->do_raycast(rc);
+
+                  dovah::form_stub* ref = nullptr;
+                  if (rc.result.hit) {
+                     if (std::holds_alternative<vulkanDK::rendered_mesh_handle>(rc.result.entity)) {
+                        auto handle = std::get<vulkanDK::rendered_mesh_handle>(rc.result.entity);
+                        if (!handle.empty()) {
+                           if (auto* nif = handle->owning_nif; nif)
+                              ref = nif->owning_form;
+                        }
+                     }
+                  }
+                  if (task->ref_filter(ref)) {
+                     view.setCursor(Qt::CursorShape::CrossCursor);
+                     this->state.valid_pick_target_ref = ref;
+                  } else {
+                     view.setCursor(Qt::CursorShape::ForbiddenCursor);
+                  }
+               }
+            }
          } else {
+            //
+            // View isn't even under the mouse. Assume no relevant mouseover stuff.
+            //
             sr->clear_all_gizmo_axis_highlighting();
          }
       }
+      //
+      // Input handling.
+      //
       {
          auto cursor_pos = view.mapFromGlobal(QCursor::pos()); // TODO: GET THIS FROM THE INPUT SYSTEM?
 
@@ -1905,6 +1959,55 @@ namespace dovahkit::subsystems::worldedit {
          // TODO: console-print the nearest vertex's attributes.
          //
       }
+   }
+   #pragma endregion
+
+   
+   #pragma region Pick ref
+   void core::begin_pick_ref(ref_pick_task* task) {
+      if (!task)
+         return;
+      this->cancel_pick_ref();
+      this->current_pick_task = task;
+      if (this->target_view) {
+         this->target_view->setFocus();
+         this->target_view->setCursor(Qt::CrossCursor);
+      } else {
+         this->cancel_pick_ref();
+      }
+   }
+   void core::cancel_pick_ref() {
+      auto* prior = this->current_pick_task;
+      if (!prior)
+         return;
+      auto callback = std::move(prior->callbacks.on_canceled);
+      this->current_pick_task = nullptr;
+      delete prior;
+      if (this->target_view)
+         this->target_view->unsetCursor();
+      if (callback)
+         callback();
+   }
+
+   void core::attempt_pick_ref(passkeys::attempt_pick_ref) {
+      auto* task = this->current_pick_task;
+      if (!task)
+         return;
+      auto* ref = this->state.valid_pick_target_ref;
+      if (auto& cb = task->ref_filter) {
+         if (!cb(ref)) {
+            if (task->cancel_on_non_matching_ref)
+               cancel_pick_ref();
+            return;
+         }
+      }
+      auto callback = std::move(task->callbacks.on_complete);
+      this->current_pick_task = nullptr;
+      delete task;
+      if (this->target_view)
+         this->target_view->unsetCursor();
+      if (callback)
+         callback(ref);
    }
    #pragma endregion
 

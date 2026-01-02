@@ -244,27 +244,63 @@ namespace dovahkit::subsystems::worldinput::builtin_control_schemes {
             .precision = bool_operation::invert,
          })
       }));
-
-      {
-         auto* node = control_scheme_node::from_data(control_scheme_action{
-            .name = "Toggle Selection",
-            //
-            .input_sequence    = _single_button_sequence(inputs::xinput_button::a),
-            .button_press_type = button_press_type::press,
-            //
-            .tool = _tool_with_options(tools::attempt_on_screen_selection::options{
-               .operation = selection_operation::toggle,
-            })
+      
+      {  // Editor Mode: Pick Ref
+         auto* em_node = control_scheme_node::from_data(control_scheme_condition{
+            .name = "When picking a ref",
+            .data = {
+               .editor_modes = editor_mode::picking_ref,
+            }
          });
-         out.top_level_nodes.push_back(node);
+         out.top_level_nodes.push_back(em_node);
+         
+         {  // Pick Ref
+            auto* node = control_scheme_node::from_data(control_scheme_action{
+               .name = "Pick ref",
+               //
+               .input_sequence    = _single_button_sequence(inputs::xinput_button::a),
+               .button_press_type = button_press_type::press,
+               //
+               .tool = _tool_sans_options<tools::attempt_on_screen_pick_ref>()
+            });
+            em_node->append_child(*node);
 
-         auto& is = node->data.input_sequence;
-         is.raycast.associated_button = is.root;
-         is.raycast.requirement = raycast_requirement{
-            .targets = {
-               .object_references = true,
-            },
-         };
+            auto& data = node->data;
+
+            auto* g = data.input_sequence.root = new input_sequence::group;
+            g->type   = input_sequence::group_type::single_control;
+            g->button = inputs::button{ .mouse = Qt::MouseButton::LeftButton };
+         }
+      }
+      {
+         auto* em_node = control_scheme_node::from_data(control_scheme_condition{
+            .name = "Object Mode",
+            .data = {
+               .editor_modes = editor_mode::objects,
+            }
+         });
+         out.top_level_nodes.push_back(em_node);
+         {
+            auto* node = control_scheme_node::from_data(control_scheme_action{
+               .name = "Toggle Selection",
+               //
+               .input_sequence    = _single_button_sequence(inputs::xinput_button::a),
+               .button_press_type = button_press_type::press,
+               //
+               .tool = _tool_with_options(tools::attempt_on_screen_selection::options{
+                  .operation = selection_operation::toggle,
+               })
+            });
+            em_node->append_child(*node);
+
+            auto& is = node->data.input_sequence;
+            is.raycast.associated_button = is.root;
+            is.raycast.requirement = raycast_requirement{
+               .targets = {
+                  .object_references = true,
+               },
+            };
+         }
       }
 
       out.assert_validity();

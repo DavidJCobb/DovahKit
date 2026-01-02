@@ -19,7 +19,7 @@ namespace dovahkit::subsystems::worldinput {
 
          using selection_count_comparison_set = util::comparison_set<size_t>;
 
-         std::optional<cobb::enum_flags<editor_mode, 3>> editor_modes;
+         std::optional<cobb::enum_flags<editor_mode, 4>> editor_modes;
          std::optional<cobb::enum_flags<gizmo_mode, 4>>  gizmo_modes;
          std::optional<selection_count_comparison_set>   selection_count;
 

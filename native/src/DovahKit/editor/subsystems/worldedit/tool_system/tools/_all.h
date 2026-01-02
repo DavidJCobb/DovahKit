@@ -8,6 +8,7 @@
 #include "../concepts/tool_with_response.h"
 #include "../all_tools.h"
 
+#include "./attempt_on_screen_pick_ref.h"
 #include "./attempt_on_screen_selection.h"
 #include "./debug_dump_landscape_details.h"
 #include "./debug_dump_raycast.h"

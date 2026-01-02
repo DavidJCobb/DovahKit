@@ -3,6 +3,9 @@
 
 namespace dovahkit::subsystems::worldedit {
    using gizmo_mode = vulkanDK::gizmo_mode;
+
+   // REMINDER: When adding values, update not just the serialization options below, but 
+   // also the bitcount used for the appropriate member on `condition_set`.
 }
 
 #include "helpers/bitstreams/enum_serialization_options.h"
