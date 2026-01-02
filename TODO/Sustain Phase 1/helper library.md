@@ -98,9 +98,9 @@ I have a general-purpose C++ library in the top-level "helpers" folder &mdash; j
 
 * `cobb::vector3<T>` uses a `throw` statement when its `operator[]` is run in constexpr, to reject out-of-bounds accesses. This statement triggers compiler warnings when the operator is invoked; I should suppress those warnings. (Not doing that now because the header is used in enough places to have a fairly wide blast radius.)
 
-## Specific files we can redesign/add
+## Specific files/definitions we can redesign/add
 
-### `passkey.h`
+### `lu::passkey`
 
 C++ has variadic templates, but there's no way to generate an arbitrary number of `friend` declarations, so it's not possible to define a passkey template class that grants access to an arbitrary number of classes. There's a proposal for variadic friends ([P2893R0 (PDF)](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2893r0.pdf)), but AFAIK it hasn't been accepted yet.
 

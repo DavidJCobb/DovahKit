@@ -652,6 +652,19 @@ namespace dovahkit::subsystems::worldedit {
       this->_update_gizmo_colors(
          gizmo_color_scheme_manager::get_or_create().get_current_color_scheme()
       );
+      //
+      // If we have a current area, then actually load it now.
+      //
+      if (auto* world = this->target_area.world) {
+         auto pos = this->target_area.world_grid_pos;
+         this->_unload_all_cells();
+         this->target_area = {};
+         this->_set_current_area_impl(world, pos.x, pos.y);
+      } else if (auto* cell = this->target_area.cell) {
+         this->_unload_all_cells();
+         this->target_area = {};
+         this->_set_current_area_impl(cell, 0, 0);
+      }
    }
    void core::_on_renderer_loss_imminent(vulkanDK::surface_renderer& sr) {
       auto& hooks = sr.get_hooks();

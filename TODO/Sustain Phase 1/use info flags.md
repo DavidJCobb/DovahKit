@@ -148,7 +148,7 @@ One last note: the enums for flags **must not** be `#include`d by the headers fo
 * ECZN (Encounter Zone)
   * **ECZN/DATA+0x04 (Location):** To optimize gathering a Location's contents.[^location-gather]
 * LCTN (Location)
-  * **LCTN/PNAM (Parent):** For rapidly querying location hierarchies, and checking if some location is inside of some other location.
+  * **LCTN/PNAM (Parent):** For rapidly querying location hierarchies, and checking if some location is inside of some other location. This would also make it easier to show a tree of locations in the Object Window.
 * NPC_ (ActorBase)
   * **NPC_/TPLT (Template Form):** For rapidly gathering all template actors that influence the contents of a templated actor. Templating can be daisy-chained, and different properties can be inherited by each successive actor, so you may need to consult several templates to determine the final properties of some templated actor.
 * REFR (ObjectReference)
@@ -156,6 +156,7 @@ One last note: the enums for flags **must not** be `#include`d by the headers fo
   * **REFR/XLCN:** To optimize gathering a Location's contents.[^location-gather]
   * **REFR/XTEL+0x00 (Teleport Destination Door):** For more optimal processing of load doors.
 * WRLD (Worldspace)
+  * **WRLD/WNAM (Parent World):** This would make it easier to show a tree of worldspaces in the Object Window, if we wanted to do that.
   * **WRLD/XEZN:** To optimize gathering a Location's contents.[^location-gather]
   * **WRLD/XLCN:** To optimize gathering a Location's contents.[^location-gather]
 
