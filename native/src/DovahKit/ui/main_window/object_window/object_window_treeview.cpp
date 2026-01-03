@@ -235,6 +235,7 @@ void ObjectWindowTreeItem::sort() {
             .appendChild(item_type::make_form_type(tr("Visual Effect", disambig), dovah::form_type::reference_effect))
             .appendChild(item_type::make_form_type(tr("Water Type", disambig), dovah::form_type::water_type))
             .appendChild(item_type::make_form_type(tr("Weather", disambig), dovah::form_type::weather))
+            .appendChild(item_type::make_form_type(tr("Worldspace", disambig), dovah::form_type::worldspace))
       );
       this->_nodes.root->appendChild(
          item_type::make_top_level(tr("World Objects", disambig))

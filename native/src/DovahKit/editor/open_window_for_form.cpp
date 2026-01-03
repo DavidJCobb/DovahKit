@@ -62,6 +62,7 @@
 #include "../ui/form_windows/leveled_item.h"
 #include "../ui/form_windows/leveled_spell.h"
 #include "../ui/form_windows/light.h"
+#include "../ui/form_windows/lighting_template.h"
 #include "../ui/form_windows/loading_screen.h"
 #include "../ui/form_windows/location.h"
 #include "../ui/form_windows/location_ref_type.h"
@@ -109,6 +110,7 @@
 #include "../ui/form_windows/weapon.h"
 #include "../ui/form_windows/weather.h"
 #include "../ui/form_windows/word_of_power.h"
+#include "../ui/form_windows/worldspace.h"
 #include "../ui/form_group_windows/camera_path/CameraPathsDialog.h"
 #include "../ui/form_group_windows/idle/IdleAnimationsDialog.h"
 #include "ui/main_window.h" // MainWindow::get
@@ -181,6 +183,7 @@ namespace {
       std::pair{ dovah::form_type::leveled_item,      _make<FormDialogLeveledItem> },
       std::pair{ dovah::form_type::leveled_spell,     _make<FormDialogLeveledSpell> },
       std::pair{ dovah::form_type::light,             _make<FormDialogLight> },
+      std::pair{ dovah::form_type::lighting_template, _make<FormDialogLightingTemplate> },
       std::pair{ dovah::form_type::loading_screen,    _make<FormDialogLoadingScreen> },
       std::pair{ dovah::form_type::location,          _make<FormDialogLocation> },
       std::pair{ dovah::form_type::location_ref_type, _make<FormDialogLocationRefType> },
@@ -237,6 +240,7 @@ namespace {
       std::pair{ dovah::form_type::weapon,            _make<FormDialogWeapon> },
       std::pair{ dovah::form_type::weather,           _make<FormDialogWeather> },
       std::pair{ dovah::form_type::word_of_power,     _make<FormDialogWordOfPower> },
+      std::pair{ dovah::form_type::worldspace,        _make<FormDialogWorldspace> },
    };
 
    #pragma region Compile-time sanity checks

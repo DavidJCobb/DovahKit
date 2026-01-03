@@ -1152,6 +1152,7 @@
     <ClCompile Include="ui\form_windows\weather\WeatherIntpackedFloatEditor.cpp" />
     <ClCompile Include="ui\form_windows\weather\WeatherSoundsModel.cpp" />
     <ClCompile Include="ui\form_windows\word_of_power.cpp" />
+    <ClCompile Include="ui\form_windows\worldspace.cpp" />
     <ClCompile Include="ui\generic\CanvasWidget.cpp" />
     <ClCompile Include="ui\generic\QItemSelectionModelEx.cpp" />
     <ClCompile Include="ui\main_window\object_window\filter_info.cpp" />
@@ -2367,6 +2368,7 @@
     <QtMoc Include="ui\form_windows\volumetric_lighting.h" />
     <ClInclude Include="ui\form_windows\weather\WeatherIntpackedFloatEditor.h" />
     <ClInclude Include="ui\form_windows\weather\WeatherSoundsModel.h" />
+    <QtMoc Include="ui\form_windows\worldspace.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\form_types\imagespace_modifier_keyframe_interp.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\idles_datastore.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\models\scoped_proxy_model.h" />
@@ -3742,6 +3744,7 @@
     <QtUic Include="ui\form_windows\weapon.ui" />
     <QtUic Include="ui\form_windows\weather.ui" />
     <QtUic Include="ui\form_windows\word_of_power.ui" />
+    <QtUic Include="ui\form_windows\worldspace.ui" />
     <QtUic Include="ui\main_window.ui" />
     <QtUic Include="ui\main_window\cell_view.ui" />
     <QtUic Include="ui\main_window\default_object_window.ui" />

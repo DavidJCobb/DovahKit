@@ -3861,6 +3861,9 @@
     <ClCompile Include="ui\form_windows\lighting_template.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\worldspace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9943,6 +9946,9 @@
     <QtUic Include="ui\form_windows\lighting_template.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="ui\form_windows\worldspace.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\main_window.h">
@@ -10897,6 +10903,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\lighting_template.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\worldspace.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
