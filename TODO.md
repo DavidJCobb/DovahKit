@@ -151,7 +151,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | SpecialEffect  | PROJ | Projectile                | ✅ | ✅ | ⬛ |
 | WorldData      | CLMT | Climate                   | ✅ | ✅ | ⬛ |
 | WorldData      | ECZN | Encounter Zone            | ✅ | ✅ | ⬛ |
-| WorldData      | LGTM | Lighting Template         | ✅ | ⬛ | ⬛ | Might be a good idea to set up shared widgets (plural!) between this and cell data, especially since the ambient lighting struct (but not the rest!) is used elsewhere too (e.g. weather). |
+| WorldData      | LGTM | Lighting Template         | ✅ | ✅ | ⬛ |
 | WorldData      | LCTN | Location                  | ✅ | ✅ | ⬛ |
 | WorldData      | LCRT | Location Ref Type         | ✅ | ✅ | ⬛ |
 | WorldData      | SPGD | Shader Particle Geometry  | ✅ | ✅ | ⬛ |

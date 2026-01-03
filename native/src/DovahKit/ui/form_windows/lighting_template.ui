@@ -1,0 +1,585 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormDialogLightingTemplate</class>
+ <widget class="QDialog" name="FormDialogLightingTemplate">
+  <property name="windowTitle">
+   <string>Lighting Template</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_7">
+   <item row="6" column="0" colspan="2">
+    <widget class="QGroupBox" name="copyFromCellGroupbox">
+     <property name="title">
+      <string>Copy Values from Cell</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="label_22">
+        <property name="text">
+         <string>Cell:</string>
+        </property>
+        <property name="buddy">
+         <cstring>copyFromCellForm</cstring>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="DKFormPicker" name="copyFromCellForm">
+        <property name="allowNone">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="buttonCopyFromCell">
+        <property name="text">
+         <string>Copy</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="7" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="buttonsLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonOK">
+       <property name="text">
+        <string>OK</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="1">
+    <layout class="QVBoxLayout" name="rightCol">
+     <item>
+      <widget class="QGroupBox" name="fogGroupbox">
+       <property name="title">
+        <string>Fog</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Near Distance:</string>
+          </property>
+          <property name="buddy">
+           <cstring>fogDistNear</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Far Distance:</string>
+          </property>
+          <property name="buddy">
+           <cstring>fogDistFar</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_7">
+          <property name="text">
+           <string>Clip Distance:</string>
+          </property>
+          <property name="buddy">
+           <cstring>fogDistClip</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>Power:</string>
+          </property>
+          <property name="buddy">
+           <cstring>fogPow</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Far Color:</string>
+          </property>
+          <property name="buddy">
+           <cstring>fogColorFar</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="0">
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>Max:</string>
+          </property>
+          <property name="buddy">
+           <cstring>fogMax</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Near Color:</string>
+          </property>
+          <property name="buddy">
+           <cstring>fogColorNear</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="DKColorPickerButton" name="fogColorNear"/>
+        </item>
+        <item row="1" column="1">
+         <widget class="DKColorPickerButton" name="fogColorFar"/>
+        </item>
+        <item row="2" column="1">
+         <widget class="QDoubleSpinBox" name="fogDistNear">
+          <property name="whatsThis">
+           <string>The distance at which fog begins to show up.</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QDoubleSpinBox" name="fogDistFar">
+          <property name="whatsThis">
+           <string>The distance in units at which the fog reaches its maximum thickness, assuming the max fog power is 1. If the max fog power is less than 1, then the fog will reach its maximum thickness at a shorter distance than this.</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QDoubleSpinBox" name="fogDistClip">
+          <property name="whatsThis">
+           <string>The distance past which geometry is entirely culled from the scene.</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QDoubleSpinBox" name="fogPow">
+          <property name="whatsThis">
+           <string>A value between 0 and 1 applied during fog calculations. The lower this value is, the quicker the fog will show up.</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="maximum">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QDoubleSpinBox" name="fogMax">
+          <property name="whatsThis">
+           <string>The maximum opacity of the fog. This is usually set to around 0.7 to prevent scenes from going to a flat color at long distances.</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="maximum">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="omniFadeGroupbox">
+       <property name="whatsThis">
+        <string>These are the distances over which non-shadow-casting omni light emitters will fade out of view.</string>
+       </property>
+       <property name="title">
+        <string>Omni Light Fade Distances</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_5">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_18">
+          <property name="text">
+           <string>Start:</string>
+          </property>
+          <property name="buddy">
+           <cstring>omniFadeStart</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QDoubleSpinBox" name="omniFadeStart">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_19">
+          <property name="text">
+           <string>End:</string>
+          </property>
+          <property name="buddy">
+           <cstring>omniFadeEnd</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QDoubleSpinBox" name="omniFadeEnd">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="unusedGroupbox">
+       <property name="whatsThis">
+        <string>These settings were never fully implemented, and have no effect in-game.</string>
+       </property>
+       <property name="title">
+        <string>Unused Options</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_6">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_20">
+          <property name="text">
+           <string>Specular Color:</string>
+          </property>
+          <property name="buddy">
+           <cstring>specular</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="DKColorPickerButton" name="specular"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_21">
+          <property name="text">
+           <string>Fresnel Power:</string>
+          </property>
+          <property name="buddy">
+           <cstring>fresnel</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QDoubleSpinBox" name="fresnel">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0">
+    <layout class="QVBoxLayout" name="leftCol">
+     <item>
+      <widget class="QGroupBox" name="ambientGroupbox">
+       <property name="whatsThis">
+        <string>This value has no &lt;em&gt;visual&lt;/em&gt; effect on a cell's lighting. It serves two purposes: it can be used to quickly calculate Directional Ambient Light; and it influences the &quot;light level&quot; of a cell, i.e. the luminosity value used by the game to calculate detection while sneaking.</string>
+       </property>
+       <property name="title">
+        <string>Ambient Light</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_12">
+          <property name="text">
+           <string>Color:</string>
+          </property>
+          <property name="buddy">
+           <cstring>ambientColor</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="DKColorPickerButton" name="ambientColor"/>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="directionalGroupbox">
+       <property name="whatsThis">
+        <string>The directional light affects everything in the cell, and is used to simulate bounced light.</string>
+       </property>
+       <property name="title">
+        <string>Directional Light</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="3" column="1">
+         <widget class="QDoubleSpinBox" name="directionalFade">
+          <property name="whatsThis">
+           <string>The brightness of the directional light.</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>Color:</string>
+          </property>
+          <property name="buddy">
+           <cstring>directionalColor</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="DKColorPickerButton" name="directionalColor"/>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_9">
+          <property name="text">
+           <string>Fade:</string>
+          </property>
+          <property name="buddy">
+           <cstring>directionalFade</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_10">
+          <property name="text">
+           <string>Rotation XY:</string>
+          </property>
+          <property name="buddy">
+           <cstring>directionalRotXY</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_11">
+          <property name="text">
+           <string>Rotation Z:</string>
+          </property>
+          <property name="buddy">
+           <cstring>directionalRotZ</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QSpinBox" name="directionalRotXY">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QSpinBox" name="directionalRotZ">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="dalcGroupbox">
+       <property name="title">
+        <string>Directional Ambient Light</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_13">
+          <property name="text">
+           <string>X:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1" colspan="2">
+         <widget class="DKColorPickerButton" name="dalcXNeg"/>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_16">
+          <property name="text">
+           <string>Y:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="3">
+         <widget class="DKColorPickerButton" name="dalcZPos"/>
+        </item>
+        <item row="1" column="3">
+         <widget class="DKColorPickerButton" name="dalcXPos"/>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_17">
+          <property name="text">
+           <string>Z:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1" colspan="2">
+         <widget class="DKColorPickerButton" name="dalcYNeg"/>
+        </item>
+        <item row="0" column="1" colspan="2">
+         <widget class="QLabel" name="label_14">
+          <property name="text">
+           <string>-</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1" colspan="2">
+         <widget class="DKColorPickerButton" name="dalcZNeg"/>
+        </item>
+        <item row="4" column="0" colspan="4">
+         <widget class="Line" name="line">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="3">
+         <widget class="DKColorPickerButton" name="dalcYPos"/>
+        </item>
+        <item row="0" column="3">
+         <widget class="QLabel" name="label_15">
+          <property name="text">
+           <string>+</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0" colspan="4">
+         <widget class="QPushButton" name="buttonSetDalcFromAmb">
+          <property name="text">
+           <string>Set From Ambient</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="0" colspan="2">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="label_23">
+       <property name="text">
+        <string>Editor ID:</string>
+       </property>
+       <property name="buddy">
+        <cstring>editorID</cstring>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="editorID"/>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKColorPickerButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKColorPickerButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editorID</tabstop>
+  <tabstop>ambientColor</tabstop>
+  <tabstop>directionalColor</tabstop>
+  <tabstop>directionalRotXY</tabstop>
+  <tabstop>directionalRotZ</tabstop>
+  <tabstop>directionalFade</tabstop>
+  <tabstop>dalcXNeg</tabstop>
+  <tabstop>dalcXPos</tabstop>
+  <tabstop>dalcYNeg</tabstop>
+  <tabstop>dalcYPos</tabstop>
+  <tabstop>dalcZNeg</tabstop>
+  <tabstop>dalcZPos</tabstop>
+  <tabstop>buttonSetDalcFromAmb</tabstop>
+  <tabstop>fogColorNear</tabstop>
+  <tabstop>fogColorFar</tabstop>
+  <tabstop>fogDistNear</tabstop>
+  <tabstop>fogDistFar</tabstop>
+  <tabstop>fogDistClip</tabstop>
+  <tabstop>fogPow</tabstop>
+  <tabstop>fogMax</tabstop>
+  <tabstop>omniFadeStart</tabstop>
+  <tabstop>omniFadeEnd</tabstop>
+  <tabstop>specular</tabstop>
+  <tabstop>fresnel</tabstop>
+  <tabstop>copyFromCellForm</tabstop>
+  <tabstop>buttonCopyFromCell</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

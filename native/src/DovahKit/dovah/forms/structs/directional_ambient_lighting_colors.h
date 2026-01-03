@@ -22,5 +22,7 @@ namespace dovah::loaded_forms::structs {
       public:
          void load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc);
          void save(tes_subrecord_writer&, load_order_interfaces::form_save& intfc);
+
+         void set_from_ambient(color_t);
    };
 }

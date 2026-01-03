@@ -3858,6 +3858,9 @@
     <ClCompile Include="editor\subsystems\worldedit\tool_system\tools\attempt_on_screen_pick_ref.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\lighting_template.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9937,6 +9940,9 @@
     <QtUic Include="ui\form_windows\reference\ObjectReferenceNewLinkedRefDialog.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="ui\form_windows\lighting_template.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\main_window.h">
@@ -10888,6 +10894,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\reference\ObjectReferenceReflectingWaterModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\lighting_template.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
