@@ -185,7 +185,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 |                | SCEN | Scene                     | ✅ | ✅ | ⬛ |
 |                | SMBN | Story Manager Branch Node | ✅ |   | ⬛ | These don't have their own UI. You edit them as part of the Event Node UI. |
 |                | SMQN | Story Manager Quest Node  | ✅ |   | ⬛ | These don't have their own UI. You edit them as part of the Event Node UI. |
-|                | WRLD | Worldspace                | ✅ | ⬛ | 🟨 |
+|                | WRLD | Worldspace                | ✅ | ✅ | 🟨 |
 | Deprecated     | APPA | BGSApparatus              | ✅ | ✅ | ⬛ | CK32 has a loader for this; test in-game behavior |
 | Deprecated     | EYES | TESEyes                   | ✅ | ✅ | ⬛ | CK32 has a loader for this |
 | Deprecated     | MICO | BGSMenuIcon               | ✅ | ✅ | ⬛ | CK32 has a loader for this |
