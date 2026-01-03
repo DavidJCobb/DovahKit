@@ -3619,6 +3619,7 @@
     <QtUic Include="ui\form_group_windows\camera_path\camera_path.ui" />
     <QtUic Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.ui" />
     <QtUic Include="ui\form_group_windows\idle\idle.ui" />
+    <QtUic Include="ui\form_group_windows\region\region.ui" />
     <QtUic Include="ui\form_windows\acoustic_space.ui" />
     <QtUic Include="ui\form_windows\activator.ui" />
     <QtUic Include="ui\form_windows\actor_action.ui" />

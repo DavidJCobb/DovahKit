@@ -1,0 +1,1714 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>RegionsDialog</class>
+ <widget class="QDialog" name="RegionsDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>941</width>
+    <height>730</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Region Editor</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,3">
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="DKFormPicker" name="currentWorld">
+         <property name="allowNone">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTableView" name="regions"/>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>1</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="currentIndex">
+        <number>4</number>
+       </property>
+       <widget class="QWidget" name="tabGeneral">
+        <attribute name="title">
+         <string>General</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="0" column="0">
+          <layout class="QGridLayout" name="gridLayout_2">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Editor ID:</string>
+             </property>
+             <property name="buddy">
+              <cstring>editorID</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="editorID"/>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>Edge Fall-Off:</string>
+             </property>
+             <property name="buddy">
+              <cstring>edgeFalloff</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
+             <item>
+              <widget class="QDoubleSpinBox" name="edgeFalloff"/>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_4">
+               <property name="text">
+                <string>world units</string>
+               </property>
+               <property name="buddy">
+                <cstring>edgeFalloff</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>0</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item row="1" column="1" alignment="Qt::AlignLeft">
+            <widget class="DKColorPickerButton" name="color"/>
+           </item>
+           <item row="1" column="0">
+            <widget class="QCheckBox" name="colorPresent">
+             <property name="text">
+              <string>Color:</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="0" column="1">
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>338</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="1" column="0">
+          <layout class="QGridLayout" name="gridLayout_3">
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="flagBorder">
+             <property name="text">
+              <string>Border Region</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="0">
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabObjects">
+        <attribute name="title">
+         <string>Objects</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_6">
+         <item row="0" column="0" colspan="2">
+          <layout class="QHBoxLayout" name="objectsMetaLayout">
+           <item>
+            <widget class="QCheckBox" name="objectsEnable">
+             <property name="text">
+              <string>Enable this type of data</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="objectsPriorityLayout">
+             <item>
+              <widget class="QLabel" name="label_2">
+               <property name="text">
+                <string>Priority:</string>
+               </property>
+               <property name="buddy">
+                <cstring>objectsPriority</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="objectsPriority">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="maximum">
+                <number>100</number>
+               </property>
+               <property name="value">
+                <number>50</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="objectsOverride">
+             <property name="text">
+              <string>Override</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <item>
+            <widget class="QTreeView" name="objectsEntries"/>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_4">
+             <item>
+              <widget class="QPushButton" name="buttonObjectsMoveUp">
+               <property name="text">
+                <string>Move Up</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="buttonObjectsMoveDown">
+               <property name="text">
+                <string>Move Down</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="1">
+          <layout class="QGridLayout" name="gridLayout_5">
+           <item row="2" column="0" colspan="2">
+            <layout class="QVBoxLayout" name="verticalLayout_4">
+             <item>
+              <widget class="QCheckBox" name="currentObjectConformToSlope">
+               <property name="whatsThis">
+                <string>If checked, the generated object will be aligned with the angle of the terrain underneath it before any angle variance settings are applied.</string>
+               </property>
+               <property name="text">
+                <string>Conform to Slope</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <item>
+                <widget class="QCheckBox" name="currentObjectPaintEnable">
+                 <property name="whatsThis">
+                  <string>If checked, the terrain above or below the generated object will be painted with a given color. The area painted is measured relative to the object's radius setting.</string>
+                 </property>
+                 <property name="text">
+                  <string>Paint landscape:</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="DKColorPickerButton" name="currentObjectPaintColor"/>
+               </item>
+               <item>
+                <widget class="QLabel" name="label_14">
+                 <property name="text">
+                  <string>within</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="currentObjectPaintPercent">
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                 <property name="suffix">
+                  <string>%</string>
+                 </property>
+                 <property name="maximum">
+                  <number>100</number>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="label_15">
+                 <property name="text">
+                  <string>of radius</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_6">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>0</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="currentObjectIsHugeRock">
+               <property name="text">
+                <string>Is a Huge Rock (allow generating objects on top of this one)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="currentObjectIsTree">
+               <property name="whatsThis">
+                <string>This option alters the behavior of the radius value: the radius will be multiplied when two or more objects flagged as trees are placed near each other. (The multiplier is a Game Setting.) This is useful for keeping trees far enough away from each other to prevent clipping, while allowing mushrooms to spawn around those trees' radii (without having to set radii values for each individual mushroom object).</string>
+               </property>
+               <property name="text">
+                <string>Is a Tree (scale radius with respect to other nearby trees)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="verticalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>Object Name:</string>
+             </property>
+             <property name="buddy">
+              <cstring>currentObjectEditorID</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <layout class="QGridLayout" name="gridLayout_7">
+             <item row="0" column="3">
+              <widget class="QLabel" name="label_7">
+               <property name="text">
+                <string>Clustering:</string>
+               </property>
+               <property name="buddy">
+                <cstring>currentObjectClustering</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QDoubleSpinBox" name="currentObjectDensity">
+               <property name="whatsThis">
+                <string>This allows you to roughly control how many of this object will be generated. The value works in tandem with the other settings and is not a fixed amount. Higher numbers mean a greater chance that the object will appear.</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="decimals">
+                <number>3</number>
+               </property>
+               <property name="maximum">
+                <double>100.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <spacer name="horizontalSpacer_5">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType">
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>8</width>
+                 <height>0</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_8">
+               <property name="text">
+                <string>Min Slope:</string>
+               </property>
+               <property name="buddy">
+                <cstring>currentObjectSlopeMin</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="4">
+              <widget class="QSpinBox" name="currentObjectClustering">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="maximum">
+                <number>100</number>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_9">
+               <property name="text">
+                <string>Max Slope:</string>
+               </property>
+               <property name="buddy">
+                <cstring>currentObjectSlopeMax</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_6">
+               <property name="text">
+                <string>Density:</string>
+               </property>
+               <property name="buddy">
+                <cstring>currentObjectDensity</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="label_10">
+               <property name="text">
+                <string>Min Height:</string>
+               </property>
+               <property name="buddy">
+                <cstring>currentObjectHeightMin</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QLabel" name="label_11">
+               <property name="text">
+                <string>Radius:</string>
+               </property>
+               <property name="buddy">
+                <cstring>currentObjectRadius</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
+              <widget class="QLabel" name="label_12">
+               <property name="text">
+                <string>Radius w/in Parent:</string>
+               </property>
+               <property name="buddy">
+                <cstring>currentObjectRadiusWRTParent</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="3">
+              <widget class="QLabel" name="label_13">
+               <property name="text">
+                <string>Max Height:</string>
+               </property>
+               <property name="buddy">
+                <cstring>currentObjectHeightMax</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QSpinBox" name="currentObjectSlopeMin">
+               <property name="whatsThis">
+                <string>The object won't appear on slopes that are less steep than this angle.</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="suffix">
+                <string>°</string>
+               </property>
+               <property name="maximum">
+                <number>90</number>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QSpinBox" name="currentObjectSlopeMax">
+               <property name="whatsThis">
+                <string>The object won't appear on slopes that are more steep than this angle.</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="suffix">
+                <string>°</string>
+               </property>
+               <property name="maximum">
+                <number>90</number>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="4">
+              <widget class="QSpinBox" name="currentObjectRadius">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="maximum">
+                <number>32767</number>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="4">
+              <widget class="QSpinBox" name="currentObjectRadiusWRTParent">
+               <property name="whatsThis">
+                <string>This option is only available when this object is a &quot;child&quot; in the treeview off to the side. Typically, a child object can only appear within its parent object's radius; the value here is an offset that will increase the radius within which the child will spawn.</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="maximum">
+                <number>32767</number>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QDoubleSpinBox" name="currentObjectHeightMin">
+               <property name="whatsThis">
+                <string>The object won't be placed below this Z-coordinate.</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="minimum">
+                <double>-500000.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>500000.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="4">
+              <widget class="QDoubleSpinBox" name="currentObjectHeightMax">
+               <property name="whatsThis">
+                <string>The object won't be placed above this Z-coordinate.</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="minimum">
+                <double>-500000.000000000000000</double>
+               </property>
+               <property name="maximum">
+                <double>500000.000000000000000</double>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="1" column="2">
+            <widget class="QGroupBox" name="groupBox">
+             <property name="whatsThis">
+              <string>For each of an object's local rotation axes, you can specify the range within which the object can rotate about that axis. You can specify positive or negative values, and checking the &quot;plus/minus&quot; box will allow the Region Editor to flip the sign on the value you specify, effectively doubling the range you've asked for.</string>
+             </property>
+             <property name="title">
+              <string>Angle variance</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_8">
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_18">
+                <property name="text">
+                 <string>Z:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>currentObjectAngleRangeZ</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QDoubleSpinBox" name="currentObjectAngleRangeZ">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="suffix">
+                 <string>°</string>
+                </property>
+                <property name="minimum">
+                 <double>-360.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>360.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_16">
+                <property name="text">
+                 <string>X:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>currentObjectAngleRangeX</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QDoubleSpinBox" name="currentObjectAngleRangeY">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="suffix">
+                 <string>°</string>
+                </property>
+                <property name="minimum">
+                 <double>-360.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>360.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QDoubleSpinBox" name="currentObjectAngleRangeX">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="suffix">
+                 <string>°</string>
+                </property>
+                <property name="minimum">
+                 <double>-360.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>360.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_17">
+                <property name="text">
+                 <string>Y:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>currentObjectAngleRangeY</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QCheckBox" name="currentObjectAngleSignedX">
+                <property name="text">
+                 <string>±</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QCheckBox" name="currentObjectAngleSignedY">
+                <property name="text">
+                 <string>±</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="2">
+               <widget class="QCheckBox" name="currentObjectAngleSignedZ">
+                <property name="text">
+                 <string>±</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="0" column="1" colspan="2">
+            <widget class="QLineEdit" name="currentObjectEditorID">
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="2">
+            <widget class="QGroupBox" name="groupBox_2">
+             <property name="title">
+              <string>Other measurements</string>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_9">
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_19">
+                <property name="whatsThis">
+                 <string>Apply a randomized (within the value specified) adjustment to the object's Z-axis (vertical) position.</string>
+                </property>
+                <property name="text">
+                 <string>Z Variance:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>currentObjectSinkVariance</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_21">
+                <property name="text">
+                 <string>Size Variance:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>currentObjectSizeVariance</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_20">
+                <property name="whatsThis">
+                 <string>Apply a constant adjustment to the object's Z-axis (vertical) position.</string>
+                </property>
+                <property name="text">
+                 <string>Z Offset:</string>
+                </property>
+                <property name="buddy">
+                 <cstring>currentObjectSink</cstring>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QDoubleSpinBox" name="currentObjectSizeVariance">
+                <property name="whatsThis">
+                 <string>Apply a randomized modifier to the object's size. Note that while this modifier isn't capped, the object's final size may be limited by the engine.</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="2">
+               <widget class="QCheckBox" name="currentObjectSizeVarianceSigned">
+                <property name="whatsThis">
+                 <string>Control whether the Region Editor is allowed to flip the sign of the size variance (i.e. whether objects can be both increased and decreased by the given size variance).</string>
+                </property>
+                <property name="text">
+                 <string>±</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1" colspan="2">
+               <widget class="QDoubleSpinBox" name="currentObjectSinkVariance">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1" colspan="2">
+               <widget class="QDoubleSpinBox" name="currentObjectSink">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabWeather">
+        <attribute name="title">
+         <string>Weather</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_11">
+         <item row="0" column="0" colspan="2">
+          <layout class="QHBoxLayout" name="weatherMetaLayout">
+           <item>
+            <widget class="QCheckBox" name="weatherEnable">
+             <property name="text">
+              <string>Enable this type of data</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_7">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="weatherPriorityLayout">
+             <item>
+              <widget class="QLabel" name="label_22">
+               <property name="text">
+                <string>Priority:</string>
+               </property>
+               <property name="buddy">
+                <cstring>weatherPriority</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="weatherPriority">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="maximum">
+                <number>100</number>
+               </property>
+               <property name="value">
+                <number>50</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="weatherOverride">
+             <property name="text">
+              <string>Override</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0" rowspan="2">
+          <layout class="QVBoxLayout" name="verticalLayout_5">
+           <item>
+            <widget class="QTableWidget" name="tableWidget"/>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_6">
+             <item>
+              <widget class="QPushButton" name="buttonWeatherAdd">
+               <property name="text">
+                <string>Add Weather...</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="buttonWeatherRemove">
+               <property name="text">
+                <string>Remove</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="1">
+          <spacer name="verticalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>0</width>
+             <height>127</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="1" column="1">
+          <widget class="QGroupBox" name="currentWeatherGroupbox">
+           <property name="title">
+            <string>Current selection</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_10">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_23">
+              <property name="text">
+               <string>Weather:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="DKFormPicker" name="currentWeatherForm"/>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_24">
+              <property name="text">
+               <string>Chance:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <layout class="QHBoxLayout" name="horizontalLayout_8">
+              <item>
+               <widget class="QRadioButton" name="currentWeatherChanceTypeFixed">
+                <property name="text">
+                 <string>Fixed percentage:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="currentWeatherChanceValueFixed">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="suffix">
+                 <string>%</string>
+                </property>
+                <property name="maximum">
+                 <number>100</number>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_8">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item row="2" column="1">
+             <layout class="QHBoxLayout" name="horizontalLayout_7">
+              <item>
+               <widget class="QRadioButton" name="currentWeatherChanceTypeGlobal">
+                <property name="text">
+                 <string>Global:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="DKFormPicker" name="currentWeatherChanceValueGlobal">
+                <property name="allowNone">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabMap">
+        <attribute name="title">
+         <string>Map</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_13">
+         <item row="0" column="0">
+          <layout class="QHBoxLayout" name="mapMetaLayout">
+           <item>
+            <widget class="QCheckBox" name="mapEnable">
+             <property name="text">
+              <string>Enable this type of data</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_9">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="mapPriorityLayout">
+             <item>
+              <widget class="QLabel" name="label_25">
+               <property name="text">
+                <string>Priority:</string>
+               </property>
+               <property name="buddy">
+                <cstring>mapPriority</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="mapPriority">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="maximum">
+                <number>100</number>
+               </property>
+               <property name="value">
+                <number>50</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="mapOverride">
+             <property name="text">
+              <string>Override</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <layout class="QGridLayout" name="gridLayout_12">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_26">
+             <property name="text">
+              <string>Map Name:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="mapName"/>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="0">
+          <spacer name="verticalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>214</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabLandscape">
+        <attribute name="title">
+         <string>Landscape</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_15">
+         <item row="0" column="0">
+          <layout class="QHBoxLayout" name="landscapeMetaLayout">
+           <item>
+            <widget class="QCheckBox" name="landscapeEnable">
+             <property name="text">
+              <string>Enable this type of data</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_10">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="landscapePriorityLayout">
+             <item>
+              <widget class="QLabel" name="label_27">
+               <property name="text">
+                <string>Priority:</string>
+               </property>
+               <property name="buddy">
+                <cstring>landscapePriority</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="landscapePriority">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="maximum">
+                <number>100</number>
+               </property>
+               <property name="value">
+                <number>50</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="landscapeOverride">
+             <property name="text">
+              <string>Override</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <layout class="QGridLayout" name="gridLayout_14">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_28">
+             <property name="text">
+              <string>Texture (Unused):</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="DKGameFilePicker" name="landscapeTexture"/>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="0">
+          <spacer name="verticalSpacer_5">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>8</width>
+             <height>248</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabGrass">
+        <attribute name="title">
+         <string>Grass</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_17">
+         <item row="3" column="0">
+          <spacer name="verticalSpacer_6">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>8</width>
+             <height>136</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="0">
+          <layout class="QHBoxLayout" name="grassMetaLayout">
+           <item>
+            <widget class="QCheckBox" name="grassEnable">
+             <property name="text">
+              <string>Enable this type of data</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_11">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="grassPriorityLayout">
+             <item>
+              <widget class="QLabel" name="label_29">
+               <property name="text">
+                <string>Priority:</string>
+               </property>
+               <property name="buddy">
+                <cstring>grassPriority</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="grassPriority">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="maximum">
+                <number>100</number>
+               </property>
+               <property name="value">
+                <number>50</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="grassOverride">
+             <property name="text">
+              <string>Override</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <widget class="QWidget" name="wordWrappingLabelsScrewUpTheTabHeightUnlessWeHaveAFixedHeightContainer" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>100</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>100</height>
+            </size>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_19" rowstretch="0,1">
+            <property name="sizeConstraint">
+             <enum>QLayout::SetFixedSize</enum>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_30">
+              <property name="text">
+               <string>&lt;p&gt;This data is no longer used. At some point during Oblivion's development, Grass forms were base forms, and placed grass objects were refs. The data here controlled what LandTextures these refs could be generated on. However, during Oblivion's development, the engine was changed so that grass is rendered as instanced geometry sprouting directly out of LandTextures; it is no longer generated via the Region Editor.&lt;/p&gt;</string>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <spacer name="verticalSpacer_8">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>8</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tabSound">
+        <attribute name="title">
+         <string>Sound</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_8">
+         <item>
+          <layout class="QHBoxLayout" name="soundMetaLayout">
+           <item>
+            <widget class="QCheckBox" name="soundEnable">
+             <property name="text">
+              <string>Enable this type of data</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_12">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="soundMusicLayout">
+             <item>
+              <widget class="QLabel" name="label_32">
+               <property name="text">
+                <string>Music Type:</string>
+               </property>
+               <property name="buddy">
+                <cstring>soundMusicType</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="DKFormPicker" name="soundMusicType">
+               <property name="overrideTextForNone">
+                <string>DEFAULT</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="soundPriorityLayout">
+             <item>
+              <spacer name="horizontalSpacer_13">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_31">
+               <property name="text">
+                <string>Priority:</string>
+               </property>
+               <property name="buddy">
+                <cstring>soundPriority</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="soundPriority">
+               <property name="alignment">
+                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               </property>
+               <property name="maximum">
+                <number>100</number>
+               </property>
+               <property name="value">
+                <number>50</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="soundOverride">
+             <property name="text">
+              <string>Override</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_9">
+           <item>
+            <widget class="QTableView" name="sounds"/>
+           </item>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_7">
+             <item>
+              <widget class="QPushButton" name="buttonSoundNew">
+               <property name="text">
+                <string>New</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="buttonSoundRemove">
+               <property name="text">
+                <string>Remove</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="verticalSpacer_7">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_3">
+           <property name="title">
+            <string>Selected entry</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_16">
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_33">
+              <property name="text">
+               <string>Sound:</string>
+              </property>
+              <property name="buddy">
+               <cstring>currentSoundDescriptor</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="DKFormPicker" name="currentSoundDescriptor"/>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_34">
+              <property name="text">
+               <string>Chance:</string>
+              </property>
+              <property name="buddy">
+               <cstring>currentSoundChance</cstring>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <layout class="QHBoxLayout" name="horizontalLayout_10">
+              <item>
+               <widget class="QDoubleSpinBox" name="currentSoundChance">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>6</number>
+                </property>
+                <property name="maximum">
+                 <double>1.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_14">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="currentSoundPleasant">
+                <property name="text">
+                 <string>Pleasant Weather</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="currentSoundCloudy">
+                <property name="text">
+                 <string>Cloudy Weather</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="currentSoundRainy">
+                <property name="text">
+                 <string>Rainy Weather</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="currentSoundSnowy">
+                <property name="text">
+                 <string>Snowy Weather</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="gridLayout" stretch="0,1">
+     <item>
+      <widget class="QGroupBox" name="gridFilters">
+       <property name="title">
+        <string>Color grid cells based on regions that define...</string>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QCheckBox" name="gridFilterObjects">
+          <property name="text">
+           <string>Objects</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="gridFilterWeather">
+          <property name="text">
+           <string>Weather</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="gridFilterMap">
+          <property name="text">
+           <string>Map</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="gridFilterLand">
+          <property name="text">
+           <string>Landscape</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="gridFilterGrass">
+          <property name="text">
+           <string>Grass</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="gridFilterSound">
+          <property name="text">
+           <string>Sound</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="gridFilterNothing">
+          <property name="text">
+           <string>Nothing</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="buttonCheckAllGridFilters">
+          <property name="text">
+           <string>Check All</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="buttonUncheckAllGridFilters">
+          <property name="text">
+           <string>Uncheck All</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QFrame" name="gridFrame">
+       <property name="focusPolicy">
+        <enum>Qt::TabFocus</enum>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::WinPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Sunken</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DKColorPickerButton</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKColorPickerButton.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKFormPicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKFormPicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKGameFilePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKGameFilePicker.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>currentWorld</tabstop>
+  <tabstop>regions</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>editorID</tabstop>
+  <tabstop>colorPresent</tabstop>
+  <tabstop>color</tabstop>
+  <tabstop>edgeFalloff</tabstop>
+  <tabstop>flagBorder</tabstop>
+  <tabstop>objectsEnable</tabstop>
+  <tabstop>objectsPriority</tabstop>
+  <tabstop>objectsOverride</tabstop>
+  <tabstop>objectsEntries</tabstop>
+  <tabstop>buttonObjectsMoveUp</tabstop>
+  <tabstop>buttonObjectsMoveDown</tabstop>
+  <tabstop>currentObjectEditorID</tabstop>
+  <tabstop>currentObjectDensity</tabstop>
+  <tabstop>currentObjectSlopeMin</tabstop>
+  <tabstop>currentObjectSlopeMax</tabstop>
+  <tabstop>currentObjectHeightMin</tabstop>
+  <tabstop>currentObjectClustering</tabstop>
+  <tabstop>currentObjectRadius</tabstop>
+  <tabstop>currentObjectRadiusWRTParent</tabstop>
+  <tabstop>currentObjectHeightMax</tabstop>
+  <tabstop>currentObjectConformToSlope</tabstop>
+  <tabstop>currentObjectPaintEnable</tabstop>
+  <tabstop>currentObjectPaintColor</tabstop>
+  <tabstop>currentObjectPaintPercent</tabstop>
+  <tabstop>currentObjectIsHugeRock</tabstop>
+  <tabstop>currentObjectIsTree</tabstop>
+  <tabstop>currentObjectAngleRangeX</tabstop>
+  <tabstop>currentObjectAngleSignedX</tabstop>
+  <tabstop>currentObjectAngleRangeY</tabstop>
+  <tabstop>currentObjectAngleSignedY</tabstop>
+  <tabstop>currentObjectAngleRangeZ</tabstop>
+  <tabstop>currentObjectAngleSignedZ</tabstop>
+  <tabstop>currentObjectSink</tabstop>
+  <tabstop>currentObjectSinkVariance</tabstop>
+  <tabstop>currentObjectSizeVariance</tabstop>
+  <tabstop>currentObjectSizeVarianceSigned</tabstop>
+  <tabstop>weatherEnable</tabstop>
+  <tabstop>weatherPriority</tabstop>
+  <tabstop>weatherOverride</tabstop>
+  <tabstop>tableWidget</tabstop>
+  <tabstop>buttonWeatherAdd</tabstop>
+  <tabstop>buttonWeatherRemove</tabstop>
+  <tabstop>currentWeatherForm</tabstop>
+  <tabstop>currentWeatherChanceTypeFixed</tabstop>
+  <tabstop>currentWeatherChanceValueFixed</tabstop>
+  <tabstop>currentWeatherChanceTypeGlobal</tabstop>
+  <tabstop>currentWeatherChanceValueGlobal</tabstop>
+  <tabstop>mapEnable</tabstop>
+  <tabstop>mapPriority</tabstop>
+  <tabstop>mapOverride</tabstop>
+  <tabstop>mapName</tabstop>
+  <tabstop>landscapeEnable</tabstop>
+  <tabstop>landscapePriority</tabstop>
+  <tabstop>landscapeOverride</tabstop>
+  <tabstop>landscapeTexture</tabstop>
+  <tabstop>grassEnable</tabstop>
+  <tabstop>grassPriority</tabstop>
+  <tabstop>grassOverride</tabstop>
+  <tabstop>soundEnable</tabstop>
+  <tabstop>soundMusicType</tabstop>
+  <tabstop>soundPriority</tabstop>
+  <tabstop>soundOverride</tabstop>
+  <tabstop>sounds</tabstop>
+  <tabstop>buttonSoundNew</tabstop>
+  <tabstop>buttonSoundRemove</tabstop>
+  <tabstop>currentSoundDescriptor</tabstop>
+  <tabstop>currentSoundChance</tabstop>
+  <tabstop>currentSoundPleasant</tabstop>
+  <tabstop>currentSoundCloudy</tabstop>
+  <tabstop>currentSoundRainy</tabstop>
+  <tabstop>currentSoundSnowy</tabstop>
+  <tabstop>gridFilterObjects</tabstop>
+  <tabstop>gridFilterWeather</tabstop>
+  <tabstop>gridFilterMap</tabstop>
+  <tabstop>gridFilterLand</tabstop>
+  <tabstop>gridFilterGrass</tabstop>
+  <tabstop>gridFilterSound</tabstop>
+  <tabstop>gridFilterNothing</tabstop>
+  <tabstop>buttonCheckAllGridFilters</tabstop>
+  <tabstop>buttonUncheckAllGridFilters</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
