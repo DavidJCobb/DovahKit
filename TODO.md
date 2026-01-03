@@ -162,7 +162,7 @@ We'd benefit from taking the "ownership" UIs (NPC/Faction+Rank) and making a reu
 | WorldObjects   | CONT | Container                 | ✅ | ✅ | ⬛ |
 | WorldObjects   | DOOR | Door                      | ✅ | ✅ | ⬛ |
 | WorldObjects   | FLOR | Flora                     | ✅ | ✅ | ⬛ |
-| WorldObjects   | FURN | Furniture                 | ✅ | 🟨 | ⬛ | Will need to be able to extract `FRN` data from the NIF |
+| WorldObjects   | FURN | Furniture                 | ✅ | ✅ | ⬛ | Will need to be able to extract `FRN` data from the NIF |
 | WorldObjects   | GRAS | Grass                     | ✅ | ✅ | ⬛ |
 | WorldObjects   | LIGH | Light                     | ✅ | ✅ | ⬛ |
 | WorldObjects   | MSTT | MovableStatic             | ✅ | ✅ | ⬛ |
