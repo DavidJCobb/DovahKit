@@ -347,6 +347,11 @@
     <ClCompile Include="dovah\forms\structs\actor_creature_sounds.cpp" />
     <ClCompile Include="dovah\forms\structs\container_object_extra_data.cpp" />
     <ClCompile Include="dovah\forms\structs\perk_effect.cpp" />
+    <ClCompile Include="dovah\forms\structs\region\generable_content\audio.cpp" />
+    <ClCompile Include="dovah\forms\structs\region\generable_content\grass.cpp" />
+    <ClCompile Include="dovah\forms\structs\region\generable_content\objects.cpp" />
+    <ClCompile Include="dovah\forms\structs\region\generable_content\weather.cpp" />
+    <ClCompile Include="dovah\forms\structs\region\generable_content_collection.cpp" />
     <ClCompile Include="dovah\forms\structs\typed_package_info\ambush.cpp" />
     <ClCompile Include="dovah\forms\structs\typed_package_info\custom.cpp" />
     <ClCompile Include="dovah\forms\structs\typed_package_info\dialogue.cpp" />
@@ -942,6 +947,9 @@
     <ClCompile Include="ui\form_group_windows\camera_path\CameraPathsDialog.cpp" />
     <ClCompile Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.cpp" />
     <ClCompile Include="ui\form_group_windows\idle\IdleAnimationsDialog.cpp" />
+    <ClCompile Include="ui\form_group_windows\region\RegionObjectsModel.cpp" />
+    <ClCompile Include="ui\form_group_windows\region\RegionSoundsModel.cpp" />
+    <ClCompile Include="ui\form_group_windows\region\RegionWeatherModel.cpp" />
     <ClCompile Include="ui\form_windows\acoustic_space.cpp" />
     <ClCompile Include="ui\form_windows\activator.cpp" />
     <ClCompile Include="ui\form_windows\actor_action.cpp" />
@@ -1160,6 +1168,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\filter_object_selection_by_scriptname.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\form_info_cache.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\form_types\imagespace_modifier_keyframe_interp.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\form_types\region_bifurcated_data_test.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\get_record_size_stats.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\idles_datastore.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\load_nif.cpp" />
@@ -1776,6 +1785,14 @@
     <ClInclude Include="dovah\forms\structs\alias_fill_params.h" />
     <ClInclude Include="dovah\forms\structs\container_object_extra_data.h" />
     <ClInclude Include="dovah\forms\structs\perk_effect.h" />
+    <ClInclude Include="dovah\forms\structs\region\area.h" />
+    <ClInclude Include="dovah\forms\structs\region\generable_content\audio.h" />
+    <ClInclude Include="dovah\forms\structs\region\generable_content\grass.h" />
+    <ClInclude Include="dovah\forms\structs\region\generable_content\landscape.h" />
+    <ClInclude Include="dovah\forms\structs\region\generable_content\map.h" />
+    <ClInclude Include="dovah\forms\structs\region\generable_content\objects.h" />
+    <ClInclude Include="dovah\forms\structs\region\generable_content\weather.h" />
+    <ClInclude Include="dovah\forms\structs\region\generable_content_collection.h" />
     <ClInclude Include="dovah\forms\structs\typed_package_info\ambush.h" />
     <ClInclude Include="dovah\forms\structs\typed_package_info\base.h" />
     <ClInclude Include="dovah\forms\structs\typed_package_info\custom.h" />
@@ -1983,6 +2000,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\reference\occlusion_box_should_be_a_plane.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\reference\suspiciously_low_z_position.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\bad_region_point_list_data_subrecord_size.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\invalid_areas.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\mismatched_region_data_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\orphaned_region_data_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\region_data_object_has_invalid_parent.h" />
@@ -2142,6 +2160,9 @@
     <QtMoc Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.h" />
     <QtMoc Include="ui\form_group_windows\camera_path\CameraPathFormsModel.h" />
     <QtMoc Include="ui\form_group_windows\camera_path\CameraPathsDialog.h" />
+    <QtMoc Include="ui\form_group_windows\region\RegionSoundsModel.h" />
+    <QtMoc Include="ui\form_group_windows\region\RegionWeatherModel.h" />
+    <QtMoc Include="ui\form_group_windows\region\RegionObjectsModel.h" />
     <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h" />
     <QtMoc Include="ui\form_windows\climate\FormSubdialogClimateWeather.h" />
     <QtMoc Include="ui\form_windows\encounter_zone.h" />
@@ -2370,6 +2391,7 @@
     <ClInclude Include="ui\form_windows\weather\WeatherSoundsModel.h" />
     <QtMoc Include="ui\form_windows\worldspace.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\form_types\imagespace_modifier_keyframe_interp.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\form_types\region_bifurcated_data_test.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\idles_datastore.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\models\scoped_proxy_model.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\qt\paint_ellipse_tests.h" />
@@ -3916,6 +3938,7 @@
     <None Include="dovah\forms\IdleAnimation.inl" />
     <None Include="dovah\forms\Landscape.inl" />
     <None Include="dovah\forms\structs\precached_nif_info.inl" />
+    <None Include="dovah\forms\structs\region\area.inl" />
     <None Include="dovah\form_stub.inl" />
     <None Include="dovah\form_stubs\helpers\README.md" />
     <None Include="dovah\load_order_interfaces\form_load.inl" />

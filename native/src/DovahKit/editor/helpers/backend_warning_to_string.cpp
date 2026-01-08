@@ -1892,6 +1892,14 @@ namespace editor_helpers {
                      "as that implies invalid subrecord data."
                   ).arg(subject).arg(signature).arg(casted->size);
                }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::region::invalid_areas*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  //
+                  return QObject::tr(
+                     "Region %1 contains %2 areas that are invalid (i.e. areas with fewer than three "
+                     "points, or areas that form a self-intersecting polygon)."
+                  ).arg(subject).arg(casted->count);
+               }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::region::mismatched_region_data_subrecord*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);
                   auto    signature = cobb::qt::four_cc_to_string(casted->subrecord);

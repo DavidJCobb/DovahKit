@@ -259,6 +259,13 @@ T* clone(T& src) {
 
 The above is all off the top of my head, untested. I'll probably want to lab this out in a throwaway VS project to hash out the details, e.g. recursion for when nested structs in a form (e.g. `std::vector<Quest::Stage>`) must themselves be visited while visiting the form. Ideally, when you ask to visit all data in a form, your own functor shouldn't have to be recursive; it should just be *invoked* recursively by the "visit everything" function, i.e. the "visit everything" function should be what recurses.
 
+## Other data integrity issues
+
+### Modifying form uses, and then unloading the form
+
+Currently, DovahKit will unload forms from memory if they're not defined in the active file, and if they're not edited. This, of course, means that it's possible for outside code to modify a `form_reference_t` in a form, forget to set that form as edited, and then unload the form. This is extremely bad: it means that we change use info, but we don't *retain* the change that was made: when we next load the form, we'll be loading it from the original file data, and its contents won't match its use info!
+
+
 ## General
 * Namespaces
   * `dovah::form_data` for loaded-form data classes

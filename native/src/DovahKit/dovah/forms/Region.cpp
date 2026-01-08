@@ -2,6 +2,7 @@
 #include "_common_cpp.h"
 
 #include "../notices/form_load_warnings/by_form_type/region/bad_region_point_list_data_subrecord_size.h"
+#include "../notices/form_load_warnings/by_form_type/region/invalid_areas.h"
 #include "../notices/form_load_warnings/by_form_type/region/mismatched_region_data_subrecord.h"
 #include "../notices/form_load_warnings/by_form_type/region/orphaned_region_data_subrecord.h"
 #include "../notices/form_load_warnings/by_form_type/region/region_data_object_has_invalid_parent.h"
@@ -12,9 +13,25 @@ namespace {
    namespace specific_load_warnings {
       using namespace dovah::notices::form_load_warnings::by_type::region;
    }
+   namespace generable_content {
+      using namespace dovah::loaded_forms::structs::region::generable_content;
+   }
 }
 
 namespace dovah::loaded_forms {
+   void Region::delete_invalid_areas() {
+      auto&  list = this->areas;
+      size_t size = list.size();
+      for (size_t i = 0; i < size; ++i) {
+         auto& area = list[i];
+         if (!area.is_valid(true)) {
+            list.erase(list.begin() + i);
+            --i;
+            --size;
+         }
+      }
+   }
+
    void Region::load(tes_record_reader& record, load_order_interfaces::form_load& intfc) {
       Form::load(record, intfc);
       if (!intfc.is_winning_record)
@@ -32,7 +49,7 @@ namespace dovah::loaded_forms {
          specific_load_warnings::mismatched_region_data_subrecord notice(
             this->stub,
             record.get_current_subrecord().signature(),
-            (region_data_type)this->region_datas.back().data.index(),
+            (region_data_type)this->generable_content.back().data.index(),
             expected
          );
          intfc.log_load_warning(notice);
@@ -41,7 +58,7 @@ namespace dovah::loaded_forms {
          specific_load_warnings::unused_region_data_subrecord notice(
             this->stub,
             record.get_current_subrecord().signature(),
-            (region_data_type)this->region_datas.back().data.index()
+            (region_data_type)this->generable_content.back().data.index()
          );
          intfc.log_load_warning(notice);
       };
@@ -67,19 +84,19 @@ namespace dovah::loaded_forms {
             #pragma region Region Areas
                case 'RPLI': // Region Point LIst
                   {
-                     auto& area = this->region_areas.emplace_back();
+                     auto& area = this->areas.emplace_back();
                      subrecord.read(area.edge_falloff);
                   }
                   break;
                case 'RPLD': // Region Point List Data
-                  if (this->region_areas.empty())
+                  if (this->areas.empty())
                      break;
                   if (subrecord.size() % 8) {
                      specific_load_warnings::bad_region_point_list_data_subrecord_size notice(this->stub, subrecord.signature(), subrecord.size());
                      intfc.log_load_warning(notice);
                   }
                   {
-                     auto&  area = this->region_areas.back();
+                     auto&  area = this->areas.back();
                      size_t size = subrecord.size() / 8;
                      area.points.resize(size);
                      for (auto& point : area.points) {
@@ -98,23 +115,29 @@ namespace dovah::loaded_forms {
                      subrecord.read(type);
                      bool valid = true;
                      switch (type) {
+                        case 0:
+                           this->generable_content.emplace_back().data.emplace<0>();
+                           break;
+                        case 1:
+                           this->generable_content.emplace_back().data.emplace<1>();
+                           break;
                         case 2:
-                           this->region_datas.emplace_back().data.emplace<2>();
+                           this->generable_content.emplace_back().data.emplace<2>();
                            break;
                         case 3:
-                           this->region_datas.emplace_back().data.emplace<3>();
+                           this->generable_content.emplace_back().data.emplace<3>();
                            break;
                         case 4:
-                           this->region_datas.emplace_back().data.emplace<4>();
+                           this->generable_content.emplace_back().data.emplace<4>();
                            break;
                         case 5:
-                           this->region_datas.emplace_back().data.emplace<5>();
+                           this->generable_content.emplace_back().data.emplace<5>();
                            break;
                         case 6:
-                           this->region_datas.emplace_back().data.emplace<6>();
+                           this->generable_content.emplace_back().data.emplace<6>();
                            break;
                         case 7:
-                           this->region_datas.emplace_back().data.emplace<7>();
+                           this->generable_content.emplace_back().data.emplace<7>();
                            break;
                         default:
                            {
@@ -127,7 +150,7 @@ namespace dovah::loaded_forms {
                      if (!valid)
                         break;
 
-                     auto& data = this->region_datas.back();
+                     auto& data = this->generable_content.back();
                      subrecord.read(data.override);
                      subrecord.read(data.priority);
                      subrecord.skip_bytes(2);
@@ -136,22 +159,22 @@ namespace dovah::loaded_forms {
                #pragma region Types
                   #pragma region Objects
                      case 'RDOB': // legacy
-                        if (this->region_datas.empty()) {
+                        if (this->generable_content.empty()) {
                            _warn_on_orphaned_region_data(region_data_type::objects);
-                        } else if (auto* data = this->region_datas.back().as_objects()) {
+                        } else if (auto* data = this->generable_content.back().as<generable_content::raw_object_collection>()) {
                            uint32_t count = subrecord.size() / 0x18;
-                           data->resize(count);
-                           for (auto& item : *data) {
+                           data->objects.resize(count);
+                           for (auto& item : data->objects) {
                               if (subrecord.is_at_end()) {
                                  item = {};
                                  continue;
                               }
                               subrecord.read(item.form);         // 00
                               subrecord.read(item.parent_index); // 04
-                              if (item.parent_index >= 0 && item.parent_index >= data->size()) {
+                              if (item.parent_index >= 0 && item.parent_index >= count) {
                                  specific_load_warnings::region_data_object_has_invalid_parent notice(
                                     this->stub,
-                                    data->size() - 1,
+                                    count - 1,
                                     item.parent_index
                                  );
                                  intfc.log_load_warning(notice);
@@ -160,13 +183,13 @@ namespace dovah::loaded_forms {
                               {
                                  uint8_t raw = 0;
                                  subrecord.read(raw); // 08
-                                 item.density = raw;
+                                 item.params.density = raw;
                               }
-                              subrecord.read(item.clustering);   // 09
-                              subrecord.read(item.slope.min);    // 0A
-                              subrecord.read(item.slope.max);    // 0B
-                              subrecord.read(item.radius_wrt_parent); // 0C
-                              subrecord.read(item.radius); // 0E
+                              subrecord.read(item.params.clustering);   // 09
+                              subrecord.read(item.params.slope.min);    // 0A
+                              subrecord.read(item.params.slope.max);    // 0B
+                              subrecord.read(item.params.radius_wrt_parent); // 0C
+                              subrecord.read(item.params.radius); // 0E
                               {
                                  enum class height_type : uint32_t {
                                     min_distance_above_ground = 0, // [      x, 200000]
@@ -188,39 +211,39 @@ namespace dovah::loaded_forms {
                                  switch (type) {
                                     using enum height_type;
                                     case min_distance_above_ground:
-                                       item.height.min = raw;
-                                       item.height.max = 2e05;
+                                       item.params.height.min = raw;
+                                       item.params.height.max = 2e05;
                                        break;
                                     case max_distance_above_ground:
-                                       item.height.min = 0;
-                                       item.height.max = raw;
+                                       item.params.height.min = 0;
+                                       item.params.height.max = raw;
                                        break;
                                     case min_distance_below_ground:
-                                       item.height.min = -2e05;
-                                       item.height.max = -raw;
+                                       item.params.height.min = -2e05;
+                                       item.params.height.max = -raw;
                                        break;
                                     case max_distance_below_ground:
-                                       item.height.min = -raw;
-                                       item.height.max = 0;
+                                       item.params.height.min = -raw;
+                                       item.params.height.max = 0;
                                        break;
                                     case unset:
                                        break;
                                     case max_distance_from_ground:
-                                       item.height.min = -raw;
-                                       item.height.max = raw;
+                                       item.params.height.min = -raw;
+                                       item.params.height.max = raw;
                                        break;
                                     case anywhere_below_height:
-                                       item.height.min = -2e05;
-                                       item.height.max = raw;
+                                       item.params.height.min = -2e05;
+                                       item.params.height.max = raw;
                                        break;
                                     case anywhere_above_sunken:
-                                       item.height.min = -raw;
-                                       item.height.max = 2e05;
+                                       item.params.height.min = -raw;
+                                       item.params.height.max = 2e05;
                                        break;
                                     case anywhere_above_ground:
                                     default:
-                                       item.height.min = 0;
-                                       item.height.max = 2e05;
+                                       item.params.height.min = 0;
+                                       item.params.height.max = 2e05;
                                        break;
                                  }
                               }
@@ -230,43 +253,46 @@ namespace dovah::loaded_forms {
                         }
                         break;
                      case 'RDOT': // modern
-                        if (this->region_datas.empty()) {
+                        if (this->generable_content.empty()) {
                            _warn_on_orphaned_region_data(region_data_type::objects);
-                        } else if (auto* data = this->region_datas.back().as_objects()) {
+                        } else if (auto* data = this->generable_content.back().as<generable_content::raw_object_collection>()) {
                            uint32_t count = subrecord.size() / 0x34;
-                           data->resize(count);
-                           for (auto& item : *data) {
+                           data->objects.resize(count);
+                           for (auto& item : data->objects) {
                               if (subrecord.is_at_end()) {
                                  item = {};
                                  continue;
                               }
                               subrecord.read(item.form);
                               subrecord.read(item.parent_index);
-                              if (item.parent_index >= 0 && item.parent_index >= data->size()) {
+                              if (item.parent_index >= 0 && item.parent_index >= count) {
                                  specific_load_warnings::region_data_object_has_invalid_parent notice(
                                     this->stub,
-                                    data->size() - 1,
+                                    count - 1,
                                     item.parent_index
                                  );
                                  intfc.log_load_warning(notice);
                               }
                               subrecord.skip_bytes(2);
-                              subrecord.read(item.density); // 08
-                              subrecord.read(item.clustering); // 0C
-                              subrecord.read(item.slope.min); // 0D
-                              subrecord.read(item.slope.max); // 0E
-                              subrecord.read(item.flags); // 0F
-                              subrecord.read(item.radius_wrt_parent); // 10
-                              subrecord.read(item.radius); // 12
-                              subrecord.read(item.height.min); // 14
-                              subrecord.read(item.height.max); // 18
-                              subrecord.read(item.sink.base); // 1C
-                              subrecord.read(item.sink.variance); // 20
-                              subrecord.read(item.angle_variance.x); // 24
-                              subrecord.read(item.angle_variance.y); // 26
-                              subrecord.read(item.angle_variance.z); // 28
-                              subrecord.skip_bytes(2);
-                              subrecord.read(item.unk30); // 30
+                              subrecord.read(item.params.density); // 08
+                              subrecord.read(item.params.clustering); // 0C
+                              subrecord.read(item.params.slope.min); // 0D
+                              subrecord.read(item.params.slope.max); // 0E
+                              subrecord.read(item.params.flags); // 0F
+                              subrecord.read(item.params.radius_wrt_parent); // 10
+                              subrecord.read(item.params.radius); // 12
+                              subrecord.read(item.params.height.min); // 14
+                              subrecord.read(item.params.height.max); // 18
+                              subrecord.read(item.params.sink.base); // 1C
+                              subrecord.read(item.params.sink.variance); // 20
+                              subrecord.read(item.params.angle_variance.x); // 24
+                              subrecord.read(item.params.angle_variance.y); // 26
+                              subrecord.read(item.params.angle_variance.z); // 28
+                              subrecord.read(item.params.unk2E); // 2E
+                              subrecord.read(item.params.paint_vertices.color.r); // 30
+                              subrecord.read(item.params.paint_vertices.color.g); // 31
+                              subrecord.read(item.params.paint_vertices.color.b); // 32
+                              subrecord.read(item.params.paint_vertices.radius_percent); // 33
                            }
                         } else {
                            _warn_on_mismatched_region_data(region_data_type::objects);
@@ -275,10 +301,10 @@ namespace dovah::loaded_forms {
                   #pragma endregion
                   #pragma region Weather
                      case 'RDWT':
-                        if (this->region_datas.empty()) {
+                        if (this->generable_content.empty()) {
                            _warn_on_orphaned_region_data(region_data_type::weather);
-                        } else if (auto* data = this->region_datas.back().as_weather()) {
-                           auto& item = data->emplace_back();
+                        } else if (auto* data = this->generable_content.back().as<generable_content::weather_collection>()) {
+                           auto& item = data->weathers.emplace_back();
                            if (auto& form = item.weather; subrecord.read(form))
                               intfc.warn_if_ref_is_wrong_type(form, form_type::weather, subrecord.signature());
                            subrecord.read(item.chance);
@@ -291,9 +317,9 @@ namespace dovah::loaded_forms {
                   #pragma endregion
                   #pragma region Map
                      case 'RDMP':
-                        if (this->region_datas.empty()) {
+                        if (this->generable_content.empty()) {
                            _warn_on_orphaned_region_data(region_data_type::map);
-                        } else if (auto* data = this->region_datas.back().as_map()) {
+                        } else if (auto* data = this->generable_content.back().as<generable_content::map>()) {
                            subrecord.read(data->name);
                         } else {
                            _warn_on_mismatched_region_data(region_data_type::map);
@@ -302,18 +328,18 @@ namespace dovah::loaded_forms {
                   #pragma endregion
                   #pragma region Landscape
                      case 'ICON':
-                        if (this->region_datas.empty()) {
+                        if (this->generable_content.empty()) {
                            _warn_on_orphaned_region_data(region_data_type::landscape);
-                        } else if (auto* data = this->region_datas.back().as_landscape()) {
+                        } else if (auto* data = this->generable_content.back().as<generable_content::landscape>()) {
                            subrecord.read(data->texture);
                         } else {
                            _warn_on_mismatched_region_data(region_data_type::landscape);
                         }
                         break;
                      case 'RDLN':
-                        if (this->region_datas.empty()) {
+                        if (this->generable_content.empty()) {
                            _warn_on_orphaned_region_data(region_data_type::landscape);
-                        } else if (auto* data = this->region_datas.back().as_landscape()) {
+                        } else if (auto* data = this->generable_content.back().as<generable_content::landscape>()) {
                            _warn_on_unused_region_data();
                         } else {
                            _warn_on_mismatched_region_data(region_data_type::landscape);
@@ -322,20 +348,20 @@ namespace dovah::loaded_forms {
                   #pragma endregion
                   #pragma region Grass
                      case 'RDGS':
-                        if (this->region_datas.empty()) {
+                        if (this->generable_content.empty()) {
                            _warn_on_orphaned_region_data(region_data_type::grass);
-                        } else if (auto* data = this->region_datas.back().as_grass()) {
+                        } else if (auto* data = this->generable_content.back().as<generable_content::grass_collection>()) {
                            uint32_t count = subrecord.size() / 8;
-                           data->resize(count);
-                           for (auto& item : *data) {
+                           data->entries.resize(count);
+                           for (auto& item : data->entries) {
                               if (subrecord.is_at_end()) {
-                                 item.object.unmanaged_set(nullptr);
-                                 item.parent.unmanaged_set(nullptr);
+                                 item.grass.unmanaged_set(nullptr);
+                                 item.land_texture.unmanaged_set(nullptr);
                                  continue;
                               }
-                              if (auto& form = item.object; subrecord.read(form))
+                              if (auto& form = item.grass; subrecord.read(form))
                                  intfc.warn_if_ref_is_wrong_type(form, form_type::grass, subrecord.signature());
-                              if (auto& form = item.parent; subrecord.read(form))
+                              if (auto& form = item.land_texture; subrecord.read(form))
                                  intfc.warn_if_ref_is_wrong_type(form, form_type::land_texture, subrecord.signature());
                            }
                         } else {
@@ -345,9 +371,9 @@ namespace dovah::loaded_forms {
                   #pragma endregion
                   #pragma region Sound
                      case 'RDMO':
-                        if (this->region_datas.empty()) {
+                        if (this->generable_content.empty()) {
                            _warn_on_orphaned_region_data(region_data_type::sound);
-                        } else if (auto* data = this->region_datas.back().as_sound()) {
+                        } else if (auto* data = this->generable_content.back().as<generable_content::audio>()) {
                            if (auto& form = data->music; subrecord.read(form))
                               intfc.warn_if_ref_is_wrong_type(form, form_type::music_type, subrecord.signature());
                         } else {
@@ -355,12 +381,12 @@ namespace dovah::loaded_forms {
                         }
                         break;
                      case 'RDSA':
-                        if (this->region_datas.empty()) {
+                        if (this->generable_content.empty()) {
                            _warn_on_orphaned_region_data(region_data_type::sound);
-                        } else if (auto* data = this->region_datas.back().as_sound()) {
+                        } else if (auto* data = this->generable_content.back().as<generable_content::audio>()) {
                            size_t size = subrecord.size() / 12;
-                           data->sounds.resize(size);
-                           for (auto& item : data->sounds) {
+                           data->ambient_sounds.resize(size);
+                           for (auto& item : data->ambient_sounds) {
                               item.form.unmanaged_set(nullptr);
                               item.chance = 0;
                               item.flags  = 0;
@@ -376,9 +402,9 @@ namespace dovah::loaded_forms {
                         break;
                      case 'RDSD':
                      case 'RDMD':
-                        if (this->region_datas.empty()) {
+                        if (this->generable_content.empty()) {
                            _warn_on_orphaned_region_data(region_data_type::sound);
-                        } else if (auto* data = this->region_datas.back().as_sound()) {
+                        } else if (auto* data = this->generable_content.back().as<generable_content::audio>()) {
                            _warn_on_unused_region_data();
                         } else {
                            _warn_on_mismatched_region_data(region_data_type::sound);
@@ -392,6 +418,19 @@ namespace dovah::loaded_forms {
                intfc.warn_on_unrecognized_subrecord(subrecord);
                break;
          }
+      }
+
+      size_t invalid_area_count = 0;
+      for (auto& area : this->areas) {
+         if (!area.is_valid(true))
+            ++invalid_area_count;
+      }
+      if (invalid_area_count > 0) {
+         specific_load_warnings::invalid_areas notice(
+            this->stub,
+            invalid_area_count
+         );
+         intfc.log_load_warning(notice);
       }
    }
    /*static*/ void Region::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
@@ -532,138 +571,18 @@ namespace dovah::loaded_forms {
 
       copy->map_color = this->map_color;
       copy->parent_world.set(*copy, this->parent_world);
-      copy->region_areas = this->region_areas;
+      copy->areas = this->areas;
       {
-         auto& src_list = this->region_datas;
-         auto& dst_list = copy->region_datas;
-         for (auto& data : dst_list) {
-            switch (data.data.index()) {
-               case 2:
-                  for (auto& item : std::get<2>(data.data))
-                     item.form.set(*copy, nullptr);
-                  break;
-               case 3:
-                  for (auto& item : std::get<3>(data.data)) {
-                     item.weather.set(*copy, nullptr);
-                     item.global.set(*copy, nullptr);
-                  }
-                  break;
-               case 6:
-                  for (auto& item : std::get<6>(data.data)) {
-                     item.object.set(*copy, nullptr);
-                     item.parent.set(*copy, nullptr);
-                  }
-                  break;
-               case 7:
-                  {
-                     auto& casted = std::get<7>(data.data);
-                     casted.music.set(*copy, nullptr);
-                     for (auto& item : casted.sounds) {
-                        item.form.set(*copy, nullptr);
-                     }
-                  }
-                  break;
-            }
-         }
+         auto& src_list = this->generable_content;
+         auto& dst_list = copy->generable_content;
+         for (auto& dst_item : dst_list)
+            dst_item.clear(*copy);
          dst_list.clear();
-         //
+         
          size_t size = src_list.size();
          dst_list.resize(size);
          for (size_t i = 0; i < size; ++i) {
-            dst_list[i].override = src_list[i].override;
-            dst_list[i].priority = src_list[i].priority;
-            switch (src_list[i].data.index()) {
-               case 0:
-                  dst_list[i].data.emplace<0>();
-                  break;
-               case 1:
-                  dst_list[i].data.emplace<1>();
-                  break;
-               case 2:
-                  {
-                     auto& src_data = std::get<2>(src_list[i].data);
-                     auto& dst_data = dst_list[i].data.emplace<2>();
-                     size_t size = src_data.size();
-                     dst_data.resize(size);
-                     for (size_t j = 0; j < size; ++j) {
-                        auto& src_item = src_data[j];
-                        auto& dst_item = dst_data[j];
-                        dst_item.form.set(*copy, src_item.form);
-                        dst_item.parent_index = src_item.parent_index;
-                        dst_item.density = src_item.density;
-                        dst_item.clustering = src_item.clustering;
-                        dst_item.slope = src_item.slope;
-                        dst_item.flags = src_item.flags;
-                        dst_item.radius_wrt_parent = src_item.radius_wrt_parent;
-                        dst_item.radius = src_item.radius;
-                        dst_item.height = src_item.height;
-                        dst_item.sink = src_item.sink;
-                        dst_item.size_variance = src_item.size_variance;
-                        dst_item.angle_variance = src_item.angle_variance;
-                        dst_item.unk30 = src_item.unk30;
-                     }
-                  }
-                  break;
-               case 3:
-                  {
-                     auto& src_data = std::get<3>(src_list[i].data);
-                     auto& dst_data = dst_list[i].data.emplace<3>();
-                     size_t size = src_data.size();
-                     dst_data.resize(size);
-                     for (size_t j = 0; j < size; ++j) {
-                        auto& src_item = src_data[j];
-                        auto& dst_item = dst_data[j];
-                        dst_item.weather.set(*copy, src_item.weather);
-                        dst_item.global.set(*copy, src_item.global);
-                        dst_item.chance = src_item.chance;
-                     }
-                  }
-                  break;
-               case 4:
-                  {
-                     auto& src_data = std::get<4>(src_list[i].data);
-                     auto& dst_data = dst_list[i].data.emplace<4>();
-                     dst_data = src_data;
-                  }
-                  break;
-               case 5:
-                  {
-                     auto& src_data = std::get<5>(src_list[i].data);
-                     auto& dst_data = dst_list[i].data.emplace<5>();
-                     dst_data = src_data;
-                  }
-                  break;
-               case 6:
-                  {
-                     auto& src_data = std::get<6>(src_list[i].data);
-                     auto& dst_data = dst_list[i].data.emplace<6>();
-                     size_t size = src_data.size();
-                     dst_data.resize(size);
-                     for (size_t j = 0; j < size; ++j) {
-                        auto& src_item = src_data[j];
-                        auto& dst_item = dst_data[j];
-                        dst_item.object.set(*copy, src_item.object);
-                        dst_item.parent.set(*copy, src_item.parent);
-                     }
-                  }
-                  break;
-               case 7:
-                  {
-                     auto& src_data = std::get<7>(src_list[i].data);
-                     auto& dst_data = dst_list[i].data.emplace<7>();
-                     dst_data.music.set(*copy, src_data.music);
-                     size_t size = src_data.sounds.size();
-                     dst_data.sounds.resize(size);
-                     for (size_t j = 0; j < size; ++j) {
-                        auto& src_item = src_data.sounds[j];
-                        auto& dst_item = dst_data.sounds[j];
-                        dst_item.form.set(*copy, src_item.form);
-                        dst_item.flags = src_item.flags;
-                        dst_item.chance = src_item.chance;
-                     }
-                  }
-                  break;
-            }
+            dst_list[i].clone_from(*copy, src_list[i]);
          }
       }
    }
@@ -675,7 +594,7 @@ namespace dovah::loaded_forms {
          subrecord.close();
       }
       record.write_formID_subrecord('WNAM', this->parent_world);
-      for (auto& area : this->region_areas) {
+      for (auto& area : this->areas) {
          {
             auto& subrecord = record.open_next_subrecord('RPLI');
             subrecord.write(area.edge_falloff);
@@ -690,7 +609,7 @@ namespace dovah::loaded_forms {
             subrecord.close();
          }
       }
-      for (auto& data : this->region_datas) {
+      for (auto& data : this->generable_content) {
          {
             auto& subrecord = record.open_next_subrecord('RDAT');
             subrecord.write((uint32_t)data.data.index());
@@ -701,31 +620,34 @@ namespace dovah::loaded_forms {
          }
          if (auto* casted = std::get_if<2>(&data.data)) {
             auto& subrecord = record.open_next_subrecord('RDOT');
-            for (auto& item : *casted) {
+            for (auto& item : casted->objects) {
                subrecord.write(item.form);
                subrecord.write(item.parent_index);
                subrecord.skip_bytes(2);
-               subrecord.write(item.density); // 08
-               subrecord.write(item.clustering); // 0C
-               subrecord.write(item.slope.min); // 0D
-               subrecord.write(item.slope.max); // 0E
-               subrecord.write(item.flags); // 0F
-               subrecord.write(item.radius_wrt_parent); // 10
-               subrecord.write(item.radius); // 12
-               subrecord.write(item.height.min); // 14
-               subrecord.write(item.height.max); // 18
-               subrecord.write(item.sink.base); // 1C
-               subrecord.write(item.sink.variance); // 20
-               subrecord.write(item.angle_variance.x); // 24
-               subrecord.write(item.angle_variance.y); // 26
-               subrecord.write(item.angle_variance.z); // 28
-               subrecord.skip_bytes(2);
-               subrecord.write(item.unk30); // 30
+               subrecord.write(item.params.density); // 08
+               subrecord.write(item.params.clustering); // 0C
+               subrecord.write(item.params.slope.min); // 0D
+               subrecord.write(item.params.slope.max); // 0E
+               subrecord.write(item.params.flags); // 0F
+               subrecord.write(item.params.radius_wrt_parent); // 10
+               subrecord.write(item.params.radius); // 12
+               subrecord.write(item.params.height.min); // 14
+               subrecord.write(item.params.height.max); // 18
+               subrecord.write(item.params.sink.base); // 1C
+               subrecord.write(item.params.sink.variance); // 20
+               subrecord.write(item.params.angle_variance.x); // 24
+               subrecord.write(item.params.angle_variance.y); // 26
+               subrecord.write(item.params.angle_variance.z); // 28
+               subrecord.write(item.params.unk2E); // 2E
+               subrecord.write(item.params.paint_vertices.color.r); // 30
+               subrecord.write(item.params.paint_vertices.color.g); // 31
+               subrecord.write(item.params.paint_vertices.color.b); // 32
+               subrecord.write(item.params.paint_vertices.radius_percent); // 33
             }
             subrecord.close();
          } else if (auto* casted = std::get_if<3>(&data.data)) {
             auto& subrecord = record.open_next_subrecord('RDWT');
-            for (auto& item : *casted) {
+            for (auto& item : casted->weathers) {
                subrecord.write(item.weather);
                subrecord.write(item.chance);
                subrecord.write(item.global);
@@ -741,15 +663,15 @@ namespace dovah::loaded_forms {
             subrecord.close();
          } else if (auto* casted = std::get_if<6>(&data.data)) {
             auto& subrecord = record.open_next_subrecord('RDGS');
-            for (auto& item : *casted) {
-               subrecord.write(item.object);
-               subrecord.write(item.parent);
+            for (auto& item : casted->entries) {
+               subrecord.write(item.grass);
+               subrecord.write(item.land_texture);
             }
             subrecord.close();
          } else if (auto* casted = std::get_if<7>(&data.data)) {
             record.write_formID_subrecord('RDMO', casted->music, true);
             auto& subrecord = record.open_next_subrecord('RDSA');
-            for (auto& item : casted->sounds) {
+            for (auto& item : casted->ambient_sounds) {
                subrecord.write(item.form);
                subrecord.write(item.flags);
                subrecord.write(item.chance);
@@ -763,38 +685,11 @@ namespace dovah::loaded_forms {
 
       this->map_color = {};
       this->parent_world.set(*this, nullptr);
-      this->region_areas.clear();
+      this->areas.clear();
       {
-         auto& list = this->region_datas;
-         for (auto& data : list) {
-            switch (data.data.index()) {
-               case 2:
-                  for (auto& item : std::get<2>(data.data))
-                     item.form.set(*this, nullptr);
-                  break;
-               case 3:
-                  for (auto& item : std::get<3>(data.data)) {
-                     item.weather.set(*this, nullptr);
-                     item.global.set(*this, nullptr);
-                  }
-                  break;
-               case 6:
-                  for (auto& item : std::get<6>(data.data)) {
-                     item.object.set(*this, nullptr);
-                     item.parent.set(*this, nullptr);
-                  }
-                  break;
-               case 7:
-                  {
-                     auto& casted = std::get<7>(data.data);
-                     casted.music.set(*this, nullptr);
-                     for (auto& item : casted.sounds) {
-                        item.form.set(*this, nullptr);
-                     }
-                  }
-                  break;
-            }
-         }
+         auto& list = this->generable_content;
+         for (auto& item : list)
+            item.clear(*this);
          list.clear();
       }
    }
@@ -803,36 +698,9 @@ namespace dovah::loaded_forms {
 
       this->parent_world.clear_if(*this, other);
       {
-         auto& list = this->region_datas;
-         for (auto& data : list) {
-            switch (data.data.index()) {
-               case 2:
-                  for (auto& item : std::get<2>(data.data))
-                     item.form.clear_if(*this, other);
-                  break;
-               case 3:
-                  for (auto& item : std::get<3>(data.data)) {
-                     item.weather.clear_if(*this, other);
-                     item.global.clear_if(*this, other);
-                  }
-                  break;
-               case 6:
-                  for (auto& item : std::get<6>(data.data)) {
-                     item.object.clear_if(*this, other);
-                     item.parent.clear_if(*this, other);
-                  }
-                  break;
-               case 7:
-                  {
-                     auto& casted = std::get<7>(data.data);
-                     casted.music.clear_if(*this, other);
-                     for (auto& item : casted.sounds) {
-                        item.form.clear_if(*this, other);
-                     }
-                  }
-                  break;
-            }
-         }
+         auto& list = this->generable_content;
+         for (auto& item : list)
+            item.sever_references_to(*this, other);
          list.clear();
       }
    }

@@ -1,7 +1,7 @@
 
 We have model templates that automate a lot of the boilerplate involved in subclassing `QAbstractItemModel`. However, these templates aren't super well-organized, and they sometimes still involve a lot of setup that I'd rather avoid. Here's a potential idea:
 
-* A template that takes, as its parameters, a noe type and a list of column definitions. Each column definition consists of a column name, a pointer-to-member for the node type, and any other info we need.
+* A template that takes, as its parameters, a node type and a list of column definitions. Each column definition consists of a column name, a pointer-to-member for the node type, and any other info we need.
   * We could also have additional column metadata e.g. text alignment overrides or "this string is, specifically, a game file path with these constraints."
 * The template automatically sets up columns based on that list, auto-caching QStrings for form-stub columns and auto-handling form deletion and changing.
 * You can mark columns as "mandatory non-null." If, for a given row, one of these columns is a form stub and that stub is deleted, then the whole row is deleted.

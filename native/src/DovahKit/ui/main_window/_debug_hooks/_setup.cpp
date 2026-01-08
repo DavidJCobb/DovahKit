@@ -22,6 +22,7 @@
 #include "ui_form_list_pane_extra_col.h"
 #include "idles_datastore.h"
 #include "./form_types/imagespace_modifier_keyframe_interp.h"
+#include "./form_types/region_bifurcated_data_test.h"
 #include "./models/scoped_proxy_model.h"
 #include "./renderwin/vulkan_renderer_instance.h"
 #include "./renderwin/worldinput2.h"
@@ -49,7 +50,8 @@
 
 namespace DovahKitDebug {
    using form_type_tests = cobb::class_list<
-      features::form_types::imagespace_modifier_keyframe_interp
+      features::form_types::imagespace_modifier_keyframe_interp,
+      features::form_types::region_bifurcated_data_test
    >;
    using model_tests = cobb::class_list<
       features::models::scoped_proxy_model

@@ -2,6 +2,7 @@
 #include <array>
 #include <QBoxLayout>
 #include <QDialog>
+#include <QIcon>
 #include <QItemSelectionModel>
 #include <QStandardItemModel>
 #include <QTimer>
@@ -52,6 +53,12 @@ namespace DovahKitDebug::features::widgets {
             _generate_n_children(root->child(2, 0), 5);
                _generate_n_children(root->child(2, 0)->child(3, 0), 1);
                   _generate_n_children(root->child(2, 0)->child(3, 0)->child(0, 0), 4);
+                  {
+                     QPixmap pixmap(16, 16);
+                     pixmap.fill(QColor(255, 0, 0));
+                     QIcon icon(pixmap);
+                     root->child(2, 0)->child(3, 0)->child(0, 0)->child(2, 0)->setIcon(icon);
+                  }
             _generate_n_children(root->child(3, 0), 2);
 
          //

@@ -21,7 +21,10 @@
        <item>
         <widget class="DKFormPicker" name="currentWorld">
          <property name="allowNone">
-          <bool>false</bool>
+          <bool>true</bool>
+         </property>
+         <property name="overrideTextForNone">
+          <string>&lt;any worldspace&gt;</string>
          </property>
         </widget>
        </item>
@@ -39,7 +42,7 @@
         </sizepolicy>
        </property>
        <property name="currentIndex">
-        <number>4</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tabGeneral">
         <attribute name="title">
@@ -863,7 +866,7 @@
            <property name="sizeHint" stdset="0">
             <size>
              <width>0</width>
-             <height>127</height>
+             <height>164</height>
             </size>
            </property>
           </spacer>
@@ -1036,7 +1039,7 @@
            <property name="sizeHint" stdset="0">
             <size>
              <width>20</width>
-             <height>214</height>
+             <height>251</height>
             </size>
            </property>
           </spacer>
@@ -1148,7 +1151,7 @@
            <property name="sizeHint" stdset="0">
             <size>
              <width>8</width>
-             <height>136</height>
+             <height>173</height>
             </size>
            </property>
           </spacer>

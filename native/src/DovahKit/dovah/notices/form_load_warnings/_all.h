@@ -105,6 +105,7 @@
    #include "./by_form_type/reference/occlusion_box_should_be_a_plane.h"
    #include "./by_form_type/reference/suspiciously_low_z_position.h"
    #include "./by_form_type/region/bad_region_point_list_data_subrecord_size.h"
+   #include "./by_form_type/region/invalid_areas.h"
    #include "./by_form_type/region/mismatched_region_data_subrecord.h"
    #include "./by_form_type/region/orphaned_region_data_subrecord.h"
    #include "./by_form_type/region/region_data_object_has_invalid_parent.h"

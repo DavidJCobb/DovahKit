@@ -135,6 +135,8 @@ One last note: the enums for flags **must not** be `#include`d by the headers fo
   * **Parent/child record relationship.** Technically, only forms that can be children[^child-forms] need this. However, making this a form-type-specific flag would be burdensome within the backend (i.e. having to bifurcate all flag accesses by form type).
 * ACTI (Activator)
   * **ACTI/WNAM (Water Type):** For rapidly checking whether refs need persistence. If the base form is an Activator with a water type, then the CK says it needs persistence.
+* ARMO (Armor)
+  * **ARMO/TNAM (Template Form):** Fast retrieval of templated data.
 * CELL (Cell)
   * **CELL/XEZN:** To optimize gathering a Location's contents.[^location-gather]
   * **CELL/XLCN:** To optimize gathering a Location's contents.[^location-gather]
@@ -152,9 +154,14 @@ One last note: the enums for flags **must not** be `#include`d by the headers fo
 * NPC_ (ActorBase)
   * **NPC_/TPLT (Template Form):** For rapidly gathering all template actors that influence the contents of a templated actor. Templating can be daisy-chained, and different properties can be inherited by each successive actor, so you may need to consult several templates to determine the final properties of some templated actor.
 * REFR (ObjectReference)
+  * **REFR/NAME (Base Form)**
   * **REFR/XLRT:** To optimize gathering a Location's contents.[^location-gather]
   * **REFR/XLCN:** To optimize gathering a Location's contents.[^location-gather]
   * **REFR/XTEL+0x00 (Teleport Destination Door):** For more optimal processing of load doors.
+* REGN (Region)
+  * **REGN/WNAM (Parent World):** This would make it faster and easier to filter a list of regions by the worldspace they're allowed to be used in.
+* WEAP (Armor)
+  * **WEAP/CNAM (Template Form):** Fast retrieval of templated data.
 * WRLD (Worldspace)
   * **WRLD/WNAM (Parent World):** This would make it easier to show a tree of worldspaces in the Object Window, if we wanted to do that.
   * **WRLD/XEZN:** To optimize gathering a Location's contents.[^location-gather]
