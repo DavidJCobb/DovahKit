@@ -31,6 +31,8 @@ I have a general-purpose C++ library in the top-level "helpers" folder &mdash; j
       * `lu::corner_square_grid`
       * `lu::centered_square_grid`
     * `lu::resizable_grid`
+  * `lu/containers/trees` &mdash; does not create a nested namespace
+    * `lu::homogenous_tree<node_data_type>`: Tree of nodes with homogenous data. Offers member functions e.g. `lu::homogenous_tree<T>::node::contains(const node&)` for you.
   * `lu::bitfield_array`
   * `lu::small_vector`
 * `lu/enums/` &mdash; does not create a nested namespace
