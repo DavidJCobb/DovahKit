@@ -4,6 +4,7 @@
 #include "../notices/form_load_warnings/by_form_type/region/bad_region_point_list_data_subrecord_size.h"
 #include "../notices/form_load_warnings/by_form_type/region/invalid_areas.h"
 #include "../notices/form_load_warnings/by_form_type/region/mismatched_region_data_subrecord.h"
+#include "../notices/form_load_warnings/by_form_type/region/multiple_data_collections_of_same_type.h"
 #include "../notices/form_load_warnings/by_form_type/region/orphaned_region_data_subrecord.h"
 #include "../notices/form_load_warnings/by_form_type/region/region_data_object_has_invalid_parent.h"
 #include "../notices/form_load_warnings/by_form_type/region/unknown_region_data_type.h"
@@ -25,6 +26,154 @@ namespace dovah::loaded_forms {
       for (size_t i = 0; i < size; ++i) {
          auto& area = list[i];
          if (!area.is_valid(true)) {
+            list.erase(list.begin() + i);
+            --i;
+            --size;
+         }
+      }
+   }
+
+   void Region::fold_generable_content() {
+      auto&  list = this->generable_content;
+      size_t size = list.size();
+
+      constexpr const size_t index_of_none = (size_t)-1;
+
+      {  // Objects
+         using collection_type = structs::region::generable_content::raw_object_collection;
+
+         size_t fold_into_index = index_of_none;
+         for (size_t i = 0; i < size; ++i) {
+            auto& item = list[i];
+            auto* here = item.as<collection_type>();
+            if (!here)
+               continue;
+            if (fold_into_index == index_of_none) {
+               fold_into_index = i;
+               continue;
+            }
+            //
+            // Merge them.
+            //
+            list[fold_into_index].as<collection_type>()->copy_insert_from(*this, *here);
+            here->clear(*this);
+            list.erase(list.begin() + i);
+            --i;
+            --size;
+         }
+      }
+      {  // Weather
+         using collection_type = structs::region::generable_content::weather_collection;
+
+         size_t fold_into_index = index_of_none;
+         for (size_t i = 0; i < size; ++i) {
+            auto& item = list[i];
+            auto* here = item.as<collection_type>();
+            if (!here)
+               continue;
+            if (fold_into_index == index_of_none) {
+               fold_into_index = i;
+               continue;
+            }
+            //
+            // Merge them.
+            //
+            list[fold_into_index].as<collection_type>()->copy_insert_from(*this, *here);
+            here->clear(*this);
+            list.erase(list.begin() + i);
+            --i;
+            --size;
+         }
+      }
+      {  // Map
+         using collection_type = structs::region::generable_content::map;
+
+         size_t fold_into_index = index_of_none;
+         for (size_t i = 0; i < size; ++i) {
+            auto& item = list[i];
+            auto* here = item.as<collection_type>();
+            if (!here)
+               continue;
+            if (fold_into_index == index_of_none) {
+               fold_into_index = i;
+               continue;
+            }
+            //
+            // Merge them.
+            //
+            if (!here->name.empty()) {
+               list[fold_into_index].as<collection_type>()->name = here->name;
+            }
+            list.erase(list.begin() + i);
+            --i;
+            --size;
+         }
+      }
+      {  // Landscape
+         using collection_type = structs::region::generable_content::landscape;
+
+         size_t fold_into_index = index_of_none;
+         for (size_t i = 0; i < size; ++i) {
+            auto& item = list[i];
+            auto* here = item.as<collection_type>();
+            if (!here)
+               continue;
+            if (fold_into_index == index_of_none) {
+               fold_into_index = i;
+               continue;
+            }
+            //
+            // Merge them.
+            //
+            if (!here->texture.empty()) {
+               list[fold_into_index].as<collection_type>()->texture = here->texture;
+            }
+            list.erase(list.begin() + i);
+            --i;
+            --size;
+         }
+      }
+      {  // Grass
+         using collection_type = structs::region::generable_content::grass_collection;
+
+         size_t fold_into_index = index_of_none;
+         for (size_t i = 0; i < size; ++i) {
+            auto& item = list[i];
+            auto* here = item.as<collection_type>();
+            if (!here)
+               continue;
+            if (fold_into_index == index_of_none) {
+               fold_into_index = i;
+               continue;
+            }
+            //
+            // Merge them.
+            //
+            list[fold_into_index].as<collection_type>()->copy_insert_from(*this, *here);
+            here->clear(*this);
+            list.erase(list.begin() + i);
+            --i;
+            --size;
+         }
+      }
+      {  // Audio
+         using collection_type = structs::region::generable_content::audio;
+
+         size_t fold_into_index = index_of_none;
+         for (size_t i = 0; i < size; ++i) {
+            auto& item = list[i];
+            auto* here = item.as<collection_type>();
+            if (!here)
+               continue;
+            if (fold_into_index == index_of_none) {
+               fold_into_index = i;
+               continue;
+            }
+            //
+            // Merge them.
+            //
+            list[fold_into_index].as<collection_type>()->copy_insert_from(*this, *here);
+            here->clear(*this);
             list.erase(list.begin() + i);
             --i;
             --size;
@@ -432,6 +581,25 @@ namespace dovah::loaded_forms {
          );
          intfc.log_load_warning(notice);
       }
+
+      std::array<size_t, (size_t)(region_data_type::sound) + 1> count_by_type = {};
+      for (auto& data : this->generable_content) {
+         auto opt = data.type();
+         if (!opt.has_value())
+            continue;
+         auto type = opt.value();
+         if ((size_t)type < count_by_type.size()) {
+            ++count_by_type[(size_t)type];
+         }
+      }
+      for (size_t i = 0; i < count_by_type.size(); ++i) {
+         auto count = count_by_type[i];
+         auto type  = (region_data_type)i;
+         if (count > 1) {
+            specific_load_warnings::multiple_data_collections_of_same_type notice(this->stub, type, count);
+            intfc.log_load_warning(notice);
+         }
+      }
    }
    /*static*/ void Region::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       if (!uib.is_final_file())
@@ -593,7 +761,7 @@ namespace dovah::loaded_forms {
          this->map_color.save(subrecord);
          subrecord.close();
       }
-      record.write_formID_subrecord('WNAM', this->parent_world);
+      record.write_formID_subrecord('WNAM', this->parent_world, true);
       for (auto& area : this->areas) {
          {
             auto& subrecord = record.open_next_subrecord('RPLI');

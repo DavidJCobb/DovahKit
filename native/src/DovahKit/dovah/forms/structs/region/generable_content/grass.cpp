@@ -34,4 +34,15 @@ namespace dovah::loaded_forms::structs::region::generable_content {
          }
       }
    }
+
+   void grass_collection::copy_insert_from(dovah::loaded_forms::Form& my_containing_form, const grass_collection& src) {
+      size_t src_size = src.entries.size();
+      size_t dst_size = this->entries.size();
+      this->entries.reserve(src_size + dst_size);
+      for (auto& src_item : src.entries) {
+         auto& dst_item = this->entries.emplace_back();
+         dst_item.grass.set(my_containing_form, src_item.grass);
+         dst_item.land_texture.set(my_containing_form, src_item.land_texture);
+      }
+   }
 }

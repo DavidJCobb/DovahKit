@@ -1911,6 +1911,15 @@ namespace editor_helpers {
                      "%3 region data, was seen inside of %4 region data."
                   ).arg(subject).arg(signature).arg(expected).arg(seen);
                }
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::region::multiple_data_collections_of_same_type*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString type    = _region_data_type_to_string(casted->type);
+                  //
+                  return QObject::tr(
+                     "Region %1 contains %2 collections of %3 region data. The Creation Kit will only "
+                     "see the last-loaded collection."
+                  ).arg(subject).arg(casted->count).arg(type);
+               }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_type::region::orphaned_region_data_subrecord*>(&warning)) {
                   QString subject   = form_identifiers_to_string(&casted->subject);
                   auto    signature = cobb::qt::four_cc_to_string(casted->subrecord);

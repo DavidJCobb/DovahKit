@@ -33,4 +33,20 @@ namespace dovah::loaded_forms::structs::region::generable_content {
          }
       }
    }
+
+   void raw_object_collection::copy_insert_from(dovah::loaded_forms::Form& my_containing_form, const raw_object_collection& src) {
+      size_t src_size = src.objects.size();
+      size_t dst_size = this->objects.size();
+      this->objects.reserve(dst_size + src_size);
+      for (auto& src_item : src.objects) {
+         auto& dst_item = this->objects.emplace_back();
+         dst_item.form.set(my_containing_form, src_item.form);
+         dst_item.parent_index = src_item.parent_index;
+         dst_item.params       = src_item.params;
+         if (src_item.parent_index >= src_size)
+            dst_item.parent_index = -1;
+         if (dst_item.parent_index != -1)
+            dst_item.parent_index += dst_size;
+      }
+   }
 }

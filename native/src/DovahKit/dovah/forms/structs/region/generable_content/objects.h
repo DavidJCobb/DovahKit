@@ -21,11 +21,11 @@ namespace dovah::loaded_forms::structs::region::generable_content {
          };
 
       public:
-         float   density    = 30.0F;
+         float   density    = 30.0F; // valid range is [0.0F, 100.0F]
          uint8_t clustering =  0;
          struct {
-            uint8_t min =  0;
-            uint8_t max = 90;
+            uint8_t min =  0; // must not be greater than 90. must not be lower than the parent object's min slope.
+            uint8_t max = 90; // must not be greater than 90. must not be greater than the parent object's max slope.
          } slope;
          uint8_t  flags = 0;
          uint16_t radius_wrt_parent = 512; // 10
@@ -40,9 +40,9 @@ namespace dovah::loaded_forms::structs::region::generable_content {
          } sink;
          float size_variance = 0; // 24
          struct {
-            uint16_t x = 0; // 28
-            uint16_t y = 0; // 2A
-            uint16_t z = 0; // 2C
+            int16_t x = 0; // 28 // valid range is [-180, 180]
+            int16_t y = 0; // 2A // valid range is [-180, 180]
+            int16_t z = 0; // 2C // valid range is [-180, 180]
          } angle_variance;
          uint16_t unk2E; // 2E
          struct {
@@ -70,5 +70,7 @@ namespace dovah::loaded_forms::structs::region::generable_content {
          void clear(dovah::loaded_forms::Form& my_containing_form);
          void clone_from(dovah::loaded_forms::Form& my_containing_form, const raw_object_collection&);
          void sever_references_to(dovah::loaded_forms::Form& my_containing_form, dovah::form_stub&);
+
+         void copy_insert_from(dovah::loaded_forms::Form& my_containing_form, const raw_object_collection&);
    };
 }

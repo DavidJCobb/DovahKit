@@ -20,5 +20,7 @@ namespace dovah::loaded_forms::structs::region::generable_content {
          void clear(dovah::loaded_forms::Form& my_containing_form);
          void clone_from(dovah::loaded_forms::Form& my_containing_form, const grass_collection&);
          void sever_references_to(dovah::loaded_forms::Form& my_containing_form, dovah::form_stub&);
+
+         void copy_insert_from(dovah::loaded_forms::Form& my_containing_form, const grass_collection&);
    };
 }

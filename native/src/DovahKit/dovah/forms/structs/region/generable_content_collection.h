@@ -1,6 +1,8 @@
 #pragma once
 #include <cstdint>
+#include <optional>
 #include <variant>
+#include "../../../data/region_data_type.h"
 #include "./generable_content/audio.h"
 #include "./generable_content/grass.h"
 #include "./generable_content/landscape.h"
@@ -51,6 +53,14 @@ namespace dovah::loaded_forms::structs::region {
                return std::get<T>(this->data);
             this->clear(containing_form);
             return this->data.emplace<T>();
+         }
+
+         constexpr std::optional<region_data_type> type() const noexcept {
+            auto i = this->data.index();
+            if (i >= 2 && i <= 7) {
+               return (region_data_type)(i - 2);
+            }
+            return {};
          }
    };
 }

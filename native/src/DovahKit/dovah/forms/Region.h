@@ -15,6 +15,12 @@ namespace dovah::loaded_forms {
       public:
          static constexpr const enum form_type form_type = form_type::region;
          Region(const constructor_params& c) : Form(form_type, c) {};
+         
+         struct form_flag : public Form::form_flag {
+            enum : uint32_t {
+               border_region = 1 << 6,
+            };
+         };
 
          using generable_content_collection = structs::region::generable_content_collection;
          using region_area = structs::region::area;
@@ -29,6 +35,10 @@ namespace dovah::loaded_forms {
 
       public:
          void delete_invalid_areas();
+
+         // If there's more than one of any given collection type, merge them.
+         // Does not attempt to avoid duplicate entries, etc..
+         void fold_generable_content();
 
       public:
          void load(tes_record_reader&, load_order_interfaces::form_load& intfc);

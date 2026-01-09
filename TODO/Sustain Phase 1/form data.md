@@ -265,6 +265,8 @@ The above is all off the top of my head, untested. I'll probably want to lab thi
 
 Currently, DovahKit will unload forms from memory if they're not defined in the active file, and if they're not edited. This, of course, means that it's possible for outside code to modify a `form_reference_t` in a form, forget to set that form as edited, and then unload the form. This is extremely bad: it means that we change use info, but we don't *retain* the change that was made: when we next load the form, we'll be loading it from the original file data, and its contents won't match its use info!
 
+This is only an issue for direct edits to a form's loaded data, as opposed to edits via a working copy, but nothing in the system prevents this sort of mistake from happening. Ideally, when we refactor everything, we want to make it so that "live" edits to a form's data (or at *least* any such edits that would alter its use info) result in the form automatically being flagged as "edited."
+
 
 ## General
 * Namespaces

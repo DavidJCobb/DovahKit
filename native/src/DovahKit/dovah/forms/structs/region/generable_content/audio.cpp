@@ -36,4 +36,20 @@ namespace dovah::loaded_forms::structs::region::generable_content {
       }
       this->music.clear_if(my_containing_form, stub);
    }
+
+   void audio::copy_insert_from(dovah::loaded_forms::Form& my_containing_form, const audio& src) {
+      if (src.music) {
+         this->music.set(my_containing_form, src.music);
+      }
+
+      size_t src_size = src.ambient_sounds.size();
+      size_t dst_size = this->ambient_sounds.size();
+      this->ambient_sounds.reserve(src_size + dst_size);
+      for (auto& src_item : src.ambient_sounds) {
+         auto& dst_item = this->ambient_sounds.emplace_back();
+         dst_item.form.set(my_containing_form, src_item.form);
+         dst_item.chance = src_item.chance;
+         dst_item.flags = src_item.flags;
+      }
+   }
 }
