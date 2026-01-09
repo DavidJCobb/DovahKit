@@ -259,9 +259,51 @@ T* clone(T& src) {
 
 The above is all off the top of my head, untested. I'll probably want to lab this out in a throwaway VS project to hash out the details, e.g. recursion for when nested structs in a form (e.g. `std::vector<Quest::Stage>`) must themselves be visited while visiting the form. Ideally, when you ask to visit all data in a form, your own functor shouldn't have to be recursive; it should just be *invoked* recursively by the "visit everything" function, i.e. the "visit everything" function should be what recurses.
 
-## Other data integrity issues
+Additionally, it may be beneficial to set things up so that you can pass e.g. a functor which is only invocable for form-uses, such that (with the magic of `if constexpr`) we only generate calls for each form-use contained within a form (including within nested structs, containers, etc.), and not calls for e.g. every `float`, `int`, and what have you. This could potentially be easier if, instead of having generic "visit" and "visit paired" functions that underlie the "clone," "clear," and "sever uses of" functions, we instead just write unique definitions for all three functions which use the same X-macros.
+
+## Other aspects of this redesign
+
+### Substructures and nested containers
+
+It's common for forms to have nested structs, including ones that are stored in `std::vector` and similar containers. Currently, these containers aren't sufficient to manage use info: you *can* just `clear` a `std::vector` and we can't stop you. We'll therefore want to define custom containers for use in form data.
+
+In C++, there's basically one way to "summon" data and one way to make data "go away:" construct it, and destroy it. For our use case, however, there are two ways:
+
+* Summoning
+  * Load a list item from a file
+  * Add a new list item, as a modification to the overall data
+* Making it go away
+  * Unload a list and its contained items
+  * Remove a list item, as a modification to the overall data
+
+Accordingly, our custom containers should have APIs organized around this concept. At the *very* least, a list in a managed form needs to offer separate APIs for unloading and clearing: `unload_all()` and `clear(FormDataBase<managed>&)`, wherein the latter adjusts use info [and marks the form as modified](./#edits-to-use-info-must-persist). The container's destructor can call `unload_all()`. (Really, there's no need to expose `unload`/`unload_all` functions, except that exposing them helps to make the distinction explicit: it *gives the distinction a name.*)
+
+### Improved uses
+
+We can use templates to make it so that uses can specify [use info flags](./use%20info%20flags.md) and/or legal form types, i.e.
+
+```c++
+// If, after we load this use, the used form is of a type other than one of the listed 
+// form types, then we'll emit a load warning.
+//
+// This is a separate identifier from `use` so that we don't need the syntax `use<>` 
+// for untyped uses.
+template<form_type... FormTypes>
+class typed_use {
+   // ...
+};
+
+template<uint32_t UseInfoFlag, form_type... FormTypes>
+class flagged_use {
+   // ...
+};
+```
+
+
+## Other data integrity issues to solve
 
 ### Modifying form uses, and then unloading the form
+<a name="edits-to-use-info-must-persist"></a>
 
 Currently, DovahKit will unload forms from memory if they're not defined in the active file, and if they're not edited. This, of course, means that it's possible for outside code to modify a `form_reference_t` in a form, forget to set that form as edited, and then unload the form. This is extremely bad: it means that we change use info, but we don't *retain* the change that was made: when we next load the form, we'll be loading it from the original file data, and its contents won't match its use info!
 
