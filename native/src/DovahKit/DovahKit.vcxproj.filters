@@ -3891,6 +3891,30 @@
     <ClCompile Include="ui\main_window\_debug_hooks\form_types\region_bifurcated_data_test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_group_windows\region\RegionsDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\types\regions\generable_content\object_collection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\types\regions\generable_content\weather_collection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\types\regions\generable_content\grass_collection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\types\regions\generable_content\audio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\types\regions\region.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\types\regions\generable_content\map.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\types\regions\generable_content\landscape.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9506,6 +9530,30 @@
     <ClInclude Include="ui\main_window\_debug_hooks\form_types\region_bifurcated_data_test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\multiple_data_collections_of_same_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\regions\generable_content\object_collection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\regions\generable_content\weather_collection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\regions\generable_content\grass_collection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\regions\region.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\regions\generable_content\audio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\regions\generable_content\map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\types\regions\generable_content\landscape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -10977,6 +11025,9 @@
     <QtMoc Include="ui\form_group_windows\region\RegionObjectsModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ui\form_group_windows\region\RegionsDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -11504,6 +11555,18 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="dovah\forms\structs\region\area.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="ui\types\regions\generable_content\object_collection.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="ui\types\regions\generable_content\weather_collection.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="ui\types\regions\generable_content\grass_collection.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="ui\types\regions\generable_content\audio.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>
