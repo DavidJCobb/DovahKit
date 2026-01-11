@@ -74,7 +74,7 @@ I have a general-purpose C++ library in the top-level "helpers" folder &mdash; j
 * `lu/type_traits/` &mdash; does not create a nested namespace
   * `./function_traits.h`
 * `lu/vectors/`
-  * `lu::vectors::convert` (formerly `map_to_new_type`
+  * `lu::vectors::convert` (formerly `map_to_new_type`)
   * `lu::vectors::move_item_after_index`
   * `lu::vectors::move_item_before_index`
   * `lu::vectors::move_item_by_distance`
