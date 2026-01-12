@@ -42,7 +42,7 @@
         </sizepolicy>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tabGeneral">
         <attribute name="title">
@@ -244,529 +244,511 @@
           </layout>
          </item>
          <item row="1" column="1">
-          <layout class="QGridLayout" name="gridLayout_5">
-           <item row="2" column="0" colspan="2">
-            <layout class="QVBoxLayout" name="verticalLayout_4">
-             <item>
-              <widget class="QCheckBox" name="currentObjectConformToSlope">
-               <property name="whatsThis">
-                <string>If checked, the generated object will be aligned with the angle of the terrain underneath it before any angle variance settings are applied.</string>
-               </property>
-               <property name="text">
-                <string>Conform to Slope</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_5">
-               <item>
-                <widget class="QCheckBox" name="currentObjectPaintEnable">
-                 <property name="whatsThis">
-                  <string>If checked, the terrain above or below the generated object will be painted with a given color. The area painted is measured relative to the object's radius setting.</string>
-                 </property>
+          <widget class="QWidget" name="currentObjectEditControls" native="true">
+           <layout class="QGridLayout" name="gridLayout_5">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item row="3" column="2">
+             <spacer name="verticalSpacer_8">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>Object Name:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QGroupBox" name="currentObjectAngleGroupbox">
+              <property name="whatsThis">
+               <string>For each of an object's local rotation axes, you can specify the range within which the object can rotate about that axis. You can specify positive or negative values, and checking the &quot;plus/minus&quot; box will allow the Region Editor to flip the sign on the value you specify, effectively doubling the range you've asked for.</string>
+              </property>
+              <property name="title">
+               <string>Angle variance</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_8">
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_18">
                  <property name="text">
-                  <string>Paint landscape:</string>
+                  <string>Z:</string>
                  </property>
                 </widget>
                </item>
-               <item>
-                <widget class="DKColorPickerButton" name="currentObjectPaintColor"/>
-               </item>
-               <item>
-                <widget class="QLabel" name="label_14">
-                 <property name="text">
-                  <string>within</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QSpinBox" name="currentObjectPaintPercent">
+               <item row="2" column="1">
+                <widget class="QDoubleSpinBox" name="currentObjectAngleRangeZ">
                  <property name="alignment">
                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                  </property>
                  <property name="suffix">
-                  <string>%</string>
+                  <string>°</string>
+                 </property>
+                 <property name="minimum">
+                  <double>-360.000000000000000</double>
                  </property>
                  <property name="maximum">
-                  <number>100</number>
+                  <double>360.000000000000000</double>
                  </property>
                 </widget>
                </item>
-               <item>
-                <widget class="QLabel" name="label_15">
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_16">
                  <property name="text">
-                  <string>of radius</string>
+                  <string>X:</string>
                  </property>
                 </widget>
                </item>
-               <item>
-                <spacer name="horizontalSpacer_6">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
+               <item row="1" column="1">
+                <widget class="QDoubleSpinBox" name="currentObjectAngleRangeY">
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                  </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
+                 <property name="suffix">
+                  <string>°</string>
                  </property>
-                </spacer>
+                 <property name="minimum">
+                  <double>-360.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>360.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QDoubleSpinBox" name="currentObjectAngleRangeX">
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                 <property name="suffix">
+                  <string>°</string>
+                 </property>
+                 <property name="minimum">
+                  <double>-360.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>360.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_17">
+                 <property name="text">
+                  <string>Y:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
+                <widget class="QCheckBox" name="currentObjectAngleSignedX">
+                 <property name="text">
+                  <string>±</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="2">
+                <widget class="QCheckBox" name="currentObjectAngleSignedY">
+                 <property name="text">
+                  <string>±</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="2">
+                <widget class="QCheckBox" name="currentObjectAngleSignedZ">
+                 <property name="text">
+                  <string>±</string>
+                 </property>
+                </widget>
                </item>
               </layout>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="currentObjectIsHugeRock">
-               <property name="text">
-                <string>Is a Huge Rock (allow generating objects on top of this one)</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="currentObjectIsTree">
-               <property name="whatsThis">
-                <string>This option alters the behavior of the radius value: the radius will be multiplied when two or more objects flagged as trees are placed near each other. (The multiplier is a Game Setting.) This is useful for keeping trees far enough away from each other to prevent clipping, while allowing mushrooms to spawn around those trees' radii (without having to set radii values for each individual mushroom object).</string>
-               </property>
-               <property name="text">
-                <string>Is a Tree (scale radius with respect to other nearby trees)</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="verticalSpacer_2">
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>0</width>
-                 <height>0</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_5">
-             <property name="text">
-              <string>Object Name:</string>
-             </property>
-             <property name="buddy">
-              <cstring>currentObjectEditorID</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0" colspan="2">
-            <layout class="QGridLayout" name="gridLayout_7">
-             <item row="0" column="3">
-              <widget class="QLabel" name="label_7">
-               <property name="text">
-                <string>Clustering:</string>
-               </property>
-               <property name="buddy">
-                <cstring>currentObjectClustering</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QDoubleSpinBox" name="currentObjectDensity">
-               <property name="whatsThis">
-                <string>This allows you to roughly control how many of this object will be generated. The value works in tandem with the other settings and is not a fixed amount. Higher numbers mean a greater chance that the object will appear.</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="decimals">
-                <number>3</number>
-               </property>
-               <property name="maximum">
-                <double>100.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="2">
-              <spacer name="horizontalSpacer_5">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeType">
-                <enum>QSizePolicy::Fixed</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>8</width>
-                 <height>0</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_8">
-               <property name="text">
-                <string>Min Slope:</string>
-               </property>
-               <property name="buddy">
-                <cstring>currentObjectSlopeMin</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="4">
-              <widget class="QSpinBox" name="currentObjectClustering">
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="maximum">
-                <number>100</number>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_9">
-               <property name="text">
-                <string>Max Slope:</string>
-               </property>
-               <property name="buddy">
-                <cstring>currentObjectSlopeMax</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_6">
-               <property name="text">
-                <string>Density:</string>
-               </property>
-               <property name="buddy">
-                <cstring>currentObjectDensity</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="label_10">
-               <property name="text">
-                <string>Min Height:</string>
-               </property>
-               <property name="buddy">
-                <cstring>currentObjectHeightMin</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="3">
-              <widget class="QLabel" name="label_11">
-               <property name="text">
-                <string>Radius:</string>
-               </property>
-               <property name="buddy">
-                <cstring>currentObjectRadius</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="3">
-              <widget class="QLabel" name="label_12">
-               <property name="text">
-                <string>Radius w/in Parent:</string>
-               </property>
-               <property name="buddy">
-                <cstring>currentObjectRadiusWRTParent</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="3">
-              <widget class="QLabel" name="label_13">
-               <property name="text">
-                <string>Max Height:</string>
-               </property>
-               <property name="buddy">
-                <cstring>currentObjectHeightMax</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QSpinBox" name="currentObjectSlopeMin">
-               <property name="whatsThis">
-                <string>The object won't appear on slopes that are less steep than this angle.</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="suffix">
-                <string>°</string>
-               </property>
-               <property name="maximum">
-                <number>90</number>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QSpinBox" name="currentObjectSlopeMax">
-               <property name="whatsThis">
-                <string>The object won't appear on slopes that are more steep than this angle.</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="suffix">
-                <string>°</string>
-               </property>
-               <property name="maximum">
-                <number>90</number>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="4">
-              <widget class="QSpinBox" name="currentObjectRadius">
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="maximum">
-                <number>32767</number>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="4">
-              <widget class="QSpinBox" name="currentObjectRadiusWRTParent">
-               <property name="whatsThis">
-                <string>This option is only available when this object is a &quot;child&quot; in the treeview off to the side. Typically, a child object can only appear within its parent object's radius; the value here is an offset that will increase the radius within which the child will spawn.</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="maximum">
-                <number>32767</number>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QDoubleSpinBox" name="currentObjectHeightMin">
-               <property name="whatsThis">
-                <string>The object won't be placed below this Z-coordinate.</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="minimum">
-                <double>-500000.000000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>500000.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="4">
-              <widget class="QDoubleSpinBox" name="currentObjectHeightMax">
-               <property name="whatsThis">
-                <string>The object won't be placed above this Z-coordinate.</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="minimum">
-                <double>-500000.000000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>500000.000000000000000</double>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="1" column="2">
-            <widget class="QGroupBox" name="groupBox">
-             <property name="whatsThis">
-              <string>For each of an object's local rotation axes, you can specify the range within which the object can rotate about that axis. You can specify positive or negative values, and checking the &quot;plus/minus&quot; box will allow the Region Editor to flip the sign on the value you specify, effectively doubling the range you've asked for.</string>
-             </property>
-             <property name="title">
-              <string>Angle variance</string>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_8">
-              <item row="2" column="0">
-               <widget class="QLabel" name="label_18">
+             </widget>
+            </item>
+            <item row="0" column="1" colspan="2">
+             <widget class="QLineEdit" name="currentObjectEditorID">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QGroupBox" name="groupBox_2">
+              <property name="title">
+               <string>Other measurements</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_9">
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_20">
+                 <property name="whatsThis">
+                  <string>Apply a constant adjustment to the object's Z-axis (vertical) position.</string>
+                 </property>
+                 <property name="text">
+                  <string>Z Offset:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1" colspan="2">
+                <widget class="QDoubleSpinBox" name="currentObjectSinkVariance">
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1" colspan="2">
+                <widget class="QDoubleSpinBox" name="currentObjectSink">
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_21">
+                 <property name="text">
+                  <string>Size Variance:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_19">
+                 <property name="whatsThis">
+                  <string>Apply a randomized (within the value specified) adjustment to the object's Z-axis (vertical) position.</string>
+                 </property>
+                 <property name="text">
+                  <string>Z Variance:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="2">
+                <widget class="QCheckBox" name="currentObjectSizeVarianceSigned">
+                 <property name="whatsThis">
+                  <string>Control whether the Region Editor is allowed to flip the sign of the size variance (i.e. whether objects can be both increased and decreased by the given size variance).</string>
+                 </property>
+                 <property name="text">
+                  <string>±</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QDoubleSpinBox" name="currentObjectSizeVariance">
+                 <property name="whatsThis">
+                  <string>Apply a randomized modifier to the object's size. Note that while this modifier isn't capped, the object's final size may be limited by the engine.</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="1" column="0" colspan="2">
+             <layout class="QGridLayout" name="gridLayout_7">
+              <item row="0" column="3">
+               <widget class="QLabel" name="label_7">
                 <property name="text">
-                 <string>Z:</string>
-                </property>
-                <property name="buddy">
-                 <cstring>currentObjectAngleRangeZ</cstring>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QDoubleSpinBox" name="currentObjectAngleRangeZ">
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-                <property name="suffix">
-                 <string>°</string>
-                </property>
-                <property name="minimum">
-                 <double>-360.000000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>360.000000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_16">
-                <property name="text">
-                 <string>X:</string>
-                </property>
-                <property name="buddy">
-                 <cstring>currentObjectAngleRangeX</cstring>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QDoubleSpinBox" name="currentObjectAngleRangeY">
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-                <property name="suffix">
-                 <string>°</string>
-                </property>
-                <property name="minimum">
-                 <double>-360.000000000000000</double>
-                </property>
-                <property name="maximum">
-                 <double>360.000000000000000</double>
+                 <string>Clustering:</string>
                 </property>
                </widget>
               </item>
               <item row="0" column="1">
-               <widget class="QDoubleSpinBox" name="currentObjectAngleRangeX">
+               <widget class="QDoubleSpinBox" name="currentObjectDensity">
+                <property name="whatsThis">
+                 <string>This allows you to roughly control how many of this object will be generated. The value works in tandem with the other settings and is not a fixed amount. Higher numbers mean a greater chance that the object will appear.</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="decimals">
+                 <number>3</number>
+                </property>
+                <property name="maximum">
+                 <double>100.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <spacer name="horizontalSpacer_5">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeType">
+                 <enum>QSizePolicy::Fixed</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>8</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_8">
+                <property name="text">
+                 <string>Min Slope:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="4">
+               <widget class="QSpinBox" name="currentObjectClustering">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="maximum">
+                 <number>100</number>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_9">
+                <property name="text">
+                 <string>Max Slope:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_6">
+                <property name="text">
+                 <string>Density:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_10">
+                <property name="text">
+                 <string>Min Height:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="3">
+               <widget class="QLabel" name="label_11">
+                <property name="text">
+                 <string>Radius:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="3">
+               <widget class="QLabel" name="label_12">
+                <property name="text">
+                 <string>Radius w/in Parent:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="3">
+               <widget class="QLabel" name="label_13">
+                <property name="text">
+                 <string>Max Height:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QSpinBox" name="currentObjectSlopeMin">
+                <property name="whatsThis">
+                 <string>The object won't appear on slopes that are less steep than this angle.</string>
+                </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                 </property>
                 <property name="suffix">
                  <string>°</string>
                 </property>
-                <property name="minimum">
-                 <double>-360.000000000000000</double>
-                </property>
                 <property name="maximum">
-                 <double>360.000000000000000</double>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_17">
-                <property name="text">
-                 <string>Y:</string>
-                </property>
-                <property name="buddy">
-                 <cstring>currentObjectAngleRangeY</cstring>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="2">
-               <widget class="QCheckBox" name="currentObjectAngleSignedX">
-                <property name="text">
-                 <string>±</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="2">
-               <widget class="QCheckBox" name="currentObjectAngleSignedY">
-                <property name="text">
-                 <string>±</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="2">
-               <widget class="QCheckBox" name="currentObjectAngleSignedZ">
-                <property name="text">
-                 <string>±</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="0" column="1" colspan="2">
-            <widget class="QLineEdit" name="currentObjectEditorID">
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
-            <widget class="QGroupBox" name="groupBox_2">
-             <property name="title">
-              <string>Other measurements</string>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_9">
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_19">
-                <property name="whatsThis">
-                 <string>Apply a randomized (within the value specified) adjustment to the object's Z-axis (vertical) position.</string>
-                </property>
-                <property name="text">
-                 <string>Z Variance:</string>
-                </property>
-                <property name="buddy">
-                 <cstring>currentObjectSinkVariance</cstring>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="label_21">
-                <property name="text">
-                 <string>Size Variance:</string>
-                </property>
-                <property name="buddy">
-                 <cstring>currentObjectSizeVariance</cstring>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_20">
-                <property name="whatsThis">
-                 <string>Apply a constant adjustment to the object's Z-axis (vertical) position.</string>
-                </property>
-                <property name="text">
-                 <string>Z Offset:</string>
-                </property>
-                <property name="buddy">
-                 <cstring>currentObjectSink</cstring>
+                 <number>90</number>
                 </property>
                </widget>
               </item>
               <item row="2" column="1">
-               <widget class="QDoubleSpinBox" name="currentObjectSizeVariance">
+               <widget class="QSpinBox" name="currentObjectSlopeMax">
                 <property name="whatsThis">
-                 <string>Apply a randomized modifier to the object's size. Note that while this modifier isn't capped, the object's final size may be limited by the engine.</string>
+                 <string>The object won't appear on slopes that are more steep than this angle.</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                 </property>
+                <property name="suffix">
+                 <string>°</string>
+                </property>
+                <property name="maximum">
+                 <number>90</number>
+                </property>
                </widget>
               </item>
-              <item row="2" column="2">
-               <widget class="QCheckBox" name="currentObjectSizeVarianceSigned">
+              <item row="1" column="4">
+               <widget class="QSpinBox" name="currentObjectRadius">
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="maximum">
+                 <number>32767</number>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="4">
+               <widget class="QSpinBox" name="currentObjectRadiusWRTParent">
                 <property name="whatsThis">
-                 <string>Control whether the Region Editor is allowed to flip the sign of the size variance (i.e. whether objects can be both increased and decreased by the given size variance).</string>
+                 <string>This option is only available when this object is a &quot;child&quot; in the treeview off to the side. Typically, a child object can only appear within its parent object's radius; the value here is an offset that will increase the radius within which the child will spawn.</string>
                 </property>
-                <property name="text">
-                 <string>±</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1" colspan="2">
-               <widget class="QDoubleSpinBox" name="currentObjectSinkVariance">
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                 </property>
+                <property name="maximum">
+                 <number>32767</number>
+                </property>
                </widget>
               </item>
-              <item row="0" column="1" colspan="2">
-               <widget class="QDoubleSpinBox" name="currentObjectSink">
+              <item row="3" column="1">
+               <widget class="QDoubleSpinBox" name="currentObjectHeightMin">
+                <property name="whatsThis">
+                 <string>The object won't be placed below this Z-coordinate.</string>
+                </property>
                 <property name="alignment">
                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="minimum">
+                 <double>-500000.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>500000.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="4">
+               <widget class="QDoubleSpinBox" name="currentObjectHeightMax">
+                <property name="whatsThis">
+                 <string>The object won't be placed above this Z-coordinate.</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+                <property name="minimum">
+                 <double>-500000.000000000000000</double>
+                </property>
+                <property name="maximum">
+                 <double>500000.000000000000000</double>
                 </property>
                </widget>
               </item>
              </layout>
-            </widget>
-           </item>
-          </layout>
+            </item>
+            <item row="2" column="0" rowspan="2" colspan="2">
+             <layout class="QVBoxLayout" name="verticalLayout_4">
+              <item>
+               <widget class="QCheckBox" name="currentObjectConformToSlope">
+                <property name="whatsThis">
+                 <string>If checked, the generated object will be aligned with the angle of the terrain underneath it before any angle variance settings are applied.</string>
+                </property>
+                <property name="text">
+                 <string>Conform to Slope</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="currentObjectPaintLayout">
+                <item>
+                 <widget class="QCheckBox" name="currentObjectPaintEnable">
+                  <property name="whatsThis">
+                   <string>If checked, the terrain above or below the generated object will be painted with a given color. The area painted is measured relative to the object's radius setting.</string>
+                  </property>
+                  <property name="text">
+                   <string>Paint landscape:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="DKColorPickerButton" name="currentObjectPaintColor"/>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_14">
+                  <property name="text">
+                   <string>within</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSpinBox" name="currentObjectPaintPercent">
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                  <property name="suffix">
+                   <string>%</string>
+                  </property>
+                  <property name="maximum">
+                   <number>100</number>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="label_15">
+                  <property name="text">
+                   <string>of radius</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_6">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="currentObjectIsHugeRock">
+                <property name="text">
+                 <string>Is a Huge Rock (allow generating objects on top of this one)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="currentObjectIsTree">
+                <property name="whatsThis">
+                 <string>This option alters the behavior of the radius value: the radius will be multiplied when two or more objects flagged as trees are placed near each other. (The multiplier is a Game Setting.) This is useful for keeping trees far enough away from each other to prevent clipping, while allowing mushrooms to spawn around those trees' radii (without having to set radii values for each individual mushroom object).</string>
+                </property>
+                <property name="text">
+                 <string>Is a Tree (scale radius with respect to other nearby trees)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_2">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
          </item>
         </layout>
        </widget>

@@ -3918,6 +3918,15 @@
     <ClCompile Include="dovah\form_stubs\helpers\get_assigned_location.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_group_windows\region\RegionsAvailableInWorldModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_group_windows\region\RegionsDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_group_windows\region\fragments\objects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9647,6 +9656,15 @@
     <ClInclude Include="dovah\form_stubs\helpers\for_each_quest_scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\model_utils\self_sorting_flat_model_mixin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_group_windows\region\fragments\objects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_group_windows\region\fragment_passkey.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -11118,6 +11136,12 @@
     <QtMoc Include="ui\form_group_windows\region\RegionObjectsModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ui\form_group_windows\region\RegionsAvailableInWorldModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_group_windows\region\RegionsDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -11663,6 +11687,8 @@
     <None Include="dovah\forms\components\extra_data\types\common_unique_form.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="dovah\_docs\use info\entry flags.md" />
+    <None Include="helpers\qt\qt_5_natvis\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
@@ -11771,5 +11797,7 @@
     <Natvis Include="dovah\datastores\idles\action_node.natvis" />
     <Natvis Include="dovah\datastores\camera_paths\node.natvis" />
     <Natvis Include="helpers\optionals\finite_float.natvis" />
+    <Natvis Include="helpers\qt\qt_5_natvis\QDirPrivate.natvis" />
+    <Natvis Include="helpers\qt\qt_5_natvis\QFileInfoPrivate.natvis" />
   </ItemGroup>
 </Project>
