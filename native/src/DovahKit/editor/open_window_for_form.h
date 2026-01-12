@@ -11,5 +11,5 @@ namespace dovah {
 // the same window open for the same form.
 //
 
-void open_use_info_dialog_for_form(dovah::form_stub&, QWidget* parent = nullptr);
-void open_edit_dialog_for_form(dovah::form_stub&, QWidget* parent = nullptr);
+extern void open_use_info_dialog_for_form(dovah::form_stub&, QWidget* parent = nullptr);
+extern void open_edit_dialog_for_form(dovah::form_stub&, QWidget* parent = nullptr);

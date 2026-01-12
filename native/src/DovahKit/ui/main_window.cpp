@@ -8,6 +8,7 @@
 #include "widgets/DKStatusBar.h"
 #include "editor/core.h"
 #include "editor/subsystems/message_log/core.h"
+#include "editor/subsystems/per_form_windows/core.h"
 #include "editor/open_window_for_form.h"
 #include "editor/open_window_for_form_type.h"
 #include "dovah/data/game/hardcoded_form_ids_ignore_record_id_prefix.h"
@@ -464,8 +465,8 @@ void MainWindow::showEvent(QShowEvent* event) {
 void MainWindow::updateFormEditWindowList() {
    this->form_edit_window_menu->clear();
    //
-   auto& editor = DovahKitCore::get();
-   editor.for_each_form_edit_dialog([this](FormEditDialogInterface* dialog) {
+   auto& pfwins = dovahkit::subsystems::per_form_windows::core::get();
+   pfwins.for_each_form_edit_dialog([this](FormEditDialogInterface* dialog) {
       auto* stub = dialog->formStub();
       if (!stub)
          return false;
@@ -499,8 +500,8 @@ void MainWindow::updateFormEditWindowList() {
 void MainWindow::updateFormUsesWindowList() {
    this->form_uses_window_menu->clear();
    //
-   auto& editor = DovahKitCore::get();
-   editor.for_each_form_uses_dialog([this](FormUseInfoDialog* dialog) {
+   auto& pfwins = DovahKitCore::get();
+   pfwins.for_each_form_uses_dialog([this](FormUseInfoDialog* dialog) {
       auto* stub = dialog->formStub();
       if (!stub)
          return false;

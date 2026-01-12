@@ -463,6 +463,7 @@
     <ClCompile Include="editor\subsystems\papyrus\known_script.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\known_script_ptr.cpp" />
     <ClCompile Include="editor\subsystems\papyrus\papyrus_subsystem.cpp" />
+    <ClCompile Include="editor\subsystems\per_form_windows\per_form_window_manager.cpp" />
     <ClCompile Include="editor\subsystems\story_manager\StoryManagerFormsModel.cpp" />
     <ClCompile Include="editor\subsystems\story_manager\story_manager_subsystem.cpp" />
     <ClCompile Include="editor\subsystems\worldedit\gizmo_colors\edit_gizmo_color_scheme_manager.cpp" />
@@ -2181,6 +2182,8 @@
     <QtMoc Include="ui\form_windows\actor_value_info\FormSubdialogActorValueInfoPerkTree.h" />
     <QtMoc Include="ui\form_windows\actor_value_info.h" />
     <QtMoc Include="editor\subsystems\story_manager\story_manager_subsystem.h" />
+    <QtMoc Include="editor\subsystems\per_form_windows\per_form_window_manager.h" />
+    <ClInclude Include="editor\subsystems\per_form_windows\core.h" />
     <ClInclude Include="editor\subsystems\story_manager\core.h" />
     <QtMoc Include="editor\subsystems\story_manager\StoryManagerFormsModel.h" />
     <ClInclude Include="editor\subsystems\story_manager\passkeys\core_controls_model.h" />

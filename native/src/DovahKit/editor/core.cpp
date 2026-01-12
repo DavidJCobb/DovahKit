@@ -22,8 +22,6 @@
 #include "core_internals/backend_notice_dispatcher.h"
 #include "helpers/make_editor_id_for_duplicate.h"
 #include "ui/main_window/delete_form_dialog.h"
-#include "ui/main_window/form_use_info.h"
-#include "ui/form_windows/_base.h"
 #include "widgets/widget-models/DKBSACollectionModel.h"
 #include <QDebug>
 #include "./subsystems/game_inis.h"
@@ -372,27 +370,6 @@ dovah::game DovahKitCore::get_current_game() const noexcept {
 
 float DovahKitCore::assess_load_progress() const noexcept {
    return this->load_order->assess_load_progress();
-}
-
-bool DovahKitCore::for_each_form_edit_dialog(std::function<bool(FormEditDialogInterface*)> functor) {
-   for (auto& pair : this->extant_form_edit_dialogs) {
-      auto* dialog = pair.second;
-      auto* casted = dynamic_cast<FormEditDialogInterface*>(dialog);
-      if (casted)
-         if ((functor)(casted))
-            return true;
-   }
-   return false;
-}
-bool DovahKitCore::for_each_form_uses_dialog(std::function<bool(FormUseInfoDialog*)> functor) {
-   for (auto& pair : this->extant_use_info_dialogs) {
-      auto* dialog = pair.second;
-      auto* casted = dynamic_cast<FormUseInfoDialog*>(dialog);
-      if (casted)
-         if ((functor)(casted))
-            return true;
-   }
-   return false;
 }
 
 dovah::file_load_order* DovahKitCore::get_file_load_order() noexcept {

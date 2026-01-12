@@ -1,5 +1,6 @@
 #include "./sound_category.h"
 #include "dovah/core.h"
+#include "editor/subsystems/per_form_windows/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
 #include "./shared/DKFormPickerExcludeSingleFormFilter.h"
@@ -25,12 +26,13 @@ FormDialogSoundCategory::FormDialogSoundCategory(dovah::form_stub& stub, QWidget
       QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
       if (dialog->exec() == QDialog::Accepted) {
          auto& editor = DovahKitCore::get();
+         auto& pfwins = dovahkit::subsystems::per_form_windows::core::get();
 
          auto sel = dialog->selectedFormStubs();
          for (dovah::form_stub* stub : sel) {
             if (auto* working = stub->working_copy) {
                ((loaded_form_type*)working)->parent.set(*working, this->formStub());
-               editor.for_each_form_edit_dialog([stub](FormEditDialogInterface* intfc) {
+               pfwins.for_each_form_edit_dialog([stub](FormEditDialogInterface* intfc) {
                   if (intfc->formStub() != stub)
                      return true;
 
@@ -57,12 +59,13 @@ FormDialogSoundCategory::FormDialogSoundCategory(dovah::form_stub& stub, QWidget
       QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
       if (dialog->exec() == QDialog::Accepted) {
          auto& editor = DovahKitCore::get();
+         auto& pfwins = dovahkit::subsystems::per_form_windows::core::get();
 
          auto sel = dialog->selectedFormStubs();
          for (dovah::form_stub* stub : sel) {
             if (auto* working = stub->working_copy) {
                ((dovah::loaded_forms::SoundDescriptor*)working)->category.set(*working, this->formStub());
-               editor.for_each_form_edit_dialog([stub](FormEditDialogInterface* intfc) {
+               pfwins.for_each_form_edit_dialog([stub](FormEditDialogInterface* intfc) {
                   if (intfc->formStub() != stub)
                      return true;
 

@@ -1,29 +1,7 @@
 #include "./open_window_for_form_type.h"
-#include "./core.h"
-#include "ui/main_window.h" // MainWindow::get
+#include "./subsystems/per_form_windows/core.h"
 
-#include "ui/form_group_windows/camera_path/CameraPathsDialog.h"
-#include "ui/form_group_windows/idle/IdleAnimationsDialog.h"
-
-void open_edit_dialog_for_form_type(dovah::form_type type) {
-   auto&    editor = DovahKitCore::get();
-   auto*    parent = &MainWindow::get();
-   QDialog* result = nullptr;
-   switch (type) {
-      case dovah::form_type::camera_path:
-         result = editor.extant_form_type_dialogs.camera_path;
-         if (!result)
-            result = editor.extant_form_type_dialogs.camera_path = new CameraPathsDialog(parent);
-         break;
-      case dovah::form_type::idle:
-         result = editor.extant_form_type_dialogs.idle;
-         if (!result)
-            result = editor.extant_form_type_dialogs.idle = new IdleAnimationsDialog(parent);
-         break;
-   }
-   if (result) {
-      result->show();
-      result->raise();
-      result->activateWindow();
-   }
+extern void open_edit_dialog_for_form_type(dovah::form_type type) {
+   auto& pfwins = dovahkit::subsystems::per_form_windows::core::get_or_create();
+   pfwins.show_form_type_edit_dialog(type);
 }

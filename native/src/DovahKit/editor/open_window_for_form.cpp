@@ -3,7 +3,7 @@
 #include "dovah/form_stub.h"
 #include "dovah/form_stubs/helpers/get_dialogue_branch_quest.h"
 #include "dovah/form_stubs/helpers/get_dialogue_topic_quest.h"
-#include "./core.h"
+#include "./subsystems/per_form_windows/core.h"
 #include "../ui/main_window/form_use_info.h"
 #include "../ui/form_windows/acoustic_space.h"
 #include "../ui/form_windows/activator.h"
@@ -113,6 +113,7 @@
 #include "../ui/form_windows/worldspace.h"
 #include "../ui/form_group_windows/camera_path/CameraPathsDialog.h"
 #include "../ui/form_group_windows/idle/IdleAnimationsDialog.h"
+#include "../ui/form_group_windows/region/RegionsDialog.h"
 #include "ui/main_window.h" // MainWindow::get
 
 // Opening the window for an SMQN or SMBN
@@ -279,46 +280,17 @@ namespace {
    #pragma endregion
 }
 
-void open_use_info_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
-   //
-   // First, let's check if there's already a window for this form. If so, we should just 
-   // refocus that window instead of opening a new one.
-   //
-   auto  formID = stub.formID;
-   auto& editor = DovahKitCore::get();
-   auto  it     = editor.extant_use_info_dialogs.find(formID);
-   if (it != editor.extant_use_info_dialogs.end()) {
-      auto dialog = it->second;
-      if (dialog) {
-         dialog->raise();
-         dialog->activateWindow();
-         return;
-      }
-   }
-   //
-   // If we made it to here, then there isn't already a window for this form, so let's 
-   // open one.
-   //
-   auto dialog = new FormUseInfoDialog(&stub, parent);
-   editor.extant_use_info_dialogs[stub.formID] = dialog;
-   QObject::connect(dialog, &QDialog::finished, &editor, [formID, dialog]() {
-      auto& editor = DovahKitCore::get();
-      auto& map    = editor.extant_use_info_dialogs;
-      auto  it     = map.find(formID);
-      if (it != map.end())
-         map.erase(it);
-      //
-      dialog->deleteLater();
-   });
-   dialog->show();
+extern void open_use_info_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
+   auto& pfwins = dovahkit::subsystems::per_form_windows::core::get_or_create();
+   pfwins.show_use_info_dialog(stub, parent);
 }
-void open_edit_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
-   auto& editor = DovahKitCore::get();
+extern void open_edit_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
+   auto& pfwins = dovahkit::subsystems::per_form_windows::core::get_or_create();
 
    if (stub.form_type == dovah::form_type::camera_path) {
-      auto* dialog = editor.extant_form_type_dialogs.camera_path;
+      auto* dialog = pfwins.extant_form_type_dialogs.camera_path;
       if (!dialog) {
-         dialog = editor.extant_form_type_dialogs.camera_path = new CameraPathsDialog(&MainWindow::get());
+         dialog = pfwins.extant_form_type_dialogs.camera_path = new CameraPathsDialog(&MainWindow::get());
       }
       dialog->focusCameraPath(stub);
       dialog->raise();
@@ -326,20 +298,30 @@ void open_edit_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
       return;
    }
    if (stub.form_type == dovah::form_type::idle) {
-      auto* dialog = editor.extant_form_type_dialogs.idle;
+      auto* dialog = pfwins.extant_form_type_dialogs.idle;
       if (!dialog) {
-         dialog = editor.extant_form_type_dialogs.idle = new IdleAnimationsDialog(&MainWindow::get());
+         dialog = pfwins.extant_form_type_dialogs.idle = new IdleAnimationsDialog(&MainWindow::get());
       }
       dialog->focusIdle(stub);
       dialog->raise();
       dialog->activateWindow();
       return;
    }
+   if (stub.form_type == dovah::form_type::region) {
+      auto* dialog = pfwins.extant_form_type_dialogs.region;
+      if (!dialog) {
+         dialog = pfwins.extant_form_type_dialogs.region = new RegionsDialog(&MainWindow::get());
+      }
+      dialog->focusRegion(stub);
+      dialog->raise();
+      dialog->activateWindow();
+      return;
+   }
 
    auto _get_extant_dialog = [](dovah::form_stub& stub) -> QDialog* {
-      auto& editor = DovahKitCore::get();
-      auto  it     = editor.extant_form_edit_dialogs.find(stub.formID);
-      if (it != editor.extant_form_edit_dialogs.end()) {
+      auto& pfwins = dovahkit::subsystems::per_form_windows::core::get();
+      auto  it     = pfwins.extant_form_edit_dialogs.find(&stub);
+      if (it != pfwins.extant_form_edit_dialogs.end()) {
          return it->second;
       }
       return nullptr;
@@ -457,11 +439,11 @@ void open_edit_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
       }
    }
    if (opened) {
-      editor.extant_form_edit_dialogs[stub.formID] = opened;
-      QObject::connect(opened, &QDialog::finished, &editor, [formID = stub.formID, opened]() {
-         auto& editor = DovahKitCore::get();
-         auto& map    = editor.extant_form_edit_dialogs;
-         auto  it     = map.find(formID);
+      pfwins.extant_form_edit_dialogs[&stub] = opened;
+      QObject::connect(opened, &QDialog::finished, &pfwins, [&stub, opened]() {
+         auto& pfwins = dovahkit::subsystems::per_form_windows::core::get();
+         auto& map    = pfwins.extant_form_edit_dialogs;
+         auto  it     = map.find(&stub);
          if (it != map.end())
             map.erase(it);
          //
