@@ -56,6 +56,6 @@ namespace dovahkit::subsystems::load_order {
 }
 ```
 
-That acutally works. Qt signals are literally just functions that, when called, invoke signal handlers; and if those functions aren't made protected or private, then anything can just... call them.
+That actually works. Qt signals are literally just functions that, when called, invoke signal handlers; and if those functions aren't made protected or private, then anything can just... call them.
 
 This will allow us to add new accessors to the subsystem without forcing a rebuild of every source file that needs the signals.

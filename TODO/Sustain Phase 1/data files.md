@@ -38,7 +38,7 @@ Some specific ideas, first written down on 4/28/2024:
 
   * The `record_reader` interface shouldn't offer any functions for reading arbitrary data (i.e. no `read` or `unchecked_read` functions). Clients that are given access to a record should be required to obey the file structure (i.e. open, read, and close subrecords). There are internals for file parsing that require pulling data from a record, but those functions could be made internal or the relevant reads could otherwise be done manually.
 
-    This would be an improvement over the current design, wherein form loaders, form use info builders, and any custom parses (e.g. the frontend caching subrecords of interest) can just choose not to obey the file structure -- to pluck arbitrary bytes out of a record without bothering to heed subrecord boundaries.
+    This would be an improvement over the current design, wherein form loaders, form use info builders, and any custom parsers (e.g. the frontend caching subrecords of interest) can just choose not to obey the file structure -- to pluck arbitrary bytes out of a record without bothering to heed subrecord boundaries.
 
 ## Observations
 
