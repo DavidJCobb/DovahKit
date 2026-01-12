@@ -1,5 +1,7 @@
 #include "./dovahkit_options.h"
+#include <array>
 #include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <istream>
 #include <ostream>
@@ -7,6 +9,7 @@
 #include <QDir>
 #include <QFile>
 #include <QSaveFile>
+#include <QStandardPaths>
 #include <QString>
 #include <QTimer>
 #include "editor/ini/main.h"
@@ -34,15 +37,8 @@ namespace dovahkit::subsystems::options {
    }
 
    QString core::get_userdata_path() {
-      //
-      // TODO: We really should look into storing userdata in %APPDATA%. However, if we do, 
-      // then things like Dovahscript package paths will need to be updated to do so as well.
-      //
-      auto path = QCoreApplication::applicationDirPath();
+      auto path = QStandardPaths::writableLocation(QStandardPaths::StandardLocation::AppLocalDataLocation);
       auto dir  = QDir(QDir(path).absoluteFilePath("userdata/"));
-      if (!dir.exists()) {
-         dir.setPath(QDir::current().absoluteFilePath("userdata/")); // During debugging, the program's path is at ./x64/ConfigurationName/ and the current working directory is at ./
-      }
       return dir.path() + "/";
    }
    QString core::get_base_options_path() {
@@ -60,6 +56,43 @@ namespace dovahkit::subsystems::options {
    }
 
    void core::reload() {
+      QDir userdata_path = get_userdata_path();
+      if (!userdata_path.exists()) {
+         //
+         // If the userdata folder isn't present, then copy the defaults out of the application 
+         // bundle.
+         //
+         QDir src_path = QDir(QCoreApplication::applicationDirPath()).absoluteFilePath("userdata/");
+         #if _DEBUG
+            if (!src_path.exists()) {
+               //
+               // During debugging, the program's path is at $(SolutionDir)/x64/ConfigurationName/
+               // and the current working  directory is at $(ProjectDir).
+               // 
+               // NOTE: If we fix up our build paths, this will need to change!
+               // 
+               // NOTE: When we clean our build paths, we should also add a custom build step to 
+               //       copy `userdata` and any similar folders into the build directory, and then 
+               //       remove this hack from the code!
+               //
+               src_path.setPath(QDir::current().absoluteFilePath("userdata/"));
+            }
+         #endif
+         if (src_path.exists()) {
+            auto dst_path = std::filesystem::path(userdata_path.absolutePath().toStdString());
+            std::error_code ec;
+            std::filesystem::create_directories(dst_path, ec);
+            if (!ec) {
+               std::filesystem::copy(
+                  std::filesystem::path(src_path.absolutePath().toStdString()),
+                  dst_path,
+                  std::filesystem::copy_options::skip_symlinks | std::filesystem::copy_options::recursive | std::filesystem::copy_options::skip_existing,
+                  ec
+               );
+            }
+         }
+      }
+
       auto path = get_main_ini_path().toStdWString();
       std::ifstream stream(path, std::ios::in);
       if (stream.good()) {
