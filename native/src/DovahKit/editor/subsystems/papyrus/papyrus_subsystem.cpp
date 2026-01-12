@@ -597,7 +597,7 @@ namespace dovahkit::subsystems::papyrus {
          //
          // Need to check against the base form, too.
          //
-         const auto* base = dovah::form_stub_helpers::get_base_form(&stub);
+         const auto* base = dovah::form_stub_helpers::get_base_form(stub);
          if (base) {
             const known_script* script_on_base = nullptr;
             

@@ -31,7 +31,7 @@ void DKRefsInCellModel::Item::updateFromStub() {
    if (me.isEmpty())
       me = editor_helpers::form_identifiers_to_string(stub);
 
-   base = dovah::form_stub_helpers::get_base_form(stub);
+   base = dovah::form_stub_helpers::get_base_form(*stub);
    if (base) {
       this->editor_ids.base = base->get_editor_id();
       this->cached_text = QString("%1 (%2)").arg(me).arg(this->editor_ids.base);
@@ -636,15 +636,15 @@ void DKRefsInCellModel::setParentCell(dovah::form_stub* cell) {
    }
 
    QVector<Item*> working;
-   dovah::form_stub_helpers::for_each_child_form(cell, [this, &working](dovah::form_stub* ref) -> bool {
-      if (!_stub_allowed_in_model(*ref))
+   dovah::form_stub_helpers::for_each_child_form(*cell, [this, &working](dovah::form_stub& ref) -> bool {
+      if (!_stub_allowed_in_model(ref))
          return false;
 
       for (auto* prepended : this->children)
-         if (prepended->stub == ref)
+         if (prepended->stub == &ref)
             return false;
 
-      auto* item = new Item(ref);
+      auto* item = new Item(&ref);
       working.push_back(item);
 
       return false;

@@ -6,6 +6,7 @@
 #include "components/keyword_list.h"
 #include "components/papyrus.h"
 #include "structs/color_dword.h"
+#include "../use_info/entry_flags/location.h"
 
 class TESPluginRecord;
 
@@ -77,7 +78,7 @@ namespace dovah::loaded_forms {
             content_list<unique_actor>       unique_actors;      // ACUN/LCUN // RCUN removes
          } contents;
          localized_string name; // FULL
-         form_reference_t parent_location; // PNAM
+         unique_form_reference_t<use_info::entry_flags::location::parent_location> parent_location; // PNAM
          form_reference_t music; // NAM1
          form_reference_t unreported_crime_faction; // FNAM
          form_reference_t marker; // MNAM

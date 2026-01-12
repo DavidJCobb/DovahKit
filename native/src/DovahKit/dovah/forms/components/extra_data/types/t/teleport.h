@@ -3,6 +3,7 @@
 #include "helpers/vector3.h"
 #include "../../extra_data.h"
 #include "../../../../../form_reference_t.h"
+#include "../../../../../use_info/entry_flags/base_extra_data.h"
 
 namespace dovah::loaded_forms::components::extra_data_types {
    class teleport : public extra_data {
@@ -20,7 +21,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
          teleport() : extra_data(all_extra_data_types::index_of_type<teleport>) {}
 
       public:
-         form_reference_t     target_door;
+         unique_form_reference_t<use_info::entry_flags::base_extra_data::extra_teleport_destination> target_door;
          cobb::vector3<float> position;
          cobb::vector3<float> rotation;  // radians
          uint32_t             flags = 0; // the game only keeps the low byte

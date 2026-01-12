@@ -268,7 +268,7 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(block_bash.impact_data_set);
       uib.add_outbound_reference(equip_type);
       uib.add_outbound_reference(race);
-      uib.add_outbound_reference(template_armor);
+      uib.add_outbound_reference(template_armor, decltype(Armor::template_armor)::use_info_flag);
       uib.add_outbound_reference(take_sound);
       uib.add_outbound_reference(drop_sound);
       for (auto id : armor_addons)

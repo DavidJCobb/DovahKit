@@ -23,7 +23,7 @@ DovahKit's frontend is built using Qt, and Qt uses a model/view system for treev
 ### Dovahscript
 The scripting engine for DovahKit, built around Lua.
 
-Dovahscript runs Lua code in a worker thread, so that the main thread (powering the application UI) remains unblocked and the user can always force-kill a script. This wouldn't guard against internal errors (i.e. an accidental infinite loop within the native code that Dovahscript APIs invoke) but will guard well enough against user errors (i.e. an accidental infinite loop within a Lua script).
+Dovahscript runs Lua code in a worker thread, so that the main thread (powering the application UI) remains unblocked and the user can always force-kill a script. This wouldn't guard against internal errors (i.e. an accidental infinite loop within the native code that Dovahscript APIs invoke) but will guard well enough against user errors (i.e. an accidental infinite loop within a Lua script). It also has the benefit of allowing some scripted UI modifications to be executed asynchronously with the script.
 
 ## F
 
@@ -42,7 +42,7 @@ Any code existing outside of the [backend](#backend).
 A helper struct that can be used to read a form's winning record and extract just specific information, skipping past everything else. They exist for cases where a [frontend](#frontend) might need to use some information for every form of a given type, but that information isn't worth packing into [form stub addenda](#form%20stub%20addenda).
 
 #### Examples
-* `dovah::loaded_forms::Package::record_skimmers::legacy_type` reads the legacy package type from a `PACK` record, taking into account all subrecords (including deprecated ones) that would mutate a package's type through the load process.
+* `dovah::loaded_forms::Package::record_skimmers::legacy_type` reads the legacy package type from a `PACK` record, taking into account all subrecords (including deprecated ones) that would mutate a package's type during the load process.
 * `dovah::loaded_forms::Topic::record_skimmers::subtype` reads a topic's subtype, as indicated by `DATA` or `SNAM`.
 
 ## U

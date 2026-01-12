@@ -43,7 +43,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
    
    /*static*/ void teleport::generate_use_info(tes_file_reading::record& record, form_stub_use_info_builder& uib, extra_data_use_info_state& uis) {
       auto& subrecord = record.get_current_subrecord();
-      subrecord.read(uis.form_ids.by_name.teleport.target_door);
+      subrecord.read(uis.form_ids_with_flags.teleport.target_door);
    }
    /*virtual*/ void teleport::clear_contained_formIDs(loaded_forms::Form& my_owner) /*override*/ {
       this->target_door.set(my_owner, nullptr);

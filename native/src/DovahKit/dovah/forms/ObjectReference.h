@@ -5,6 +5,7 @@
 #include "_common.h"
 #include "components/extra_data.h"
 #include "components/papyrus.h"
+#include "../use_info/entry_flags/reference.h"
 #include "../../helpers/vector3.h"
 
 namespace dovah::loaded_forms {
@@ -49,7 +50,7 @@ namespace dovah::loaded_forms {
 
          components::extra_data_list         extra_data;
          components::papyrus_attachment_data script_data; // VMAD
-         base_form_reference_t base_form; // NAME
+         unique_form_reference_t<use_info::entry_flags::reference::base_form> base_form; // NAME
          cobb::vector3<float> position; // DATA
          cobb::vector3<float> rotation; // DATA // radians
 

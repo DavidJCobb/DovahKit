@@ -1994,7 +1994,7 @@ namespace dovah {
                return error_code::exterior_cell_must_have_grid_coordinates;
             auto& grid_coords = grid_opt.value();
 
-            auto* existing = form_stub_helpers::get_worldspace_cell_by_grid(request.child_of, grid_coords.x, grid_coords.y);
+            auto* existing = form_stub_helpers::get_worldspace_cell_by_grid(*request.child_of, grid_coords.x, grid_coords.y);
             if (existing)
                return error_code::exterior_grid_coordinates_already_taken;
          }

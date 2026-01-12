@@ -401,13 +401,14 @@ void open_edit_dialog_for_form(dovah::form_stub& stub, QWidget* parent) {
                dovah::form_stub* quest_stub = nullptr;
                switch (stub.form_type) {
                   case dovah::form_type::dialogue_branch:
-                     quest_stub = dovah::form_stub_helpers::get_dialogue_branch_quest(&stub);
+                     quest_stub = dovah::form_stub_helpers::get_dialogue_branch_quest(stub);
                      break;
                   case dovah::form_type::topic:
-                     quest_stub = dovah::form_stub_helpers::get_dialogue_topic_quest(&stub);
+                     quest_stub = dovah::form_stub_helpers::get_dialogue_topic_quest(stub);
                      break;
                   case dovah::form_type::topic_info:
-                     quest_stub = dovah::form_stub_helpers::get_dialogue_topic_quest(stub.get_parent_form());
+                     if (auto* topic = stub.get_parent_form())
+                        quest_stub = dovah::form_stub_helpers::get_dialogue_topic_quest(*topic);
                      break;
                }
                if (quest_stub) {

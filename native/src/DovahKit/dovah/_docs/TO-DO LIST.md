@@ -75,7 +75,6 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 ### Location (LCTN)
 * Since I last worked on it, I learned that some of its lists of forms are in fact of REFRs, and are coalesced in some way across all files.
   * Do these lists need to be updated as REFRs are moved in and out of a LCTN's bounds? We don't currently do that.
-  * Are some of the subrecords used as a "remove from list" function? We need to look into that. If so, then we'll need code and infra to get a LCTN's "computed lists." We can load the "computed list" for all files prior to the active file, and then maintain separate lists of additions and removals pertaining to the active file, to ensure reliable editing, saving, and serialization.
 
 ### Package (PACK)
 * Conditions can refer to a piece of package data on the condition's owning package; they refer to that data by index. If the package is edited and its data is rearranged, how do we find and update all referencing conditions?

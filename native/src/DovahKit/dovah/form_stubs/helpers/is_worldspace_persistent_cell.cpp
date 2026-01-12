@@ -10,6 +10,6 @@ namespace dovah::form_stub_helpers {
          return false;
       if (parent->form_type != form_type::worldspace)
          return false;
-      return &cell == get_worldspace_persistent_cell(parent);
+      return &cell == get_worldspace_persistent_cell(*parent);
    }
 }

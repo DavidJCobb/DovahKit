@@ -775,7 +775,7 @@ namespace dovah::loaded_forms {
                break;
          }
       }
-      uib.add_outbound_reference(owning_quest, use_info_entry::flag::dialogue_quest);
+      uib.add_outbound_reference(owning_quest, use_info::entry_flags::scene::parent_quest);
    }
    void Scene::_clone_impl(Form* out) const noexcept {
       assert(out->type == form_type);

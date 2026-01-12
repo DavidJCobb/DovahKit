@@ -107,7 +107,7 @@ namespace ui::types::packages {
          CASE(dovah::packages::package_data_type::target_selector);
          CASE(dovah::packages::package_data_type::topic);
          #undef CASE
-         #pragma pop_macro("CASE");
+         #pragma pop_macro("CASE")
       }
    }
 

@@ -13,6 +13,7 @@
 #include "components/model.h"
 #include "components/papyrus.h"
 #include "../utils/data_by_sex.h"
+#include "../use_info/entry_flags/armor.h"
 
 namespace dovah::loaded_forms {
    class Armor : public Form {
@@ -60,7 +61,7 @@ namespace dovah::loaded_forms {
             form_reference_t take; // YNAM
             form_reference_t drop; // ZNAM
          } sounds;
-         form_reference_t template_armor; // TNAM -> ARMO
+         unique_form_reference_t<use_info::entry_flags::armor::template_form> template_armor; // TNAM -> ARMO
          int32_t value = 0;  // DATA+0x00
          float   weight = 0; // DATA+0x04
          data_by_sex<world_model> world_models;

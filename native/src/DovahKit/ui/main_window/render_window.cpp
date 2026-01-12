@@ -56,7 +56,7 @@ RenderWindow::RenderWindow(QWidget* parent) : QWidget(parent) {
       auto& worldedit = dovahkit::subsystems::worldedit::core::get_or_create();
       worldedit.set_target_view(*view);
       QObject::connect(&worldedit, &dovahkit::subsystems::worldedit::core::refSelectionChanged, this, [this](dovah::form_stub& refr, bool selected) {
-         auto* base = dovah::form_stub_helpers::get_base_form(&refr);
+         auto* base = dovah::form_stub_helpers::get_base_form(refr);
          if (!base)
             return;
 

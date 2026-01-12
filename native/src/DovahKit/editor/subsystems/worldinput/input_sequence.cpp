@@ -459,6 +459,7 @@ namespace dovahkit::subsystems::worldinput {
          for (size_t i = 0; i < size; ++i) {
             assert(this->children[i] != nullptr);
             assert(other.children[i] != nullptr);
+            #pragma warning(suppress:5232) // recursion is intentional; this is a recursive data structure
             if (*this->children[i] != *other.children[i])
                return false;
          }

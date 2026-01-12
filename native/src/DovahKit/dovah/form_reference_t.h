@@ -2,7 +2,8 @@
 #include <cstdint>
 #include <vector>
 #include "./form_types.h"
-#include "./use_info_entry.h"
+#include "./use_info/entry_flag_underlying_type.h"
+#include "./use_info/entry_flag_to_mask.h"
 
 namespace dovah {
    namespace loaded_forms {
@@ -25,11 +26,11 @@ namespace dovah {
       friend class tes_file_reading::subrecord;
       friend class tes_file_writing::subrecord;
       protected:
-         form_stub* stub           = nullptr;
-         uint8_t    use_info_flags = 0;
+         form_stub* stub = nullptr;
+         use_info::entry_flag_underlying_type use_info_flags = 0;
          
-         explicit form_reference_t(uint8_t f) : use_info_flags(f) {}
-         explicit form_reference_t(uint8_t f, form_stub* s) : use_info_flags(f), stub(s) {}
+         explicit form_reference_t(use_info::entry_flag_underlying_type f) : use_info_flags(f) {}
+         explicit form_reference_t(use_info::entry_flag_underlying_type f, form_stub* s) : use_info_flags(f), stub(s) {}
          
       public:
          form_reference_t() {}
@@ -60,35 +61,24 @@ namespace dovah {
          inline form_reference_t& operator=(form_stub* other) { this->stub = other; return *this; };
    };
 
-   //
-   // Subclasses below automatically manage specific use info flags, for any special 
-   // relationships between forms.
    // 
-   // NOTE WHEN ADDING NEW SUBCLASSES:
+   // NOTE WHEN USING `unique_form_reference_t`:
    // 
    // Form types' `generate_use_info` functions generally pass the relevant use info 
    // flag manually, since as of this writing there's no way to actually extract it 
    // from the form_reference_t instance. When adding a new use info flag, then, you 
-   // will want to add both a subclass, as below, and to edit the referring form's 
-   // `generate_use_info` function to use the flag. TODO: Look into templating these 
-   // eventually and automating that...
+   // will want to edit the referring form's `generate_use_info` function to use the 
+   // flag. TODO: Look into templating these eventually and automating that...
    //
+   template<auto Flag>
+   class unique_form_reference_t : public form_reference_t {
+      public:
+         static constexpr const auto use_info_flag = Flag;
 
-   namespace impl {
-      template<use_info_entry::flag::type Flag>
-      class unique_form_reference_t : public form_reference_t {
-         static_assert(decltype(form_reference_t::use_info_flags)(Flag) == Flag, "The field we store use info flags in must be wide enough to store this flag.");
-         public:
-            unique_form_reference_t() : form_reference_t(Flag) {};
-            unique_form_reference_t(form_stub* s) : form_reference_t(Flag, s) {};
-      };
-   }
-
-   using base_form_reference_t       = impl::unique_form_reference_t<use_info_entry::flag::object_reference>;
-   using dialogue_branch_reference_t = impl::unique_form_reference_t<use_info_entry::flag::dialogue_branch>;
-   using dialogue_quest_reference_t  = impl::unique_form_reference_t<use_info_entry::flag::dialogue_quest>;
-   using water_acti_type_reference_t = impl::unique_form_reference_t<use_info_entry::flag::water_acti_type>;
-   using template_actor_reference_t  = impl::unique_form_reference_t<use_info_entry::flag::template_actor>;
+      public:
+         unique_form_reference_t() : form_reference_t(use_info::entry_flag_to_mask(Flag)) {};
+         unique_form_reference_t(form_stub* s) : form_reference_t(use_info::entry_flag_to_mask(Flag), s) {};
+   };
 
    extern void clear_form_reference_list(
       std::vector<form_reference_t>&,

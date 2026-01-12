@@ -1,20 +1,16 @@
 #include "./update_location_content.h"
 #include "../data/hardcoded_form_ids.h"
 #include "../form_stubs/helpers/for_each_child_form.h"
+#include "../form_stubs/helpers/get_assigned_location.h"
 #include "../form_stubs/helpers/get_base_form.h"
+#include "../form_stubs/helpers/get_location_ref_type.h"
 #include "../form_stubs/helpers/get_worldspace_persistent_cell.h"
 #include "../form_stubs/helpers/is_persistent.h"
 #include "../forms/ActorBase.h"
-#include "../forms/Cell.h"
 #include "../forms/DefaultObjectManager.h"
-#include "../forms/EncounterZone.h"
 #include "../forms/Location.h"
 #include "../forms/ObjectReference.h"
-#include "../forms/Worldspace.h"
 #include "../forms/components/extra_data/types/e/enable_state_parent.h"
-#include "../forms/components/extra_data/types/e/encounter_zone.h"
-#include "../forms/components/extra_data/types/l/location.h"
-#include "../forms/components/extra_data/types/l/location_ref_type.h"
 #include "./get_computed_location.h"
 
 namespace {
@@ -26,14 +22,14 @@ namespace {
 namespace dovah::utils {
    void update_location_content::_crawl_special_refs(form_stub& cell_or_world) {
       if (cell_or_world.form_type == form_type::cell) {
-         form_stub_helpers::for_each_child_form(&cell_or_world, [this](form_stub* child) {
-            if (!form_type_is_reference(child->form_type))
+         form_stub_helpers::for_each_child_form(cell_or_world, [this](form_stub& child) {
+            if (!form_type_is_reference(child.form_type))
                return;
-            if (child->is_deleted())
+            if (child.is_deleted())
                return;
-            if (!_get_loc_ref_type(*child))
+            if (!_get_loc_ref_type(child))
                return;
-            this->content.special_refs.push_back(child);
+            this->content.special_refs.push_back(&child);
          });
          return;
       }
@@ -43,84 +39,33 @@ namespace dovah::utils {
          // this is because persistent-flagged cells should only contain persistent-flagged 
          // refs, which wouldn't need to be cached by LCTN... but that's just a guess.
          //
-         auto* pcell = form_stub_helpers::get_worldspace_persistent_cell(&cell_or_world);
-         if (pcell && !form_stub_helpers::is_persistent(pcell)) {
+         auto* pcell = form_stub_helpers::get_worldspace_persistent_cell(cell_or_world);
+         if (pcell && !form_stub_helpers::is_persistent(*pcell)) {
             if (!this->location || get_computed_location(*pcell) == this->location)
                this->_crawl_special_refs(*pcell);
          }
-         form_stub_helpers::for_each_child_form(&cell_or_world, [this](form_stub* cell) {
-            if (cell->form_type != form_type::cell)
+         form_stub_helpers::for_each_child_form(cell_or_world, [this](form_stub& cell) {
+            if (cell.form_type != form_type::cell)
                return;
             if (form_stub_helpers::is_persistent(cell))
                return;
-            if (!this->location || get_computed_location(*cell) == this->location)
-               this->_crawl_special_refs(*cell);
+            if (!this->location || get_computed_location(cell) == this->location)
+               this->_crawl_special_refs(cell);
          });
          return;
       }
    }
-   /*static*/ form_stub* update_location_content::_get_encounter_zone(form_stub& form) {
-      if (form.form_type == form_type::cell) {
-         if (auto loaded = form.load().ptr_cast<loaded_forms::Cell>()) {
-            auto* extra = loaded->extra_data.get<extra_data_types::encounter_zone>();
-            if (extra && extra->form)
-               return extra->form.get_form_stub();
-         }
-         if (auto* world = _get_containing_world(form))
-            return _get_encounter_zone(*world);
-      } else if (form.form_type == form_type::worldspace) {
-         if (auto loaded = form.load().ptr_cast<loaded_forms::Worldspace>())
-            return loaded->encounter_zone.get_form_stub();
-      }
-      return nullptr;
-   }
    /*static*/ form_stub* update_location_content::_get_explicit_location(form_stub& form) {
-      if (form_type_is_reference(form.form_type)) {
-         auto loaded = form.load().ptr_cast<loaded_forms::ObjectReference>();
-         if (!loaded)
-            return nullptr;
-         auto* extra = loaded->extra_data.get<extra_data_types::location>();
-         if (!extra)
-            return nullptr;
-         return extra->form.get_form_stub();
-      }
-      switch (form.form_type) {
-         case form_type::cell:
-            {
-               auto loaded = form.load().ptr_cast<loaded_forms::Cell>();
-               if (!loaded)
-                  break;
-               auto* extra = loaded->extra_data.get<extra_data_types::location>();
-               if (!extra)
-                  break;
-               return extra->form.get_form_stub();
-            }
-            break;
-         case form_type::encounter_zone:
-            {
-               auto loaded = form.load().ptr_cast<loaded_forms::EncounterZone>();
-               if (loaded)
-                  return loaded->location.get_form_stub();
-            }
-            break;
-         case form_type::worldspace:
-            {
-               auto loaded = form.load().ptr_cast<loaded_forms::Worldspace>();
-               if (loaded)
-                  return loaded->location.get_form_stub();
-            }
-            break;
-      }
+      auto* loc = form_stub_helpers::get_assigned_location(form);
+      if (loc && loc->form_type == dovah::form_type::location)
+         return loc;
       return nullptr;
    }
    /*static*/ form_stub* update_location_content::_get_loc_ref_type(form_stub& ref) {
-      auto loaded_refr = ref.load().ptr_cast<loaded_forms::ObjectReference>();
-      if (!loaded_refr)
-         return nullptr;
-      auto* extra = loaded_refr->extra_data.get<extra_data_types::location_ref_type>();
-      if (!extra)
-         return nullptr;
-      return extra->form.get_form_stub();
+      auto* lrt = form_stub_helpers::get_location_ref_type(ref);
+      if (lrt && lrt->form_type == form_type::location_ref_type)
+         return lrt;
+      return nullptr;
    }
    /*static*/ form_stub* update_location_content::_get_containing_world(form_stub& cell) {
       if (cell.form_type != form_type::cell)
@@ -176,7 +121,7 @@ namespace dovah::utils {
                continue;
             this->content.persist_loc_refs.push_back(stub); // *CSR
 
-            auto* base = form_stub_helpers::get_base_form(stub);
+            auto* base = form_stub_helpers::get_base_form(*stub);
             if (base && !base->is_deleted() && _is_unique_actor(*base))
                this->content.unique_actors.push_back(stub); // *CUN
          } else if (stub->form_type == form_type::cell) {
@@ -352,7 +297,7 @@ namespace dovah::utils {
          auto _append = [loaded](auto& list, form_stub& stub) {
             auto& item = list.emplace_back();
             item.actor.set(*loaded, &stub);
-            item.actor_base.set(*loaded, form_stub_helpers::get_base_form(&stub));
+            item.actor_base.set(*loaded, form_stub_helpers::get_base_form(stub));
             //
             // Editor location:
             //

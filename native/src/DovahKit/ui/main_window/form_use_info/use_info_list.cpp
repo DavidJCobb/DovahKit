@@ -2,6 +2,9 @@
 #include <QHeaderView>
 #include <QLineEdit>
 #include "helpers/qt/strings.h"
+#include "dovah/use_info/entry_flag_to_mask.h"
+#include "dovah/use_info/entry_flags/base.h"
+#include "dovah/use_info/entry_flags/reference.h"
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/open_window_for_form.h"
@@ -35,8 +38,10 @@ namespace {
 }
 
 #pragma region FormUseInfoListModel
-FormUseInfoListModelItem::FormUseInfoListModelItem(const dovah::use_info_entry* source) {
-   bool is_reference = (source->flags & data_t::flag::object_reference) != 0;
+FormUseInfoListModelItem::FormUseInfoListModelItem(const dovah::use_info::entry* source) {
+   bool is_reference = false;
+   if (source->other)
+      is_reference = dovah::form_type_is_reference(source->other->form_type) && source->flags & dovah::use_info::entry_flag_to_mask(dovah::use_info::entry_flags::reference::base_form);
    //
    this->flags       = source->flags;
    this->countUsed   = source->refcount;
@@ -51,7 +56,9 @@ FormUseInfoListModelItem::FormUseInfoListModelItem(const dovah::use_info_entry* 
    }
 }
 void FormUseInfoListModelItem::updateFromStub() {
-   bool is_reference = (this->flags & data_t::flag::object_reference) != 0;
+   bool is_reference = false;
+   if (this->otherStub)
+      is_reference = dovah::form_type_is_reference(this->otherStub->form_type) && this->flags & dovah::use_info::entry_flag_to_mask(dovah::use_info::entry_flags::reference::base_form);
    auto stub = this->otherStub;
    //
    this->otherID   = stub->formID;
@@ -90,7 +97,9 @@ void FormUseInfoListModelItem::updateUseInfo(const form_stub& used_form) {
    this->countUsed   = 0;
 }
 void FormUseInfoListModelItem::updateUseInfo(const data_t& source) {
-   bool is_reference = (source.flags & data_t::flag::object_reference) != 0;
+   bool is_reference = false;
+   if (source.other)
+      is_reference = dovah::form_type_is_reference(source.other->form_type) && source.flags & dovah::use_info::entry_flag_to_mask(dovah::use_info::entry_flags::reference::base_form);
    //
    this->flags       = source.flags;
    this->countUsed   = source.refcount;
@@ -111,24 +120,26 @@ FormUseInfoListModel::FormUseInfoListModel(QObject* parent) : QAbstractTableMode
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,      this, &FormUseInfoListModel::clear);
 }
 void FormUseInfoListModel::addUser(const use_info_entry& entry, bool queued) {
-   using _ue_flag = dovah::use_info_entry::flag;
    //
    // Do not list child forms as "using" their parents, in the UI. The entry 
    // we process here will always be an inbound entry.
    //
-   if (entry.flags & (_ue_flag::parent_child)) {
+   if (entry.flags & dovah::use_info::entry_flag_to_mask(dovah::use_info::entry_flags::base::parent)) {
       if (entry.refcount <= 1)
          return;
    }
+   bool is_reference = false;
+   if (entry.other)
+      is_reference = dovah::form_type_is_reference(entry.other->form_type) && entry.flags & dovah::use_info::entry_flag_to_mask(dovah::use_info::entry_flags::reference::base_form);
    //
    switch (this->mode) {
       case relationship_mode::general_only:
-         if (entry.flags & _ue_flag::object_reference)
+         if (is_reference)
             if (entry.refcount <= 1)
                return;
          break;
       case relationship_mode::base_form_only:
-         if (!(entry.flags & _ue_flag::object_reference))
+         if (!is_reference)
             return;
          break;
    }
@@ -383,7 +394,6 @@ void FormUseInfoListModel::build(const dovah::form_stub* used) {
    this->used = used;
    auto& queued = this->queued_additions;
    //
-   using _ue_flag = dovah::use_info_entry::flag;
    for (auto& pair : used->inbound)
       this->addUser(pair.second, true);
    if (queued.size() == 0)

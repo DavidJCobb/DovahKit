@@ -62,7 +62,7 @@ void FormSubdialogTopicInfoResponse::importFrom(const loaded_form_type& src_form
 
    auto* info  = &src_form.stub;
    auto* topic = info->get_parent_form();
-   auto* quest = dovah::form_stub_helpers::get_dialogue_topic_quest(topic);
+   auto* quest = topic ? dovah::form_stub_helpers::get_dialogue_topic_quest(*topic) : nullptr;
    {  // Topic Text and Prompt preview
       {
          auto prompt = editor.convert_localized_string(src_form.override_topic_text);

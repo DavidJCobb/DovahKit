@@ -1,6 +1,8 @@
 #include "./form_stub_use_info_builder.h"
 #include "./form_stub.h"
 #include "./form_stub_use_info_builder_form_specific_data.h"
+#include "./use_info/entry.h"
+#include "./use_info/entry_flags/base.h"
 
 namespace dovah {
    form_stub_use_info_builder::form_stub_use_info_builder(form_stub& s) : _stub(s) {
@@ -12,41 +14,14 @@ namespace dovah {
       }
    }
 
-   void form_stub_use_info_builder::add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {
-      if (++this->_pending.size < preallocated_array_size) {
-         this->_pending.fixed[this->_pending.size - 1] = _pending_entry(to_stub, flags);
-      } else {
-         this->_pending.extra.emplace_back(to_stub, flags);
-      }
-   }
-   void form_stub_use_info_builder::add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
+   void form_stub_use_info_builder::add_outbound_reference(uint32_t toFormID, use_info::entry_flag_underlying_type flags) {
       if (++this->_pending.size < preallocated_array_size) {
          this->_pending.fixed[this->_pending.size - 1] = _pending_entry(toFormID, flags);
       } else {
          this->_pending.extra.emplace_back(toFormID, flags);
       }
    }
-   void form_stub_use_info_builder::cancel_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags) {
-      auto full = this->_pending.size;
-      auto size = std::min(full, preallocated_array_size);
-      for (size_t i = 0; i < size; ++i) {
-         auto& entry = this->_pending.fixed[i];
-         if (entry.target_stub == to_stub && entry.flags == flags) {
-            entry = _pending_entry();
-            return;
-         }
-      }
-      auto& list = this->_pending.extra;
-      size = list.size();
-      for (size_t i = 0; i < size; ++i) {
-         auto& entry = list[i];
-         if (entry.target_stub == to_stub && entry.flags == flags) {
-            list.erase(list.begin() + i);
-            return;
-         }
-      }
-   }
-   void form_stub_use_info_builder::cancel_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags) {
+   void form_stub_use_info_builder::cancel_outbound_reference(uint32_t toFormID, use_info::entry_flag_underlying_type flags) {
       auto full = this->_pending.size;
       auto size = std::min(full, preallocated_array_size);
       for (size_t i = 0; i < size; ++i) {
@@ -114,12 +89,12 @@ namespace dovah {
       this->_pending.extra.clear();
    }
    void form_stub_use_info_builder::clear_all_prior_use_info() const noexcept {
-      use_info_entry parent_entry;
+      use_info::entry parent_entry;
       //
       auto& stub = this->_stub;
       for (auto& pair : stub.outbound) {
          auto& entry = pair.second;
-         if (entry.flags & use_info_entry::flag::parent_child)
+         if (entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent))
             parent_entry = entry;
       }
       stub.outbound.clear();

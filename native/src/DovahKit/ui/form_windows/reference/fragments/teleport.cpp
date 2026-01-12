@@ -281,7 +281,7 @@ namespace ui::reference::fragments {
    }
 
    bool teleport::_is_legal_teleport_destination(dovah::form_stub& ref) const {
-      auto* base = dovah::form_stub_helpers::get_base_form(&ref);
+      auto* base = dovah::form_stub_helpers::get_base_form(ref);
       if (!base || base->form_type != dovah::form_type::door) {
          return false;
       }

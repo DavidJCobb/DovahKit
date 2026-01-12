@@ -1,6 +1,8 @@
 #include "./context.h"
 
+#include "../../../form_stubs/helpers/get_unique_outbound_use.h"
 #include "../../../form_stub.h"
+#include "../../../use_info/entry_flags/topic.h"
 #include "../../Package.h"
 #include "../../Quest.h"
 #include "../../Scene.h"
@@ -21,13 +23,13 @@ namespace dovah::loaded_forms::components::conditions {
             this->quest = loaded->owning_quest.get_form_stub();
          }
       } else if (owner.form_type == form_type::topic) {
-         auto* quest = owner.get_outbound_use_with_flag(dovah::use_info_entry::flag::dialogue_quest);
+         auto* quest = form_stub_helpers::get_unique_outbound_use<use_info::entry_flags::topic::parent_quest>(owner);
          if (quest->form_type == dovah::form_type::quest)
             this->quest = quest;
       } else if (owner.form_type == form_type::topic_info) {
          auto* parent = owner.get_parent_form();
          if (parent && parent->form_type == dovah::form_type::topic) {
-            auto* quest = parent->get_outbound_use_with_flag(dovah::use_info_entry::flag::dialogue_quest);
+            auto* quest = form_stub_helpers::get_unique_outbound_use<use_info::entry_flags::topic::parent_quest>(*parent);
             if (quest->form_type == dovah::form_type::quest)
                this->quest = quest;
          }

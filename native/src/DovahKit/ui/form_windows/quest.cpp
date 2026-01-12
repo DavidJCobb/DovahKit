@@ -276,12 +276,13 @@ void FormDialogQuest::_save_impl() {
 
 #include <QApplication>
 #include "dovah/data/dialogue/topic_subtype.h"
+#include "dovah/form_stubs/helpers/for_each_quest_scene.h"
 #include "dovah/form_stubs/helpers/get_dialogue_branch_quest.h"
 #include "dovah/form_stubs/helpers/get_dialogue_topic_quest.h"
 #include "dovah/forms/Topic.h"
 
 void FormDialogQuest::focus_dialogue_branch(dovah::form_stub& stub) {
-   auto* quest = dovah::form_stub_helpers::get_dialogue_branch_quest(&stub);
+   auto* quest = dovah::form_stub_helpers::get_dialogue_branch_quest(stub);
    if (quest != this->formStub())
       return;
 
@@ -290,7 +291,7 @@ void FormDialogQuest::focus_dialogue_branch(dovah::form_stub& stub) {
    this->subwidgets.dialogue_tab_bodies.player->select_branch(&stub);
 }
 void FormDialogQuest::focus_dialogue_topic(dovah::form_stub& stub, dovah::form_stub* info) {
-   auto* quest = dovah::form_stub_helpers::get_dialogue_topic_quest(&stub);
+   auto* quest = dovah::form_stub_helpers::get_dialogue_topic_quest(stub);
    if (quest != this->formStub())
       return;
 
@@ -315,28 +316,21 @@ void FormDialogQuest::focus_dialogue_topic(dovah::form_stub& stub, dovah::form_s
       case dovah::dialogue::category::scene:
          this->ui.tabWidget->setCurrentWidget(this->ui.tabScenes);
          {
-            dovah::form_stub* scene = nullptr;
             dovah::form_stub* topic = &stub;
-            for (auto& use : this->formStub()->inbound) {
-               if (!(use.second.flags & dovah::use_info_entry::flag::dialogue_quest))
-                  continue;
-               auto* stub = use.second.other;
-               if (stub->form_type != dovah::form_type::scene)
-                  continue;
-
+            dovah::form_stub_helpers::for_each_quest_scene(*this->formStub(), [this, topic, &info](dovah::form_stub& scene) {
                bool refers_to_topic = false;
-               for (auto& use : stub->outbound) {
+               for (auto& use : scene.outbound) {
                   if (use.second.other == topic) {
                      refers_to_topic = true;
                      break;
                   }
                }
                if (!refers_to_topic)
-                  continue;
+                  return false;
 
-               auto loaded = stub->load().ptr_cast<dovah::loaded_forms::Scene>();
+               auto loaded = scene.load().ptr_cast<dovah::loaded_forms::Scene>();
                if (!loaded)
-                  continue;
+                  return false;
 
                for (const auto& action : loaded->actions) {
                   auto* variant = std::get_if<dovah::loaded_forms::Scene::action::dialogue_data>(&action.data);
@@ -345,11 +339,12 @@ void FormDialogQuest::focus_dialogue_topic(dovah::form_stub& stub, dovah::form_s
                   if (variant->topic != topic)
                      continue;
 
-                  this->tabs.scenes->select_scene(stub);
+                  this->tabs.scenes->select_scene(&scene);
                   this->tabs.scenes->focus_dialogue_forms(action.action_id, topic, info);
-                  return;
+                  return true;
                }
-            }
+               return false;
+            });
          }
          return;
       case dovah::dialogue::category::favor_dialogue:

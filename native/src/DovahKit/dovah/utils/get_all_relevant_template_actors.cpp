@@ -11,7 +11,7 @@ namespace dovah {
       relevant_template_actors out;
       out.subject = &subject_actor;
 
-      if (!form_stub_helpers::get_template_actor(&subject_actor))
+      if (!form_stub_helpers::get_template_actor(subject_actor))
          return out;
 
       auto loaded = subject_actor.load().ptr_cast<loaded_form_type>();
@@ -27,7 +27,7 @@ namespace dovah {
          form_stub* current = &subject_actor;
          std::vector<form_stub*> seen_actors = { current };
          do {
-            auto* tmpl = form_stub_helpers::get_template_actor(current);
+            auto* tmpl = form_stub_helpers::get_template_actor(*current);
             if (!tmpl)
                break;
             if (std::find(seen_actors.begin(), seen_actors.end(), tmpl) != seen_actors.end())

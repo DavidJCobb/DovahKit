@@ -13,8 +13,8 @@ namespace dovah::loaded_forms::components::extra_data_types {
          ammo() : extra_data(all_extra_data_types::index_of_type<ammo>) {}
 
       public:
-         form_reference_t type;  // XAMT
-         uint32_t         count; // XAMC (loads only after XAMT)
+         form_reference_t type;      // XAMT
+         uint32_t         count = 0; // XAMC (loads only after XAMT)
 
       public:
          virtual subrecord_load_result load(tes_file_reading::subrecord&, load_interface_t&) override;

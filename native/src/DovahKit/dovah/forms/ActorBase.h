@@ -19,6 +19,7 @@
 #include "../data/sex.h"
 #include "../utils/data_by_actor_attribute.h"
 #include "../utils/data_by_skill.h"
+#include "../use_info/entry_flags/actor_base.h"
 
 namespace dovah::loaded_forms {
    class ActorBase : public Form {
@@ -221,8 +222,8 @@ namespace dovah::loaded_forms {
             form_reference_t combat_style; // ZNAM
          } stats;
          struct {
-            template_actor_reference_t actor;     // TPLT
-            template_flags_t           flags = 0; // ABCS+0x12
+            unique_form_reference_t<use_info::entry_flags::actor_base::template_actor> actor; // TPLT
+            template_flags_t flags = 0; // ABCS+0x12
          } template_data;
          //
          structs::actor_creature_sounds creature_sounds;

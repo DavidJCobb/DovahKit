@@ -5,6 +5,8 @@
 #include "../../push_native_object.h"
 #include "../../wrapper.h"
 
+#include "../../../dovah/form_stubs/helpers/get_unique_outbound_use.h"
+#include "../../../dovah/use_info/entry_flags/topic.h"
 #include "../../../dovah/form_stub_addenda.h"
 #include "../../../dovah/forms/Topic.h"
 
@@ -50,7 +52,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.stub)
             return 0;
-         auto* parent = self.stub->get_outbound_use_with_flag(dovah::use_info_entry::flag::dialogue_branch);
+         auto* parent = dovah::form_stub_helpers::get_unique_outbound_use<dovah::use_info::entry_flags::topic::parent_branch>(*self.stub);
          if (parent->form_type != dovah::form_type::dialogue_branch)
             return 0;
          return push_native_object(parent);
@@ -59,7 +61,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.stub)
             return 0;
-         auto* parent = self.stub->get_outbound_use_with_flag(dovah::use_info_entry::flag::dialogue_quest);
+         auto* parent = dovah::form_stub_helpers::get_unique_outbound_use<dovah::use_info::entry_flags::topic::parent_quest>(*self.stub);
          if (parent->form_type != dovah::form_type::quest)
             return 0;
          return push_native_object(parent);

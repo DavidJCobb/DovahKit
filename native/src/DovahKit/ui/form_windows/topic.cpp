@@ -28,13 +28,13 @@ FormDialogTopic::FormDialogTopic(dovah::form_stub& stub, QWidget* parent) : QDia
          // have to avoid using its subtype. Let's verify that it isn't a *newly-added* 
          // sibling of ours.
          //
-         auto* our_branch   = dovah::form_stub_helpers::get_dialogue_topic_branch(this->formStub());
-         auto* their_branch = dovah::form_stub_helpers::get_dialogue_topic_branch(stub);
+         auto* our_branch   = dovah::form_stub_helpers::get_dialogue_topic_branch(*this->formStub());
+         auto* their_branch = dovah::form_stub_helpers::get_dialogue_topic_branch(*stub);
          if (our_branch != their_branch)
             return;
          if (!our_branch) {
-            auto* our_quest   = dovah::form_stub_helpers::get_dialogue_topic_quest(this->formStub());
-            auto* their_quest = dovah::form_stub_helpers::get_dialogue_topic_quest(stub);
+            auto* our_quest   = dovah::form_stub_helpers::get_dialogue_topic_quest(*this->formStub());
+            auto* their_quest = dovah::form_stub_helpers::get_dialogue_topic_quest(*stub);
             if (our_quest != their_quest)
                return;
          }
@@ -86,11 +86,11 @@ void FormDialogTopic::_load_impl() {
       // This topic contains SharedInfos. If any are in use by other Infos, then disallow changing 
       // the subtype.
       //
-      dovah::form_stub_helpers::for_each_child_form(&working.stub, [this](dovah::form_stub* child) -> bool {
-         if (child->form_type != dovah::form_type::topic_info)
+      dovah::form_stub_helpers::for_each_child_form(working.stub, [this](dovah::form_stub& child) -> bool {
+         if (child.form_type != dovah::form_type::topic_info)
             return false;
 
-         for (const auto& pair : child->inbound) {
+         for (const auto& pair : child.inbound) {
             auto* other = pair.second.other;
             if (!other || other->form_type != dovah::form_type::topic_info)
                continue;
@@ -98,7 +98,7 @@ void FormDialogTopic::_load_impl() {
             auto loaded = other->load().ptr_cast<dovah::loaded_forms::TopicInfo>();
             if (!loaded)
                continue;
-            if (loaded->use_shared_info.get_form_stub() == child) {
+            if (loaded->use_shared_info.get_form_stub() == &child) {
                this->_any_shared_infos_in_use = true;
                return true;
             }
@@ -184,10 +184,10 @@ void FormDialogTopic::_update_available_subtypes() {
 
    dovah::form_stub* branch = nullptr;
    dovah::form_stub* quest  = nullptr;
-   if (branch = dovah::form_stub_helpers::get_dialogue_topic_branch(this->formStub())) {
-      quest = dovah::form_stub_helpers::get_dialogue_branch_quest(branch);
+   if (branch = dovah::form_stub_helpers::get_dialogue_topic_branch(*this->formStub())) {
+      quest = dovah::form_stub_helpers::get_dialogue_branch_quest(*branch);
    } else {
-      quest = dovah::form_stub_helpers::get_dialogue_topic_quest(this->formStub());
+      quest = dovah::form_stub_helpers::get_dialogue_topic_quest(*this->formStub());
    }
    
    if (const auto& opt = this->_initial_category; opt.has_value()) {
@@ -202,27 +202,27 @@ void FormDialogTopic::_update_available_subtypes() {
    }
    
    this->_subtypes.sibling_topics.clear();
-   auto _handle_other_topic = [this, &subtypes](dovah::form_stub* other) {
-      if (other == this->formStub())
+   auto _handle_other_topic = [this, &subtypes](dovah::form_stub& other) {
+      if (&other == this->formStub())
          return;
-      if (other->is_deleted())
+      if (other.is_deleted())
          return;
-      auto loaded = other->load().ptr_cast<loaded_form_type>();
+      auto loaded = other.load().ptr_cast<loaded_form_type>();
       if (!loaded)
          return;
       auto i = dovah::dialogue::topic_subtype_signature_to_index(loaded->subtype);
       if (i == (size_t)-1)
          return;
-      this->_subtypes.sibling_topics.push_back(other);
+      this->_subtypes.sibling_topics.push_back(&other);
 
       auto& dfn = dovah::dialogue::all_topic_subtypes[i];
       if (!dfn.is_reusable)
          subtypes.reset(i);
    };
-   if (branch = dovah::form_stub_helpers::get_dialogue_topic_branch(this->formStub())) {
-      dovah::form_stub_helpers::for_each_dialogue_branch_topic(branch, _handle_other_topic);
+   if (branch = dovah::form_stub_helpers::get_dialogue_topic_branch(*this->formStub())) {
+      dovah::form_stub_helpers::for_each_dialogue_branch_topic(*branch, _handle_other_topic);
    } else {
-      dovah::form_stub_helpers::for_each_quest_topic(quest, _handle_other_topic);
+      dovah::form_stub_helpers::for_each_quest_topic(*quest, _handle_other_topic);
    }
 
    auto*  widget  = this->ui.subtype;

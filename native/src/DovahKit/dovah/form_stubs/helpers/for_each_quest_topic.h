@@ -2,7 +2,8 @@
 #include <type_traits>
 #include "../../form_stub.h"
 #include "../../form_types.h"
-#include "../../use_info_entry.h"
+#include "../../use_info/entry_flags/topic.h"
+#include "./for_each_inbound_use_with_flag.h"
 
 namespace dovah::form_stub_helpers {
    //
@@ -13,23 +14,10 @@ namespace dovah::form_stub_helpers {
    // Note that this grabs all topics, including those that have a containing 
    // dialogue branch.
    //
-   template<typename Functor> requires std::is_invocable_v<Functor, form_stub*>
-   void for_each_quest_topic(const form_stub* quest, Functor&& functor) {
-      if (!quest || quest->form_type != form_type::quest)
+   template<typename Functor> requires std::is_invocable_v<Functor, form_stub&>
+   void for_each_quest_topic(const form_stub& quest, Functor&& functor) {
+      if (quest.form_type != form_type::quest)
          return;
-      for (auto& pair : quest->inbound) {
-         auto& entry = pair.second;
-         if (entry.flags & use_info_entry::flag::dialogue_quest) {
-            auto* child = entry.other;
-            if (!child || child->form_type != form_type::topic)
-               continue;
-            if constexpr (std::is_invocable_r_v<bool, Functor, form_stub*>) {
-               if (functor(child))
-                  break;
-            } else {
-               functor(child);
-            }
-         }
-      }
+      for_each_inbound_use_with_flag<use_info::entry_flags::topic::parent_quest>(quest, functor);
    }
 }

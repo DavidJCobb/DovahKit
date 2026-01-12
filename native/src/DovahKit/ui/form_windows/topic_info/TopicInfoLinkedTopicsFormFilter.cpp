@@ -7,7 +7,7 @@
       return false;
    if (!this->_model || !this->_quest)
       return false;
-   if (dovah::form_stub_helpers::get_dialogue_topic_quest(&stub) != this->_quest)
+   if (dovah::form_stub_helpers::get_dialogue_topic_quest(stub) != this->_quest)
       return false;
    if (this->_model->containsTopic(&stub))
       return false;

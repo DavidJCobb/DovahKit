@@ -10,6 +10,7 @@
 #include "components/papyrus.h"
 #include "structs/world_large_ref_data.h"
 #include "structs/world_max_height_data.h"
+#include "../use_info/entry_flags/worldspace.h"
 
 namespace dovah::loaded_forms {
    class Worldspace : public Form {
@@ -80,8 +81,8 @@ namespace dovah::loaded_forms {
          } center_cell_coordinates; // WCTR // for fixed-dimension worldspaces only?
          form_reference_t climate;           // CNAM
          form_reference_t lighting_template; // LTMP
-         form_reference_t encounter_zone;    // XEZN // Uses the same signature as an extra-data type, but isn't loaded as extra-data.
-         form_reference_t location;          // XLCN // Uses the same signature as an extra-data type, but isn't loaded as extra-data.
+         unique_form_reference_t<use_info::entry_flags::worldspace::encounter_zone> encounter_zone; // XEZN // Uses the same signature as an extra-data type, but isn't loaded as extra-data.
+         unique_form_reference_t<use_info::entry_flags::worldspace::location>       location;       // XLCN // Uses the same signature as an extra-data type, but isn't loaded as extra-data.
          form_reference_t music;             // ZNAM
          form_reference_t water_type;        // NAM2
          form_reference_t water_type_lod;    // NAM3
@@ -91,7 +92,7 @@ namespace dovah::loaded_forms {
             float default_water_height =     0.0F;
          } land_data; // DNAM
          struct {
-            form_reference_t form; // WNAM
+            unique_form_reference_t<use_info::entry_flags::worldspace::parent_worldspace> form; // WNAM
             uint16_t flags = 0; // PNAM
          } parent;
          std::string map_icon; // ICON

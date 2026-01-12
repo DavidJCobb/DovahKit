@@ -2,7 +2,8 @@
 #include <type_traits>
 #include "../../form_stub.h"
 #include "../../form_types.h"
-#include "../../use_info_entry.h"
+#include "../../use_info/entry_flags/base.h"
+#include "./for_each_inbound_use_with_flag.h"
 
 namespace dovah::form_stub_helpers {
    //
@@ -10,25 +11,10 @@ namespace dovah::form_stub_helpers {
    // has a boolean return type, then returning true will break out of the loop 
    // early.
    //
-   template<typename Functor> requires std::is_invocable_v<Functor, form_stub*>
-   void for_each_child_form(const form_stub* parent, Functor&& functor) {
-      if (!parent)
+   template<typename Functor> requires std::is_invocable_v<Functor, form_stub&>
+   void for_each_child_form(const form_stub& parent, Functor&& functor) {
+      if (!(form_type_info::lookup(parent.form_type).flags & form_type_info::flag::can_have_children))
          return;
-      if (!(form_type_info::lookup(parent->form_type).flags & form_type_info::flag::can_have_children))
-         return;
-      for (auto& pair : parent->inbound) {
-         auto& entry = pair.second;
-         if (entry.flags & use_info_entry::flag::parent_child) {
-            auto* child = entry.other;
-            if (!child)
-               continue;
-            if constexpr (std::is_invocable_r_v<bool, Functor, form_stub*>) {
-               if (functor(child))
-                  break;
-            } else {
-               functor(child);
-            }
-         }
-      }
+      for_each_inbound_use_with_flag<use_info::entry_flags::base::parent>(parent, functor);
    }
 }

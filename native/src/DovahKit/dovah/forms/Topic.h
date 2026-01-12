@@ -7,6 +7,7 @@
 #include "../data/dialogue/category.h"
 #include "components/conditions.h"
 #include "components/papyrus.h"
+#include "../use_info/entry_flags/topic.h"
 
 namespace dovah::loaded_forms {
    class Topic : public Form {
@@ -34,8 +35,8 @@ namespace dovah::loaded_forms {
          using subtype_index = uint16_t;
 
          struct {
-            dialogue_branch_reference_t branch; // BNAM
-            dialogue_quest_reference_t  quest;  // QNAM
+            unique_form_reference_t<use_info::entry_flags::topic::parent_branch> branch; // BNAM
+            unique_form_reference_t<use_info::entry_flags::topic::parent_quest>  quest;  // QNAM
          } owning_forms;
          localized_string text; // FULL // player's dialogue
          struct {

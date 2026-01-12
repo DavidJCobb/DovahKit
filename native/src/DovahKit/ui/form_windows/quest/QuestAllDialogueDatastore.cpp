@@ -486,7 +486,7 @@
    }
    QuestAllDialogueDatastore::Topic* QuestAllDialogueDatastore::_item_for_topic_stub(const dovah::form_stub& stub) const {
       assert(stub.form_type == dovah::form_type::topic);
-      auto* branch_stub = dovah::form_stub_helpers::get_dialogue_topic_branch(&stub);
+      auto* branch_stub = dovah::form_stub_helpers::get_dialogue_topic_branch(stub);
       if (branch_stub) {
          if (auto* branch = this->_item_for_branch_stub(*branch_stub))
             for (auto* item : branch->topics)
@@ -512,7 +512,7 @@
             break;
          }
       } else {
-         auto* branch_stub = dovah::form_stub_helpers::get_dialogue_topic_branch(&stub);
+         auto* branch_stub = dovah::form_stub_helpers::get_dialogue_topic_branch(stub);
          if (branch_stub) {
             auto* branch = _item_for_branch_stub(*branch_stub);
             if (branch) {
@@ -548,14 +548,14 @@
       if (!stub)
          return;
 
-      dovah::form_stub_helpers::for_each_quest_dialogue_branch(stub, [this](dovah::form_stub* branch_stub) {
-         this->_add_branch_to_datastore(*branch_stub);
+      dovah::form_stub_helpers::for_each_quest_dialogue_branch(*stub, [this](dovah::form_stub& branch_stub) {
+         this->_add_branch_to_datastore(branch_stub);
       });
-      dovah::form_stub_helpers::for_each_quest_topic(stub, [this](dovah::form_stub* topic_stub) {
+      dovah::form_stub_helpers::for_each_quest_topic(*stub, [this](dovah::form_stub& topic_stub) {
          auto* bs = dovah::form_stub_helpers::get_dialogue_topic_branch(topic_stub);
          if (bs)
             return;
-         this->_add_branchless_topic_to_datastore(*topic_stub);
+         this->_add_branchless_topic_to_datastore(topic_stub);
       });
       emit this->on_filled();
    }
@@ -725,18 +725,18 @@
       topic->stub = &stub;
       topic->recache_from_stub();
       
-      auto _handle_info = [this, topic](dovah::form_stub* child) {
-         if (child->form_type != dovah::form_type::topic_info)
+      auto _handle_info = [this, topic](dovah::form_stub& child) {
+         if (child.form_type != dovah::form_type::topic_info)
             return;
-         this->_add_info_to_datastore(*topic, *child);
+         this->_add_info_to_datastore(*topic, child);
       };
 
       if (const auto* addenda = stub.addenda) {
          for (auto* child : addenda->ordered_children.active_file) {
-            _handle_info(child);
+            _handle_info(*child);
          }
       } else {
-         dovah::form_stub_helpers::for_each_child_form(&stub, _handle_info);
+         dovah::form_stub_helpers::for_each_child_form(stub, _handle_info);
       }
       return topic;
    }
@@ -753,8 +753,8 @@
             starting_topic = loaded->starting_topic.get_form_stub();
       }
 
-      dovah::form_stub_helpers::for_each_dialogue_branch_topic(&branch_stub, [this, branch, starting_topic](dovah::form_stub* topic_stub) {
-         this->_add_topic_to_datastore(*branch, *topic_stub);
+      dovah::form_stub_helpers::for_each_dialogue_branch_topic(branch_stub, [this, branch, starting_topic](dovah::form_stub& topic_stub) {
+         this->_add_topic_to_datastore(*branch, topic_stub);
 
          auto* topic = branch->topics.back();
          if (topic->stub == starting_topic) {
@@ -841,7 +841,7 @@
          auto&  list = this->_data.branches;
          size_t size = list.size();
 
-         auto* quest_stub = dovah::form_stub_helpers::get_dialogue_branch_quest(&stub);
+         auto* quest_stub = dovah::form_stub_helpers::get_dialogue_branch_quest(stub);
          if (quest_stub != this->_quest) {
             //
             // Handle the case of one of our branches being moved to another quest.
@@ -874,7 +874,7 @@
          emit this->on_branch_added(*item);
       }
       void QuestAllDialogueDatastore::_handle_topic_edited(dovah::form_stub& stub) {
-         if (!this->_quest || dovah::form_stub_helpers::get_dialogue_topic_quest(&stub) != this->_quest)
+         if (!this->_quest || dovah::form_stub_helpers::get_dialogue_topic_quest(stub) != this->_quest)
             return;
 
          Branch* branch_prior = nullptr;
@@ -885,7 +885,7 @@
             // Find where in the datastore the topic is or should be, and check to 
             // see if it was moved across branches.
             //
-            auto* branch_stub = dovah::form_stub_helpers::get_dialogue_topic_branch(&stub);
+            auto* branch_stub = dovah::form_stub_helpers::get_dialogue_topic_branch(stub);
             for (auto* branch : this->_data.branches) {
                if (branch->stub == branch_stub)
                   branch_after = branch;
@@ -1057,7 +1057,7 @@
       }
 
       void QuestAllDialogueDatastore::_handle_branch_created(dovah::form_stub& stub) {
-         if (this->_quest != dovah::form_stub_helpers::get_dialogue_branch_quest(&stub))
+         if (this->_quest != dovah::form_stub_helpers::get_dialogue_branch_quest(stub))
             return;
 
          this->_add_branch_to_datastore(stub);
@@ -1066,13 +1066,13 @@
          emit this->on_branch_added(*item);
       }
       void QuestAllDialogueDatastore::_handle_topic_created(dovah::form_stub& stub) {
-         if (this->_quest != dovah::form_stub_helpers::get_dialogue_topic_quest(&stub))
+         if (this->_quest != dovah::form_stub_helpers::get_dialogue_topic_quest(stub))
             return;
 
          Branch* parent  = nullptr;
          Topic*  created = nullptr;
          {
-            auto* branch_stub = dovah::form_stub_helpers::get_dialogue_topic_branch(&stub);
+            auto* branch_stub = dovah::form_stub_helpers::get_dialogue_topic_branch(stub);
             if (branch_stub)
                parent = this->_item_for_branch_stub(*branch_stub);
          }
@@ -1091,7 +1091,7 @@
          auto* topic_stub = stub.get_parent_form();
          if (!topic_stub || topic_stub->form_type != dovah::form_type::topic)
             return;
-         if (this->_quest != dovah::form_stub_helpers::get_dialogue_topic_quest(topic_stub))
+         if (this->_quest != dovah::form_stub_helpers::get_dialogue_topic_quest(*topic_stub))
             return;
 
          Topic* parent = _item_for_topic_stub(*topic_stub);
@@ -1132,7 +1132,7 @@
          auto* topic_stub = stub.get_parent_form();
          if (!topic_stub)
             return;
-         if (this->_quest != dovah::form_stub_helpers::get_dialogue_topic_quest(topic_stub))
+         if (this->_quest != dovah::form_stub_helpers::get_dialogue_topic_quest(*topic_stub))
             return;
          auto* topic = this->_item_for_topic_stub(*topic_stub);
          if (!topic)

@@ -479,7 +479,7 @@ void PackageProcedureTreeModel::_unchecked_move_node(node_type& subject, node_ty
 
          std::vector<node_type*> dragged_nodes;
          while (!stream.atEnd()) {
-            DragDropTracking::uid_t id;
+            decltype(_drag_and_drop)::uid_type id;
             stream >> id;
             auto* node = this->_drag_and_drop.get_by_id(id);
             if (node)
@@ -514,7 +514,7 @@ void PackageProcedureTreeModel::_unchecked_move_node(node_type& subject, node_ty
          }
          std::vector<node_type*> nodes;
          while (!stream.atEnd()) {
-            DragDropTracking::uid_t id;
+            decltype(_drag_and_drop)::uid_type id;
             stream >> id;
             auto* node = this->_drag_and_drop.get_by_id(id);
             if (node)
@@ -751,7 +751,7 @@ void PackageProcedureTreeModel::removeItem(const QModelIndex& qmi) {
    auto* node = _node_for_qmi(qmi);
    if (!node)
       return;
-   this->_drag_and_drop.untrack(*node);
+   this->_on_node_destroyed(*node);
    if (!node->parent_node) {
       if (node == this->_root.get()) {
          this->beginRemoveRows(_qmi_for_model(), 0, 0);
@@ -972,32 +972,14 @@ void PackageProcedureTreeModel::_sever_uses_of_form(dovah::form_stub& stub) {
          traverse(*ptr);
 }
 
-#pragma region PackageProcedureTreeModel::DragDropTracking
-   PackageProcedureTreeModel::DragDropTracking::uid_t PackageProcedureTreeModel::DragDropTracking::track(node_type& node) {
-      for (const auto& pair : this->nodes)
-         if (pair.second == &node)
-            return pair.first;
-      auto id = this->next_id;
-      this->next_id++;
-      this->nodes[id] = &node;
-      return id;
-   }
-   void PackageProcedureTreeModel::DragDropTracking::untrack(node_type& node) {
-      auto& map = this->nodes;
-      auto  it  = std::find_if(map.begin(), map.end(), [&node](const auto& pair) {
-         return pair.second == &node;
-      });
-      if (it != map.end())
-         map.erase(it);
-   }
-   void PackageProcedureTreeModel::DragDropTracking::clear() {
-      this->nodes.clear();
-   }
-   PackageProcedureTreeModel::node_type* PackageProcedureTreeModel::DragDropTracking::get_by_id(uid_t id) {
-      auto& map = this->nodes;
-      auto  it  = map.find(id);
-      if (it != map.end())
-         return it->second;
-      return nullptr;
-   }
-#pragma endregion
+void PackageProcedureTreeModel::_on_node_destroyed(node_type& node) {
+   [this](this auto&& recurse, node_type& node) -> void {
+      this->_drag_and_drop.untrack(node);
+      if (!std::holds_alternative<ui::types::packages::procedure_tree_typed_data::branch>(node.data))
+         return;
+      auto& branch = std::get<ui::types::packages::procedure_tree_typed_data::branch>(node.data);
+      for (auto& child_ptr : branch.children) {
+         recurse(*child_ptr);
+      }
+   }(node);
+}

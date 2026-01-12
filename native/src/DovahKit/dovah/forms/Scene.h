@@ -11,6 +11,7 @@
 #include "components/legacy_script.h"
 #include "components/papyrus.h"
 #include "../data/dialogue/emotion.h"
+#include "../use_info/entry_flags/scene.h"
 
 namespace dovah::loaded_forms {
    class Scene : public Form {
@@ -157,7 +158,7 @@ namespace dovah::loaded_forms {
          std::vector<actor>  actors;
          std::vector<action> actions; // Each action begins AND ENDS with an ANAM.
          //
-         dialogue_quest_reference_t owning_quest;       // PNAM
+         unique_form_reference_t<use_info::entry_flags::scene::parent_quest> owning_quest; // PNAM
          uint32_t                   last_action_id = 0; // INAM
          components::condition_list loop_conditions;
          std::array<uint32_t, 4>    vnam = { 3, 3, 3, 3 }; // VNAM

@@ -9,6 +9,7 @@
 #include "components/model.h"
 #include "components/papyrus.h"
 #include "structs/color_dword.h"
+#include "../use_info/entry_flags/activator.h"
 
 namespace dovah::loaded_forms {
    class Activator : public Form {
@@ -52,7 +53,7 @@ namespace dovah::loaded_forms {
          color_t           marker_color;        // PNAM
          form_reference_t  looping_sound;       // SNAM; form type is SNDR
          form_reference_t  activation_sound;    // VNAM
-         water_acti_type_reference_t water_type;          // WNAM
+         unique_form_reference_t<use_info::entry_flags::activator::water_type> water_type; // WNAM
          form_reference_t  interact_keyword;    // KNAM
          localized_string  activation_verb;     // RNAM
          activator_flags_t activator_flags = 0; // FNAM

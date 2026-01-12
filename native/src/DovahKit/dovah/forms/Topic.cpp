@@ -129,9 +129,9 @@ namespace dovah::loaded_forms {
       }
       if (uib.is_final_file()) {
          if (auto formID = uib.extra_form_ids[stored_bnam])
-            uib.add_outbound_reference(formID, use_info_entry::flag::dialogue_branch);
+            uib.add_outbound_reference(formID, use_info::entry_flags::topic::parent_branch);
          if (auto formID = uib.extra_form_ids[stored_qnam])
-            uib.add_outbound_reference(formID, use_info_entry::flag::dialogue_quest);
+            uib.add_outbound_reference(formID, use_info::entry_flags::topic::parent_quest);
       }
    }
    /*virtual*/ void Topic::_clone_impl(Form* out) const noexcept {

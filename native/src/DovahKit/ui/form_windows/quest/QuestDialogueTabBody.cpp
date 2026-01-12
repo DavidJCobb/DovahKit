@@ -719,7 +719,7 @@ void QuestDialogueTabBody::select_topic(dovah::form_stub* stub) {
    QModelIndex tl;
    QModelIndex br;
    if (this->_category == dovah::dialogue::category::topic) {
-      auto* branch_stub = dovah::form_stub_helpers::get_dialogue_topic_branch(stub);
+      auto* branch_stub = dovah::form_stub_helpers::get_dialogue_topic_branch(*stub);
       if (!branch_stub)
          return;
       this->select_branch(branch_stub);
@@ -731,7 +731,7 @@ void QuestDialogueTabBody::select_topic(dovah::form_stub* stub) {
       tl = model->index(i, 0, {});
       br = model->index(i, model->columnCount() - 1, {});
    } else {
-      auto* branch_stub = dovah::form_stub_helpers::get_dialogue_topic_branch(stub);
+      auto* branch_stub = dovah::form_stub_helpers::get_dialogue_topic_branch(*stub);
       if (branch_stub)
          return;
       

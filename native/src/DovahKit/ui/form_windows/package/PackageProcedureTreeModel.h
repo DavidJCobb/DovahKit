@@ -9,6 +9,7 @@
 #include "dovah/data/packages/procedure_type.h"
 #include "dovah/forms/structs/custom_packages/package_flag_overrides.h"
 #include "editor/q_declare_metatype/package_flag_overrides.h"
+#include "ui/model_utils/drag_drop_node_id_map.h"
 #include "ui/types/packages/procedure_tree_typed_data/branch.h"
 #include "ui/types/packages/procedure_tree_typed_data/procedure.h"
 #include "ui/types/packages/procedure_node.h"
@@ -137,18 +138,7 @@ class PackageProcedureTreeModel : public QAbstractItemModel {
       void _default_params_of(ui::types::packages::procedure_tree_typed_data::procedure&);
       void _sever_uses_of_form(dovah::form_stub&);
 
-      struct DragDropTracking {
-         public:
-            using uid_t = uint64_t;
+      void _on_node_destroyed(node_type&);
 
-         public:
-            uid_t next_id = 0;
-            std::unordered_map<uid_t, node_type*> nodes;
-
-            uid_t track(node_type&);
-            void untrack(node_type&);
-            void clear();
-            node_type* get_by_id(uid_t);
-      };
-      mutable DragDropTracking _drag_and_drop; // mutable because QAbstractItemModel::mimeData is const
+      mutable ui::model_utils::drag_drop_node_id_map<node_type> _drag_and_drop; // mutable because QAbstractItemModel::mimeData is const
 };

@@ -59,7 +59,7 @@ namespace dovah::loaded_forms {
          }
       }
       uib.add_outbound_reference(owner);
-      uib.add_outbound_reference(location);
+      uib.add_outbound_reference(location, decltype(EncounterZone::location)::use_info_flag);
    }
    void EncounterZone::_clone_impl(Form* out) const noexcept {
       assert(out->type == form_type);

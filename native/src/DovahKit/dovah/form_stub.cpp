@@ -9,6 +9,8 @@
 #include "forms/factories/hardcoded.h"
 #include "forms/factories/use_info.h"
 #include "forms/Form.h"
+#include "use_info/entry_flags/base.h"
+#include "use_info/entry_flag_to_mask.h"
 #include "utils/file_prefix.h"
 #include "form_stub_addenda.h"
 #include "form_stub_heap.h"
@@ -537,7 +539,7 @@ namespace dovah {
             it->second.other->receive_inbound_ref({}, this, it->second.refcount, it->second.flags);
       }
    }
-   void form_stub::receive_inbound_ref(form_stub_passkeys::build_use_info_during_load, form_stub* inbound, uint32_t refcount, use_info_entry::flags_t flags) noexcept {
+   void form_stub::receive_inbound_ref(form_stub_passkeys::build_use_info_during_load, form_stub* inbound, uint32_t refcount, use_info::entry_flag_underlying_type flags) noexcept {
       auto& list  = this->inbound;
       auto& entry = list[inbound->formID];
       entry.other     = inbound;
@@ -545,7 +547,7 @@ namespace dovah {
       entry.flags    |= flags;
    }
 
-   void form_stub::_add_one_way_outbound_reference(form_stub_passkeys::build_use_info_during_load, form_stub* to_stub, use_info_entry::flags_t flags) {
+   void form_stub::_add_one_way_outbound_reference(form_stub_passkeys::build_use_info_during_load, form_stub* to_stub, use_info::entry_flag_underlying_type flags) {
       //
       // This function creates a single-direction connection from (this) to (to_stub), with the understanding 
       // that a later call to (this->send_inbound_refs()) will make all such connections bidirectional. As 
@@ -571,7 +573,7 @@ namespace dovah {
       if (flags)
          entry.flags |= flags;
    }
-   void form_stub::_add_one_way_outbound_reference(form_stub_passkeys::build_use_info_during_load, uint32_t toFormID, use_info_entry::flags_t flags) {
+   void form_stub::_add_one_way_outbound_reference(form_stub_passkeys::build_use_info_during_load, uint32_t toFormID, use_info::entry_flag_underlying_type flags) {
       //
       // Please refer to the documentation comments in this function's other overload.
       //
@@ -600,10 +602,10 @@ namespace dovah {
       for (auto it = list.begin(); it != list.end(); ++it) {
          auto& pair  = *it;
          auto& entry = pair.second;
-         if (entry.flags & use_info_entry::flag::parent_child) {
+         if (entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent)) {
             if (entry.other == parent)
                return;
-            entry.flags &= ~use_info_entry::flag::parent_child;
+            entry.flags &= ~use_info::entry_flag_to_mask(use_info::entry_flags::base::parent);
             if (--entry.refcount == 0)
                list.erase(it);
             break;
@@ -612,7 +614,7 @@ namespace dovah {
       //
       // Set the new parent form.
       //
-      this->_add_one_way_outbound_reference({}, parent, use_info_entry::flag::parent_child);
+      this->_add_one_way_outbound_reference({}, parent, use_info::entry_flag_to_mask(use_info::entry_flags::base::parent));
    }
    #pragma endregion
 
@@ -737,7 +739,7 @@ namespace dovah {
          auto& entry = pair.second;
          if (!entry.other)
             continue;
-         if (!(entry.flags & use_info_entry::flag::parent_child))
+         if (!(entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent)))
             continue;
          return entry.other;
       }
@@ -746,7 +748,7 @@ namespace dovah {
    bool form_stub::has_child_forms() const noexcept {
       for (auto& pair : this->inbound) {
          auto& entry = pair.second;
-         if (entry.flags & use_info_entry::flag::parent_child)
+         if (entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent))
             return true;
       }
       return false;
@@ -757,7 +759,7 @@ namespace dovah {
          auto& pair = *it;
          if (pair.first != child.formID)
             continue;
-         if (pair.second.flags & use_info_entry::flag::parent_child)
+         if (pair.second.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent))
             return true;
       }
       return false;
@@ -767,7 +769,7 @@ namespace dovah {
       auto* parent = this->get_parent_form();
       if (!parent)
          return;
-      this->revoke_outbound_reference(parent, use_info_entry::flag::parent_child);
+      this->revoke_outbound_reference(parent, use_info::entry_flag_to_mask(use_info::entry_flags::base::parent));
       if (this->form_type == form_type::topic_info && parent->form_type == form_type::topic)
          parent->_remove_child_topic_info({}, *this, false);
    }
@@ -782,7 +784,7 @@ namespace dovah {
       this->orphan();
       if (!target)
          return;
-      this->replace_outbound_reference(0, target, use_info_entry::flag::parent_child);
+      this->replace_outbound_reference(0, target, use_info::entry_flag_to_mask(use_info::entry_flags::base::parent));
       if (target->form_type == form_type::topic && this->form_type == form_type::topic_info)
          target->_insert_child_topic_info_post_load(*this);
    }
@@ -794,7 +796,7 @@ namespace dovah {
       }
       for (auto& pair : this->inbound) {
          auto& entry = pair.second;
-         if (!(entry.flags & use_info_entry::flag::parent_child))
+         if (!(entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent)))
             continue;
          auto stub = entry.other;
          if (stub->is_edited() || stub->is_any_descendant_form_edited())
@@ -809,7 +811,7 @@ namespace dovah {
       auto& owner = this->_get_load_order();
       for (auto& pair : this->inbound) {
          auto& entry = pair.second;
-         if (!(entry.flags & use_info_entry::flag::parent_child))
+         if (!(entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent)))
             continue;
          auto stub = entry.other;
          if (owner.is_defined_or_overridden_in_active_file(*stub))
@@ -887,16 +889,9 @@ namespace dovah {
             masked &= 0x00000FFF;
       return (masked % 100) / 10;
    }
-   [[nodiscard]] form_stub* form_stub::get_outbound_use_with_flag(use_info_entry::flags_t f) const noexcept {
-      assert(f && "This function is meaningless without a flag specified.");
-      for (auto& pair : this->outbound)
-         if (pair.second.flags & f)
-            return pair.second.other;
-      return nullptr;
-   }
 
    #pragma region Functions for modifying use info
-   void form_stub::revoke_outbound_reference(form_stub* target, use_info_entry::flags_t flags) {
+   void form_stub::revoke_outbound_reference(form_stub* target, use_info::entry_flag_underlying_type flags) {
       //
       // Bidirectionally sever a connection from this form to another: this form's outbound 
       // connection will be severed, and the other form's inbound connection will be severed. 
@@ -950,7 +945,7 @@ namespace dovah {
          }
       }
    }
-   void form_stub::replace_outbound_reference(bare_form_id_t old, form_stub* new_stub, use_info_entry::flags_t flags) {
+   void form_stub::replace_outbound_reference(bare_form_id_t old, form_stub* new_stub, use_info::entry_flag_underlying_type flags) {
       //
       // This function replaces an outbound reference from this form to some other form, while also 
       // making appropriate changes to that other form's inbound connections.
@@ -974,7 +969,7 @@ namespace dovah {
       this->_add_one_way_outbound_reference({}, new_stub, flags);
       new_stub->receive_inbound_ref({}, this, 1, flags);
    }
-   void form_stub::replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info_entry::flags_t flags) {
+   void form_stub::replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info::entry_flag_underlying_type flags) {
       auto& lo       = this->_get_load_order();
       auto* new_stub = lo.get_form(change_to, false);
       this->replace_outbound_reference(old, new_stub, flags);

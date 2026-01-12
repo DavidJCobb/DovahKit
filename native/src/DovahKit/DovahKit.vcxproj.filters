@@ -3891,9 +3891,6 @@
     <ClCompile Include="ui\main_window\_debug_hooks\form_types\region_bifurcated_data_test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\form_group_windows\region\RegionsDialog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ui\types\regions\generable_content\object_collection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -3913,6 +3910,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui\types\regions\generable_content\landscape.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\form_stubs\helpers\get_assigned_encounter_zone.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\form_stubs\helpers\get_assigned_location.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -7613,9 +7616,6 @@
     <ClInclude Include="dovah\form_reference_t.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovah\use_info_entry.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dovah\utils\data_by_actor_attribute.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -9554,6 +9554,99 @@
     <ClInclude Include="ui\types\regions\generable_content\landscape.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\model_utils\drag_drop_node_id_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\model_utils\drag_drop_nodes_by_id.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flags\base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flags\activator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\form_type_for_entry_flag.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flags\actor_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flags\armor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flags\topic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flags\dialogue_branch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flags\encounter_zone.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flags\location.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flags\reference.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flags\region.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flags\weapon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flags\worldspace.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flag_underlying_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\FOR_EACH_ENTRY_FLAG_TYPE.define.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\FOR_EACH_ENTRY_FLAG_TYPE.undef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flag_to_mask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\is_entry_flag_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flags\base_extra_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\types\common_unique_form.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flag_type_pertains_to_form_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_stubs\helpers\for_each_inbound_use_with_flag.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_stubs\helpers\get_assigned_location.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_stubs\helpers\get_assigned_encounter_zone.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_stubs\helpers\get_location_ref_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flags\furniture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\use_info\entry_flags\scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\form_stubs\helpers\for_each_quest_scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -11025,9 +11118,6 @@
     <QtMoc Include="ui\form_group_windows\region\RegionObjectsModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="ui\form_group_windows\region\RegionsDialog.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -11567,6 +11657,10 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="ui\types\regions\generable_content\audio.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="ui\_docs\model_utils\drag_drop_node_id_map.md" />
+    <None Include="dovah\forms\components\extra_data\types\common_unique_form.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

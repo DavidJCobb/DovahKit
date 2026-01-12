@@ -10,7 +10,8 @@
 #include "helpers/multiheap.h"
 #include "./core.h"
 #include "./form_types.h"
-#include "./use_info_entry.h"
+#include "./use_info/entry.h"
+#include "./use_info/entry_flag_underlying_type.h"
 #include "./files/common.h"
 
 #include "./form_stubs/passkeys/build_use_info_during_load.h"
@@ -67,9 +68,9 @@ namespace dovah {
    //
    using use_info_list = std::map<
       bare_form_id_t,
-      use_info_entry,
+      use_info::entry,
       std::less<bare_form_id_t>,
-      cobb::multiheap_allocator<std::pair<const bare_form_id_t, use_info_entry>, 64000>
+      cobb::multiheap_allocator<std::pair<const bare_form_id_t, use_info::entry>, 64000>
    >;
    #pragma endregion
 
@@ -162,10 +163,10 @@ namespace dovah {
          #pragma region Passkeyed methods
          void build_outbound_refs(form_stub_passkeys::build_use_info_during_load, tes_file_reading::basic_reader&) noexcept;
          void send_inbound_refs(form_stub_passkeys::build_use_info_during_load) noexcept; // use my outbound ref data to add inbound refs to the forms I refer to
-         void receive_inbound_ref(form_stub_passkeys::build_use_info_during_load, form_stub* inbound, uint32_t refcount, use_info_entry::flags_t flags = 0) noexcept;
+         void receive_inbound_ref(form_stub_passkeys::build_use_info_during_load, form_stub* inbound, uint32_t refcount, use_info::entry_flag_underlying_type flags = 0) noexcept;
 
-         void _add_one_way_outbound_reference(form_stub_passkeys::build_use_info_during_load, form_stub* to_stub, use_info_entry::flags_t flags = 0);
-         void _add_one_way_outbound_reference(form_stub_passkeys::build_use_info_during_load, uint32_t toFormID, use_info_entry::flags_t flags = 0);
+         void _add_one_way_outbound_reference(form_stub_passkeys::build_use_info_during_load, form_stub* to_stub, use_info::entry_flag_underlying_type flags = 0);
+         void _add_one_way_outbound_reference(form_stub_passkeys::build_use_info_during_load, uint32_t toFormID, use_info::entry_flag_underlying_type flags = 0);
          void _set_parent_form_one_way(form_stub_passkeys::build_use_info_during_load, form_stub* parent);
 
          void _insert_child_topic_info(form_stub_passkeys::build_use_info_during_load, form_stub& info, size_t at = std::string::npos); // inserts (info) into the addendum info list, without form type checks or managing parenthood
@@ -282,14 +283,12 @@ namespace dovah {
          [[nodiscard]] bool is_exterior_cell() const noexcept; // checks whether we have a parent form. can't check cell flags, since the form may not be loaded
          [[nodiscard]] uint32_t get_cell_block() const noexcept;
          [[nodiscard]] uint32_t get_cell_sub_block() const noexcept;
-         //
-         [[nodiscard]] form_stub* get_outbound_use_with_flag(use_info_entry::flags_t) const noexcept;
          
          #pragma region Functions for modifying use info
-         void revoke_outbound_reference(form_stub* target, use_info_entry::flags_t flags = 0);
+         void revoke_outbound_reference(form_stub* target, use_info::entry_flag_underlying_type flags = 0);
          void revoke_all_outbound_references_to(form_stub* target);
-         void replace_outbound_reference(bare_form_id_t old, form_stub* changeTo, use_info_entry::flags_t flags = 0);
-         void replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info_entry::flags_t flags = 0);
+         void replace_outbound_reference(bare_form_id_t old, form_stub* changeTo, use_info::entry_flag_underlying_type flags = 0);
+         void replace_outbound_reference(bare_form_id_t old, bare_form_id_t change_to, use_info::entry_flag_underlying_type flags = 0);
 
          void sever_all_outbound_references(); // works bidirectionally; use when deleting a form
          #pragma endregion

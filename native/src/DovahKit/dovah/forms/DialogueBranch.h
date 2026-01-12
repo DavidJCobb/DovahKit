@@ -7,6 +7,7 @@
 #include "components/bounds.h"
 #include "components/conditions.h"
 #include "components/papyrus.h"
+#include "../use_info/entry_flags/dialogue_branch.h"
 
 namespace dovah::loaded_forms {
    class DialogueBranch : public Form {
@@ -25,7 +26,7 @@ namespace dovah::loaded_forms {
          };
          using branch_flags_t = std::underlying_type_t<branch_flag::type>;
 
-         dialogue_quest_reference_t owning_quest; // QNAM
+         unique_form_reference_t<use_info::entry_flags::dialogue_branch::parent_quest> owning_quest; // QNAM
          form_reference_t starting_topic; // SNAM
          branch_flags_t   branch_flags = branch_flag::top_level; // DNAM
          uint32_t tnam = 0; // TNAM

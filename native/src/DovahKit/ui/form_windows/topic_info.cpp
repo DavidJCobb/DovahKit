@@ -217,7 +217,7 @@ void FormDialogTopicInfo::_load_impl() {
    {
       dovah::form_stub* owning_quest = nullptr;
       if (auto* topic = this->formStub()->get_parent_form(); topic && topic->form_type == dovah::form_type::topic) {
-         owning_quest = dovah::form_stub_helpers::get_dialogue_topic_quest(topic);
+         owning_quest = dovah::form_stub_helpers::get_dialogue_topic_quest(*topic);
       }
 
       this->_filters.new_linked_topic->setOwningQuest(owning_quest);

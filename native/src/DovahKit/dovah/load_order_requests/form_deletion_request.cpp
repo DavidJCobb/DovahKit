@@ -7,6 +7,11 @@
 #include "../exceptions/form_deletion_failed.h"
 #include "../load_order_processes/file_save.h"
 #include "../forms/factories/construct.h" // can_load_form_data
+#include "../use_info/entry_flag_to_mask.h"
+#include "../use_info/entry_flags/base.h"
+#include "../use_info/entry_flags/dialogue_branch.h"
+#include "../use_info/entry_flags/scene.h"
+#include "../use_info/entry_flags/topic.h"
 
 namespace {
    using exception  = dovah::exceptions::form_deletion_failed;
@@ -99,7 +104,7 @@ namespace dovah {
          }
          //
          bool should_delete = false;
-         if (entry.flags & use_info_entry::flag::parent_child) {
+         if (entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent)) {
             assert(!entry.other->is_hardcoded() && "How is a hardcoded form a descendant of a form that can be deleted (and in fact is currently being deleted)?");
             should_delete = true;
          } else if (this->delete_dialogue_children) {
@@ -112,20 +117,21 @@ namespace dovah {
             //
             switch (start->form_type) {
                case dovah::form_type::quest:
-                  if (entry.flags & use_info_entry::flag::dialogue_quest) {
-                     switch (entry.other->form_type) {
-                        case dovah::form_type::dialogue_branch:
-                        case dovah::form_type::topic:
-                           should_delete = true;
-                           break;
-                     }
+                  switch (entry.other->form_type) {
+                     case dovah::form_type::dialogue_branch:
+                        should_delete = (entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::dialogue_branch::parent_quest));
+                        break;
+                     case dovah::form_type::scene:
+                        should_delete = (entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::scene::parent_quest));
+                        break;
+                     case dovah::form_type::topic:
+                        should_delete = (entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::topic::parent_quest));
+                        break;
                   }
                   break;
                case dovah::form_type::dialogue_branch:
-                  if (entry.flags & use_info_entry::flag::dialogue_branch) {
-                     if (entry.other->form_type == dovah::form_type::topic)
-                        should_delete = true;
-                  }
+                  if (entry.other->form_type == dovah::form_type::topic)
+                     should_delete = (entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::topic::parent_branch));
                   break;
             }
          }

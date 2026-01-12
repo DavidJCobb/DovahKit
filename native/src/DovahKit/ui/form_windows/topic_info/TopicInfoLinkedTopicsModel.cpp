@@ -11,7 +11,7 @@ void TopicInfoLinkedTopicsModelNode::recache() {
    }
    this->cached.topic_editor_id = QString::fromStdString(this->stub->editorID);
 
-   auto* branch = dovah::form_stub_helpers::get_dialogue_topic_branch(this->stub);
+   auto* branch = dovah::form_stub_helpers::get_dialogue_topic_branch(*this->stub);
    if (branch)
       this->cached.branch_editor_id = QString::fromStdString(branch->editorID);
    else

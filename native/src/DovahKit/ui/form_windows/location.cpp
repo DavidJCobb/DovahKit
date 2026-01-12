@@ -298,11 +298,11 @@ void FormDialogLocation::_update_contents_views() {
             // location, even if this location is not the actors' Persist Location (i.e. 
             // even if the Actor(Base) and Location do not use each other directly).
             dovah::form_stub_helpers::for_each_child_form(
-               using_stub,
-               [this, &location_stub](dovah::form_stub* child) {
+               *using_stub,
+               [this, &location_stub](dovah::form_stub& child) {
                   if (auto* base = dovah::form_stub_helpers::get_base_form(child))
                      if (_is_unique_actor_base(*base))
-                        this->ui.actors->addStub(child);
+                        this->ui.actors->addStub(&child);
                }
             );
 
@@ -333,7 +333,7 @@ void FormDialogLocation::_on_actor_base_changed(dovah::form_stub& actor_base) {
    bool is_unique_actor = _is_unique_actor_base(actor_base);
    bool was_unique_actor = false;
    for (const auto* actor : known_unique_actors) {
-      if (dovah::form_stub_helpers::get_base_form(actor) == &actor_base) {
+      if (dovah::form_stub_helpers::get_base_form(*actor) == &actor_base) {
          was_unique_actor = true;
          break;
       }
@@ -349,13 +349,13 @@ void FormDialogLocation::_on_actor_base_changed(dovah::form_stub& actor_base) {
       //
       for (const auto* cell : this->ui.cells->stubs()) {
          dovah::form_stub_helpers::for_each_child_form(
-            cell,
-            [this, &actor_base](dovah::form_stub* child) {
-            if (child->form_type != dovah::form_type::actor)
-               return;
-            if (dovah::form_stub_helpers::get_base_form(child) == &actor_base)
-               this->ui.actors->addStub(child);
-         }
+            *cell,
+            [this, &actor_base](dovah::form_stub& child) {
+               if (child.form_type != dovah::form_type::actor)
+                  return;
+               if (dovah::form_stub_helpers::get_base_form(child) == &actor_base)
+                  this->ui.actors->addStub(&child);
+            }
          );
       }
    } else {
@@ -363,7 +363,7 @@ void FormDialogLocation::_on_actor_base_changed(dovah::form_stub& actor_base) {
       // Strip no-longer-unique actors from our unique actors list.
       //
       for (auto* actor : known_unique_actors)
-         if (dovah::form_stub_helpers::get_base_form(actor) == &actor_base)
+         if (dovah::form_stub_helpers::get_base_form(*actor) == &actor_base)
             this->ui.actors->removeStub(actor);
    }
 }
@@ -379,7 +379,7 @@ void FormDialogLocation::_on_actor_changed(dovah::form_stub& stub) {
 
    const auto known_unique_actors = this->ui.actors->stubs();
 
-   auto* base = dovah::form_stub_helpers::get_base_form(&stub);
+   auto* base = dovah::form_stub_helpers::get_base_form(stub);
    bool  is_unique_actor = _is_unique_actor_base(*base);
    bool  was_unique_actor = false;
    for (const auto* actor : known_unique_actors) {
@@ -400,8 +400,8 @@ void FormDialogLocation::_on_actor_changed(dovah::form_stub& stub) {
    if (!loaded) {
       return;
    }
-   bool persists_here = _persist_location_of(*loaded) == &this->form->stub;
-   bool is_in_here    = _containing_location_of_ref(stub)         == &this->form->stub;
+   bool persists_here = _persist_location_of(*loaded)     == &this->form->stub;
+   bool is_in_here    = _containing_location_of_ref(stub) == &this->form->stub;
    if (!persists_here && !is_in_here) {
       this->ui.actors->removeStub(&stub);
       this->ui.locRefTypes->removeStub(&stub);
@@ -427,15 +427,15 @@ void FormDialogLocation::_on_cell_changed(dovah::form_stub& cell) {
       this->ui.cells->addStub(&cell);
       //
       dovah::form_stub_helpers::for_each_child_form(
-         &cell,
-         [this](dovah::form_stub* child) {
+         cell,
+         [this](dovah::form_stub& child) {
             if (auto* base = dovah::form_stub_helpers::get_base_form(child))
                if (_is_unique_actor_base(*base))
-                  this->ui.actors->addStub(child);
-            auto loaded = child->load().ptr_cast<dovah::loaded_forms::ObjectReference>();
+                  this->ui.actors->addStub(&child);
+            auto loaded = child.load().ptr_cast<dovah::loaded_forms::ObjectReference>();
             if (loaded)
                if (_loc_ref_type_of(*loaded))
-                  this->ui.locRefTypes->addStub(child);
+                  this->ui.locRefTypes->addStub(&child);
          }
       );
    } else {

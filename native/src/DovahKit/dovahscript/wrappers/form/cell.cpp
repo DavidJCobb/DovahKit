@@ -40,12 +40,12 @@ namespace {
          lua_settop(L, 1);
          lua_createtable(L, 0, 0);
          int i = 1;
-         dovah::form_stub_helpers::for_each_child_form(stub, [L, &i](dovah::form_stub* child) {
-            if (!child || !dovah::form_type_is_reference(child->form_type))
+         dovah::form_stub_helpers::for_each_child_form(*stub, [L, &i](dovah::form_stub& child) {
+            if (!dovah::form_type_is_reference(child.form_type))
                return false;
-            if (!child->test_record_flags(dovah::tes_file_record_header::flag::persistent))
+            if (!child.test_record_flags(dovah::tes_file_record_header::flag::persistent))
                return false;
-            int argcount = push_native_object(child);
+            int argcount = push_native_object(&child);
             while (argcount--)
                lua_rawseti(L, 2, i++);
             return false;
@@ -60,10 +60,10 @@ namespace {
          lua_settop(L, 1);
          lua_createtable(L, stub->inbound.size() / 2, 0);
          int i = 1;
-         dovah::form_stub_helpers::for_each_child_form(stub, [L, &i](dovah::form_stub* child) {
-            if (!child || !dovah::form_type_is_reference(child->form_type))
+         dovah::form_stub_helpers::for_each_child_form(*stub, [L, &i](dovah::form_stub& child) {
+            if (!dovah::form_type_is_reference(child.form_type))
                return false;
-            int argcount = push_native_object(child);
+            int argcount = push_native_object(&child);
             while (argcount--)
                lua_rawseti(L, 2, i++);
             return false;
@@ -108,7 +108,7 @@ namespace {
          auto* stub = self.stub;
          if (!stub)
             return 0;
-         return push_native_object(dovah::form_stub_helpers::get_cell_landscape(stub));
+         return push_native_object(dovah::form_stub_helpers::get_cell_landscape(*stub));
       }
       int name(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);

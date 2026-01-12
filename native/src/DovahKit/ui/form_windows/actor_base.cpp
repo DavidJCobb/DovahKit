@@ -699,8 +699,8 @@ void FormDialogActorBase::_on_other_form_modified(dovah::form_stub* stub) {
       //
       // Detect changes to our template actor (or their template actor (or...)).
       //
-      auto* current = dovah::form_stub_helpers::get_template_actor(this->formStub());
-      for (; current; current = dovah::form_stub_helpers::get_template_actor(current)) {
+      auto* current = dovah::form_stub_helpers::get_template_actor(*this->formStub());
+      for (; current; current = dovah::form_stub_helpers::get_template_actor(*current)) {
          if (stub == current) {
             this->_update_from_template_actor();
             break;
@@ -1269,7 +1269,7 @@ dovah::form_stub* FormDialogActorBase::_is_templated_from_leveled_base() const {
    std::vector<dovah::form_stub*> seen;
 
    dovah::form_stub* current = this->form->template_data.actor.get_form_stub();
-   for(; current; current = dovah::form_stub_helpers::get_template_actor(current)) {
+   for(; current; current = dovah::form_stub_helpers::get_template_actor(*current)) {
       if (std::find(seen.begin(), seen.end(), current) != seen.end())
          break;
       seen.push_back(current);
@@ -1304,7 +1304,7 @@ void FormDialogActorBase::_set_template_actor(dovah::form_stub* desired) {
       {
          std::vector<dovah::form_stub*> seen;
          dovah::form_stub* current = desired;
-         for (; current; current = dovah::form_stub_helpers::get_template_actor(current)) {
+         for (; current; current = dovah::form_stub_helpers::get_template_actor(*current)) {
             if (current == this->formStub()) {
                would_create_a_new_cycle = true;
                break;

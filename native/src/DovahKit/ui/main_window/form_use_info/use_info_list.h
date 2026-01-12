@@ -8,6 +8,7 @@
 #include <QTimer>
 #include "../../../dovah/core.h"
 #include "../../../dovah/form_stub.h"
+#include "../../../dovah/use_info/entry_flag_underlying_type.h"
 
 class FormUseInfoListModel;
 class FormUseInfoListModelItem {
@@ -20,9 +21,10 @@ class FormUseInfoListModelItem {
       using bare_form_id_t = dovah::bare_form_id_t;
       using form_stub      = dovah::form_stub;
       using form_type      = dovah::form_type;
-      using data_t         = dovah::use_info_entry;
+      using flags_type     = dovah::use_info::entry_flag_underlying_type;
+      using data_t         = dovah::use_info::entry;
       //
-      data_t::flags_t flags       = 0;
+      flags_type      flags       = 0;
       form_type       otherType   = dovah::form_type::none;
       uint32_t        countUsed   = 0;
       uint32_t        countPlaced = 0;
@@ -33,7 +35,7 @@ class FormUseInfoListModelItem {
       QString parentCell;
       //
       FormUseInfoListModelItem() {}
-      FormUseInfoListModelItem(const data_t*);
+      FormUseInfoListModelItem(const dovah::use_info::entry*);
       void updateFromStub(); // update the form's identifying information, e.g. its editor ID
       void updateUseInfo(const form_stub& used_form); // update the form's use information, e.g. the counts and flags
       void updateUseInfo(const data_t&);
@@ -45,7 +47,7 @@ class FormUseInfoListModel : public QAbstractTableModel {
    public:
       using item_type = FormUseInfoListModelItem;
       using form_stub = dovah::form_stub;
-      using use_info_entry = dovah::use_info_entry;
+      using use_info_entry = dovah::use_info::entry;
       enum class relationship_mode {
          invalid        = -1,
          general_only   = 0,

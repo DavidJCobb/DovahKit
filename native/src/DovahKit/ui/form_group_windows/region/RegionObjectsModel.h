@@ -1,72 +1,42 @@
 #pragma once
 #include <cstdint>
-#include <vector>
+#include <unordered_map>
 #include <QAbstractItemModel>
-#include "dovah/forms/structs/region/generable_content/objects.h"
+#include "ui/model_utils/drag_drop_node_id_map.h"
+#include "ui/types/regions/generable_content/object_collection.h"
 namespace dovah {
-   namespace loaded_forms {
-      class Region;
-   }
    class form_stub;
 }
-
-// Qt often chokes on nested classes/structs
-struct RegionObjectsModelObject {
-   public:
-      using object_params = dovah::loaded_forms::structs::region::generable_content::object_params;
-
-   public:
-      dovah::form_stub* form = nullptr;
-      object_params     params;
-};
-Q_DECLARE_METATYPE(RegionObjectsModelObject);
+namespace ui::types::regions {
+   class region;
+}
 
 class RegionObjectsModel : public QAbstractItemModel {
    Q_OBJECT;
    public:
-      using loaded_form_type        = dovah::loaded_forms::Region;
-      using backend_collection_type = dovah::loaded_forms::structs::region::generable_content::raw_object_collection;
-      using object_params           = dovah::loaded_forms::structs::region::generable_content::object_params;
+      using frontend_form_data = ui::types::regions::region;
+
+      using tree_type = ui::types::regions::generable_content::object_collection;
+      using node_type = tree_type::object;
+
+      using object_data = ui::types::regions::generable_content::object_data;
 
       static constexpr const size_t ColumnCount = 1;
-
-      using ObjectData = RegionObjectsModelObject;
 
       static constexpr const Qt::ItemDataRole ObjectDataRole = Qt::UserRole;
 
    protected:
-      class Object : public ObjectData {
-         public:
-            ~Object();
-
-         public:
-            Object* parent = nullptr;
-            std::vector<Object*> children;
-
-            struct {
-               QString editor_id;
-            } cached;
-
-         public:
-            constexpr bool contains(const Object& o) const noexcept {
-               for (auto* p = o.parent; p; p = p->parent)
-                  if (p == this)
-                     return true;
-               return false;
-            }
-            constexpr size_t index_of(const Object& o) const noexcept {
-               for (size_t i = 0; i < this->children.size(); ++i)
-                  if (this->children[i] == &o)
-                     return i;
-               return (size_t)-1;
-            }
+      struct node_cached_data {
+         QString editor_id;
       };
-      std::vector<Object*> _data;
+
+      tree_type _tree;
+      std::unordered_map<node_type*, node_cached_data> _cache;
 
       #pragma region Node utils
-         const Object* _node_for_qmi(const QModelIndex&) const;
-         Object* _node_for_qmi(const QModelIndex&);
-         QModelIndex _qmi_for_node(const Object&) const;
+         const node_type* _node_for_qmi(const QModelIndex&) const;
+         node_type* _node_for_qmi(const QModelIndex&);
+         QModelIndex _qmi_for_node(const node_type&) const;
       #pragma endregion
 
       static bool allows_form_type(dovah::form_type);
@@ -83,9 +53,6 @@ class RegionObjectsModel : public QAbstractItemModel {
             virtual QModelIndex sibling(int row, int column, const QModelIndex& index) const override;
             virtual int         rowCount(const QModelIndex& parent = {}) const override;
             virtual int         columnCount(const QModelIndex& parent = {}) const override;
-            #pragma region Editing
-               virtual bool removeRows(int row, int count, const QModelIndex& parent = {}) override;
-            #pragma endregion
          #pragma endregion
          #pragma region Node data
             virtual QVariant      data(const QModelIndex&, int role) const override;
@@ -105,45 +72,43 @@ class RegionObjectsModel : public QAbstractItemModel {
          #pragma endregion
       #pragma endregion
 
-      void importData(const backend_collection_type&);
-      void exportData(backend_collection_type&, loaded_form_type&) const;
+      void importData(const frontend_form_data&);
+      void exportData(frontend_form_data&) const;
       void clear();
 
       QModelIndex insertObject(const QModelIndex& parent_qmi, int row, dovah::form_stub& base_form);
-      QModelIndex insertObject(const QModelIndex& parent_qmi, int row, const ObjectData&);
+      QModelIndex insertObject(const QModelIndex& parent_qmi, int row, const object_data&);
+
+      // We intentionally do not implement QAbstractItemModel::removeRow(s), to avoid bad jank 
+      // involving internal-move drag-and-drop operations as managed by QAbstractItemView. Those 
+      // operations are implemented as "remove from source, insert copy into destination" which 
+      // isn't terribly great for us.
+      //
+      // These functions are provided as alternatives.
+      void removeObject(const QModelIndex&);
+      void removeObjects(const QModelIndex& parent_qmi, size_t row, size_t count);
 
    protected:
+      void _on_node_destroyed(node_type&);
+
       void _on_form_deleted(dovah::form_stub&);
       void _on_form_modified(dovah::form_stub&);
+
+      void _recache_node(node_type&, bool silent = false);
 
       #pragma region Drag and drop implementation
          #pragma region Forms from the Object Window
             static bool _is_dragged_form_stub_list(const QMimeData&);
             bool _can_drop_form_stub_list(const QMimeData&, Qt::DropAction action) const;
-            bool _drop_form_stub_list(const QMimeData&, Qt::DropAction action, const QModelIndex& parent_qmi, Object* parent_node, int row);
+            bool _drop_form_stub_list(const QMimeData&, Qt::DropAction action, const QModelIndex& parent_qmi, node_type* parent_node, int row);
          #pragma endregion
          #pragma region Drag-moving nodes within our tree
             QMimeData* _get_node_drag_data(const QModelIndexList&) const;
             static bool _is_dragged_nodes(const QMimeData&);
             bool _can_drop_nodes(const QMimeData&, Qt::DropAction action, int row, const QModelIndex& parent_qmi) const;
-            bool _drop_nodes(const QMimeData&, Qt::DropAction action, const QModelIndex& parent_qmi, Object* parent_node, int row);
+            bool _drop_nodes(const QMimeData&, Qt::DropAction action, const QModelIndex& parent_qmi, node_type* parent_node, int row);
 
-            struct DragDropTracking {
-               public:
-                  using uid_t = uint64_t;
-
-               public:
-                  uid_t next_id = 0;
-                  std::unordered_map<uid_t, Object*> nodes;
-
-                  uid_t track(Object&);
-                  void untrack(Object&);
-                  void clear();
-                  Object* get_by_id(uid_t);
-
-                  void on_node_destroyed(Object&);
-            };
-            mutable DragDropTracking _drag_and_drop; // mutable because QAbstractItemModel::mimeData is const
+            mutable ui::model_utils::drag_drop_node_id_map<node_type> _drag_and_drop; // mutable because QAbstractItemModel::mimeData is const
          #pragma endregion
       #pragma endregion
 };

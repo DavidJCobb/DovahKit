@@ -378,6 +378,8 @@
     <ClCompile Include="dovah\forms\Weather.cpp" />
     <ClCompile Include="dovah\form_reference_t.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_activator_water_type.cpp" />
+    <ClCompile Include="dovah\form_stubs\helpers\get_assigned_encounter_zone.cpp" />
+    <ClCompile Include="dovah\form_stubs\helpers\get_assigned_location.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_base_form.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_cell_landscape.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\get_dialogue_branch_quest.cpp" />
@@ -1249,6 +1251,13 @@
     <ClCompile Include="ui\types\papyrus\property_value.cpp" />
     <ClCompile Include="ui\types\perk_entries\entry.cpp" />
     <ClCompile Include="ui\types\perk_entries\entry_point_entry.cpp" />
+    <ClCompile Include="ui\types\regions\generable_content\audio.cpp" />
+    <ClCompile Include="ui\types\regions\generable_content\grass_collection.cpp" />
+    <ClCompile Include="ui\types\regions\generable_content\landscape.cpp" />
+    <ClCompile Include="ui\types\regions\generable_content\map.cpp" />
+    <ClCompile Include="ui\types\regions\generable_content\object_collection.cpp" />
+    <ClCompile Include="ui\types\regions\generable_content\weather_collection.cpp" />
+    <ClCompile Include="ui\types\regions\region.cpp" />
     <ClCompile Include="ui\utils\bind.cpp" />
     <ClCompile Include="ui\utils\DKStyledItemDelegate.cpp" />
     <ClCompile Include="ui\utils\enable_inbound_drag_and_drop_insertions.cpp" />
@@ -1605,6 +1614,7 @@
     <ClInclude Include="dovah\forms\components\extra_data\types\common_empty.h" />
     <ClInclude Include="dovah\forms\components\extra_data\types\common_fundamental.h" />
     <ClInclude Include="dovah\forms\components\extra_data\types\common_string.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\types\common_unique_form.h" />
     <ClInclude Include="dovah\forms\components\extra_data\types\c\cell_acoustic_space.h" />
     <ClInclude Include="dovah\forms\components\extra_data\types\c\cell_climate.h" />
     <ClInclude Include="dovah\forms\components\extra_data\types\common_form.h" />
@@ -1825,15 +1835,20 @@
     <ClInclude Include="dovah\form_reference_t.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_child_form.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_dialogue_branch_topic.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\for_each_inbound_use_with_flag.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_persistent_ref_in_world.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_quest_dialogue_branch.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\for_each_quest_scene.h" />
     <ClInclude Include="dovah\form_stubs\helpers\for_each_quest_topic.h" />
     <ClInclude Include="dovah\form_stubs\helpers\get_activator_water_type.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\get_assigned_encounter_zone.h" />
     <ClInclude Include="dovah\form_stubs\helpers\get_base_form.h" />
     <ClInclude Include="dovah\form_stubs\helpers\get_cell_landscape.h" />
     <ClInclude Include="dovah\form_stubs\helpers\get_dialogue_branch_quest.h" />
     <ClInclude Include="dovah\form_stubs\helpers\get_dialogue_topic_branch.h" />
     <ClInclude Include="dovah\form_stubs\helpers\get_dialogue_topic_quest.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\get_assigned_location.h" />
+    <ClInclude Include="dovah\form_stubs\helpers\get_location_ref_type.h" />
     <ClInclude Include="dovah\form_stubs\helpers\get_template_actor.h" />
     <ClInclude Include="dovah\form_stubs\helpers\get_unique_outbound_use.h" />
     <ClInclude Include="dovah\form_stubs\helpers\get_worldspace_cell_by_grid.h" />
@@ -2002,6 +2017,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\bad_region_point_list_data_subrecord_size.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\invalid_areas.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\mismatched_region_data_subrecord.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\multiple_data_collections_of_same_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\orphaned_region_data_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\region_data_object_has_invalid_parent.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\region\unknown_region_data_type.h" />
@@ -2059,7 +2075,29 @@
     <ClInclude Include="dovah\notices\_all_warnings.h" />
     <ClInclude Include="dovah\notices\_util.define.h" />
     <ClInclude Include="dovah\notices\_util.undef.h" />
-    <ClInclude Include="dovah\use_info_entry.h" />
+    <ClInclude Include="dovah\use_info\entry.h" />
+    <ClInclude Include="dovah\use_info\entry_flags\activator.h" />
+    <ClInclude Include="dovah\use_info\entry_flags\actor_base.h" />
+    <ClInclude Include="dovah\use_info\entry_flags\armor.h" />
+    <ClInclude Include="dovah\use_info\entry_flags\base.h" />
+    <ClInclude Include="dovah\use_info\entry_flags\base_extra_data.h" />
+    <ClInclude Include="dovah\use_info\entry_flags\dialogue_branch.h" />
+    <ClInclude Include="dovah\use_info\entry_flags\encounter_zone.h" />
+    <ClInclude Include="dovah\use_info\entry_flags\furniture.h" />
+    <ClInclude Include="dovah\use_info\entry_flags\location.h" />
+    <ClInclude Include="dovah\use_info\entry_flags\reference.h" />
+    <ClInclude Include="dovah\use_info\entry_flags\region.h" />
+    <ClInclude Include="dovah\use_info\entry_flags\scene.h" />
+    <ClInclude Include="dovah\use_info\entry_flags\topic.h" />
+    <ClInclude Include="dovah\use_info\entry_flags\weapon.h" />
+    <ClInclude Include="dovah\use_info\entry_flags\worldspace.h" />
+    <ClInclude Include="dovah\use_info\entry_flag_type_pertains_to_form_type.h" />
+    <ClInclude Include="dovah\use_info\entry_flag_to_mask.h" />
+    <ClInclude Include="dovah\use_info\entry_flag_underlying_type.h" />
+    <ClInclude Include="dovah\use_info\form_type_for_entry_flag.h" />
+    <ClInclude Include="dovah\use_info\FOR_EACH_ENTRY_FLAG_TYPE.define.h" />
+    <ClInclude Include="dovah\use_info\FOR_EACH_ENTRY_FLAG_TYPE.undef.h" />
+    <ClInclude Include="dovah\use_info\is_entry_flag_type.h" />
     <ClInclude Include="dovah\utils\auto_door_envelopes_teleport_marker.h" />
     <ClInclude Include="dovah\utils\default_light_emitter_shadow_depth_bias.h" />
     <ClInclude Include="dovah\utils\default_primitive_color_for_base_form.h" />
@@ -2408,6 +2446,8 @@
     <QtMoc Include="ui\models\DKScopedProxyModel.h" />
     <ClInclude Include="ui\models\forms\FactionMembersModel.h" />
     <QtMoc Include="ui\models\forms\LeveledListModel.h" />
+    <ClInclude Include="ui\model_utils\drag_drop_nodes_by_id.h" />
+    <ClInclude Include="ui\model_utils\drag_drop_node_id_map.h" />
     <ClInclude Include="ui\types\conditions\condition.h" />
     <ClInclude Include="ui\types\face_tints\layer.h" />
     <ClInclude Include="ui\types\face_tints\preset.h" />
@@ -2431,6 +2471,13 @@
     <ClInclude Include="ui\types\perk_entries\entry_point_entry.h" />
     <ClInclude Include="ui\types\perk_entries\quest_entry.h" />
     <ClInclude Include="ui\types\perk_entries\spell_entry.h" />
+    <ClInclude Include="ui\types\regions\generable_content\audio.h" />
+    <ClInclude Include="ui\types\regions\generable_content\grass_collection.h" />
+    <ClInclude Include="ui\types\regions\generable_content\landscape.h" />
+    <ClInclude Include="ui\types\regions\generable_content\map.h" />
+    <ClInclude Include="ui\types\regions\generable_content\object_collection.h" />
+    <ClInclude Include="ui\types\regions\generable_content\weather_collection.h" />
+    <ClInclude Include="ui\types\regions\region.h" />
     <ClInclude Include="ui\utils\bind.h" />
     <ClInclude Include="ui\utils\DKStyledItemDelegate.h" />
     <QtMoc Include="widgets\DKDelayedEnableButton.h" />
@@ -3932,6 +3979,7 @@
     <None Include="dovah\forms\components\extra_data\types\common_form.inl" />
     <None Include="dovah\forms\components\extra_data\types\common_fundamental.inl" />
     <None Include="dovah\forms\components\extra_data\types\common_string.inl" />
+    <None Include="dovah\forms\components\extra_data\types\common_unique_form.inl" />
     <None Include="dovah\forms\components\model.md" />
     <None Include="dovah\forms\components\papyrus\attached_script.inl" />
     <None Include="dovah\forms\components\papyrus\attachment_data.inl" />
@@ -4186,7 +4234,15 @@
     </None>
     <None Include="ui\types\face_tints\layer.inl" />
     <None Include="ui\types\papyrus\property_value.inl" />
+    <None Include="ui\types\regions\generable_content\audio.inl" />
+    <None Include="ui\types\regions\generable_content\grass_collection.inl" />
+    <None Include="ui\types\regions\generable_content\object_collection.inl" />
+    <None Include="ui\types\regions\generable_content\weather_collection.inl" />
     <None Include="ui\_docs\form-editing dialogs.md" />
+    <None Include="ui\_docs\model_utils\drag_drop_node_id_map.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="ui\_docs\scenes.md" />
     <None Include="userdata\scripts\simple\count persistent refs.lua" />
     <None Include="userdata\scripts\simple\dialogue search.lua" />

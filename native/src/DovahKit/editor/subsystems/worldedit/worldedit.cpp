@@ -414,7 +414,7 @@ namespace dovahkit::subsystems::worldedit {
          }
       #endif
 
-      auto* base = dovah::form_stub_helpers::get_base_form(&stub);
+      auto* base = dovah::form_stub_helpers::get_base_form(stub);
       if (!base)
          return false;
       //
@@ -482,7 +482,7 @@ namespace dovahkit::subsystems::worldedit {
       loaded.stub = cell;
       loaded.land = nullptr;
       if (cell->is_exterior_cell()) {
-         if (auto* land = dovah::form_stub_helpers::get_cell_landscape(cell)) {
+         if (auto* land = dovah::form_stub_helpers::get_cell_landscape(*cell)) {
             loaded.land = land->load().ptr_cast<dovah::loaded_forms::Landscape>();
          }
       }
@@ -522,13 +522,13 @@ namespace dovahkit::subsystems::worldedit {
          }
       }
 
-      dovah::form_stub_helpers::for_each_child_form(cell, [this, sr, &refr_count, any_refs_already_loaded](dovah::form_stub* stub) {
-         if (!dovah::form_type_is_reference(stub->form_type))
+      dovah::form_stub_helpers::for_each_child_form(*cell, [this, sr, &refr_count, any_refs_already_loaded](dovah::form_stub& stub) {
+         if (!dovah::form_type_is_reference(stub.form_type))
             return false;
 
          if (any_refs_already_loaded) {
             for (const auto& item : this->loaded_refs)
-               if (item.stub == stub)
+               if (item.stub == &stub)
                   //
                   // This ref is already loaded. Loading it a second time will break things.
                   //
@@ -539,7 +539,7 @@ namespace dovahkit::subsystems::worldedit {
          cobb::vector3<float> rot;
          bool is_coc;
          //
-         if (!this->_load_refr(*stub, pos, rot, is_coc))
+         if (!this->_load_refr(stub, pos, rot, is_coc))
             return false;
          ++refr_count;
          
@@ -582,7 +582,7 @@ namespace dovahkit::subsystems::worldedit {
       for (auto& item : this->loaded_refs) {
          if (!item.stub || item.stub->get_parent_form() != &stub)
             continue;
-         auto* base = dovah::form_stub_helpers::get_base_form(item.stub);
+         auto* base = dovah::form_stub_helpers::get_base_form(*item.stub);
          if (!base)
             continue;
 
@@ -795,7 +795,7 @@ namespace dovahkit::subsystems::worldedit {
          } else {
             gp_now.x = grid_x;
             gp_now.y = grid_y;
-            cell = dovah::form_stub_helpers::get_worldspace_cell_by_grid(world, grid_x, grid_y);
+            cell = dovah::form_stub_helpers::get_worldspace_cell_by_grid(*world, grid_x, grid_y);
          }
          //
          auto diff_x = gp_now.x - gp_old.x;
@@ -820,7 +820,7 @@ namespace dovahkit::subsystems::worldedit {
             this->loaded_cells.for_each([this, world, &gp_now](core::cell& data, loaded_cell_grid_coord x, loaded_cell_grid_coord y) {
                if (data.stub)
                   return;
-               auto* replace = dovah::form_stub_helpers::get_worldspace_cell_by_grid(world, gp_now.x + x, gp_now.y + y);
+               auto* replace = dovah::form_stub_helpers::get_worldspace_cell_by_grid(*world, gp_now.x + x, gp_now.y + y);
                if (replace) {
                   if constexpr (debug_log_area_load_unload) {
                      qDebug("[Worldedit] Loading cell at (%d, %d) due to set-current-area...", (gp_now.x + x), (gp_now.y + y));
@@ -834,7 +834,7 @@ namespace dovahkit::subsystems::worldedit {
             auto& lc = this->loaded_cells;
             for (loaded_cell_grid_coord y = lc.top(); y <= lc.bottom(); ++y) {
                for (loaded_cell_grid_coord x = lc.left(); x <= lc.right(); ++x) {
-                  auto* replace = dovah::form_stub_helpers::get_worldspace_cell_by_grid(world, gp_now.x + x, gp_now.y + y);
+                  auto* replace = dovah::form_stub_helpers::get_worldspace_cell_by_grid(*world, gp_now.x + x, gp_now.y + y);
                   if (replace) {
                      this->_load_cell(replace, x, y);
                   }
@@ -1031,7 +1031,7 @@ namespace dovahkit::subsystems::worldedit {
             this->loaded_cells.for_each([this, world, &gp_now](core::cell& data, loaded_cell_grid_coord x, loaded_cell_grid_coord y) {
                if (data.stub)
                   return;
-               auto* cell = dovah::form_stub_helpers::get_worldspace_cell_by_grid(world, gp_now.x + x, gp_now.y + y);
+               auto* cell = dovah::form_stub_helpers::get_worldspace_cell_by_grid(*world, gp_now.x + x, gp_now.y + y);
                if (cell) {
                   if constexpr (debug_log_area_load_unload) {
                      qDebug("[Worldedit] Loading cell at (%d, %d) due to grid size increasing...", (gp_now.x + x), (gp_now.y + y));
@@ -1282,7 +1282,7 @@ namespace dovahkit::subsystems::worldedit {
                this->loaded_cells.for_each([this, world, cgx, cgy](core::cell& data, loaded_cell_grid_coord x, loaded_cell_grid_coord y) {
                   if (data.stub)
                      return;
-                  auto* replace = dovah::form_stub_helpers::get_worldspace_cell_by_grid(world, cgx + x, cgy + y);
+                  auto* replace = dovah::form_stub_helpers::get_worldspace_cell_by_grid(*world, cgx + x, cgy + y);
                   if (replace) {
                      if constexpr (debug_log_area_load_unload) {
                         qDebug("[Worldedit] Loading cell at (%d, %d) due to camera movement...", (cgx + x), (cgy + y));
@@ -1296,7 +1296,7 @@ namespace dovahkit::subsystems::worldedit {
                auto& lc = this->loaded_cells;
                for (loaded_cell_grid_coord y = lc.top(); y <= lc.bottom(); ++y) {
                   for (loaded_cell_grid_coord x = lc.left(); x <= lc.right(); ++x) {
-                     auto* replace = dovah::form_stub_helpers::get_worldspace_cell_by_grid(world, cgx + x, cgy + y);
+                     auto* replace = dovah::form_stub_helpers::get_worldspace_cell_by_grid(*world, cgx + x, cgy + y);
                      if (replace) {
                         if constexpr (debug_log_area_load_unload) {
                            qDebug("[Worldedit] Loading cell at (%d, %d) due to camera movement...", (cgx + x), (cgy + y));
@@ -1719,7 +1719,7 @@ namespace dovahkit::subsystems::worldedit {
                   //
                   // Re-parent the ref to the cell we're moving it into.
                   //
-                  auto* destination_cell = dovah::form_stub_helpers::get_worldspace_cell_by_grid(this->target_area.world, gx_after, gy_after);
+                  auto* destination_cell = dovah::form_stub_helpers::get_worldspace_cell_by_grid(*this->target_area.world, gx_after, gy_after);
                   if (!destination_cell) {
                      //
                      // Create the destination cell.

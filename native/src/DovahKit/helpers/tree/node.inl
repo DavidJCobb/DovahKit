@@ -210,6 +210,7 @@ namespace cobb {
 
       size_t size = this->children.size();
       for (size_t i = 0; i < size; ++i)
+         #pragma warning(suppress:5232) // recursion is intentional; this is a recursive data structure
          if (*this->children[i] != *other.children[i])
             return false;
 

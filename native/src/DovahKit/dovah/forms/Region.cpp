@@ -313,17 +313,18 @@ namespace dovah::loaded_forms {
                         } else if (auto* data = this->generable_content.back().as<generable_content::raw_object_collection>()) {
                            uint32_t count = subrecord.size() / 0x18;
                            data->objects.resize(count);
-                           for (auto& item : data->objects) {
+                           for (size_t i = 0; i < data->objects.size(); ++i) {
+                              auto& item = data->objects[i];
                               if (subrecord.is_at_end()) {
                                  item = {};
                                  continue;
                               }
                               subrecord.read(item.form);         // 00
                               subrecord.read(item.parent_index); // 04
-                              if (item.parent_index >= 0 && item.parent_index >= count) {
+                              if (item.parent_index >= 0 && item.parent_index >= i) {
                                  specific_load_warnings::region_data_object_has_invalid_parent notice(
                                     this->stub,
-                                    count - 1,
+                                    i,
                                     item.parent_index
                                  );
                                  intfc.log_load_warning(notice);
@@ -724,7 +725,7 @@ namespace dovah::loaded_forms {
             #pragma endregion
          }
       }
-      uib.add_outbound_reference(parent_world);
+      uib.add_outbound_reference(parent_world, use_info::entry_flags::region::worldspace);
       //
       for (auto id : region_data)
          uib.add_outbound_reference(id);

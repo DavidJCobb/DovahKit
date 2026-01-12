@@ -180,7 +180,7 @@ namespace {
 
       bool flag_is_valid_for_form(uint32_t flag, const dovah::form_stub* refr) noexcept {
          if (_helpers::all_type_specific_flags & flag) {
-            auto* base = dovah::form_stub_helpers::get_base_form(refr);
+            auto* base = dovah::form_stub_helpers::get_base_form(*refr);
             auto  type = base->form_type;
             for (auto& def : _helpers::type_specific_flags) {
                if (def.value != flag)
@@ -220,7 +220,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.stub)
             return 0;
-         auto* base = dovah::form_stub_helpers::get_base_form(self.stub);
+         auto* base = dovah::form_stub_helpers::get_base_form(*self.stub);
          return push_native_object(base);
       }
       int parent_cell(lua_State* L) {

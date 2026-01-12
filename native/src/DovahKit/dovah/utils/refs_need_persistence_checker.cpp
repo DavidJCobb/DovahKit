@@ -4,6 +4,7 @@
 #include "../data/hardcoded_form_ids.h"
 #include "../files/file_load_order.h"
 #include "../form_stub.h"
+#include "../form_stubs/helpers/get_activator_water_type.h"
 #include "../form_stubs/helpers/get_base_form.h"
 
 #include "../forms/factories/hardcoded.h"
@@ -79,7 +80,7 @@ namespace dovah {
       if (!refr.inbound.empty())
          return true;
 
-      auto* base_stub = form_stub_helpers::get_base_form(&refr);
+      auto* base_stub = form_stub_helpers::get_base_form(refr);
       if (!base_stub)
          return false;
 
@@ -98,10 +99,8 @@ namespace dovah {
 
       switch (base_stub->form_type) {
          case dovah::form_type::activator:
-            for (const auto& item : base_stub->outbound) {
-               if (item.second.flags & use_info_entry::flag::water_acti_type)
-                  return true;
-            }
+            if (form_stub_helpers::get_activator_water_type(*base_stub))
+               return true;
             break;
          case dovah::form_type::actor_base:
             if (_actor_is_unique(*base_stub)) {

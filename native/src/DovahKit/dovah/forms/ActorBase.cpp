@@ -1,6 +1,5 @@
 #include "ActorBase.h"
 #include "_common_cpp.h"
-#include "../use_info_entry.h"
 
 #include "../utils/get_all_relevant_template_actors.h"
 
@@ -801,7 +800,7 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(outfits.normal);
       uib.add_outbound_reference(outfits.sleeping);
       uib.add_outbound_reference(race);
-      uib.add_outbound_reference(template_actor, use_info_entry::flag::template_actor);
+      uib.add_outbound_reference(template_actor, use_info::entry_flags::actor_base::template_actor);
       uib.add_outbound_reference(voicetype);
       uib.add_outbound_reference(skin);
       uib.add_outbound_reference(package_override_lists.spectator);

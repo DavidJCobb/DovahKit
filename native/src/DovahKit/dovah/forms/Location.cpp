@@ -687,7 +687,7 @@ namespace dovah::loaded_forms {
          uib.add_outbound_reference(marker);
          uib.add_outbound_reference(horse_marker);
          uib.add_outbound_reference(music);
-         uib.add_outbound_reference(parent);
+         uib.add_outbound_reference(parent, decltype(Location::parent_location)::use_info_flag);
       }
    }
    void Location::_clone_impl(Form* out) const noexcept {

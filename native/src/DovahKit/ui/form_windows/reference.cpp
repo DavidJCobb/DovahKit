@@ -62,7 +62,7 @@ namespace {
    }
 
    static bool can_rescale_ref(dovah::form_stub& ref) {
-      auto* base = dovah::form_stub_helpers::get_base_form(&ref);
+      auto* base = dovah::form_stub_helpers::get_base_form(ref);
       if (!base)
          return true;
 

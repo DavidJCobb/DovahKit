@@ -324,7 +324,7 @@ bool ObjectReferenceReflectingWaterModel::is_a_reflector_at_all(dovah::form_stub
    if (!dovah::form_type_is_reference(ref.form_type))
       return false;
 
-   auto* base = dovah::form_stub_helpers::get_base_form(&ref);
+   auto* base = dovah::form_stub_helpers::get_base_form(ref);
    if (!base)
       return false;
    if (!dovah::form_stub_helpers::get_activator_water_type(*base))
@@ -450,7 +450,7 @@ void ObjectReferenceReflectingWaterModel::_re_sort_item(size_t from) {
 /*static*/ QString ObjectReferenceReflectingWaterModel::_name_of(const dovah::form_stub& stub) {
    if (dovah::form_type_is_reference(stub.form_type)) {
       if (stub.editorID.empty()) {
-         if (auto* base = dovah::form_stub_helpers::get_base_form(&stub))
+         if (auto* base = dovah::form_stub_helpers::get_base_form(stub))
             return QString::fromStdString(base->editorID);
       }
    }

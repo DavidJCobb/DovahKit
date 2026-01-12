@@ -81,7 +81,7 @@ namespace ui::bound_script_models {
             return form_str;
          }
 
-         if (auto* base = dovah::form_stub_helpers::get_base_form(v)) {
+         if (auto* base = dovah::form_stub_helpers::get_base_form(*v)) {
             if (!base->editorID.empty()) {
                return QString("%1 (%2)").arg(form_str).arg(QString::fromStdString(base->editorID));
             }

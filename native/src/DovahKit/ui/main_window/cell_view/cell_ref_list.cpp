@@ -22,7 +22,7 @@ dovah::form_type CellRefListModelItem::formType() const noexcept {
 }
 void CellRefListModelItem::update() {
    auto stub = this->stub;
-   this->base = dovah::form_stub_helpers::get_base_form(stub);
+   this->base = dovah::form_stub_helpers::get_base_form(*stub);
    this->baseType = this->base ? this->base->form_type : dovah::form_type::none;
    //
    this->editorID = QString::fromUtf8(stub->get_editor_id());
@@ -252,10 +252,10 @@ void CellRefListModel::rebuild(const dovah::form_stub* cell) {
       return;
    //
    this->last_used_cell = cell;
-   dovah::form_stub_helpers::for_each_child_form(cell, [this](dovah::form_stub* stub) {
-      if (!dovah::form_type_is_reference(stub->form_type))
+   dovah::form_stub_helpers::for_each_child_form(*cell, [this](dovah::form_stub& stub) {
+      if (!dovah::form_type_is_reference(stub.form_type))
          return false;
-      this->_insertItem(stub, true);
+      this->_insertItem(&stub, true);
       return false;
    });
    auto& queue = this->queued_additions;

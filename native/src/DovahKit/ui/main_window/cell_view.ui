@@ -294,8 +294,11 @@
   <tabstop>jumpToGridX</tabstop>
   <tabstop>jumpToGridY</tabstop>
   <tabstop>jumpToGrid</tabstop>
+  <tabstop>cellList</tabstop>
+  <tabstop>loadedCellsAtTop</tabstop>
   <tabstop>filterFormType</tabstop>
   <tabstop>filterText</tabstop>
+  <tabstop>referenceList</tabstop>
  </tabstops>
  <resources/>
  <connections/>

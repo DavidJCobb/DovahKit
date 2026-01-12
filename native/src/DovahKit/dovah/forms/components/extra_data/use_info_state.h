@@ -25,13 +25,10 @@ namespace dovah::loaded_forms::components {
                struct {
                   form_id_t ref;
                } enable_state_parent;
-               form_id_t encounter_zone;
                form_id_t global;
                form_id_t horse;
                form_id_t interior_lock_list;
                form_id_t leveled_item_base;
-               form_id_t location;
-               form_id_t location_ref_type;
                struct {
                   form_id_t key;
                } lock;
@@ -54,16 +51,21 @@ namespace dovah::loaded_forms::components {
                   form_id_t imagespace;
                } room_ref_data;
                form_id_t spawn_container;
-               struct {
-                  form_id_t target_door;
-               } teleport;
                form_id_t teleport_name;
                struct {
                   form_id_t cell;
                } water_current_zone_data;
             } by_name;
-            std::array<form_id_t, 32> list = {};
+            std::array<form_id_t, 28> list = {};
          } form_ids;
+         struct {
+            form_id_t encounter_zone;    // use info entry flag: base_extra_data::extra_encounter_zone
+            form_id_t location;          // use info entry flag: base_extra_data::extra_location
+            form_id_t location_ref_type; // use info entry flag: base_extra_data::extra_location_ref_type
+            struct {
+               form_id_t target_door; // use info entry flag: base_extra_data::extra_teleport_destination
+            } teleport;
+         } form_ids_with_flags;
          std::vector<form_id_t> cell_region_list;
          loaded_forms::components::package_event_dialogue::use_info_state patrol_ref_data;
          struct {

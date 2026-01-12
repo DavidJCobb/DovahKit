@@ -3,6 +3,7 @@
 #include "Form.h"
 #include "_common.h"
 #include "components/papyrus.h"
+#include "../use_info/entry_flags/encounter_zone.h"
 
 namespace dovah::loaded_forms {
    class EncounterZone : public Form {
@@ -22,7 +23,7 @@ namespace dovah::loaded_forms {
          components::papyrus_attachment_data script_data; // VMAD
          //
          form_reference_t owner;    // DATA+0x00 -> NPC_ or FACT
-         form_reference_t location; // DATA+0x04 -> LCTN
+         unique_form_reference_t<use_info::entry_flags::encounter_zone::location> location; // DATA+0x04 -> LCTN
          struct {
             int8_t  rank      = 0; // DATA+0x08
             int8_t  min_level = 0; // DATA+0x09

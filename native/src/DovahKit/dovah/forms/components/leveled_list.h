@@ -81,7 +81,7 @@ namespace dovah::loaded_forms::components {
 
          template<size_t Count>
          constexpr void _set_allowed_form_types(const std::array<form_type, Count>& src) {
-            if (src.size())
+            if (!src.empty())
                this->_allowed_form_types = decltype(_allowed_form_types){ src.data(), src.size() };
          }
 

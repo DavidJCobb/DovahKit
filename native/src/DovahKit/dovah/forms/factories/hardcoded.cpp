@@ -7,6 +7,7 @@
 #include "../../files/tes_file_reading/file_loader.h"
 #include "../../files/file_load_order.h"
 #include "../../data/actor_values.h"
+#include "../../use_info/entry_flags/reference.h"
 #include "../Activator.h"
 #include "../Actor.h"
 #include "../ActorBase.h"
@@ -918,7 +919,7 @@ namespace dovah {
       auto* stub = uib.stub();
       switch (stub->formID) {
          case hardcoded_form_ids::PlayerRef: // [ACHR]PlayerRef
-            uib.add_outbound_reference(0x00000007, use_info_entry::flag::object_reference);
+            uib.add_outbound_reference(0x00000007, use_info::entry_flags::reference::base_form);
             break;
          case hardcoded_form_ids::DefaultWeather: // [WTHR]DefaultWeather
             //

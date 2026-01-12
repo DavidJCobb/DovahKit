@@ -1,9 +1,11 @@
 #include "./RegionObjectsModel.h"
 #include <memory>
-#include "dovah/forms/Region.h"
+#include <vector>
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
 #include "editor/helpers/form_stub_drag_drop.h"
+#include "ui/model_utils/drag_drop_nodes_by_id.h"
+#include "ui/types/regions/region.h"
 
 namespace {
    constexpr const char* const mime_type = "application/dovah-kit.region-objects-model.node";
@@ -16,56 +18,39 @@ RegionObjectsModel::RegionObjectsModel(QObject* parent) : QAbstractItemModel(par
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() { this->clear(); });
 }
 RegionObjectsModel::~RegionObjectsModel() {
+   this->_cache.clear();
    this->_drag_and_drop.clear();
-   for (auto*& ptr : this->_data) {
-      if (ptr) {
-         delete ptr;
-         ptr = nullptr;
-      }
-   }
-   this->_data.clear();
+   this->_tree.clear();
 }
 
-#pragma region RegionObjectsModel::Object
-   RegionObjectsModel::Object::~Object() {
-      for (auto*& ptr : this->children) {
-         if (ptr) {
-            delete ptr;
-            ptr = nullptr;
-         }
-      }
-      this->children.clear();
-   }
-#pragma endregion
-
 #pragma region Node utils
-   const RegionObjectsModel::Object* RegionObjectsModel::_node_for_qmi(const QModelIndex& qmi) const {
+   const RegionObjectsModel::node_type* RegionObjectsModel::_node_for_qmi(const QModelIndex& qmi) const {
       if (qmi.model() != this || !qmi.isValid())
          return nullptr;
-      auto* parent = (Object*)qmi.internalPointer();
+      auto* parent = (node_type*)qmi.internalPointer();
       if (parent) {
          if (qmi.row() >= parent->children.size())
             return nullptr;
-         return parent->children[qmi.row()];
+         return parent->children[qmi.row()].get();
       }
-      if (qmi.row() >= this->_data.size())
+      if (qmi.row() >= this->_tree.objects.size())
          return nullptr;
-      return this->_data[qmi.row()];
+      return this->_tree.objects[qmi.row()].get();
    }
-   RegionObjectsModel::Object* RegionObjectsModel::_node_for_qmi(const QModelIndex& qmi) {
-      return const_cast<Object*>(std::as_const(*this)._node_for_qmi(qmi));
+   RegionObjectsModel::node_type* RegionObjectsModel::_node_for_qmi(const QModelIndex& qmi) {
+      return const_cast<node_type*>(std::as_const(*this)._node_for_qmi(qmi));
    }
-   QModelIndex RegionObjectsModel::_qmi_for_node(const Object& node) const {
+   QModelIndex RegionObjectsModel::_qmi_for_node(const node_type& node) const {
       size_t i = (size_t)-1;
 
-      const std::vector<Object*>* siblings = nullptr;
+      const std::vector<std::unique_ptr<node_type>>* siblings = nullptr;
       if (node.parent)
          siblings = &node.parent->children;
       else
-         siblings = &this->_data;
+         siblings = &this->_tree.objects;
 
       for (size_t j = 0; j < siblings->size(); ++j) {
-         if ((*siblings)[j] == &node) {
+         if ((*siblings)[j].get() == &node) {
             i = j;
             break;
          }
@@ -108,11 +93,11 @@ RegionObjectsModel::~RegionObjectsModel() {
          auto* node = _node_for_qmi(qmi);
          if (!node)
             return {};
-         const std::vector<Object*>* siblings = nullptr;
+         const std::vector<std::unique_ptr<node_type>>* siblings = nullptr;
          if (node->parent) {
             siblings = &node->parent->children;
          } else {
-            siblings = &this->_data;
+            siblings = &this->_tree.objects;
          }
          if (row >= siblings->size())
             return {};
@@ -121,49 +106,31 @@ RegionObjectsModel::~RegionObjectsModel() {
       /*virtual*/ int RegionObjectsModel::rowCount(const QModelIndex& parent) const /*override*/ {
          auto* node = _node_for_qmi(parent);
          if (!node)
-            return this->_data.size();
+            return this->_tree.objects.size();
          return node->children.size();
       }
       /*virtual*/ int RegionObjectsModel::columnCount(const QModelIndex& parent) const /*override*/ {
          return ColumnCount;
       }
-      #pragma region Editing
-         /*virtual*/ bool RegionObjectsModel::removeRows(int row, int count, const QModelIndex& parent_qmi) /*override*/ {
-            if (row < 0 || count <= 0)
-               return false;
-            auto* siblings = &this->_data;
-            if (parent_qmi.isValid()) {
-               auto* parent_node = _node_for_qmi(parent_qmi);
-               if (!parent_node)
-                  return false;
-               siblings = &parent_node->children;
-            }
-            if (row + count > siblings->size())
-               return false;
-
-            this->beginRemoveRows(parent_qmi, row, row + count - 1);
-            for (size_t i = 0; i < count; ++i) {
-               auto& node_ptr = (*siblings)[row + i];
-               delete node_ptr;
-               node_ptr = nullptr;
-            }
-            siblings->erase(siblings->begin() + row, siblings->begin() + row + count);
-            this->endRemoveRows();
-            return true;
-         }
-      #pragma endregion
    #pragma endregion
    #pragma region Node data
       /*virtual*/ QVariant RegionObjectsModel::data(const QModelIndex& qmi, int role) const /*override*/ {
-         auto* node = _node_for_qmi(qmi);
+         const node_type* node = _node_for_qmi(qmi);
          if (!node)
             return {};
          switch (role) {
             case Qt::DisplayRole:
             case Qt::ToolTipRole:
-               return node->cached.editor_id;
+               {
+                  auto it = this->_cache.find(const_cast<node_type*>(node)); // can't use const pointers for lookups when non-const pointers are the key type -_-
+                  if (it != this->_cache.end()) {
+                     auto& cache = it->second;
+                     return cache.editor_id;
+                  }
+               }
+               break;
             case ObjectDataRole:
-               return QVariant::fromValue(*(ObjectData*)node);
+               return QVariant::fromValue(node->data);
          }
          return {};
       }
@@ -182,17 +149,16 @@ RegionObjectsModel::~RegionObjectsModel() {
          switch (role) {
             case ObjectDataRole:
                {
-                  if (!value.canConvert<ObjectData>())
+                  if (!value.canConvert<object_data>())
                      return false;
-                  auto data = value.value<ObjectData>();
-                  if (!data.form)
+                  auto data = value.value<object_data>();
+                  if (!data.base_form)
                      return false;
 
-                  auto* prior_stub = node->form;
-                  node->ObjectData::operator=(std::move(data));
-                  if (node->form != prior_stub) {
-                     node->cached.editor_id = QString::fromStdString(node->form->editorID);
-                     emit dataChanged(qmi, qmi);
+                  auto* prior_stub = node->data.base_form;
+                  node->data = data;
+                  if (node->data.base_form != prior_stub) {
+                     this->_recache_node(*node, false);
                   }
                }
                break;
@@ -206,10 +172,7 @@ RegionObjectsModel::~RegionObjectsModel() {
    #pragma region Drag and drop
       #pragma region Whole-model queries
          /*virtual*/ QStringList RegionObjectsModel::mimeTypes() const /*override*/ {
-            return QStringList({
-               //editor_helpers::form_stub_array_mime_type,
-               mime_type
-            });
+            return QStringList({ mime_type });
          }
          /*virtual*/ Qt::DropActions RegionObjectsModel::supportedDragActions() const /*override*/ {
             return Qt::MoveAction;
@@ -248,7 +211,7 @@ RegionObjectsModel::~RegionObjectsModel() {
             return true;
          auto* parent_node = _node_for_qmi(parent_qmi);
          if (row == -1) {
-            row = parent_node ? parent_node->children.size() : this->_data.size();
+            row = parent_node ? parent_node->children.size() : this->_tree.objects.size();
          }
 
          if (_is_dragged_form_stub_list(*mime))
@@ -262,82 +225,57 @@ RegionObjectsModel::~RegionObjectsModel() {
    #pragma endregion
 #pragma endregion
 
-void RegionObjectsModel::importData(const backend_collection_type& src_coll) {
+void RegionObjectsModel::importData(const frontend_form_data& region) {
    this->beginResetModel();
-   for (auto*& ptr : this->_data) {
-      if (ptr) {
-         delete ptr;
-         ptr = nullptr;
-      }
-   }
-   this->_data.clear();
+   this->_cache.clear();
+   this->_drag_and_drop.clear();
+   this->_tree.clear();
 
-   std::vector<Object*> flat_list;
-   flat_list.reserve(src_coll.objects.size());
-   for (size_t i = 0; i < src_coll.objects.size(); ++i) {
-      auto& src_item     = src_coll.objects[i];
-      if (!src_item.form)
-         continue;
-      if (!allows_form_type(src_item.form.get_form_stub()->form_type))
-         continue;
-      auto  dst_item_ptr = std::make_unique<Object>();
-      auto& dst_item     = *dst_item_ptr;
-      dst_item.form   = src_item.form.get_form_stub();
-      dst_item.params = src_item.params;
-      if (src_item.parent_index < 0 || src_item.parent_index >= flat_list.size()) {
-         this->_data.push_back(&dst_item);
-      } else {
-         auto* parent = flat_list[src_item.parent_index];
-         parent->children.push_back(&dst_item);
-         dst_item.parent = parent;
+   auto& src_coll_opt = region.generable_content.objects;
+   if (src_coll_opt.has_value()) {
+      auto& src_coll = src_coll_opt.value();
+      this->_tree = src_coll;
+   }
+
+   auto crawl = [this](this auto&& recurse, node_type& node) -> void {
+      this->_recache_node(node, true);
+      for (auto& child_ptr : node.children) {
+         recurse(*child_ptr);
       }
-      flat_list.push_back(&dst_item);
-      dst_item_ptr.release();
+   };
+   for (auto& node_ptr : this->_tree.objects) {
+      crawl(*node_ptr);
    }
 
    this->endResetModel();
 }
-void RegionObjectsModel::exportData(backend_collection_type& dst_coll, loaded_form_type& dst_form) const {
-   dst_coll.clear(dst_form);
+void RegionObjectsModel::exportData(frontend_form_data& region) const {
+   auto& dst_coll_opt = region.generable_content.objects;
+   dst_coll_opt.emplace();
 
-   for (auto* item : this->_data) {
-      [&dst_coll, &dst_form](this auto&& recurse, Object& subject, int parent_index) -> void {
-         size_t subject_index = dst_coll.objects.size();
-         auto&  dst_item      = dst_coll.objects.emplace_back();
-         dst_item.form.set(dst_form, subject.form);
-         dst_item.parent_index = parent_index;
-         dst_item.params       = subject.params;
-         for (auto* child : subject.children) {
-            recurse(*child, subject_index);
-         }
-      }(*item, -1);
-   }
+   auto& dst_coll = dst_coll_opt.value();
+   dst_coll.tree_type::operator=(this->_tree);
 }
 void RegionObjectsModel::clear() {
    this->beginResetModel();
+   this->_cache.clear();
    this->_drag_and_drop.clear();
-   for (auto*& ptr : this->_data) {
-      if (ptr) {
-         delete ptr;
-         ptr = nullptr;
-      }
-   }
-   this->_data.clear();
+   this->_tree.clear();
    this->endResetModel();
 }
 
 QModelIndex RegionObjectsModel::insertObject(const QModelIndex& parent_qmi, int row, dovah::form_stub& base_form) {
-   ObjectData data;
-   data.form = &base_form;
+   object_data data;
+   data.base_form = &base_form;
    return this->insertObject(parent_qmi, row, data);
 }
-QModelIndex RegionObjectsModel::insertObject(const QModelIndex& parent_qmi, int row, const ObjectData& data) {
+QModelIndex RegionObjectsModel::insertObject(const QModelIndex& parent_qmi, int row, const object_data& data) {
    if (row < 0)
       return {};
-   if (!data.form || !allows_form_type(data.form->form_type))
+   if (!data.base_form || !allows_form_type(data.base_form->form_type))
       return {};
    auto* parent_node = _node_for_qmi(parent_qmi);
-   auto* siblings    = &this->_data;
+   auto* siblings    = &this->_tree.objects;
    if (parent_node) {
       siblings = &parent_node->children;
    } else {
@@ -348,51 +286,97 @@ QModelIndex RegionObjectsModel::insertObject(const QModelIndex& parent_qmi, int 
       return {};
 
    this->beginInsertRows(parent_qmi, row, row);
-   auto node_ptr = std::make_unique<Object>();
-   node_ptr->ObjectData::operator=(data);
+   auto node_ptr = std::make_unique<node_type>();
+   node_ptr->data   = data;
    node_ptr->parent = parent_node;
-   siblings->insert(siblings->begin() + row, &*node_ptr);
-   node_ptr.release();
+   siblings->insert(siblings->begin() + row, std::move(node_ptr));
    this->endInsertRows();
 
    return this->createIndex(row, 0, parent_node);
+}
+void RegionObjectsModel::removeObject(const QModelIndex& qmi) {
+   if (!qmi.isValid() || qmi.model() != this)
+      return;
+   auto* node = _node_for_qmi(qmi);
+   if (!node)
+      return;
+
+   QModelIndex parent_qmi;
+   auto*       siblings = &this->_tree.objects;
+   int         row      = -1;
+   if (node->parent) {
+      parent_qmi = _qmi_for_node(*node->parent);
+      siblings   = &node->parent->children;
+      row        = node->parent->index_of(*node);
+   } else {
+      row = this->_tree.index_of(*node);
+   }
+   assert(row != node_type::index_of_none);
+
+   this->beginRemoveRows(parent_qmi, row, row);
+   siblings->erase(siblings->begin() + row);
+   this->endRemoveRows();
+}
+void RegionObjectsModel::removeObjects(const QModelIndex& parent_qmi, size_t row, size_t count) {
+   if (count == 0)
+      return;
+   auto* siblings = &this->_tree.objects;
+   if (parent_qmi.isValid()) {
+      auto* parent_node = _node_for_qmi(parent_qmi);
+      if (!parent_node)
+         return;
+      siblings = &parent_node->children;
+   }
+   if (row + count > siblings->size())
+      return;
+   
+   this->beginRemoveRows(parent_qmi, row, row + count - 1);
+   siblings->erase(siblings->begin() + row, siblings->begin() + row + count);
+   this->endRemoveRows();
+}
+
+void RegionObjectsModel::_on_node_destroyed(node_type& node) {
+   this->_drag_and_drop.untrack(node);
+   [this](this auto&& recurse, node_type& node) -> void {
+      this->_cache.erase(&node);
+      for (auto& child_ptr : node.children)
+         recurse(*child_ptr);
+   }(node);
 }
 
 void RegionObjectsModel::_on_form_deleted(dovah::form_stub& stub) {
    if (!allows_form_type(stub.form_type))
       return;
 
-   auto crawl = [this, &stub](this auto&& recurse, Object& parent) -> void {
+   auto crawl = [this, &stub](this auto&& recurse, node_type& parent) -> void {
       QModelIndex parent_qmi;
       auto&  list = parent.children;
       size_t size = list.size();
       for (size_t i = 0; i < size; ++i) {
-         auto* child = list[i];
-         if (child->form != &stub) {
+         auto* child = list[i].get();
+         if (child->data.base_form != &stub) {
             recurse(*child);
             continue;
          }
          if (!parent_qmi.isValid())
             parent_qmi = _qmi_for_node(parent);
          this->beginRemoveRows(parent_qmi, i, i);
+         this->_on_node_destroyed(*child);
          list.erase(list.begin() + i);
-         this->_drag_and_drop.on_node_destroyed(*child);
-         delete child;
          --i;
          --size;
          this->endRemoveRows();
       }
    };
 
-   auto&  list = this->_data;
+   auto&  list = this->_tree.objects;
    size_t size = list.size();
    for (size_t i = 0; i < size; ++i) {
-      auto* child = list[i];
-      if (child->form == &stub) {
+      auto* child = list[i].get();
+      if (child->data.base_form == &stub) {
          this->beginRemoveRows({}, i, i);
+         this->_on_node_destroyed(*child);
          list.erase(list.begin() + i);
-         this->_drag_and_drop.on_node_destroyed(*child);
-         delete child;
          --i;
          --size;
          this->endRemoveRows();
@@ -404,22 +388,29 @@ void RegionObjectsModel::_on_form_deleted(dovah::form_stub& stub) {
 void RegionObjectsModel::_on_form_modified(dovah::form_stub& stub) {
    QString editor_id;
 
-   auto crawl = [this, &editor_id, &stub](this auto&& recurse, Object& object) -> void {
-      if (object.form == &stub) {
-         if (editor_id.isEmpty()) {
-            editor_id = QString::fromStdString(stub.editorID);
-         }
-         object.cached.editor_id = editor_id;
-         auto qmi = _qmi_for_node(object);
-         emit dataChanged(qmi, qmi);
+   auto crawl = [this, &editor_id, &stub](this auto&& recurse, node_type& object) -> void {
+      if (object.data.base_form == &stub) {
+         _recache_node(object, false);
       }
-      for (auto* child : object.children) {
-         recurse(*child);
+      for (auto& child_ptr : object.children) {
+         recurse(*child_ptr);
       }
    };
 
-   for (auto* node : this->_data)
-      crawl(*node);
+   for (auto& node_ptr : this->_tree.objects)
+      crawl(*node_ptr);
+}
+
+void RegionObjectsModel::_recache_node(node_type& node, bool silent) {
+   auto& cache = this->_cache[&node];
+   cache.editor_id = tr("NONE");
+   if (auto* stub = node.data.base_form) {
+      cache.editor_id = QString::fromStdString(stub->editorID);
+   }
+   if (!silent) {
+      auto qmi = _qmi_for_node(node);
+      emit dataChanged(qmi, qmi);
+   }
 }
 
 #pragma region Drag and drop implementation
@@ -440,7 +431,7 @@ void RegionObjectsModel::_on_form_modified(dovah::form_stub& stub) {
          }
          return false;
       }
-      bool RegionObjectsModel::_drop_form_stub_list(const QMimeData& mime, Qt::DropAction action, const QModelIndex& parent_qmi, Object* parent_node, int row) {
+      bool RegionObjectsModel::_drop_form_stub_list(const QMimeData& mime, Qt::DropAction action, const QModelIndex& parent_qmi, node_type* parent_node, int row) {
          auto dropped_stubs = editor_helpers::form_stubs_from_mime_data(mime);
          std::erase_if(
             dropped_stubs,
@@ -453,16 +444,15 @@ void RegionObjectsModel::_on_form_modified(dovah::form_stub& stub) {
 
          this->beginInsertRows(parent_qmi, row, row + dropped_stubs.size() - 1);
          for (size_t i = 0; i < dropped_stubs.size(); ++i) {
-            auto  item_ptr = std::make_unique<Object>();
+            auto  item_ptr = std::make_unique<node_type>();
             auto& item     = *item_ptr;
             if (parent_node) {
-               parent_node->children.insert(parent_node->children.begin() + row + i, &item);
+               parent_node->children.insert(parent_node->children.begin() + row + i, std::move(item_ptr));
             } else {
-               this->_data.insert(this->_data.begin() + row + i, &item);
+               this->_tree.objects.insert(this->_tree.objects.begin() + row + i, std::move(item_ptr));
             }
-            item_ptr.release();
-            item.form = dropped_stubs[i];
-            item.cached.editor_id = QString::fromStdString(item.form->editorID);
+            item.data.base_form = dropped_stubs[i];
+            this->_recache_node(item, true);
          }
          this->endInsertRows();
          return true;
@@ -472,46 +462,15 @@ void RegionObjectsModel::_on_form_modified(dovah::form_stub& stub) {
       QMimeData* RegionObjectsModel::_get_node_drag_data(const QModelIndexList& indices) const {
          if (indices.count() <= 0)
             return nullptr;
-         QByteArray  data;
-         QDataStream stream(&data, QIODevice::WriteOnly);
-         //
-         // Stream begins with our `this` pointer. The pointer is used only for equality 
-         // checks on drop (i.e. no moving/copying procedure data across packages) and is 
-         // never dereferenced.
-         //
-         stream << (intptr_t)this;
-         //
-         for (const QModelIndex& qmi : indices) {
-            const auto* node = _node_for_qmi(qmi);
-            if (!node)
-               continue;
-            //
-            // The default design for QAbstractItemModel is to serialize all itemData for 
-            // a dragged node into the stream. "Moving" an item actually involves removing 
-            // it from the tree and then inserting a new copy somewhere else.
-            // 
-            // This is dumb and wasteful, it only works if all of the node data can be 
-            // encoded as Qt item data, AFAIK it doesn't account for child/descendant nodes, 
-            // and for most of the models we make, it's not possible for a variety of other 
-            // reasons.
-            // 
-            // We also can't track the lifetime of the drag operation, so we can't, for 
-            // example, store a map of unique IDs to QPersistentModelIndexes, because we 
-            // wouldn't know when to destroy the QPMIs.
-            // 
-            // Our solution is to create IDs on demand for nodes that are being dragged, 
-            // and serialize those. We never expose direct access to nodes (and thus to the 
-            // unique_ptr list of child nodes), so all node removals go through us; we can 
-            // invalidate unique IDs properly.
-            // 
-            // Of course, since we can't track the lifetime of a drag operation, we have to 
-            // assume that a request for a node's MIME data is the start of a drag, and we 
-            // have to create the ID then. Since the mimeData() getter is const, this is... 
-            // a complication.
-            //
-            stream << this->_drag_and_drop.track(*const_cast<Object*>(node));
-         }
-         //
+
+         QByteArray data = ui::model_utils::drag_drop_nodes_by_id::build_data(
+            indices,
+            *this,
+            this->_drag_and_drop,
+            [this](const QModelIndex& qmi) {
+               return _node_for_qmi(qmi);
+            }
+         );
          QMimeData* mime = new QMimeData();
          mime->setData(mime_type, data);
          return mime;
@@ -523,14 +482,14 @@ void RegionObjectsModel::_on_form_modified(dovah::form_stub& stub) {
          if (action != Qt::DropAction::MoveAction)
             return false;
 
-         QByteArray  data = mime.data(mime_type);
-         QDataStream stream(&data, QIODevice::ReadOnly);
-         {  // Verify that this is an internal move.
-            std::intptr_t this_pointer;
-            stream >> this_pointer;
-            if ((RegionObjectsModel*)this_pointer != this)
-               return false;
-         }
+         auto extracted = ui::model_utils::drag_drop_nodes_by_id::extract_nodes_from_data(
+            mime.data(mime_type),
+            *this,
+            this->_drag_and_drop
+         );
+         if (!extracted.has_value())
+            return false;
+         auto& dragged_nodes = extracted.value();
 
          const auto* parent_node = _node_for_qmi(parent_qmi);
          if (!parent_node)
@@ -539,52 +498,35 @@ void RegionObjectsModel::_on_form_modified(dovah::form_stub& stub) {
          //
          // Don't allow dragging any node into itself or its own descendants.
          //
-         std::vector<Object*> dragged_nodes;
-         while (!stream.atEnd()) {
-            Object* node = nullptr;
-            {
-               DragDropTracking::uid_t id;
-               stream >> id;
-               node = this->_drag_and_drop.get_by_id(id);
-            }
-            if (!node)
-               continue;
-
+         for (auto* node : dragged_nodes) {
             if (node == parent_node)
                return false;
             if (node->contains(*parent_node))
                return false;
          }
+
          return true;
       }
-      bool RegionObjectsModel::_drop_nodes(const QMimeData& mime, Qt::DropAction action, const QModelIndex& dst_parent_qmi, Object* dst_parent_node, int row) {
-         QByteArray  data = mime.data(mime_type);
-         QDataStream stream(&data, QIODevice::ReadOnly);
-         {  // Verify that this is an internal move.
-            std::intptr_t this_pointer;
-            stream >> this_pointer;
-            if ((RegionObjectsModel*)this_pointer != this)
-               return false;
-         }
-         std::vector<Object*> nodes;
-         while (!stream.atEnd()) {
-            DragDropTracking::uid_t id;
-            stream >> id;
-            auto* node = this->_drag_and_drop.get_by_id(id);
-            if (node)
-               nodes.push_back(node);
-         }
+      bool RegionObjectsModel::_drop_nodes(const QMimeData& mime, Qt::DropAction action, const QModelIndex& dst_parent_qmi, node_type* dst_parent_node, int row) {
+         auto extracted = ui::model_utils::drag_drop_nodes_by_id::extract_nodes_from_data(
+            mime.data(mime_type),
+            *this,
+            this->_drag_and_drop
+         );
+         if (!extracted.has_value())
+            return false;
+         auto& nodes = extracted.value();
          if (!nodes.size())
             return false;
 
-         auto* dst_siblings = &this->_data;
+         auto* dst_siblings = &this->_tree.objects;
          if (dst_parent_node) {
             dst_siblings = &dst_parent_node->children;
          }
          for (auto it = nodes.rbegin(); it != nodes.rend(); ++it) {
-            Object& node = **it;
+            node_type& node = **it;
 
-            auto*       src_siblings = &this->_data;
+            auto*       src_siblings = &this->_tree.objects;
             QModelIndex src_parent_qmi;
             if (node.parent) {
                src_siblings   = &node.parent->children;
@@ -592,7 +534,7 @@ void RegionObjectsModel::_on_form_modified(dovah::form_stub& stub) {
             }
             int src_i = -1;
             for (size_t i = 0; i < src_siblings->size(); ++i) {
-               if ((*src_siblings)[i] == &node) {
+               if ((*src_siblings)[i].get() == &node) {
                   src_i = i;
                   break;
                }
@@ -600,48 +542,11 @@ void RegionObjectsModel::_on_form_modified(dovah::form_stub& stub) {
             assert(src_i >= 0);
 
             this->beginMoveRows(src_parent_qmi, src_i, src_i, dst_parent_qmi, row);
-            dst_siblings->insert(dst_siblings->begin() + row, &node);
+            dst_siblings->insert(dst_siblings->begin() + row, std::move((*src_siblings)[src_i]));
             src_siblings->erase(src_siblings->begin() + src_i);
             this->endMoveRows();
          }
          return true;
       }
-
-      #pragma region DragDropTracking
-         RegionObjectsModel::DragDropTracking::uid_t RegionObjectsModel::DragDropTracking::track(Object& node) {
-            for (const auto& pair : this->nodes)
-               if (pair.second == &node)
-                  return pair.first;
-            auto id = this->next_id;
-            this->next_id++;
-            this->nodes[id] = &node;
-            return id;
-         }
-         void RegionObjectsModel::DragDropTracking::untrack(Object& node) {
-            auto& map = this->nodes;
-            auto  it  = std::find_if(map.begin(), map.end(), [&node](const auto& pair) {
-               return pair.second == &node;
-            });
-            if (it != map.end())
-               map.erase(it);
-         }
-         void RegionObjectsModel::DragDropTracking::clear() {
-            this->nodes.clear();
-         }
-         RegionObjectsModel::Object* RegionObjectsModel::DragDropTracking::get_by_id(uid_t id) {
-            auto& map = this->nodes;
-            auto  it  = map.find(id);
-            if (it != map.end())
-               return it->second;
-            return nullptr;
-         }
-         void RegionObjectsModel::DragDropTracking::on_node_destroyed(Object& node) {
-            [this](this auto&& recurse, Object& node) -> void {
-               this->untrack(node);
-               for (auto* child : node.children)
-                  recurse(*child);
-            }(node);
-         }
-      #pragma endregion
    #pragma endregion
 #pragma endregion

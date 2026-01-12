@@ -356,7 +356,7 @@ namespace dovah::tes_file_writing {
       form_stub* persistent_cell = nullptr;
       if (worldspace) {
          if (worldspace->form_type == dovah::form_type::worldspace) {
-            persistent_cell = form_stub_helpers::get_worldspace_persistent_cell(worldspace);
+            persistent_cell = form_stub_helpers::get_worldspace_persistent_cell(*worldspace);
          } else {
             worldspace = nullptr;
          }
@@ -366,10 +366,10 @@ namespace dovah::tes_file_writing {
       std::vector<form_stub*> temporary;
       if (stub == persistent_cell) {
          assert(worldspace);
-         form_stub_helpers::for_each_persistent_ref_in_world(*worldspace, [&persistent](form_stub* child) {
-            if (!child->needs_save())
+         form_stub_helpers::for_each_persistent_ref_in_world(*worldspace, [&persistent](form_stub& child) {
+            if (!child.needs_save())
                return false;
-            persistent.push_back(child);
+            persistent.push_back(&child);
             return false;
          });
       } else {
@@ -387,15 +387,15 @@ namespace dovah::tes_file_writing {
          // during the save process.
          //
          bool gather_persistent = !persistent_cell || !stub->is_exterior_cell();
-         form_stub_helpers::for_each_child_form(stub, [stub, gather_persistent, &persistent, &temporary](form_stub* child) {
-            if (!child->needs_save())
+         form_stub_helpers::for_each_child_form(*stub, [stub, gather_persistent, &persistent, &temporary](form_stub& child) {
+            if (!child.needs_save())
                return false;
             if (form_stub_helpers::is_persistent(child)) {
                if (!gather_persistent)
                   return false;
-               persistent.push_back(child);
+               persistent.push_back(&child);
             } else {
-               temporary.push_back(child);
+               temporary.push_back(&child);
             }
             return false;
          });
@@ -521,7 +521,7 @@ namespace dovah::tes_file_writing {
          group_opened = true;
       };
       //
-      if (auto cell = form_stub_helpers::get_worldspace_persistent_cell(stub)) {
+      if (auto cell = form_stub_helpers::get_worldspace_persistent_cell(*stub)) {
          if (cell->needs_save()) {
             //
             // NOTE: You may be aware that persistent refs need to be handled differently from 
@@ -541,15 +541,15 @@ namespace dovah::tes_file_writing {
       }
       //
       std::map<uint32_t, _cell_block> blocks;
-      form_stub_helpers::for_each_child_form(stub, [&blocks, &open_group_if_needed](form_stub* child) {
-         if (child->form_type != form_type::cell)
+      form_stub_helpers::for_each_child_form(*stub, [&blocks, &open_group_if_needed](form_stub& child) {
+         if (child.form_type != form_type::cell)
             return false;
-         if (!child->needs_save())
+         if (!child.needs_save())
             return false;
          (open_group_if_needed)();
-         auto b  = child->get_cell_block();
-         auto sb = child->get_cell_sub_block();
-         blocks[b].contents[sb].cells.push_back(child);
+         auto b  = child.get_cell_block();
+         auto sb = child.get_cell_sub_block();
+         blocks[b].contents[sb].cells.push_back(&child);
          return false;
       });
       for (auto& pair : blocks) {

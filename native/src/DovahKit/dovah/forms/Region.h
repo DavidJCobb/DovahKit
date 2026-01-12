@@ -9,6 +9,7 @@
 #include "./structs/region/area.h"
 #include "./structs/region/generable_content_collection.h"
 #include "./structs/color_dword.h"
+#include "../use_info/entry_flags/region.h"
 
 namespace dovah::loaded_forms {
    class Region : public Form {
@@ -29,7 +30,7 @@ namespace dovah::loaded_forms {
          components::papyrus_attachment_data script_data; // VMAD
          //
          color_t map_color; // RCLR
-         form_reference_t parent_world; // WNAM -> WRLD
+         unique_form_reference_t<use_info::entry_flags::region::worldspace> parent_world; // WNAM -> WRLD
          std::vector<region_area> areas; // (RPLI+RPLD[])[]
          std::vector<generable_content_collection> generable_content; // (RDAT+...)[]
 

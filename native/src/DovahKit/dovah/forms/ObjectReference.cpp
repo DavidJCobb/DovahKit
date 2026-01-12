@@ -120,7 +120,7 @@ namespace dovah::loaded_forms {
       assert(world.form_type == form_type::worldspace);
       int32_t gx = position.x / 4096;
       int32_t gy = position.y / 4096;
-      auto* move_to_cell = form_stub_helpers::get_worldspace_cell_by_grid(&world, gx, gy);
+      auto* move_to_cell = form_stub_helpers::get_worldspace_cell_by_grid(world, gx, gy);
       if (move_to_cell) {
          this->stub.set_edited(true);
          this->stub.set_parent_form(move_to_cell);
@@ -362,7 +362,7 @@ namespace dovah::loaded_forms {
                break;
          }
       }
-      uib.add_outbound_reference(base_form, use_info_entry::flag::object_reference);
+      uib.add_outbound_reference(base_form, decltype(ObjectReference::base_form)::use_info_flag);
       eduis.commit_to(uib);
    }
    void ObjectReference::_clone_impl(Form* out) const noexcept {

@@ -581,7 +581,7 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(sounds.idle);
       uib.add_outbound_reference(sounds.equip);
       uib.add_outbound_reference(sounds.unequip);
-      uib.add_outbound_reference(template_weapon);
+      uib.add_outbound_reference(template_weapon, use_info::entry_flags::weapon::template_form);
       uib.add_outbound_reference(take_sound);
       uib.add_outbound_reference(drop_sound);
       uib.add_outbound_reference(scope_effect);

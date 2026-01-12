@@ -242,7 +242,7 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(activator.interact_keyword);
       uib.add_outbound_reference(activator.sound_loop);
       uib.add_outbound_reference(activator.sound_activate);
-      uib.add_outbound_reference(activator.water_type, use_info_entry::flag::water_acti_type);
+      uib.add_outbound_reference(activator.water_type, decltype(Furniture::water_type)::use_info_flag);
       activator.destruction_uib.done();
 
       uib.add_outbound_reference(furniture.associated_spell);

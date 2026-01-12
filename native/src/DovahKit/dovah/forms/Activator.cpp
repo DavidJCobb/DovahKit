@@ -135,7 +135,7 @@ namespace dovah::loaded_forms {
       uib.add_outbound_reference(interact_keyword);
       uib.add_outbound_reference(sound_loop);
       uib.add_outbound_reference(sound_activate);
-      uib.add_outbound_reference(water_type, use_info_entry::flag::water_acti_type);
+      uib.add_outbound_reference(water_type, decltype(Activator::water_type)::use_info_flag);
       destruction_uib.done();
    }
    void Activator::_clone_impl(Form* out) const noexcept {

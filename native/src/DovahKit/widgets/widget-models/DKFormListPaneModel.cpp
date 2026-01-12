@@ -162,7 +162,7 @@ void DKFormListPaneModel::_recacheItemText(Item& item) {
       bool done = false;
       if (item.stub && item.stub->editorID.empty() && dovah::form_type_is_reference(item.stub->form_type)) {
          if (this->nameless_refs_show_base_editor_id) {
-            auto* base = dovah::form_stub_helpers::get_base_form(item.stub);
+            auto* base = dovah::form_stub_helpers::get_base_form(*item.stub);
             if (base && !base->editorID.empty()) {
                editor_id = QString::fromStdString(base->editorID);
                done = true;

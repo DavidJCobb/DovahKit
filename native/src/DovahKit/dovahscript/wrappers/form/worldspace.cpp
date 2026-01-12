@@ -52,13 +52,13 @@ namespace {
          //
          int i   = 0;
          int pos = lua_gettop(L);
-         const auto* persistent_cell = dovah::form_stub_helpers::get_worldspace_persistent_cell(stub);
-         dovah::form_stub_helpers::for_each_child_form(stub, [L, &i, pos, persistent_cell](dovah::form_stub* child) {
-            if (child == persistent_cell)
+         const auto* persistent_cell = dovah::form_stub_helpers::get_worldspace_persistent_cell(*stub);
+         dovah::form_stub_helpers::for_each_child_form(*stub, [L, &i, pos, persistent_cell](dovah::form_stub& child) {
+            if (&child == persistent_cell)
                return false;
-            if (child->form_type != dovah::form_type::cell)
+            if (child.form_type != dovah::form_type::cell)
                return false;
-            int wcount = push_native_object(child);
+            int wcount = push_native_object(&child);
             while (wcount--)
                lua_rawseti(L, pos, ++i);
             return false;
@@ -77,7 +77,7 @@ namespace {
          luaL_argcheck(L, isnum, 3, "grid-y (integer) expected");
          if (!stub)
             return 0;
-         auto* cell = dovah::form_stub_helpers::get_worldspace_cell_by_grid(stub, gx, gy);
+         auto* cell = dovah::form_stub_helpers::get_worldspace_cell_by_grid(*stub, gx, gy);
          return push_native_object(cell);
       }
    }

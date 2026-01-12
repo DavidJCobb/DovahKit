@@ -135,7 +135,7 @@ void SceneFormVisualEditor::setContext(const SceneContext& c) {
       if (stub->form_type != dovah::form_type::scene) {
          this->_context.scene = nullptr;
       } else if (!this->_context.quest) {
-         this->_context.quest = dovah::form_stub_helpers::get_unique_outbound_use<dovah::use_info_entry::flag::dialogue_quest>(*stub);
+         this->_context.quest = dovah::form_stub_helpers::get_unique_outbound_use<dovah::use_info::entry_flags::scene::parent_quest>(*stub);
       }
    }
    this->_update_phase_conditions();

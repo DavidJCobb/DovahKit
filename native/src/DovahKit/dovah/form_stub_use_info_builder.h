@@ -3,7 +3,9 @@
 #include <cstdint>
 #include <vector>
 #include "./form_id_t.h"
-#include "./use_info_entry.h"
+#include "./use_info/entry_flag_to_mask.h"
+#include "./use_info/entry_flag_underlying_type.h"
+#include "./use_info/is_entry_flag_type.h"
 
 namespace dovah {
    class form_stub;
@@ -22,11 +24,11 @@ namespace dovah {
          struct _pending_entry {
             form_stub* target_stub = nullptr; // form stub
             uint32_t   target_id   = 0;       // form ID
-            use_info_entry::flags_t flags = 0;
+            use_info::entry_flag_underlying_type flags = 0;
             //
             _pending_entry() {}
-            _pending_entry(uint32_t i, use_info_entry::flags_t f) : target_id(i), flags(f) {}
-            _pending_entry(form_stub* s, use_info_entry::flags_t f) : target_stub(s), flags(f) {}
+            _pending_entry(uint32_t i, use_info::entry_flag_underlying_type f) : target_id(i), flags(f) {}
+            _pending_entry(form_stub* s, use_info::entry_flag_underlying_type f) : target_stub(s), flags(f) {}
          };
          
          form_stub& _stub;
@@ -52,11 +54,19 @@ namespace dovah {
          
       public:
          bool is_partial_record = false;
-         //
-         void add_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
-         void add_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
-         void cancel_outbound_reference(form_stub* to_stub, use_info_entry::flags_t flags = 0);
-         void cancel_outbound_reference(uint32_t toFormID, use_info_entry::flags_t flags = 0);
+         
+         void add_outbound_reference(uint32_t toFormID, use_info::entry_flag_underlying_type flags = 0);
+         void cancel_outbound_reference(uint32_t toFormID, use_info::entry_flag_underlying_type flags = 0);
+
+         template<typename UseInfoFlag> requires use_info::is_entry_flag_type_v<UseInfoFlag>
+         void add_outbound_reference(uint32_t to_form_id, UseInfoFlag flag) {
+            this->add_outbound_reference(to_form_id, use_info::entry_flag_to_mask(flag));
+         }
+         template<typename UseInfoFlag> requires use_info::is_entry_flag_type_v<UseInfoFlag>
+         void cancel_outbound_reference(uint32_t to_form_id, UseInfoFlag flag) {
+            this->cancel_outbound_reference(to_form_id, use_info::entry_flag_to_mask(flag));
+         }
+
          void commit();
          
          //

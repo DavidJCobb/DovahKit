@@ -6,9 +6,11 @@
 #include "../../push_native_object.h"
 #include "../../wrapper.h"
 
-#include "../../../dovah/forms/TopicInfo.h"
-#include "topic_info/collection_responses.h"
-#include "topic_info/response.h"
+#include "dovah/form_stubs/helpers/get_unique_outbound_use.h"
+#include "dovah/use_info/entry_flags/topic.h"
+#include "dovah/forms/TopicInfo.h"
+#include "./topic_info/collection_responses.h"
+#include "./topic_info/response.h"
 
 namespace {
    using namespace dovahscript;
@@ -48,7 +50,7 @@ namespace {
          dovah::form_stub* parent = self.stub->get_parent_form();
          dovah::form_stub* quest  = nullptr;
          if (parent && parent->form_type == dovah::form_type::topic) {
-            quest = parent->get_outbound_use_with_flag(dovah::use_info_entry::flag::dialogue_quest);
+            quest = dovah::form_stub_helpers::get_unique_outbound_use<dovah::use_info::entry_flags::topic::parent_quest>(*parent);
             if (quest->form_type != dovah::form_type::quest)
                quest = nullptr;
          }

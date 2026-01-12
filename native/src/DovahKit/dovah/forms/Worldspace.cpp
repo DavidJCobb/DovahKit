@@ -297,11 +297,11 @@ namespace dovah::loaded_forms {
       }
       uib.add_outbound_reference(climate);
       uib.add_outbound_reference(lighting_template);
-      uib.add_outbound_reference(encounter_zone);
-      uib.add_outbound_reference(location);
+      uib.add_outbound_reference(encounter_zone, use_info::entry_flags::worldspace::encounter_zone);
+      uib.add_outbound_reference(location,       use_info::entry_flags::worldspace::location);
       uib.add_outbound_reference(water_type);
       uib.add_outbound_reference(water_type_lod);
-      uib.add_outbound_reference(parent_world);
+      uib.add_outbound_reference(parent_world,   use_info::entry_flags::worldspace::parent_worldspace);
       uib.add_outbound_reference(music_type);
    }
    void Worldspace::setup(const file_load_order& load_order) noexcept {

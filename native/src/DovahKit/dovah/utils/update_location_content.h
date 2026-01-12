@@ -21,7 +21,6 @@ namespace dovah::utils {
       protected:
          void _crawl_special_refs(form_stub& cell_or_world);
          static form_stub* _get_containing_world(form_stub& cell);
-         static form_stub* _get_encounter_zone(form_stub&);
          static form_stub* _get_explicit_location(form_stub&);
          static form_stub* _get_loc_ref_type(form_stub&);
          static bool _is_unique_actor(form_stub& base_form);

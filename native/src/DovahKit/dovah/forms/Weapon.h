@@ -14,6 +14,7 @@
 #include "../data/detection_loudness.h"
 #include "../data/skills.h"
 #include "../data/weapon_type.h"
+#include "../use_info/entry_flags/weapon.h"
 
 namespace dovah::loaded_forms {
    class Weapon : public Form {
@@ -67,7 +68,7 @@ namespace dovah::loaded_forms {
          localized_string name        = localized_string(localized_string_type::common);      // FULL
          localized_string description = localized_string(localized_string_type::description); // DESC
          //
-         form_reference_t template_weapon; // CNAM
+         unique_form_reference_t<use_info::entry_flags::weapon::template_form> template_weapon; // CNAM
          //
          form_reference_t equip_type; // ETYP
          form_reference_t first_person_model; // WNAM // a STAT form

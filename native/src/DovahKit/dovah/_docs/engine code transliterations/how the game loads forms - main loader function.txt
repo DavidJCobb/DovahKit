@@ -219,7 +219,7 @@ lAfterDeletedCheck:
          //
          // NavMeshInfoMap is a singleton.
          //
-         LoadFormAndMaybeDoOtherStuff(Arg3 ? Arg3 : (*g_TES)->GetOrCreateNavMeshInfoMap(), Arg1);
+         LoadFormFromFile(Arg3 ? Arg3 : (*g_TES)->GetOrCreateNavMeshInfoMap(), Arg1);
          break;
       case form_type::cell: // at 0x004405ED
          {
@@ -228,7 +228,7 @@ lAfterDeletedCheck:
                Arg3 = new TESObjectCELL;
                ebpp0F = true;
             }
-            LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+            LoadFormFromFile(Arg3, Arg1);
             if (this->unkA9E) {
                Arg3->Unk_24(1);
             }
@@ -284,7 +284,7 @@ lAfterDeletedCheck:
          }
          // at 0x00440771
          if (Arg3) {
-            if (!LoadFormAndMaybeDoOtherStuff(Arg3, Arg1)) {
+            if (!LoadFormFromFile(Arg3, Arg1)) {
                ref_handle ebpn34;
                CreateRefHandleFor(ebpn34, Arg3);
                if (!ebpn34) {
@@ -378,19 +378,23 @@ lAfterDeletedCheck:
       case form_type::worldspace: // at 0x00440A81
          if (!Arg3)
             Arg3 = new TESWorldSpace;
-         LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+         LoadFormFromFile(Arg3, Arg1);
          this->formsByType[form_type::worldspace].push_back(Arg3);
          current_loaded_wrld = Arg3;
          break;
       case form_type::landscape: // at 0x004409B9
          if (current_loaded_cell) {
-            Arg3 = current_loaded_cell->GetOrCreateLand();
+            Arg3 = current_loaded_cell->GetOrCreateLandscape();
             if (!Arg3) {
                Arg3 = new TESObjectLAND;
-               Arg3->sub004B9260(current_loaded_cell);
-               current_loaded_cell->sub004C2380(Arg3);
+               Arg3->SetParentCell(current_loaded_cell);
+               current_loaded_cell->SetLandscape(Arg3);
             }
-            LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+            LoadFormFromFile(Arg3, Arg1);
+            //
+            // By implication, this means that if a CELL contains multiple LAND records, 
+            // the later records act as overrides to the earlier records, rather than 
+            // being truly separate forms.
          }
          break;
       case form_type::navmesh: // at 0x00440BD9
@@ -401,7 +405,7 @@ lAfterDeletedCheck:
             // Branch for a new navmesh:
             //
             Arg3 = new NavMesh; // also stored in a smart pointer
-            if (LoadFormAndMaybeDoOtherStuff(navmesh, Arg1)) {
+            if (LoadFormFromFile(navmesh, Arg1)) {
                if (TESObjectCELL* cell = Arg3->sub005F6780()) {
                   //
                   // Every time we use (cell) in this block, we're redundantly calling that 
@@ -423,24 +427,22 @@ lAfterDeletedCheck:
          //
          // Branch for overriding a navmesh:
          //
-         LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+         LoadFormFromFile(Arg3, Arg1);
          break;
       case form_type::topic: // at 0x00440AF8
          if (!Arg3) {
             Arg3 = new TESTopic;
-            LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
-            //
-            // ... weird stuff here ...
-            //
+            LoadFormFromFile(Arg3, Arg1);
+            this->formsByType[form_type::topic].push_back(Arg3); // guessed
             break;
          }
-         LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+         LoadFormFromFile(Arg3, Arg1);
          break;
       case form_type::topic_info: // at 0x00440B5F
          if (!Arg3)
             Arg3 = new TESTopicInfo;
          {
-            bool al = LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+            bool al = LoadFormFromFile(Arg3, Arg1);
             tls2EB = false;
             return al;
          }
@@ -448,19 +450,19 @@ lAfterDeletedCheck:
       case form_type::quest: // at 0x00440BB4
       case form_type::camera_path:
          if (Arg3) {
-            LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+            LoadFormFromFile(Arg3, Arg1);
             break;
          }
-         LoadFormAndMaybeDoOtherStuff(CreateFormByType(form_type_to_load), Arg1);
+         LoadFormFromFile(CreateFormByType(form_type_to_load), Arg1);
          break;
       case form_type::actor_value_info: // at 0x00440CD2
-         LoadFormAndMaybeDoOtherStuff(Arg3, Arg1); // note that we never create new forms
+         LoadFormFromFile(Arg3, Arg1); // note that we never create new forms
          break;
       case form_type::default_object_manager: // at 0x004405D0
          //
          // DefaultObjectManager is a singleton.
          //
-         LoadFormAndMaybeDoOtherStuff(GetDefaultObjectManager(), Arg1);
+         LoadFormFromFile(GetDefaultObjectManager(), Arg1);
          break;
       case form_type::dialogue_view: // at 0x00440D20
          //
@@ -475,7 +477,7 @@ lAfterDeletedCheck:
          }
          if (!Arg3)
             return false;
-         LoadFormAndMaybeDoOtherStuff(Arg3, Arg1);
+         LoadFormFromFile(Arg3, Arg1);
          if (creating_new_form) {
             this->RegisterForm(Arg3);
          }
@@ -486,7 +488,7 @@ lAfterDeletedCheck:
    return true;
 }
 
-bool LoadFormAndMaybeDoOtherStuff(TESForm* form, TESFile& file) {
+bool LoadFormFromFile(TESForm* form, TESFile& file) {
    //
    // It looks like some Creation Kit state flags are mixed into the file format. 
    // The "active" flag on files almost certainly refers to the Active File, i.e. 
@@ -497,17 +499,13 @@ bool LoadFormAndMaybeDoOtherStuff(TESForm* form, TESFile& file) {
    // they're the flags on the TES4 record. Strangely, though, at least some of 
    // them apply to all record types, as we see here.
    //
-   bool bl    = form->flags & 1;
-   bool esp10 = form->Load(file);
+   bool bl    = form->flags & 1; // per-form "master" flag
+   bool esp10 = form->Load(file); // virtual call
    //
    // We want the "master" flag on a form to be true if the form is defined in any 
    // master-flagged file, even if it's subsequently overridden by a non-master.
    //
-   if (bl) {
-      form->ModifyFlag00000001(true); // set "master" flag on form... to what it already is
-   } else {
-      form->ModifyFlag00000001(file.IsMaster()); // set "master" flag on form to match this file
-   }
+   form->SetIsMaster(bl ? bl : file.IsMaster());
    //
    // Creation Kit bookkeeping (still in TESV.exe):
    //
@@ -518,4 +516,103 @@ bool LoadFormAndMaybeDoOtherStuff(TESForm* form, TESFile& file) {
    // Return result of original "load form" operation:
    //
    return esp10;
+}
+
+#if CREATION_KIT
+   static struct SomeVersionControlStruct {
+      uint8_t user_id; // 00
+      // ...
+   } ptrSomeVersionControlStruct = nullptr;
+#endif
+
+// Called (indirectly) by many forms' "Load" vfuncs, near their start. 
+// This seems to be where a form's flags are updated based on the record 
+// header (or set for the first time if it's the base record).
+void TESFile::SetUpFormFromRecordHeader(TESForm& form) {
+   FormType ft;
+   if (!this->currentForm.signature) {
+      uint8_t al = this->ReadRecordHeader();
+      if (al) {
+         this->currentChunkID  = 0; // The community's "subrecords" are Bethesda's "chunks."
+         this->actualChunkSize = 0; // CommonLibSSE seems to prefer the latter terminology.
+         this->_OpenNextSubrecordImpl();
+      }
+   }
+   ft = FourCCToFormType(this->currentForm.signature);
+
+   //
+   // Clear all pre-existing flags on the form except for:
+   //
+   //  - Temporary     (1 << 14)
+   //  - Still Loading (1 << 21) (name per CommonLibSSE)
+   //  - Retains ID    (1 << 22) (name per CommonLibSSE)
+   //
+   uint32_t flags_to_preserve = form.flags & 0x00604000;
+   if (form.flags & (1 << 3)) { // kInitialized
+      if (this->currentForm.flags & 0x20) { // kDeleted
+         //
+         // If an override is flagged as "deleted," then we won't have 
+         // invoked TESForm::ClearData and friends.
+         //
+         // When forms refer to each other, they do so via an untagged 
+         // union of a form ID and a form pointer. After loading, the 
+         // game invokes TESForm::InitItemImpl, which converts the form 
+         // IDs into pointers, and then sets the "initialized" flag. If 
+         // we load a deleted record for a form that has already been 
+         // initialized, then that form will hold on to those unions, 
+         // so we want to preserve this flag so we know that the unions 
+         // are pointers and not raw form IDs.
+         //
+         flags_to_preserve |= 1 << 3; // kInitialized
+      }
+   }
+   form.flags = this->currentForm.flags | flags_to_preserve;
+
+   form.SetFormID(this->currentForm.formID, true);
+
+   #if CREATION_KIT
+      //
+      // Version control stuff.
+      //
+      uint8_t checked_out_user_prior = this->currentForm.versionControl >> 24; // cl
+      form.unk14 = this->currentForm.versionControl;
+      if (!(form.flags & (1 << 14))) { // "Temporary" flag
+         //
+         // "Temporary" is not here an antonym for "persistent." Its use 
+         // within the Creation Kit and the form loader is unclear, but 
+         // during gameplay, it's used for "fake" forms.
+         //
+         // For example, when you view your inventory, the 3D model you see 
+         // for an item is actually a TESObjectREFR flagged as "temporary." 
+         // This flag means, "I don't exist, I shouldn't be selectable in 
+         // the console, I shouldn't be saved, and my form ID should be 
+         // considered available for (re)use by other forms even if I'm 
+         // still in RAM."
+         //
+         if (!(this->flags & 1)) { // "Master" flag
+            constexpr const uint8_t no_user = 0xFF;
+
+            uint8_t checked_out_user_after = form.unk14 >> 24; // dl
+            if (checked_out_user_after != checked_out_user_prior) {
+               //
+               // The user ID that has this form checked out has changed, 
+               // from the last-loaded record to this one.
+               //
+               if (checked_out_user_after != ptrSomeVersionControlStruct->user_id && checked_out_user_after != no_user) {
+                  //
+                  // Retain the new timestamp and "last user who checked out 
+                  // this form" ID, but retain the old "user who currently has 
+                  // this form checked out" ID.
+                  //
+                  form.unk14 &= 0x00FFFFFF;
+                  form.unk14 |= checked_out_user_prior << 24;
+               }
+            }
+         }
+      }
+
+      form.SetRecordVersion(this->currentForm.formVersion >> 16); // record version, from the record header
+   #endif
+
+   form.AppendToSourceFileList(this);
 }

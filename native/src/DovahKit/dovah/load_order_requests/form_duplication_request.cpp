@@ -47,8 +47,8 @@ namespace dovah {
       this->main_request->set_parent_form(this->parent);
       this->main_request->queue_clone(original);
       //
-      form_stub_helpers::for_each_child_form(original, [this, original](form_stub* child) {
-         auto* request = new form_creation_request(this->owner.request_form_creation(child->form_type));
+      form_stub_helpers::for_each_child_form(*original, [this, original](form_stub& child) {
+         auto* request = new form_creation_request(this->owner.request_form_creation(child.form_type));
 
          // HACK HACK HACK: Set a dummy parent form (in this case, the parent we wish to clone) 
          // so that when we later check if cloning the child is possible, we don't spuriously 
@@ -57,14 +57,14 @@ namespace dovah {
          // that. We update the parentage after the parent-clone is created.)
          request->set_parent_form(original);
 
-         request->queue_clone(child);
+         request->queue_clone(&child);
          this->child_requests.push_back(request);
          return false;
       });
       if (original->form_type == form_type::quest) {
-         form_stub_helpers::for_each_quest_topic(original, [this](form_stub* child) {
-            auto* request = new form_creation_request(this->owner.request_form_creation(child->form_type));
-            request->queue_clone(child);
+         form_stub_helpers::for_each_quest_topic(*original, [this](form_stub& child) {
+            auto* request = new form_creation_request(this->owner.request_form_creation(child.form_type));
+            request->queue_clone(&child);
             this->child_requests.push_back(request);
             return false;
          });

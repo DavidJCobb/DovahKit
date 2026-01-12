@@ -33,6 +33,7 @@ namespace cobb {
             case 1: return y;
             case 2: return z;
             default:
+               #pragma warning(suppress:4297) // throw-in-noexcept is intentional, to halt constant evaluation
                throw;
          }
       } else {
@@ -48,6 +49,7 @@ namespace cobb {
             case 1: return y;
             case 2: return z;
             default:
+               #pragma warning(suppress:4297) // throw-in-noexcept is intentional, to halt constant evaluation
                throw;
          }
       } else {

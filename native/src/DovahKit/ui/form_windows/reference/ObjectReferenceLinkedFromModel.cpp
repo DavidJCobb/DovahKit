@@ -412,7 +412,7 @@ void ObjectReferenceLinkedFromModel::_re_sort_item(size_t from) {
 /*static*/ QString ObjectReferenceLinkedFromModel::_name_of(const dovah::form_stub& stub) {
    if (dovah::form_type_is_reference(stub.form_type)) {
       if (stub.editorID.empty()) {
-         if (auto* base = dovah::form_stub_helpers::get_base_form(&stub))
+         if (auto* base = dovah::form_stub_helpers::get_base_form(stub))
             return QString::fromStdString(base->editorID);
       }
    }

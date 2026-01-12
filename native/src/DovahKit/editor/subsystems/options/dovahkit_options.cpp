@@ -41,7 +41,7 @@ namespace dovahkit::subsystems::options {
       auto path = QCoreApplication::applicationDirPath();
       auto dir  = QDir(QDir(path).absoluteFilePath("userdata/"));
       if (!dir.exists()) {
-         dir = QDir::current().absoluteFilePath("userdata/"); // During debugging, the program's path is at ./x64/ConfigurationName/ and the current working directory is at ./
+         dir.setPath(QDir::current().absoluteFilePath("userdata/")); // During debugging, the program's path is at ./x64/ConfigurationName/ and the current working directory is at ./
       }
       return dir.path() + "/";
    }

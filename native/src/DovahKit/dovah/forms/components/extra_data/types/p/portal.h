@@ -13,14 +13,14 @@ namespace dovah::loaded_forms::components::extra_data_types {
          portal() : extra_data(all_extra_data_types::index_of_type<portal>) {}
 
       public:
-         float width;
-         float height;
+         float width  = 0;
+         float height = 0;
          cobb::vector3<float> position;
          struct { // quaternion?
-            float a;
-            float b;
-            float c;
-            float d;
+            float a = 0;
+            float b = 0;
+            float c = 0;
+            float d = 0;
          } rotation;
 
       public:

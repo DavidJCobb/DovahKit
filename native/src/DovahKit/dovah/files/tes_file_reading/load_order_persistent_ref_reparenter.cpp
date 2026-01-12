@@ -3,6 +3,8 @@
 #include "../file_load_order.h"
 #include "../../form_stub.h"
 #include "../../form_stub_addenda.h"
+#include "../../use_info/entry_flags/base.h"
+#include "../../use_info/entry_flag_to_mask.h"
 #include "../../utils/world_position_to_grid_coordinates.h"
 #include "../../load_order_interfaces/form_load.h"
 
@@ -34,7 +36,7 @@ namespace dovah::tes_file_reading {
          auto* p_cell = world.addenda ? world.addenda->persistent_cell : nullptr;
          for (auto& pair : world.inbound) {
             auto& entry = pair.second;
-            if (!(entry.flags & use_info_entry::flag::parent_child))
+            if (!(entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent)))
                continue;
             auto* cell = entry.other;
             if (!cell || cell->form_type != form_type::cell)
@@ -156,7 +158,7 @@ namespace dovah::tes_file_reading {
             if ((item.gy >= 0) != this->y_pos)
                continue;
          }
-         item.cell->receive_inbound_ref({}, item.refr, 1, use_info_entry::flag::parent_child);
+         item.cell->receive_inbound_ref({}, item.refr, 1, use_info::entry_flag_to_mask(use_info::entry_flags::base::parent));
       }
    }
    //
@@ -237,7 +239,7 @@ namespace dovah::tes_file_reading {
             //
             for (auto& pair : src) {
                auto& entry = pair.second;
-               if (entry.flags & use_info_entry::flag::parent_child) {
+               if (entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent)) {
                   auto* child = entry.other;
                   if (child && form_type_is_reference(child->form_type)) {
                      this->refs.emplace_back(*child);

@@ -5,5 +5,5 @@ namespace dovah {
 }
 
 namespace dovah::form_stub_helpers {
-   extern form_stub* get_template_actor(const form_stub* subject_actor);
+   extern form_stub* get_template_actor(const form_stub& subject_actor);
 }

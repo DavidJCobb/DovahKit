@@ -1,5 +1,6 @@
 #include "./QuestTabScenes.h"
 #include <array>
+#include "dovah/form_stubs/helpers/for_each_quest_scene.h"
 #include "dovah/form_stubs/helpers/get_unique_outbound_use.h"
 #include "dovah/forms/Scene.h"
 #include "dovah/forms/Quest.h"
@@ -72,14 +73,9 @@ void QuestTabScenes::setupUi() {
       this->ui.buttons.zoom_out->setEnabled(zoom > 0.1F);
    });
 
-   for (auto& use : this->working_quest.stub.inbound) {
-      if (use.second.flags & dovah::use_info_entry::flag::dialogue_quest) {
-         auto* stub = use.second.other;
-         if (stub->form_type != dovah::form_type::scene)
-            continue;
-         this->ui.scene_picker->addStub(stub);
-      }
-   }
+   dovah::form_stub_helpers::for_each_quest_scene(this->working_quest.stub, [this](dovah::form_stub& scene) {
+      this->ui.scene_picker->addStub(&scene);
+   });
 
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::formCreated, this, &QuestTabScenes::_on_form_created);
@@ -189,7 +185,7 @@ void QuestTabScenes::_on_form_created(dovah::form_stub* stub) {
    if (stub->form_type != dovah::form_type::scene)
       return;
 
-   auto* quest = dovah::form_stub_helpers::get_unique_outbound_use<dovah::use_info_entry::flag::dialogue_quest>(*stub);
+   auto* quest = dovah::form_stub_helpers::get_unique_outbound_use<dovah::use_info::entry_flags::scene::parent_quest>(*stub);
    if (!quest)
       return;
    if (quest != &this->working_quest.stub)

@@ -47,14 +47,14 @@ namespace {
          });
       } else {
          auto _scan_cell = [&out](dovah::form_stub& cell) {
-            dovah::form_stub_helpers::for_each_child_form(&cell, [&out](dovah::form_stub* ref) {
-               if (ref->form_type != dovah::form_type::navmesh)
+            dovah::form_stub_helpers::for_each_child_form(cell, [&out](dovah::form_stub& ref) {
+               if (ref.form_type != dovah::form_type::navmesh)
                   return;
-               if (!ref->is_deleted())
+               if (!ref.is_deleted())
                   return;
-               if (!_is_defined_and_overridden_in_different_masters(*ref))
+               if (!_is_defined_and_overridden_in_different_masters(ref))
                   return;
-               out.push_back(ref);
+               out.push_back(&ref);
             });
          };
 
@@ -65,16 +65,16 @@ namespace {
             return false;
          });
          lo.for_each_form_of_type(dovah::form_type::worldspace, [&_scan_cell](dovah::form_stub* world) -> bool {
-            auto* pcell = dovah::form_stub_helpers::get_worldspace_persistent_cell(world);
+            auto* pcell = dovah::form_stub_helpers::get_worldspace_persistent_cell(*world);
             if (pcell) {
                _scan_cell(*pcell);
             }
-            dovah::form_stub_helpers::for_each_child_form(world, [&_scan_cell, pcell](dovah::form_stub* cell) {
-               if (cell->form_type != dovah::form_type::cell)
+            dovah::form_stub_helpers::for_each_child_form(*world, [&_scan_cell, pcell](dovah::form_stub& cell) {
+               if (cell.form_type != dovah::form_type::cell)
                   return;
-               if (cell == pcell)
+               if (&cell == pcell)
                   return;
-               _scan_cell(*cell);
+               _scan_cell(cell);
             });
          });
       }
