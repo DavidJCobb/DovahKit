@@ -8,14 +8,13 @@
 #include "dovah/form_stub.h"
 #include "ui/types/regions/region.h"
 #include "./fragments/objects.h"
+#include "./fragments/weather.h"
 #include "./fragment_passkey.h"
 namespace dovah::exceptions {
    class form_creation_failed;
 }
 class RegionsAvailableInWorldModel;
-class RegionObjectsModel;
 class RegionSoundsModel;
-class RegionWeatherModel;
 
 class RegionsDialog : public QDialog {
    Q_OBJECT;
@@ -37,11 +36,11 @@ class RegionsDialog : public QDialog {
       bool _current_region_edited = false;
       struct {
          ui::region::fragments::objects objects;
+         ui::region::fragments::weather weather;
       } fragments;
       struct {
          RegionsAvailableInWorldModel* available_regions = nullptr;
          RegionSoundsModel*  sounds  = nullptr;
-         RegionWeatherModel* weather = nullptr;
       } models;
 
       void _report_region_create_error(const dovah::exceptions::form_creation_failed&);

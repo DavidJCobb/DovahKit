@@ -1,5 +1,6 @@
 #include "./objects.h"
 #include <QCheckBox>
+#include <QCoreApplication>
 #include <QDoubleSpinBox>
 #include <QLineEdit>
 #include <QPushButton>
@@ -7,42 +8,53 @@
 #include <QSpinBox>
 #include "helpers/bound_mem_fn.h"
 #include "widgets/DKColorPickerButton.h"
+#include "ui/model_utils/ViewEventFilter_RemoveRowOnDelKey.h"
+#include "ui/utils/set_custom_context_menu.h"
 #include "ui/utils/set_range.h"
 #include "../RegionObjectsModel.h"
 #include "../RegionsDialog.h"
 
-// Given: DO(control, object_data_field, ...)
-#define FOR_EACH_NUMERIC_PARAM(DO) \
-   DO(edit.angle_variance.ranges.x,   angle_variance.x) \
-   DO(edit.angle_variance.ranges.y,   angle_variance.y) \
-   DO(edit.angle_variance.ranges.z,   angle_variance.z) \
-   DO(edit.clustering,                clustering) \
-   DO(edit.density,                   density) \
-   DO(edit.height.min,                height.min) \
-   DO(edit.height.max,                height.max) \
-   DO(edit.paint_vertices.percentage, paint_vertices.radius_percent) \
-   DO(edit.radius,                    radius) \
-   DO(edit.radius_wrt_parent,         radius_wrt_parent) \
-   DO(edit.sink.base,                 sink.base) \
-   DO(edit.sink.variance,             sink.variance) \
-   DO(edit.size_variance.range,       size_variance) \
-   DO(edit.slope.min,                 slope.min) \
-   DO(edit.slope.max,                 slope.max)
+#pragma region X-macros
+   // Given: DO(control, object_data_field, ...)
+   #define FOR_EACH_NUMERIC_PARAM(DO) \
+      DO(edit.angle_variance.ranges.x,   angle_variance.x) \
+      DO(edit.angle_variance.ranges.y,   angle_variance.y) \
+      DO(edit.angle_variance.ranges.z,   angle_variance.z) \
+      DO(edit.clustering,                clustering) \
+      DO(edit.density,                   density) \
+      DO(edit.height.min,                height.min) \
+      DO(edit.height.max,                height.max) \
+      DO(edit.paint_vertices.percentage, paint_vertices.radius_percent) \
+      DO(edit.radius,                    radius) \
+      DO(edit.radius_wrt_parent,         radius_wrt_parent) \
+      DO(edit.sink.base,                 sink.base) \
+      DO(edit.sink.variance,             sink.variance) \
+      DO(edit.size_variance.range,       size_variance) \
+      DO(edit.slope.min,                 slope.min) \
+      DO(edit.slope.max,                 slope.max)
 
-// Given: DO(control, flag_name, ...)
-#define FOR_EACH_FLAG_FIELD(DO) \
-   DO(edit.angle_variance.invertible.x, angle_x_range_signed) \
-   DO(edit.angle_variance.invertible.y, angle_y_range_signed) \
-   DO(edit.angle_variance.invertible.z, angle_z_range_signed) \
-   DO(edit.conform_to_slope,            conform_to_slope) \
-   DO(edit.is_huge_rock,                huge_rock) \
-   DO(edit.is_tree,                     tree) \
-   DO(edit.paint_vertices.enabled,      paint_vertices) \
-   DO(edit.size_variance.invertible,    size_variance_signed)
+   // Given: DO(control, flag_name, ...)
+   #define FOR_EACH_FLAG_FIELD(DO) \
+      DO(edit.angle_variance.invertible.x, angle_x_range_signed) \
+      DO(edit.angle_variance.invertible.y, angle_y_range_signed) \
+      DO(edit.angle_variance.invertible.z, angle_z_range_signed) \
+      DO(edit.conform_to_slope,            conform_to_slope) \
+      DO(edit.is_huge_rock,                huge_rock) \
+      DO(edit.is_tree,                     tree) \
+      DO(edit.paint_vertices.enabled,      paint_vertices) \
+      DO(edit.size_variance.invertible,    size_variance_signed)
+#pragma endregion
 
 namespace ui::region::fragments {
    objects::objects(RegionsDialog& o) : owner(o) {
       this->model = new model_type(&o);
+
+      this->remove_row_on_del = new ui::model_utils::ViewEventFilter_RemoveRowOnDelKey(&o);
+      this->remove_row_on_del->setCustomRemoveFunction([this](QAbstractItemModel* model, const QModelIndex& qmi) {
+         if (model != this->model)
+            return;
+         this->model->removeObject(qmi);
+      });
    }
    void objects::set_controls(controls&& src) {
       this->ui = std::move(src);
@@ -57,6 +69,7 @@ namespace ui::region::fragments {
          view->setDragEnabled(true);
          view->setAcceptDrops(true);
          view->setDropIndicatorShown(true);
+         view->installEventFilter(this->remove_row_on_del);
 
          QObject::connect(view->selectionModel(), &QItemSelectionModel::selectionChanged, &this->owner, [this](const QItemSelection& sel) {
             if (sel.empty()) {
@@ -64,17 +77,49 @@ namespace ui::region::fragments {
             } else {
                this->on_object_selected(sel[0].topLeft());
             }
+            this->update_button_enable_states();
          });
 
-         //
-         // TODO: "Move Up" button
-         // 
-         // TODO: "Move Down" button
-         // 
-         // TODO: Context menu
-         // 
-         // TODO: "Del" keybind
-         //
+         // Account for drag-and-drop, and ensure the region is considered "edited" when it happens.
+         // Ditto for spontaneous removals e.g. due to deletions of referenced forms.
+         {
+            auto _changed = cobb__bound_this_fn(on_model_layout_edited);
+            QObject::connect(this->model, &QAbstractItemModel::rowsInserted, &this->owner, _changed);
+            QObject::connect(this->model, &QAbstractItemModel::rowsRemoved, &this->owner, _changed);
+         }
+
+         QObject::connect(this->ui.buttons.move_up, &QPushButton::clicked, &this->owner, cobb__bound_this_fn(try_move_item_up));
+         QObject::connect(this->ui.buttons.move_down, &QPushButton::clicked, &this->owner, cobb__bound_this_fn(try_move_item_down));
+         #pragma region Context menu
+         {
+            auto& menu = this->view_context.menu;
+            ui::set_custom_context_menu(*view, menu);
+            {
+               auto*& action = this->view_context.actions.move_up;
+               action = new QAction(QCoreApplication::translate("REGN dialog, objects tab", "Move up"), &menu);
+               QObject::connect(action, &QAction::triggered, &this->owner, cobb__bound_this_fn(try_move_item_up));
+               menu.addAction(action);
+            }
+            {
+               auto*& action = this->view_context.actions.move_down;
+               action = new QAction(QCoreApplication::translate("REGN dialog, objects tab", "Move down"), &menu);
+               QObject::connect(action, &QAction::triggered, &this->owner, cobb__bound_this_fn(try_move_item_down));
+               menu.addAction(action);
+            }
+            {
+               auto*& action = this->view_context.actions.remove;
+               action = new QAction(QCoreApplication::translate("REGN dialog, objects tab", "Delete"), &menu);
+               QObject::connect(action, &QAction::triggered, &this->owner, cobb__bound_this_fn(try_remove_item));
+               menu.addAction(action);
+            }
+            QObject::connect(&menu, &QMenu::aboutToShow, &this->owner, [this]() {
+               bool has_selection = !this->ui.view->selectionModel()->selection().empty();
+               this->view_context.actions.move_up->setEnabled(has_selection);
+               this->view_context.actions.move_down->setEnabled(has_selection);
+               this->view_context.actions.remove->setEnabled(has_selection);
+            });
+         }
+         #pragma endregion
       }
 
       QObject::connect(this->ui.header.enable,  &QCheckBox::toggled, &this->owner, cobb__bound_this_fn(on_header_edited));
@@ -217,5 +262,41 @@ namespace ui::region::fragments {
 
       this->model->setData(qmi, QVariant::fromValue(data), model_type::ObjectDataRole);
       this->owner.on_region_modified({});
+   }
+   void objects::on_model_layout_edited() {
+      this->owner.on_region_modified({});
+   }
+
+   void objects::update_button_enable_states() {
+      auto sel = this->ui.view->selectionModel()->selection();
+      if (sel.empty()) {
+         this->ui.buttons.move_up->setEnabled(false);
+         this->ui.buttons.move_down->setEnabled(false);
+         return;
+      }
+      auto qmi = sel[0].topLeft();
+      this->ui.buttons.move_up->setEnabled(model->canMoveUp(qmi));
+      this->ui.buttons.move_down->setEnabled(model->canMoveDown(qmi));
+   }
+   void objects::try_move_item_up() {
+      auto sel = this->ui.view->selectionModel()->selection();
+      if (sel.empty())
+         return;
+      auto qmi = sel[0].topLeft();
+      model->moveUp(qmi);
+   }
+   void objects::try_move_item_down() {
+      auto sel = this->ui.view->selectionModel()->selection();
+      if (sel.empty())
+         return;
+      auto qmi = sel[0].topLeft();
+      model->moveDown(qmi);
+   }
+   void objects::try_remove_item() {
+      auto sel = this->ui.view->selectionModel()->selection();
+      if (sel.empty())
+         return;
+      QModelIndex qmi = sel[0].topLeft();
+      this->model->removeObject(qmi);
    }
 }

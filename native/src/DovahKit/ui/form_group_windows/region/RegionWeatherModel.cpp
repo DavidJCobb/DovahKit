@@ -1,9 +1,9 @@
 #include "./RegionWeatherModel.h"
-#include "dovah/forms/Region.h"
 #include "dovah/form_stub.h"
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
 #include "editor/helpers/form_stub_drag_drop.h"
+#include "ui/types/regions/region.h"
 
 RegionWeatherModel::RegionWeatherModel(QObject* parent) : QAbstractItemModel(parent) {
    auto& editor = DovahKitCore::get();
@@ -223,56 +223,42 @@ RegionWeatherModel::~RegionWeatherModel() {
    #pragma endregion
 #pragma endregion
 
-void RegionWeatherModel::importData(const loaded_form_type& src_form) {
+void RegionWeatherModel::importData(const frontend_form_data& region) {
    this->beginResetModel();
    this->_items.clear();
-   for (auto& rdat : src_form.generable_content) {
-      auto* casted = rdat.as<backend_collection_type>();
-      if (!casted)
-         continue;
-      for (auto& src_item : casted->weathers) {
-         if (!src_item.weather || src_item.weather.get_form_stub()->form_type != dovah::form_type::weather)
+
+   auto& src_coll_opt = region.generable_content.weather;
+   if (src_coll_opt.has_value()) {
+      auto& src_coll = src_coll_opt.value();
+      for (auto& src_item : src_coll.weathers) {
+         if (!src_item.weather || src_item.weather->form_type != dovah::form_type::weather)
             continue;
-         if (this->containsWeather(*src_item.weather.get_form_stub()))
+         if (this->containsWeather(*src_item.weather))
             continue;
          auto& dst_item = this->_items.emplace_back();
-         dst_item.weather = src_item.weather.get_form_stub();
-         dst_item.chance  = src_item.chance;
-         dst_item.global  = src_item.global.get_form_stub();
-         if (dst_item.global && dst_item.global->form_type != dovah::form_type::global)
-            dst_item.global = nullptr;
+         dst_item.weather = src_item.weather;
+         dst_item.chance  = src_item.chance_constant;
+         dst_item.global  = src_item.chance_global;
          
          dst_item.cached.weather_id = QString::fromStdString(dst_item.weather->editorID);
          if (dst_item.global)
             dst_item.cached.global_id = QString::fromStdString(dst_item.global->editorID);
       }
    }
+
    this->endResetModel();
 }
-void RegionWeatherModel::exportData(loaded_form_type& dst_form) {
-   //
-   // First, strip all sound data.
-   //
-   auto&  dst_list = dst_form.generable_content;
-   size_t dst_size = dst_list.size();
-   size_t reuse    = (size_t)-1;
-   for (size_t i = 0; i < dst_size; ++i) {
-      if (auto* casted = dst_list[i].as<backend_collection_type>()) {
-         casted->clear(dst_form);
-         reuse = i;
-      }
-   }
-   if (this->_items.empty())
-      return;
-   auto& dst_data = (reuse == (size_t)-1) ? dst_list.emplace_back() : dst_list[reuse];
-   if (reuse == (size_t)-1) {
-      dst_data.get_or_emplace<backend_collection_type>(dst_form);
-   }
+void RegionWeatherModel::exportData(frontend_form_data& region) const {
+   auto& dst_coll_opt = region.generable_content.weather;
+   dst_coll_opt.emplace();
+
+   auto& dst_coll = dst_coll_opt.value();
+   dst_coll.weathers.reserve(this->_items.size());
    for (auto& src_item : this->_items) {
-      auto dst_item = dst_data.as<backend_collection_type>()->weathers.emplace_back();
-      dst_item.weather.set(dst_form, src_item.weather);
-      dst_item.chance = src_item.chance;
-      dst_item.global.set(dst_form, src_item.global);
+      auto& dst_item = dst_coll.weathers.emplace_back();
+      dst_item.weather         = src_item.weather;
+      dst_item.chance_constant = src_item.chance;
+      dst_item.chance_global   = src_item.global;
    }
 }
 void RegionWeatherModel::clear() {
@@ -317,6 +303,13 @@ bool RegionWeatherModel::containsWeather(const dovah::form_stub& stub) const {
       if (item.weather == &stub)
          return true;
    return false;
+}
+
+std::vector<dovah::form_stub*> RegionWeatherModel::allWeathers() const {
+   std::vector<dovah::form_stub*> out;
+   for (auto& item : this->_items)
+      out.push_back(item.weather);
+   return out;
 }
 
 void RegionWeatherModel::_on_form_deleted(dovah::form_stub& stub) {

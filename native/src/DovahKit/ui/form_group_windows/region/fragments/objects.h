@@ -1,4 +1,5 @@
 #pragma once
+#include <QMenu>
 class DKColorPickerButton;
 class RegionObjectsModel;
 class RegionsDialog;
@@ -10,6 +11,9 @@ class QPushButton;
 class QSpinBox;
 class QTreeView;
 class QWidget;
+namespace ui::model_utils {
+   class ViewEventFilter_RemoveRowOnDelKey;
+}
 
 namespace ui::region::fragments {
    class objects {
@@ -82,6 +86,15 @@ namespace ui::region::fragments {
       protected:
          controls    ui;
          model_type* model = nullptr;
+         struct {
+            QMenu menu;
+            struct {
+               QAction* move_up   = nullptr;
+               QAction* move_down = nullptr;
+               QAction* remove    = nullptr;
+            } actions;
+         } view_context;
+         ui::model_utils::ViewEventFilter_RemoveRowOnDelKey* remove_row_on_del = nullptr;
 
       public:
          void set_controls(controls&&);
@@ -92,5 +105,11 @@ namespace ui::region::fragments {
          void on_no_object_selected();
          void on_header_edited();
          void on_object_edited();
+         void on_model_layout_edited();
+
+         void update_button_enable_states();
+         void try_move_item_up();
+         void try_move_item_down();
+         void try_remove_item();
    };
 }

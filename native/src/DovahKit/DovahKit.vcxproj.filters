@@ -3933,6 +3933,12 @@
     <ClCompile Include="ui\form_group_windows\region\RegionsDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_group_windows\region\fragments\weather.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\model_utils\ViewEventFilter_RemoveRowOnDelKey.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9677,6 +9683,9 @@
     <ClInclude Include="dovah\bare_form_id_t.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\form_group_windows\region\fragments\weather.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -11158,6 +11167,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_group_windows\region\RegionsDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\model_utils\ViewEventFilter_RemoveRowOnDelKey.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

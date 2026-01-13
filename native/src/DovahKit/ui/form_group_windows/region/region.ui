@@ -42,7 +42,7 @@
         </sizepolicy>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tabGeneral">
         <attribute name="title">
@@ -818,10 +818,10 @@
          <item row="1" column="0" rowspan="2">
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <item>
-            <widget class="QTableWidget" name="tableWidget"/>
+            <widget class="QTableView" name="weatherEntries"/>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <layout class="QHBoxLayout" name="weatherButtonsLayout">
              <item>
               <widget class="QPushButton" name="buttonWeatherAdd">
                <property name="text">
@@ -867,7 +867,11 @@
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="DKFormPicker" name="currentWeatherForm"/>
+             <widget class="DKFormPicker" name="currentWeatherForm">
+              <property name="allowNone">
+               <bool>false</bool>
+              </property>
+             </widget>
             </item>
             <item row="1" column="0">
              <widget class="QLabel" name="label_24">
@@ -1344,7 +1348,7 @@
           </layout>
          </item>
          <item>
-          <widget class="QGroupBox" name="groupBox_3">
+          <widget class="QGroupBox" name="currentSoundGroupbox">
            <property name="title">
             <string>Selected entry</string>
            </property>
@@ -1603,7 +1607,7 @@
   <tabstop>weatherEnable</tabstop>
   <tabstop>weatherPriority</tabstop>
   <tabstop>weatherOverride</tabstop>
-  <tabstop>tableWidget</tabstop>
+  <tabstop>weatherEntries</tabstop>
   <tabstop>buttonWeatherAdd</tabstop>
   <tabstop>buttonWeatherRemove</tabstop>
   <tabstop>currentWeatherForm</tabstop>

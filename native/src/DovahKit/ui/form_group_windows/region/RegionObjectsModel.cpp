@@ -75,9 +75,9 @@ RegionObjectsModel::~RegionObjectsModel() {
                return {};
             return _qmi_for_node(*node->children[row]);
          }
-         if (row >= node->children.size())
+         if (row >= this->_tree.objects.size())
             return {};
-         return _qmi_for_node(*node->children[row]);
+         return _qmi_for_node(*this->_tree.objects[row]);
       }
       /*virtual*/ QModelIndex RegionObjectsModel::parent(const QModelIndex& qmi) const /*override*/ {
          if (!qmi.isValid())
@@ -333,6 +333,79 @@ void RegionObjectsModel::removeObjects(const QModelIndex& parent_qmi, size_t row
    this->beginRemoveRows(parent_qmi, row, row + count - 1);
    siblings->erase(siblings->begin() + row, siblings->begin() + row + count);
    this->endRemoveRows();
+}
+
+bool RegionObjectsModel::canMoveUp(const QModelIndex& qmi) const {
+   return qmi.isValid() && qmi.row() > 0;
+}
+bool RegionObjectsModel::canMoveDown(const QModelIndex& qmi) const {
+   auto* node = _node_for_qmi(qmi);
+   if (!node)
+      return false;
+   auto* siblings = &this->_tree.objects;
+   if (node->parent) {
+      siblings = &node->parent->children;
+   }
+   for (size_t i = 0; i < siblings->size(); ++i) {
+      if ((*siblings)[i].get() == node) {
+         return i + 1 < siblings->size();
+      }
+   }
+   return false; // should be unreachable
+}
+bool RegionObjectsModel::moveUp(const QModelIndex& qmi) {
+   auto* node = _node_for_qmi(qmi);
+   if (!node)
+      return false;
+
+   QModelIndex parent_qmi;
+   auto* siblings = &this->_tree.objects;
+   if (node->parent) {
+      siblings   = &node->parent->children;
+      parent_qmi = _qmi_for_node(*node->parent);
+   }
+
+   size_t src_i = (size_t)-1;
+   for (size_t i = 0; i < siblings->size(); ++i) {
+      if ((*siblings)[i].get() == node) {
+         src_i = i;
+         break;
+      }
+   }
+   assert(src_i != (size_t)-1);
+   if (src_i == 0)
+      return false;
+   this->beginMoveRows(parent_qmi, src_i, src_i, parent_qmi, src_i - 1);
+   std::swap((*siblings)[src_i], (*siblings)[src_i - 1]);
+   this->endMoveRows();
+   return true;
+}
+bool RegionObjectsModel::moveDown(const QModelIndex& qmi) {
+   auto* node = _node_for_qmi(qmi);
+   if (!node)
+      return false;
+
+   QModelIndex parent_qmi;
+   auto* siblings = &this->_tree.objects;
+   if (node->parent) {
+      siblings   = &node->parent->children;
+      parent_qmi = _qmi_for_node(*node->parent);
+   }
+
+   size_t src_i = (size_t)-1;
+   for (size_t i = 0; i < siblings->size(); ++i) {
+      if ((*siblings)[i].get() == node) {
+         src_i = i;
+         break;
+      }
+   }
+   assert(src_i != (size_t)-1);
+   if (src_i == siblings->size() - 1)
+      return false;
+   this->beginMoveRows(parent_qmi, src_i, src_i, parent_qmi, src_i + 1);
+   std::swap((*siblings)[src_i], (*siblings)[src_i + 1]);
+   this->endMoveRows();
+   return true;
 }
 
 void RegionObjectsModel::_on_node_destroyed(node_type& node) {

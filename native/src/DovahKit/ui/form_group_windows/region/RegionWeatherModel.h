@@ -2,20 +2,17 @@
 #include <vector>
 #include <QAbstractItemModel>
 namespace dovah {
-   namespace loaded_forms {
-      namespace structs::region::generable_content {
-         class weather_collection;
-      }
-      class Region;
-   }
    class form_stub;
+}
+namespace ui::types::regions {
+   class region;
 }
 
 class RegionWeatherModel : public QAbstractItemModel {
    Q_OBJECT;
    public:
-      using backend_collection_type = dovah::loaded_forms::structs::region::generable_content::weather_collection;
-      using loaded_form_type        = dovah::loaded_forms::Region;
+      using frontend_form_data = ui::types::regions::region;
+
       struct Column {
          Column() = delete;
          enum {
@@ -63,12 +60,14 @@ class RegionWeatherModel : public QAbstractItemModel {
          #pragma endregion
       #pragma endregion
 
-      void importData(const loaded_form_type&);
-      void exportData(loaded_form_type&);
+      void importData(const frontend_form_data&);
+      void exportData(frontend_form_data&) const;
       void clear();
 
       QModelIndex addWeather(dovah::form_stub& weather, float chance, dovah::form_stub* global);
       bool containsWeather(const dovah::form_stub&) const;
+
+      [[nodiscard]] std::vector<dovah::form_stub*> allWeathers() const;
 
    protected:
       struct Item {

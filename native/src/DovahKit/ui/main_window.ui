@@ -89,6 +89,7 @@
     <addaction name="actionDefaultObjects"/>
     <addaction name="actionGameSettings"/>
     <addaction name="actionIdleAnimations"/>
+    <addaction name="actionRegions"/>
     <addaction name="separator"/>
     <addaction name="menuManageFormIDs"/>
     <addaction name="separator"/>
@@ -216,6 +217,11 @@
   <action name="actionCameraPaths">
    <property name="text">
     <string>Camera Paths...</string>
+   </property>
+  </action>
+  <action name="actionRegions">
+   <property name="text">
+    <string>Regions...</string>
    </property>
   </action>
  </widget>

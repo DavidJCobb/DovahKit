@@ -10,23 +10,25 @@
 #include "editor/form_stub_meta_type.h"
 #include "editor/open_window_for_form.h"
 #include "ui/utils/set_custom_context_menu.h"
+#include "ui/utils/typical_tableview_config.h"
 #include "./RegionsAvailableInWorldModel.h"
-#include "./RegionObjectsModel.h"
 #include "./RegionSoundsModel.h"
-#include "./RegionWeatherModel.h"
 
 RegionsDialog::RegionsDialog(QWidget* parent) :
    QDialog(parent),
    fragments{
       .objects{*this},
+      .weather{*this},
    }
 {
    this->ui.setupUi(this);
+   this->ui.tabWidget->setCurrentWidget(this->ui.tabGeneral);
 
    {
       auto* model = this->models.available_regions = new RegionsAvailableInWorldModel(this);
       auto* view  = this->ui.regions;
       view->setModel(model);
+      ui::typical_tableview_config(view);
 
       auto* world_picker = this->ui.currentWorld;
       world_picker->setAllowedFormType(dovah::form_type::worldspace);
@@ -100,6 +102,33 @@ RegionsDialog::RegionsDialog(QWidget* parent) :
             },
          },
          .view = this->ui.objectsEntries,
+      });
+      this->fragments.weather.set_controls({
+         .header = {
+            .enable   = this->ui.weatherEnable,
+            .override = this->ui.weatherOverride,
+            .priority = this->ui.weatherPriority,
+         },
+         .buttons = {
+            .add    = this->ui.buttonWeatherAdd,
+            .remove = this->ui.buttonWeatherRemove,
+         },
+         .edit = {
+            .container = this->ui.currentWeatherGroupbox,
+            //
+            .weather = this->ui.currentWeatherForm,
+            .chance  = {
+               .constant = {
+                  .radio = this->ui.currentWeatherChanceTypeFixed,
+                  .value = this->ui.currentWeatherChanceValueFixed,
+               },
+               .form = {
+                  .radio = this->ui.currentWeatherChanceTypeGlobal,
+                  .value = this->ui.currentWeatherChanceValueGlobal,
+               },
+            },
+         },
+         .view = this->ui.weatherEntries,
       });
       //
       // TODO: other fragments
@@ -213,10 +242,12 @@ void RegionsDialog::_set_selected_region(dovah::form_stub* region) {
    data = {};
    data.import_data(*loaded);
    data.import_record_flags(region->get_record_flags());
+   this->_pull_selected_region_to_ui();
 }
 
 void RegionsDialog::_pull_selected_region_to_ui() {
    this->fragments.objects.reload();
+   this->fragments.weather.reload();
    // TODO: other fragments
 
    auto& data = this->_current_region;
@@ -248,7 +279,7 @@ void RegionsDialog::_pull_selected_region_to_ui() {
       // Technically, each region area can have its own falloff, but Bethesda's 
       // UI design doesn't allow for this.
       this->ui.edgeFalloff->setValue(1024);
-      if (data.bounds.areas.empty()) {
+      if (!data.bounds.areas.empty()) {
          this->ui.edgeFalloff->setValue(data.bounds.areas[0].edge_falloff);
       }
 

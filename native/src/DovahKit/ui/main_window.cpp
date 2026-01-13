@@ -248,6 +248,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
    QObject::connect(this->ui.actionCameraPaths, &QAction::triggered, this, [this]() {
       open_edit_dialog_for_form_type(dovah::form_type::camera_path);
    });
+   QObject::connect(this->ui.actionRegions, &QAction::triggered, this, [this]() {
+      open_edit_dialog_for_form_type(dovah::form_type::region);
+   });
    QObject::connect(this->ui.actionDefaultObjects, &QAction::triggered, this, [this]() {
       if (auto dialog = this->default_object_window) {
          dialog->raise();

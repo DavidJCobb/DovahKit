@@ -88,6 +88,11 @@ class RegionObjectsModel : public QAbstractItemModel {
       void removeObject(const QModelIndex&);
       void removeObjects(const QModelIndex& parent_qmi, size_t row, size_t count);
 
+      bool canMoveUp(const QModelIndex&) const;
+      bool canMoveDown(const QModelIndex&) const;
+      bool moveUp(const QModelIndex&);
+      bool moveDown(const QModelIndex&);
+
    protected:
       void _on_node_destroyed(node_type&);
 
