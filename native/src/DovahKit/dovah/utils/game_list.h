@@ -1,7 +1,7 @@
 #pragma once
 #include <array>
 #include "../../helpers/enum_bitfields.h"
-#include "../core.h"
+#include "../data/game.h"
 
 namespace dovah {
    //

@@ -2,7 +2,6 @@
 #include "dovah/data/dialogue/topic_subtype.h"
 #include "dovah/files/tes_file_reading/elements.h"
 #include "dovah/forms/Topic.h"
-#include "dovah/core.h"
 
 namespace {
    using loaded_form_type = dovah::loaded_forms::Topic;

@@ -1,5 +1,4 @@
 #include "./equip_slot.h"
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogEquipSlot::FormDialogEquipSlot(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {

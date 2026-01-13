@@ -1,5 +1,4 @@
 #include "./book.h"
-#include "dovah/core.h"
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "widgets/DKFormNIFPicker.h"
 #include "ui/utils/enum_dropdown_configs/skill.h"

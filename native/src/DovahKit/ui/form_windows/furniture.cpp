@@ -1,5 +1,4 @@
 #include "./furniture.h"
-#include "dovah/core.h"
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/enum_dropdown_configs/skill.h"
 #include "ui/utils/bind.h"

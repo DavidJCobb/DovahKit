@@ -9,7 +9,6 @@
 #include <QAbstractItemModel>
 #include <QString>
 #include <QVarLengthArray>
-#include "dovah/core.h"
 #include "dovah/form_stub.h"
 #include "../widget-data/DKCustomFormFilterableModelMixin.h"
 

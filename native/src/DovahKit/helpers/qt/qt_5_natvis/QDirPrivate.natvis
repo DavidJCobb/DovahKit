@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="QDirPrivate" Priority="High">
+      <Intrinsic Name="_align" Expression="offset + ((offset % alignment) ? alignment - (offset % alignment) : 0)">
+         <Parameter Name="offset" Type="size_t" />
+         <Parameter Name="alignment" Type="size_t" />
+      </Intrinsic>
+
+      <Intrinsic Name="_QFileSystemEntry_m_filePath" Expression="*(QString*)((uint8_t*)this + _align(offset, 8))">
+         <Parameter Name="offset" Type="size_t" />
+      </Intrinsic>
+      <Intrinsic Name="_QFileSystemEntry_m_nativeFilePath" Expression="*(QByteArray*)((uint8_t*)this + _align(offset, 8) + sizeof(QString))">
+         <Parameter Name="offset" Type="size_t" />
+      </Intrinsic>
+      <Intrinsic Name="_QFileSystemEntry_m_lastSeparator" Expression="*(int16_t*)((uint8_t*)this + _align(offset, 8) + sizeof(QString) + sizeof(QByteArray))">
+         <Parameter Name="offset" Type="size_t" />
+      </Intrinsic>
+      <Intrinsic Name="_QFileSystemEntry_m_firstDotInFileName" Expression="*(int16_t*)((uint8_t*)this + _align(offset, 8) + sizeof(QString) + sizeof(QByteArray) + 2)">
+         <Parameter Name="offset" Type="size_t" />
+      </Intrinsic>
+      <Intrinsic Name="_QFileSystemEntry_m_lastDotInFileName" Expression="*(int16_t*)((uint8_t*)this + _align(offset, 8) + sizeof(QString) + sizeof(QByteArray) + 4)">
+         <Parameter Name="offset" Type="size_t" />
+      </Intrinsic>
+      <Intrinsic Name="_sizeof_QFileSystemEntry" Expression="sizeof(QString) + sizeof(QByteArray) + 8" />
+      
+      <Intrinsic Name="_offsetof_fileListsInitialized" Expression="sizeof(QSharedData)" />
+      <Intrinsic Name="_offsetof_files" Expression="_align(_offsetof_fileListsInitialized() + sizeof(bool), _alignment_of_struct())" />
+      <Intrinsic Name="_offsetof_fileInfos" Expression="_align(_offsetof_files() + sizeof(QStringList), _alignment_of_struct())" />
+      <Intrinsic Name="_offsetof_nameFilters" Expression="_align(_offsetof_fileInfos() + sizeof(QFileInfoList), _alignment_of_struct())" />
+      <Intrinsic Name="_offsetof_sort" Expression="_align(_offsetof_nameFilters() + sizeof(QStringList), 4)" />
+      <Intrinsic Name="_offsetof_filters" Expression="_align(_offsetof_sort() + sizeof(QDir::SortFlags), 4)" />
+      <Intrinsic Name="_offsetof_fileEngine" Expression="_align(_offsetof_filters() + sizeof(QDir::Filters), 8)" />
+      <Intrinsic Name="_offsetof_dirEntry" Expression="_align(_offsetof_fileEngine() + sizeof(void*), 8)" />
+      <Intrinsic Name="_offsetof_absoluteDirEntry" Expression="_align(_offsetof_dirEntry() + _sizeof_QFileSystemEntry(), 8)" />
+
+      
+      <Expand>
+         <Item Name="[QSharedData]">*(QSharedData*)this</Item>
+         <Item Name="fileListsInitialized">*(bool*)((uint8_t*)this + _offsetof_fileListsInitialized())</Item>
+         <Item Name="files">*(QStringList*)((uint8_t*)this + _offsetof_files())</Item>
+         <Item Name="fileInfos">*(QFileInfoList*)((uint8_t*)this + _offsetof_fileInfos())</Item>
+         <Item Name="nameFilters">*(QStringList*)((uint8_t*)this + _offsetof_nameFilters())</Item>
+         <Item Name="sort">*(QDir::SortFlags*)((uint8_t*)this + _offsetof_sort())</Item>
+         <Item Name="filters">*(QDir::Filters*)((uint8_t*)this + _offsetof_filters())</Item>
+         <!-- because std::unique_ptr is never instantiated on this type in any code the debugger can see,
+              we can't cast to it. -->
+         <!--
+            <Item Name="fileEngine">*(std::unique_ptr&lt;QAbstractFileEngine&gt;*)((uint8_t*)this + _offsetof_fileEngine())</Item>
+         -->
+         <Item Name="fileEngine">*(void**)((uint8_t*)this + _offsetof_fileEngine())</Item>
+         <Synthetic Name="[QFileSystemEntry] dirEntry">
+            <DisplayString>{_QFileSystemEntry_m_filePath(_offsetof_dirEntry())}</DisplayString>
+            <Expand>
+               <Item Name="m_filePath">_QFileSystemEntry_m_filePath(_offsetof_dirEntry())</Item>
+               <Item Name="m_nativeFilePath">_QFileSystemEntry_m_nativeFilePath(_offsetof_dirEntry())</Item>
+               <Item Name="m_lastSeparator">_QFileSystemEntry_m_lastSeparator(_offsetof_dirEntry())</Item>
+               <Item Name="m_firstDotInFileName">_QFileSystemEntry_m_firstDotInFileName(_offsetof_dirEntry())</Item>
+               <Item Name="m_lastDotInFileName">_QFileSystemEntry_m_lastDotInFileName(_offsetof_dirEntry())</Item>
+            </Expand>
+         </Synthetic>
+         <Synthetic Name="[QFileSystemEntry] absoluteDirEntry">
+            <DisplayString>{_QFileSystemEntry_m_filePath(_offsetof_absoluteDirEntry())}</DisplayString>
+            <Expand>
+               <Item Name="m_filePath">_QFileSystemEntry_m_filePath(_offsetof_absoluteDirEntry())</Item>
+               <Item Name="m_nativeFilePath">_QFileSystemEntry_m_nativeFilePath(_offsetof_absoluteDirEntry())</Item>
+               <Item Name="m_lastSeparator">_QFileSystemEntry_m_lastSeparator(_offsetof_absoluteDirEntry())</Item>
+               <Item Name="m_firstDotInFileName">_QFileSystemEntry_m_firstDotInFileName(_offsetof_absoluteDirEntry())</Item>
+               <Item Name="m_lastDotInFileName">_QFileSystemEntry_m_lastDotInFileName(_offsetof_absoluteDirEntry())</Item>
+            </Expand>
+         </Synthetic>
+         <!--
+            and then a metadata struct but i can't be bothered
+         -->
+      </Expand>
+   </Type>
+</AutoVisualizer>

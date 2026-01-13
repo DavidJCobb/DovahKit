@@ -3,7 +3,6 @@
 #include <QKeyEvent>
 #include <QMessageBox>
 #include "helpers/string/strlen.h"
-#include "dovah/core.h"
 #include "dovah/exceptions/actor_base_template_is_cyclical.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/enable_inbound_drag_and_drop_insertions.h"

@@ -5,7 +5,6 @@
 #include "helpers/qt/basic_bindings.h"
 #include "../../generic/QStandardItemModelDKEx.h" // enhanced QStandardItemModel
 #include "dovah/forms/components/conditions/context.h"
-#include "dovah/core.h"
 #include "editor/core.h"
 #include "editor/helpers/stringify_conditions.h"
 #include "editor/subsystems/game_localized_strings/core.h"

@@ -1,5 +1,4 @@
 #include "./constructible_object.h"
-#include "dovah/core.h"
 #include "dovah/data/all_item_form_types.h"
 #include "widgets/DKFormNIFPicker.h"
 #include "ui/utils/bind.h"

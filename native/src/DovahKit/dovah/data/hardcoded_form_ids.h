@@ -1,5 +1,5 @@
 #pragma once
-#include "../core.h"
+#include "../bare_form_id_t.h"
 
 namespace dovah::hardcoded_form_ids {
    static constexpr bare_form_id_t DoorMarker             = 0x001;

@@ -1,6 +1,5 @@
 #include "./explosion.h"
 #include <limits>
-#include "dovah/core.h"
 #include "dovah/data/all_base_form_types.h"
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/enum_dropdown_configs/detection_loudness.h"

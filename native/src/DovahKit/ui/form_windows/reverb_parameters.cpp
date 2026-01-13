@@ -1,5 +1,4 @@
 #include "./reverb_parameters.h"
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
 

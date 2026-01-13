@@ -8,6 +8,7 @@
 #include "./config.h"
 #include "./elements.h"
 #include "../../utils/refs_need_persistence_checker.h"
+#include "../../bare_form_id_t.h"
 
 namespace dovah {
    namespace exceptions {

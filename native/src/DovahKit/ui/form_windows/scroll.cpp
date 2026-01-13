@@ -1,7 +1,6 @@
 #include "./scroll.h"
 #include <limits>
 #include <QMessageBox>
-#include "dovah/core.h"
 #include "editor/localize/magic_casting_type.h"
 #include "editor/localize/magic_delivery_type.h"
 #include "editor/subsystems/game_localized_strings/core.h"

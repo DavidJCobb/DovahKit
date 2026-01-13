@@ -1,6 +1,5 @@
 #include "./combat_style.h"
 #include <limits>
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/pair_slider_to_spinbox.h"
 

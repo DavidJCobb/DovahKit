@@ -4,7 +4,6 @@
 #include <QWidget>
 #if !defined(QT_PLUGIN)
    #include <functional>
-   #include "dovah/core.h"
 #endif
 #include "dovah/form_types.h"
 

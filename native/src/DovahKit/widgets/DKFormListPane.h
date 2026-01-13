@@ -13,8 +13,8 @@
 
 class DKFormListPaneModel;
 #if !defined(QT_PLUGIN)
-   #include "../dovah/core.h"
    #include "widget-models/DKFormListPaneModel.h"
+   #include "dovah/form_reference_t.h"
 #endif
 #if !defined(QT_PLUGIN)
    class DKCustomFormFilter;

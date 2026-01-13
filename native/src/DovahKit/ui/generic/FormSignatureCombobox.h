@@ -1,7 +1,7 @@
 #pragma once
+#include <cstdint>
 #include <QComboBox>
-#include "../../dovah/core.h"
-#include "../../dovah/form_types.h"
+#include "dovah/form_types.h"
 
 class FormSignatureCombobox : public QComboBox {
    Q_OBJECT

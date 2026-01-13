@@ -1,6 +1,5 @@
 #include "./_base.h"
 #include "dovah/files/tes_file_reading/elements.h"
-#include "dovah/core.h"
 #include "dovah/form_stub.h"
 
 namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {

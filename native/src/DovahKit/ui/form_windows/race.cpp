@@ -5,7 +5,6 @@
 #include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/data/skills.h"
 #include "dovah/forms/MovementType.h"
-#include "dovah/core.h"
 #include "editor/helpers/face_fx_phoneme_name.h"
 #include "editor/helpers/skill_name_to_string.h"
 #include "editor/subsystems/form_info_cache/core.h"

@@ -3,7 +3,6 @@
 #include "../../../lua.h"
 #include "helpers/passkey.h"
 #include "helpers/singleton.h"
-#include "dovah/core.h"
 #include "../blocking_task_slot.h"
 #include "../task_queue.h"
 #include "../../script_set.h"

@@ -1,8 +1,9 @@
 #pragma once
 #include <cstdint>
 #include <optional>
+#include <string>
+#include <string_view>
 #include "../base_file_load_warning.h"
-#include "../../core.h"
 
 namespace dovah {
    class form_stub;

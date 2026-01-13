@@ -1,5 +1,4 @@
 #include "./effectshader.h"
-#include "dovah/core.h"
 #include "editor/asset_manager/asset_manager.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/shrink_dialog_on_show.h"

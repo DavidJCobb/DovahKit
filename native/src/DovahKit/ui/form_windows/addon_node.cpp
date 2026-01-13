@@ -1,6 +1,5 @@
 #include "./addon_node.h"
 #include <limits>
-#include "dovah/core.h"
 #include "editor/helpers/nif_is_valid_master_particle_system.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"

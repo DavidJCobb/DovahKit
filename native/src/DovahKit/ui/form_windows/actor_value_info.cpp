@@ -1,5 +1,4 @@
 #include "./actor_value_info.h"
-#include "dovah/core.h"
 #include "dovah/data/actor_values.h"
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"

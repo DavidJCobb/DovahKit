@@ -7,6 +7,7 @@
 #include "dovah/data/game_settings.h"
 #include "dovah/exceptions/game_setting_value_change_failed.h"
 #include "editor/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 
 namespace {
    GameSettingList::model_item_type* _get_selected_item(QTableView* widget) {
@@ -85,7 +86,10 @@ GameSettingWindow::GameSettingWindow(QWidget* parent) : QDialog(parent) {
             value.i = this->ui.valueF->value();
             break;
          case dovah::game_setting_type::string:
-            gls.assign_localized_string(value.s, this->ui.valueS->toPlainText());
+            {
+               auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
+               gls.assign_localized_string(value.s, this->ui.valueS->toPlainText());
+            }
             break;
          default:
             return;

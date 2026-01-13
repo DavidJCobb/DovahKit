@@ -6,7 +6,7 @@
 #include <QString>
 #include <QTableView>
 #include <QTimer>
-#include "../../../dovah/core.h"
+#include "../../../dovah/bare_form_id_t.h"
 #include "../../../dovah/form_stub.h"
 #include "../../../dovah/use_info/entry_flag_underlying_type.h"
 

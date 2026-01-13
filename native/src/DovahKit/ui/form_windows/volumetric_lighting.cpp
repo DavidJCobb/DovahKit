@@ -1,5 +1,4 @@
 #include "./volumetric_lighting.h"
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogVolumetricLighting::FormDialogVolumetricLighting(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {

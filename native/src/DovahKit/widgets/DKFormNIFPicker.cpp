@@ -1,7 +1,6 @@
 #include "./DKFormNIFPicker.h"
 #include <QHBoxLayout>
 #if !defined(QT_PLUGIN)
-   #include "dovah/core.h"
    #include "dovah/forms/components/model.h"
    #include "./widget-dialogs/DKFormNIFPickerDialog.h"
 #endif

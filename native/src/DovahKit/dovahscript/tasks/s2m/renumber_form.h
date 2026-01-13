@@ -1,7 +1,7 @@
 #pragma once
 #pragma once
 #include "../_base.h"
-#include "../../../dovah/core.h"
+#include "dovah/bare_form_id_t.h"
 
 namespace dovah {
    class form_stub;

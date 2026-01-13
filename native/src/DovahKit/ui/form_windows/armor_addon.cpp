@@ -1,5 +1,4 @@
 #include "./armor_addon.h"
-#include "dovah/core.h"
 #include "widgets/DKFormNIFPicker.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"

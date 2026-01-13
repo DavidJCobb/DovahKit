@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
-#include "../core.h"
+#include "../bare_form_id_t.h"
 #include "../form_types.h"
 
 namespace dovah {

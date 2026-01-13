@@ -1,5 +1,4 @@
 #include "./dialogue_branch.h"
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 #include "./dialogue_branch/DialogueBranchStartingTopicFormFilter.h"
 

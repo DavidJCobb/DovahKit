@@ -17,7 +17,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #pragma once
 #include <cstdint>
 #include <string>
-#include "../core.h"
+#include <vector>
 #include "../utils/game_list.h"
 
 namespace dovah {

@@ -3,13 +3,15 @@
 #include <QAbstractItemModel>
 #include <QIcon>
 #include <QString>
-#include "dovah/core.h"
+#include "dovah/bare_form_id_t.h"
 #include "helpers/passkey.h"
 #include "ui/types/logging/log_item.h"
-
-namespace dovah::notices {
-   class base_error;
-   class base_warning;
+namespace dovah {
+   namespace notices {
+      class base_error;
+      class base_warning;
+   }
+   class form_stub;
 }
 
 namespace dovahkit::subsystems::message_log {

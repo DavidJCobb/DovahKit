@@ -53,7 +53,7 @@ void GameSettingListModelItem::updateFrom(const dovah::loaded_game_setting& sour
       case dovah::game_setting_type::string:
          {
             auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
-            this->value.string = DovahKitCore::get().convert_localized_string(source.value.s);
+            this->value.string = gls.convert_localized_string(source.value.s);
          }
          break;
    }

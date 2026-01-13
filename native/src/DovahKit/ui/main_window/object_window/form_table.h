@@ -5,7 +5,7 @@
 #include <QString>
 #include <QTableView>
 #include <QTimer>
-#include "../../../dovah/core.h"
+#include "dovah/bare_form_id_t.h"
 #include "./object_window_treeview.h"
 #include "./filter_info.h"
 

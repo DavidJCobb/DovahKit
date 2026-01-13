@@ -1,5 +1,4 @@
 #pragma once
-#include "../core.h"
 #include <array>
 #include <atomic>
 #include <cstdint>
@@ -15,6 +14,7 @@
 #include "./file_load_order_normalizer.h"
 #include "../utils/file_prefix.h"
 #include "../form_stub.h"
+#include "../form_types.h"
 #include "../localized_strings.h"
 #include "../data/game.h"
 #include "../data/game_settings.h"

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="QFileInfoPrivate" Priority="High">
+      <Intrinsic Name="_align" Expression="offset + ((offset % alignment) ? alignment - (offset % alignment) : 0)">
+         <Parameter Name="offset" Type="size_t" />
+         <Parameter Name="alignment" Type="size_t" />
+      </Intrinsic>
+
+      <Intrinsic Name="_QFileSystemEntry_m_filePath" Expression="*(QString*)((uint8_t*)this + _align(offset, 8))">
+         <Parameter Name="offset" Type="size_t" />
+      </Intrinsic>
+      <Intrinsic Name="_QFileSystemEntry_m_nativeFilePath" Expression="*(QByteArray*)((uint8_t*)this + _align(offset, 8) + sizeof(QString))">
+         <Parameter Name="offset" Type="size_t" />
+      </Intrinsic>
+      <Intrinsic Name="_QFileSystemEntry_m_lastSeparator" Expression="*(int16_t*)((uint8_t*)this + _align(offset, 8) + sizeof(QString) + sizeof(QByteArray))">
+         <Parameter Name="offset" Type="size_t" />
+      </Intrinsic>
+      <Intrinsic Name="_QFileSystemEntry_m_firstDotInFileName" Expression="*(int16_t*)((uint8_t*)this + _align(offset, 8) + sizeof(QString) + sizeof(QByteArray) + 2)">
+         <Parameter Name="offset" Type="size_t" />
+      </Intrinsic>
+      <Intrinsic Name="_QFileSystemEntry_m_lastDotInFileName" Expression="*(int16_t*)((uint8_t*)this + _align(offset, 8) + sizeof(QString) + sizeof(QByteArray) + 4)">
+         <Parameter Name="offset" Type="size_t" />
+      </Intrinsic>
+      <Intrinsic Name="_sizeof_QFileSystemEntry" Expression="sizeof(QString) + sizeof(QByteArray) + 8" />
+      
+      <Intrinsic Name="_offsetof_fileEntry" Expression="sizeof(QSharedData)" />
+      <Intrinsic Name="_offsetof_fileEngine" Expression="_offsetof_fileEntry() + _sizeof_QFileSystemEntry()" />
+      <Intrinsic Name="_offsetof_fileNames" Expression="_offsetof_fileEngine() + sizeof(void*)" />
+
+      <Expand>
+         <Item Name="[QSharedData]">*(QSharedData*)this</Item>
+         <Synthetic Name="[QFileSystemEntry] fileEntry">
+            <DisplayString>{_QFileSystemEntry_m_filePath(_offsetof_fileEntry())}</DisplayString>
+            <Expand>
+               <Item Name="m_filePath">_QFileSystemEntry_m_filePath(_offsetof_fileEntry())</Item>
+               <Item Name="m_nativeFilePath">_QFileSystemEntry_m_nativeFilePath(_offsetof_fileEntry())</Item>
+               <Item Name="m_lastSeparator">_QFileSystemEntry_m_lastSeparator(_offsetof_fileEntry())</Item>
+               <Item Name="m_firstDotInFileName">_QFileSystemEntry_m_firstDotInFileName(_offsetof_fileEntry())</Item>
+               <Item Name="m_lastDotInFileName">_QFileSystemEntry_m_lastDotInFileName(_offsetof_fileEntry())</Item>
+            </Expand>
+         </Synthetic>
+         <!-- and then more garbage... -->
+      </Expand>
+   </Type>
+</AutoVisualizer>

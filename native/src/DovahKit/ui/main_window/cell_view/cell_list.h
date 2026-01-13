@@ -6,7 +6,7 @@
 #include <QString>
 #include <QTableView>
 #include <QTimer>
-#include "../../../dovah/core.h"
+#include "../../../dovah/bare_form_id_t.h"
 #include "../../generic/FormsOfTypeCombobox.h"
 
 namespace dovah {

@@ -1,6 +1,5 @@
 #include "./material_object.h"
 #include <limits>
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 #include <QTextDocument> // Qt::mightBeRichText
 

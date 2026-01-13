@@ -18,7 +18,6 @@
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
 
-#include "dovah/core.h"
 #include "dovah/utils/leveled_list_preview.h"
 #include "widgets/widget-dialogs/DKLeveledListPreviewDialog.h"
 #include "ui/models/forms/LeveledListModel.h"

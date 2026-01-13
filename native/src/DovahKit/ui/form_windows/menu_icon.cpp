@@ -1,5 +1,4 @@
 #include "./menu_icon.h"
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogMenuIcon::FormDialogMenuIcon(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {

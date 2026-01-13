@@ -1,5 +1,4 @@
 #include "./weather.h"
-#include "dovah/core.h"
 #include "dovah/data/game_settings.h"
 #include "dovah/forms/Sound.h"
 #include "editor/core.h"

@@ -1,5 +1,5 @@
 #include "./sound_category.h"
-#include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "editor/subsystems/per_form_windows/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
@@ -96,7 +96,7 @@ void FormDialogSoundCategory::forceRefreshParentCategory() {
 }
 
 void FormDialogSoundCategory::_load_impl() {
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    this->_filters.exclude_self->set_exclusion(this->formStub());
@@ -131,7 +131,7 @@ void FormDialogSoundCategory::_save_impl() {
    // working copy in real-time (e.g. if a checkbox doesn't literally modify 
    // the working copy *as* it's (un)checked).
    //
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    gls.assign_localized_string(working.name, this->ui.name->text());

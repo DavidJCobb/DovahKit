@@ -1,5 +1,4 @@
 #include "./footstep_set.h"
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogFootstepSet::FormDialogFootstepSet(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {

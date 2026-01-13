@@ -1,13 +1,9 @@
 #pragma once
 #include <cstdint>
 #include <filesystem>
-#include <string>
-#include <unordered_map>
 #include <QDialog>
 #include <QObject>
-#include "dovah/data/game.h"
-#include "dovah/core.h" // bare_form_id_t
-#include "dovah/form_types.h"
+#include "dovah/bare_form_id_t.h"
 #include "dovah/files/file_load_order.h"
 
 #include "dovah/load_order_requests/form_creation_request.h"
@@ -25,13 +21,14 @@ namespace dovah {
       class base_error;
       class base_warning;
    }
-   class  bsa_archived_file;
-   class  bsa_load_order;
-   class  compiled_papyrus_script;
-   class  file_load_order;
-   class  form_deletion_request;
-   class  form_stub;
-   struct localized_string;
+   class bsa_archived_file;
+   class bsa_load_order;
+   class compiled_papyrus_script;
+   class file_load_order;
+   class form_deletion_request;
+   class form_stub;
+   enum class form_type : uint8_t;
+   enum class game;
    struct tes_file_header;
    namespace tes_file_reading {
       class file_loader;

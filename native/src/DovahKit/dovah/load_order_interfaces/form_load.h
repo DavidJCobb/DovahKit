@@ -2,7 +2,7 @@
 #include <array>
 #include <cstdint>
 #include <vector>
-#include "../core.h"
+#include "../form_reference_t.h"
 #include "../form_types.h"
 #include "../notices/form_load_warnings/form_reference_type_mismatch.h"
 

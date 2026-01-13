@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <optional>
 #include "../base_file_load_warning.h"
-#include "../../core.h"
+#include "../../bare_form_id_t.h"
 
 #include "../_util.define.h"
 namespace dovah::notices::file_load_warnings {

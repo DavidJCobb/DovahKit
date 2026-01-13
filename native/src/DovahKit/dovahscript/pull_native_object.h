@@ -1,6 +1,6 @@
 #pragma once
 #include "../lua.h"
-#include "../dovah/core.h"
+#include "../dovah/form_types.h"
 
 namespace dovah {
    class form_stub;

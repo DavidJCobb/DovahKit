@@ -1,6 +1,6 @@
 #pragma once
 #include <QSortFilterProxyModel>
-#include "../../../dovah/core.h"
+#include "dovah/form_types.h"
 
 class _FormSignatureComboboxProxy : public QSortFilterProxyModel {
    Q_OBJECT

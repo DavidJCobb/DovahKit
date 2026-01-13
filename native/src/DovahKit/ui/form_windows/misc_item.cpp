@@ -1,6 +1,6 @@
 #include "./misc_item.h"
 #include <limits>
-#include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogMiscItem::FormDialogMiscItem(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
@@ -16,7 +16,7 @@ FormDialogMiscItem::FormDialogMiscItem(dovah::form_stub& stub, QWidget* parent) 
    this->load(); // this creates the working copy.
 }
 void FormDialogMiscItem::_load_impl() {
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
@@ -40,7 +40,7 @@ void FormDialogMiscItem::_save_impl() {
    // working copy in real-time (e.g. if a checkbox doesn't literally modify 
    // the working copy *as* it's (un)checked).
    //
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
    gls.assign_localized_string(working.name, this->ui.name->text());

@@ -1,5 +1,4 @@
 #include "./perk.h"
-#include "dovah/core.h"
 #include "dovah/forms/components/papyrus/fragment_data/perk_fragment_data.h"
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"

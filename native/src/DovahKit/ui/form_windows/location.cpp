@@ -1,9 +1,9 @@
 #include "./location.h"
 #include <limits>
-#include "dovah/core.h"
 #include "dovah/utils/update_location_content.h"
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 #include "./shared/DKFormPickerExcludeSingleFormFilter.h"
 
@@ -213,6 +213,7 @@ FormDialogLocation::FormDialogLocation(dovah::form_stub& stub, QWidget* parent) 
 }
 void FormDialogLocation::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    this->_filters.exclude_self->set_exclusion(&this->form->stub);
@@ -255,7 +256,7 @@ void FormDialogLocation::_save_impl() {
    // working copy in real-time (e.g. if a checkbox doesn't literally modify 
    // the working copy *as* it's (un)checked).
    //
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
    gls.assign_localized_string(working.name, this->ui.name->text());

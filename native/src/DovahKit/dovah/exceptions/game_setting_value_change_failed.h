@@ -1,7 +1,7 @@
 #pragma once
 #include <stdexcept>
+#include <string>
 #include "helpers/vector3.h"
-#include "../core.h"
 
 namespace dovah {
    class form_stub;

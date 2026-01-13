@@ -1,5 +1,4 @@
 #include "./art_object.h"
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogArtObject::FormDialogArtObject(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {

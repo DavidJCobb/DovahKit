@@ -1,5 +1,4 @@
 #include "./shout_word.h"
-#include "dovah/core.h"
 #include "editor/core.h"
 
 FormShoutWordEditor::FormShoutWordEditor(QWidget* parent) : QWidget(parent) {

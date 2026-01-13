@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "../core.h" // bare_form_id_t
+#include "../bare_form_id_t.h"
 
 namespace dovah {
    struct file_prefix {

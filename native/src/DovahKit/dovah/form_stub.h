@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <vector>
 #include "helpers/multiheap.h"
-#include "./core.h"
+#include "./bare_form_id_t.h"
 #include "./form_types.h"
 #include "./use_info/entry.h"
 #include "./use_info/entry_flag_underlying_type.h"

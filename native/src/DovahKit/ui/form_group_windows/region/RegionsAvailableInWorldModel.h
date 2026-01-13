@@ -11,6 +11,7 @@ class RegionsAvailableInWorldModel :
    public ui::model_utils::self_sorting_flat_model_mixin<RegionsAvailableInWorldModel>
 {
    Q_OBJECT;
+   friend self_sorting_flat_model_mixin;
    public:
       static constexpr const size_t ColumnCount = 1;
 

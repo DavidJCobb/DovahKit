@@ -1,6 +1,5 @@
 #include "./relationship.h"
 #include <limits>
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogRelationship::FormDialogRelationship(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {

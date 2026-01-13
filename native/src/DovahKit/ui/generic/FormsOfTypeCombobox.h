@@ -1,6 +1,10 @@
 #pragma once
 #include <QComboBox>
-#include "../../dovah/core.h"
+#include "dovah/bare_form_id_t.h"
+#include "dovah/form_types.h"
+namespace dovah {
+   class form_stub;
+}
 
 class FormsOfTypeCombobox : public QComboBox {
    Q_OBJECT

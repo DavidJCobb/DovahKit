@@ -1,6 +1,5 @@
 #include "./story_manager_event_node.h"
 #include <QInputDialog>
-#include "dovah/core.h"
 #include "dovah/data/story_manager.h"
 #include "editor/helpers/story_event_name.h"
 #include "editor/subsystems/story_manager/core.h"

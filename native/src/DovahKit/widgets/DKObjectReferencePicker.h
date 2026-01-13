@@ -10,7 +10,6 @@
 
 #include "dovah/form_types.h"
 #if !defined(QT_PLUGIN)
-   #include "dovah/core.h"
    #include "./widget-models/DKRefsInCellModel.h"
 #endif
 #include "./DKComboBox.h"

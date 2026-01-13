@@ -1,5 +1,4 @@
 #include "./eyes.h"
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogEyes::FormDialogEyes(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {

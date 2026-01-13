@@ -1,6 +1,6 @@
 #include "./light.h"
 #include <limits>
-#include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogLight::FormDialogLight(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
@@ -61,6 +61,7 @@ FormDialogLight::FormDialogLight(dovah::form_stub& stub, QWidget* parent) : QDia
 }
 void FormDialogLight::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
@@ -129,6 +130,7 @@ void FormDialogLight::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
    gls.assign_localized_string(working.item_data.name, this->ui.name->text());

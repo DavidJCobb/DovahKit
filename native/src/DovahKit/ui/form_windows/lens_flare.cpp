@@ -1,5 +1,4 @@
 #include "./lens_flare.h"
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/typical_tableview_config.h"
 #include "./lens_flare/FormSubdialogLensFlareSprite.h"

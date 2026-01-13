@@ -1,7 +1,7 @@
 #pragma once
 #include <stdexcept>
 #include "../game_change_failure_reason.h"
-#include "../core.h"
+#include "../data/game.h"
 
 namespace dovah::exceptions {
    class game_change_failed : public std::runtime_error {

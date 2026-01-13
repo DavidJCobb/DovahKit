@@ -5,7 +5,7 @@
 #include "dovah/forms/structs/color_dword.h"
 #include "dovah/forms/Form.h" // for working copies
 #include "dovah/forms/Sound.h" // for mapping TESSound to BGSSoundDescriptor.
-#include "dovah/core.h" // form_reference_t
+#include "dovah/form_reference_t.h"
 #include "editor/asset_manager/asset_manager.h" // for DKTextureAssetPane and whatnot
 #include "ui/types/game_file_path.h"
 #include "widgets/DKColorPickerButton.h"

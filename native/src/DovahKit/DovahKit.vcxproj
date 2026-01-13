@@ -1457,6 +1457,7 @@
     <ClCompile Include="widgets\widget-models\DKTopicOrSubtypePicker\DKTopicOrSubtypePickerModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovah\bare_form_id_t.h" />
     <ClInclude Include="dovah\datastores\camera_paths.h" />
     <ClInclude Include="dovah\datastores\camera_paths\anam_subrecord_position.h" />
     <ClInclude Include="dovah\datastores\camera_paths\node.h" />
@@ -2210,10 +2211,10 @@
     <QtMoc Include="ui\form_group_windows\region\RegionSoundsModel.h" />
     <QtMoc Include="ui\form_group_windows\region\RegionWeatherModel.h" />
     <QtMoc Include="ui\form_group_windows\region\RegionObjectsModel.h" />
-    <QtMoc Include="ui\form_group_windows\region\RegionsAvailableInWorldModel.h" />
-    <QtMoc Include="ui\form_group_windows\region\RegionsDialog.h" />
     <ClInclude Include="ui\form_group_windows\region\fragments\objects.h" />
     <ClInclude Include="ui\form_group_windows\region\fragment_passkey.h" />
+    <QtMoc Include="ui\form_group_windows\region\RegionsAvailableInWorldModel.h" />
+    <QtMoc Include="ui\form_group_windows\region\RegionsDialog.h" />
     <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h" />
     <QtMoc Include="ui\form_windows\climate\FormSubdialogClimateWeather.h" />
     <QtMoc Include="ui\form_windows\encounter_zone.h" />
@@ -3478,7 +3479,6 @@
     <ClInclude Include="dovahscript\wrappers\unusual\_all.h" />
     <ClInclude Include="dovahscript\wrap_native_object.h" />
     <ClInclude Include="dovah\bs_hash.h" />
-    <ClInclude Include="dovah\core.h" />
     <ClInclude Include="dovah\data\actor_values.h" />
     <ClInclude Include="dovah\data\default_objects.h" />
     <ClInclude Include="dovah\data\game_settings.h" />

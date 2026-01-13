@@ -1,5 +1,4 @@
 #include "./loading_screen.h"
-#include "dovah/core.h"
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"

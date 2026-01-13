@@ -1,5 +1,4 @@
 #include "./climate.h"
-#include "dovah/core.h"
 #include "widgets/DKFormNIFPicker.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/enable_inbound_drag_and_drop_insertions.h"

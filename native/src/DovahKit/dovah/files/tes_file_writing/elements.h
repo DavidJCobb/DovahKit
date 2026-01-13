@@ -4,7 +4,8 @@
 #include "../../helpers/memory.h"
 #include "../../helpers/miscellaneous.h"
 #include "../../helpers/type_traits.h"
-#include "../../core.h"
+#include "../../bare_form_id_t.h"
+#include "../../form_reference_t.h"
 #include "../common.h"
 
 namespace dovah {

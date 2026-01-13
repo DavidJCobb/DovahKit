@@ -1,5 +1,5 @@
 #pragma once
-#include "../core.h"
+#include "../bare_form_id_t.h"
 
 namespace dovah {
    class file_load_order;

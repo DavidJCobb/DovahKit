@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <string>
 #include "../../../data/conditions/parameter_underlying_type.h"
-#include "../../../core.h"
+#include "../../../form_reference_t.h"
 
 namespace dovah::loaded_forms::components::conditions {
    struct parameter {

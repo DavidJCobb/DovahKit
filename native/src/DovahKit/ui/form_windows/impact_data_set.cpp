@@ -1,7 +1,6 @@
 #include "./impact_data_set.h"
 #include <limits>
 #include <QHeaderView>
-#include "dovah/core.h"
 #include "editor/form_stub_meta_type.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/typical_tableview_config.h"

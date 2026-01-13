@@ -1,6 +1,5 @@
 #include "./quest.h"
 #include <QWhatsThis> // for the "Help" button in the dialogue tab
-#include "dovah/core.h"
 #include "dovah/form_stub_addenda.h"
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "./odds_and_ends/quest_tab_stages.h"

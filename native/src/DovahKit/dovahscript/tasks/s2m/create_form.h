@@ -1,7 +1,8 @@
 #pragma once
+#include <cstdint>
 #include <string>
 #include "../_base.h"
-#include "../../../dovah/core.h"
+#include "dovah/form_types.h"
 
 namespace dovah {
    class form_stub;

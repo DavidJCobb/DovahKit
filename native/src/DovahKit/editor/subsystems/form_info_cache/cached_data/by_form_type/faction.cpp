@@ -1,7 +1,6 @@
 #include "./faction.h"
 #include "dovah/files/tes_file_reading/elements.h"
 #include "dovah/forms/Faction.h"
-#include "dovah/core.h"
 
 namespace {
    using loaded_form_type = dovah::loaded_forms::Faction;

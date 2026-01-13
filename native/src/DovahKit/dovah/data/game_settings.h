@@ -17,7 +17,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #pragma once
 #include <array>
 #include <cstdint>
-#include "../core.h"
+#include "./game.h"
 #include "../localized_strings.h"
 #include "../utils/game_list.h"
 

@@ -1,5 +1,4 @@
 #include "./actor_action.h"
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogActorAction::FormDialogActorAction(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {

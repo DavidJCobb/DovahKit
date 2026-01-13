@@ -1,5 +1,4 @@
 #include "./location_ref_type.h"
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogLocationRefType::FormDialogLocationRefType(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {

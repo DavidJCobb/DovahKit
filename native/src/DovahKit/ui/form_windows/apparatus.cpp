@@ -1,6 +1,5 @@
 #include "./apparatus.h"
 #include <limits>
-#include "dovah/core.h"
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 #include "dovah/forms/MiscItem.h" // "non-playable" flag

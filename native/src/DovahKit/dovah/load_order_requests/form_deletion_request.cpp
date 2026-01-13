@@ -46,7 +46,7 @@ namespace dovah {
    void form_deletion_request::_common_init() {
       if (!this->owner.active_file)
          throw exception(error_code::no_active_file, this->target);
-      if (this->target.is_hardcoded() || this->target.formID < minimum_plugin_form_id)
+      if (this->target.is_hardcoded())
          throw exception(error_code::form_is_hardcoded, this->target);
 
       this->active_file_prefix = this->owner.expected_active_file_prefix_post_save();

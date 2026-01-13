@@ -1,5 +1,4 @@
 #include "./load_task.h"
-#include "dovah/core.h"
 #include "dovah/files/file_load_order.h"
 #include "dovah/exceptions/file_load_failed.h"
 #include "dovah/exceptions/invalid_load_order.h"

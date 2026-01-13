@@ -1,5 +1,4 @@
 #include "./shader_particle_geometry_data.h"
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/item_indices_to_data.h"
 #include "ui/utils/set_range.h"

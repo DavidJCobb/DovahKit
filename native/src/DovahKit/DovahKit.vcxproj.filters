@@ -3918,12 +3918,6 @@
     <ClCompile Include="dovah\form_stubs\helpers\get_assigned_location.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ui\form_group_windows\region\RegionsAvailableInWorldModel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ui\form_group_windows\region\RegionsDialog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ui\form_group_windows\region\fragments\objects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -3931,6 +3925,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor\subsystems\game_localized_strings\game_localized_strings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_group_windows\region\RegionsAvailableInWorldModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_group_windows\region\RegionsDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -3948,9 +3948,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\files\file_load_order.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dovah\core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovah\logging.h">
@@ -9677,6 +9674,9 @@
     <ClInclude Include="editor\subsystems\game_localized_strings\core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\bare_form_id_t.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -11148,16 +11148,16 @@
     <QtMoc Include="ui\form_group_windows\region\RegionObjectsModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="ui\form_group_windows\region\RegionsAvailableInWorldModel.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="ui\form_group_windows\region\RegionsDialog.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="editor\subsystems\per_form_windows\per_form_window_manager.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\subsystems\game_localized_strings\game_localized_strings.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_group_windows\region\RegionsAvailableInWorldModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_group_windows\region\RegionsDialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

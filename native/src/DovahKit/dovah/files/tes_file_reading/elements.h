@@ -7,7 +7,9 @@
 #include "helpers/type_traits.h"
 #include "helpers/type_traits/is_literal.h"
 #include "helpers/type_traits/is_std_array.h"
-#include "../../core.h"
+#include "../../bare_form_id_t.h"
+#include "../../form_id_t.h"
+#include "../../form_reference_t.h"
 #include "../common.h"
 
 namespace dovah {

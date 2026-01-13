@@ -1,6 +1,8 @@
 #pragma once
+#include <array>
+#include <set>
 #include <vector>
-#include "../../../core.h"
+#include "../../../form_id_t.h"
 #include "../package_event_dialogue.h"
 
 namespace dovah::loaded_forms::components {

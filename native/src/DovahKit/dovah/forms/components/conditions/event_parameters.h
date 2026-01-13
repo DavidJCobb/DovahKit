@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "../../../core.h"
+#include "../../../form_reference_t.h"
 
 namespace dovah::loaded_forms::components::conditions {
    struct event_parameters {

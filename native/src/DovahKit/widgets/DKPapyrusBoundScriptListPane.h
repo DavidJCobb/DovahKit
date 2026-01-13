@@ -5,7 +5,6 @@
 
 class DKBoundScriptListModel;
 #if !defined(QT_PLUGIN)
-   #include "dovah/core.h"
    #include "dovah/form_stub.h"
    #include "dovah/forms/components/papyrus.h"
    #include "./widget-models/DKBoundScriptListModel.h"

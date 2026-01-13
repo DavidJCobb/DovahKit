@@ -1,4 +1,5 @@
 #include "./TopicInfoLinkedTopicsModel.h"
+#include "dovah/form_reference_t.h"
 #include "dovah/form_stubs/helpers/get_dialogue_topic_branch.h"
 #include "dovah/form_stub.h"
 #include "editor/core.h"

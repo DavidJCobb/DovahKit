@@ -6,7 +6,7 @@
 #include <QString>
 #include <QTableView>
 #include <QTimer>
-#include "dovah/core.h" // bare_form_id_t
+#include "dovah/bare_form_id_t.h" // bare_form_id_t
 #include "dovah/data/game.h"
 #include "dovah/data/game_settings.h"
 

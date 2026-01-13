@@ -1,7 +1,6 @@
 #include "./actor_base.h"
 #include "dovah/files/tes_file_reading/elements.h"
 #include "dovah/forms/ActorBase.h"
-#include "dovah/core.h"
 
 namespace {
    using loaded_form_type = dovah::loaded_forms::ActorBase;

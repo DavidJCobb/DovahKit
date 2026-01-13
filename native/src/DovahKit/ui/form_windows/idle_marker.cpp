@@ -1,5 +1,4 @@
 #include "./idle_marker.h"
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogIdleMarker::FormDialogIdleMarker(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {

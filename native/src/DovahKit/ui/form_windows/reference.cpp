@@ -1,6 +1,5 @@
 #include "./reference.h"
 #include <QMessageBox>
-#include "dovah/core.h"
 #include "dovah/form_stubs/helpers/get_activator_water_type.h"
 #include "dovah/form_stubs/helpers/get_base_form.h"
 #include "editor/helpers/form_identifiers_to_string.h"

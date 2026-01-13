@@ -2,7 +2,6 @@
 #include <limits>
 #include <optional>
 #include <QContextMenuEvent>
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
 #include "editor/form_stub_meta_type.h" // for QVariant::fromValue on a form stub
@@ -492,6 +491,7 @@ FormDialogFaction::FormDialogFaction(dovah::form_stub& stub, QWidget* parent) : 
                return;
             }
 
+            auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
             this->ui.rankEditID->setValue(data->id);
             this->ui.rankEditInsignia->setValue(ui::types::game_file_path(QString::fromStdString(data->insignia)));
             this->ui.rankEditNameF->setText(gls.convert_localized_string(data->title_fem));
@@ -512,7 +512,8 @@ FormDialogFaction::FormDialogFaction(dovah::form_stub& stub, QWidget* parent) : 
             auto* src   = model->node(index);
             if (!src)
                return;
-            auto data = *src;
+            auto  data = *src;
+            auto& gls  = dovahkit::subsystems::game_localized_strings::core::get();
             gls.assign_localized_string(data.title_fem, this->ui.rankEditNameF->text());
             model->setRankData(index.row(), data);
          });
@@ -521,7 +522,8 @@ FormDialogFaction::FormDialogFaction(dovah::form_stub& stub, QWidget* parent) : 
             auto* src   = model->node(index);
             if (!src)
                return;
-            auto data = *src;
+            auto  data = *src;
+            auto& gls  = dovahkit::subsystems::game_localized_strings::core::get();
             gls.assign_localized_string(data.title_masc, this->ui.rankEditNameM->text());
             model->setRankData(index.row(), data);
          });

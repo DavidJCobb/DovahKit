@@ -1,6 +1,5 @@
 #pragma once
 #include <QSortFilterProxyModel>
-#include "../../../dovah/core.h"
 
 class _FormsOfTypeComboboxProxy : public QSortFilterProxyModel {
    Q_OBJECT

@@ -1,5 +1,4 @@
 #include "./package.h"
-#include "dovah/core.h"
 #include "dovah/forms/components/papyrus/fragment_data/package_fragment_data.h"
 #include "dovah/forms/structs/typed_package_info/custom.h"
 #include "editor/localize/package_data_type.h"

@@ -1,7 +1,6 @@
 #include "./head_part.h"
 #include "dovah/files/tes_file_reading/elements.h"
 #include "dovah/forms/HeadPart.h"
-#include "dovah/core.h"
 
 namespace {
    namespace vmad {

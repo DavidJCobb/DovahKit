@@ -1,7 +1,6 @@
 #pragma once
 #include <cstdint>
 #include <stdexcept>
-#include "../core.h"
 #include "../form_types.h"
 #include "./enums/form_creation_error_code.h"
 

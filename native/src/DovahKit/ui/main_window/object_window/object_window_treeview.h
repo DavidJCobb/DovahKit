@@ -5,7 +5,7 @@
 #include <QAbstractItemModel>
 #include <QString>
 #include <QTreeView>
-#include "../../../dovah/core.h"
+#include "dovah/form_types.h"
 #include "../../generic/QLinedTreeView.h"
 
 #include "./filter_info.h"

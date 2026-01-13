@@ -1,5 +1,4 @@
 #include "./dual_cast_data.h"
-#include "dovah/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogDualCastData::FormDialogDualCastData(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {

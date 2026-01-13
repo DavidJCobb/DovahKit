@@ -1,7 +1,6 @@
 #include "./music_track.h"
 #include "dovah/files/tes_file_reading/elements.h"
 #include "dovah/forms/MusicTrack.h"
-#include "dovah/core.h"
 
 namespace dovahkit::subsystems::form_info_cache::cached_data::by_form {
    void music_track::skim_subrecord(dovah::tes_file_reading::subrecord& subrecord) {

@@ -4,7 +4,6 @@
 #include "../../data/game/max_file_version.h"
 #include "../../data/game/min_file_version.h"
 #include "../../load_order_interfaces/form_save.h"
-#include "../../core.h"
 #include "../../form_stub.h"
 #include "../../form_stub_addenda.h"
 #include "../../form_stubs/helpers/for_each_child_form.h"
