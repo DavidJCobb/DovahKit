@@ -8,6 +8,7 @@
 #include "dovah/forms/Faction.h"
 #include "dovah/forms/ObjectReference.h"
 #include "editor/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 namespace {
    namespace extra_data_types {
       using namespace dovah::loaded_forms::components::extra_data_types;
@@ -76,7 +77,7 @@ namespace ui::reference::fragments {
    }
    
    void ownership::_update_ownership_rank_picker() {
-      auto& editor  = DovahKitCore::get();
+      auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
       auto& working = this->loaded();
 
       auto* form_picker = this->controls.owner_form;
@@ -107,8 +108,8 @@ namespace ui::reference::fragments {
       for (auto& rank : loaded->ranks) {
          QString text;
          {
-            auto masc = editor.convert_localized_string(rank.title_masc);
-            auto fem = editor.convert_localized_string(rank.title_fem);
+            auto masc = gls.convert_localized_string(rank.title_masc);
+            auto fem = gls.convert_localized_string(rank.title_fem);
             if (masc == fem) {
                text = fem;
             } else {

@@ -24,7 +24,7 @@ void FormDialogTree::_load_impl() {
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    this->ui.model->initializeFrom(working.model);
    ui::bind(this->ui.flexibilityTrunk, working.tree_data.trunk.flexibility);
    ui::bind(this->ui.flexibilityBranch, working.tree_data.branch_flexibility);
@@ -50,7 +50,7 @@ void FormDialogTree::_save_impl() {
    auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
    this->ui.model->commitTo(working.model, working);
 
    this->ui.scriptListPane->commit();

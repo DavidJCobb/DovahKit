@@ -1,5 +1,6 @@
 #include "./door.h"
 #include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogDoor::FormDialogDoor(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
@@ -14,10 +15,11 @@ FormDialogDoor::FormDialogDoor(dovah::form_stub& stub, QWidget* parent) : QDialo
 }
 void FormDialogDoor::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    this->ui.model->initializeFrom(working.model);
    this->ui.destructionData->initializeFrom(working.destruction_data);
    ui::bind(this->ui.soundOpen,  working.open_sound,  working);
@@ -52,9 +54,10 @@ void FormDialogDoor::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
    this->ui.model->commitTo(working.model, working);
    this->ui.destructionData->commitTo(working.destruction_data, working);
 

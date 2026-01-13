@@ -20,7 +20,7 @@ void FormDialogMiscItem::_load_impl() {
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    ui::bind(this->ui.weight, working.weight);
    ui::bind(this->ui.value,  working.value);
    ui::bind_inverse(this->ui.flagPlayable, this->record_flags(), loaded_form_type::form_flag::non_playable);
@@ -43,7 +43,7 @@ void FormDialogMiscItem::_save_impl() {
    auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
    this->ui.model->commitTo(working.model, working);
    this->ui.destructionData->commitTo(working.destruction_data, working);
 

@@ -2,6 +2,7 @@
 #include <limits>
 #include "dovah/core.h"
 #include "dovah/data/all_base_form_types.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/enum_dropdown_configs/detection_loudness.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/item_indices_to_data.h"
@@ -38,10 +39,11 @@ FormDialogExplosion::FormDialogExplosion(dovah::form_stub& stub, QWidget* parent
 }
 void FormDialogExplosion::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    this->ui.model->initializeFrom(working.model);
    ui::bind(this->ui.force, working.force);
    ui::bind(this->ui.flagPushSourceOnly, working.explosion_flags, loaded_form_type::explosion_flag::push_source_ref_only);
@@ -74,8 +76,9 @@ void FormDialogExplosion::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
    this->ui.model->commitTo(working.model, working);
 }

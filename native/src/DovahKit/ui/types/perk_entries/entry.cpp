@@ -2,13 +2,13 @@
 #include "dovah/forms/components/papyrus/fragment_data/perk_fragment_data.h"
 #include "dovah/forms/structs/perk_effect.h"
 #include "dovah/forms/Perk.h"
-#include "editor/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 
 namespace ui::types::perk_entries {
    /*static*/ std::vector<entry> entry::pull_list_from_backend(const dovah::loaded_forms::Perk& perk) {
       using src_type = dovah::loaded_forms::structs::perk_effect;
 
-      auto&       editor   = DovahKitCore::get();
+      auto&       gls      = dovahkit::subsystems::game_localized_strings::core::get();
       const auto& src_list = perk.effects;
       const auto* papyrus  = dynamic_cast<dovah::loaded_forms::components::papyrus::perk_fragment_data*>(perk.script_data.fragment_data);
 
@@ -48,7 +48,7 @@ namespace ui::types::perk_entries {
                         {
                            auto& src_params = std::get<src_config_type::data_types::activate_choice>(src_data.function.data);
                            auto& dst_params = dst_data.parameters.emplace<ui::types::perk_entries::params::activate_choice>();
-                           dst_params.label = editor.convert_localized_string(src_params.text);
+                           dst_params.label = gls.convert_localized_string(src_params.text);
                            dst_params.spell = src_params.spell.get_form_stub();
                            dst_params.replace_default = src_params.flags & src_config_type::data_types::activate_choice::flag::replace_default;
                            dst_params.run_immediately = src_params.flags & src_config_type::data_types::activate_choice::flag::run_immediately;
@@ -82,7 +82,7 @@ namespace ui::types::perk_entries {
                         {
                            auto& src_params = std::get<dovah::localized_string>(src_data.function.data);
                            auto& dst_params = dst_data.parameters.emplace<ui::types::perk_entries::params::localized_string>();
-                           dst_params.value = editor.convert_localized_string(src_params);
+                           dst_params.value = gls.convert_localized_string(src_params);
                         }
                         break;
                      case dovah::entry_point_function_type::none:
@@ -140,7 +140,7 @@ namespace ui::types::perk_entries {
    void entry::append_into_backend(dovah::loaded_forms::Perk& perk) const {
       using backend_type = dovah::loaded_forms::structs::perk_effect;
 
-      auto& editor = DovahKitCore::get();
+      auto& gls      = dovahkit::subsystems::game_localized_strings::core::get();
       auto& dst_list = perk.effects;
 
       auto& papyrus   = perk.script_data;
@@ -171,7 +171,7 @@ namespace ui::types::perk_entries {
             auto& dst_params = casted_dst.function.data;
             if (auto* casted_src_params = std::get_if<ui::types::perk_entries::params::activate_choice>(&src_params)) {
                auto& casted_dst_params = dst_params.emplace<backend_type::data_types::activate_choice>();
-               editor.assign_localized_string(casted_dst_params.text, casted_src_params->label);
+               gls.assign_localized_string(casted_dst_params.text, casted_src_params->label);
                casted_dst_params.spell.set(perk, casted_src_params->spell);
                if (casted_src_params->replace_default)
                   casted_dst_params.flags |= backend_type::data_types::activate_choice::flag::replace_default;
@@ -203,7 +203,7 @@ namespace ui::types::perk_entries {
                }
             } else if (auto* casted_src_params = std::get_if<ui::types::perk_entries::params::localized_string>(&src_params)) {
                auto& casted_dst_params = dst_params.emplace<dovah::localized_string>();
-               editor.assign_localized_string(casted_dst_params, casted_src_params->value);
+               gls.assign_localized_string(casted_dst_params, casted_src_params->value);
             } else if (auto* casted_src_params = std::get_if<ui::types::perk_entries::params::one_av_one_float>(&src_params)) {
                auto& casted_dst_params = dst_params.emplace<backend_type::data_types::two_floats>();
                casted_dst_params.a = casted_src_params->actor_value;

@@ -64,7 +64,7 @@ void FormDialogLight::_load_impl() {
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.item_data.name));
+   this->ui.name->setText(gls.convert_localized_string(working.item_data.name));
 
    this->ui.model->initializeFrom(working.model);
    this->ui.destructionData->initializeFrom(working.destruction_data);
@@ -131,7 +131,7 @@ void FormDialogLight::_save_impl() {
    auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.item_data.name, this->ui.name->text());
+   gls.assign_localized_string(working.item_data.name, this->ui.name->text());
    this->ui.model->commitTo(working.model, working);
    this->ui.destructionData->commitTo(working.destruction_data, working);
 

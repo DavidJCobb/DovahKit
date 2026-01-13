@@ -16,6 +16,7 @@
 #include "dovah/forms/components/extra_data/types/r/rank.h"
 #include "dovah/forms/components/extra_data/types/w/water_data.h"
 #include "dovah/forms/components/extra_data/types/w/water_environment_map.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 
 namespace {
    using form_flag = dovah::loaded_forms::Cell::form_flag;
@@ -189,6 +190,7 @@ void FormDialogCell::_load_impl() {
    auto& extra    = this->form->extra_data;
    auto& lighting = this->form->interior.lighting;
    auto& editor   = DovahKitCore::get();
+   auto& gls      = dovahkit::subsystems::game_localized_strings::core::get();
    //
    bool is_exterior = this->stub->is_exterior_cell();
    this->ui.tabs->setTabEnabled(1, !is_exterior);
@@ -286,7 +288,7 @@ void FormDialogCell::_load_impl() {
          this->ui.directionalAmbColorZNeg->setColor(_form_color_to_q(lighting.ambient.directional.z.negative));
       #pragma endregion
       #pragma region Interior Data
-         this->ui.name->setText(editor.convert_localized_string(this->form->name));
+         this->ui.name->setText(gls.convert_localized_string(this->form->name));
          _load_extra_formID<extra_data_types::encounter_zone>(this->ui.encounterZone, extra);
          if (auto* data = extra.get<extra_data_types::water_environment_map>()) {
             this->ui.waterEnvironmentMap->setValue(data->value.c_str());
@@ -311,6 +313,7 @@ void FormDialogCell::_save_impl() {
    auto& extra    = this->form->extra_data;
    auto& lighting = this->form->interior.lighting;
    auto& editor   = DovahKitCore::get();
+   auto& gls      = dovahkit::subsystems::game_localized_strings::core::get();
    //
    bool is_exterior = this->stub->is_exterior_cell();
    //
@@ -404,7 +407,7 @@ void FormDialogCell::_save_impl() {
          _q_color_to_form(lighting.ambient.directional.z.negative, this->ui.directionalAmbColorZNeg->color());
       #pragma endregion
       #pragma region Interior Data
-         editor.assign_localized_string(this->form->name, this->ui.name->text());
+         gls.assign_localized_string(this->form->name, this->ui.name->text());
          this->write_extra_form_ref<extra_data_types::encounter_zone>(extra, this->ui.encounterZone->formStub());
          {
             auto path = this->ui.waterEnvironmentMap->value().to_string();

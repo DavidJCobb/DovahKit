@@ -2,6 +2,7 @@
 #include <QWhatsThis> // for the "Help" button in the dialogue tab
 #include "dovah/core.h"
 #include "dovah/form_stub_addenda.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "./odds_and_ends/quest_tab_stages.h"
 #include "./odds_and_ends/quest_tab_objectives.h"
 #include "./quest/QuestTabScenes.h"
@@ -186,13 +187,13 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
    }
 }
 void FormDialogQuest::_load_impl() {
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    //
    #pragma region Basic Data
       ui::bind(this->ui.editorID, this->editor_id());
       ui::bind(this->ui.editorCategory, working.filter);
-      this->ui.name->setText(editor.convert_localized_string(working.name));
+      this->ui.name->setText(gls.convert_localized_string(working.name));
       ui::bind<loaded_form_type::quest_type::type>(this->ui.questType, working.quest_type);
       ui::bind(this->ui.flagAllowRepeatedStages,       working.flags, loaded_form_type::quest_flag::allow_repeated_stages);
       ui::bind(this->ui.flagExcludeFromDialogueExport, working.flags, loaded_form_type::quest_flag::exclude_from_dialogue_export);
@@ -238,11 +239,11 @@ void FormDialogQuest::_save_impl() {
    // working copy in real-time (e.g. if a checkbox doesn't literally modify 
    // the working copy *as* it's (un)checked).
    //
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    //
    #pragma region Basic Data
-      editor.assign_localized_string(working.name, this->ui.name->text());
+      gls.assign_localized_string(working.name, this->ui.name->text());
       this->ui.textDisplayGlobals->commitStubs(working.text_display_globals, working);
       this->ui.dialogueConditions->exportTo(*this->form, working.conditions.dialogue);
    #pragma endregion

@@ -1,6 +1,7 @@
 #include "./apparatus.h"
 #include <limits>
 #include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 #include "dovah/forms/MiscItem.h" // "non-playable" flag
 
@@ -27,10 +28,11 @@ FormDialogApparatus::FormDialogApparatus(dovah::form_stub& stub, QWidget* parent
 }
 void FormDialogApparatus::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    ui::bind(this->ui.weight, working.weight);
    ui::bind(this->ui.value,  working.value);
    ui::bind_inverse(this->ui.flagPlayable, this->record_flags(), dovah::loaded_forms::MiscItem::form_flag::non_playable);
@@ -50,9 +52,10 @@ void FormDialogApparatus::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
    this->ui.model->commitTo(working.model, working);
    this->ui.destructionData->commitTo(working.destruction_data, working);
 

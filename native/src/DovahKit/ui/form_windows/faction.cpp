@@ -6,6 +6,7 @@
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
 #include "editor/form_stub_meta_type.h" // for QVariant::fromValue on a form stub
+#include "editor/subsystems/game_localized_strings/core.h"
 
 #include "ui/models/forms/FactionMembersModel.h"
 #include "./faction/FormSubdialogFactionVendorLocation.h"
@@ -493,8 +494,8 @@ FormDialogFaction::FormDialogFaction(dovah::form_stub& stub, QWidget* parent) : 
 
             this->ui.rankEditID->setValue(data->id);
             this->ui.rankEditInsignia->setValue(ui::types::game_file_path(QString::fromStdString(data->insignia)));
-            this->ui.rankEditNameF->setText(editor.convert_localized_string(data->title_fem));
-            this->ui.rankEditNameM->setText(editor.convert_localized_string(data->title_masc));
+            this->ui.rankEditNameF->setText(gls.convert_localized_string(data->title_fem));
+            this->ui.rankEditNameM->setText(gls.convert_localized_string(data->title_masc));
             this->ui.rankEditInsigniaPreview->setAsset(this->ui.rankEditInsignia->value().to_string());
          });
          QObject::connect(this->ui.rankEditID, QOverload<int>::of(&QSpinBox::valueChanged), this, [this, model, sel_model](int value) {
@@ -512,7 +513,7 @@ FormDialogFaction::FormDialogFaction(dovah::form_stub& stub, QWidget* parent) : 
             if (!src)
                return;
             auto data = *src;
-            editor.assign_localized_string(data.title_fem, this->ui.rankEditNameF->text());
+            gls.assign_localized_string(data.title_fem, this->ui.rankEditNameF->text());
             model->setRankData(index.row(), data);
          });
          QObject::connect(this->ui.rankEditNameM, &QLineEdit::textChanged, this, [this, &editor, model, sel_model](QString text) {
@@ -521,7 +522,7 @@ FormDialogFaction::FormDialogFaction(dovah::form_stub& stub, QWidget* parent) : 
             if (!src)
                return;
             auto data = *src;
-            editor.assign_localized_string(data.title_masc, this->ui.rankEditNameM->text());
+            gls.assign_localized_string(data.title_masc, this->ui.rankEditNameM->text());
             model->setRankData(index.row(), data);
          });
          QObject::connect(this->ui.rankEditInsignia, &DKGameFilePicker::valueChanged, this, [this, model, sel_model](ui::types::game_file_path path) {
@@ -569,10 +570,11 @@ FormDialogFaction::FormDialogFaction(dovah::form_stub& stub, QWidget* parent) : 
 }
 void FormDialogFaction::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
 
    {  // General tab
       ui::bind(this->ui.flagHiddenFromPlayer, working.faction_flags, loaded_form_type::faction_flag::hidden_from_player);
@@ -659,9 +661,10 @@ void FormDialogFaction::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
 
    this->models.relationships->coalesce();
    this->models.relationships->commitTo(working, working.relationships);

@@ -79,8 +79,6 @@ class DovahKitCore : public QObject {
       bool    loaded  = false;
       bool    loading = false;
       QThread* async_loader = nullptr;
-      std::string encoding;
-      std::string language_name;
       bool com_is_ready = false; // is COM set up for the main thread?
       DKBSACollectionModelBackend* bsa_browse_backend = nullptr;
       //
@@ -125,8 +123,6 @@ class DovahKitCore : public QObject {
       void dataSaveImminent();
       void dataSaveComplete();
       void dataSaveFailed();
-      
-      void editorEncodingChanged(const std::string& prior, const std::string& after);
       
    public:
       void abandon_data();
@@ -205,13 +201,6 @@ class DovahKitCore : public QObject {
       void set_default_object(uint32_t signature, bare_form_id_t);
 
       const dovah::bsa_load_order* get_bsa_load_order();
-
-      inline const std::string& get_encoding() const noexcept { return this->encoding; }
-      void set_encoding(const std::string& name) noexcept; // use the Qt names
-      void set_encoding(); // pulls the language name from Skyrim.ini and uses that to decide
-
-      QString convert_localized_string(const dovah::localized_string&) const noexcept;
-      void assign_localized_string(dovah::localized_string&, const QString&) const noexcept; // sets the localized_string's contained std::string, i.e. only suitable for when saving something with no STRINGS files
 
       bool get_game_path(std::filesystem::path& out, dovah::game) const noexcept;
       bool get_game_plugins(std::vector<QString>& out, dovah::game) const noexcept; // plugins.txt

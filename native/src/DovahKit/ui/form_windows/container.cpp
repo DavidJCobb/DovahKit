@@ -1,6 +1,7 @@
 #include "./container.h"
 #include <limits>
 #include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogContainer::FormDialogContainer(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
@@ -15,10 +16,11 @@ FormDialogContainer::FormDialogContainer(dovah::form_stub& stub, QWidget* parent
 }
 void FormDialogContainer::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    ui::bind(this->ui.weight, working.weight);
    ui::bind(this->ui.flagRandomAnimStart,     this->record_flags(),    loaded_form_type::form_flag::random_anim_start);
    ui::bind(this->ui.flagObstacle,            this->record_flags(),    loaded_form_type::form_flag::obstacle);
@@ -43,9 +45,10 @@ void FormDialogContainer::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
    this->ui.model->commitTo(working.model, working);
    this->ui.destructionData->commitTo(working.destruction_data, working);
 

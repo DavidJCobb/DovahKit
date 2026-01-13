@@ -218,7 +218,7 @@ void FormDialogLocation::_load_impl() {
    this->_filters.exclude_self->set_exclusion(&this->form->stub);
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    ui::bind(this->ui.parent, working.parent_location, working);
    ui::bind(this->ui.marker, working.marker, working);
    ui::bind(this->ui.markerRadius, working.radius);
@@ -258,7 +258,7 @@ void FormDialogLocation::_save_impl() {
    auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
    this->ui.keywords->commitStubs(working.keywords.forms, working);
 }
 

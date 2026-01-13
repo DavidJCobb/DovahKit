@@ -21,6 +21,7 @@
 #include "dovah/form_stub_addenda.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/helpers/stringify_conditions.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "editor/core.h"
 
 #pragma region Info
@@ -276,9 +277,9 @@
 
       const QString delim = tr(" | ", "response delimiter (in table cell)");
 
-      auto& editor = DovahKitCore::get();
+      auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
       for (size_t i = 0; i < loaded->responses.size(); ++i) {
-         auto str = editor.convert_localized_string(loaded->responses[i].text);
+         auto str = gls.convert_localized_string(loaded->responses[i].text);
          if (i > 0) {
             display += delim;
             tooltip += "<hr>";
@@ -308,8 +309,8 @@
       this->cached.links_to_any_topics = !loaded->link_to.normal.empty() || !loaded->link_to.locked.empty();
       this->cached.hours_until_reset   = loaded->get_hours_until_reset();
       {
-         auto& editor = DovahKitCore::get();
-         auto  prompt = editor.convert_localized_string(loaded->override_topic_text);
+         auto& gls    = dovahkit::subsystems::game_localized_strings::core::get();
+         auto  prompt = gls.convert_localized_string(loaded->override_topic_text);
          if (!prompt.isEmpty())
             this->cached.has_own_prompt = true;
       }
@@ -348,8 +349,8 @@
       }
       this->cached.editor_id = this->stub ? QString::fromStdString(this->stub->editorID) : "";
       {
-         auto& editor = DovahKitCore::get();
-         this->cached.display_text = editor.convert_localized_string(loaded->text);
+         auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
+         this->cached.display_text = gls.convert_localized_string(loaded->text);
       }
       this->cached.priority = loaded->priority;
       this->cached.subtype  = loaded->subtype;

@@ -85,7 +85,7 @@ GameSettingWindow::GameSettingWindow(QWidget* parent) : QDialog(parent) {
             value.i = this->ui.valueF->value();
             break;
          case dovah::game_setting_type::string:
-            editor.assign_localized_string(value.s, this->ui.valueS->toPlainText());
+            gls.assign_localized_string(value.s, this->ui.valueS->toPlainText());
             break;
          default:
             return;

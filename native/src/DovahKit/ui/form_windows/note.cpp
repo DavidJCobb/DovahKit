@@ -1,6 +1,7 @@
 #include "./note.h"
 #include <limits>
 #include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogNote::FormDialogNote(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
@@ -30,10 +31,11 @@ FormDialogNote::FormDialogNote(dovah::form_stub& stub, QWidget* parent) : QDialo
 }
 void FormDialogNote::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    this->ui.model->initializeFrom(working.model);
    ui::bind(this->ui.icon, working.icon);
    ui::bind(this->ui.soundTake, working.take_sound, working);
@@ -45,7 +47,7 @@ void FormDialogNote::_load_impl() {
    ui::bind(this->ui.noteDataImage,   working.content.image);
    ui::bind(this->ui.noteDataSpeaker, working.content.speaker, working);
    ui::bind(this->ui.noteDataTopic,   working.content.topic, working);
-   this->ui.noteDataText->setPlainText(editor.convert_localized_string(working.content.text));
+   this->ui.noteDataText->setPlainText(gls.convert_localized_string(working.content.text));
 }
 void FormDialogNote::_save_impl() {
    //
@@ -56,10 +58,11 @@ void FormDialogNote::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
    this->ui.model->commitTo(working.model, working);
 
-   editor.assign_localized_string(working.content.text, this->ui.noteDataText->toPlainText());
+   gls.assign_localized_string(working.content.text, this->ui.noteDataText->toPlainText());
 }

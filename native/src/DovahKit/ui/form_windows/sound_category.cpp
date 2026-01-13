@@ -102,7 +102,7 @@ void FormDialogSoundCategory::_load_impl() {
    this->_filters.exclude_self->set_exclusion(this->formStub());
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    ui::bind(this->ui.parent, working.parent, working);
    ui::bind(this->ui.flagMuteUnderwater, working.flags, loaded_form_type::sound_category_flag::mute_when_submerged);
    ui::bind(this->ui.flagShowInMenu, working.flags, loaded_form_type::sound_category_flag::show_in_audio_menu);
@@ -134,5 +134,5 @@ void FormDialogSoundCategory::_save_impl() {
    auto& editor  = DovahKitCore::get();
    auto& working = *this->form;
 
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
 }

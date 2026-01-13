@@ -1,5 +1,5 @@
 #include "./activator.h"
-#include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "widgets/DKFormNIFPicker.h"
 #include "ui/utils/bind.h"
 
@@ -15,11 +15,11 @@ FormDialogActivator::FormDialogActivator(dovah::form_stub& stub, QWidget* parent
    this->load(); // this creates the working copy.
 }
 void FormDialogActivator::_load_impl() {
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    this->ui.model->initializeFrom(working.model);
    this->ui.destructionData->initializeFrom(working.destruction_data);
    ui::bind(this->ui.soundActivate, working.activation_sound, working);
@@ -28,7 +28,7 @@ void FormDialogActivator::_load_impl() {
    ui::bind(this->ui.waterType, working.water_type, working);
    ui::bind(this->ui.flagNoDisplacement, working.activator_flags, loaded_form_type::activator_flag::no_displacement);
    //
-   this->ui.activateTextOverride->setText(editor.convert_localized_string(working.activation_verb));
+   this->ui.activateTextOverride->setText(gls.convert_localized_string(working.activation_verb));
    {  // Flags
       ui::bind(this->ui.flagIgnoredBySandbox, working.activator_flags, loaded_form_type::activator_flag::ignored_by_sandbox);
       
@@ -59,13 +59,13 @@ void FormDialogActivator::_save_impl() {
    // working copy in real-time (e.g. if a checkbox doesn't literally modify 
    // the working copy *as* it's (un)checked).
    //
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
    this->ui.model->commitTo(working.model, working);
    this->ui.destructionData->commitTo(working.destruction_data, working);
-   editor.assign_localized_string(working.activation_verb, this->ui.activateTextOverride->text());
+   gls.assign_localized_string(working.activation_verb, this->ui.activateTextOverride->text());
 
    this->ui.keywords->commitStubs(working.keywords.forms, working);
 

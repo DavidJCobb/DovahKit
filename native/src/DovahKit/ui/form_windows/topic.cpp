@@ -1,5 +1,5 @@
 #include "./topic.h"
-#include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 
 #include <bitset>
@@ -62,7 +62,7 @@ FormDialogTopic::FormDialogTopic(dovah::form_stub& stub, QWidget* parent) : QDia
    this->load(); // this creates the working copy.
 }
 void FormDialogTopic::_load_impl() {
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
@@ -155,7 +155,7 @@ void FormDialogTopic::_load_impl() {
 
    ui::bind(this->ui.priority, working.priority);
 
-   this->ui.text->setPlainText(editor.convert_localized_string(this->form->text));
+   this->ui.text->setPlainText(gls.convert_localized_string(this->form->text));
 
    ui::bind(this->ui.flagDoAllBeforeRepeating, working.data.flags, loaded_form_type::dialogue_flag::do_all_before_repeating);
 }
@@ -167,10 +167,10 @@ void FormDialogTopic::_save_impl() {
    // working copy in real-time (e.g. if a checkbox doesn't literally modify 
    // the working copy *as* it's (un)checked).
    //
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
-   editor.assign_localized_string(this->form->text, this->ui.text->toPlainText());
+   gls.assign_localized_string(this->form->text, this->ui.text->toPlainText());
 }
 
 /*static*/ QString FormDialogTopic::_subtype_name(size_t subtype_index) {

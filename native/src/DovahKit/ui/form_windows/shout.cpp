@@ -1,4 +1,5 @@
 #include "./shout.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 
 FormDialogShout::FormDialogShout(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
    initialize(stub);
@@ -13,10 +14,10 @@ FormDialogShout::FormDialogShout(dovah::form_stub& stub, QWidget* parent) : QDia
    this->load();
 }
 void FormDialogShout::_load_impl() {
-   auto& editor = DovahKitCore::get();
+   auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
    
    this->ui.editorID->setText(QString::fromStdString(this->stub->get_editor_id()));
-   this->ui.name->setText(editor.convert_localized_string(this->form->name));
+   this->ui.name->setText(gls.convert_localized_string(this->form->name));
    this->ui.treatAsPower->setChecked(this->form->treat_as_power());
    this->ui.menuDisplayObject->setFormStub(this->form->menu_display_object.get_form_stub());
    this->ui.description->setPlainText(this->form->description.c_str());
@@ -25,10 +26,10 @@ void FormDialogShout::_load_impl() {
    this->ui.word2->load();
 }
 void FormDialogShout::_save_impl() {
-   auto& editor = DovahKitCore::get();
+   auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
    
    this->stub->editorID = this->ui.editorID->text().toStdString();
-   editor.assign_localized_string(this->form->name, this->ui.name->text());
+   gls.assign_localized_string(this->form->name, this->ui.name->text());
    this->form->treat_as_power(this->ui.treatAsPower->isChecked());
    this->write_form_ref(this->form->menu_display_object, this->ui.menuDisplayObject->formStub());
    this->form->description = this->ui.description->toPlainText().toStdString();

@@ -3930,6 +3930,9 @@
     <ClCompile Include="editor\subsystems\per_form_windows\per_form_window_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="editor\subsystems\game_localized_strings\game_localized_strings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9671,6 +9674,9 @@
     <ClInclude Include="editor\subsystems\per_form_windows\core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="editor\subsystems\game_localized_strings\core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -11149,6 +11155,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="editor\subsystems\per_form_windows\per_form_window_manager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="editor\subsystems\game_localized_strings\game_localized_strings.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

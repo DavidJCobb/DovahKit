@@ -1,12 +1,12 @@
 #include "./spell.h"
 #include <limits>
 #include <QMessageBox>
-#include "dovah/core.h"
 #include "editor/helpers/actor_value_index_to_name.h"
 #include "editor/localize/magic_casting_type.h"
 #include "editor/localize/magic_delivery_type.h"
 #include "editor/subsystems/form_info_cache/core.h"
 #include "editor/subsystems/form_info_cache/cached_data/by_form_type/magic_effect.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 
 #include "dovah/forms/MagicEffect.h"
@@ -115,11 +115,11 @@ FormDialogSpell::FormDialogSpell(dovah::form_stub& stub, QWidget* parent) : QDia
    this->load(); // this creates the working copy.
 }
 void FormDialogSpell::_load_impl() {
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    ui::bind(this->ui.type, working.common_data.type);
    ui::bind(this->ui.casting, working.common_data.casting_type);
    ui::bind(this->ui.delivery, working.common_data.delivery_type);
@@ -138,7 +138,7 @@ void FormDialogSpell::_load_impl() {
 
       ui::bind_inverse(this->ui.flagAutoCalc, flags, flag::manual_cost_calc);
    }
-   this->ui.description->setPlainText(editor.convert_localized_string(working.description));
+   this->ui.description->setPlainText(gls.convert_localized_string(working.description));
 
    this->ui.effects->setCastingType(working.common_data.casting_type);
    this->ui.effects->setDeliveryType(working.common_data.delivery_type);
@@ -158,11 +158,11 @@ void FormDialogSpell::_save_impl() {
    // working copy in real-time (e.g. if a checkbox doesn't literally modify 
    // the working copy *as* it's (un)checked).
    //
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
-   editor.assign_localized_string(working.description, this->ui.description->toPlainText());
+   gls.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.description, this->ui.description->toPlainText());
 
    this->ui.effects->exportTo(working, working.effects);
 }

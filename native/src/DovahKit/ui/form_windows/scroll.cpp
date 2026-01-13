@@ -4,6 +4,7 @@
 #include "dovah/core.h"
 #include "editor/localize/magic_casting_type.h"
 #include "editor/localize/magic_delivery_type.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 
 #include "dovah/forms/MagicEffect.h"
@@ -82,11 +83,11 @@ FormDialogScroll::FormDialogScroll(dovah::form_stub& stub, QWidget* parent) : QD
    this->load(); // this creates the working copy.
 }
 void FormDialogScroll::_load_impl() {
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    {
       using enumeration = dovah::magic_casting_type;
       auto* widget = this->ui.casting;
@@ -108,7 +109,7 @@ void FormDialogScroll::_load_impl() {
    }
    ui::bind(this->ui.soundTake, working.sounds.take, working);
    ui::bind(this->ui.soundDrop, working.sounds.drop, working);
-   this->ui.description->setPlainText(editor.convert_localized_string(working.description));
+   this->ui.description->setPlainText(gls.convert_localized_string(working.description));
 
    this->ui.destructionData->initializeFrom(working.destruction_data);
    this->ui.keywords->pullStubs(working.keywords.forms);
@@ -132,11 +133,11 @@ void FormDialogScroll::_save_impl() {
    // working copy in real-time (e.g. if a checkbox doesn't literally modify 
    // the working copy *as* it's (un)checked).
    //
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
-   editor.assign_localized_string(working.description, this->ui.description->toPlainText());
+   gls.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.description, this->ui.description->toPlainText());
 
    this->ui.destructionData->commitTo(working.destruction_data, working);
    this->ui.effects->exportTo(working, working.effects);

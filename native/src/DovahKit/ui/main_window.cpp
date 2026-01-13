@@ -7,6 +7,7 @@
 #include "helpers/qt/strings.h"
 #include "widgets/DKStatusBar.h"
 #include "editor/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "editor/subsystems/message_log/core.h"
 #include "editor/subsystems/per_form_windows/core.h"
 #include "editor/open_window_for_form.h"
@@ -305,13 +306,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
          action->setCheckable(true);
          action->setChecked(false);
          QObject::connect(action, &QAction::triggered, this, [action]() {
-            DovahKitCore::get().set_encoding(action->data().toString().toStdString());
+            auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
+            gls.set_encoding(action->data().toString().toStdString());
          });
       }
       QObject::connect(this->ui.menuTextEncoding, &QMenu::aboutToShow, this, [this]() {
-         auto* menu     = this->ui.menuTextEncoding;
-         auto& editor   = DovahKitCore::get();
-         auto  encoding = QString::fromStdString(editor.get_encoding());
+         auto* menu = this->ui.menuTextEncoding;
+         auto& gls  = dovahkit::subsystems::game_localized_strings::core::get();
+         auto  encoding = QString::fromStdString(gls.get_encoding());
          //
          for (auto* action : menu->actions()) {
             QString n = action->data().toString();
@@ -465,7 +467,7 @@ void MainWindow::showEvent(QShowEvent* event) {
 void MainWindow::updateFormEditWindowList() {
    this->form_edit_window_menu->clear();
    //
-   auto& pfwins = dovahkit::subsystems::per_form_windows::core::get();
+   auto& pfwins = dovahkit::subsystems::per_form_windows::core::get_or_create();
    pfwins.for_each_form_edit_dialog([this](FormEditDialogInterface* dialog) {
       auto* stub = dialog->formStub();
       if (!stub)
@@ -500,7 +502,7 @@ void MainWindow::updateFormEditWindowList() {
 void MainWindow::updateFormUsesWindowList() {
    this->form_uses_window_menu->clear();
    //
-   auto& pfwins = DovahKitCore::get();
+   auto& pfwins = dovahkit::subsystems::per_form_windows::core::get_or_create();
    pfwins.for_each_form_uses_dialog([this](FormUseInfoDialog* dialog) {
       auto* stub = dialog->formStub();
       if (!stub)

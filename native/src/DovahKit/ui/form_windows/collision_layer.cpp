@@ -1,6 +1,7 @@
 #include "./collision_layer.h"
 #include <limits>
 #include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 
 FormDialogCollisionLayer::FormDialogCollisionLayer(dovah::form_stub& stub, QWidget* parent) : QDialog(parent) {
@@ -14,12 +15,13 @@ FormDialogCollisionLayer::FormDialogCollisionLayer(dovah::form_stub& stub, QWidg
 }
 void FormDialogCollisionLayer::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
    ui::bind(this->ui.name, working.name);
    ui::bind(this->ui.layerID, working.unique_id);
-   this->ui.description->setPlainText(editor.convert_localized_string(working.description));
+   this->ui.description->setPlainText(gls.convert_localized_string(working.description));
    ui::bind(this->ui.color, working.debug_color);
    this->ui.collidesWith->pullStubs(working.collides_with);
    ui::bind(this->ui.flagSensor,          working.layer_flags, loaded_form_type::layer_flag::sensor);
@@ -35,8 +37,9 @@ void FormDialogCollisionLayer::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.description, this->ui.description->toPlainText());
+   gls.assign_localized_string(working.description, this->ui.description->toPlainText());
    this->ui.collidesWith->commitStubs(working.collides_with, working);
 }

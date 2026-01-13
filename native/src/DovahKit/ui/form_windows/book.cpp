@@ -1,5 +1,6 @@
 #include "./book.h"
 #include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "widgets/DKFormNIFPicker.h"
 #include "ui/utils/enum_dropdown_configs/skill.h"
 #include "ui/utils/bind.h"
@@ -18,11 +19,12 @@ FormDialogBook::FormDialogBook(dovah::form_stub& stub, QWidget* parent) : QDialo
 }
 void FormDialogBook::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    #pragma region Left column
       ui::bind(this->ui.editorID, this->editor_id());
-      this->ui.name->setText(editor.convert_localized_string(working.name));
+      this->ui.name->setText(gls.convert_localized_string(working.name));
       ui::bind(this->ui.weight, working.weight);
       ui::bind(this->ui.value,  working.value);
       {
@@ -50,10 +52,10 @@ void FormDialogBook::_load_impl() {
       ui::bind(this->ui.dropSound, working.sounds.drop, working);
       ui::bind(this->ui.inventoryIcon, working.icons.inventory);
       ui::bind(this->ui.messageIcon, working.icons.message);
-      this->ui.description->setPlainText(editor.convert_localized_string(working.description));
+      this->ui.description->setPlainText(gls.convert_localized_string(working.description));
    #pragma endregion
    #pragma region Middle column
-      this->ui.bookContent->setPlainText(editor.convert_localized_string(working.text));
+      this->ui.bookContent->setPlainText(gls.convert_localized_string(working.text));
    #pragma endregion
    #pragma region Right column
       this->ui.scriptListPane->setFormWorkingCopy(&working);
@@ -71,9 +73,10 @@ void FormDialogBook::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
    {
       auto& dst_variant = working.teaches;
       if (this->ui.teachTypeSpell->isChecked()) {
@@ -89,9 +92,9 @@ void FormDialogBook::_save_impl() {
    }
    this->ui.model->commitTo(working.model, working);
    this->ui.destructionData->commitTo(working.destruction_data, working);
-   editor.assign_localized_string(working.description, this->ui.description->toPlainText());
+   gls.assign_localized_string(working.description, this->ui.description->toPlainText());
 
-   editor.assign_localized_string(working.text, this->ui.bookContent->toPlainText());
+   gls.assign_localized_string(working.text, this->ui.bookContent->toPlainText());
 
    this->ui.scriptListPane->commit();
    this->ui.keywords->commitStubs(working.keywords.forms, working);

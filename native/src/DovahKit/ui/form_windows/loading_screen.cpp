@@ -1,5 +1,6 @@
 #include "./loading_screen.h"
 #include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
 
@@ -29,10 +30,11 @@ FormDialogLoadingScreen::FormDialogLoadingScreen(dovah::form_stub& stub, QWidget
 }
 void FormDialogLoadingScreen::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.description->setPlainText(editor.convert_localized_string(working.description));
+   this->ui.description->setPlainText(gls.convert_localized_string(working.description));
    ui::bind(this->ui.cameraPath, working.camera_path);
 
    ui::bind(this->ui.flagShowsInMainMenu, this->record_flags(), loaded_form_type::form_flag::displays_in_main_menu);
@@ -58,9 +60,10 @@ void FormDialogLoadingScreen::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.description, this->ui.description->toPlainText());
+   gls.assign_localized_string(working.description, this->ui.description->toPlainText());
 
    this->ui.conditions->exportTo(working, working.conditions);
 }

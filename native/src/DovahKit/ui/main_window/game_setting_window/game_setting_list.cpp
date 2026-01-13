@@ -6,6 +6,7 @@
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/get_game_setting_description.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 
 #pragma region GameSettingListModel
 GameSettingListModelItem::GameSettingListModelItem(const dovah::loaded_game_setting& source) {
@@ -50,7 +51,10 @@ void GameSettingListModelItem::updateFrom(const dovah::loaded_game_setting& sour
          this->value.number = source.value.i;
          break;
       case dovah::game_setting_type::string:
-         this->value.string = DovahKitCore::get().convert_localized_string(source.value.s);
+         {
+            auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
+            this->value.string = DovahKitCore::get().convert_localized_string(source.value.s);
+         }
          break;
    }
    this->is_in_active_file = false;

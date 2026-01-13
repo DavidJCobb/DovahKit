@@ -8,6 +8,7 @@
 #include "dovah/core.h"
 #include "editor/core.h"
 #include "editor/helpers/stringify_conditions.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 
 namespace {
    constexpr int no_stage = -1;
@@ -173,7 +174,8 @@ QuestTabObjectives::QuestTabObjectives(dovah::form_stub& s, loaded_t& q, QWidget
    });
    QObject::connect(this->ui.objectiveText, &QLineEdit::textEdited, this, [this](const QString& text) {
       if (auto* obj = this->_get_objective()) {
-         DovahKitCore::get().assign_localized_string(obj->text, text);
+         auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
+         gls.assign_localized_string(obj->text, text);
          this->redrawObjectiveListSelectedItemText();
       }
    });
@@ -363,7 +365,8 @@ void QuestTabObjectives::redrawObjectiveListSelectedItemText() {
    auto* col    = model->item(qmi.row(), 1);
    if (!col)
       return;
-   col->setText(DovahKitCore::get().convert_localized_string(obj->text));
+   auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
+   col->setText(gls.convert_localized_string(obj->text));
 }
 void QuestTabObjectives::redrawTargetListSelectedItemAliasName() {
    loaded_t::Target* target = nullptr;
@@ -538,10 +541,10 @@ void QuestTabObjectives::_redraw_objective_list() {
    if (list.empty())
       return;
    QStandardItem* prior = nullptr;
-   auto& editor = DovahKitCore::get();
+   auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
    for (auto& obj : list) {
       auto* col0 = new QStandardItem(QString::number(obj.index));
-      auto* col1 = new QStandardItem(editor.convert_localized_string(obj.text));
+      auto* col1 = new QStandardItem(gls.convert_localized_string(obj.text));
       col0->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
       col0->setData((int)obj.index, Qt::UserRole);
       col1->setData((int)obj.index, Qt::UserRole); // *sigh* having absolutely everything be per-cell and not per-row is annoying
@@ -576,7 +579,8 @@ void QuestTabObjectives::_redraw_objective_settings() {
    }
    this->ui.objectiveFlagOR->setChecked(ptr->flags & loaded_t::Objective::flag::or_with_previous);
    this->ui.objectiveID->setValue(ptr->index);
-   this->ui.objectiveText->setText(DovahKitCore::get().convert_localized_string(ptr->text));
+   auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
+   this->ui.objectiveText->setText(gls.convert_localized_string(ptr->text));
 }
 void QuestTabObjectives::_redraw_target_list() {
    int   index   = this->_selected_target_index();

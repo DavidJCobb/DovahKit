@@ -1,6 +1,7 @@
 #include "./magic_effect.h"
 #include <limits>
 #include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/enum_dropdown_configs/detection_loudness.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
@@ -155,13 +156,14 @@ FormDialogMagicEffect::FormDialogMagicEffect(dovah::form_stub& stub, QWidget* pa
 }
 void FormDialogMagicEffect::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    this->_filters.exclude_self->set_exclusion(this->formStub());
    
    #pragma region Left column
       ui::bind(this->ui.editorID, this->editor_id());
-      this->ui.name->setText(editor.convert_localized_string(working.name));
+      this->ui.name->setText(gls.convert_localized_string(working.name));
       ui::bind(this->ui.archetype, working.archetype);
       QObject::connect(this->ui.archetype, qOverload<int>(&QComboBox::currentIndexChanged), this, &FormDialogMagicEffect::on_archetype_changed);
       ui::bind(this->ui.castingType, working.casting_type);
@@ -286,7 +288,7 @@ void FormDialogMagicEffect::_load_impl() {
       }
       ui::bind(this->ui.detectionSoundLevel, working.audio.casting_loudness);
 
-      this->ui.description->setPlainText(editor.convert_localized_string(working.description));
+      this->ui.description->setPlainText(gls.convert_localized_string(working.description));
 
       this->ui.scriptListPane->setFormWorkingCopy(&working);
    #pragma endregion
@@ -300,9 +302,10 @@ void FormDialogMagicEffect::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
    this->ui.keywords->commitStubs(working.keywords.forms, working);
    this->ui.counterEffects->commitStubs(working.counter_effects, working);
 
@@ -333,7 +336,7 @@ void FormDialogMagicEffect::_save_impl() {
       #pragma pop_macro("DO_SOUND")
    }
    //
-   editor.assign_localized_string(working.description, this->ui.description->toPlainText());
+   gls.assign_localized_string(working.description, this->ui.description->toPlainText());
    this->ui.scriptListPane->commit();
 }
 

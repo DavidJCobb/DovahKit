@@ -16,6 +16,7 @@
 #include "editor/subsystems/form_info_cache/cached_data/by_form_type/faction.h"
 #include "editor/subsystems/form_info_cache/cached_data/by_form_type/head_part.h"
 #include "editor/subsystems/form_info_cache/cached_data/by_form_type/voicetype.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "editor/subsystems/game_settings/core.h"
 #include "editor/subsystems/message_log/core.h"
 #include "editor/open_window_for_form.h"
@@ -722,6 +723,7 @@ void FormDialogActorBase::_on_other_form_modified(dovah::form_stub* stub) {
 
 void FormDialogActorBase::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    //
@@ -754,8 +756,8 @@ void FormDialogActorBase::_load_impl() {
 
    #pragma region Not in a tab
       ui::bind(this->ui.editorID, this->editor_id());
-      this->ui.name->setText(editor.convert_localized_string(working.name));
-      this->ui.shortName->setText(editor.convert_localized_string(working.short_name));
+      this->ui.name->setText(gls.convert_localized_string(working.name));
+      this->ui.shortName->setText(gls.convert_localized_string(working.short_name));
 
       ui::bind(this->ui.flagPreset, working.actor_flags, loaded_form_type::actor_flag::is_chargen_preset);
       ui::bind(this->ui.flagEssential, working.actor_flags, loaded_form_type::actor_flag::essential);
@@ -1063,10 +1065,11 @@ void FormDialogActorBase::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name,       this->ui.name->text());
-   editor.assign_localized_string(working.short_name, this->ui.shortName->text());
+   gls.assign_localized_string(working.name,       this->ui.name->text());
+   gls.assign_localized_string(working.short_name, this->ui.shortName->text());
    this->ui.destructionData->commitTo(working.destruction_data, working);
    this->ui.scriptListPane->commit();
 
@@ -1419,6 +1422,7 @@ void FormDialogActorBase::_push_data_to_ui(loaded_form_type::template_flag::type
    using template_flag = loaded_form_type::template_flag;
 
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    switch (flag) {
@@ -1663,8 +1667,8 @@ void FormDialogActorBase::_push_data_to_ui(loaded_form_type::template_flag::type
                QSignalBlocker(this->ui.flagDoesntAffectStealthMeter),
             };
 
-            this->ui.name->setText(editor.convert_localized_string(working.name));
-            this->ui.shortName->setText(editor.convert_localized_string(working.short_name));
+            this->ui.name->setText(gls.convert_localized_string(working.name));
+            this->ui.shortName->setText(gls.convert_localized_string(working.short_name));
             //
             auto flags = working.actor_flags;
             this->ui.flagEssential->setChecked(flags & actor_flag::essential);

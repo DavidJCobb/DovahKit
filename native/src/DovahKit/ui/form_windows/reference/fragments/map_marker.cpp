@@ -11,6 +11,7 @@
 #include "dovah/forms/components/extra_data/types/r/radius.h"
 #include "dovah/forms/ObjectReference.h"
 #include "editor/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/set_range.h"
 namespace {
    namespace extra_data_types {
@@ -97,8 +98,9 @@ namespace ui::reference::fragments {
    }
    void map_marker::load(loaded_form_type& form) {
       if (auto* extra = form.extra_data.get<extra_data_type>()) {
+			auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
          this->controls.groupbox->setChecked(true);
-         this->controls.name->setText(DovahKitCore::get().convert_localized_string(extra->name));
+         this->controls.name->setText(gls.convert_localized_string(extra->name));
          this->controls.icon->setCurrentIndex(this->controls.icon->findData((int)extra->type));
          this->controls.flags.is_visible->setChecked(extra->flags & extra_data_type::flag::visible);
          this->controls.flags.can_be_fast_traveled_to->setChecked(extra->flags & extra_data_type::flag::can_travel_to);
@@ -119,8 +121,9 @@ namespace ui::reference::fragments {
       if (this->controls.groupbox->isChecked()) {
          form.extra_data.remove<extra_data_type>(form);
       } else {
+			auto& gls   = dovahkit::subsystems::game_localized_strings::core::get();
          auto* extra = form.extra_data.get_or_create<extra_data_type>();
-         DovahKitCore::get().assign_localized_string(extra->name, this->controls.name->text());
+         gls.assign_localized_string(extra->name, this->controls.name->text());
          extra->type  = this->controls.icon->currentData().toInt();
          cobb::edit_bit(extra->flags, extra_data_type::flag::visible, this->controls.flags.is_visible->isChecked());
          cobb::edit_bit(extra->flags, extra_data_type::flag::can_travel_to, this->controls.flags.can_be_fast_traveled_to->isChecked());

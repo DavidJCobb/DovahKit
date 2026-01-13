@@ -3,12 +3,12 @@
 #include <QKeyEvent>
 #include "helpers/vectors/move_item_within.h"
 #include "helpers/bitset.h"
-#include "dovah/core.h"
 #include "dovah/form_stubs/helpers/get_dialogue_topic_quest.h"
 #include "dovah/forms/components/papyrus/fragment_data/topic_info_fragment_data.h"
 #include "dovah/forms/Topic.h"
 #include "editor/core.h"
 #include "editor/open_window_for_form.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_custom_context_menu.h"
 #include "ui/utils/set_tableview_column_flex.h"
@@ -210,7 +210,7 @@ FormDialogTopicInfo::FormDialogTopicInfo(dovah::form_stub& stub, QWidget* parent
    this->_update_topic_text_preview();
 }
 void FormDialogTopicInfo::_load_impl() {
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    this->_update_topic_text_preview();
@@ -225,7 +225,7 @@ void FormDialogTopicInfo::_load_impl() {
    }
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.prompt->setText(editor.convert_localized_string(working.override_topic_text));
+   this->ui.prompt->setText(gls.convert_localized_string(working.override_topic_text));
 
    {
       ui::bind(this->ui.speaker,             working.speaker, working);
@@ -305,7 +305,7 @@ void FormDialogTopicInfo::_save_impl() {
    // working copy in real-time (e.g. if a checkbox doesn't literally modify 
    // the working copy *as* it's (un)checked).
    //
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    if (working.audio_output_override) {
@@ -314,7 +314,7 @@ void FormDialogTopicInfo::_save_impl() {
       working.info_flags &= ~loaded_form_type::info_flag::audio_output_override;
    }
    
-   editor.assign_localized_string(working.override_topic_text, this->ui.prompt->text());
+   gls.assign_localized_string(working.override_topic_text, this->ui.prompt->text());
    this->ui.conditions->exportBifurcatedList(working, working.conditions.locked, working.conditions.normal);
    {  // Link To list
       this->_models.linked_topics->exportTo(working.link_to.normal, working);
@@ -384,7 +384,8 @@ void FormDialogTopicInfo::_update_topic_text_preview() {
    }
    auto loaded = topic->load().ptr_cast<dovah::loaded_forms::Topic>();
    if (loaded) {
-      widget->setText(DovahKitCore::get().convert_localized_string(loaded->text));
+      auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
+      widget->setText(gls.convert_localized_string(loaded->text));
    } else {
       widget->setText("");
    }
@@ -401,7 +402,7 @@ void FormDialogTopicInfo::_refresh_responses_listview() {
          src_list = &src_form->responses;
    }
 
-   auto& editor = DovahKitCore::get();
+   auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
    for (auto& src : *src_list) {
       auto& node = nodes.emplace_back();
       node.edited  = false;
@@ -409,7 +410,7 @@ void FormDialogTopicInfo::_refresh_responses_listview() {
          .type  = src.emotion.type,
          .value = src.emotion.value,
       };
-      node.response_text = editor.convert_localized_string(src.text);
+      node.response_text = gls.convert_localized_string(src.text);
    }
    this->_models.responses->overwriteAllItems(nodes);
 }
@@ -526,7 +527,8 @@ std::optional<uint8_t> FormDialogTopicInfo::_allocate_new_response_id() const {
          .type  = response.emotion.type,
          .value = response.emotion.value,
       };
-      node.response_text = DovahKitCore::get().convert_localized_string(response.text);
+      auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
+      node.response_text = gls.convert_localized_string(response.text);
       this->_models.responses->overwrite(row, node);
    }
    void FormDialogTopicInfo::_move_response(int by) {

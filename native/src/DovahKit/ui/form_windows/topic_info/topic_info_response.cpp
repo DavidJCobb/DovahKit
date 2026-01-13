@@ -3,7 +3,7 @@
 #include "dovah/form_stubs/helpers/get_dialogue_topic_quest.h"
 #include "dovah/forms/Topic.h"
 #include "dovah/utils/compute_voice_file_location.h"
-#include "editor/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 
 namespace {
    // Constexpr so we can enable these as they're implemented.
@@ -46,10 +46,10 @@ FormSubdialogTopicInfoResponse::FormSubdialogTopicInfoResponse(QWidget* parent) 
 }
 
 void FormSubdialogTopicInfoResponse::importFrom(const loaded_form_type& src_form, const response_type& src) {
-   auto& editor = DovahKitCore::get();
-   this->ui.text->setPlainText(editor.convert_localized_string(src.text));
-   this->ui.scriptNotes->setPlainText(editor.convert_localized_string(src.script_notes));
-   this->ui.edits->setPlainText(editor.convert_localized_string(src.edits));
+   auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
+   this->ui.text->setPlainText(gls.convert_localized_string(src.text));
+   this->ui.scriptNotes->setPlainText(gls.convert_localized_string(src.script_notes));
+   this->ui.edits->setPlainText(gls.convert_localized_string(src.edits));
 
    this->ui.animSpeaker->setFormStub(src.idles.speaker.get_form_stub());
    this->ui.animListener->setFormStub(src.idles.listener.get_form_stub());
@@ -65,14 +65,14 @@ void FormSubdialogTopicInfoResponse::importFrom(const loaded_form_type& src_form
    auto* quest = topic ? dovah::form_stub_helpers::get_dialogue_topic_quest(*topic) : nullptr;
    {  // Topic Text and Prompt preview
       {
-         auto prompt = editor.convert_localized_string(src_form.override_topic_text);
+         auto prompt = gls.convert_localized_string(src_form.override_topic_text);
          if (!prompt.isEmpty())
             this->ui.promptPreview->setText(prompt);
       }
       if (topic && topic->form_type == dovah::form_type::topic) {
          auto loaded = topic->load().ptr_cast<dovah::loaded_forms::Topic>();
          if (loaded) {
-            auto prompt = editor.convert_localized_string(loaded->text);
+            auto prompt = gls.convert_localized_string(loaded->text);
             if (!prompt.isEmpty())
                this->ui.topicTextPreview->setText(prompt);
          }
@@ -99,10 +99,10 @@ void FormSubdialogTopicInfoResponse::importFrom(const loaded_form_type& src_form
    }
 }
 void FormSubdialogTopicInfoResponse::exportTo(loaded_form_type& dst_form, response_type& dst) {
-   auto& editor = DovahKitCore::get();
-   editor.assign_localized_string(dst.text,         this->ui.text->toPlainText());
-   editor.assign_localized_string(dst.script_notes, this->ui.scriptNotes->toPlainText());
-   editor.assign_localized_string(dst.edits,        this->ui.edits->toPlainText());
+   auto& gls = dovahkit::subsystems::game_localized_strings::core::get();
+   gls.assign_localized_string(dst.text,         this->ui.text->toPlainText());
+   gls.assign_localized_string(dst.script_notes, this->ui.scriptNotes->toPlainText());
+   gls.assign_localized_string(dst.edits,        this->ui.edits->toPlainText());
 
    dst.idles.speaker.set(dst_form, this->ui.animSpeaker->formStub());
    dst.idles.listener.set(dst_form, this->ui.animListener->formStub());

@@ -1,5 +1,6 @@
 #include "./message.h"
 #include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "widgets/DKFormNIFPicker.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/typical_tableview_config.h"
@@ -105,15 +106,16 @@ FormDialogMessage::FormDialogMessage(dovah::form_stub& stub, QWidget* parent) : 
 }
 void FormDialogMessage::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.title->setText(editor.convert_localized_string(working.name));
+   this->ui.title->setText(gls.convert_localized_string(working.name));
    ui::bind(this->ui.owningQuest, working.owning_quest, working);
    ui::bind(this->ui.displayTime, working.display_time);
    ui::bind(this->ui.flagMessageBox,  working.flags, loaded_form_type::flag::message_box);
    ui::bind(this->ui.flagAutoDisplay, working.flags, loaded_form_type::flag::auto_display);
-   this->ui.text->setPlainText(editor.convert_localized_string(working.description));
+   this->ui.text->setPlainText(gls.convert_localized_string(working.description));
 
    {
       auto* model    = this->_models.buttons;
@@ -122,7 +124,7 @@ void FormDialogMessage::_load_impl() {
       dst_list.reserve(src_list.size());
       for (auto& src : src_list) {
          auto& dst = dst_list.emplace_back();
-         dst.text = editor.convert_localized_string(src.text);
+         dst.text = gls.convert_localized_string(src.text);
          dst.conditions.reserve(src.conditions.size());
          for (auto& cnd : src.conditions)
             dst.conditions.emplace_back(cnd);
@@ -139,10 +141,11 @@ void FormDialogMessage::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.title->text());
-   editor.assign_localized_string(working.description, this->ui.text->toPlainText());
+   gls.assign_localized_string(working.name, this->ui.title->text());
+   gls.assign_localized_string(working.description, this->ui.text->toPlainText());
 
    this->_push_button_conditions(this->_selected_button_row());
 
@@ -161,7 +164,7 @@ void FormDialogMessage::_save_impl() {
          if (!src)
             continue;
          auto& dst = working.buttons.emplace_back();
-         editor.assign_localized_string(dst.text, src->text);
+         gls.assign_localized_string(dst.text, src->text);
          dst.conditions.append_all_of(working, src->conditions);
       }
    }

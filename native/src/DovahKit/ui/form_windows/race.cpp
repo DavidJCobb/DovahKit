@@ -10,6 +10,7 @@
 #include "editor/helpers/skill_name_to_string.h"
 #include "editor/subsystems/form_info_cache/core.h"
 #include "editor/subsystems/form_info_cache/cached_data/by_form_type/head_part.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/enum_dropdown_configs/skill.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/get_selection.h"
@@ -785,7 +786,7 @@ FormDialogRace::FormDialogRace(dovah::form_stub& stub, QWidget* parent) : QDialo
    this->_state.filling_movement_type_list = false;
 }
 void FormDialogRace::_load_impl() {
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
@@ -945,8 +946,8 @@ void FormDialogRace::_load_impl() {
       ui::bind(this->ui.soundClose, working.container_sounds.close, working);
    #pragma endregion
    #pragma region Text tab
-      this->ui.name->setText(editor.convert_localized_string(working.name));
-      this->ui.description->setPlainText(editor.convert_localized_string(working.description));
+      this->ui.name->setText(gls.convert_localized_string(working.name));
+      this->ui.description->setPlainText(gls.convert_localized_string(working.description));
    #pragma endregion
    #pragma region Movement Details tab
       ui::bind(this->ui.accelerationRate, working.movement.acceleration_rate);
@@ -1144,7 +1145,7 @@ void FormDialogRace::_save_impl() {
    // working copy in real-time (e.g. if a checkbox doesn't literally modify 
    // the working copy *as* it's (un)checked).
    //
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
    #pragma region General tab
@@ -1193,8 +1194,8 @@ void FormDialogRace::_save_impl() {
       //
    #pragma endregion
    #pragma region Text tab
-      editor.assign_localized_string(working.name,        this->ui.name->text());
-      editor.assign_localized_string(working.description, this->ui.description->toPlainText());
+      gls.assign_localized_string(working.name,        this->ui.name->text());
+      gls.assign_localized_string(working.description, this->ui.description->toPlainText());
    #pragma endregion
    #pragma region Movement Details tab
       this->_models.base_movement_types->commitTo(working);

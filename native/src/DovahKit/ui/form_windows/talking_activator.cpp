@@ -1,5 +1,5 @@
 #include "./talking_activator.h"
-#include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "widgets/DKFormNIFPicker.h"
 #include "ui/utils/bind.h"
 
@@ -13,11 +13,11 @@ FormDialogTalkingActivator::FormDialogTalkingActivator(dovah::form_stub& stub, Q
    this->load(); // this creates the working copy.
 }
 void FormDialogTalkingActivator::_load_impl() {
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    this->ui.model->initializeFrom(working.model);
    this->ui.destructionData->initializeFrom(working.destruction_data);
    ui::bind(this->ui.loopSound, working.looping_sound, working);
@@ -55,10 +55,10 @@ void FormDialogTalkingActivator::_save_impl() {
    // working copy in real-time (e.g. if a checkbox doesn't literally modify 
    // the working copy *as* it's (un)checked).
    //
-   auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
    this->ui.model->commitTo(working.model, working);
    this->ui.destructionData->commitTo(working.destruction_data, working);
 

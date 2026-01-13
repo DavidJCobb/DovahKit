@@ -7,6 +7,7 @@
 #include "editor/localize/magic_delivery_type.h"
 #include "editor/subsystems/form_info_cache/core.h"
 #include "editor/subsystems/form_info_cache/cached_data/by_form_type/magic_effect.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
 #include "ui/utils/shrink_dialog_on_show.h"
@@ -100,12 +101,13 @@ FormDialogEnchantment::FormDialogEnchantment(dovah::form_stub& stub, QWidget* pa
 }
 void FormDialogEnchantment::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    this->_filters.exclude_self->set_exclusion(&working.stub);
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    ui::bind(this->ui.type, working.enchantment_type);
    ui::bind(this->ui.casting, working.casting_type);
    ui::bind(this->ui.delivery, working.delivery_type);
@@ -138,9 +140,10 @@ void FormDialogEnchantment::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
 
    this->ui.effects->exportTo(working, working.effects);
 }

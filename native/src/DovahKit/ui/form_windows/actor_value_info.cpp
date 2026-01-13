@@ -1,6 +1,7 @@
 #include "./actor_value_info.h"
 #include "dovah/core.h"
 #include "dovah/data/actor_values.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/item_indices_to_data.h"
 #include "./actor_value_info/FormSubdialogActorValueInfoPerkTree.h"
@@ -15,6 +16,7 @@ FormDialogActorValueInfo::FormDialogActorValueInfo(dovah::form_stub& stub, QWidg
 }
 void FormDialogActorValueInfo::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    bool is_skill = false;
@@ -60,14 +62,14 @@ void FormDialogActorValueInfo::_load_impl() {
    this->ui.skillImproveGroupbox->setEnabled(is_skill);
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    this->ui.abbreviation->setText(QString::fromStdString(working.abbreviation));
    ui::bind(this->ui.skillCategory, working.skill_info.category);
    ui::bind(this->ui.skillUseMult, working.skill_info.skill_use_mult);
    ui::bind(this->ui.skillUseOffset, working.skill_info.skill_use_offset);
    ui::bind(this->ui.skillImproveMult, working.skill_info.skill_improve_mult);
    ui::bind(this->ui.skillImproveOffset, working.skill_info.skill_improve_offset);
-   this->ui.description->setPlainText(editor.convert_localized_string(working.description));
+   this->ui.description->setPlainText(gls.convert_localized_string(working.description));
    ui::bind(this->ui.image, working.icon);
 
    QObject::connect(this->ui.buttonPerkTree, &QPushButton::clicked, this, [this]() {
@@ -85,9 +87,10 @@ void FormDialogActorValueInfo::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
    working.abbreviation = this->ui.abbreviation->text().toStdString();
-   editor.assign_localized_string(working.description, this->ui.description->toPlainText());
+   gls.assign_localized_string(working.description, this->ui.description->toPlainText());
 }

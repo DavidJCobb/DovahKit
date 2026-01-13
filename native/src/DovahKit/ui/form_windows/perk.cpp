@@ -1,6 +1,7 @@
 #include "./perk.h"
 #include "dovah/core.h"
 #include "dovah/forms/components/papyrus/fragment_data/perk_fragment_data.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
 #include "ui/utils/set_tableview_column_flex.h"
@@ -78,10 +79,11 @@ FormDialogPerk::FormDialogPerk(dovah::form_stub& stub, QWidget* parent) : QDialo
 }
 void FormDialogPerk::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    ui::bind(this->ui.flagTrait,    working.data.is_trait);
    ui::bind(this->ui.flagPlayable, working.data.playable);
    ui::bind(this->ui.flagHidden,   working.data.hidden);
@@ -89,7 +91,7 @@ void FormDialogPerk::_load_impl() {
    ui::bind(this->ui.ranks, working.data.rank_count);
    this->ui.icon->setValue(ui::types::game_file_path("Data\\Textures\\").append(QString::fromStdString(working.icon)));
    ui::bind(this->ui.nextPerk, working.next_perk, working);
-   this->ui.description->setPlainText(editor.convert_localized_string(working.description));
+   this->ui.description->setPlainText(gls.convert_localized_string(working.description));
 
    this->ui.conditions->importFrom(working, working.conditions);
 
@@ -111,19 +113,20 @@ void FormDialogPerk::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    // Easiest way to add the perk entries in is to just clear the whole form 
    // and then write everything back in.
    working.clear();
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.name, this->ui.name->text());
    {
       auto path = this->ui.icon->value();
       auto str  = path.lexically_relative("Data\\Textures\\").to_string().toStdString();
       working.icon = str;
    }
-   editor.assign_localized_string(working.description, this->ui.description->toPlainText());
+   gls.assign_localized_string(working.description, this->ui.description->toPlainText());
 
    this->ui.conditions->exportTo(working, working.conditions);
 

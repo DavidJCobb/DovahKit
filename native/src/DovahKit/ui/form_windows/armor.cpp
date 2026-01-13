@@ -1,5 +1,6 @@
 #include "./armor.h"
 #include "dovah/core.h"
+#include "editor/subsystems/game_localized_strings/core.h"
 #include "widgets/DKFormNIFPicker.h"
 #include "ui/utils/bind.h"
 #include "ui/utils/set_range.h"
@@ -41,12 +42,13 @@ FormDialogArmor::FormDialogArmor(dovah::form_stub& stub, QWidget* parent) : QDia
 }
 void FormDialogArmor::_load_impl() {
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
 
    this->_filters.exclude_self->set_exclusion(this->formStub());
 
    ui::bind(this->ui.editorID, this->editor_id());
-   this->ui.name->setText(editor.convert_localized_string(working.name));
+   this->ui.name->setText(gls.convert_localized_string(working.name));
    ui::bind(this->ui.value, working.value);
    ui::bind(this->ui.enchantment, working.enchantable.effect, working);
    ui::bind(this->ui.templateForm, working.template_armor, working);
@@ -57,7 +59,7 @@ void FormDialogArmor::_load_impl() {
    ui::bind(this->ui.equipType, working.equip_type, working);
    ui::bind(this->ui.impactDataSetBlockBash, working.block_bash.impact_data_set, working);
    ui::bind(this->ui.alternateBlockMaterial, working.block_bash.alternate_material, working);
-   this->ui.description->setPlainText(editor.convert_localized_string(working.description));
+   this->ui.description->setPlainText(gls.convert_localized_string(working.description));
    ui::bind(this->ui.bipedObjectsCurrentRace, working.race, working);
    this->ui.modelM->initializeFrom(working.world_models[dovah::sex::male].model);
    ui::bind(this->ui.iconInventoryM, working.world_models[dovah::sex::male].icons.inventory);
@@ -83,10 +85,11 @@ void FormDialogArmor::_save_impl() {
    // the working copy *as* it's (un)checked).
    //
    auto& editor  = DovahKitCore::get();
+   auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
    
-   editor.assign_localized_string(working.name, this->ui.name->text());
-   editor.assign_localized_string(working.description, this->ui.description->toPlainText());
+   gls.assign_localized_string(working.name, this->ui.name->text());
+   gls.assign_localized_string(working.description, this->ui.description->toPlainText());
    this->_models.biped_objects->exportFlags(working.biped_object);
    this->ui.destructionData->commitTo(working.destruction_data, working);
    this->ui.armorAddons->commitStubs(working.armor_addons, working);
