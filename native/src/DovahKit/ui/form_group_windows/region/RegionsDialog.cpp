@@ -10,6 +10,8 @@
 #include "editor/form_stub_meta_type.h"
 #include "editor/open_window_for_form.h"
 #include "ui/utils/set_custom_context_menu.h"
+#include "ui/utils/set_range.h"
+#include "ui/utils/set_tableview_column_flex.h"
 #include "ui/utils/typical_tableview_config.h"
 #include "./RegionsAvailableInWorldModel.h"
 #include "./RegionSoundsModel.h"
@@ -29,6 +31,9 @@ RegionsDialog::RegionsDialog(QWidget* parent) :
       auto* view  = this->ui.regions;
       view->setModel(model);
       ui::typical_tableview_config(view);
+      ui::set_tableview_column_flex(view, [this](DKHeaderView& header, const QFontMetrics& metrics) {
+         header.setColumnFlex(0, 1, 1);
+      });
 
       auto* world_picker = this->ui.currentWorld;
       world_picker->setAllowedFormType(dovah::form_type::worldspace);
@@ -44,6 +49,8 @@ RegionsDialog::RegionsDialog(QWidget* parent) :
          }
       });
    }
+
+   ui::set_unsigned_range<float>(this->ui.edgeFalloff);
 
    #pragma region Set up fragments
       this->fragments.objects.set_controls({
@@ -159,6 +166,17 @@ ui::types::regions::region& RegionsDialog::region_data(ui::region::fragment_pass
 void RegionsDialog::on_region_modified(ui::region::fragment_passkey) {
    this->_current_region_edited = true;
 }
+
+#pragma region Event handlers
+   /*virtual*/ void RegionsDialog::closeEvent(QCloseEvent* e) /*override*/ {
+      this->_commit_pending_changes();
+      QDialog::closeEvent(e);
+   }
+   /*virtual*/ void RegionsDialog::focusOutEvent(QFocusEvent* e) /*override*/ {
+      this->_commit_pending_changes();
+      QDialog::focusOutEvent(e);
+   }
+#pragma endregion
 
 void RegionsDialog::_report_region_create_error(const dovah::exceptions::form_creation_failed& ex) {
    QString text;

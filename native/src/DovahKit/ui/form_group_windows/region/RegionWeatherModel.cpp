@@ -204,7 +204,7 @@ RegionWeatherModel::~RegionWeatherModel() {
          std::erase_if(
             dropped_stubs,
             [this](dovah::form_stub* stub) -> bool {
-               return stub && stub->form_type == dovah::form_type::weather && !this->containsWeather(*stub);
+               return !stub || stub->form_type != dovah::form_type::weather || this->containsWeather(*stub);
             }
          );
          if (dropped_stubs.empty())
@@ -212,10 +212,16 @@ RegionWeatherModel::~RegionWeatherModel() {
 
          this->beginInsertRows({}, row, row + dropped_stubs.size() - 1);
          for (size_t i = 0; i < dropped_stubs.size(); ++i) {
-            this->_items.insert(this->_items.begin() + row + i, {});
-            auto& item = this->_items[row + i];
-            item.weather = dropped_stubs[i];
-            item.cached.weather_id = QString::fromStdString(item.weather->editorID);
+            auto* stub = dropped_stubs[i];
+            this->_items.insert(
+               this->_items.begin() + row + i,
+               Item{
+                  .weather = stub,
+                  .cached  = {
+                     .weather_id = QString::fromStdString(stub->editorID),
+                  }
+               }
+            );
          }
          this->endInsertRows();
          return true;

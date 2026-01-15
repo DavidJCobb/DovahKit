@@ -69,6 +69,7 @@ namespace ui::region::fragments {
          view->setDragEnabled(true);
          view->setAcceptDrops(true);
          view->setDropIndicatorShown(true);
+         view->setHeaderHidden(true);
          view->installEventFilter(this->remove_row_on_del);
 
          QObject::connect(view->selectionModel(), &QItemSelectionModel::selectionChanged, &this->owner, [this](const QItemSelection& sel) {
@@ -170,6 +171,7 @@ namespace ui::region::fragments {
          this->ui.header.priority->setEnabled(false);
          this->model->clear();
          this->ui.view->setEnabled(false);
+         this->update_button_enable_states();
          return;
       }
       auto& src = opt_coll.value();
@@ -180,6 +182,7 @@ namespace ui::region::fragments {
       this->ui.header.priority->setEnabled(true);
       this->ui.view->setEnabled(true);
       this->model->importData(data);
+      this->update_button_enable_states();
    }
    void objects::commit() {
       auto& data     = this->owner.region_data({});

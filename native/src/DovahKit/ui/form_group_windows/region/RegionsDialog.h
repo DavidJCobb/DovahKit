@@ -43,6 +43,11 @@ class RegionsDialog : public QDialog {
          RegionSoundsModel*  sounds  = nullptr;
       } models;
 
+      #pragma region Event handlers
+         virtual void closeEvent(QCloseEvent*) override;
+         virtual void focusOutEvent(QFocusEvent*) override;
+      #pragma endregion
+
       void _report_region_create_error(const dovah::exceptions::form_creation_failed&);
 
       void _commit_pending_changes();

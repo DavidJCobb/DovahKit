@@ -10,8 +10,10 @@
 #include "widgets/widget-dialogs/DKCompactObjectReferencePickerDialog.h"
 #include "editor/form_stub_meta_type.h"
 #include "ui/model_utils/ViewEventFilter_RemoveRowOnDelKey.h"
+#include "ui/utils/enable_inbound_drag_and_drop_insertions.h"
 #include "ui/utils/set_custom_context_menu.h"
 #include "ui/utils/set_range.h"
+#include "ui/utils/set_tableview_column_flex.h"
 #include "ui/utils/typical_tableview_config.h"
 #include "../RegionWeatherModel.h"
 #include "../RegionsDialog.h"
@@ -38,7 +40,18 @@ namespace ui::region::fragments {
          view->setAcceptDrops(true);
          view->setDropIndicatorShown(true);
          ui::typical_tableview_config(view);
+         ui::enable_inbound_drag_and_drop_insertions(view);
          view->installEventFilter(this->remove_row_on_del);
+         ui::set_tableview_column_flex(view, [this](DKHeaderView& header, const QFontMetrics& metrics) {
+            std::array<size_t, model_type::ColumnCount> min_widths = {};
+            for (size_t i = 0; i < min_widths.size(); ++i) {
+               auto text = this->model->headerData(i, Qt::Orientation::Horizontal, Qt::DisplayRole).toString();
+               min_widths[i] = metrics.horizontalAdvance(text);
+            }
+            header.setColumnFlex(0, 3, 1, min_widths[0]);
+            header.setColumnFlex(1, 0, 0, min_widths[1]);
+            header.setColumnFlex(2, 2, 1, min_widths[2]);
+         });
 
          QObject::connect(view->selectionModel(), &QItemSelectionModel::selectionChanged, &this->owner, [this](const QItemSelection& sel) {
             if (sel.empty()) {
@@ -115,6 +128,7 @@ namespace ui::region::fragments {
       this->ui.header.priority->setEnabled(true);
       this->ui.view->setEnabled(true);
       this->model->importData(data);
+      this->on_no_item_selected();
    }
    void weather::commit() {
       auto& data     = this->owner.region_data({});
@@ -166,8 +180,15 @@ namespace ui::region::fragments {
       bool enabled = this->ui.header.enable->isChecked();
       this->ui.header.override->setEnabled(enabled);
       this->ui.header.priority->setEnabled(enabled);
-      this->ui.edit.container->setEnabled(enabled);
       this->ui.view->setEnabled(enabled);
+      {
+         auto* sel_model = this->ui.view->selectionModel();
+         auto  rows      = sel_model->selectedRows();
+         if (rows.empty())
+            this->on_no_item_selected();
+         else
+            this->on_item_selected(rows[0]);
+      }
       this->owner.on_region_modified({});
    }
    void weather::on_item_edited() {
