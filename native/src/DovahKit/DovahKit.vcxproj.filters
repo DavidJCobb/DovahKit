@@ -3951,6 +3951,9 @@
     <ClCompile Include="ui\form_group_windows\region\fragments\audio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_group_windows\region\RegionCanvasWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -11197,6 +11200,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\model_utils\ViewEventFilter_RemoveRowOnDelKey.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_group_windows\region\RegionCanvasWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

@@ -1,8 +1,10 @@
 #include "./RegionCanvasWidget.h"
 #include <QPainter>
+#include <QWheelEvent>
 #include "dovah/form_stubs/helpers/for_each_child_form.h"
 #include "dovah/form_stubs/helpers/for_each_inbound_use_with_flag.h"
 #include "dovah/form_stubs/helpers/get_unique_outbound_use.h"
+#include "dovah/form_stubs/helpers/get_worldspace_persistent_cell.h"
 #include "dovah/forms/components/extra_data/types/c/cell_region_list.h"
 #include "dovah/forms/Cell.h"
 #include "dovah/forms/Region.h"
@@ -13,19 +15,36 @@ RegionCanvasWidget::RegionCanvasWidget(QWidget* parent) : QWidget(parent) {
    {
       auto* scrollbar = this->subwidgets.scrollbar_x = new QScrollBar(this);
       scrollbar->setOrientation(Qt::Orientation::Horizontal);
+      QObject::connect(scrollbar, &QScrollBar::valueChanged, this, qOverload<>(&QWidget::repaint));
    }
    {
       auto* scrollbar = this->subwidgets.scrollbar_y = new QScrollBar(this);
       scrollbar->setOrientation(Qt::Orientation::Vertical);
+      QObject::connect(scrollbar, &QScrollBar::valueChanged, this, qOverload<>(&QWidget::repaint));
    }
 
    auto& editor = DovahKitCore::get();
-   static_assert(false, "TODO: editor events for form creation/modification/deletion");
+   QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &RegionCanvasWidget::_on_data_abandoned);
+   QObject::connect(&editor, &DovahKitCore::dataAcquireComplete, this, &RegionCanvasWidget::_on_data_acquired);
+   QObject::connect(&editor, &DovahKitCore::formCreated, this, [this](dovah::form_stub* stub) { this->_on_form_created(*stub); });
+   QObject::connect(&editor, &DovahKitCore::formModified, this, [this](dovah::form_stub* stub) { this->_on_form_modified(*stub); });
+   QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub) { this->_on_form_deleted(*stub); });
+   if (editor.has_data()) {
+      this->_on_data_acquired();
+   }
 }
 
-void RegionCanvasWidget::scrollContentsBy(int dx, int dy);
-void RegionCanvasWidget::scrollTo(int x, int y);
-void RegionCanvasWidget::setRegion(dovah::form_stub* stub);
+void RegionCanvasWidget::setRegion(dovah::form_stub* stub) {
+   if (stub == this->state.region)
+      return;
+   if (stub && stub->form_type != dovah::form_type::region)
+      return;
+   this->state.region = stub;
+   //
+   // TODO: Update context menus?
+   //
+   this->repaint(); // to render region areas
+}
 void RegionCanvasWidget::setWorldspace(dovah::form_stub* stub) {
    if (!stub) {
       if (!this->state.worldspace)
@@ -34,7 +53,7 @@ void RegionCanvasWidget::setWorldspace(dovah::form_stub* stub) {
       this->state.known_regions.clear();
       this->state.region = nullptr;
       this->state.worldspace = nullptr;
-      this->state.bounds = {};
+      this->state.grid_extents = {};
       this->update();
       return;
    }
@@ -51,8 +70,30 @@ void RegionCanvasWidget::setWorldspace(dovah::form_stub* stub) {
    this->update();
 }
 
-dovah::form_stub* RegionCanvasWidget::cellAt(int x_px, int y_px) const;
-std::vector<dovah::form_stub*> RegionCanvasWidget::regionsAt(int x_px, int y_px) const;
+QPoint RegionCanvasWidget::localPosToGridPos(const QPoint& local) const {
+   const float cell_size   = default_cell_size * this->state.zoom;
+   const int   scroll_x_px = this->subwidgets.scrollbar_x->value();
+   const int   scroll_y_px = this->subwidgets.scrollbar_y->value();
+
+   QPoint grid;
+   grid.setX((local.x() + scroll_x_px - (cell_size / 2)) /  cell_size);
+   grid.setY((local.y() + scroll_y_px - (cell_size / 2)) / -cell_size);
+   return grid;
+}
+QPoint RegionCanvasWidget::gridPosToLocalPos(const QPoint& grid) const {
+   return gridPosToCanvasPos(grid) - QPoint(
+      this->subwidgets.scrollbar_x->value(),
+      this->subwidgets.scrollbar_y->value()
+   );
+}
+QPoint RegionCanvasWidget::gridPosToCanvasPos(const QPoint& grid) const {
+   const float cell_size = default_cell_size * this->state.zoom;
+
+   QPoint local;
+   local.setX( grid.x() * cell_size + (cell_size / 2));
+   local.setY(-grid.y() * cell_size + (cell_size / 2));
+   return local;
+}
 
 void RegionCanvasWidget::forceRegionColor(dovah::form_stub& region, QColor c) {
    auto it = this->state.known_regions.find(&region);
@@ -90,8 +131,9 @@ void RegionCanvasWidget::forceRegionColor(dovah::form_stub& region, QColor c) {
    /*virtual*/ void RegionCanvasWidget::paintEvent(QPaintEvent* event) /*override*/ {
       QPainter painter(this);
 
+      painter.setClipRect(this->state.view_size);
       painter.setBrush(QColor(0, 0, 0));
-      painter.drawRect(this->rect());
+      painter.drawRect(this->state.view_size);
 
       const float cell_size = default_cell_size * this->state.zoom;
 
@@ -100,12 +142,10 @@ void RegionCanvasWidget::forceRegionColor(dovah::form_stub& region, QColor c) {
       int scroll_x_gr = scroll_x_px / cell_size;
       int scroll_y_gr = scroll_y_px / cell_size;
       for (auto& cell : this->state.cells) {
-         int cell_x_px = cell.grid.x * cell_size - scroll_x_px;
-         int cell_y_px = cell.grid.y * cell_size - scroll_y_px;
-
-         QRect cell_rect;
-         cell_rect.setX(cell_x_px - (cell_size / 2));
-         cell_rect.setY(cell_y_px - (cell_size / 2));
+         QPoint cell_centerpoint = gridPosToLocalPos({ cell.grid.x, cell.grid.y });
+         QRect  cell_rect;
+         cell_rect.setX(cell_centerpoint.x() - (cell_size / 2));
+         cell_rect.setY(cell_centerpoint.y() - (cell_size / 2));
          cell_rect.setWidth(cell_size - 2);
          cell_rect.setHeight(cell_size - 2);
 
@@ -127,17 +167,17 @@ void RegionCanvasWidget::forceRegionColor(dovah::form_stub& region, QColor c) {
                colors_to_blend.push_back(region_info.color);
             }
             if (!colors_to_blend.empty()) {
-               uint32_t r = color.red();
-               uint32_t g = color.green();
-               uint32_t b = color.blue();
+               uint32_t r = 0;
+               uint32_t g = 0;
+               uint32_t b = 0;
                for (auto& other : colors_to_blend) {
                   r += other.red();
                   g += other.green();
                   b += other.blue();
                }
-               r = (float)r / (colors_to_blend.size() + 1);
-               g = (float)g / (colors_to_blend.size() + 1);
-               b = (float)b / (colors_to_blend.size() + 1);
+               r = (float)r / colors_to_blend.size();
+               g = (float)g / colors_to_blend.size();
+               b = (float)b / colors_to_blend.size();
                color = QColor(r, g, b);
             }
          }
@@ -154,6 +194,21 @@ void RegionCanvasWidget::forceRegionColor(dovah::form_stub& region, QColor c) {
       //
    }
    /*virtual*/ void RegionCanvasWidget::resizeEvent(QResizeEvent* event) /*override*/ {
+      this->_recalc_layout();
+      this->repaint();
+   }
+   /*virtual*/ void RegionCanvasWidget::wheelEvent(QWheelEvent* event) /*override*/ {
+      const auto delta = event->angleDelta().y();
+      if (delta < 0) {
+         float z = this->state.zoom - 0.1F;
+         if (z < minimum_zoom)
+            return;
+         this->state.zoom = z;
+      } else if (delta > 0) {
+         if (this->state.zoom > 3.0F)
+            return;
+         this->state.zoom += 0.1F;
+      }
       this->_recalc_scrollbars(false);
       this->repaint();
    }
@@ -169,24 +224,96 @@ void RegionCanvasWidget::forceRegionColor(dovah::form_stub& region, QColor c) {
       this->state.worldspace = nullptr;
       this->repaint();
    }
-   void RegionCanvasWidget::_on_form_created(dovah::form_stub& stub);
-   void RegionCanvasWidget::_on_form_modified(dovah::form_stub& stub);
-   void RegionCanvasWidget::_on_form_deleted(dovah::form_stub& stub);
+   void RegionCanvasWidget::_on_form_created(dovah::form_stub& stub) {
+      if (stub.is_exterior_cell() && stub.get_parent_form() == this->state.worldspace) {
+         this->_cache_cell(stub);
+         this->repaint();
+         for (auto& cell_info : this->state.cells) {
+            if (cell_info.stub != &stub)
+               continue;
+            for (auto* region : cell_info.regions) {
+               auto it = this->state.known_regions.find(region);
+               if (it == this->state.known_regions.end())
+                  this->_cache_region(*region);
+            }
+         }
+         return;
+      }
+      if (stub.form_type == dovah::form_type::region) {
+         auto* world = dovah::form_stub_helpers::get_unique_outbound_use<dovah::use_info::entry_flags::region::worldspace>(stub);
+         if (world && world == this->state.worldspace) {
+            this->_cache_region(stub);
+            this->repaint();
+            return;
+         }
+      }
+   }
+   void RegionCanvasWidget::_on_form_modified(dovah::form_stub& stub) {
+      if (stub.is_exterior_cell() && stub.get_parent_form() == this->state.worldspace) {
+         this->_cache_cell(stub);
+         this->repaint();
+         return;
+      }
+      if (stub.form_type == dovah::form_type::region) {
+         auto* world = dovah::form_stub_helpers::get_unique_outbound_use<dovah::use_info::entry_flags::region::worldspace>(stub);
+         if (world && world == this->state.worldspace) {
+            this->_cache_region(stub);
+            this->repaint();
+            return;
+         }
+      }
+   }
+   void RegionCanvasWidget::_on_form_deleted(dovah::form_stub& stub) {
+      if (stub.form_type == dovah::form_type::worldspace) {
+         if (this->state.worldspace == &stub) {
+            this->setWorldspace(nullptr);
+         }
+         return;
+      }
+      if (stub.form_type == dovah::form_type::cell) {
+         auto& list = this->state.cells;
+         for (size_t i = 0; i < list.size(); ++i) {
+            if (list[i].stub == &stub) {
+               list.erase(list.begin() + i);
+               this->repaint();
+               break;
+            }
+         }
+         return;
+      }
+      if (stub.form_type == dovah::form_type::region) {
+         if (this->state.region == &stub) {
+            this->state.region = nullptr;
+         }
+         for (auto& cell : this->state.cells) {
+            auto it = std::find(cell.regions.begin(), cell.regions.end(), &stub);
+            if (it != cell.regions.end())
+               cell.regions.erase(it);
+         }
+         this->state.known_regions.erase(&stub);
+         this->repaint();
+         return;
+      }
+   }
 #pragma endregion
 
 void RegionCanvasWidget::_gather_cells_from(dovah::form_stub& worldspace) {
+   this->state.grid_extents = {};
    this->state.cells.clear();
-   dovah::form_stub_helpers::for_each_child_form(worldspace, [this](dovah::form_stub& cell) {
+   auto* persistent_cell = dovah::form_stub_helpers::get_worldspace_persistent_cell(worldspace);
+   dovah::form_stub_helpers::for_each_child_form(worldspace, [this, persistent_cell](dovah::form_stub& cell) {
       if (cell.form_type != dovah::form_type::cell)
+         return;
+      if (persistent_cell == &cell)
          return;
       auto& info = this->state.cells.emplace_back();
       info.stub = &cell;
       this->_cache_cell(info);
 
-      auto& min_x = this->state.bounds.grid.min.rx();
-      auto& min_y = this->state.bounds.grid.min.ry();
-      auto& max_x = this->state.bounds.grid.max.rx();
-      auto& max_y = this->state.bounds.grid.max.ry();
+      auto& min_x = this->state.grid_extents.min.rx();
+      auto& min_y = this->state.grid_extents.min.ry();
+      auto& max_x = this->state.grid_extents.max.rx();
+      auto& max_y = this->state.grid_extents.max.ry();
       min_x = std::min(min_x, info.grid.x);
       min_y = std::min(min_y, info.grid.y);
       max_x = std::max(max_x, info.grid.x);
@@ -206,7 +333,17 @@ void RegionCanvasWidget::_gather_regions() {
       );
    }
 }
-void RegionCanvasWidget::_cache_cell(dovah::form_stub& cell);
+void RegionCanvasWidget::_cache_cell(dovah::form_stub& cell) {
+   for (auto& info : this->state.cells) {
+      if (info.stub == &cell) {
+         this->_cache_cell(info);
+         return;
+      }
+   }
+   auto& info = this->state.cells.emplace_back();
+   info.stub = &cell;
+   this->_cache_cell(info);
+}
 void RegionCanvasWidget::_cache_cell(KnownCell& info) {
    auto& cell = *info.stub;
    cell.get_grid_coordinates(info.grid.x, info.grid.y);
@@ -218,8 +355,12 @@ void RegionCanvasWidget::_cache_cell(KnownCell& info) {
       auto* extra = loaded_ptr->extra_data.get<dovah::loaded_forms::components::extra_data_types::cell_region_list>();
       if (extra) {
          auto& list = info.regions;
-         for (auto& use : extra->regions)
-            list.push_back(use.get_form_stub());
+         for (auto& use : extra->regions) {
+            auto* region = use.get_form_stub();
+            if (!region || region->form_type != dovah::form_type::region)
+               continue;
+            list.push_back(region);
+         }
          auto last = std::unique(list.begin(), list.end());
          list.erase(last, list.end());
       }
@@ -255,6 +396,28 @@ void RegionCanvasWidget::_cache_region(KnownRegion& info) {
    }
 }
 
+void RegionCanvasWidget::_recalc_layout() {
+   QRect inner = this->rect();
+
+   this->subwidgets.scrollbar_x->ensurePolished();
+   this->subwidgets.scrollbar_y->ensurePolished();
+
+   auto rect_sb_x = QRect({ 0, 0 }, this->subwidgets.scrollbar_x->sizeHint());
+   auto rect_sb_y = QRect({ 0, 0 }, this->subwidgets.scrollbar_y->sizeHint());
+
+   inner.setWidth( inner.width()  - rect_sb_y.width());
+   inner.setHeight(inner.height() - rect_sb_x.height());
+   this->state.view_size = inner;
+
+   rect_sb_x.translate(0, inner.height());
+   rect_sb_x.setWidth(inner.width());
+   rect_sb_y.translate(inner.width(), 0);
+   rect_sb_y.setHeight(inner.height());
+   this->subwidgets.scrollbar_x->setGeometry(rect_sb_x);
+   this->subwidgets.scrollbar_y->setGeometry(rect_sb_y);
+
+   this->_recalc_scrollbars(false);
+}
 void RegionCanvasWidget::_recalc_scrollbars(bool reset_scroll) {
    //
    // Start by calculating the worldspace size in pixels.
@@ -262,20 +425,36 @@ void RegionCanvasWidget::_recalc_scrollbars(bool reset_scroll) {
    const float cell_size       = default_cell_size * this->state.zoom;
    const float cell_size_prior = default_cell_size * this->state.last_rendered_zoom;
    //
-   int center_grid_x = 0;
-   int center_grid_y = 0;
+   float center_x = 0;
+   float center_y = 0;
    if (!reset_scroll) {
       auto scroll_x = this->subwidgets.scrollbar_x->value() + (float)this->subwidgets.scrollbar_x->pageStep() / 2;
       auto scroll_y = this->subwidgets.scrollbar_y->value() + (float)this->subwidgets.scrollbar_y->pageStep() / 2;
-      center_grid_x = std::round(scroll_x / cell_size_prior);
-      center_grid_y = std::round(scroll_y / cell_size_prior);
+      center_x = scroll_x / cell_size_prior;
+      center_y = scroll_y / cell_size_prior;
    }
-   this->subwidgets.scrollbar_x->setRange(this->state.bounds.grid.min.x() * cell_size, this->state.bounds.grid.max.x() * cell_size);
-   this->subwidgets.scrollbar_x->setPageStep(this->rect().width());
-   this->subwidgets.scrollbar_y->setRange(this->state.bounds.grid.min.y() * cell_size, this->state.bounds.grid.max.y() * cell_size);
-   this->subwidgets.scrollbar_y->setPageStep(this->rect().height());
-   this->subwidgets.scrollbar_x->setValue(center_grid_x * cell_size);
-   this->subwidgets.scrollbar_y->setValue(center_grid_y * cell_size);
-   //
+
+   QRect view_rect = this->state.view_size;
+   QRect grid_rect;
+   grid_rect.setBottomLeft(gridPosToCanvasPos(this->state.grid_extents.min));
+   grid_rect.setTopRight(gridPosToCanvasPos(this->state.grid_extents.max));
+   grid_rect.adjust(-cell_size / 2, -cell_size / 2, cell_size / 2, cell_size / 2);
+
+   int x1 = grid_rect.left();
+   int x2 = grid_rect.right() - view_rect.width();
+   if (x2 < x1)
+      x2 = x1;
+   this->subwidgets.scrollbar_x->setRange(x1, x2);
+   this->subwidgets.scrollbar_x->setPageStep(view_rect.width());
+
+   int y1 = grid_rect.top();
+   int y2 = grid_rect.bottom() - view_rect.height();
+   if (y2 < y1)
+      y2 = y1;
+   this->subwidgets.scrollbar_y->setRange(y1, y2);
+   this->subwidgets.scrollbar_y->setPageStep(view_rect.height());
+
+   this->subwidgets.scrollbar_x->setValue(center_x * cell_size - view_rect.width()/2);
+   this->subwidgets.scrollbar_y->setValue(center_y * cell_size - view_rect.height()/2);
    this->state.last_rendered_zoom = this->state.zoom;
 }

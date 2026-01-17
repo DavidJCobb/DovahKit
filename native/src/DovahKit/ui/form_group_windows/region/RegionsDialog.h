@@ -18,7 +18,7 @@ namespace dovah::exceptions {
    class form_creation_failed;
 }
 class RegionsAvailableInWorldModel;
-class RegionSoundsModel;
+class RegionCanvasWidget;
 
 class RegionsDialog : public QDialog {
    Q_OBJECT;
@@ -48,8 +48,8 @@ class RegionsDialog : public QDialog {
       } fragments;
       struct {
          RegionsAvailableInWorldModel* available_regions = nullptr;
-         RegionSoundsModel*  sounds  = nullptr;
       } models;
+      RegionCanvasWidget* canvas = nullptr;
 
       #pragma region Event handlers
          virtual void closeEvent(QCloseEvent*) override;

@@ -14,7 +14,7 @@
 #include "ui/utils/set_tableview_column_flex.h"
 #include "ui/utils/typical_tableview_config.h"
 #include "./RegionsAvailableInWorldModel.h"
-#include "./RegionSoundsModel.h"
+#include "./RegionCanvasWidget.h"
 
 RegionsDialog::RegionsDialog(QWidget* parent) :
    QDialog(parent),
@@ -30,6 +30,14 @@ RegionsDialog::RegionsDialog(QWidget* parent) :
    this->ui.setupUi(this);
    this->ui.tabWidget->setCurrentWidget(this->ui.tabGeneral);
 
+   this->canvas = new RegionCanvasWidget(this);
+   {
+      auto* layout = new QVBoxLayout;
+      this->ui.gridFrame->setLayout(layout);
+      layout->setContentsMargins(0, 0, 0, 0);
+      layout->addWidget(this->canvas);
+   }
+
    {
       auto* model = this->models.available_regions = new RegionsAvailableInWorldModel(this);
       auto* view  = this->ui.regions;
@@ -42,6 +50,7 @@ RegionsDialog::RegionsDialog(QWidget* parent) :
       auto* world_picker = this->ui.currentWorld;
       world_picker->setAllowedFormType(dovah::form_type::worldspace);
       QObject::connect(world_picker, &DKFormPicker::formChanged, model, &RegionsAvailableInWorldModel::setWorldspace);
+      QObject::connect(world_picker, &DKFormPicker::formChanged, this->canvas, &RegionCanvasWidget::setWorldspace);
 
       auto* sel_model = view->selectionModel();
       QObject::connect(sel_model, &QItemSelectionModel::selectionChanged, this, [this](const QItemSelection& sel) {
@@ -336,6 +345,7 @@ void RegionsDialog::_pull_selected_region_to_ui() {
 
    auto& data = this->_current_region;
    if (!data.stub) {
+      this->canvas->setRegion(nullptr);
       this->ui.editorID->setText("");
       //
       // TODO: Clear fields
@@ -363,6 +373,8 @@ void RegionsDialog::_pull_selected_region_to_ui() {
 
       this->ui.flagBorder->setChecked(data.is_border_region);
    #pragma endregion
+
+   this->canvas->setRegion(data.stub);
 
    this->_set_form_ui_enable_state(true);
 }

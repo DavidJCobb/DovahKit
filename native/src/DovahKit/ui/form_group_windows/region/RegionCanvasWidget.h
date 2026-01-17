@@ -16,6 +16,9 @@ class RegionCanvasWidget : public QWidget {
    protected:
       static constexpr const int default_cell_size = 32; // size in pixels including the border
 
+      // i.e. minimum allowed size of a cell, in pixels, divided by default size
+      static constexpr const float minimum_zoom = 4.0F / default_cell_size;
+
       struct KnownCell {
          QString editor_id;
          struct {
@@ -42,16 +45,11 @@ class RegionCanvasWidget : public QWidget {
       struct {
          float last_rendered_zoom = 1.0F;
          float zoom = 1.0F;
+         QRect view_size; // in pixels
          struct {
-            struct {
-               QPoint min;
-               QPoint max;
-            } grid;
-            struct {
-               QPointF min;
-               QPointF max;
-            } view; // for when the view size and grid size differ
-         } bounds; // all measured in grid coordinates
+            QPoint min; // grid Y is flipped, so this is the local bottom-left
+            QPoint max; // grid Y is flipped, so this is the local top-right
+         } grid_extents;
 
          std::vector<KnownCell> cells;
          dovah::form_stub* region     = nullptr;
@@ -65,13 +63,12 @@ class RegionCanvasWidget : public QWidget {
       } subwidgets;
 
    public:
-      void scrollContentsBy(int dx, int dy);
-      void scrollTo(int x, int y);
       void setRegion(dovah::form_stub*);
       void setWorldspace(dovah::form_stub*);
 
-      dovah::form_stub* cellAt(int x_px, int y_px) const;
-      std::vector<dovah::form_stub*> regionsAt(int x_px, int y_px) const;
+      QPoint localPosToGridPos(const QPoint&) const;
+      QPoint gridPosToLocalPos(const QPoint&) const; // returns centerpoint
+      QPoint gridPosToCanvasPos(const QPoint&) const; // returns centerpoint; does not adjust for scrolling
 
       void forceRegionColor(dovah::form_stub&, QColor);
 
@@ -84,6 +81,7 @@ class RegionCanvasWidget : public QWidget {
          virtual void mousePressEvent(QMouseEvent*) override;
          virtual void paintEvent(QPaintEvent*) override;
          virtual void resizeEvent(QResizeEvent*) override;
+         virtual void wheelEvent(QWheelEvent*) override;
       #pragma endregion
 
    signals:
@@ -106,5 +104,6 @@ class RegionCanvasWidget : public QWidget {
       void _cache_region(dovah::form_stub&);
       void _cache_region(KnownRegion&);
 
+      void _recalc_layout();
       void _recalc_scrollbars(bool reset_scroll);
 };

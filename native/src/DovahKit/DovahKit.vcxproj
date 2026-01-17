@@ -957,6 +957,7 @@
     <ClCompile Include="ui\form_group_windows\region\fragments\map.cpp" />
     <ClCompile Include="ui\form_group_windows\region\fragments\objects.cpp" />
     <ClCompile Include="ui\form_group_windows\region\fragments\weather.cpp" />
+    <ClCompile Include="ui\form_group_windows\region\RegionCanvasWidget.cpp" />
     <ClCompile Include="ui\form_group_windows\region\RegionObjectsModel.cpp" />
     <ClCompile Include="ui\form_group_windows\region\RegionsAvailableInWorldModel.cpp" />
     <ClCompile Include="ui\form_group_windows\region\RegionsDialog.cpp" />
@@ -2226,6 +2227,7 @@
     <ClInclude Include="ui\form_group_windows\region\fragment_passkey.h" />
     <QtMoc Include="ui\form_group_windows\region\RegionsAvailableInWorldModel.h" />
     <QtMoc Include="ui\form_group_windows\region\RegionsDialog.h" />
+    <QtMoc Include="ui\form_group_windows\region\RegionCanvasWidget.h" />
     <ClInclude Include="ui\form_windows\climate\ClimateWeathersModel.h" />
     <QtMoc Include="ui\form_windows\climate\FormSubdialogClimateWeather.h" />
     <QtMoc Include="ui\form_windows\encounter_zone.h" />
