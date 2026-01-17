@@ -951,6 +951,10 @@
     <ClCompile Include="ui\form_group_windows\camera_path\CameraPathsDialog.cpp" />
     <ClCompile Include="ui\form_group_windows\idle\FormSubdialogIdleNewGraph.cpp" />
     <ClCompile Include="ui\form_group_windows\idle\IdleAnimationsDialog.cpp" />
+    <ClCompile Include="ui\form_group_windows\region\fragments\audio.cpp" />
+    <ClCompile Include="ui\form_group_windows\region\fragments\grass.cpp" />
+    <ClCompile Include="ui\form_group_windows\region\fragments\landscape.cpp" />
+    <ClCompile Include="ui\form_group_windows\region\fragments\map.cpp" />
     <ClCompile Include="ui\form_group_windows\region\fragments\objects.cpp" />
     <ClCompile Include="ui\form_group_windows\region\fragments\weather.cpp" />
     <ClCompile Include="ui\form_group_windows\region\RegionObjectsModel.cpp" />
@@ -2213,6 +2217,10 @@
     <QtMoc Include="ui\form_group_windows\region\RegionSoundsModel.h" />
     <QtMoc Include="ui\form_group_windows\region\RegionWeatherModel.h" />
     <QtMoc Include="ui\form_group_windows\region\RegionObjectsModel.h" />
+    <ClInclude Include="ui\form_group_windows\region\fragments\audio.h" />
+    <ClInclude Include="ui\form_group_windows\region\fragments\grass.h" />
+    <ClInclude Include="ui\form_group_windows\region\fragments\landscape.h" />
+    <ClInclude Include="ui\form_group_windows\region\fragments\map.h" />
     <ClInclude Include="ui\form_group_windows\region\fragments\objects.h" />
     <ClInclude Include="ui\form_group_windows\region\fragments\weather.h" />
     <ClInclude Include="ui\form_group_windows\region\fragment_passkey.h" />
@@ -2525,6 +2533,7 @@
     <ClInclude Include="ui\utils\set_tableview_column_flex.h" />
     <ClInclude Include="ui\utils\set_tableview_column_widths.h" />
     <ClInclude Include="ui\utils\shrink_dialog_on_show.h" />
+    <ClInclude Include="ui\utils\size_tableview_columns.h" />
     <ClInclude Include="ui\utils\typical_tableview_config.h" />
     <QtMoc Include="widgets\DKTabBar.h" />
     <QtMoc Include="widgets\DKTabWidget.h" />

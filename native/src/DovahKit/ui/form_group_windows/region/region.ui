@@ -1119,7 +1119,11 @@
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="DKGameFilePicker" name="landscapeTexture"/>
+            <widget class="DKGameFilePicker" name="landscapeTexture">
+             <property name="presetConfiguration">
+              <enum>DKGameFilePicker::Textures</enum>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>

@@ -1,8 +1,8 @@
-#include "./weather.h"
+#include "./audio.h"
 #include <QCheckBox>
+#include <QDoubleSpinBox>
 #include <QGroupBox>
 #include <QPushButton>
-#include <QRadioButton>
 #include <QSpinBox>
 #include <QTableView>
 #include "helpers/bound_mem_fn.h"
@@ -15,21 +15,22 @@
 #include "ui/utils/set_range.h"
 #include "ui/utils/size_tableview_columns.h"
 #include "ui/utils/typical_tableview_config.h"
-#include "../RegionWeatherModel.h"
+#include "../RegionSoundsModel.h"
 #include "../RegionsDialog.h"
 #include "ui/form_windows/shared/DKFormPickerExcludeListedFormsFilter.h"
 
 namespace ui::region::fragments {
-   weather::weather(RegionsDialog& o) : owner(o) {
+   audio::audio(RegionsDialog& o) : owner(o) {
       this->model = new model_type(&o);
 
       this->remove_row_on_del = new ui::model_utils::ViewEventFilter_RemoveRowOnDelKey(&o);
    }
-   void weather::set_controls(controls&& src) {
+   void audio::set_controls(controls&& src) {
       this->ui = std::move(src);
+      this->ui.music->setAllowedFormType(dovah::form_type::music_type);
+      this->ui.music->setEnabled(false);
       this->ui.edit.container->setEnabled(false);
-      this->ui.edit.weather->setAllowedFormType(dovah::form_type::weather);
-      this->ui.edit.chance.form.value->setAllowedFormType(dovah::form_type::global);
+      this->ui.edit.sound->setAllowedFormType(dovah::form_type::sound_descriptor);
 
       {
          auto* view = this->ui.view;
@@ -46,7 +47,10 @@ namespace ui::region::fragments {
             std::array{
                ui::tableview_column_spec{ .grow = 3, .shrink = 1 },
                ui::tableview_column_spec{ .grow = 0, .shrink = 0 },
-               ui::tableview_column_spec{ .grow = 2, .shrink = 1 },
+               ui::tableview_column_spec{ .grow = 0, .shrink = 0 },
+               ui::tableview_column_spec{ .grow = 0, .shrink = 0 },
+               ui::tableview_column_spec{ .grow = 0, .shrink = 0 },
+               ui::tableview_column_spec{ .grow = 0, .shrink = 0 },
             }
          >(view);
 
@@ -66,7 +70,7 @@ namespace ui::region::fragments {
             QObject::connect(this->model, &QAbstractItemModel::rowsRemoved,  &this->owner, _changed);
          }
 
-         QObject::connect(this->ui.buttons.add,    &QPushButton::clicked, &this->owner, cobb__bound_this_fn(try_add_weather));
+         QObject::connect(this->ui.buttons.add,    &QPushButton::clicked, &this->owner, cobb__bound_this_fn(try_add_sound));
          QObject::connect(this->ui.buttons.remove, &QPushButton::clicked, &this->owner, cobb__bound_this_fn(try_remove_item));
          #pragma region Context menu
          {
@@ -74,13 +78,13 @@ namespace ui::region::fragments {
             ui::set_custom_context_menu(*view, menu);
             {
                auto*& action = this->view_context.actions.insert;
-               action = new QAction(QCoreApplication::translate("REGN dialog, objects tab", "Add another weather..."), &menu);
-               QObject::connect(action, &QAction::triggered, &this->owner, cobb__bound_this_fn(try_add_weather));
+               action = new QAction(QCoreApplication::translate("REGN dialog, audio tab", "Add another sound..."), &menu);
+               QObject::connect(action, &QAction::triggered, &this->owner, cobb__bound_this_fn(try_add_sound));
                menu.addAction(action);
             }
             {
                auto*& action = this->view_context.actions.remove;
-               action = new QAction(QCoreApplication::translate("REGN dialog, objects tab", "Remove"), &menu);
+               action = new QAction(QCoreApplication::translate("REGN dialog, audio tab", "Remove"), &menu);
                QObject::connect(action, &QAction::triggered, &this->owner, cobb__bound_this_fn(try_remove_item));
                menu.addAction(action);
             }
@@ -96,15 +100,16 @@ namespace ui::region::fragments {
       QObject::connect(this->ui.header.override, &QCheckBox::toggled, &this->owner, cobb__bound_this_fn(on_header_edited));
       QObject::connect(this->ui.header.priority, qOverload<int>(&QSpinBox::valueChanged), &this->owner, cobb__bound_this_fn(on_header_edited));
 
-      QObject::connect(this->ui.edit.weather,               &DKFormPicker::formChanged, &this->owner, cobb__bound_this_fn(on_item_edited));
-      QObject::connect(this->ui.edit.chance.constant.radio, &QRadioButton::toggled, &this->owner, cobb__bound_this_fn(on_item_edited));
-      QObject::connect(this->ui.edit.chance.constant.value, qOverload<int>(&QSpinBox::valueChanged), &this->owner, cobb__bound_this_fn(on_item_edited));
-      QObject::connect(this->ui.edit.chance.form.radio,     &QRadioButton::toggled, &this->owner, cobb__bound_this_fn(on_item_edited));
-      QObject::connect(this->ui.edit.chance.form.value,     &DKFormPicker::formChanged, &this->owner, cobb__bound_this_fn(on_item_edited));
+      QObject::connect(this->ui.edit.sound,            &DKFormPicker::formChanged, &this->owner, cobb__bound_this_fn(on_item_edited));
+      QObject::connect(this->ui.edit.chance,           qOverload<double>(&QDoubleSpinBox::valueChanged), &this->owner, cobb__bound_this_fn(on_item_edited));
+      QObject::connect(this->ui.edit.weather.pleasant, &QCheckBox::toggled, &this->owner, cobb__bound_this_fn(on_item_edited));
+      QObject::connect(this->ui.edit.weather.cloudy,   &QCheckBox::toggled, &this->owner, cobb__bound_this_fn(on_item_edited));
+      QObject::connect(this->ui.edit.weather.rainy,    &QCheckBox::toggled, &this->owner, cobb__bound_this_fn(on_item_edited));
+      QObject::connect(this->ui.edit.weather.snowy,    &QCheckBox::toggled, &this->owner, cobb__bound_this_fn(on_item_edited));
    }
-   void weather::reload() {
+   void audio::reload() {
       auto& data     = this->owner.region_data({});
-      auto& opt_coll = data.generable_content.weather;
+      auto& opt_coll = data.generable_content.audio;
       this->ui.header.enable->setEnabled(data.stub != nullptr);
       if (!data.stub || !opt_coll.has_value()) {
          this->ui.header.enable->setChecked(false);
@@ -113,6 +118,7 @@ namespace ui::region::fragments {
          this->ui.header.priority->setValue(0);
          this->ui.header.priority->setEnabled(false);
          this->model->clear();
+         this->ui.music->setEnabled(false);
          this->ui.view->setEnabled(false);
          this->ui.buttons.remove->setEnabled(false);
          return;
@@ -123,25 +129,27 @@ namespace ui::region::fragments {
       this->ui.header.override->setEnabled(true);
       this->ui.header.priority->setValue(src.priority);
       this->ui.header.priority->setEnabled(true);
+      this->ui.music->setEnabled(true);
       this->ui.view->setEnabled(true);
       this->model->importData(data);
       this->on_no_item_selected();
    }
-   void weather::commit() {
+   void audio::commit() {
       auto& data     = this->owner.region_data({});
-      auto& opt_coll = data.generable_content.weather;
+      auto& opt_coll = data.generable_content.audio;
       if (this->ui.header.enable->isChecked()) {
          opt_coll.emplace();
          auto& dst = opt_coll.value();
          dst.override = this->ui.header.override->isChecked();
          dst.priority = this->ui.header.priority->value();
+         dst.music_type = this->ui.music->formStub();
          this->model->exportData(data);
       } else {
          opt_coll.reset();
       }
    }
 
-   void weather::on_item_selected(const QModelIndex& qmi) {
+   void audio::on_item_selected(const QModelIndex& qmi) {
       if (!qmi.isValid()) {
          this->on_no_item_selected();
          return;
@@ -151,29 +159,27 @@ namespace ui::region::fragments {
       this->ui.buttons.remove->setEnabled(true);
 
       const auto blockers = std::array{
-         QSignalBlocker(this->ui.edit.weather),
-         QSignalBlocker(this->ui.edit.chance.constant.radio),
-         QSignalBlocker(this->ui.edit.chance.constant.value),
-         QSignalBlocker(this->ui.edit.chance.form.radio),
-         QSignalBlocker(this->ui.edit.chance.form.value),
+         QSignalBlocker(this->ui.edit.sound),
+         QSignalBlocker(this->ui.edit.chance),
+         QSignalBlocker(this->ui.edit.weather.pleasant),
+         QSignalBlocker(this->ui.edit.weather.cloudy),
+         QSignalBlocker(this->ui.edit.weather.rainy),
+         QSignalBlocker(this->ui.edit.weather.snowy),
       };
 
-      auto* global = qmi.data(model_type::GlobalStubRole).value<dovah::form_stub*>();
-      this->ui.edit.weather->setFormStub(qmi.data(model_type::WeatherStubRole).value<dovah::form_stub*>());
-      this->ui.edit.chance.form.value->setFormStub(global);
-      this->ui.edit.chance.constant.value->setValue(qmi.siblingAtColumn(model_type::Column::Chance).data(Qt::EditRole).value<int>());
-
-      bool uses_global = global == nullptr;
-      this->ui.edit.chance.constant.radio->setChecked(!uses_global);
-      this->ui.edit.chance.constant.value->setEnabled(!uses_global);
-      this->ui.edit.chance.form.radio->setChecked(uses_global);
-      this->ui.edit.chance.form.value->setEnabled(uses_global);
+      auto* sound = qmi.data(model_type::FormStubRole).value<dovah::form_stub*>();
+      this->ui.edit.sound->setFormStub(sound);
+      this->ui.edit.chance->setValue(qmi.siblingAtColumn(model_type::Column::Chance).data(Qt::EditRole).value<int>());
+      this->ui.edit.weather.pleasant->setChecked(qmi.siblingAtColumn(model_type::Column::WeatherIsPleasant).data(Qt::EditRole).toBool());
+      this->ui.edit.weather.cloudy->setChecked(qmi.siblingAtColumn(model_type::Column::WeatherIsCloudy).data(Qt::EditRole).toBool());
+      this->ui.edit.weather.rainy->setChecked(qmi.siblingAtColumn(model_type::Column::WeatherIsRainy).data(Qt::EditRole).toBool());
+      this->ui.edit.weather.snowy->setChecked(qmi.siblingAtColumn(model_type::Column::WeatherIsSnowy).data(Qt::EditRole).toBool());
    }
-   void weather::on_no_item_selected() {
+   void audio::on_no_item_selected() {
       this->ui.edit.container->setEnabled(false);
       this->ui.buttons.remove->setEnabled(false);
    }
-   void weather::on_header_edited() {
+   void audio::on_header_edited() {
       bool enabled = this->ui.header.enable->isChecked();
       this->ui.header.override->setEnabled(enabled);
       this->ui.header.priority->setEnabled(enabled);
@@ -188,44 +194,41 @@ namespace ui::region::fragments {
       }
       this->owner.on_region_modified({});
    }
-   void weather::on_item_edited() {
+   void audio::on_item_edited() {
       auto sel = this->ui.view->selectionModel()->selection();
       if (sel.empty())
          return;
       QModelIndex qmi = sel[0].topLeft();
 
-      dovah::form_stub* weather = this->ui.edit.weather->formStub();
-      dovah::form_stub* global  = nullptr;
-      if (this->ui.edit.chance.form.radio->isChecked()) {
-         global = this->ui.edit.chance.form.value->formStub();
-      }
-      this->model->setData(qmi, QVariant::fromValue(weather), model_type::WeatherStubRole);
-      this->model->setData(qmi, QVariant::fromValue(global),  model_type::GlobalStubRole);
-      this->model->setData(qmi.siblingAtColumn(model_type::Column::Chance), this->ui.edit.chance.constant.value->value(), Qt::EditRole);
+      dovah::form_stub* sound = this->ui.edit.sound->formStub();
+      this->model->setData(qmi, QVariant::fromValue(sound), model_type::FormStubRole);
+      this->model->setData(qmi.siblingAtColumn(model_type::Column::Chance), this->ui.edit.chance->value(), Qt::EditRole);
+      this->model->setData(qmi.siblingAtColumn(model_type::Column::WeatherIsPleasant), this->ui.edit.weather.pleasant->isChecked(), Qt::EditRole);
+      this->model->setData(qmi.siblingAtColumn(model_type::Column::WeatherIsCloudy),   this->ui.edit.weather.cloudy->isChecked(), Qt::EditRole);
+      this->model->setData(qmi.siblingAtColumn(model_type::Column::WeatherIsRainy),    this->ui.edit.weather.rainy->isChecked(), Qt::EditRole);
+      this->model->setData(qmi.siblingAtColumn(model_type::Column::WeatherIsSnowy),    this->ui.edit.weather.snowy->isChecked(), Qt::EditRole);
 
       this->owner.on_region_modified({});
    }
-   void weather::on_model_layout_edited() {
+   void audio::on_model_layout_edited() {
       this->owner.on_region_modified({});
    }
 
-   void weather::try_add_weather() {
+   void audio::try_add_sound() {
       auto* dialog = new DKFormPickerDialog(&this->owner);
-      dialog->setAllowedFormType(dovah::form_type::weather);
+      dialog->setAllowedFormType(dovah::form_type::sound_descriptor);
       QObject::connect(dialog, &QDialog::finished, dialog, &QObject::deleteLater);
-      {
-         auto* filter = new DKFormPickerExcludeListedFormsFilter(dialog);
-         filter->set_exclusion(this->model->allWeathers());
-         dialog->setCustomFilter(filter);
-      }
       if (dialog->exec() != QDialog::Accepted)
          return;
-      dovah::form_stub* weather = dialog->formStub();
-      if (!weather)
+      dovah::form_stub* form = dialog->formStub();
+      if (!form)
          return;
-      auto qmi = this->model->addWeather(*weather, 0, nullptr);
+      size_t row = this->model->rowCount({});
+      this->model->insertRow(row, {});
+      auto qmi = this->model->index(row, 0, {});
       if (!qmi.isValid())
          return;
+      this->model->setData(qmi, QVariant::fromValue(form), model_type::FormStubRole);
       this->ui.view->selectionModel()->select(
          {
             qmi.siblingAtColumn(0),
@@ -234,7 +237,7 @@ namespace ui::region::fragments {
          QItemSelectionModel::SelectionFlag::ClearAndSelect
       );
    }
-   void weather::try_remove_item() {
+   void audio::try_remove_item() {
       auto sel = this->ui.view->selectionModel()->selection();
       if (sel.empty())
          return;

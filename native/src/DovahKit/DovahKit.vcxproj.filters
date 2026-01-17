@@ -3939,6 +3939,18 @@
     <ClCompile Include="ui\model_utils\ViewEventFilter_RemoveRowOnDelKey.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_group_windows\region\fragments\map.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_group_windows\region\fragments\landscape.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_group_windows\region\fragments\grass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_group_windows\region\fragments\audio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9684,6 +9696,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\form_group_windows\region\fragments\weather.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\size_tableview_columns.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_group_windows\region\fragments\map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_group_windows\region\fragments\landscape.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_group_windows\region\fragments\grass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\form_group_windows\region\fragments\audio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -2,27 +2,24 @@
 #include <vector>
 #include <QAbstractItemModel>
 namespace dovah {
-   namespace loaded_forms {
-      namespace structs::region::generable_content {
-         class audio;
-      }
-      class Region;
-   }
    class form_stub;
+}
+namespace ui::types::regions {
+   class region;
 }
 
 class RegionSoundsModel : public QAbstractItemModel {
    Q_OBJECT;
    public:
-      using backend_collection_type = dovah::loaded_forms::structs::region::generable_content::audio;
-      using loaded_form_type        = dovah::loaded_forms::Region;
+      using frontend_form_data = ui::types::regions::region;
+
       struct Column {
          Column() = delete;
          enum {
             SoundName,
             Chance,
             WeatherIsPleasant,
-            WeahterIsCloudy,
+            WeatherIsCloudy,
             WeatherIsRainy,
             WeatherIsSnowy,
 
@@ -65,9 +62,9 @@ class RegionSoundsModel : public QAbstractItemModel {
             virtual bool dropMimeData(const QMimeData*, Qt::DropAction, int row, int column, const QModelIndex& parent) override;
          #pragma endregion
       #pragma endregion
-
-      void importData(const loaded_form_type&);
-      void exportData(loaded_form_type&);
+            
+      void importData(const frontend_form_data&);
+      void exportData(frontend_form_data&) const;
       void clear();
 
    protected:

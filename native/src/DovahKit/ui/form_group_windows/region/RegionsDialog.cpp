@@ -19,6 +19,10 @@
 RegionsDialog::RegionsDialog(QWidget* parent) :
    QDialog(parent),
    fragments{
+      .audio{*this},
+      .grass{*this},
+      .landscape{*this},
+      .map{*this},
       .objects{*this},
       .weather{*this},
    }
@@ -137,9 +141,54 @@ RegionsDialog::RegionsDialog(QWidget* parent) :
          },
          .view = this->ui.weatherEntries,
       });
-      //
-      // TODO: other fragments
-      //
+      this->fragments.map.set_controls({
+         .header = {
+            .enable   = this->ui.mapEnable,
+            .override = this->ui.mapOverride,
+            .priority = this->ui.mapPriority,
+         },
+         .name = this->ui.mapName,
+      });
+      this->fragments.landscape.set_controls({
+         .header = {
+            .enable   = this->ui.landscapeEnable,
+            .override = this->ui.landscapeOverride,
+            .priority = this->ui.landscapePriority,
+         },
+         .texture = this->ui.landscapeTexture,
+      });
+      this->fragments.grass.set_controls({
+         .header = {
+            .enable   = this->ui.grassEnable,
+            .override = this->ui.grassOverride,
+            .priority = this->ui.grassPriority,
+         },
+      });
+      this->fragments.audio.set_controls({
+         .header = {
+            .enable   = this->ui.soundEnable,
+            .override = this->ui.soundOverride,
+            .priority = this->ui.soundPriority,
+         },
+         .music = this->ui.soundMusicType,
+         .buttons = {
+            .add    = this->ui.buttonSoundNew,
+            .remove = this->ui.buttonSoundRemove,
+         },
+         .edit = {
+            .container = this->ui.currentSoundGroupbox,
+            //
+            .chance  = this->ui.currentSoundChance,
+            .sound   = this->ui.currentSoundDescriptor,
+            .weather = {
+               .pleasant = this->ui.currentSoundPleasant,
+               .cloudy   = this->ui.currentSoundCloudy,
+               .rainy    = this->ui.currentSoundRainy,
+               .snowy    = this->ui.currentSoundSnowy,
+            },
+         },
+         .view = this->ui.sounds,
+      });
    #pragma endregion
 
    auto& editor = DovahKitCore::get();
@@ -233,6 +282,13 @@ void RegionsDialog::_commit_pending_changes() {
    if (!loaded)
       return;
 
+   this->fragments.objects.commit();
+   this->fragments.weather.commit();
+   this->fragments.map.commit();
+   this->fragments.landscape.commit();
+   this->fragments.grass.commit();
+   this->fragments.audio.commit();
+
    auto& editor = DovahKitCore::get();
    emit editor.formModificationImminent(data.stub);
    data.export_data(*loaded);
@@ -266,15 +322,10 @@ void RegionsDialog::_set_selected_region(dovah::form_stub* region) {
 void RegionsDialog::_pull_selected_region_to_ui() {
    this->fragments.objects.reload();
    this->fragments.weather.reload();
-   // TODO: other fragments
-
-   auto& data = this->_current_region;
-   if (!data.stub) {
-      //
-      // TODO: Clear fields
-      //
-      return;
-   }
+   this->fragments.map.reload();
+   this->fragments.landscape.reload();
+   this->fragments.grass.reload();
+   this->fragments.audio.reload();
 
    const auto blockers = std::array{
       QSignalBlocker(this->ui.editorID),
@@ -282,6 +333,15 @@ void RegionsDialog::_pull_selected_region_to_ui() {
       QSignalBlocker(this->ui.color),
       QSignalBlocker(this->ui.edgeFalloff),
    };
+
+   auto& data = this->_current_region;
+   if (!data.stub) {
+      this->ui.editorID->setText("");
+      //
+      // TODO: Clear fields
+      //
+      return;
+   }
 
    #pragma region General
       this->ui.editorID->setText(data.stub->get_editor_id());

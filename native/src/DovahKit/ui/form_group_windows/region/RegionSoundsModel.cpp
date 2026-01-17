@@ -4,6 +4,7 @@
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
 #include "editor/helpers/form_stub_drag_drop.h"
+#include "ui/types/regions/region.h"
 
 RegionSoundsModel::RegionSoundsModel(QObject* parent) : QAbstractItemModel(parent) {
    auto& editor = DovahKitCore::get();
@@ -91,7 +92,7 @@ RegionSoundsModel::~RegionSoundsModel() {
                      case Column::WeatherIsPleasant:
                         checked = item.weather.pleasant;
                         break;
-                     case Column::WeahterIsCloudy:
+                     case Column::WeatherIsCloudy:
                         checked = item.weather.cloudy;
                         break;
                      case Column::WeatherIsRainy:
@@ -116,7 +117,7 @@ RegionSoundsModel::~RegionSoundsModel() {
                      return item.chance;
                   case Column::WeatherIsPleasant:
                      return item.weather.pleasant;
-                  case Column::WeahterIsCloudy:
+                  case Column::WeatherIsCloudy:
                      return item.weather.cloudy;
                   case Column::WeatherIsRainy:
                      return item.weather.rainy;
@@ -171,7 +172,7 @@ RegionSoundsModel::~RegionSoundsModel() {
                      item.weather.pleasant = value.toBool();
                      emit dataChanged(qmi, qmi);
                      return true;
-                  case Column::WeahterIsCloudy:
+                  case Column::WeatherIsCloudy:
                      item.weather.cloudy = value.toBool();
                      emit dataChanged(qmi, qmi);
                      return true;
@@ -203,7 +204,7 @@ RegionSoundsModel::~RegionSoundsModel() {
          case Column::SoundName: return tr("Sound");
          case Column::Chance: return tr("Chance");
          case Column::WeatherIsPleasant: return tr("Is Pleasant");
-         case Column::WeahterIsCloudy: return tr("Is Cloudy");
+         case Column::WeatherIsCloudy: return tr("Is Cloudy");
          case Column::WeatherIsRainy: return tr("Is Rainy");
          case Column::WeatherIsSnowy: return tr("Is Snowy");
       }
@@ -262,64 +263,48 @@ RegionSoundsModel::~RegionSoundsModel() {
    #pragma endregion
 #pragma endregion
 
-void RegionSoundsModel::importData(const loaded_form_type& src_form) {
+void RegionSoundsModel::importData(const frontend_form_data& region) {
    this->beginResetModel();
    this->_items.clear();
-   for (auto& rdat : src_form.generable_content) {
-      auto* casted = rdat.as<backend_collection_type>();
-      if (!casted)
-         continue;
-      for (auto& sound : casted->ambient_sounds) {
-         if (!sound.form || sound.form.get_form_stub()->form_type != dovah::form_type::sound_descriptor)
+   
+   auto& src_coll_opt = region.generable_content.audio;
+   if (src_coll_opt.has_value()) {
+      auto& src_coll = src_coll_opt.value();
+      for (auto& src_item : src_coll.ambient_sounds) {
+         if (!src_item.sound || src_item.sound->form_type != dovah::form_type::sound_descriptor)
             continue;
          auto& item = this->_items.emplace_back();
-         item.form = sound.form.get_form_stub();
-         item.chance = sound.chance;
-         item.weather.pleasant = sound.flags & backend_collection_type::ambient_sound::flag::weather_pleasant;
-         item.weather.cloudy   = sound.flags & backend_collection_type::ambient_sound::flag::weather_cloudy;
-         item.weather.rainy    = sound.flags & backend_collection_type::ambient_sound::flag::weather_rainy;
-         item.weather.snowy    = sound.flags & backend_collection_type::ambient_sound::flag::weather_snowy;
+         item.form   = src_item.sound;
+         item.chance = src_item.chance;
+         item.weather.pleasant = src_item.weather.pleasant;
+         item.weather.cloudy   = src_item.weather.cloudy;
+         item.weather.rainy    = src_item.weather.rainy;
+         item.weather.snowy    = src_item.weather.snowy;
          //
          item.cached.editor_id = QString::fromStdString(item.form->editorID);
       }
    }
+
    this->endResetModel();
 }
-void RegionSoundsModel::exportData(loaded_form_type& dst_form) {
-   //
-   // First, strip all sound data.
-   //
-   auto&  dst_list = dst_form.generable_content;
-   size_t dst_size = dst_list.size();
-   size_t reuse    = (size_t)-1;
-   for (size_t i = 0; i < dst_size; ++i) {
-      if (auto* casted = dst_list[i].as<backend_collection_type>()) {
-         for (auto& dst_item : casted->ambient_sounds) {
-            dst_item.form.set(dst_form, nullptr);
-         }
-         casted->ambient_sounds.clear();
-         reuse = i;
-      }
+void RegionSoundsModel::exportData(frontend_form_data& region) const {
+   auto& dst_coll_opt = region.generable_content.audio;
+   if (dst_coll_opt.has_value()) {
+      dst_coll_opt.value().ambient_sounds.clear();
+   } else {
+      dst_coll_opt.emplace();
    }
-   if (this->_items.empty())
-      return;
-   auto& dst_data = (reuse == (size_t)-1) ? dst_list.emplace_back() : dst_list[reuse];
-   if (reuse == (size_t)-1) {
-      dst_data.get_or_emplace<backend_collection_type>(dst_form);
-   }
+
+   auto& dst_coll = dst_coll_opt.value();
+   dst_coll.ambient_sounds.reserve(this->_items.size());
    for (auto& src_item : this->_items) {
-      auto dst_item = dst_data.as<backend_collection_type>()->ambient_sounds.emplace_back();
-      dst_item.form.set(dst_form, src_item.form);
-      dst_item.chance = src_item.chance;
-      dst_item.flags  = 0;
-      if (src_item.weather.pleasant)
-         dst_item.flags |= backend_collection_type::ambient_sound::flag::weather_pleasant;
-      if (src_item.weather.cloudy)
-         dst_item.flags |= backend_collection_type::ambient_sound::flag::weather_cloudy;
-      if (src_item.weather.rainy)
-         dst_item.flags |= backend_collection_type::ambient_sound::flag::weather_rainy;
-      if (src_item.weather.snowy)
-         dst_item.flags |= backend_collection_type::ambient_sound::flag::weather_snowy;
+      auto& dst_item = dst_coll.ambient_sounds.emplace_back();
+      dst_item.sound   = src_item.form;
+      dst_item.chance  = src_item.chance;
+      dst_item.weather.pleasant = src_item.weather.pleasant;
+      dst_item.weather.cloudy   = src_item.weather.cloudy;
+      dst_item.weather.rainy    = src_item.weather.rainy;
+      dst_item.weather.snowy    = src_item.weather.snowy;
    }
 }
 void RegionSoundsModel::clear() {

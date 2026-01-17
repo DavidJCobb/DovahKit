@@ -7,6 +7,10 @@
 #include "dovah/forms/Region.h"
 #include "dovah/form_stub.h"
 #include "ui/types/regions/region.h"
+#include "./fragments/audio.h"
+#include "./fragments/grass.h"
+#include "./fragments/landscape.h"
+#include "./fragments/map.h"
 #include "./fragments/objects.h"
 #include "./fragments/weather.h"
 #include "./fragment_passkey.h"
@@ -35,8 +39,12 @@ class RegionsDialog : public QDialog {
       ui::types::regions::region _current_region;
       bool _current_region_edited = false;
       struct {
-         ui::region::fragments::objects objects;
-         ui::region::fragments::weather weather;
+         ui::region::fragments::audio     audio;
+         ui::region::fragments::grass     grass;
+         ui::region::fragments::landscape landscape;
+         ui::region::fragments::map       map;
+         ui::region::fragments::objects   objects;
+         ui::region::fragments::weather   weather;
       } fragments;
       struct {
          RegionsAvailableInWorldModel* available_regions = nullptr;
