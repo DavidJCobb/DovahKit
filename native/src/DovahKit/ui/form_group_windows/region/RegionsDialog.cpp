@@ -235,6 +235,7 @@ RegionsDialog::RegionsDialog(QWidget* parent) :
    #pragma endregion
 
    #pragma region General tab
+      QObject::connect(this->ui.editorID, &QLineEdit::textChanged, this, [this]() { this->_current_region_edited = true; });
       QObject::connect(this->ui.color, &DKColorPickerButton::colorChanged, this, [this](QColor color) {
          if (color == QColor(0, 0, 0)) {
             //
@@ -244,26 +245,15 @@ RegionsDialog::RegionsDialog(QWidget* parent) :
             color = QColor(1, 0, 0);
             this->ui.color->setColor(color);
          }
-         if (this->ui.colorPresent->isChecked()) {
-            //
-            // Update the color that the canvas widget displays for this region.
-            //
-            auto* stub = this->_current_region.stub;
-            if (stub)
-               this->canvas->forceRegionColor(*stub, color);
-         }
+         this->_current_region_edited = true;
+         this->_push_region_color_to_canvas();
       });
       QObject::connect(this->ui.colorPresent, &QCheckBox::toggled, this, [this](bool checked) {
-         QColor color = QColor(0, 0, 0);
-         if (checked)
-            color = this->ui.color->color();
-         //
-         // Update the color that the canvas widget displays for this region.
-         //
-         auto* stub = this->_current_region.stub;
-         if (stub)
-            this->canvas->forceRegionColor(*stub, color);
+         this->_current_region_edited = true;
+         this->_push_region_color_to_canvas();
       });
+      QObject::connect(this->ui.edgeFalloff, qOverload<double>(&QDoubleSpinBox::valueChanged), this, [this]() { this->_current_region_edited = true; });
+      QObject::connect(this->ui.flagBorder, &QCheckBox::toggled, this, [this]() { this->_current_region_edited = true; });
    #pragma endregion
 
    auto& editor = DovahKitCore::get();
@@ -289,6 +279,7 @@ ui::types::regions::region& RegionsDialog::region_data(ui::region::fragment_pass
 }
 void RegionsDialog::on_region_modified(ui::region::fragment_passkey) {
    this->_current_region_edited = true;
+   this->_push_region_data_presence_to_canvas();
 }
 
 #pragma region Event handlers
@@ -394,6 +385,29 @@ void RegionsDialog::_set_selected_region(dovah::form_stub* region) {
    this->_pull_selected_region_to_ui();
 }
 
+void RegionsDialog::_push_region_color_to_canvas() {
+   auto* stub = this->_current_region.stub;
+   if (!stub)
+      return;
+
+   auto color = this->ui.color->color();
+   if (!this->ui.colorPresent->isChecked())
+      color = QColor(0, 0, 0);
+
+   this->canvas->forceRegionColor(*stub, color);
+}
+void RegionsDialog::_push_region_data_presence_to_canvas() {
+   if (!this->_current_region.stub)
+      return;
+   RegionCanvasWidget::RegionDataPresence presence;
+   presence.audio     = this->ui.soundEnable->isChecked();
+   presence.grass     = this->ui.grassEnable->isChecked();
+   presence.landscape = this->ui.landscapeEnable->isChecked();
+   presence.map       = this->ui.mapEnable->isChecked();
+   presence.objects   = this->ui.objectsEnable->isChecked();
+   presence.weather   = this->ui.weatherEnable->isChecked();
+   this->canvas->forceRegionDataPresence(*this->_current_region.stub, presence);
+}
 void RegionsDialog::_update_region_canvas_color_reqs() {
    RegionCanvasWidget::RegionColorRequirements req;
    req.audio     = this->ui.gridFilterSound->isChecked();

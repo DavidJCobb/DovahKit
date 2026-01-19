@@ -7,18 +7,6 @@ Also refer to comments in `main.cpp`, though many were written years ago...
 
 # Backend
 
-## General
-
-* Consider altering the subclasses of `form_reference_t` to rely on a template.
-
-* Need to support expanded ESLs: new SSE versions allow files to define new forms in the range [0x001, 0x7FF]. (Are there any specific constraints, e.g. the new forms cannot be of the same type as hardcoded forms with the same IDs?) Ideally we should support loading these forms, but should only ever use these IDs when no other IDs are available within the active file, as new forms with these IDs crash older versions of the game during plug-in load.
-  * Backend should support this
-    * Okay, but how exactly does it even work? Can the user define their own forms overtop the hardcoded forms if the form types differ? For example, can I define an `ACTI` with form ID 0x14, colliding with `[REFR]PlayerRef`? Or is Bethesda just only allowing the hardcoded-range IDs they themselves haven't used (with the implication that they'll never hardcode any new forms in the future)?
-    * Code to convert between games should fail on SSE -> LE if any non-hardcoded forms are in this range
-  * Form renumbering should only error on this if the current game doesn't support it (i.e. `skyrim_classic`)
-  * When renumbering forms into this range with SSE, pop a dialog box warning the user that LE and older SSE doesn't support it, and that they also won't be able to convert their mod from SSE to LE unless they renumber all forms back out of the range.
-  * Don't forget handling GMST renumbering too.
-
 ## Loading
 * `add_hardcoded_forms_to_load_order` in `dovah/forms/factories/hardcoded.h` is only used by the file load process and should be passkeyed somehow.
 * `build_hardcoded_form_outbound_refs` in `dovah/forms/factories/hardcoded.h` is only used by the file load process and should be passkeyed somehow.
