@@ -355,6 +355,11 @@ void RegionsDialog::_commit_pending_changes() {
    this->fragments.grass.commit();
    this->fragments.audio.commit();
 
+   data.bounds.areas = this->canvas->regionAreas();
+   if (!data.bounds.areas.empty()) {
+      data.bounds.worldspace = this->canvas->worldspace();
+   }
+
    auto& editor = DovahKitCore::get();
    emit editor.formModificationImminent(data.stub);
    data.export_data(*loaded);
@@ -437,7 +442,7 @@ void RegionsDialog::_pull_selected_region_to_ui() {
 
    auto& data = this->_current_region;
    if (!data.stub) {
-      this->canvas->setRegion(nullptr);
+      this->canvas->setNoRegion();
       this->ui.editorID->setText("");
       //
       // TODO: Clear fields
@@ -466,7 +471,7 @@ void RegionsDialog::_pull_selected_region_to_ui() {
       this->ui.flagBorder->setChecked(data.is_border_region);
    #pragma endregion
 
-   this->canvas->setRegion(data.stub);
+   this->canvas->setRegion(data);
 
    this->_set_form_ui_enable_state(true);
 }

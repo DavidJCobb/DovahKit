@@ -1,6 +1,7 @@
 #include "./RegionCanvasWidget.h"
 #include <QPainter>
 #include <QWheelEvent>
+#include "dovah/core_constants/exterior_cell_side_length.h"
 #include "dovah/form_stubs/helpers/for_each_child_form.h"
 #include "dovah/form_stubs/helpers/for_each_inbound_use_with_flag.h"
 #include "dovah/form_stubs/helpers/get_unique_outbound_use.h"
@@ -23,6 +24,22 @@ RegionCanvasWidget::RegionCanvasWidget(QWidget* parent) : QWidget(parent) {
       scrollbar->setOrientation(Qt::Orientation::Vertical);
       QObject::connect(scrollbar, &QScrollBar::valueChanged, this, qOverload<>(&QWidget::repaint));
    }
+   {
+      auto* status_bar = this->subwidgets.status_bar = new QStatusBar(this);
+      {
+         auto* panel = this->subwidgets.status_panels.grid = new QLabel(this);
+         panel->setMinimumWidth(150);
+         panel->setMaximumWidth(150);
+         status_bar->addWidget(panel);
+      }
+      {
+         auto* panel = this->subwidgets.status_panels.world = new QLabel(this);
+         panel->setMinimumWidth(150);
+         panel->setMaximumWidth(150);
+         status_bar->addWidget(panel);
+      }
+   }
+   this->setMouseTracking(true); // for status bar coordinate updates
 
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &RegionCanvasWidget::_on_data_abandoned);
@@ -37,16 +54,24 @@ RegionCanvasWidget::RegionCanvasWidget(QWidget* parent) : QWidget(parent) {
 RegionCanvasWidget::~RegionCanvasWidget() {
 }
 
-void RegionCanvasWidget::setRegion(dovah::form_stub* stub) {
-   if (stub == this->state.region)
+void RegionCanvasWidget::setRegion(const ui::types::regions::region& region) {
+   if (!region.stub)
       return;
-   if (stub && stub->form_type != dovah::form_type::region)
+   if (region.bounds.worldspace && region.bounds.worldspace != this->state.worldspace)
       return;
-   this->state.region = stub;
+   this->state.current_region.stub  = region.stub;
+   this->state.current_region.areas = region.bounds.areas;
    //
    // TODO: Update any extant context menus?
    //
    this->repaint(); // to render region areas
+}
+void RegionCanvasWidget::setNoRegion() {
+   this->state.current_region = {};
+   //
+   // TODO: Update any extant context menus?
+   //
+   this->repaint();
 }
 void RegionCanvasWidget::setWorldspace(dovah::form_stub* stub) {
    if (!stub) {
@@ -54,8 +79,8 @@ void RegionCanvasWidget::setWorldspace(dovah::form_stub* stub) {
          return;
       this->state.cells.clear();
       this->state.known_regions.clear();
-      this->state.region = nullptr;
       this->state.worldspace = nullptr;
+      this->state.current_region = {};
       this->state.grid_extents = {};
       this->update();
       return;
@@ -65,8 +90,8 @@ void RegionCanvasWidget::setWorldspace(dovah::form_stub* stub) {
    if (stub == this->state.worldspace)
       return;
 
-   this->state.region = nullptr;
    this->state.worldspace = stub;
+   this->state.current_region = {};
 
    this->_gather_regions();
    this->_gather_cells_from(*stub);
@@ -79,29 +104,78 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
 }
 
 #pragma region Coordinate space conversions
-   QPoint RegionCanvasWidget::localPosToGridPos(const QPoint& local) const {
-      const float cell_size   = default_cell_size * this->state.zoom;
-      const int   scroll_x_px = this->subwidgets.scrollbar_x->value();
-      const int   scroll_y_px = this->subwidgets.scrollbar_y->value();
+   namespace {
+      constexpr const QPoint  world_axis_invert     = QPoint(1, -1);
+      constexpr const QPointF grid_to_corner_offset = QPointF(0.5, 0.5);
 
-      QPoint grid;
-      grid.setX((local.x() + scroll_x_px - (cell_size / 2)) /  cell_size);
-      grid.setY((local.y() + scroll_y_px - (cell_size / 2)) / -cell_size);
-      return grid;
+      constexpr const float world_units_per_cell           = dovah::core_constants::exterior_cell_side_length;
+      constexpr const float world_units_per_unscaled_pixel = world_units_per_cell / RegionCanvasWidget::default_cell_size;
+
+      static QPointF _apply_world_axis_invert(const QPointF& f) {
+         QPointF g = f;
+         g.setX(f.x() * world_axis_invert.x());
+         g.setY(f.y() * world_axis_invert.y());
+         return g;
+      }
    }
-   QPoint RegionCanvasWidget::gridPosToLocalPos(const QPoint& grid) const {
-      return gridPosToCanvasPos(grid) - QPoint(
-         this->subwidgets.scrollbar_x->value(),
-         this->subwidgets.scrollbar_y->value()
-      );
+   QPoint RegionCanvasWidget::mapWorldToGridPos(const QPointF& src) const {
+      QPointF dst = src;
+      dst += (grid_to_corner_offset * world_units_per_cell);
+      dst /= world_units_per_cell;
+      return dst.toPoint();
    }
-   QPoint RegionCanvasWidget::gridPosToCanvasPos(const QPoint& grid) const {
+   QPointF RegionCanvasWidget::mapGridToWorldPos(const QPoint& src) const {
+      QPointF dst = src;
+      dst *= dovah::core_constants::exterior_cell_side_length;
+      dst -= (grid_to_corner_offset * world_units_per_cell);
+      return dst;
+   }
+   QPoint RegionCanvasWidget::mapWorldToCanvasPos(const QPointF& src) const {
+      QPointF dst = src;
+      dst  = _apply_world_axis_invert(dst);
+      dst -= QPoint(world_units_per_cell, 0); // not sure why we need this lmao
+      dst /= (world_units_per_unscaled_pixel / this->state.zoom);
+      return dst.toPoint();
+   }
+   QPointF RegionCanvasWidget::mapCanvasToWorldPos(const QPoint& src) const {
+      QPointF dst = src;
+      dst *= (world_units_per_unscaled_pixel / this->state.zoom);
+      dst += QPoint(world_units_per_cell, 0); // not sure why we need this lmao
+      dst  = _apply_world_axis_invert(dst);
+      return dst;
+   }
+
+   QPoint RegionCanvasWidget::mapGridToCanvasPos(const QPoint& src) const {
       const float cell_size = default_cell_size * this->state.zoom;
 
-      QPoint local;
-      local.setX( grid.x() * cell_size + (cell_size / 2));
-      local.setY(-grid.y() * cell_size + (cell_size / 2));
-      return local;
+      QPointF dst = src;
+      dst  = _apply_world_axis_invert(dst);
+      dst -= grid_to_corner_offset;
+      dst *= cell_size;
+      return dst.toPoint();
+   }
+   QPoint RegionCanvasWidget::mapCanvasToGridPos(const QPoint& src) const {
+      const float cell_size = default_cell_size * this->state.zoom;
+
+      QPointF dst = src;
+      dst /= cell_size;
+      dst += grid_to_corner_offset;
+      dst  = _apply_world_axis_invert(dst);
+      return dst.toPoint();
+   }
+
+   QPoint RegionCanvasWidget::mapCanvasToWidgetPos(const QPoint& src) const {
+      return src - QPoint(this->subwidgets.scrollbar_x->value(), this->subwidgets.scrollbar_y->value());
+   }
+   QPoint RegionCanvasWidget::mapWidgetToCanvasPos(const QPoint& src) const {
+      return src + QPoint(this->subwidgets.scrollbar_x->value(), this->subwidgets.scrollbar_y->value());
+   }
+
+   QPoint RegionCanvasWidget::mapWidgetToScreenPos(const QPoint& p) const {
+      return this->mapToGlobal(p);
+   }
+   QPoint RegionCanvasWidget::mapScreenToWidgetPos(const QPoint& p) const {
+      return this->mapFromGlobal(p);
    }
 #pragma endregion
 
@@ -124,17 +198,22 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
    /*virtual*/ QSize RegionCanvasWidget::minimumSizeHint() const /*override*/ {
       this->subwidgets.scrollbar_x->ensurePolished();
       this->subwidgets.scrollbar_y->ensurePolished();
+      this->subwidgets.status_bar->ensurePolished();
       int w = this->subwidgets.scrollbar_y->width();
       int h = this->subwidgets.scrollbar_x->height();
-      return QSize{ w * 2, h * 2 };
+      return QSize{ w * 2, h * 2 + this->subwidgets.status_bar->height()};
    }
 #pragma endregion
 #pragma region Events
    /*virtual*/ void RegionCanvasWidget::contextMenuEvent(QContextMenuEvent* event) /*override*/ {
       this->_stop_panning();
+      this->_clear_status_panels();
       //
       // TODO
       //
+   }
+   /*virtual*/ void RegionCanvasWidget::leaveEvent(QEvent* event) /*override*/ {
+      this->_clear_status_panels();
    }
    /*virtual*/ void RegionCanvasWidget::mouseMoveEvent(QMouseEvent* event) /*override*/ {
       if (this->state.panning) {
@@ -147,9 +226,7 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
          sbx->setValue(sbx->value() + delta.x());
          sby->setValue(sby->value() + delta.y());
       }
-      //
-      // TODO: update status bar based on mouse position
-      //
+      this->_update_status_panels(mapCoords<CoordinateSpace::Widget, CoordinateSpace::Canvas>(event->localPos().toPoint()));
    }
    /*virtual*/ void RegionCanvasWidget::mousePressEvent(QMouseEvent* event) /*override*/ {
       auto local_pos    = event->localPos().toPoint();
@@ -186,21 +263,39 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
       int scroll_x_gr = scroll_x_px / cell_size;
       int scroll_y_gr = scroll_y_px / cell_size;
       for (auto& cell : this->state.cells) {
-         QPoint cell_centerpoint = gridPosToLocalPos({ cell.grid.x, cell.grid.y });
+         QPoint cell_centerpoint = mapCoords<CoordinateSpace::Grid, CoordinateSpace::Widget>({ cell.grid.x, cell.grid.y });
          QRect  cell_rect;
-         cell_rect.setX(cell_centerpoint.x() - (cell_size / 2));
-         cell_rect.setY(cell_centerpoint.y() - (cell_size / 2));
-         cell_rect.setWidth(cell_size - 2);
-         cell_rect.setHeight(cell_size - 2);
+         cell_rect.setX(cell_centerpoint.x() - (cell_size / 2) + (cell_border_width / 2));
+         cell_rect.setY(cell_centerpoint.y() - (cell_size / 2) + (cell_border_width / 2));
+         cell_rect.setWidth(cell_size - cell_border_width);
+         cell_rect.setHeight(cell_size - cell_border_width);
 
          painter.setBrush(_recalc_cell_color(cell));
          painter.drawRect(cell_rect);
       }
-
       //
-      // TODO: Draw current region's areas
+      // Draw the current region's areas.
       //
-
+      {
+         auto& areas = this->state.current_region.areas;
+         if (!areas.empty()) {
+            painter.setBrush(QColor(0, 0, 0, 0));
+            {
+               QPen pen;
+               pen.setCosmetic(true);
+               pen.setColor(QColor(128, 0, 0));
+               pen.setWidth(3);
+               painter.setPen(pen);
+            }
+            for (const auto& area : areas) {
+               QPolygon polygon;
+               for (const auto& point : area.points) {
+                  polygon << mapCoords<CoordinateSpace::World, CoordinateSpace::Widget>({ point.x, point.y });
+               }
+               painter.drawPolygon(polygon);
+            }
+         }
+      }
       //
       // TODO: If user is editing an area, draw that area now
       //
@@ -232,7 +327,7 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
    void RegionCanvasWidget::_on_data_abandoned() {
       this->state.cells.clear();
       this->state.known_regions.clear();
-      this->state.region     = nullptr;
+      this->state.current_region = {};
       this->state.worldspace = nullptr;
       this->repaint();
    }
@@ -294,8 +389,8 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
          return;
       }
       if (stub.form_type == dovah::form_type::region) {
-         if (this->state.region == &stub) {
-            this->state.region = nullptr;
+         if (this->state.current_region.stub == &stub) {
+            this->state.current_region = {};
          }
          for (auto& cell : this->state.cells) {
             auto it = std::find(cell.regions.begin(), cell.regions.end(), &stub);
@@ -471,12 +566,15 @@ void RegionCanvasWidget::_recalc_layout() {
 
    this->subwidgets.scrollbar_x->ensurePolished();
    this->subwidgets.scrollbar_y->ensurePolished();
+   this->subwidgets.status_bar->ensurePolished();
 
    auto rect_sb_x = QRect({ 0, 0 }, this->subwidgets.scrollbar_x->sizeHint());
    auto rect_sb_y = QRect({ 0, 0 }, this->subwidgets.scrollbar_y->sizeHint());
 
+   auto rect_stat = QRect({ 0, 0 }, this->subwidgets.status_bar->sizeHint());
+
    inner.setWidth( inner.width()  - rect_sb_y.width());
-   inner.setHeight(inner.height() - rect_sb_x.height());
+   inner.setHeight(inner.height() - rect_sb_x.height() - rect_stat.height());
    this->state.view_size = inner;
 
    rect_sb_x.translate(0, inner.height());
@@ -485,6 +583,10 @@ void RegionCanvasWidget::_recalc_layout() {
    rect_sb_y.setHeight(inner.height());
    this->subwidgets.scrollbar_x->setGeometry(rect_sb_x);
    this->subwidgets.scrollbar_y->setGeometry(rect_sb_y);
+
+   rect_stat.translate(0, rect_sb_x.bottom());
+   rect_stat.setWidth(inner.width());
+   this->subwidgets.status_bar->setGeometry(rect_stat);
 
    this->_recalc_scrollbars(false);
 }
@@ -506,9 +608,14 @@ void RegionCanvasWidget::_recalc_scrollbars(bool reset_scroll) {
 
    QRect view_rect = this->state.view_size;
    QRect grid_rect;
-   grid_rect.setBottomLeft(gridPosToCanvasPos(this->state.grid_extents.min));
-   grid_rect.setTopRight(gridPosToCanvasPos(this->state.grid_extents.max));
-   grid_rect.adjust(-cell_size / 2, -cell_size / 2, cell_size / 2, cell_size / 2);
+   grid_rect.setBottomLeft(
+      mapCoords<CoordinateSpace::Grid, CoordinateSpace::Canvas>(this->state.grid_extents.min) -
+      (grid_to_corner_offset * cell_size).toPoint()
+   );
+   grid_rect.setTopRight(
+      mapCoords<CoordinateSpace::Grid, CoordinateSpace::Canvas>(this->state.grid_extents.max) +
+      (grid_to_corner_offset * cell_size).toPoint()
+   );
 
    int x1 = grid_rect.left();
    int x2 = grid_rect.right() - view_rect.width();
@@ -527,6 +634,29 @@ void RegionCanvasWidget::_recalc_scrollbars(bool reset_scroll) {
    this->subwidgets.scrollbar_x->setValue(center_x * cell_size - view_rect.width()/2);
    this->subwidgets.scrollbar_y->setValue(center_y * cell_size - view_rect.height()/2);
    this->state.last_rendered_zoom = this->state.zoom;
+}
+
+void RegionCanvasWidget::_clear_status_panels() {
+   this->subwidgets.status_panels.grid->setText("");
+   this->subwidgets.status_panels.world->setText("");
+}
+void RegionCanvasWidget::_update_status_panels(const QPoint& canvas_pos) {
+   auto    grid_pos = mapCoords<CoordinateSpace::Canvas, CoordinateSpace::Grid>(canvas_pos);
+   QString cell_name;
+   for (auto& cell : this->state.cells) {
+      if (grid_pos.x() == cell.grid.x && grid_pos.y() == cell.grid.y) {
+         cell_name = cell.editor_id;
+         break;
+      }
+   }
+   if (!cell_name.isEmpty()) {
+      this->subwidgets.status_panels.grid->setText(tr("(%1, %2)\"%3\"", "status bar: cell grid pos and editor ID").arg(grid_pos.x()).arg(grid_pos.y()).arg(cell_name));
+   } else {
+      this->subwidgets.status_panels.grid->setText(tr("(%1, %2)", "status bar: cell grid pos").arg(grid_pos.x()).arg(grid_pos.y()));
+   }
+
+   auto world_pos = mapCoords<CoordinateSpace::Canvas, CoordinateSpace::World>(canvas_pos);
+   this->subwidgets.status_panels.world->setText(tr("(%1, %2)", "status bar: world pos").arg(world_pos.x()).arg(world_pos.y()));
 }
 
 void RegionCanvasWidget::_start_panning(QPoint pos) {

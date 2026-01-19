@@ -4037,6 +4037,15 @@
       <SubType>
       </SubType>
     </None>
+    <None Include="dovah\_docs\form types\g\grass.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="qt.natstepfilter" />
+    <None Include="dovah\_docs\form types\r\region.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovah\_docs\game data file format\file header.md">
       <SubType>
       </SubType>
@@ -4262,6 +4271,7 @@
     <None Include="shaders\util\oit-composite.frag.spv" />
     <None Include="shaders\util\scene-fog-color-far.frag" />
     <None Include="shaders\util\scene-fog-color-far.frag.spv" />
+    <None Include="ui\form_group_windows\region\RegionCanvasWidget.inl" />
     <None Include="ui\form_windows\quest\QuestAllDialogueDatastore.inl" />
     <None Include="ui\form_windows\quest\QuestAllDialogueModel.md" />
     <None Include="ui\form_windows\_base.inl" />

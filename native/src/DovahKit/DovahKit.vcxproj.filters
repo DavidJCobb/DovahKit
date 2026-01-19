@@ -11758,6 +11758,12 @@
     </None>
     <None Include="dovah\_docs\use info\entry flags.md" />
     <None Include="helpers\qt\qt_5_natvis\README.md" />
+    <None Include="dovah\_docs\form types\r\region.md" />
+    <None Include="dovah\_docs\form types\g\grass.md" />
+    <None Include="qt.natstepfilter" />
+    <None Include="ui\form_group_windows\region\RegionCanvasWidget.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

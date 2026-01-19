@@ -1,15 +1,27 @@
 #pragma once
 #include <cstdint>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
+#include <QLabel>
 #include <QScrollBar>
+#include <QStatusBar>
 #include <QWidget>
+#include "ui/types/regions/region.h"
 namespace dovah {
    class form_stub;
 }
 
 class RegionCanvasWidget : public QWidget {
    Q_OBJECT;
+   public:
+      static constexpr const int default_cell_size = 32; // size in pixels including the border
+
+      static constexpr const int cell_border_width = 2; // width of the border, treating it as centered between cells
+
+      // i.e. minimum allowed size of a cell, in pixels, divided by default size
+      static constexpr const float minimum_zoom = 4.0F / default_cell_size;
+
    public:
       struct RegionDataPresence {
          constexpr bool operator==(const RegionDataPresence&) const noexcept = default;
@@ -36,16 +48,38 @@ class RegionCanvasWidget : public QWidget {
          }
       };
 
+      using RegionArea = ui::types::regions::region::area;
+
+      // Ordering of constants in here matters; should be "outer" to "inner."
+      enum class CoordinateSpace {
+         Screen,
+
+         // Pixel coordinates relative to the widget's bounds.
+         Widget,
+
+         // Pixel coordinates within the drawn worldspace, irrespective of any scrolling.
+         Canvas,
+
+         // Cell grid coordinates. Integer values. Converting these to any other space 
+         // yields the centerpoint of the drawn cell.
+         Grid,
+
+         // In-game coordinates measured in world units. A cell is 4096x4096wu.
+         World
+      };
+
+      template<CoordinateSpace Space>
+      using Point = std::conditional_t<
+         (Space == CoordinateSpace::World),
+         QPointF,
+         QPoint
+      >;
+
    public:
       RegionCanvasWidget(QWidget* parent = nullptr);
       ~RegionCanvasWidget();
 
    protected:
-      static constexpr const int default_cell_size = 32; // size in pixels including the border
-
-      // i.e. minimum allowed size of a cell, in pixels, divided by default size
-      static constexpr const float minimum_zoom = 4.0F / default_cell_size;
-
       struct KnownCell {
          QString editor_id;
          struct {
@@ -72,8 +106,12 @@ class RegionCanvasWidget : public QWidget {
          } grid_extents;
 
          std::vector<KnownCell> cells;
-         dovah::form_stub* region     = nullptr;
          dovah::form_stub* worldspace = nullptr;
+
+         struct {
+            dovah::form_stub* stub = nullptr;
+            std::vector<RegionArea> areas;
+         } current_region;
 
          std::unordered_map<dovah::form_stub*, KnownRegion> known_regions;
 
@@ -85,26 +123,42 @@ class RegionCanvasWidget : public QWidget {
       struct {
          QScrollBar* scrollbar_x = nullptr;
          QScrollBar* scrollbar_y = nullptr;
+         QStatusBar* status_bar  = nullptr;
+         struct {
+            QLabel* grid  = nullptr;
+            QLabel* world = nullptr;
+         } status_panels;
       } subwidgets;
 
    public:
-      void setRegion(dovah::form_stub*);
+      void setRegion(const ui::types::regions::region&);
+      void setNoRegion();
       void setWorldspace(dovah::form_stub*);
-
+      //
       void setColorRequirements(const RegionColorRequirements&);
 
+      constexpr dovah::form_stub* region() const noexcept { return this->state.current_region.stub; }
+      constexpr const std::vector<RegionArea>& regionAreas() const noexcept { return this->state.current_region.areas; }
+      constexpr dovah::form_stub* worldspace() const noexcept { return this->state.worldspace; }
+
+
       #pragma region Coordinate space conversions
-         //
-         // Coordinate spaces:
-         //  - global = whole screen
-         //  - local  = widget
-         //  - canvas = entire displayed worldspace, in pixels, not accounting for scrolling
-         //  - grid   = cell grid, where each integer coordinate is a cell's centerpoint
-         //  - world  = coordinates measured in world units
-         //
-         QPoint localPosToGridPos(const QPoint&) const;
-         QPoint gridPosToLocalPos(const QPoint&) const; // returns centerpoint
-         QPoint gridPosToCanvasPos(const QPoint&) const; // returns centerpoint; does not adjust for scrolling
+         template<CoordinateSpace src_space, CoordinateSpace dst_space> requires (src_space != dst_space)
+         auto mapCoords(const Point<src_space>&) const;
+
+         QPoint mapWorldToGridPos(const QPointF&) const;
+         QPointF mapGridToWorldPos(const QPoint&) const;
+         QPoint mapWorldToCanvasPos(const QPointF&) const;
+         QPointF mapCanvasToWorldPos(const QPoint&) const;
+
+         QPoint mapGridToCanvasPos(const QPoint&) const;
+         QPoint mapCanvasToGridPos(const QPoint&) const;
+
+         QPoint mapCanvasToWidgetPos(const QPoint&) const;
+         QPoint mapWidgetToCanvasPos(const QPoint&) const;
+
+         QPoint mapWidgetToScreenPos(const QPoint&) const;
+         QPoint mapScreenToWidgetPos(const QPoint&) const;
       #pragma endregion
 
       void forceRegionColor(dovah::form_stub&, QColor);
@@ -115,6 +169,7 @@ class RegionCanvasWidget : public QWidget {
       #pragma endregion
       #pragma region Events
          virtual void contextMenuEvent(QContextMenuEvent*) override;
+         virtual void leaveEvent(QEvent*) override;
          virtual void mouseMoveEvent(QMouseEvent*) override;
          virtual void mousePressEvent(QMouseEvent*) override;
          virtual void mouseReleaseEvent(QMouseEvent*) override;
@@ -148,6 +203,11 @@ class RegionCanvasWidget : public QWidget {
       void _recalc_layout();
       void _recalc_scrollbars(bool reset_scroll);
 
+      void _clear_status_panels();
+      void _update_status_panels(const QPoint& canvas_pos);
+
       void _start_panning(QPoint pos);
       void _stop_panning();
 };
+
+#include "./RegionCanvasWidget.inl"
