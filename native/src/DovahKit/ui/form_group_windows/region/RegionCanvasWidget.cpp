@@ -9,6 +9,7 @@
 #include "dovah/forms/Cell.h"
 #include "dovah/forms/Region.h"
 #include "dovah/use_info/entry_flags/region.h"
+#include "dovah/utils/get_region_worldspace.h"
 #include "editor/core.h"
 
 RegionCanvasWidget::RegionCanvasWidget(QWidget* parent) : QWidget(parent) {
@@ -33,6 +34,8 @@ RegionCanvasWidget::RegionCanvasWidget(QWidget* parent) : QWidget(parent) {
       this->_on_data_acquired();
    }
 }
+RegionCanvasWidget::~RegionCanvasWidget() {
+}
 
 void RegionCanvasWidget::setRegion(dovah::form_stub* stub) {
    if (stub == this->state.region)
@@ -41,7 +44,7 @@ void RegionCanvasWidget::setRegion(dovah::form_stub* stub) {
       return;
    this->state.region = stub;
    //
-   // TODO: Update context menus?
+   // TODO: Update any extant context menus?
    //
    this->repaint(); // to render region areas
 }
@@ -65,40 +68,54 @@ void RegionCanvasWidget::setWorldspace(dovah::form_stub* stub) {
    this->state.region = nullptr;
    this->state.worldspace = stub;
 
-   this->_gather_cells_from(*stub);
    this->_gather_regions();
+   this->_gather_cells_from(*stub);
    this->update();
 }
 
-QPoint RegionCanvasWidget::localPosToGridPos(const QPoint& local) const {
-   const float cell_size   = default_cell_size * this->state.zoom;
-   const int   scroll_x_px = this->subwidgets.scrollbar_x->value();
-   const int   scroll_y_px = this->subwidgets.scrollbar_y->value();
+void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req) {
+   this->state.color_requirements = req;
+   this->repaint();
+}
 
-   QPoint grid;
-   grid.setX((local.x() + scroll_x_px - (cell_size / 2)) /  cell_size);
-   grid.setY((local.y() + scroll_y_px - (cell_size / 2)) / -cell_size);
-   return grid;
-}
-QPoint RegionCanvasWidget::gridPosToLocalPos(const QPoint& grid) const {
-   return gridPosToCanvasPos(grid) - QPoint(
-      this->subwidgets.scrollbar_x->value(),
-      this->subwidgets.scrollbar_y->value()
-   );
-}
-QPoint RegionCanvasWidget::gridPosToCanvasPos(const QPoint& grid) const {
-   const float cell_size = default_cell_size * this->state.zoom;
+#pragma region Coordinate space conversions
+   QPoint RegionCanvasWidget::localPosToGridPos(const QPoint& local) const {
+      const float cell_size   = default_cell_size * this->state.zoom;
+      const int   scroll_x_px = this->subwidgets.scrollbar_x->value();
+      const int   scroll_y_px = this->subwidgets.scrollbar_y->value();
 
-   QPoint local;
-   local.setX( grid.x() * cell_size + (cell_size / 2));
-   local.setY(-grid.y() * cell_size + (cell_size / 2));
-   return local;
-}
+      QPoint grid;
+      grid.setX((local.x() + scroll_x_px - (cell_size / 2)) /  cell_size);
+      grid.setY((local.y() + scroll_y_px - (cell_size / 2)) / -cell_size);
+      return grid;
+   }
+   QPoint RegionCanvasWidget::gridPosToLocalPos(const QPoint& grid) const {
+      return gridPosToCanvasPos(grid) - QPoint(
+         this->subwidgets.scrollbar_x->value(),
+         this->subwidgets.scrollbar_y->value()
+      );
+   }
+   QPoint RegionCanvasWidget::gridPosToCanvasPos(const QPoint& grid) const {
+      const float cell_size = default_cell_size * this->state.zoom;
+
+      QPoint local;
+      local.setX( grid.x() * cell_size + (cell_size / 2));
+      local.setY(-grid.y() * cell_size + (cell_size / 2));
+      return local;
+   }
+#pragma endregion
 
 void RegionCanvasWidget::forceRegionColor(dovah::form_stub& region, QColor c) {
    auto it = this->state.known_regions.find(&region);
    if (it != this->state.known_regions.end()) {
       it->second.color = c;
+      this->repaint();
+   }
+}
+void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const RegionDataPresence& presence) {
+   auto it = this->state.known_regions.find(&region);
+   if (it != this->state.known_regions.end()) {
+      it->second.presence = presence;
       this->repaint();
    }
 }
@@ -114,19 +131,46 @@ void RegionCanvasWidget::forceRegionColor(dovah::form_stub& region, QColor c) {
 #pragma endregion
 #pragma region Events
    /*virtual*/ void RegionCanvasWidget::contextMenuEvent(QContextMenuEvent* event) /*override*/ {
+      this->_stop_panning();
       //
       // TODO
       //
    }
    /*virtual*/ void RegionCanvasWidget::mouseMoveEvent(QMouseEvent* event) /*override*/ {
+      if (this->state.panning) {
+         auto pos   = event->globalPos();
+         auto delta = pos - this->state.panning_from;
+         this->state.panning_from = pos;
+
+         auto* sbx = this->subwidgets.scrollbar_x;
+         auto* sby = this->subwidgets.scrollbar_y;
+         sbx->setValue(sbx->value() + delta.x());
+         sby->setValue(sby->value() + delta.y());
+      }
       //
       // TODO: update status bar based on mouse position
       //
    }
    /*virtual*/ void RegionCanvasWidget::mousePressEvent(QMouseEvent* event) /*override*/ {
-      //
-      // TODO: handle drawing a region area
-      //
+      auto local_pos    = event->localPos().toPoint();
+      bool is_on_canvas = this->state.view_size.contains(local_pos);
+      if (is_on_canvas) {
+         switch (event->button()) {
+            case Qt::MouseButton::MiddleButton:
+               this->_start_panning(event->globalPos());
+               break;
+            case Qt::MouseButton::LeftButton:
+               //
+               // TODO: handle drawing a region area
+               //
+               break;
+         }
+      }
+   }
+   /*virtual*/ void RegionCanvasWidget::mouseReleaseEvent(QMouseEvent* event) /*override*/ {
+      if (event->button() == Qt::MouseButton::MiddleButton) {
+         this->_stop_panning();
+      }
    }
    /*virtual*/ void RegionCanvasWidget::paintEvent(QPaintEvent* event) /*override*/ {
       QPainter painter(this);
@@ -149,39 +193,7 @@ void RegionCanvasWidget::forceRegionColor(dovah::form_stub& region, QColor c) {
          cell_rect.setWidth(cell_size - 2);
          cell_rect.setHeight(cell_size - 2);
 
-         auto color = QColor(255, 255, 255);
-         {
-            std::vector<QColor> colors_to_blend;
-            for (auto* region_stub : cell.regions) {
-               if (!region_stub)
-                  continue;
-               auto it = this->state.known_regions.find(region_stub);
-               if (it == this->state.known_regions.end())
-                  continue;
-               auto& region_info = it->second;
-               if (region_info.color == QColor(0, 0, 0)) // black = no color
-                  continue;
-               //
-               // TODO: If region isn't visible, skip it.
-               //
-               colors_to_blend.push_back(region_info.color);
-            }
-            if (!colors_to_blend.empty()) {
-               uint32_t r = 0;
-               uint32_t g = 0;
-               uint32_t b = 0;
-               for (auto& other : colors_to_blend) {
-                  r += other.red();
-                  g += other.green();
-                  b += other.blue();
-               }
-               r = (float)r / colors_to_blend.size();
-               g = (float)g / colors_to_blend.size();
-               b = (float)b / colors_to_blend.size();
-               color = QColor(r, g, b);
-            }
-         }
-         painter.setBrush(color);
+         painter.setBrush(_recalc_cell_color(cell));
          painter.drawRect(cell_rect);
       }
 
@@ -365,6 +377,18 @@ void RegionCanvasWidget::_cache_cell(KnownCell& info) {
          list.erase(last, list.end());
       }
    }
+   //
+   // Sometimes, REGN/WNAM isn't set but the REGN is still used in a given worldspace, and 
+   // this can only be determined via examination of the cells it touches.
+   //
+   for (auto* region : info.regions) {
+      auto it = this->state.known_regions.find(region);
+      if (it != this->state.known_regions.end())
+         continue;
+      auto* world = dovah::utils::get_region_worldspace(*region);
+      if (world && world == this->state.worldspace)
+         this->_cache_region(*region);
+   }
 }
 void RegionCanvasWidget::_cache_region(dovah::form_stub& region) {
    assert(region.form_type == dovah::form_type::region);
@@ -379,7 +403,7 @@ void RegionCanvasWidget::_cache_region(KnownRegion& info) {
    auto loaded_ptr = info.stub->load().ptr_cast<dovah::loaded_forms::Region>();
    if (loaded_ptr) {
       info.color = QColor(loaded_ptr->map_color.r, loaded_ptr->map_color.g, loaded_ptr->map_color.b);
-      for (auto& data : loaded_ptr->generable_content) {
+      for (const auto& data : loaded_ptr->generable_content) {
          if (data.as<dovah::loaded_forms::structs::region::generable_content::audio>())
             info.presence.audio = true;
          else if (data.as<dovah::loaded_forms::structs::region::generable_content::grass_collection>())
@@ -394,6 +418,52 @@ void RegionCanvasWidget::_cache_region(KnownRegion& info) {
             info.presence.weather = true;
       }
    }
+}
+
+QColor RegionCanvasWidget::_recalc_cell_color(KnownCell& cell) const {
+   if (!cell.regions.size())
+      return QColor(255, 255, 255);
+
+   uint32_t r     = 0;
+   uint32_t g     = 0;
+   uint32_t b     = 0;
+   size_t   count = 0;
+   for (auto* region_stub : cell.regions) {
+      if (!region_stub)
+         continue;
+      auto it = this->state.known_regions.find(region_stub);
+      if (it == this->state.known_regions.end())
+         continue;
+      auto& region_info = it->second;
+      if (region_info.color == QColor(0, 0, 0)) // black = no color
+         continue;
+
+      bool any = false;
+      if (
+         (this->state.color_requirements.audio     && region_info.presence.audio)
+      || (this->state.color_requirements.grass     && region_info.presence.grass)
+      || (this->state.color_requirements.landscape && region_info.presence.landscape)
+      || (this->state.color_requirements.map       && region_info.presence.map)
+      || (this->state.color_requirements.objects   && region_info.presence.objects)
+      || (this->state.color_requirements.weather   && region_info.presence.weather)
+      || (this->state.color_requirements.empty     && region_info.presence.none())
+      ) {
+         any = true;
+      }
+      if (!any)
+         continue;
+
+      r += region_info.color.red();
+      g += region_info.color.green();
+      b += region_info.color.blue();
+      ++count;
+   }
+   if (!count)
+      return QColor(255, 255, 255);
+   r = (float)r / count;
+   g = (float)g / count;
+   b = (float)b / count;
+   return QColor(r, g, b);
 }
 
 void RegionCanvasWidget::_recalc_layout() {
@@ -457,4 +527,18 @@ void RegionCanvasWidget::_recalc_scrollbars(bool reset_scroll) {
    this->subwidgets.scrollbar_x->setValue(center_x * cell_size - view_rect.width()/2);
    this->subwidgets.scrollbar_y->setValue(center_y * cell_size - view_rect.height()/2);
    this->state.last_rendered_zoom = this->state.zoom;
+}
+
+void RegionCanvasWidget::_start_panning(QPoint pos) {
+   if (this->state.panning)
+      return;
+   this->state.panning      = true;
+   this->state.panning_from = pos;
+   this->setCursor(Qt::CursorShape::ClosedHandCursor);
+}
+void RegionCanvasWidget::_stop_panning() {
+   if (!this->state.panning)
+      return;
+   this->state.panning = false;
+   this->unsetCursor();
 }

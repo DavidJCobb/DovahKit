@@ -30,13 +30,47 @@ RegionsDialog::RegionsDialog(QWidget* parent) :
    this->ui.setupUi(this);
    this->ui.tabWidget->setCurrentWidget(this->ui.tabGeneral);
 
-   this->canvas = new RegionCanvasWidget(this);
-   {
-      auto* layout = new QVBoxLayout;
-      this->ui.gridFrame->setLayout(layout);
-      layout->setContentsMargins(0, 0, 0, 0);
-      layout->addWidget(this->canvas);
-   }
+   #pragma region Set up canvas widget
+      this->canvas = new RegionCanvasWidget(this);
+      {
+         auto* layout = new QVBoxLayout;
+         this->ui.gridFrame->setLayout(layout);
+         layout->setContentsMargins(0, 0, 0, 0);
+         layout->addWidget(this->canvas);
+      }
+      //
+      // Checkboxes for showing region colors in the grid:
+      //
+      {
+         const auto checkboxes = std::array{
+            this->ui.gridFilterGrass,
+            this->ui.gridFilterLand,
+            this->ui.gridFilterMap,
+            this->ui.gridFilterNothing,
+            this->ui.gridFilterObjects,
+            this->ui.gridFilterSound,
+            this->ui.gridFilterWeather,
+         };
+         for (auto* checkbox : checkboxes) {
+            QObject::connect(checkbox, &QCheckBox::toggled, this, &RegionsDialog::_update_region_canvas_color_reqs);
+         }
+         QObject::connect(this->ui.buttonCheckAllGridFilters, &QPushButton::clicked, this, [this, checkboxes]() {
+            for (auto* checkbox : checkboxes) {
+               const auto blocker = QSignalBlocker(checkbox);
+               checkbox->setChecked(true);
+            }
+            this->_update_region_canvas_color_reqs();
+         });
+         QObject::connect(this->ui.buttonUncheckAllGridFilters, &QPushButton::clicked, this, [this, checkboxes]() {
+            for (auto* checkbox : checkboxes) {
+               const auto blocker = QSignalBlocker(checkbox);
+               checkbox->setChecked(false);
+            }
+            this->_update_region_canvas_color_reqs();
+         });
+      }
+      this->_update_region_canvas_color_reqs();
+   #pragma endregion
 
    {
       auto* model = this->models.available_regions = new RegionsAvailableInWorldModel(this);
@@ -200,6 +234,38 @@ RegionsDialog::RegionsDialog(QWidget* parent) :
       });
    #pragma endregion
 
+   #pragma region General tab
+      QObject::connect(this->ui.color, &DKColorPickerButton::colorChanged, this, [this](QColor color) {
+         if (color == QColor(0, 0, 0)) {
+            //
+            // Bethesda uses RGB(0, 0, 0) to signal the absence of a color.
+            //
+            const auto blocker = QSignalBlocker(this->ui.color);
+            color = QColor(1, 0, 0);
+            this->ui.color->setColor(color);
+         }
+         if (this->ui.colorPresent->isChecked()) {
+            //
+            // Update the color that the canvas widget displays for this region.
+            //
+            auto* stub = this->_current_region.stub;
+            if (stub)
+               this->canvas->forceRegionColor(*stub, color);
+         }
+      });
+      QObject::connect(this->ui.colorPresent, &QCheckBox::toggled, this, [this](bool checked) {
+         QColor color = QColor(0, 0, 0);
+         if (checked)
+            color = this->ui.color->color();
+         //
+         // Update the color that the canvas widget displays for this region.
+         //
+         auto* stub = this->_current_region.stub;
+         if (stub)
+            this->canvas->forceRegionColor(*stub, color);
+      });
+   #pragma endregion
+
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, [this]() {
       this->_set_selected_region(nullptr);
@@ -326,6 +392,18 @@ void RegionsDialog::_set_selected_region(dovah::form_stub* region) {
    data.import_data(*loaded);
    data.import_record_flags(region->get_record_flags());
    this->_pull_selected_region_to_ui();
+}
+
+void RegionsDialog::_update_region_canvas_color_reqs() {
+   RegionCanvasWidget::RegionColorRequirements req;
+   req.audio     = this->ui.gridFilterSound->isChecked();
+   req.grass     = this->ui.gridFilterGrass->isChecked();
+   req.landscape = this->ui.gridFilterLand->isChecked();
+   req.map       = this->ui.gridFilterMap->isChecked();
+   req.objects   = this->ui.gridFilterObjects->isChecked();
+   req.weather   = this->ui.gridFilterWeather->isChecked();
+   req.empty     = this->ui.gridFilterNothing->isChecked();
+   this->canvas->setColorRequirements(req);
 }
 
 void RegionsDialog::_pull_selected_region_to_ui() {

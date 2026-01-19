@@ -406,6 +406,7 @@
     <ClCompile Include="dovah\utils\default_primitive_color_for_base_form.cpp" />
     <ClCompile Include="dovah\utils\form_component_accessors\keyword_list.cpp" />
     <ClCompile Include="dovah\utils\get_computed_location.cpp" />
+    <ClCompile Include="dovah\utils\get_region_worldspace.cpp" />
     <ClCompile Include="dovah\utils\location_is_or_is_inside_of_location.cpp" />
     <ClCompile Include="dovah\utils\subrecord_data_position.cpp" />
     <ClCompile Include="dovah\utils\update_location_content.cpp" />
@@ -2115,6 +2116,7 @@
     <ClInclude Include="dovah\utils\default_light_emitter_shadow_depth_bias.h" />
     <ClInclude Include="dovah\utils\default_primitive_color_for_base_form.h" />
     <ClInclude Include="dovah\utils\form_component_accessors\keyword_list.h" />
+    <ClInclude Include="dovah\utils\get_region_worldspace.h" />
     <ClInclude Include="dovah\utils\location_is_or_is_inside_of_location.h" />
     <ClInclude Include="dovah\utils\magic_effect_list_item_cost_calculator.h" />
     <ClInclude Include="dovah\utils\cell_grid_position.h" />

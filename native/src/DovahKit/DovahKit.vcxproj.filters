@@ -3954,6 +3954,9 @@
     <ClCompile Include="ui\form_group_windows\region\RegionCanvasWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovah\utils\get_region_worldspace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9714,6 +9717,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ui\form_group_windows\region\fragments\audio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\utils\get_region_worldspace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

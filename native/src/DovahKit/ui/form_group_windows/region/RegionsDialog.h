@@ -61,6 +61,8 @@ class RegionsDialog : public QDialog {
       void _commit_pending_changes();
       void _set_selected_region(dovah::form_stub*);
 
+      void _update_region_canvas_color_reqs();
+
       void _pull_selected_region_to_ui();
       void _push_selected_region_to_form();
       void _set_form_ui_enable_state(bool);

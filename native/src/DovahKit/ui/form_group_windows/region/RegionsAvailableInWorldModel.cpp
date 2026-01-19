@@ -4,6 +4,7 @@
 #include "dovah/form_stubs/helpers/for_each_inbound_use_with_flag.h"
 #include "dovah/form_stubs/helpers/get_unique_outbound_use.h"
 #include "dovah/use_info/entry_flags/region.h"
+#include "dovah/utils/get_region_worldspace.h"
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
 
@@ -28,7 +29,7 @@ void RegionsAvailableInWorldModel::_gather_regions() {
 
    this->_data.clear();
    DovahKitCore::get().for_each_form_of_type(dovah::form_type::region, [this](dovah::form_stub* region) -> bool {
-      auto* world = dovah::form_stub_helpers::get_unique_outbound_use<dovah::use_info::entry_flags::region::worldspace>(*region);
+      auto* world = dovah::utils::get_region_worldspace(*region);
       if (!world || world == this->_worldspace) {
          auto& item = this->_data.emplace_back(region);
          this->_recache(item);
