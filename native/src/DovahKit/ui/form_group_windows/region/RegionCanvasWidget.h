@@ -216,7 +216,10 @@ class RegionCanvasWidget : public QWidget {
       void _start_panning(QPoint pos);
       void _stop_panning();
 
+      bool _can_close_polygon_at(const QPoint& canvas_pos) const;
       void _draw_point_at(const QPoint& canvas_pos);
+
+      void _update_cursor();
 };
 
 #include "./RegionCanvasWidget.inl"

@@ -234,7 +234,15 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
          sbx->setValue(sbx->value() + delta.x());
          sby->setValue(sby->value() + delta.y());
       }
-      this->_update_status_panels(mapCoords<CoordinateSpace::Widget, CoordinateSpace::Canvas>(event->localPos().toPoint()));
+      auto local_pos = event->localPos().toPoint();
+      if (!this->state.panning && this->isDrawingArea()) {
+         if (_can_close_polygon_at(mapCoords<CoordinateSpace::Widget, CoordinateSpace::Canvas>(local_pos))) {
+            this->setCursor(Qt::CursorShape::PointingHandCursor);
+         } else {
+            this->setCursor(Qt::CursorShape::CrossCursor);
+         }
+      }
+      this->_update_status_panels(mapCoords<CoordinateSpace::Widget, CoordinateSpace::Canvas>(local_pos));
    }
    /*virtual*/ void RegionCanvasWidget::mousePressEvent(QMouseEvent* event) /*override*/ {
       auto local_pos    = event->localPos().toPoint();
@@ -317,7 +325,7 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
          }
          painter.drawPolyline(polygon);
          //
-         // Draw vertices.
+         // Draw first and most-recent vertices.
          //
          {
             QPen pen;
@@ -325,12 +333,13 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
             pen.setColor(QColor(255, 0, 0));
             pen.setWidth(1);
             painter.setPen(pen);
-            painter.setBrush(QColor(255, 192, 180));
+            painter.setBrush(QColor(255, 0, 0));
          }
-         for (size_t i = 0; i < area.points.size(); ++i) {
-            auto point = polygon.point(i);
-            painter.drawEllipse(point, 2, 2);
+         if (area.points.size() > 1) {
+            painter.drawEllipse(polygon.point(0), 3, 3);
          }
+         painter.setBrush(QColor(255, 192, 180));
+         painter.drawEllipse(polygon.point(area.points.size() - 1), 3, 3);
       }
    }
    /*virtual*/ void RegionCanvasWidget::resizeEvent(QResizeEvent* event) /*override*/ {
@@ -377,6 +386,36 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
             }
             this->_recalc_cell_color(cell_info);
          }
+         //
+         // Handle the case of the worldspace being made larger by the addition of this cell.
+         //
+         {
+            int32_t gx;
+            int32_t gy;
+            if (stub.get_grid_coordinates(gx, gy)) {
+               bool changed = false;
+               if (gx < this->state.grid_extents.min.x()) {
+                  this->state.grid_extents.min.setX(gx);
+                  changed = true;
+               }
+               if (gy < this->state.grid_extents.min.y()) {
+                  this->state.grid_extents.min.setY(gy);
+                  changed = true;
+               }
+               if (gx > this->state.grid_extents.max.x()) {
+                  this->state.grid_extents.max.setX(gx);
+                  changed = true;
+               }
+               if (gy > this->state.grid_extents.max.y()) {
+                  this->state.grid_extents.max.setY(gy);
+                  changed = true;
+               }
+               if (changed) {
+                  this->_recalc_scrollbars(false);
+               }
+            }
+         }
+         //
          this->repaint();
          return;
       }
@@ -727,36 +766,42 @@ void RegionCanvasWidget::_start_panning(QPoint pos) {
       return;
    this->state.panning      = true;
    this->state.panning_from = pos;
-   this->setCursor(Qt::CursorShape::ClosedHandCursor);
+   this->_update_cursor();
 }
 void RegionCanvasWidget::_stop_panning() {
    if (!this->state.panning)
       return;
    this->state.panning = false;
-   this->unsetCursor();
+   this->_update_cursor();
 }
 
+bool RegionCanvasWidget::_can_close_polygon_at(const QPoint& canvas_pos) const {
+   if (!this->isDrawingArea())
+      return false;
+   const auto& area = this->state.area_being_drawn;
+   if (area.points.size() < 3)
+      return false;
+   
+   auto& first_point     = area.points[0];
+   auto  first_on_canvas = mapCoords<CoordinateSpace::World, CoordinateSpace::Canvas>({ first_point.x, first_point.y });
+   //
+   auto  diff     = QPointF(first_on_canvas) - canvas_pos;
+   auto  distance = std::sqrt(QPointF::dotProduct(diff, diff));
+   return (distance < QApplication::startDragDistance());
+}
 void RegionCanvasWidget::_draw_point_at(const QPoint& canvas_pos) {
-   bool was_drawing_area = this->isDrawingArea();
-   bool close            = false;
-   if (was_drawing_area && this->state.area_being_drawn.points.size() >= 3) {
-      auto& first_point     = this->state.area_being_drawn.points[0];
-      auto  first_on_canvas = mapCoords<CoordinateSpace::World, CoordinateSpace::Canvas>({ first_point.x, first_point.y });
-      //
-      auto  diff     = QPointF(first_on_canvas) - canvas_pos;
-      auto  distance = std::sqrt(QPointF::dotProduct(diff, diff));
-      if (distance < QApplication::startDragDistance()) {
-         close = true;
-      }
+   if (this->state.current_region.stub == nullptr) {
+      return;
    }
-
-   if (close) {
+   if (_can_close_polygon_at(canvas_pos)) {
       if (this->state.area_being_drawn.would_become_self_intersecting(this->state.area_being_drawn.points[0])) {
          QApplication::beep();
          this->subwidgets.status_bar->showMessage(tr("Can't close the polygon. The polygon would become self-intersecting."), 3);
+         return;
       }
       this->state.current_region.areas.push_back(std::move(this->state.area_being_drawn));
       this->state.area_being_drawn.points.clear();
+      this->_update_cursor();
       emit onRegionAreasEdited();
    } else {
       auto world_pos = mapCoords<CoordinateSpace::Canvas, CoordinateSpace::World>(canvas_pos);
@@ -769,7 +814,24 @@ void RegionCanvasWidget::_draw_point_at(const QPoint& canvas_pos) {
          this->subwidgets.status_bar->showMessage(tr("Can't place a point there. The polygon would become self-intersecting."), 3);
       } else {
          this->state.area_being_drawn.points.push_back(to_add);
+         this->_update_cursor();
       }
    }
    this->repaint();
+}
+
+void RegionCanvasWidget::_update_cursor() {
+   if (this->state.panning) {
+      this->setCursor(Qt::CursorShape::ClosedHandCursor);
+   } else if (this->isDrawingArea()) {
+      auto local_pos  = mapFromGlobal(QCursor::pos());
+      auto canvas_pos = mapCoords<CoordinateSpace::Widget, CoordinateSpace::Canvas>(local_pos);
+      if (_can_close_polygon_at(canvas_pos)) {
+         this->setCursor(Qt::CursorShape::PointingHandCursor);
+      } else {
+         this->setCursor(Qt::CursorShape::CrossCursor);
+      }
+   } else {
+      this->unsetCursor();
+   }
 }
