@@ -59,6 +59,9 @@ class RegionsDialog : public QDialog {
       void _report_region_create_error(const dovah::exceptions::form_creation_failed&);
 
       void _commit_pending_changes();
+      void _update_cells_in_region_areas();
+      void _add_region_to_cell(dovah::form_stub& region, dovah::form_stub& cell);
+      void _remove_region_from_cell(dovah::form_stub& region, dovah::form_stub& cell);
       void _set_selected_region(dovah::form_stub*);
 
       void _push_region_color_to_canvas();

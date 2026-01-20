@@ -1,4 +1,5 @@
 #include "./RegionCanvasWidget.h"
+#include <QApplication>
 #include <QPainter>
 #include <QWheelEvent>
 #include "dovah/core_constants/exterior_cell_side_length.h"
@@ -61,6 +62,7 @@ void RegionCanvasWidget::setRegion(const ui::types::regions::region& region) {
       return;
    this->state.current_region.stub  = region.stub;
    this->state.current_region.areas = region.bounds.areas;
+   this->state.area_being_drawn = {};
    //
    // TODO: Update any extant context menus?
    //
@@ -81,6 +83,7 @@ void RegionCanvasWidget::setWorldspace(dovah::form_stub* stub) {
       this->state.known_regions.clear();
       this->state.worldspace = nullptr;
       this->state.current_region = {};
+      this->state.area_being_drawn = {};
       this->state.grid_extents = {};
       this->update();
       return;
@@ -92,14 +95,17 @@ void RegionCanvasWidget::setWorldspace(dovah::form_stub* stub) {
 
    this->state.worldspace = stub;
    this->state.current_region = {};
+   this->state.area_being_drawn = {};
 
    this->_gather_regions();
    this->_gather_cells_from(*stub);
+   this->_recalc_all_cell_colors();
    this->update();
 }
 
 void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req) {
    this->state.color_requirements = req;
+   this->_recalc_all_cell_colors();
    this->repaint();
 }
 
@@ -183,6 +189,7 @@ void RegionCanvasWidget::forceRegionColor(dovah::form_stub& region, QColor c) {
    auto it = this->state.known_regions.find(&region);
    if (it != this->state.known_regions.end()) {
       it->second.color = c;
+      this->_recalc_cell_colors_affected_by(region);
       this->repaint();
    }
 }
@@ -190,6 +197,7 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
    auto it = this->state.known_regions.find(&region);
    if (it != this->state.known_regions.end()) {
       it->second.presence = presence;
+      this->_recalc_cell_colors_affected_by(region);
       this->repaint();
    }
 }
@@ -237,9 +245,7 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
                this->_start_panning(event->globalPos());
                break;
             case Qt::MouseButton::LeftButton:
-               //
-               // TODO: handle drawing a region area
-               //
+               this->_draw_point_at(mapCoords<CoordinateSpace::Widget, CoordinateSpace::Canvas>(local_pos));
                break;
          }
       }
@@ -270,7 +276,7 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
          cell_rect.setWidth(cell_size - cell_border_width);
          cell_rect.setHeight(cell_size - cell_border_width);
 
-         painter.setBrush(_recalc_cell_color(cell));
+         painter.setBrush(cell.color);
          painter.drawRect(cell_rect);
       }
       //
@@ -296,9 +302,36 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
             }
          }
       }
-      //
-      // TODO: If user is editing an area, draw that area now
-      //
+      if (this->isDrawingArea()) {
+         {
+            QPen pen;
+            pen.setCosmetic(true);
+            pen.setColor(QColor(255, 0, 0));
+            pen.setWidth(3);
+            painter.setPen(pen);
+         }
+         const auto& area = this->state.area_being_drawn;
+         QPolygon    polygon;
+         for (const auto& point : area.points) {
+            polygon << mapCoords<CoordinateSpace::World, CoordinateSpace::Widget>({ point.x, point.y });
+         }
+         painter.drawPolyline(polygon);
+         //
+         // Draw vertices.
+         //
+         {
+            QPen pen;
+            pen.setCosmetic(true);
+            pen.setColor(QColor(255, 0, 0));
+            pen.setWidth(1);
+            painter.setPen(pen);
+            painter.setBrush(QColor(255, 192, 180));
+         }
+         for (size_t i = 0; i < area.points.size(); ++i) {
+            auto point = polygon.point(i);
+            painter.drawEllipse(point, 2, 2);
+         }
+      }
    }
    /*virtual*/ void RegionCanvasWidget::resizeEvent(QResizeEvent* event) /*override*/ {
       this->_recalc_layout();
@@ -334,7 +367,6 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
    void RegionCanvasWidget::_on_form_created(dovah::form_stub& stub) {
       if (stub.is_exterior_cell() && stub.get_parent_form() == this->state.worldspace) {
          this->_cache_cell(stub);
-         this->repaint();
          for (auto& cell_info : this->state.cells) {
             if (cell_info.stub != &stub)
                continue;
@@ -343,13 +375,16 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
                if (it == this->state.known_regions.end())
                   this->_cache_region(*region);
             }
+            this->_recalc_cell_color(cell_info);
          }
+         this->repaint();
          return;
       }
       if (stub.form_type == dovah::form_type::region) {
          auto* world = dovah::form_stub_helpers::get_unique_outbound_use<dovah::use_info::entry_flags::region::worldspace>(stub);
          if (world && world == this->state.worldspace) {
             this->_cache_region(stub);
+            this->_recalc_cell_colors_affected_by(stub);
             this->repaint();
             return;
          }
@@ -358,13 +393,20 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
    void RegionCanvasWidget::_on_form_modified(dovah::form_stub& stub) {
       if (stub.is_exterior_cell() && stub.get_parent_form() == this->state.worldspace) {
          this->_cache_cell(stub);
+         for (auto& info : this->state.cells) {
+            if (info.stub == &stub) {
+               this->_recalc_cell_color(info);
+               break;
+            }
+         }
          this->repaint();
          return;
       }
       if (stub.form_type == dovah::form_type::region) {
-         auto* world = dovah::form_stub_helpers::get_unique_outbound_use<dovah::use_info::entry_flags::region::worldspace>(stub);
+         auto* world = dovah::utils::get_region_worldspace(stub);
          if (world && world == this->state.worldspace) {
             this->_cache_region(stub);
+            this->_recalc_cell_colors_affected_by(stub);
             this->repaint();
             return;
          }
@@ -394,8 +436,10 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
          }
          for (auto& cell : this->state.cells) {
             auto it = std::find(cell.regions.begin(), cell.regions.end(), &stub);
-            if (it != cell.regions.end())
+            if (it != cell.regions.end()) {
                cell.regions.erase(it);
+               this->_recalc_cell_color(cell);
+            }
          }
          this->state.known_regions.erase(&stub);
          this->repaint();
@@ -515,9 +559,28 @@ void RegionCanvasWidget::_cache_region(KnownRegion& info) {
    }
 }
 
-QColor RegionCanvasWidget::_recalc_cell_color(KnownCell& cell) const {
+void RegionCanvasWidget::_recalc_all_cell_colors() {
+   for (auto& info : this->state.cells)
+      this->_recalc_cell_color(info);
+}
+void RegionCanvasWidget::_recalc_cell_colors_affected_by(dovah::form_stub& region) {
+   for (auto& info : this->state.cells) {
+      bool found = false;
+      for (auto* r : info.regions) {
+         if (r == &region) {
+            found = true;
+            break;
+         }
+      }
+      if (!found)
+         continue;
+      this->_recalc_cell_color(info);
+   }
+}
+void RegionCanvasWidget::_recalc_cell_color(KnownCell& cell) {
+   cell.color = QColor(255, 255, 255);
    if (!cell.regions.size())
-      return QColor(255, 255, 255);
+      return;
 
    uint32_t r     = 0;
    uint32_t g     = 0;
@@ -554,11 +617,11 @@ QColor RegionCanvasWidget::_recalc_cell_color(KnownCell& cell) const {
       ++count;
    }
    if (!count)
-      return QColor(255, 255, 255);
+      return;
    r = (float)r / count;
    g = (float)g / count;
    b = (float)b / count;
-   return QColor(r, g, b);
+   cell.color = QColor(r, g, b);
 }
 
 void RegionCanvasWidget::_recalc_layout() {
@@ -671,4 +734,42 @@ void RegionCanvasWidget::_stop_panning() {
       return;
    this->state.panning = false;
    this->unsetCursor();
+}
+
+void RegionCanvasWidget::_draw_point_at(const QPoint& canvas_pos) {
+   bool was_drawing_area = this->isDrawingArea();
+   bool close            = false;
+   if (was_drawing_area && this->state.area_being_drawn.points.size() >= 3) {
+      auto& first_point     = this->state.area_being_drawn.points[0];
+      auto  first_on_canvas = mapCoords<CoordinateSpace::World, CoordinateSpace::Canvas>({ first_point.x, first_point.y });
+      //
+      auto  diff     = QPointF(first_on_canvas) - canvas_pos;
+      auto  distance = std::sqrt(QPointF::dotProduct(diff, diff));
+      if (distance < QApplication::startDragDistance()) {
+         close = true;
+      }
+   }
+
+   if (close) {
+      if (this->state.area_being_drawn.would_become_self_intersecting(this->state.area_being_drawn.points[0])) {
+         QApplication::beep();
+         this->subwidgets.status_bar->showMessage(tr("Can't close the polygon. The polygon would become self-intersecting."), 3);
+      }
+      this->state.current_region.areas.push_back(std::move(this->state.area_being_drawn));
+      this->state.area_being_drawn.points.clear();
+      emit onRegionAreasEdited();
+   } else {
+      auto world_pos = mapCoords<CoordinateSpace::Canvas, CoordinateSpace::World>(canvas_pos);
+
+      RegionArea::point to_add;
+      to_add.x = world_pos.x();
+      to_add.y = world_pos.y();
+      if (this->state.area_being_drawn.would_become_self_intersecting(to_add)) {
+         QApplication::beep();
+         this->subwidgets.status_bar->showMessage(tr("Can't place a point there. The polygon would become self-intersecting."), 3);
+      } else {
+         this->state.area_being_drawn.points.push_back(to_add);
+      }
+   }
+   this->repaint();
 }

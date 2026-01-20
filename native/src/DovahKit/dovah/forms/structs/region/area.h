@@ -27,6 +27,9 @@ namespace dovah::loaded_forms::structs::region {
       public:
          constexpr bool is_self_intersecting() const;
          constexpr bool is_valid(bool forbid_points_and_lines) const;
+
+         // Assumes the area is not already self-intersecting.
+         constexpr bool would_become_self_intersecting(const point&) const;
    };
 }
 

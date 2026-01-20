@@ -81,6 +81,7 @@ class RegionCanvasWidget : public QWidget {
 
    protected:
       struct KnownCell {
+         QColor  color; // cached, based on region color reqs
          QString editor_id;
          struct {
             int32_t x = 0;
@@ -112,6 +113,7 @@ class RegionCanvasWidget : public QWidget {
             dovah::form_stub* stub = nullptr;
             std::vector<RegionArea> areas;
          } current_region;
+         RegionArea area_being_drawn;
 
          std::unordered_map<dovah::form_stub*, KnownRegion> known_regions;
 
@@ -141,6 +143,9 @@ class RegionCanvasWidget : public QWidget {
       constexpr const std::vector<RegionArea>& regionAreas() const noexcept { return this->state.current_region.areas; }
       constexpr dovah::form_stub* worldspace() const noexcept { return this->state.worldspace; }
 
+      constexpr bool isDrawingArea() const noexcept {
+         return !this->state.area_being_drawn.points.empty();
+      }
 
       #pragma region Coordinate space conversions
          template<CoordinateSpace src_space, CoordinateSpace dst_space> requires (src_space != dst_space)
@@ -198,7 +203,9 @@ class RegionCanvasWidget : public QWidget {
       void _cache_region(dovah::form_stub&);
       void _cache_region(KnownRegion&);
 
-      QColor _recalc_cell_color(KnownCell&) const;
+      void _recalc_all_cell_colors();
+      void _recalc_cell_colors_affected_by(dovah::form_stub& region);
+      void _recalc_cell_color(KnownCell&);
 
       void _recalc_layout();
       void _recalc_scrollbars(bool reset_scroll);
@@ -208,6 +215,8 @@ class RegionCanvasWidget : public QWidget {
 
       void _start_panning(QPoint pos);
       void _stop_panning();
+
+      void _draw_point_at(const QPoint& canvas_pos);
 };
 
 #include "./RegionCanvasWidget.inl"

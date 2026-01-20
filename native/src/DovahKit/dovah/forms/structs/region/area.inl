@@ -1,5 +1,7 @@
 #pragma once
 #include "./area.h"
+#include <limits>
+#include "../../../core_constants/exterior_cell_side_length.h"
 
 namespace dovah::loaded_forms::structs::region {
    namespace impl {
@@ -87,6 +89,26 @@ namespace dovah::loaded_forms::structs::region {
    constexpr bool area::is_valid(bool forbid_points_and_lines) const {
       if (!forbid_points_and_lines || this->points.size() >= 3) {
          return !this->is_self_intersecting();
+      }
+      return false;
+   }
+
+   constexpr bool area::would_become_self_intersecting(const point& next) const {
+      const size_t size = this->points.size();
+      if (size < 3)
+         return false;
+
+      //
+      // Test all existing edges A-B against the new edges C-D formed by 
+      // adding `next`. 
+      //
+      const auto& c = this->points[size - 1];
+      const auto& d = next;
+      for (size_t i = 0; i + 2 < size; ++i) {
+         const auto& a = this->points[i];
+         const auto& b = this->points[i + 1];
+         if (impl::are_poly_edges_self_intersecting(a, b, c, d))
+            return true;
       }
       return false;
    }
