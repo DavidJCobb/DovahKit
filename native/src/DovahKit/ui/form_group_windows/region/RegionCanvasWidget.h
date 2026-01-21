@@ -22,6 +22,10 @@ class RegionCanvasWidget : public QWidget {
       // i.e. minimum allowed size of a cell, in pixels, divided by default size
       static constexpr const float minimum_zoom = 4.0F / default_cell_size;
 
+      // if the worldspace is large enough to fill the canvas, show at least this many empty cells on 
+      // all sizes
+      static constexpr const int min_grid_margin = 5;
+
    public:
       struct RegionDataPresence {
          constexpr bool operator==(const RegionDataPresence&) const noexcept = default;

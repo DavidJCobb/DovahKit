@@ -709,15 +709,32 @@ void RegionCanvasWidget::_recalc_scrollbars(bool reset_scroll) {
    }
 
    QRect view_rect = this->state.view_size;
+
+   QSizeF canvas_size_in_grid_cells;
+   canvas_size_in_grid_cells.setWidth(this->state.view_size.width() / cell_size);
+   canvas_size_in_grid_cells.setHeight(this->state.view_size.height() / cell_size);
+
    QRect grid_rect;
    grid_rect.setBottomLeft(
       mapCoords<CoordinateSpace::Grid, CoordinateSpace::Canvas>(this->state.grid_extents.min) -
-      (grid_to_corner_offset * cell_size).toPoint()
+      (grid_to_corner_offset * cell_size).toPoint() +
+      QPoint(-min_grid_margin, min_grid_margin)
    );
    grid_rect.setTopRight(
       mapCoords<CoordinateSpace::Grid, CoordinateSpace::Canvas>(this->state.grid_extents.max) +
-      (grid_to_corner_offset * cell_size).toPoint()
+      (grid_to_corner_offset * cell_size).toPoint() +
+      QPoint(min_grid_margin, -min_grid_margin)
    );
+
+   auto grid_center = grid_rect.center();
+   if (grid_rect.width() < canvas_size_in_grid_cells.width()) {
+      grid_rect.setWidth(canvas_size_in_grid_cells.width());
+      grid_rect.moveCenter(grid_center);
+   }
+   if (grid_rect.height() < canvas_size_in_grid_cells.height()) {
+      grid_rect.setHeight(canvas_size_in_grid_cells.height());
+      grid_rect.moveCenter(grid_center);
+   }
 
    int x1 = grid_rect.left();
    int x2 = grid_rect.right() - view_rect.width();
