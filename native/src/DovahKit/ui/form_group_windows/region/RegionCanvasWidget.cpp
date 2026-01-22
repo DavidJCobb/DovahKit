@@ -109,6 +109,21 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
    this->repaint();
 }
 
+QPointF RegionCanvasWidget::scrollCenter() const noexcept {
+   auto* sbx = this->subwidgets.scrollbar_x;
+   auto* sby = this->subwidgets.scrollbar_y;
+   return QPointF{
+      sbx->value() + (float)sbx->pageStep() / 2,
+      sby->value() + (float)sby->pageStep() / 2,
+   };
+}
+QPoint RegionCanvasWidget::scrollPosition() const noexcept {
+   return QPoint{
+      this->subwidgets.scrollbar_x->value(),
+      this->subwidgets.scrollbar_y->value(),
+   };
+}
+
 #pragma region Coordinate space conversions
    namespace {
       constexpr const QPoint  world_axis_invert     = QPoint(1, -1);
@@ -171,10 +186,10 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
    }
 
    QPoint RegionCanvasWidget::mapCanvasToWidgetPos(const QPoint& src) const {
-      return src - QPoint(this->subwidgets.scrollbar_x->value(), this->subwidgets.scrollbar_y->value());
+      return src - this->scrollPosition();
    }
    QPoint RegionCanvasWidget::mapWidgetToCanvasPos(const QPoint& src) const {
-      return src + QPoint(this->subwidgets.scrollbar_x->value(), this->subwidgets.scrollbar_y->value());
+      return src + this->scrollPosition();
    }
 
    QPoint RegionCanvasWidget::mapWidgetToScreenPos(const QPoint& p) const {
@@ -246,7 +261,7 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
    }
    /*virtual*/ void RegionCanvasWidget::mousePressEvent(QMouseEvent* event) /*override*/ {
       auto local_pos    = event->localPos().toPoint();
-      bool is_on_canvas = this->state.view_size.contains(local_pos);
+      bool is_on_canvas = this->state.viewport.contains(local_pos);
       if (is_on_canvas) {
          switch (event->button()) {
             case Qt::MouseButton::MiddleButton:
@@ -266,9 +281,9 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
    /*virtual*/ void RegionCanvasWidget::paintEvent(QPaintEvent* event) /*override*/ {
       QPainter painter(this);
 
-      painter.setClipRect(this->state.view_size);
+      painter.setClipRect(this->state.viewport);
       painter.setBrush(QColor(0, 0, 0));
-      painter.drawRect(this->state.view_size);
+      painter.drawRect(this->state.viewport);
 
       const float cell_size = default_cell_size * this->state.zoom;
 
@@ -677,7 +692,7 @@ void RegionCanvasWidget::_recalc_layout() {
 
    inner.setWidth( inner.width()  - rect_sb_y.width());
    inner.setHeight(inner.height() - rect_sb_x.height() - rect_stat.height());
-   this->state.view_size = inner;
+   this->state.viewport = inner;
 
    rect_sb_x.translate(0, inner.height());
    rect_sb_x.setWidth(inner.width());
@@ -698,60 +713,56 @@ void RegionCanvasWidget::_recalc_scrollbars(bool reset_scroll) {
    //
    const float cell_size       = default_cell_size * this->state.zoom;
    const float cell_size_prior = default_cell_size * this->state.last_rendered_zoom;
-   //
-   float center_x = 0;
-   float center_y = 0;
+   
+   QPointF scroll_center = { 0, 0 };
    if (!reset_scroll) {
-      auto scroll_x = this->subwidgets.scrollbar_x->value() + (float)this->subwidgets.scrollbar_x->pageStep() / 2;
-      auto scroll_y = this->subwidgets.scrollbar_y->value() + (float)this->subwidgets.scrollbar_y->pageStep() / 2;
-      center_x = scroll_x / cell_size_prior;
-      center_y = scroll_y / cell_size_prior;
+      scroll_center = this->scrollCenter() / cell_size_prior;
    }
 
-   QRect view_rect = this->state.view_size;
+   const auto& viewport = this->state.viewport;
 
-   QSizeF canvas_size_in_grid_cells;
-   canvas_size_in_grid_cells.setWidth(this->state.view_size.width() / cell_size);
-   canvas_size_in_grid_cells.setHeight(this->state.view_size.height() / cell_size);
+   QRect worldspace_canvas_rect;
+   {
+      const auto corner_offset = (grid_to_corner_offset * cell_size).toPoint();
+      const auto margin_offset = QPoint(min_grid_margin, min_grid_margin);
+      worldspace_canvas_rect.setBottomLeft(
+         mapCoords<CoordinateSpace::Grid, CoordinateSpace::Canvas>(
+            this->state.grid_extents.min - margin_offset
+         ) - corner_offset
+      );
+      worldspace_canvas_rect.setTopRight(
+         mapCoords<CoordinateSpace::Grid, CoordinateSpace::Canvas>(
+            this->state.grid_extents.max + margin_offset
+         ) + corner_offset
+      );
 
-   QRect grid_rect;
-   grid_rect.setBottomLeft(
-      mapCoords<CoordinateSpace::Grid, CoordinateSpace::Canvas>(this->state.grid_extents.min) -
-      (grid_to_corner_offset * cell_size).toPoint() +
-      QPoint(-min_grid_margin, min_grid_margin)
-   );
-   grid_rect.setTopRight(
-      mapCoords<CoordinateSpace::Grid, CoordinateSpace::Canvas>(this->state.grid_extents.max) +
-      (grid_to_corner_offset * cell_size).toPoint() +
-      QPoint(min_grid_margin, -min_grid_margin)
-   );
-
-   auto grid_center = grid_rect.center();
-   if (grid_rect.width() < canvas_size_in_grid_cells.width()) {
-      grid_rect.setWidth(canvas_size_in_grid_cells.width());
-      grid_rect.moveCenter(grid_center);
+      auto grid_center = worldspace_canvas_rect.center();
+      if (worldspace_canvas_rect.width() < viewport.width()) {
+         worldspace_canvas_rect.setWidth(viewport.width());
+         worldspace_canvas_rect.moveCenter(grid_center);
+      }
+      if (worldspace_canvas_rect.height() < viewport.height()) {
+         worldspace_canvas_rect.setHeight(viewport.height());
+         worldspace_canvas_rect.moveCenter(grid_center);
+      }
    }
-   if (grid_rect.height() < canvas_size_in_grid_cells.height()) {
-      grid_rect.setHeight(canvas_size_in_grid_cells.height());
-      grid_rect.moveCenter(grid_center);
-   }
 
-   int x1 = grid_rect.left();
-   int x2 = grid_rect.right() - view_rect.width();
+   int x1 = worldspace_canvas_rect.left();
+   int x2 = worldspace_canvas_rect.right() - viewport.width();
    if (x2 < x1)
       x2 = x1;
    this->subwidgets.scrollbar_x->setRange(x1, x2);
-   this->subwidgets.scrollbar_x->setPageStep(view_rect.width());
+   this->subwidgets.scrollbar_x->setPageStep(viewport.width());
 
-   int y1 = grid_rect.top();
-   int y2 = grid_rect.bottom() - view_rect.height();
+   int y1 = worldspace_canvas_rect.top();
+   int y2 = worldspace_canvas_rect.bottom() - viewport.height();
    if (y2 < y1)
       y2 = y1;
    this->subwidgets.scrollbar_y->setRange(y1, y2);
-   this->subwidgets.scrollbar_y->setPageStep(view_rect.height());
+   this->subwidgets.scrollbar_y->setPageStep(viewport.height());
 
-   this->subwidgets.scrollbar_x->setValue(center_x * cell_size - view_rect.width()/2);
-   this->subwidgets.scrollbar_y->setValue(center_y * cell_size - view_rect.height()/2);
+   this->subwidgets.scrollbar_x->setValue(scroll_center.x() * cell_size - (float)viewport.width()  / 2);
+   this->subwidgets.scrollbar_y->setValue(scroll_center.y() * cell_size - (float)viewport.height() / 2);
    this->state.last_rendered_zoom = this->state.zoom;
 }
 

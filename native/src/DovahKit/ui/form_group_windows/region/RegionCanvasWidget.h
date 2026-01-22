@@ -61,7 +61,9 @@ class RegionCanvasWidget : public QWidget {
          // Pixel coordinates relative to the widget's bounds.
          Widget,
 
-         // Pixel coordinates within the drawn worldspace, irrespective of any scrolling.
+         // Pixel coordinates within the drawn worldspace, irrespective of any scrolling. 
+         // This coordinate space is centered on (0, 0), like grid and world coordinates; 
+         // the scrollbars can have negative minimums.
          Canvas,
 
          // Cell grid coordinates. Integer values. Converting these to any other space 
@@ -104,7 +106,7 @@ class RegionCanvasWidget : public QWidget {
       struct {
          float last_rendered_zoom = 1.0F;
          float zoom = 1.0F;
-         QRect view_size; // in pixels; local coordinates excluding scrollbar areas
+         QRect viewport; // in pixels; local coordinates excluding scrollbar areas
          struct {
             QPoint min; // grid Y is flipped, so this is the local bottom-left
             QPoint max; // grid Y is flipped, so this is the local top-right
@@ -150,6 +152,9 @@ class RegionCanvasWidget : public QWidget {
       constexpr bool isDrawingArea() const noexcept {
          return !this->state.area_being_drawn.points.empty();
       }
+
+      QPointF scrollCenter() const noexcept;
+      QPoint scrollPosition() const noexcept;
 
       #pragma region Coordinate space conversions
          template<CoordinateSpace src_space, CoordinateSpace dst_space> requires (src_space != dst_space)
