@@ -2,6 +2,7 @@
 #include <QApplication>
 #include <QPainter>
 #include <QWheelEvent>
+#include "helpers/bound_mem_fn.h"
 #include "dovah/core_constants/exterior_cell_side_length.h"
 #include "dovah/form_stubs/helpers/for_each_child_form.h"
 #include "dovah/form_stubs/helpers/for_each_inbound_use_with_flag.h"
@@ -13,6 +14,7 @@
 #include "dovah/use_info/entry_flags/region.h"
 #include "dovah/utils/get_region_worldspace.h"
 #include "editor/core.h"
+#include "editor/form_stub_meta_type.h"
 
 RegionCanvasWidget::RegionCanvasWidget(QWidget* parent) : QWidget(parent) {
    {
@@ -51,31 +53,59 @@ RegionCanvasWidget::RegionCanvasWidget(QWidget* parent) : QWidget(parent) {
    if (editor.has_data()) {
       this->_on_data_acquired();
    }
+
+   //
+   // Context menu
+   //
+   {
+      auto& menu     = this->context.menu;
+      auto& actions  = this->context.actions;
+      #pragma region Drawing-region-area actions
+         {
+            auto* action = actions.clear_last_point = new QAction(tr("Clear last point"), this);
+            QObject::connect(action, &QAction::triggered, this, cobb__bound_this_fn(_context_clear_last_point));
+         }
+         {
+            auto* action = actions.close_polygon = new QAction(tr("Close polygon"), this);
+            QObject::connect(action, &QAction::triggered, this, cobb__bound_this_fn(_context_finish_drawing_area));
+         }
+         {
+            auto* action = actions.cancel_drawing = new QAction(tr("Cancel drawing area"), this);
+            QObject::connect(action, &QAction::triggered, this, cobb__bound_this_fn(_context_cancel_drawing_area));
+         }
+      #pragma endregion
+      QObject::connect(&menu, &QMenu::aboutToShow, this, [this]() {
+         this->_build_context_menu();
+      });
+   }
 }
 RegionCanvasWidget::~RegionCanvasWidget() {
 }
 
-void RegionCanvasWidget::setRegion(const ui::types::regions::region& region) {
-   if (!region.stub)
-      return;
-   if (region.bounds.worldspace && region.bounds.worldspace != this->state.worldspace)
-      return;
-   this->state.current_region.stub  = region.stub;
-   this->state.current_region.areas = region.bounds.areas;
-   this->state.area_being_drawn = {};
-   //
-   // TODO: Update any extant context menus?
-   //
-   this->repaint(); // to render region areas
-}
-void RegionCanvasWidget::setNoRegion() {
-   this->state.current_region = {};
-   //
-   // TODO: Update any extant context menus?
-   //
-   this->repaint();
-}
-void RegionCanvasWidget::setWorldspace(dovah::form_stub* stub) {
+#pragma region Current world/region focus
+   void RegionCanvasWidget::setRegion(const ui::types::regions::region& region) {
+      if (!region.stub)
+         return;
+      if (region.bounds.worldspace && region.bounds.worldspace != this->state.worldspace)
+         return;
+      this->state.current_region.stub  = region.stub;
+      this->state.current_region.areas = region.bounds.areas;
+      this->state.area_being_drawn = {};
+
+      this->context.menu.hide();
+      this->context.menu.clear();
+
+      this->repaint(); // to render region areas
+   }
+   void RegionCanvasWidget::setNoRegion() {
+      this->state.current_region = {};
+
+      this->context.menu.hide();
+      this->context.menu.clear();
+
+      this->repaint();
+   }
+   void RegionCanvasWidget::setWorldspace(dovah::form_stub* stub) {
    if (!stub) {
       if (!this->state.worldspace)
          return;
@@ -85,6 +115,10 @@ void RegionCanvasWidget::setWorldspace(dovah::form_stub* stub) {
       this->state.current_region = {};
       this->state.area_being_drawn = {};
       this->state.grid_extents = {};
+
+      this->context.menu.hide();
+      this->context.menu.clear();
+
       this->update();
       return;
    }
@@ -100,28 +134,96 @@ void RegionCanvasWidget::setWorldspace(dovah::form_stub* stub) {
    this->_gather_regions();
    this->_gather_cells_from(*stub);
    this->_recalc_all_cell_colors();
+
+   this->context.menu.hide();
+   this->context.menu.clear();
+
    this->update();
 }
+#pragma endregion
+#pragma region Editing helpers
+   void RegionCanvasWidget::forceRegionColor(dovah::form_stub& region, QColor c) {
+      auto it = this->state.known_regions.find(&region);
+      if (it != this->state.known_regions.end()) {
+         it->second.color = c;
+         this->_recalc_cell_colors_affected_by(region);
+         this->repaint();
+      }
+   }
+   void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const RegionDataPresence& presence) {
+      auto it = this->state.known_regions.find(&region);
+      if (it != this->state.known_regions.end()) {
+         it->second.presence = presence;
+         this->_recalc_cell_colors_affected_by(region);
+         this->repaint();
+      }
+   }
+#pragma endregion
+#pragma region Widget state
+   QPointF RegionCanvasWidget::scrollCenter() const noexcept {
+      auto* sbx = this->subwidgets.scrollbar_x;
+      auto* sby = this->subwidgets.scrollbar_y;
+      return QPointF{
+         sbx->value() + (float)sbx->pageStep() / 2,
+         sby->value() + (float)sby->pageStep() / 2,
+      };
+   }
+   QPoint RegionCanvasWidget::scrollPosition() const noexcept {
+      return QPoint{
+         this->subwidgets.scrollbar_x->value(),
+         this->subwidgets.scrollbar_y->value(),
+      };
+   }
+#pragma endregion
+#pragma region Worldspace contents accessors
+   std::vector<size_t> RegionCanvasWidget::areasUnderPoint(const QPoint& local_pos) const noexcept {
+      auto world_pos = mapCoords<CoordinateSpace::Widget, CoordinateSpace::World>(local_pos);
+   
+      std::vector<size_t> out;
+
+      auto& areas = this->state.current_region.areas;
+      for (size_t i = 0; i < areas.size(); ++i) {
+         QPolygonF poly;
+         for (auto& point : areas[i].points)
+            poly << QPointF(point.x, point.y);
+
+         if (poly.containsPoint(world_pos, Qt::FillRule::OddEvenFill)) {
+            out.push_back(i);
+         }
+      }
+
+      return out;
+   }
+   std::vector<std::pair<dovah::form_stub*, QString>> RegionCanvasWidget::regionsUnderPoint(const QPoint& local_pos) const noexcept {
+      std::vector<std::pair<dovah::form_stub*, QString>> out;
+
+      auto grid_pos = mapCoords<CoordinateSpace::Widget, CoordinateSpace::Grid>(local_pos);
+      for (auto& cell : this->state.cells) {
+         if (cell.grid.x != grid_pos.x())
+            continue;
+         if (cell.grid.y != grid_pos.y())
+            continue;
+
+         for (auto* region : cell.regions) {
+            out.emplace_back(
+               region,
+               QString::fromStdString(region->editorID)
+            );
+         }
+         std::sort(out.begin(), out.end(), [](const auto& a, const auto& b) {
+            return a.second.localeAwareCompare(b.second) < 0;
+         });
+         break;
+      }
+
+      return out;
+   }
+#pragma endregion
 
 void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req) {
    this->state.color_requirements = req;
    this->_recalc_all_cell_colors();
    this->repaint();
-}
-
-QPointF RegionCanvasWidget::scrollCenter() const noexcept {
-   auto* sbx = this->subwidgets.scrollbar_x;
-   auto* sby = this->subwidgets.scrollbar_y;
-   return QPointF{
-      sbx->value() + (float)sbx->pageStep() / 2,
-      sby->value() + (float)sby->pageStep() / 2,
-   };
-}
-QPoint RegionCanvasWidget::scrollPosition() const noexcept {
-   return QPoint{
-      this->subwidgets.scrollbar_x->value(),
-      this->subwidgets.scrollbar_y->value(),
-   };
 }
 
 #pragma region Coordinate space conversions
@@ -200,23 +302,6 @@ QPoint RegionCanvasWidget::scrollPosition() const noexcept {
    }
 #pragma endregion
 
-void RegionCanvasWidget::forceRegionColor(dovah::form_stub& region, QColor c) {
-   auto it = this->state.known_regions.find(&region);
-   if (it != this->state.known_regions.end()) {
-      it->second.color = c;
-      this->_recalc_cell_colors_affected_by(region);
-      this->repaint();
-   }
-}
-void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const RegionDataPresence& presence) {
-   auto it = this->state.known_regions.find(&region);
-   if (it != this->state.known_regions.end()) {
-      it->second.presence = presence;
-      this->_recalc_cell_colors_affected_by(region);
-      this->repaint();
-   }
-}
-
 #pragma region Widget API
    /*virtual*/ QSize RegionCanvasWidget::minimumSizeHint() const /*override*/ {
       this->subwidgets.scrollbar_x->ensurePolished();
@@ -231,9 +316,8 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
    /*virtual*/ void RegionCanvasWidget::contextMenuEvent(QContextMenuEvent* event) /*override*/ {
       this->_stop_panning();
       this->_clear_status_panels();
-      //
-      // TODO
-      //
+
+      this->context.menu.popup(event->globalPos());
    }
    /*virtual*/ void RegionCanvasWidget::leaveEvent(QEvent* event) /*override*/ {
       this->_clear_status_panels();
@@ -386,6 +470,10 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
       this->state.known_regions.clear();
       this->state.current_region = {};
       this->state.worldspace = nullptr;
+
+      this->context.menu.hide();
+      this->context.menu.clear();
+
       this->repaint();
    }
    void RegionCanvasWidget::_on_form_created(dovah::form_stub& stub) {
@@ -496,100 +584,108 @@ void RegionCanvasWidget::forceRegionDataPresence(dovah::form_stub& region, const
             }
          }
          this->state.known_regions.erase(&stub);
+         for (auto* action : this->context.menu.actions()) {
+            auto data = action->property("region");
+            if (data.isValid()) {
+               action->setProperty("region", {});
+               this->context.menu.removeAction(action);
+            }
+         }
          this->repaint();
          return;
       }
    }
 #pragma endregion
 
-void RegionCanvasWidget::_gather_cells_from(dovah::form_stub& worldspace) {
-   this->state.grid_extents = {};
-   this->state.cells.clear();
-   auto* persistent_cell = dovah::form_stub_helpers::get_worldspace_persistent_cell(worldspace);
-   dovah::form_stub_helpers::for_each_child_form(worldspace, [this, persistent_cell](dovah::form_stub& cell) {
-      if (cell.form_type != dovah::form_type::cell)
-         return;
-      if (persistent_cell == &cell)
-         return;
+#pragma region Worldspace contents
+   void RegionCanvasWidget::_gather_cells_from(dovah::form_stub& worldspace) {
+      this->state.grid_extents = {};
+      this->state.cells.clear();
+      auto* persistent_cell = dovah::form_stub_helpers::get_worldspace_persistent_cell(worldspace);
+      dovah::form_stub_helpers::for_each_child_form(worldspace, [this, persistent_cell](dovah::form_stub& cell) {
+         if (cell.form_type != dovah::form_type::cell)
+            return;
+         if (persistent_cell == &cell)
+            return;
+         auto& info = this->state.cells.emplace_back();
+         info.stub = &cell;
+         this->_cache_cell(info);
+
+         auto& min_x = this->state.grid_extents.min.rx();
+         auto& min_y = this->state.grid_extents.min.ry();
+         auto& max_x = this->state.grid_extents.max.rx();
+         auto& max_y = this->state.grid_extents.max.ry();
+         min_x = std::min(min_x, info.grid.x);
+         min_y = std::min(min_y, info.grid.y);
+         max_x = std::max(max_x, info.grid.x);
+         max_y = std::max(max_y, info.grid.y);
+      });
+      this->_recalc_scrollbars(true);
+      this->repaint();
+   }
+   void RegionCanvasWidget::_gather_regions() {
+      this->state.known_regions.clear();
+      if (this->state.worldspace) {
+         dovah::form_stub_helpers::for_each_inbound_use_with_flag<dovah::use_info::entry_flags::region::worldspace>(
+            *this->state.worldspace,
+            [this](dovah::form_stub& region) {
+               this->_cache_region(region);
+            }
+         );
+      }
+   }
+   void RegionCanvasWidget::_cache_cell(dovah::form_stub& cell) {
+      for (auto& info : this->state.cells) {
+         if (info.stub == &cell) {
+            this->_cache_cell(info);
+            return;
+         }
+      }
       auto& info = this->state.cells.emplace_back();
       info.stub = &cell;
       this->_cache_cell(info);
-
-      auto& min_x = this->state.grid_extents.min.rx();
-      auto& min_y = this->state.grid_extents.min.ry();
-      auto& max_x = this->state.grid_extents.max.rx();
-      auto& max_y = this->state.grid_extents.max.ry();
-      min_x = std::min(min_x, info.grid.x);
-      min_y = std::min(min_y, info.grid.y);
-      max_x = std::max(max_x, info.grid.x);
-      max_y = std::max(max_y, info.grid.y);
-   });
-   this->_recalc_scrollbars(true);
-   this->repaint();
-}
-void RegionCanvasWidget::_gather_regions() {
-   this->state.known_regions.clear();
-   if (this->state.worldspace) {
-      dovah::form_stub_helpers::for_each_inbound_use_with_flag<dovah::use_info::entry_flags::region::worldspace>(
-         *this->state.worldspace,
-         [this](dovah::form_stub& region) {
-            this->_cache_region(region);
-         }
-      );
    }
-}
-void RegionCanvasWidget::_cache_cell(dovah::form_stub& cell) {
-   for (auto& info : this->state.cells) {
-      if (info.stub == &cell) {
-         this->_cache_cell(info);
-         return;
+   void RegionCanvasWidget::_cache_cell(KnownCell& info) {
+      auto& cell = *info.stub;
+      cell.get_grid_coordinates(info.grid.x, info.grid.y);
+      info.editor_id = QString::fromStdString(info.stub->editorID);
+
+      info.regions.clear();
+      auto loaded_ptr = cell.load().ptr_cast<dovah::loaded_forms::Cell>();
+      if (loaded_ptr) {
+         auto* extra = loaded_ptr->extra_data.get<dovah::loaded_forms::components::extra_data_types::cell_region_list>();
+         if (extra) {
+            auto& list = info.regions;
+            for (auto& use : extra->regions) {
+               auto* region = use.get_form_stub();
+               if (!region || region->form_type != dovah::form_type::region)
+                  continue;
+               list.push_back(region);
+            }
+            auto last = std::unique(list.begin(), list.end());
+            list.erase(last, list.end());
+         }
+      }
+      //
+      // Sometimes, REGN/WNAM isn't set but the REGN is still used in a given worldspace, and 
+      // this can only be determined via examination of the cells it touches.
+      //
+      for (auto* region : info.regions) {
+         auto it = this->state.known_regions.find(region);
+         if (it != this->state.known_regions.end())
+            continue;
+         auto* world = dovah::utils::get_region_worldspace(*region);
+         if (world && world == this->state.worldspace)
+            this->_cache_region(*region);
       }
    }
-   auto& info = this->state.cells.emplace_back();
-   info.stub = &cell;
-   this->_cache_cell(info);
-}
-void RegionCanvasWidget::_cache_cell(KnownCell& info) {
-   auto& cell = *info.stub;
-   cell.get_grid_coordinates(info.grid.x, info.grid.y);
-   info.editor_id = QString::fromStdString(info.stub->editorID);
-
-   info.regions.clear();
-   auto loaded_ptr = cell.load().ptr_cast<dovah::loaded_forms::Cell>();
-   if (loaded_ptr) {
-      auto* extra = loaded_ptr->extra_data.get<dovah::loaded_forms::components::extra_data_types::cell_region_list>();
-      if (extra) {
-         auto& list = info.regions;
-         for (auto& use : extra->regions) {
-            auto* region = use.get_form_stub();
-            if (!region || region->form_type != dovah::form_type::region)
-               continue;
-            list.push_back(region);
-         }
-         auto last = std::unique(list.begin(), list.end());
-         list.erase(last, list.end());
-      }
+   void RegionCanvasWidget::_cache_region(dovah::form_stub& region) {
+      assert(region.form_type == dovah::form_type::region);
+      auto& info = this->state.known_regions[&region];
+      info.stub = &region;
+      this->_cache_region(info);
    }
-   //
-   // Sometimes, REGN/WNAM isn't set but the REGN is still used in a given worldspace, and 
-   // this can only be determined via examination of the cells it touches.
-   //
-   for (auto* region : info.regions) {
-      auto it = this->state.known_regions.find(region);
-      if (it != this->state.known_regions.end())
-         continue;
-      auto* world = dovah::utils::get_region_worldspace(*region);
-      if (world && world == this->state.worldspace)
-         this->_cache_region(*region);
-   }
-}
-void RegionCanvasWidget::_cache_region(dovah::form_stub& region) {
-   assert(region.form_type == dovah::form_type::region);
-   auto& info = this->state.known_regions[&region];
-   info.stub = &region;
-   this->_cache_region(info);
-}
-void RegionCanvasWidget::_cache_region(KnownRegion& info) {
+   void RegionCanvasWidget::_cache_region(KnownRegion& info) {
    info.editor_id = QString::fromStdString(info.stub->editorID);
 
    info.presence = {};
@@ -612,6 +708,7 @@ void RegionCanvasWidget::_cache_region(KnownRegion& info) {
       }
    }
 }
+#pragma endregion
 
 void RegionCanvasWidget::_recalc_all_cell_colors() {
    for (auto& info : this->state.cells)
@@ -821,31 +918,36 @@ void RegionCanvasWidget::_draw_point_at(const QPoint& canvas_pos) {
    if (this->state.current_region.stub == nullptr) {
       return;
    }
+   auto& area = this->state.area_being_drawn;
    if (_can_close_polygon_at(canvas_pos)) {
-      if (this->state.area_being_drawn.would_become_self_intersecting(this->state.area_being_drawn.points[0])) {
+      if (area.would_become_self_intersecting(area.points[0])) {
          QApplication::beep();
          this->subwidgets.status_bar->showMessage(tr("Can't close the polygon. The polygon would become self-intersecting."), 3);
          return;
       }
-      this->state.current_region.areas.push_back(std::move(this->state.area_being_drawn));
-      this->state.area_being_drawn.points.clear();
-      this->_update_cursor();
-      emit onRegionAreasEdited();
+      this->_close_polygon_being_drawn();
    } else {
       auto world_pos = mapCoords<CoordinateSpace::Canvas, CoordinateSpace::World>(canvas_pos);
 
       RegionArea::point to_add;
       to_add.x = world_pos.x();
       to_add.y = world_pos.y();
-      if (this->state.area_being_drawn.would_become_self_intersecting(to_add)) {
+      if (area.would_become_self_intersecting(to_add)) {
          QApplication::beep();
          this->subwidgets.status_bar->showMessage(tr("Can't place a point there. The polygon would become self-intersecting."), 3);
       } else {
-         this->state.area_being_drawn.points.push_back(to_add);
+         area.points.push_back(to_add);
          this->_update_cursor();
+         this->repaint();
       }
    }
+}
+void RegionCanvasWidget::_close_polygon_being_drawn() {
+   this->state.current_region.areas.push_back(std::move(this->state.area_being_drawn));
+   this->state.area_being_drawn.points.clear();
+   this->_update_cursor();
    this->repaint();
+   emit onRegionAreasEdited();
 }
 
 void RegionCanvasWidget::_update_cursor() {
@@ -863,3 +965,88 @@ void RegionCanvasWidget::_update_cursor() {
       this->unsetCursor();
    }
 }
+
+#pragma region Context menu actions
+   void RegionCanvasWidget::_build_context_menu() {
+      auto& menu    = this->context.menu;
+      auto& actions = this->context.actions;
+
+      menu.clear();
+      if (this->isDrawingArea()) {
+         menu.addAction(actions.clear_last_point);
+         menu.addAction(actions.close_polygon);
+         menu.addAction(actions.cancel_drawing);
+
+         bool can_delete = this->state.area_being_drawn.points.size() >= 2;
+         bool can_close  = this->state.area_being_drawn.points.size() >= 3;
+         actions.clear_last_point->setEnabled(can_delete);
+         actions.close_polygon->setEnabled(can_close);
+      } else {
+         auto local_pos = mapFromGlobal(QCursor::pos());
+
+         std::vector<size_t> areas;
+         auto regions = this->regionsUnderPoint(local_pos);
+         if (this->region()) {
+            areas = this->areasUnderPoint(local_pos);
+         }
+
+         for (size_t area_index : areas) {
+            auto* action = new QAction(tr("Delete area %1").arg(area_index), &menu);
+            action->setProperty("area-index", (int)area_index);
+            menu.addAction(action);
+            QObject::connect(action, &QAction::triggered, this, [this, action]() {
+               auto index = action->property("area-index").toInt();
+               this->_context_delete_region_area(index);
+            });
+         }
+         if (!areas.empty() && !regions.empty()) {
+            menu.addSeparator();
+         }
+         for (auto& item : regions) {
+            auto* action = new QAction(tr("Switch to %1").arg(item.second), &menu);
+            action->setProperty("region", QVariant::fromValue(item.first));
+            if (item.first == this->region()) {
+               action->setEnabled(false);
+            }
+            menu.addAction(action);
+            QObject::connect(action, &QAction::triggered, this, [this, action]() {
+               auto stub = action->property("region").value<dovah::form_stub*>();
+               emit this->onRegionChangeRequested(stub);
+            });
+         }
+      }
+   }
+
+   #pragma region Region area actions
+      void RegionCanvasWidget::_context_delete_region_area(size_t i) {
+         auto& areas = this->state.current_region.areas;
+         if (i >= areas.size())
+            return;
+         areas.erase(areas.begin() + i);
+         this->repaint();
+      }
+   #pragma endregion
+   #pragma region Drawing-new-area actions
+      void RegionCanvasWidget::_context_clear_last_point() {
+         auto& area = this->state.area_being_drawn;
+         if (area.points.size() < 2)
+            return;
+         area.points.pop_back();
+         this->_update_cursor();
+         this->repaint();
+      }
+      void RegionCanvasWidget::_context_cancel_drawing_area() {
+         this->state.area_being_drawn = {};
+         this->_update_cursor();
+         this->repaint();
+      }
+      void RegionCanvasWidget::_context_finish_drawing_area() {
+         auto& area = this->state.area_being_drawn;
+         if (area.points.size() < 3)
+            return;
+         if (area.would_become_self_intersecting(area.points[0]))
+            return;
+         this->_close_polygon_being_drawn();
+      }
+   #pragma endregion
+#pragma endregion

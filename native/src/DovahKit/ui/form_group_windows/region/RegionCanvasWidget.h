@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include <QLabel>
+#include <QMenu>
 #include <QScrollBar>
 #include <QStatusBar>
 #include <QWidget>
@@ -104,6 +105,14 @@ class RegionCanvasWidget : public QWidget {
       };
 
       struct {
+         QMenu menu;
+         struct {
+            QAction* clear_last_point = nullptr;
+            QAction* cancel_drawing   = nullptr;
+            QAction* close_polygon    = nullptr;
+         } actions;
+      } context;
+      struct {
          float last_rendered_zoom = 1.0F;
          float zoom = 1.0F;
          QRect viewport; // in pixels; local coordinates excluding scrollbar areas
@@ -139,22 +148,32 @@ class RegionCanvasWidget : public QWidget {
       } subwidgets;
 
    public:
-      void setRegion(const ui::types::regions::region&);
-      void setNoRegion();
-      void setWorldspace(dovah::form_stub*);
-      //
+      #pragma region Current world/region focus
+         constexpr dovah::form_stub* region() const noexcept { return this->state.current_region.stub; }
+         void setRegion(const ui::types::regions::region&);
+         void setNoRegion();
+
+         constexpr dovah::form_stub* worldspace() const noexcept { return this->state.worldspace; }
+         void setWorldspace(dovah::form_stub*);
+      #pragma endregion
+      #pragma region Editing helpers
+         void forceRegionColor(dovah::form_stub&, QColor);
+         void forceRegionDataPresence(dovah::form_stub&, const RegionDataPresence&);
+      #pragma endregion
+      #pragma region Widget state accessors
+         constexpr bool isDrawingArea() const noexcept {
+            return !this->state.area_being_drawn.points.empty();
+         }
+         QPointF scrollCenter() const noexcept;
+         QPoint scrollPosition() const noexcept;
+      #pragma endregion
+      #pragma region Worldspace contents accessors
+         [[nodiscard]] std::vector<size_t> areasUnderPoint(const QPoint& local_pos) const noexcept;
+         constexpr const std::vector<RegionArea>& regionAreas() const noexcept { return this->state.current_region.areas; }
+         [[nodiscard]] std::vector<std::pair<dovah::form_stub*, QString>> regionsUnderPoint(const QPoint& local_pos) const noexcept;
+      #pragma endregion
+      
       void setColorRequirements(const RegionColorRequirements&);
-
-      constexpr dovah::form_stub* region() const noexcept { return this->state.current_region.stub; }
-      constexpr const std::vector<RegionArea>& regionAreas() const noexcept { return this->state.current_region.areas; }
-      constexpr dovah::form_stub* worldspace() const noexcept { return this->state.worldspace; }
-
-      constexpr bool isDrawingArea() const noexcept {
-         return !this->state.area_being_drawn.points.empty();
-      }
-
-      QPointF scrollCenter() const noexcept;
-      QPoint scrollPosition() const noexcept;
 
       #pragma region Coordinate space conversions
          template<CoordinateSpace src_space, CoordinateSpace dst_space> requires (src_space != dst_space)
@@ -174,9 +193,6 @@ class RegionCanvasWidget : public QWidget {
          QPoint mapWidgetToScreenPos(const QPoint&) const;
          QPoint mapScreenToWidgetPos(const QPoint&) const;
       #pragma endregion
-
-      void forceRegionColor(dovah::form_stub&, QColor);
-      void forceRegionDataPresence(dovah::form_stub&, const RegionDataPresence&);
 
       #pragma region Widget API
          virtual QSize minimumSizeHint() const override;
@@ -205,12 +221,14 @@ class RegionCanvasWidget : public QWidget {
          void _on_form_deleted(dovah::form_stub&);
       #pragma endregion
 
-      void _gather_cells_from(dovah::form_stub& worldspace);
-      void _gather_regions();
-      void _cache_cell(dovah::form_stub&);
-      void _cache_cell(KnownCell&);
-      void _cache_region(dovah::form_stub&);
-      void _cache_region(KnownRegion&);
+      #pragma region Worldspace contents
+         void _gather_cells_from(dovah::form_stub& worldspace);
+         void _gather_regions();
+         void _cache_cell(dovah::form_stub&);
+         void _cache_cell(KnownCell&);
+         void _cache_region(dovah::form_stub&);
+         void _cache_region(KnownRegion&);
+      #pragma endregion
 
       void _recalc_all_cell_colors();
       void _recalc_cell_colors_affected_by(dovah::form_stub& region);
@@ -227,8 +245,22 @@ class RegionCanvasWidget : public QWidget {
 
       bool _can_close_polygon_at(const QPoint& canvas_pos) const;
       void _draw_point_at(const QPoint& canvas_pos);
+      void _close_polygon_being_drawn();
 
       void _update_cursor();
+
+      #pragma region Context menu actions
+         void _build_context_menu();
+
+         #pragma region Region area actions
+            void _context_delete_region_area(size_t i);
+         #pragma endregion
+         #pragma region Drawing-new-area actions
+            void _context_clear_last_point();
+            void _context_cancel_drawing_area();
+            void _context_finish_drawing_area();
+         #pragma endregion
+      #pragma endregion
 };
 
 #include "./RegionCanvasWidget.inl"

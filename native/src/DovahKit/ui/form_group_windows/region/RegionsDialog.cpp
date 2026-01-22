@@ -49,6 +49,9 @@ RegionsDialog::RegionsDialog(QWidget* parent) :
          this->_current_region_edited = true;
          this->_commit_pending_changes();
       });
+      QObject::connect(this->canvas, &RegionCanvasWidget::onRegionChangeRequested, this, [this](dovah::form_stub* region) {
+         this->_set_selected_region(region);
+      });
       //
       // Checkboxes for showing region colors in the grid:
       //
