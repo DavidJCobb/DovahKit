@@ -86,6 +86,7 @@ RegionCanvasWidget::~RegionCanvasWidget() {
          return;
       if (region.bounds.worldspace && region.bounds.worldspace != this->state.worldspace)
          return;
+      this->_cancel_moving_area();
       this->state.current_region.stub  = region.stub;
       this->state.current_region.areas = region.bounds.areas;
       this->state.area_being_drawn = {};
@@ -96,6 +97,7 @@ RegionCanvasWidget::~RegionCanvasWidget() {
       this->repaint(); // to render region areas
    }
    void RegionCanvasWidget::setNoRegion() {
+      this->_cancel_moving_area();
       this->state.current_region = {};
 
       this->context.menu.hide();
@@ -114,6 +116,7 @@ RegionCanvasWidget::~RegionCanvasWidget() {
       this->state.area_being_drawn = {};
       this->state.grid_extents = {};
 
+      this->_cancel_moving_area();
       this->context.menu.hide();
       this->context.menu.clear();
 
@@ -133,6 +136,7 @@ RegionCanvasWidget::~RegionCanvasWidget() {
    this->_gather_cells_from(*stub);
    this->_recalc_all_cell_colors();
 
+   this->_cancel_moving_area();
    this->context.menu.hide();
    this->context.menu.clear();
 
@@ -321,15 +325,24 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
       this->_clear_status_panels();
    }
    /*virtual*/ void RegionCanvasWidget::mouseMoveEvent(QMouseEvent* event) /*override*/ {
+      QPoint delta;
+      if (this->state.panning || this->isMovingArea()) {
+         auto pos = event->globalPos();
+         delta = pos - this->state.last_mouse_pos;
+         this->state.last_mouse_pos = pos;
+      }
       if (this->state.panning) {
-         auto pos   = event->globalPos();
-         auto delta = pos - this->state.panning_from;
-         this->state.panning_from = pos;
-
          auto* sbx = this->subwidgets.scrollbar_x;
          auto* sby = this->subwidgets.scrollbar_y;
          sbx->setValue(sbx->value() + delta.x());
          sby->setValue(sby->value() + delta.y());
+      }
+      if (this->isMovingArea()) {
+         auto world_delta = QPointF(delta) * (world_units_per_unscaled_pixel / this->state.zoom);
+         world_delta = _apply_world_axis_invert(world_delta);
+
+         this->state.moving_area_delta += world_delta;
+         this->repaint();
       }
       auto local_pos = event->localPos().toPoint();
       if (!this->state.panning && this->isDrawingArea()) {
@@ -350,7 +363,18 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
                this->_start_panning(event->globalPos());
                break;
             case Qt::MouseButton::LeftButton:
-               this->_draw_point_at(mapCoords<CoordinateSpace::Widget, CoordinateSpace::Canvas>(local_pos));
+               if (this->isMovingArea()) {
+                  this->_finish_moving_area();
+                  event->accept();
+               } else {
+                  this->_draw_point_at(mapCoords<CoordinateSpace::Widget, CoordinateSpace::Canvas>(local_pos));
+               }
+               break;
+            case Qt::MouseButton::RightButton:
+               if (this->isMovingArea()) {
+                  this->_cancel_moving_area();
+                  event->accept();
+               }
                break;
          }
       }
@@ -398,10 +422,16 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
                pen.setWidth(3);
                painter.setPen(pen);
             }
-            for (const auto& area : areas) {
+            for (size_t i = 0; i < areas.size(); ++i) {
+               const auto& area = areas[i];
+
                QPolygon polygon;
                for (const auto& point : area.points) {
-                  polygon << mapCoords<CoordinateSpace::World, CoordinateSpace::Widget>({ point.x, point.y });
+                  QPointF world_point = QPointF(point.x, point.y);
+                  if (this->state.moving_region_area == i) {
+                     world_point += this->state.moving_area_delta;
+                  }
+                  polygon << mapCoords<CoordinateSpace::World, CoordinateSpace::Widget>(world_point);
                }
                painter.drawPolygon(polygon);
             }
@@ -573,6 +603,7 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
       if (stub.form_type == dovah::form_type::region) {
          if (this->state.current_region.stub == &stub) {
             this->state.current_region = {};
+            this->_cancel_moving_area();
          }
          for (auto& cell : this->state.cells) {
             auto it = std::find(cell.regions.begin(), cell.regions.end(), &stub);
@@ -887,8 +918,8 @@ void RegionCanvasWidget::_update_status_panels(const QPoint& canvas_pos) {
 void RegionCanvasWidget::_start_panning(QPoint pos) {
    if (this->state.panning)
       return;
-   this->state.panning      = true;
-   this->state.panning_from = pos;
+   this->state.panning        = true;
+   this->state.last_mouse_pos = pos;
    this->_update_cursor();
 }
 void RegionCanvasWidget::_stop_panning() {
@@ -948,8 +979,60 @@ void RegionCanvasWidget::_close_polygon_being_drawn() {
    emit onRegionAreasEdited();
 }
 
+void RegionCanvasWidget::_start_moving_area(size_t which) {
+   if (this->isDrawingArea())
+      return;
+   if (this->isMovingArea())
+      this->_cancel_moving_area();
+
+   if (!this->region())
+      return;
+   if (which >= this->state.current_region.areas.size())
+      return;
+
+   this->state.moving_region_area = which;
+   this->state.moving_area_delta  = QPointF(0, 0);
+   this->state.last_mouse_pos     = QCursor::pos();
+   this->_update_cursor();
+
+   this->subwidgets.status_bar->showMessage(
+      tr("Left-click to finish; right-click to cancel.")
+   );
+}
+void RegionCanvasWidget::_cancel_moving_area() {
+   if (!this->isMovingArea())
+      return;
+   this->state.moving_region_area = index_of_none;
+   this->_update_cursor();
+   this->repaint();
+
+   this->subwidgets.status_bar->clearMessage();
+}
+void RegionCanvasWidget::_finish_moving_area() {
+   if (!this->isMovingArea() || !this->region())
+      return;
+   auto which = this->state.moving_region_area;
+   if (which >= this->state.current_region.areas.size())
+      return;
+   auto& area = this->state.current_region.areas[which];
+   for (auto& point : area.points) {
+      point.x += this->state.moving_area_delta.x();
+      point.y += this->state.moving_area_delta.y();
+   }
+
+   this->state.moving_region_area = index_of_none;
+   this->_update_cursor();
+   this->repaint();
+
+   this->subwidgets.status_bar->clearMessage();
+
+   emit this->onRegionAreasEdited();
+}
+
 void RegionCanvasWidget::_update_cursor() {
-   if (this->state.panning) {
+   if (this->isMovingArea()) {
+      this->setCursor(Qt::CursorShape::SizeAllCursor);
+   } else if (this->state.panning) {
       this->setCursor(Qt::CursorShape::ClosedHandCursor);
    } else if (this->isDrawingArea()) {
       auto local_pos  = mapFromGlobal(QCursor::pos());
@@ -987,15 +1070,27 @@ void RegionCanvasWidget::_update_cursor() {
          if (this->region()) {
             areas = this->areasUnderPoint(local_pos);
          }
-
-         for (size_t area_index : areas) {
-            auto* action = new QAction(tr("Delete area %1").arg(area_index), &menu);
-            action->setProperty("area-index", (int)area_index);
-            menu.addAction(action);
-            QObject::connect(action, &QAction::triggered, this, [this, action]() {
-               auto index = action->property("area-index").toInt();
-               this->_context_delete_region_area(index);
-            });
+         
+         if (!areas.empty()) {
+            for (size_t area_index : areas) {
+               auto* action = new QAction(tr("Move area %1").arg(area_index), &menu);
+               action->setProperty("area-index", (int)area_index);
+               menu.addAction(action);
+               QObject::connect(action, &QAction::triggered, this, [this, action]() {
+                  auto index = action->property("area-index").toInt();
+                  this->_start_moving_area(index);
+               });
+            }
+            menu.addSeparator();
+            for (size_t area_index : areas) {
+               auto* action = new QAction(tr("Delete area %1").arg(area_index), &menu);
+               action->setProperty("area-index", (int)area_index);
+               menu.addAction(action);
+               QObject::connect(action, &QAction::triggered, this, [this, action]() {
+                  auto index = action->property("area-index").toInt();
+                  this->_context_delete_region_area(index);
+               });
+            }
          }
          if (!areas.empty() && !regions.empty()) {
             menu.addSeparator();

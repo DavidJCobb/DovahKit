@@ -82,6 +82,8 @@ class RegionCanvasWidget : public QWidget {
          QPoint
       >;
 
+      static constexpr const size_t index_of_none = (size_t)-1;
+
    public:
       RegionCanvasWidget(QWidget* parent = nullptr);
       ~RegionCanvasWidget();
@@ -134,8 +136,12 @@ class RegionCanvasWidget : public QWidget {
 
          RegionColorRequirements color_requirements;
 
-         bool   panning = false; // with middle mouse button
-         QPoint panning_from;
+         QPoint last_mouse_pos; // global position. for panning, and for moving region areas.
+
+         bool panning = false; // with middle mouse button
+
+         size_t  moving_region_area = index_of_none;
+         QPointF moving_area_delta; // distance the area has been moved, measured in world coordinates
       } state;
       struct {
          QScrollBar* scrollbar_x = nullptr;
@@ -163,6 +169,9 @@ class RegionCanvasWidget : public QWidget {
       #pragma region Widget state accessors
          constexpr bool isDrawingArea() const noexcept {
             return !this->state.area_being_drawn.points.empty();
+         }
+         constexpr bool isMovingArea() const noexcept {
+            return this->state.moving_region_area != index_of_none;
          }
          QPointF scrollCenter() const noexcept;
          QPoint scrollPosition() const noexcept;
@@ -249,6 +258,10 @@ class RegionCanvasWidget : public QWidget {
       bool _can_close_polygon_at(const QPoint& canvas_pos) const;
       void _draw_point_at(const QPoint& canvas_pos);
       void _close_polygon_being_drawn();
+
+      void _start_moving_area(size_t which);
+      void _cancel_moving_area();
+      void _finish_moving_area();
 
       void _update_cursor();
 

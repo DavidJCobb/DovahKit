@@ -25,6 +25,8 @@ In addition to the purpose above, regions can also be used to hold music and amb
 
   In other words: to know what worldspace a region belongs to, you must check `REGN/WNAM` and, if that's null or not a worldspace form, you must then check every `CELL/XCLR` (from every record, winning or losing) that refers to the region in question. Given the earliest-loading exterior cell record (i.e. a cell that has a parent worldspace record) that contains such an `XCLR`, grab the cell's parent worldspace.
 
+  * If a region lacks a valid `WNAM`, has defined areas, and isn't referenced by any cells' `CELL/XCLR`, then the region is invalid. The Creation Kit (mis)handles this by displaying the region as being available in every worldspace, and (when the region is selected) displaying its areas in every worldspace. This behavior may seem insensible, but it has practical value: you as a hypothetical content author can look at the region in every worldspace, see which worldspace makes the most sense for the region based on the region areas, and then make any change to the region areas to "commit" it to that worldspace.
+
 ### Historical information
 
 * Prior to Oblivion, tufts of grass seen in the game world were Static forms. Oblivion introduced Grass forms, which define pieces of instanced geometry that can sprout out from LandTextures automatically. At some point during Oblivion's development, however, Grass was originally developed for use as a base form. There are remnants of this in two places: region forms can define a mapping of LandTexture to Grass forms; and the `REFR` loader has a specific warning if grass is set as a base form, saying that it's no longer allowed.
