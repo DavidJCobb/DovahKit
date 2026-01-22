@@ -74,9 +74,7 @@ RegionCanvasWidget::RegionCanvasWidget(QWidget* parent) : QWidget(parent) {
             QObject::connect(action, &QAction::triggered, this, cobb__bound_this_fn(_context_cancel_drawing_area));
          }
       #pragma endregion
-      QObject::connect(&menu, &QMenu::aboutToShow, this, [this]() {
-         this->_build_context_menu();
-      });
+      QObject::connect(&menu, &QMenu::aboutToShow, this, cobb__bound_this_fn(_build_context_menu));
    }
 }
 RegionCanvasWidget::~RegionCanvasWidget() {
@@ -708,72 +706,72 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
       }
    }
 }
-#pragma endregion
 
-void RegionCanvasWidget::_recalc_all_cell_colors() {
-   for (auto& info : this->state.cells)
-      this->_recalc_cell_color(info);
-}
-void RegionCanvasWidget::_recalc_cell_colors_affected_by(dovah::form_stub& region) {
-   for (auto& info : this->state.cells) {
-      bool found = false;
-      for (auto* r : info.regions) {
-         if (r == &region) {
-            found = true;
-            break;
+   void RegionCanvasWidget::_recalc_all_cell_colors() {
+      for (auto& info : this->state.cells)
+         this->_recalc_cell_color(info);
+   }
+   void RegionCanvasWidget::_recalc_cell_colors_affected_by(dovah::form_stub& region) {
+      for (auto& info : this->state.cells) {
+         bool found = false;
+         for (auto* r : info.regions) {
+            if (r == &region) {
+               found = true;
+               break;
+            }
          }
+         if (!found)
+            continue;
+         this->_recalc_cell_color(info);
       }
-      if (!found)
-         continue;
-      this->_recalc_cell_color(info);
    }
-}
-void RegionCanvasWidget::_recalc_cell_color(KnownCell& cell) {
-   cell.color = QColor(255, 255, 255);
-   if (!cell.regions.size())
-      return;
+   void RegionCanvasWidget::_recalc_cell_color(KnownCell& cell) {
+      cell.color = QColor(255, 255, 255);
+      if (!cell.regions.size())
+         return;
 
-   uint32_t r     = 0;
-   uint32_t g     = 0;
-   uint32_t b     = 0;
-   size_t   count = 0;
-   for (auto* region_stub : cell.regions) {
-      if (!region_stub)
-         continue;
-      auto it = this->state.known_regions.find(region_stub);
-      if (it == this->state.known_regions.end())
-         continue;
-      auto& region_info = it->second;
-      if (region_info.color == QColor(0, 0, 0)) // black = no color
-         continue;
+      uint32_t r     = 0;
+      uint32_t g     = 0;
+      uint32_t b     = 0;
+      size_t   count = 0;
+      for (auto* region_stub : cell.regions) {
+         if (!region_stub)
+            continue;
+         auto it = this->state.known_regions.find(region_stub);
+         if (it == this->state.known_regions.end())
+            continue;
+         auto& region_info = it->second;
+         if (region_info.color == QColor(0, 0, 0)) // black = no color
+            continue;
 
-      bool any = false;
-      if (
-         (this->state.color_requirements.audio     && region_info.presence.audio)
-      || (this->state.color_requirements.grass     && region_info.presence.grass)
-      || (this->state.color_requirements.landscape && region_info.presence.landscape)
-      || (this->state.color_requirements.map       && region_info.presence.map)
-      || (this->state.color_requirements.objects   && region_info.presence.objects)
-      || (this->state.color_requirements.weather   && region_info.presence.weather)
-      || (this->state.color_requirements.empty     && region_info.presence.none())
-      ) {
-         any = true;
+         bool any = false;
+         if (
+            (this->state.color_requirements.audio     && region_info.presence.audio)
+         || (this->state.color_requirements.grass     && region_info.presence.grass)
+         || (this->state.color_requirements.landscape && region_info.presence.landscape)
+         || (this->state.color_requirements.map       && region_info.presence.map)
+         || (this->state.color_requirements.objects   && region_info.presence.objects)
+         || (this->state.color_requirements.weather   && region_info.presence.weather)
+         || (this->state.color_requirements.empty     && region_info.presence.none())
+         ) {
+            any = true;
+         }
+         if (!any)
+            continue;
+
+         r += region_info.color.red();
+         g += region_info.color.green();
+         b += region_info.color.blue();
+         ++count;
       }
-      if (!any)
-         continue;
-
-      r += region_info.color.red();
-      g += region_info.color.green();
-      b += region_info.color.blue();
-      ++count;
+      if (!count)
+         return;
+      r = (float)r / count;
+      g = (float)g / count;
+      b = (float)b / count;
+      cell.color = QColor(r, g, b);
    }
-   if (!count)
-      return;
-   r = (float)r / count;
-   g = (float)g / count;
-   b = (float)b / count;
-   cell.color = QColor(r, g, b);
-}
+#pragma endregion
 
 void RegionCanvasWidget::_recalc_layout() {
    QRect inner = this->rect();
@@ -966,7 +964,7 @@ void RegionCanvasWidget::_update_cursor() {
    }
 }
 
-#pragma region Context menu actions
+#pragma region Context menu
    void RegionCanvasWidget::_build_context_menu() {
       auto& menu    = this->context.menu;
       auto& actions = this->context.actions;

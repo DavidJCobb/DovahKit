@@ -2,6 +2,7 @@
 #include <cmath>
 #include <QInputDialog>
 #include <QMessageBox>
+#include "helpers/bound_mem_fn.h"
 #include "dovah/core_constants/exterior_cell_side_length.h"
 #include "dovah/exceptions/form_creation_failed.h"
 #include "dovah/forms/components/extra_data/types/c/cell_region_list.h"
@@ -11,6 +12,7 @@
 #include "dovah/form_stubs/helpers/get_unique_outbound_use.h"
 #include "dovah/form_stubs/helpers/get_worldspace_cell_by_grid.h"
 #include "dovah/use_info/entry_flags/region.h"
+#include "dovah/utils/get_region_worldspace.h"
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
 #include "editor/helpers/form_identifiers_to_string.h"
@@ -109,6 +111,27 @@ RegionsDialog::RegionsDialog(QWidget* parent) :
             _set_selected_region(stub);
          }
       });
+
+      {
+         auto& menu    = this->context.region_list.menu;
+         auto& actions = this->context.region_list.actions;
+         ui::set_custom_context_menu(*view, menu);
+         {
+            auto* action = actions.create_form = new QAction(tr("New"), this);
+            menu.addAction(action);
+            QObject::connect(action, &QAction::triggered, this, cobb__bound_this_fn(_create_region));
+         }
+         {
+            auto* action = actions.delete_form = new QAction(tr("Delete"), this);
+            menu.addAction(action);
+            QObject::connect(action, &QAction::triggered, this, cobb__bound_this_fn(_delete_selected_region));
+         }
+         {
+            auto* action = actions.use_info = new QAction(tr("Use Info"), this);
+            menu.addAction(action);
+            QObject::connect(action, &QAction::triggered, this, cobb__bound_this_fn(_show_region_use_info));
+         }
+      }
    }
 
    ui::set_unsigned_range<float>(this->ui.edgeFalloff);
@@ -264,6 +287,7 @@ RegionsDialog::RegionsDialog(QWidget* parent) :
       });
       QObject::connect(this->ui.colorPresent, &QCheckBox::toggled, this, [this](bool checked) {
          this->_current_region_edited = true;
+         this->ui.color->setEnabled(checked);
          this->_push_region_color_to_canvas();
       });
       QObject::connect(this->ui.edgeFalloff, qOverload<double>(&QDoubleSpinBox::valueChanged), this, [this]() { this->_current_region_edited = true; });
@@ -280,8 +304,9 @@ void RegionsDialog::focusRegion(dovah::form_stub& region) {
    if (region.form_type != dovah::form_type::region)
       return;
 
-   auto* world = dovah::form_stub_helpers::get_unique_outbound_use<dovah::use_info::entry_flags::region::worldspace>(region);
-   this->ui.currentWorld->setFormStub(world);
+   auto* world = dovah::utils::get_region_worldspace(region);
+   if (world && world != this->ui.currentWorld->formStub())
+      this->ui.currentWorld->setFormStub(world);
 
    auto region_qmi = this->models.available_regions->regionIndex(region);
    this->ui.regions->scrollTo(region_qmi);
@@ -683,12 +708,12 @@ void RegionsDialog::_pull_selected_region_to_ui() {
    };
 
    auto& data = this->_current_region;
+   this->ui.editorID->setEnabled(!!data.stub);
+   this->ui.colorPresent->setEnabled(!!data.stub);
+   this->ui.edgeFalloff->setEnabled(!!data.stub);
    if (!data.stub) {
       this->canvas->setNoRegion();
       this->ui.editorID->setText("");
-      //
-      // TODO: Clear fields
-      //
       return;
    }
 
@@ -714,16 +739,45 @@ void RegionsDialog::_pull_selected_region_to_ui() {
    #pragma endregion
 
    this->canvas->setRegion(data);
+}
 
-   this->_set_form_ui_enable_state(true);
+void RegionsDialog::_create_region() {
+   auto editor_id = QInputDialog::getText(this, tr("Create region"), tr("Editor ID:"), QLineEdit::Normal, {});
+   if (editor_id.isEmpty())
+      return;
+
+   dovah::form_stub* region = nullptr;
+   {
+      auto request = DovahKitCore::get().request_form_creation(dovah::form_type::region);
+      request.editorID = editor_id.toStdString();
+      try {
+         region = request.commit();
+      } catch (const dovah::exceptions::form_creation_failed& ex) {
+         _report_region_create_error(ex);
+         return;
+      }
+   }
+   if (!region)
+      return;
+   this->focusRegion(*region);
 }
-void RegionsDialog::_push_selected_region_to_form() {
-   //
-   // TODO
-   //
+void RegionsDialog::_delete_selected_region() {
+   auto sel = this->ui.regions->selectionModel()->selectedRows();
+   if (sel.empty())
+      return;
+   auto  qmi  = sel[0];
+   auto* stub = qmi.data(RegionsAvailableInWorldModel::FormStubRole).value<dovah::form_stub*>();
+   if (!stub || stub->form_type != dovah::form_type::region)
+      return;
+   DovahKitCore::get().delete_form(*stub, this);
 }
-void RegionsDialog::_set_form_ui_enable_state(bool v) {
-   //
-   // TODO
-   //
+void RegionsDialog::_show_region_use_info() {
+   auto sel = this->ui.regions->selectionModel()->selectedRows();
+   if (sel.empty())
+      return;
+   auto  qmi  = sel[0];
+   auto* stub = qmi.data(RegionsAvailableInWorldModel::FormStubRole).value<dovah::form_stub*>();
+   if (!stub || stub->form_type != dovah::form_type::region)
+      return;
+   open_use_info_dialog_for_form(*stub);
 }

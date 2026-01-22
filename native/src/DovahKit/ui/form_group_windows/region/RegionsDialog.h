@@ -50,6 +50,16 @@ class RegionsDialog : public QDialog {
          RegionsAvailableInWorldModel* available_regions = nullptr;
       } models;
       RegionCanvasWidget* canvas = nullptr;
+      struct {
+         struct {
+            QMenu menu;
+            struct {
+               QAction* create_form = nullptr;
+               QAction* delete_form = nullptr;
+               QAction* use_info    = nullptr;
+            } actions;
+         } region_list;
+      } context;
 
       #pragma region Event handlers
          virtual void closeEvent(QCloseEvent*) override;
@@ -69,6 +79,9 @@ class RegionsDialog : public QDialog {
       void _update_region_canvas_color_reqs();
 
       void _pull_selected_region_to_ui();
-      void _push_selected_region_to_form();
-      void _set_form_ui_enable_state(bool);
+
+      // Context menu handlers
+      void _create_region();
+      void _delete_selected_region();
+      void _show_region_use_info();
 };

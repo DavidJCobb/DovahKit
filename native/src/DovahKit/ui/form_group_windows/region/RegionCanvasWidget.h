@@ -169,7 +169,10 @@ class RegionCanvasWidget : public QWidget {
       #pragma endregion
       #pragma region Worldspace contents accessors
          [[nodiscard]] std::vector<size_t> areasUnderPoint(const QPoint& local_pos) const noexcept;
+
          constexpr const std::vector<RegionArea>& regionAreas() const noexcept { return this->state.current_region.areas; }
+
+         // Queries by cell, not by region area; it's inexact, but to an acceptable degree.
          [[nodiscard]] std::vector<std::pair<dovah::form_stub*, QString>> regionsUnderPoint(const QPoint& local_pos) const noexcept;
       #pragma endregion
       
@@ -228,11 +231,11 @@ class RegionCanvasWidget : public QWidget {
          void _cache_cell(KnownCell&);
          void _cache_region(dovah::form_stub&);
          void _cache_region(KnownRegion&);
-      #pragma endregion
 
-      void _recalc_all_cell_colors();
-      void _recalc_cell_colors_affected_by(dovah::form_stub& region);
-      void _recalc_cell_color(KnownCell&);
+         void _recalc_all_cell_colors();
+         void _recalc_cell_colors_affected_by(dovah::form_stub& region);
+         void _recalc_cell_color(KnownCell&);
+      #pragma endregion
 
       void _recalc_layout();
       void _recalc_scrollbars(bool reset_scroll);
@@ -249,7 +252,7 @@ class RegionCanvasWidget : public QWidget {
 
       void _update_cursor();
 
-      #pragma region Context menu actions
+      #pragma region Context menu
          void _build_context_menu();
 
          #pragma region Region area actions
