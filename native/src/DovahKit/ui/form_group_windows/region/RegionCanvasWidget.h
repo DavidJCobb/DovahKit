@@ -189,6 +189,11 @@ class RegionCanvasWidget : public QWidget {
          // When the mouse cursor is over a context menu item pertaining to a specific 
          // region area, we want to highlight that area.
          size_t region_area_to_highlight = index_of_none;
+
+         // Some mouse interactions use right-clicking to perform specific functions (e.g. 
+         // cancelling moving a region), in which case that right-click shouldn't trigger 
+         // the context menu to open.
+         bool suppress_next_context_menu_click = false;
       } state;
       Style styles;
       struct {

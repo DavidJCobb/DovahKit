@@ -386,6 +386,17 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
 #pragma endregion
 #pragma region Events
    /*virtual*/ void RegionCanvasWidget::contextMenuEvent(QContextMenuEvent* event) /*override*/ {
+      if (this->state.suppress_next_context_menu_click) {
+         //
+         // A brief implementation note: Qt triggers the context menu event 
+         // after whatever mouse event caused it. Depending on platform this 
+         // may be mousePressEvent or mouseReleaseEvent. As such, we set this 
+         // flag in mousePressEvent.
+         //
+         this->state.suppress_next_context_menu_click = false;
+         return;
+      }
+
       this->_stop_panning();
       this->_clear_status_panels();
 
@@ -442,6 +453,7 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
                break;
             case Qt::MouseButton::RightButton:
                if (this->isMovingArea()) {
+                  this->state.suppress_next_context_menu_click = true;
                   this->_cancel_moving_area();
                   event->accept();
                }
