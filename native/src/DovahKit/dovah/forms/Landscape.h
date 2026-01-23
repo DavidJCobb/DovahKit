@@ -124,6 +124,7 @@ namespace dovah::loaded_forms {
 
          float minimum_height() const;
          float maximum_height() const;
+         float height_at(float x, float y) const; // x- and y-coordinates are relative to the cell
 
          void recalc_normals();
          void recalc_normals_to(std::array<cobb::vector3<float>, total_vertex_count>&) const;

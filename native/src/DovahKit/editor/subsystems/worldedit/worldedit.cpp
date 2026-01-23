@@ -19,6 +19,7 @@
 #include "dovah/forms/components/extra_data.h"
 #include "dovah/forms/components/model.h"
 #include "dovah/utils/world_coordinate_to_grid_coordinate.h"
+#include "dovah/utils/world_position_to_grid_coordinates.h"
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/subsystems/assets.h"
@@ -1104,6 +1105,50 @@ namespace dovahkit::subsystems::worldedit {
       QObject::connect(&view, &DKVulkanView::focusLost, this, [this]() {
          this->cancel_pick_ref();
       });
+   }
+   void core::view_world_at(dovah::form_stub& stub, float x, float y) {
+      auto* cell_or_world = &stub;
+      switch (stub.form_type) {
+         case dovah::form_type::cell:
+            if (stub.is_exterior_cell()) {
+               cell_or_world = stub.get_parent_form();
+            }
+            break;
+         case dovah::form_type::worldspace:
+            break;
+         default:
+            return;
+      }
+      if (cell_or_world->form_type == dovah::form_type::worldspace) {
+         auto [grid_x, grid_y] = dovah::world_position_to_grid_coordinates(x, y);
+         this->_set_current_area_impl(cell_or_world, grid_x, grid_y);
+      } else {
+         this->set_current_area(cell_or_world);
+      }
+
+      if (!this->target_view)
+         return;
+      auto* sr = this->target_view->surfaceRenderer();
+      if (!sr)
+         return;
+      auto& loaded = this->loaded_cells.at(0, 0);
+      if (!loaded.stub)
+         return;
+      glm::vec3 pos = { x, y, 0 };
+      if (loaded.land) {
+         float x_in_cell = fmod(x, dovah::core_constants::exterior_cell_side_length);
+         float y_in_cell = fmod(y, dovah::core_constants::exterior_cell_side_length);
+         if (x_in_cell < 0)
+            x_in_cell += dovah::core_constants::exterior_cell_side_length;
+         if (y_in_cell < 0)
+            y_in_cell += dovah::core_constants::exterior_cell_side_length;
+         float height = loaded.land->height_at(x_in_cell, y_in_cell);
+
+         pos.z = height + 512;
+      } else {
+         pos.z = sr->scene.camera.position().z;
+      }
+      sr->scene.camera.set_coordinates(pos, glm::vec3{ 90 * cobb::degrees_to_radians_mult, 0, 0 });
    }
 
    void core::view_input_poll_handler(DKVulkanView& view) {

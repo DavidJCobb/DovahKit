@@ -194,6 +194,7 @@ namespace dovahkit::subsystems::worldedit {
          void set_current_area(dovah::form_stub* cell_or_world);
          void set_current_area(dovah::form_stub* world, int32_t grid_x, int32_t grid_y);
          void set_target_view(DKVulkanView&);
+         void view_world_at(dovah::form_stub& cell_or_world, float x, float y);
 
          void view_input_poll_handler(DKVulkanView&);
 

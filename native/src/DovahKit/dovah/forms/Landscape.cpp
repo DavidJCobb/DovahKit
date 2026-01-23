@@ -51,6 +51,34 @@ namespace dovah::loaded_forms {
             max = f;
       return max;
    }
+   float Landscape::height_at(float x, float y) const {
+      uint8_t vx = x / vertex_distance;
+      uint8_t vy = y / vertex_distance;
+
+      float delta;
+      {
+         float dx = (x / vertex_distance) - vx;
+         float dy = (y / vertex_distance) - vy;
+         delta = std::sqrt(dx * dx + dy * dy);
+      }
+
+      float a = this->heightmap.heights.item(vx, vy);
+      if (abs(delta) < 0.00001F) {
+         return a;
+      }
+
+      float b;
+      {
+         uint8_t vx_b = vx + 1;
+         uint8_t vy_b = vy + 1;
+         if (vx_b >= vertices_per_side)
+            vx_b = vx;
+         if (vy_b >= vertices_per_side)
+            vy_b = vy;
+         b = this->heightmap.heights.item(vx_b, vy_b);
+      }
+      return a + (b - a) / delta;
+   }
 
    void Landscape::recalc_normals() {
       this->recalc_normals_to(this->heightmap.normals.list());

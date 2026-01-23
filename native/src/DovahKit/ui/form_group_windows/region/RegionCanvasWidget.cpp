@@ -15,6 +15,7 @@
 #include "dovah/utils/get_region_worldspace.h"
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
+#include "editor/subsystems/worldedit/core.h"
 
 namespace {
    static constexpr const char* context_menu_item_region_area_index_property = "area-index";
@@ -122,6 +123,12 @@ RegionCanvasWidget::RegionCanvasWidget(QWidget* parent) : QWidget(parent) {
          {
             auto* action = actions.cancel_drawing = new QAction(tr("Cancel drawing area"), this);
             QObject::connect(action, &QAction::triggered, this, cobb__bound_this_fn(_context_cancel_drawing_area));
+         }
+      #pragma endregion
+      #pragma region Other actions
+         {
+            auto* action = actions.view_world_here = new QAction(tr("View world here"), this);
+            QObject::connect(action, &QAction::triggered, this, cobb__bound_this_fn(_context_view_world_here));
          }
       #pragma endregion
       QObject::connect(&menu, &QMenu::aboutToShow, this, cobb__bound_this_fn(_build_context_menu));
@@ -400,7 +407,9 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
       this->_stop_panning();
       this->_clear_status_panels();
 
-      this->context.menu.popup(event->globalPos());
+      auto global_pos = event->globalPos();
+      this->state.context_menu_opened_from = mapCoords<CoordinateSpace::Screen, CoordinateSpace::Canvas>(global_pos);
+      this->context.menu.popup(global_pos);
    }
    /*virtual*/ void RegionCanvasWidget::leaveEvent(QEvent* event) /*override*/ {
       this->_clear_status_panels();
@@ -1193,6 +1202,10 @@ void RegionCanvasWidget::_update_cursor() {
             });
          }
       }
+
+      if (!menu.actions().empty())
+         menu.addSeparator();
+      menu.addAction(actions.view_world_here);
    }
 
    #pragma region Region area actions
@@ -1227,4 +1240,16 @@ void RegionCanvasWidget::_update_cursor() {
          this->_close_polygon_being_drawn();
       }
    #pragma endregion
+
+   void RegionCanvasWidget::_context_view_world_here() {
+      auto* worldspace = this->worldspace();
+      if (!worldspace)
+         return;
+      auto world_pos = mapCoords<CoordinateSpace::Canvas, CoordinateSpace::World>(this->state.context_menu_opened_from);
+      dovahkit::subsystems::worldedit::core::get().view_world_at(
+         *worldspace,
+         world_pos.x(),
+         world_pos.y()
+      );
+   }
 #pragma endregion

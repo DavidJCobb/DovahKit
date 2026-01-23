@@ -155,6 +155,8 @@ class RegionCanvasWidget : public QWidget {
             QAction* clear_last_point = nullptr;
             QAction* cancel_drawing   = nullptr;
             QAction* close_polygon    = nullptr;
+
+            QAction* view_world_here = nullptr;
          } actions;
       } context;
       struct {
@@ -194,6 +196,7 @@ class RegionCanvasWidget : public QWidget {
          // cancelling moving a region), in which case that right-click shouldn't trigger 
          // the context menu to open.
          bool suppress_next_context_menu_click = false;
+         QPoint context_menu_opened_from; // canvas position
       } state;
       Style styles;
       struct {
@@ -341,6 +344,8 @@ class RegionCanvasWidget : public QWidget {
             void _context_cancel_drawing_area();
             void _context_finish_drawing_area();
          #pragma endregion
+
+         void _context_view_world_here();
       #pragma endregion
 };
 
