@@ -16,6 +16,10 @@
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
 
+namespace {
+   static constexpr const char* context_menu_item_region_area_index_property = "area-index";
+}
+
 RegionCanvasWidget::RegionCanvasWidget(QWidget* parent) : QWidget(parent) {
    {
       auto* scrollbar = this->subwidgets.scrollbar_x = new QScrollBar(this);
@@ -43,6 +47,52 @@ RegionCanvasWidget::RegionCanvasWidget(QWidget* parent) : QWidget(parent) {
       }
    }
    this->setMouseTracking(true); // for status bar coordinate updates
+
+   #pragma region Default styles
+      this->styles.grid.background = QColor(0, 0, 0);
+      {
+         QPen border_pen;
+         border_pen.setCosmetic(true);
+         border_pen.setWidth(3);
+
+         QPen vertex_outline_pen;
+         vertex_outline_pen.setCosmetic(true);
+         vertex_outline_pen.setWidth(1);
+
+         this->styles.region_area = decltype(Style::region_area){
+            .normal = {
+               .fill = QColor(0, 0, 0, 0),
+               .line = border_pen,
+            },
+            .highlight = {
+               .fill = QColor(255, 255, 255, 64),
+               .line = border_pen,
+            },
+            .being_drawn = {
+               .area = {
+                  .fill = QColor(0, 0, 0, 0),
+                  .line = border_pen,
+               },
+               .first_vertex  = {
+                  .fill   = QColor(255, 0, 0),
+                  .line   = vertex_outline_pen,
+                  .radius = 3,
+               },
+               .latest_vertex = {
+                  .fill   = QColor(255, 192, 180),
+                  .line   = vertex_outline_pen,
+                  .radius = 3,
+               },
+            },
+         };
+         this->styles.region_area.normal.line.setColor(QColor(128, 0, 0));
+         this->styles.region_area.highlight.line.setColor(QColor(255, 0, 0));
+         this->styles.region_area.being_drawn.area.line.setColor(QColor(255, 0, 0));
+
+         this->styles.region_area.being_drawn.first_vertex.line.setColor(QColor(255, 0, 0));
+         this->styles.region_area.being_drawn.latest_vertex.line.setColor(QColor(255, 0, 0));
+      }
+   #pragma endregion
 
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent, this, &RegionCanvasWidget::_on_data_abandoned);
@@ -75,6 +125,26 @@ RegionCanvasWidget::RegionCanvasWidget(QWidget* parent) : QWidget(parent) {
          }
       #pragma endregion
       QObject::connect(&menu, &QMenu::aboutToShow, this, cobb__bound_this_fn(_build_context_menu));
+      QObject::connect(&menu, &QMenu::hovered, this, [this](QAction* action) {
+         size_t& stored_index  = this->state.region_area_to_highlight;
+         size_t  current_index = index_of_none;
+         if (action) {
+            auto prop = action->property(context_menu_item_region_area_index_property);
+            if (prop.isValid())
+               current_index = prop.toInt();
+         }
+         if (stored_index != current_index) {
+            stored_index = current_index;
+            this->repaint();
+         }
+      });
+      QObject::connect(&menu, &QMenu::aboutToHide, this, [this]() {
+         auto& index = this->state.region_area_to_highlight;
+         if (index != index_of_none) {
+            index = index_of_none;
+            this->repaint();
+         }
+      });
    }
 }
 RegionCanvasWidget::~RegionCanvasWidget() {
@@ -388,25 +458,28 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
       QPainter painter(this);
 
       painter.setClipRect(this->state.viewport);
-      painter.setBrush(QColor(0, 0, 0));
+      painter.setBrush(this->styles.grid.background);
       painter.drawRect(this->state.viewport);
 
-      const float cell_size = default_cell_size * this->state.zoom;
+      if (!this->state.cells.empty()) {
+         const float  cell_size = default_cell_size * this->state.zoom;
+         const QPoint cell_px_offset = QPoint(
+            (cell_border_width / 2) - (cell_size / 2),
+            (cell_border_width / 2) - (cell_size / 2)
+         );
+         const QSize cell_px_size = QSize(
+            cell_size - cell_border_width,
+            cell_size - cell_border_width
+         );
+         for (auto& cell : this->state.cells) {
+            QPoint cell_centerpoint = mapCoords<CoordinateSpace::Grid, CoordinateSpace::Widget>({ cell.grid.x, cell.grid.y });
+            QRect  cell_rect;
+            cell_rect.setTopLeft(cell_centerpoint + cell_px_offset);
+            cell_rect.setSize(cell_px_size);
 
-      int scroll_x_px = this->subwidgets.scrollbar_x->value();
-      int scroll_y_px = this->subwidgets.scrollbar_y->value();
-      int scroll_x_gr = scroll_x_px / cell_size;
-      int scroll_y_gr = scroll_y_px / cell_size;
-      for (auto& cell : this->state.cells) {
-         QPoint cell_centerpoint = mapCoords<CoordinateSpace::Grid, CoordinateSpace::Widget>({ cell.grid.x, cell.grid.y });
-         QRect  cell_rect;
-         cell_rect.setX(cell_centerpoint.x() - (cell_size / 2) + (cell_border_width / 2));
-         cell_rect.setY(cell_centerpoint.y() - (cell_size / 2) + (cell_border_width / 2));
-         cell_rect.setWidth(cell_size - cell_border_width);
-         cell_rect.setHeight(cell_size - cell_border_width);
-
-         painter.setBrush(cell.color);
-         painter.drawRect(cell_rect);
+            painter.setBrush(cell.color);
+            painter.drawRect(cell_rect);
+         }
       }
       //
       // Draw the current region's areas.
@@ -414,37 +487,42 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
       {
          auto& areas = this->state.current_region.areas;
          if (!areas.empty()) {
-            painter.setBrush(QColor(0, 0, 0, 0));
-            {
-               QPen pen;
-               pen.setCosmetic(true);
-               pen.setColor(QColor(128, 0, 0));
-               pen.setWidth(3);
-               painter.setPen(pen);
-            }
-            for (size_t i = 0; i < areas.size(); ++i) {
-               const auto& area = areas[i];
-
+            auto _draw_poly = [this, &painter](size_t area_index, const RegionArea& area) {
                QPolygon polygon;
                for (const auto& point : area.points) {
                   QPointF world_point = QPointF(point.x, point.y);
-                  if (this->state.moving_region_area == i) {
+                  if (area_index == this->state.moving_region_area) {
                      world_point += this->state.moving_area_delta;
                   }
                   polygon << mapCoords<CoordinateSpace::World, CoordinateSpace::Widget>(world_point);
                }
                painter.drawPolygon(polygon);
+            };
+            //
+            // Draw non-highlighted areas first; then the highlighted area separately. 
+            // This minimizes the number of brush/pen switches done while drawing the 
+            // overall region.
+            //
+            painter.setBrush(this->styles.region_area.normal.fill);
+            painter.setPen(this->styles.region_area.normal.line);
+            for (size_t i = 0; i < areas.size(); ++i) {
+               if (i == this->state.region_area_to_highlight)
+                  continue;
+               _draw_poly(i, areas[i]);
+            }
+            if (this->state.region_area_to_highlight < areas.size()) {
+               painter.setBrush(this->styles.region_area.highlight.fill);
+               painter.setPen(this->styles.region_area.highlight.line);
+
+               auto i = this->state.region_area_to_highlight;
+               _draw_poly(i, areas[i]);
             }
          }
       }
       if (this->isDrawingArea()) {
-         {
-            QPen pen;
-            pen.setCosmetic(true);
-            pen.setColor(QColor(255, 0, 0));
-            pen.setWidth(3);
-            painter.setPen(pen);
-         }
+         painter.setBrush(this->styles.region_area.being_drawn.area.fill);
+         painter.setPen(this->styles.region_area.being_drawn.area.line);
+
          const auto& area = this->state.area_being_drawn;
          QPolygon    polygon;
          for (const auto& point : area.points) {
@@ -454,18 +532,13 @@ void RegionCanvasWidget::setColorRequirements(const RegionColorRequirements& req
          //
          // Draw first and most-recent vertices.
          //
-         {
-            QPen pen;
-            pen.setCosmetic(true);
-            pen.setColor(QColor(255, 0, 0));
-            pen.setWidth(1);
-            painter.setPen(pen);
-            painter.setBrush(QColor(255, 0, 0));
-         }
+         painter.setBrush(this->styles.region_area.being_drawn.first_vertex.fill);
+         painter.setPen(this->styles.region_area.being_drawn.first_vertex.line);
          if (area.points.size() > 1) {
             painter.drawEllipse(polygon.point(0), 3, 3);
          }
-         painter.setBrush(QColor(255, 192, 180));
+         painter.setBrush(this->styles.region_area.being_drawn.latest_vertex.fill);
+         painter.setPen(this->styles.region_area.being_drawn.latest_vertex.line);
          painter.drawEllipse(polygon.point(area.points.size() - 1), 3, 3);
       }
    }
@@ -1074,20 +1147,20 @@ void RegionCanvasWidget::_update_cursor() {
          if (!areas.empty()) {
             for (size_t area_index : areas) {
                auto* action = new QAction(tr("Move area %1").arg(area_index), &menu);
-               action->setProperty("area-index", (int)area_index);
+               action->setProperty(context_menu_item_region_area_index_property, (int)area_index);
                menu.addAction(action);
                QObject::connect(action, &QAction::triggered, this, [this, action]() {
-                  auto index = action->property("area-index").toInt();
+                  auto index = action->property(context_menu_item_region_area_index_property).toInt();
                   this->_start_moving_area(index);
                });
             }
             menu.addSeparator();
             for (size_t area_index : areas) {
                auto* action = new QAction(tr("Delete area %1").arg(area_index), &menu);
-               action->setProperty("area-index", (int)area_index);
+               action->setProperty(context_menu_item_region_area_index_property, (int)area_index);
                menu.addAction(action);
                QObject::connect(action, &QAction::triggered, this, [this, action]() {
-                  auto index = action->property("area-index").toInt();
+                  auto index = action->property(context_menu_item_region_area_index_property).toInt();
                   this->_context_delete_region_area(index);
                });
             }

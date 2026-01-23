@@ -3,8 +3,10 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
+#include <QBrush>
 #include <QLabel>
 #include <QMenu>
+#include <QPen>
 #include <QScrollBar>
 #include <QStatusBar>
 #include <QWidget>
@@ -16,73 +18,114 @@ namespace dovah {
 class RegionCanvasWidget : public QWidget {
    Q_OBJECT;
    public:
-      static constexpr const int default_cell_size = 32; // size in pixels including the border
+      // Width of the border drawn between cells; a constant size regardless of zoom level. 
+      // The border is drawn between cells, such that half the border width overlaps the 
+      // cell on each side of the border.
+      static constexpr const int cell_border_width = 2;
 
-      static constexpr const int cell_border_width = 2; // width of the border, treating it as centered between cells
+      // Size (width and height) of a cell in pixels at the default zoom. This size includes 
+      // the area overlapped by the border between cells.
+      static constexpr const int default_cell_size = 32;
 
-      // i.e. minimum allowed size of a cell, in pixels, divided by default size
-      static constexpr const float minimum_zoom = 4.0F / default_cell_size;
+      // The minimum zoom factor, computed from the minimum allowed size of a cell in pixels 
+      // divided by the default size in pixels.
+      static constexpr const float minimum_zoom = (float)(cell_border_width * 2) / default_cell_size;
 
-      // if the worldspace is large enough to fill the canvas, show at least this many empty cells on 
-      // all sizes
+      // If the worldspace is large enough to fill the canvas, show at least this many empty cells on 
+      // all sizes. This allows the user to create new cells by drawing region areas out in the void.
       static constexpr const int min_grid_margin = 5;
 
+   protected:
+      static constexpr const size_t index_of_none = (size_t)-1;
+
    public:
-      struct RegionDataPresence {
-         constexpr bool operator==(const RegionDataPresence&) const noexcept = default;
+      #pragma region Region-data-presence definitions
+         struct RegionDataPresence {
+            constexpr bool operator==(const RegionDataPresence&) const noexcept = default;
 
-         bool audio     = false;
-         bool grass     = false;
-         bool landscape = false;
-         bool map       = false;
-         bool objects   = false;
-         bool weather   = false;
+            bool audio     = false;
+            bool grass     = false;
+            bool landscape = false;
+            bool map       = false;
+            bool objects   = false;
+            bool weather   = false;
 
-         constexpr bool none() const noexcept {
-            return !this->audio && !this->grass && !this->landscape && !this->map && !this->objects && !this->weather;
-         }
-      };
+            constexpr bool none() const noexcept {
+               return !this->audio && !this->grass && !this->landscape && !this->map && !this->objects && !this->weather;
+            }
+         };
       
-      struct RegionColorRequirements : public RegionDataPresence {
-         constexpr bool operator==(const RegionColorRequirements&) const noexcept = default;
+         // A region will affect cells' colors if at least one bool is `true` in both the region data 
+         // presence and in the color requirements, or if no region-data-presence bool is true and the 
+         // `empty` bool is true in the color requirements.
+         struct RegionColorRequirements : public RegionDataPresence {
+            constexpr bool operator==(const RegionColorRequirements&) const noexcept = default;
 
-         bool empty = false;
+            bool empty = false;
 
-         constexpr bool none() const noexcept {
-            return this->RegionDataPresence::none() && !this->empty;
-         }
-      };
+            constexpr bool none() const noexcept {
+               return this->RegionDataPresence::none() && !this->empty;
+            }
+         };
+      #pragma endregion
 
       using RegionArea = ui::types::regions::region::area;
 
-      // Ordering of constants in here matters; should be "outer" to "inner."
-      enum class CoordinateSpace {
-         Screen,
+      #pragma region Coordinate space definitions
+         enum class CoordinateSpace {
+            Screen,
 
-         // Pixel coordinates relative to the widget's bounds.
-         Widget,
+            // Pixel coordinates relative to the widget's bounds.
+            Widget,
 
-         // Pixel coordinates within the drawn worldspace, irrespective of any scrolling. 
-         // This coordinate space is centered on (0, 0), like grid and world coordinates; 
-         // the scrollbars can have negative minimums.
-         Canvas,
+            // Pixel coordinates within the drawn worldspace, irrespective of any scrolling. 
+            // This coordinate space is centered on (0, 0), like grid and world coordinates; 
+            // the scrollbars can have negative minimums.
+            Canvas,
 
-         // Cell grid coordinates. Integer values. Converting these to any other space 
-         // yields the centerpoint of the drawn cell.
-         Grid,
+            // Cell grid coordinates. Integer values. Converting these to any other space 
+            // yields the centerpoint of the drawn cell.
+            Grid,
 
-         // In-game coordinates measured in world units. A cell is 4096x4096wu.
-         World
-      };
+            // In-game coordinates measured in world units. A cell is 4096x4096wu.
+            World
+         };
 
-      template<CoordinateSpace Space>
-      using Point = std::conditional_t<
-         (Space == CoordinateSpace::World),
-         QPointF,
-         QPoint
-      >;
+         template<CoordinateSpace Space>
+         using Point = std::conditional_t<
+            (Space == CoordinateSpace::World),
+            QPointF,
+            QPoint
+         >;
+      #pragma endregion
 
-      static constexpr const size_t index_of_none = (size_t)-1;
+      #pragma region Widget style definitions
+         struct RegionAreaStyle {
+            QBrush fill;
+            QPen   line;
+         };
+         struct VertexStyle {
+            QBrush fill;
+            QPen   line;
+            int    radius = 0;
+         };
+         struct RegionAreaInProgressStyle {
+            RegionAreaStyle area;
+            VertexStyle first_vertex;
+            VertexStyle latest_vertex;
+         };
+
+         struct Style {
+            struct {
+               QBrush background;
+            } grid;
+            struct {
+               RegionAreaStyle normal;
+               RegionAreaStyle highlight;
+               RegionAreaInProgressStyle being_drawn;
+            } region_area;
+         };
+      #pragma endregion
 
    public:
       RegionCanvasWidget(QWidget* parent = nullptr);
@@ -95,9 +138,9 @@ class RegionCanvasWidget : public QWidget {
          struct {
             int32_t x = 0;
             int32_t y = 0;
-         } grid;
+         } grid; // i.e. position within the worldspace
          dovah::form_stub* stub = nullptr;
-         std::vector<dovah::form_stub*> regions;
+         std::vector<dovah::form_stub*> regions; // CELL/XCLR: all regions overlapping this cell
       };
       struct KnownRegion {
          QColor  color;
@@ -115,7 +158,7 @@ class RegionCanvasWidget : public QWidget {
          } actions;
       } context;
       struct {
-         float last_rendered_zoom = 1.0F;
+         float last_rendered_zoom = 1.0F; // used to preserve scroll-center position when the zoom changes
          float zoom = 1.0F;
          QRect viewport; // in pixels; local coordinates excluding scrollbar areas
          struct {
@@ -142,7 +185,12 @@ class RegionCanvasWidget : public QWidget {
 
          size_t  moving_region_area = index_of_none;
          QPointF moving_area_delta; // distance the area has been moved, measured in world coordinates
+
+         // When the mouse cursor is over a context menu item pertaining to a specific 
+         // region area, we want to highlight that area.
+         size_t region_area_to_highlight = index_of_none;
       } state;
+      Style styles;
       struct {
          QScrollBar* scrollbar_x = nullptr;
          QScrollBar* scrollbar_y = nullptr;
@@ -173,7 +221,11 @@ class RegionCanvasWidget : public QWidget {
          constexpr bool isMovingArea() const noexcept {
             return this->state.moving_region_area != index_of_none;
          }
+
+         // The centerpoint of the viewport, in canvas-relative coordinates.
          QPointF scrollCenter() const noexcept;
+
+         // The top-left corner of the viewport, in canvas-relative coordinates.
          QPoint scrollPosition() const noexcept;
       #pragma endregion
       #pragma region Worldspace contents accessors
@@ -186,6 +238,14 @@ class RegionCanvasWidget : public QWidget {
       #pragma endregion
       
       void setColorRequirements(const RegionColorRequirements&);
+
+      constexpr const Style& widgetStyles() const noexcept { return this->styles; }
+      void setWidgetStyles(const Style& s) {
+         if (&s == &this->styles)
+            return;
+         this->styles = s;
+         this->repaint();
+      }
 
       #pragma region Coordinate space conversions
          template<CoordinateSpace src_space, CoordinateSpace dst_space> requires (src_space != dst_space)
