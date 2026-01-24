@@ -1,6 +1,7 @@
 #include "./RegionObjectsModel.h"
 #include <memory>
 #include <vector>
+#include "helpers/vectors/move_item_to_index.h"
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
 #include "editor/helpers/form_stub_drag_drop.h"
@@ -64,7 +65,7 @@ RegionObjectsModel::~RegionObjectsModel() {
    return dovah::form_type_is_base_form(ft);
 }
 
-#pragma region QAbstractItemModel /*override*/s
+#pragma region QAbstractItemModel overrides
    #pragma region Hierarchy
       /*virtual*/ QModelIndex RegionObjectsModel::index(int row, int column, const QModelIndex& parent) const /*override*/ {
          if (row < 0 || column < 0 || column >= ColumnCount)
@@ -131,13 +132,17 @@ RegionObjectsModel::~RegionObjectsModel() {
                break;
             case ObjectDataRole:
                return QVariant::fromValue(node->data);
+            case ObjectMinSlopeRole:
+               return node->data.params.slope.min;
+            case ObjectMaxSlopeRole:
+               return node->data.params.slope.max;
          }
          return {};
       }
       /*virtual*/ Qt::ItemFlags RegionObjectsModel::flags(const QModelIndex& qmi) const /*override*/ {
          if (!qmi.isValid())
             return Qt::ItemFlag::ItemIsDropEnabled;
-         auto flags = Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsDropEnabled;
+         auto flags = Qt::ItemFlag::ItemIsSelectable | Qt::ItemFlag::ItemIsEnabled | Qt::ItemFlag::ItemIsDragEnabled | Qt::ItemFlag::ItemIsDropEnabled;
          return flags;
       }
       /*virtual*/ bool RegionObjectsModel::setData(const QModelIndex& qmi, const QVariant& value, int role) /*override*/ {
@@ -157,9 +162,30 @@ RegionObjectsModel::~RegionObjectsModel() {
 
                   auto* prior_stub = node->data.base_form;
                   node->data = data;
+                  node->clamp_slope_to_ancestor_range(true);
                   if (node->data.base_form != prior_stub) {
                      this->_recache_node(*node, false);
                   }
+               }
+               break;
+            case ObjectMinSlopeRole:
+               if (!value.canConvert<int>())
+                  return false;
+               {
+                  auto v = value.toInt();
+                  if (v < 0 || v > 90)
+                     return false;
+                  node->set_min_slope(v);
+               }
+               break;
+            case ObjectMaxSlopeRole:
+               if (!value.canConvert<int>())
+                  return false;
+               {
+                  auto v = value.toInt();
+                  if (v < 0 || v > 90)
+                     return false;
+                  node->set_max_slope(v);
                }
                break;
          }
@@ -172,7 +198,15 @@ RegionObjectsModel::~RegionObjectsModel() {
    #pragma region Drag and drop
       #pragma region Whole-model queries
          /*virtual*/ QStringList RegionObjectsModel::mimeTypes() const /*override*/ {
-            return QStringList({ mime_type });
+            //
+            // Qt's documentation states that this function has to list the "allowed" MIME types, 
+            // but does not state the precise operational definition of "allowed."
+            // 
+            // In practice, it filters the MIME types that can be dragged into the model. Nothing 
+            // filters the MIME types that can be dragged *out* of the model; your `mimeData()` 
+            // getter has to produce all possible MIME types for export up-front.
+            //
+            return QStringList({ mime_type, editor_helpers::form_stub_array_mime_type });
          }
          /*virtual*/ Qt::DropActions RegionObjectsModel::supportedDragActions() const /*override*/ {
             return Qt::MoveAction;
@@ -190,7 +224,7 @@ RegionObjectsModel::~RegionObjectsModel() {
          return _get_node_drag_data(indices);
       }
       /*virtual*/ bool RegionObjectsModel::canDropMimeData(const QMimeData* mime, Qt::DropAction action, int row, int column, const QModelIndex& parent_qmi) const /*override*/ {
-         if (column >= ColumnCount || row > this->rowCount(parent_qmi))
+         if (column >= (int)ColumnCount || row > this->rowCount(parent_qmi))
             return false;
          if (!mime)
             return false;
@@ -375,7 +409,8 @@ bool RegionObjectsModel::moveUp(const QModelIndex& qmi) {
    assert(src_i != (size_t)-1);
    if (src_i == 0)
       return false;
-   this->beginMoveRows(parent_qmi, src_i, src_i, parent_qmi, src_i - 1);
+   bool legal = this->beginMoveRows(parent_qmi, src_i, src_i, parent_qmi, src_i - 1);
+   assert(legal);
    std::swap((*siblings)[src_i], (*siblings)[src_i - 1]);
    this->endMoveRows();
    return true;
@@ -402,7 +437,17 @@ bool RegionObjectsModel::moveDown(const QModelIndex& qmi) {
    assert(src_i != (size_t)-1);
    if (src_i == siblings->size() - 1)
       return false;
-   this->beginMoveRows(parent_qmi, src_i, src_i, parent_qmi, src_i + 1);
+   //
+   // Next call has to be +2 because to move items down within their parent, 
+   // you need to provide as the destination row the current index of the 
+   // element *after* the destination row. In literally every other scenario 
+   // you specify the index you want your item to be moved *before*, i.e. the 
+   // current index of the element *at* the destination row.
+   // 
+   // What a cool and normal API.
+   //
+   bool legal = this->beginMoveRows(parent_qmi, src_i, src_i, parent_qmi, src_i + 2);
+   assert(legal);
    std::swap((*siblings)[src_i], (*siblings)[src_i + 1]);
    this->endMoveRows();
    return true;
@@ -509,7 +554,7 @@ void RegionObjectsModel::_recache_node(node_type& node, bool silent) {
          std::erase_if(
             dropped_stubs,
             [this](dovah::form_stub* stub) -> bool {
-               return stub && allows_form_type(stub->form_type);
+               return !stub || !allows_form_type(stub->form_type);
             }
          );
          if (dropped_stubs.empty())
@@ -524,6 +569,7 @@ void RegionObjectsModel::_recache_node(node_type& node, bool silent) {
             } else {
                this->_tree.objects.insert(this->_tree.objects.begin() + row + i, std::move(item_ptr));
             }
+            item.parent = parent_node;
             item.data.base_form = dropped_stubs[i];
             this->_recache_node(item, true);
          }
@@ -615,8 +661,15 @@ void RegionObjectsModel::_recache_node(node_type& node, bool silent) {
             assert(src_i >= 0);
 
             this->beginMoveRows(src_parent_qmi, src_i, src_i, dst_parent_qmi, row);
-            dst_siblings->insert(dst_siblings->begin() + row, std::move((*src_siblings)[src_i]));
-            src_siblings->erase(src_siblings->begin() + src_i);
+            if (src_siblings == dst_siblings) {
+               if (row > src_i)
+                  --row;
+               cobb::vectors::move_item_to_index(*src_siblings, src_i, row);
+            } else {
+               dst_siblings->insert(dst_siblings->begin() + row, std::move((*src_siblings)[src_i]));
+               src_siblings->erase(src_siblings->begin() + src_i);
+            }
+            node.parent = dst_parent_node;
             this->endMoveRows();
          }
          return true;

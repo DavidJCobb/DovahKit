@@ -64,7 +64,7 @@ namespace ui::region::fragments {
       {
          auto* view = this->ui.view;
          view->setModel(this->model);
-         view->setDragDropMode(QAbstractItemView::DragDropMode::InternalMove);
+         view->setDragDropMode(QAbstractItemView::DragDropMode::DragDrop);
          view->setDragDropOverwriteMode(false);
          view->setDragEnabled(true);
          view->setAcceptDrops(true);
@@ -87,6 +87,7 @@ namespace ui::region::fragments {
             auto _changed = cobb__bound_this_fn(on_model_layout_edited);
             QObject::connect(this->model, &QAbstractItemModel::rowsInserted, &this->owner, _changed);
             QObject::connect(this->model, &QAbstractItemModel::rowsRemoved, &this->owner, _changed);
+            QObject::connect(this->model, &QAbstractItemModel::rowsMoved, &this->owner, _changed); // "Move Up" and "Move Down" buttons too
          }
 
          QObject::connect(this->ui.buttons.move_up, &QPushButton::clicked, &this->owner, cobb__bound_this_fn(try_move_item_up));
@@ -228,6 +229,17 @@ namespace ui::region::fragments {
       FOR_EACH_FLAG_FIELD(DO)
       #undef DO
       this->ui.edit.paint_vertices.color->setColor(QColor(data.params.paint_vertices.color.r, data.params.paint_vertices.color.g, data.params.paint_vertices.color.b));
+
+      auto parent_qmi = qmi.parent();
+      if (parent_qmi.isValid()) {
+         auto v_min = parent_qmi.data(model_type::ObjectMinSlopeRole).toInt();
+         auto v_max = parent_qmi.data(model_type::ObjectMaxSlopeRole).toInt();
+         this->ui.edit.slope.min->setRange(v_min, v_max);
+         this->ui.edit.slope.max->setRange(v_min, v_max);
+      } else {
+         this->ui.edit.slope.min->setRange(0, 90);
+         this->ui.edit.slope.max->setRange(0, 90);
+      }
    }
    void objects::on_no_object_selected() {
       this->ui.edit.container->setEnabled(false);
@@ -287,6 +299,7 @@ namespace ui::region::fragments {
          return;
       auto qmi = sel[0].topLeft();
       model->moveUp(qmi);
+      this->update_button_enable_states(); // in case item is moved to the top
    }
    void objects::try_move_item_down() {
       auto sel = this->ui.view->selectionModel()->selection();
@@ -294,6 +307,7 @@ namespace ui::region::fragments {
          return;
       auto qmi = sel[0].topLeft();
       model->moveDown(qmi);
+      this->update_button_enable_states(); // in case item is moved to the bottom
    }
    void objects::try_remove_item() {
       auto sel = this->ui.view->selectionModel()->selection();

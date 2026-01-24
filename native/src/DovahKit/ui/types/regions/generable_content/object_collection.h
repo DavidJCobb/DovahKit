@@ -52,6 +52,8 @@ namespace ui::types::regions::generable_content {
                constexpr size_t index_of(const object&) const noexcept;
 
                constexpr void clamp_slope_to_ancestor_range(bool descendants_too = true);
+               constexpr void set_min_slope(uint8_t);
+               constexpr void set_max_slope(uint8_t);
          };
 
       public:

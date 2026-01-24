@@ -30,6 +30,23 @@ namespace ui::types::regions::generable_content {
                child_ptr->clamp_slope_to_ancestor_range(true);
          }
       }
+
+      constexpr void object_collection::object::set_min_slope(uint8_t s) {
+         if (s == this->data.params.slope.min)
+            return;
+         if (s > 90)
+            return;
+         this->data.params.slope.min = s;
+         this->clamp_slope_to_ancestor_range(true);
+      }
+      constexpr void object_collection::object::set_max_slope(uint8_t s) {
+         if (s == this->data.params.slope.max)
+            return;
+         if (s > 90)
+            return;
+         this->data.params.slope.max = s;
+         this->clamp_slope_to_ancestor_range(true);
+      }
    #pragma endregion
 
    #pragma region object_collection

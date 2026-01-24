@@ -24,6 +24,8 @@ class RegionObjectsModel : public QAbstractItemModel {
       static constexpr const size_t ColumnCount = 1;
 
       static constexpr const Qt::ItemDataRole ObjectDataRole = Qt::UserRole;
+      static constexpr const Qt::ItemDataRole ObjectMinSlopeRole = (Qt::ItemDataRole)(Qt::UserRole + 1);
+      static constexpr const Qt::ItemDataRole ObjectMaxSlopeRole = (Qt::ItemDataRole)(Qt::UserRole + 2);
 
    protected:
       struct node_cached_data {
