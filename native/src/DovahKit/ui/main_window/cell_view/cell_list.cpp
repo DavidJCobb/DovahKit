@@ -2,6 +2,7 @@
 #include <QHeaderView>
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
+#include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/form_stub.h"
 #include "widgets/DKHeaderView.h"
 
@@ -289,6 +290,8 @@ void CellListModel::emitRowChanged(int i) {
 }
 void CellListModel::insertItem(const dovah::form_stub* stub, bool queued) {
    if (!stub)
+      return;
+   if (stub->formID == dovah::hardcoded_form_ids::NavmeshGenCell)
       return;
    auto item = new item_type(stub);
    if (queued) {

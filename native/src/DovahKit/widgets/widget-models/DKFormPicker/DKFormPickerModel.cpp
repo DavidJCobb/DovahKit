@@ -1,4 +1,5 @@
 #include "./DKFormPickerModel.h"
+#include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/form_stub.h"
 #include "editor/subsystems/papyrus/core.h"
 #include "editor/core.h"
@@ -33,6 +34,8 @@ namespace ui::impl::DKFormPicker {
          bool should_exclude = [this]() -> bool {
             if (this->stub->form_type == dovah::form_type::cell) {
                if (this->stub->is_exterior_cell() && this->stub->editorID.empty())
+                  return true;
+               if (this->stub->formID == dovah::hardcoded_form_ids::NavmeshGenCell)
                   return true;
             }
             return false;
