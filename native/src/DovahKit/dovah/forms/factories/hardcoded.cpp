@@ -397,6 +397,13 @@ namespace dovah {
          // Full Name: "Ash Pile 2"
          lo._accept_hardcoded_form(stub);
       }
+      {  // [CELL:025]"NavmeshGenCell"
+         auto stub = new form_stub();
+         stub->formID    = hardcoded_form_ids::NavmeshGenCell;
+         stub->form_type = form_type_info::signature_to_form_type('CELL');
+         stub->editorID  = "NavmeshGenCell";
+         lo._accept_hardcoded_form(stub);
+      }
       {  // [TXST:028]"NullTextureSet"
          auto stub = new form_stub();
          stub->formID    = hardcoded_form_ids::NullTextureSet;

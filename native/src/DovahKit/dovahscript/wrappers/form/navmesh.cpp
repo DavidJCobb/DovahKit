@@ -11,6 +11,7 @@
 #include "./navmesh/edge_link.h"
 #include "./navmesh/triangle.h"
 #include "./navmesh/vertex.h"
+#include "./navmesh/collection_base_forms.h"
 #include "./navmesh/collection_door_links.h"
 #include "./navmesh/collection_edge_links.h"
 #include "./navmesh/collection_triangles.h"
@@ -22,6 +23,24 @@ namespace {
    using wrapped_type = cls::wrapped_type;
 
    namespace _getters {
+      int auto_generated(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<wrapped_type>();
+         if (!form)
+            return 0;
+         lua_pushboolean(L, form->stub.test_record_flags(wrapped_type::form_flag::auto_generated));
+         return 1;
+      }
+      int base_forms(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<wrapped_type>();
+         if (!form)
+            return 0;
+         wrapper out = self;
+         out.append_part(wrapper_part_types::navmesh_base_forms);
+         out.is_collection = true;
+         return core::subsystems::userdata::get().push(L, out, wrappers::collections::navmesh_base_forms.registry_key);
+      }
       int door_links(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* form = self.get_loaded_form_data<wrapped_type>();
@@ -41,6 +60,22 @@ namespace {
          out.append_part(wrapper_part_types::navmesh_edge_link);
          out.is_collection = true;
          return core::subsystems::userdata::get().push(L, out, wrappers::collections::navmesh_edge_links.registry_key);
+      }
+      int initially_disabled(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<wrapped_type>();
+         if (!form)
+            return 0;
+         lua_pushboolean(L, form->stub.test_record_flags(wrapped_type::form_flag::initially_disabled));
+         return 1;
+      }
+      int is_object_navmesh(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<wrapped_type>();
+         if (!form)
+            return 0;
+         lua_pushboolean(L, form->stub.test_record_flags(wrapped_type::form_flag::navmesh_gen_cell));
+         return 1;
       }
       int triangles(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -77,16 +112,20 @@ namespace dovahscript::wrappers {
    /*static*/ cls::method_list_t cls::metatable_methods = no_functions;
    
    /*static*/ cls::method_list_t cls::metatable_getters = {
-      { "door_links", &_getters::door_links },
-      { "edge_links", &_getters::edge_links },
-      { "triangles",  &_getters::triangles },
-      { "version",    &_getters::version },
-      { "vertices",   &_getters::vertices },
+      { "auto_generated",     &_getters::auto_generated },
+      { "base_forms",         &_getters::base_forms },
+      { "door_links",         &_getters::door_links },
+      { "edge_links",         &_getters::edge_links },
+      { "initially_disabled", &_getters::initially_disabled },
+      { "triangles",          &_getters::triangles },
+      { "version",            &_getters::version },
+      { "vertices",           &_getters::vertices },
    };
    /*static*/ cls::method_list_t cls::metatable_setters = {
    };
 
    /*static*/ void cls::extra_class_setup(lua_State* L) {
+      define_collection_metatable(L, collections::navmesh_base_forms);
       define_collection_metatable(L, collections::navmesh_door_links);
       define_collection_metatable(L, collections::navmesh_edge_links);
       define_collection_metatable(L, collections::navmesh_triangles);

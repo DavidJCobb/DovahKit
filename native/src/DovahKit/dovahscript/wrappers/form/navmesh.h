@@ -6,6 +6,7 @@ namespace dovah::loaded_forms {
 }
 
 namespace dovahscript::wrapper_part_types {
+   inline constexpr cobb::eight_cc navmesh_base_forms = "NavmBase";
    inline constexpr cobb::eight_cc navmesh_triangle  = "NavmTria";
    inline constexpr cobb::eight_cc navmesh_vertex    = "NavmVrtx";
    inline constexpr cobb::eight_cc navmesh_door_link = "NavmDoor";

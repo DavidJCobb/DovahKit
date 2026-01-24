@@ -34,6 +34,7 @@ namespace dovah::hardcoded_form_ids {
    static constexpr bare_form_id_t DefaultAshPile2        = 0x022;
    // Seen in Fallout 4: [STAT:023]LODClipVolume
    // Unused after Fallout: New Vegas: [STAT:024]AudioBuoyMarker
+   static constexpr bare_form_id_t NavmeshGenCell         = 0x025;
    // Seen in Fallout 4: [NOCM:026]
    // Seen in Fallout 4: [OVIS:027]
    static constexpr bare_form_id_t NullTextureSet         = 0x028;
