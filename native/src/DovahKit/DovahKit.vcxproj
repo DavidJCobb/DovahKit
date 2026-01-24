@@ -137,6 +137,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovahscript\wrappers\form\navmesh.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_door_links.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_triangles.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_triangle_cover_edges.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_vertices.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\navmesh\door_link.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\navmesh\edge_link.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_edge_links.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\navmesh\triangle.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\navmesh\triangle_cover_edge.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\navmesh\vertex.cpp" />
     <ClCompile Include="dovah\datastores\camera_paths.cpp" />
     <ClCompile Include="dovah\datastores\camera_paths\anam_subrecord_position.cpp" />
     <ClCompile Include="dovah\datastores\camera_paths\node.cpp" />
@@ -1465,6 +1476,17 @@
     <ClCompile Include="widgets\widget-models\DKTopicOrSubtypePicker\DKTopicOrSubtypePickerModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovahscript\wrappers\form\navmesh.h" />
+    <ClInclude Include="dovahscript\wrappers\form\navmesh\collection_door_links.h" />
+    <ClInclude Include="dovahscript\wrappers\form\navmesh\collection_edge_links.h" />
+    <ClInclude Include="dovahscript\wrappers\form\navmesh\collection_triangles.h" />
+    <ClInclude Include="dovahscript\wrappers\form\navmesh\collection_triangle_cover_edges.h" />
+    <ClInclude Include="dovahscript\wrappers\form\navmesh\collection_vertices.h" />
+    <ClInclude Include="dovahscript\wrappers\form\navmesh\door_link.h" />
+    <ClInclude Include="dovahscript\wrappers\form\navmesh\edge_link.h" />
+    <ClInclude Include="dovahscript\wrappers\form\navmesh\triangle.h" />
+    <ClInclude Include="dovahscript\wrappers\form\navmesh\triangle_cover_edge.h" />
+    <ClInclude Include="dovahscript\wrappers\form\navmesh\vertex.h" />
     <ClInclude Include="dovah\bare_form_id_t.h" />
     <ClInclude Include="dovah\datastores\camera_paths.h" />
     <ClInclude Include="dovah\datastores\camera_paths\anam_subrecord_position.h" />

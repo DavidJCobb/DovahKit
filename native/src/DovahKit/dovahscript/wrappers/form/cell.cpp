@@ -52,6 +52,22 @@ namespace {
          });
          return 1;
       }
+      int get_all_children(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* stub = self.stub;
+         if (!stub)
+            return 0;
+         lua_settop(L, 1);
+         lua_createtable(L, stub->inbound.size(), 0);
+         int i = 1;
+         dovah::form_stub_helpers::for_each_child_form(*stub, [L, &i](dovah::form_stub& child) {
+            int argcount = push_native_object(&child);
+            while (argcount--)
+               lua_rawseti(L, 2, i++);
+            return false;
+         });
+         return 1;
+      }
       int get_all_refs(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* stub = self.stub;
@@ -228,6 +244,7 @@ namespace {
 
 namespace dovahscript::wrappers {
    /*static*/ cls::method_list_t cls::metatable_methods = {
+      { "get_all_children",        &_methods::get_all_children },
       { "get_all_persistent_refs", &_methods::get_all_persistent_refs },
       { "get_all_refs",            &_methods::get_all_refs },
    };

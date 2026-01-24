@@ -57,6 +57,12 @@ namespace dovahscript {
                define_wrapper_metatable<landscape_quad>(L);
                define_wrapper_metatable<landscape_quad_alpha_layer>(L);
                define_wrapper_metatable<landscape_quad_list>(L);
+            define_wrapper_metatable<navmesh>(L);
+               define_wrapper_metatable<navmesh_door_link>(L);
+               define_wrapper_metatable<navmesh_edge_link>(L);
+               define_wrapper_metatable<navmesh_triangle>(L);
+               define_wrapper_metatable<navmesh_triangle_cover_edge>(L);
+               define_wrapper_metatable<navmesh_vertex>(L);
             define_wrapper_metatable<objectreference>(L);
                define_wrapper_metatable<objectreference_position>(L);
                define_wrapper_metatable<objectreference_rotation>(L);
