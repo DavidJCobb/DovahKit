@@ -231,12 +231,12 @@ namespace dovah::tes_file_reading::threads {
                   continue;
                //
                auto* stub = this->make_stub_for_record();
-               if (form_type_is_reference(stub->form_type)) {
+               {
                   uint32_t cellID = group.getRawIDOfParentCell();
                   lo.local_formID_to_global_formID(this->loader, cellID);
                   this->set_stub_parent(stub, cellID);
                   if (!cellID)
-                     dovah::logging::print_line("[dovah::tes_file_reading::threads::interior_cell:%s] Reference %08X is not in a cell?", this->loader->get_filename(), stub->formID);
+                     dovah::logging::print_line("[dovah::tes_file_reading::threads::interior_cell:%s] Cell-child form %08X is not in a cell?", this->loader->get_filename(), stub->formID);
                }
                if (!this->commit_stub(stub)) {
                   continue;
@@ -364,12 +364,12 @@ namespace dovah::tes_file_reading::threads {
                   continue;
                //
                auto* stub = this->make_stub_for_record();
-               if (form_type_is_reference(stub->form_type)) {
+               {
                   uint32_t cellID = group.getRawIDOfParentCell();
                   lo.local_formID_to_global_formID(this->loader, cellID);
                   this->set_stub_parent(stub, cellID);
                   if (!cellID)
-                     dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_persistent_cell_children:%s] Reference %08X is not in a cell?", this->loader->get_filename(), stub->formID);
+                     dovah::logging::print_line("[dovah::tes_file_reading::threads::worldspace_persistent_cell_children:%s] Cell-child %08X is not in a cell?", this->loader->get_filename(), stub->formID);
                }
                if (!this->commit_stub(stub)) {
                   continue;

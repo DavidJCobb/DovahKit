@@ -47,8 +47,9 @@ CellViewWindow::CellViewWindow(QWidget* parent) : QWidget(parent) {
    //
    this->ui.filterFormType->setAllowUnfiltered(true);
    for (auto& info : dovah::form_types) {
-      if (dovah::form_type_is_base_form(info.form_type))
+      if (CellRefListModel::acceptsFormType(info.form_type)) {
          this->ui.filterFormType->whitelistSignature(info.signature);
+      }
    }
    //
    this->ui.cellList->setWorldspacePicker(this->ui.worldspace);

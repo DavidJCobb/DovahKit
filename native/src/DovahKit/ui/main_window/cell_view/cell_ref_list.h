@@ -60,6 +60,8 @@ class CellRefListModel : public QAbstractTableModel {
       //
       static constexpr int ColumnCount = 3;
 
+      static bool acceptsFormType(dovah::form_type);
+
    protected:
       QVector<item_type*> children;
       QVector<item_type*> queued_additions;

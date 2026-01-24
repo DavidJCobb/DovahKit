@@ -1376,7 +1376,7 @@ namespace dovahkit::subsystems::worldedit {
       return cell == this->target_area.cell;
    }
    bool core::is_ref_loaded(const dovah::form_stub* ref) const {
-      if (!ref)
+      if (!ref || !dovah::form_type_is_reference(ref->form_type))
          return false;
       for (const auto& item : this->loaded_refs)
          if (item.stub == ref)
@@ -1384,6 +1384,8 @@ namespace dovahkit::subsystems::worldedit {
       return false;
    }
    bool core::is_ref_selected(const dovah::form_stub* ref) const {
+      if (!ref || !dovah::form_type_is_reference(ref->form_type))
+         return false;
       for (auto& item : this->state.selection.refs)
          if (item.stub == ref)
             return true;
@@ -2116,6 +2118,8 @@ namespace dovahkit::subsystems::worldedit {
    }
 
    void core::setRefSelectionState(dovah::form_stub& stub, bool state) {
+      if (!dovah::form_type_is_reference(stub.form_type))
+         return;
       auto* ref_info = this->_get_loaded_refr_info(stub);
       if (!ref_info)
          //
@@ -2139,6 +2143,8 @@ namespace dovahkit::subsystems::worldedit {
       }
    }
    void core::toggleRefSelectionState(dovah::form_stub& stub) {
+      if (!dovah::form_type_is_reference(stub.form_type))
+         return;
       auto* ref_info = this->_get_loaded_refr_info(stub);
       if (!ref_info)
          //

@@ -22,20 +22,45 @@ dovah::form_type CellRefListModelItem::formType() const noexcept {
 }
 void CellRefListModelItem::update() {
    auto stub = this->stub;
-   this->base = dovah::form_stub_helpers::get_base_form(*stub);
-   this->baseType = this->base ? this->base->form_type : dovah::form_type::none;
-   //
+   this->base     = dovah::form_stub_helpers::get_base_form(*stub);
    this->editorID = QString::fromUtf8(stub->get_editor_id());
-   if (this->editorID.isEmpty() && this->base)
-      this->editorID = QString::fromUtf8(this->base->get_editor_id());
-   //
+
+   if (this->base) {
+      this->baseType = this->base->form_type;
+      if (this->editorID.isEmpty())
+         this->editorID = QString::fromUtf8(this->base->get_editor_id());
+   } else {
+      switch (stub->form_type) {
+         case dovah::form_type::land:
+         case dovah::form_type::navmesh:
+            this->baseType = stub->form_type;
+            if (this->editorID.isEmpty()) {
+               this->editorID = editor_helpers::form_type_name_to_string(stub->form_type);
+            }
+            break;
+         default:
+            this->baseType = dovah::form_type::none;
+      }
+   }
+   
    this->formID = stub->formID;
-   //
+   
    this->is_active   = stub->is_edited_or_in_active_file() && !stub->test_record_flags(dovah::tes_file_record_header::flag::partial);
    this->is_injected = stub->is_injected();
 }
 
 #pragma region CellRefListModel
+/*static*/ bool CellRefListModel::acceptsFormType(dovah::form_type ft) {
+   if (dovah::form_type_is_reference(ft))
+      return true;
+   switch (ft) {
+      case dovah::form_type::land:
+      case dovah::form_type::navmesh:
+         return true;
+   }
+   return false;
+}
+
 CellRefListModel::CellRefListModel(QObject* parent) : QAbstractTableModel(parent) {
    auto& editor = DovahKitCore::get();
    QObject::connect(&editor, &DovahKitCore::dataAbandonImminent,  this, &CellRefListModel::clear);
@@ -59,7 +84,7 @@ void CellRefListModel::formModified(const dovah::form_stub* stub) {
       return;
    if (stub->get_parent_form() != this->last_used_cell)
       return;
-   if (!dovah::form_type_is_reference(stub->form_type))
+   if (!acceptsFormType(stub->form_type))
       return;
    auto& list = this->children;
    auto  size = list.size();
@@ -253,7 +278,7 @@ void CellRefListModel::rebuild(const dovah::form_stub* cell) {
    //
    this->last_used_cell = cell;
    dovah::form_stub_helpers::for_each_child_form(*cell, [this](dovah::form_stub& stub) {
-      if (!dovah::form_type_is_reference(stub.form_type))
+      if (!acceptsFormType(stub.form_type))
          return false;
       this->_insertItem(&stub, true);
       return false;
