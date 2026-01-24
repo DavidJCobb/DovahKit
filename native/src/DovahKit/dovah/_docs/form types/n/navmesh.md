@@ -21,3 +21,16 @@ The Creation Kit will create edge links if the following criteria are met:
 Object navmeshes are stored as children of the default "navmesh gen cell" (form ID `025`), and have a special record flag (`1 << 31`) as well. These navmeshes list their target object via `NAVM/ONAM`.
 
 You can create an object navmesh by right-clicking a base form in the Creation Kit and selecting "Navmesh Object." This will load the navmesh gen cell in the Render Window, and spawn a ref with that base form in the cell; but the Render Window will hide everything except that ref and any navmesh you draw for it.
+
+## Notes
+
+* Load doors, the navmesh, and the navmesh info map must all be linked.
+  * Load doors identify their navmesh and triangle via `REFR/XNDP`.
+  * The navmesh identifies load doors and matches them to local triangles via door links (`PathingDoor` instances) in `NAVM/NVNM`.
+  * The navmesh info map identifies load doors via door links (`PathingDoor` instances) in `NAVI/NVMI` (`NavMeshInfo` instances; each navmesh should have one).
+
+### Areas for future research
+
+* Object navmeshes are stored in the hardcoded navmesh gen cell. However, in Skyrim.esm, the navmesh gen cell also contains numerous refs. These refs have non-hardcoded base forms (`REFR/NAME`), but unusually, they also have primitive data (`REFR/XPRM`). A small number of them have editor IDs resembling `NavCutterDUPLICATE000`.
+  
+  The navmesh editor normally lets you place `NAVCUT` primitives. I suspect that it's possible to do this when creating Object Navmeshes as well; certainly it'd be useful for things like fences. I think that when an Object Navmesh includes `NAVCUT` primitives, these primitives are stored as refs in the navmesh gen cell, with the refs' base forms identifying the base forms that were being navmeshed &mdash; the base forms whose Object Navmeshes should be paired with the primitives. However, I haven't tested this or looked into it especially rigorously; since DovahKit's alpha will not be shipping with navmesh editing, investigating this isn't a development priority as of this writing.
