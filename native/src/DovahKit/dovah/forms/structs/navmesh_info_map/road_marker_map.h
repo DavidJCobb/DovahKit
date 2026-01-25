@@ -28,6 +28,8 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
          std::optional<uint32_t> get_index_for(form_stub&) const;
          void set_index_for(form_stub&, uint32_t, Form& my_owner);
 
+         constexpr const auto& raw_entries() const noexcept { return this->data; }
+
       public:
          void load(tes_subrecord_reader&, load_order_interfaces::form_load& intfc);
          static void generate_use_info(tes_subrecord_reader&, form_specific_use_info_data&);

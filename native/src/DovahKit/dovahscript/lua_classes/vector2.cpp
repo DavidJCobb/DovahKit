@@ -93,10 +93,10 @@ namespace {
             lua_Number scalar = lua_tonumber(L, 2);
             lua_getfield  (L, 1, "x");
             lua_pushnumber(L, scalar);
-            lua_arith     (L, LUA_OPDIV); // 3
+            lua_arith     (L, LUA_OPMUL); // 3
             lua_getfield  (L, 1, "y");
             lua_pushnumber(L, scalar);
-            lua_arith     (L, LUA_OPDIV); // 4
+            lua_arith     (L, LUA_OPMUL); // 4
             _make_vector(L, lua_tonumber(L, 3), lua_tonumber(L, 4));
             return 1;
          }
@@ -235,6 +235,26 @@ namespace {
          //
          lua_Number length = x*x + y*y;
          lua_pushnumber(L, length);
+         return 1;
+      }
+      int mul(lua_State* L) { // modifies (self)
+         cls::require_self_type(L);
+         luaL_argcheck(L, lua_isnumber(L, 2), 2, "expected non-zero number");
+         auto scalar = lua_tonumber(L, 2);
+         //
+         lua_settop(L, 2);
+         lua_getfield  (L, 1, "x");
+         lua_pushnumber(L, scalar);
+         lua_arith     (L, LUA_OPMUL);
+         lua_setfield  (L, 1, "x");
+         //
+         lua_settop(L, 2);
+         lua_getfield  (L, 1, "y");
+         lua_pushnumber(L, scalar);
+         lua_arith     (L, LUA_OPMUL);
+         lua_setfield  (L, 1, "y");
+         //
+         lua_settop(L, 1); // return (self) to allow chaining
          return 1;
       }
       int normal(lua_State* L) {
@@ -383,6 +403,7 @@ namespace dovahscript::lua_classes {
       { "flatten",        &_methods::flatten },
       { "length",         &_methods::length },
       { "length_squared", &_methods::length_squared },
+      { "mul",            &_methods::mul },   // operator*=
       { "normal",         &_methods::normal },
       { "rotate",         &_methods::rotate },
       { "project",        &_methods::project },

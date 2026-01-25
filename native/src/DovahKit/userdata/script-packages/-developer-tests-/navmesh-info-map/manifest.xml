@@ -1,0 +1,16 @@
+<package>
+   <metadata>
+      <name>Test NavMeshInfoMap</name>
+      <author name="DavidJCobb">
+         <link name="NexusMods" url="https://www.nexusmods.com/users/9663214?tab=user+files" />
+      </author>
+      <description>
+         A package created by DovahKit's developers to test loading of NavMeshInfoMap (NAVI) form data.
+      </description>
+   </metadata>
+   <files>
+window.lua
+range.lua
+main.lua
+   </files>
+</package>

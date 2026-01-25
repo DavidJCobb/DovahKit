@@ -30,7 +30,10 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
          intfc.warn_if_ref_is_wrong_type(form, form_type::navmesh, subrecord.signature());
       }
       subrecord.read(this->category);
-      subrecord.read(this->unk08);
+      subrecord.read(this->approx_location.x);
+      subrecord.read(this->approx_location.y);
+      subrecord.read(this->approx_location.z);
+      subrecord.read(this->preference);
       {
          auto&    list = this->links.edges;
          uint32_t size = 0;
@@ -105,7 +108,10 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
    void navmesh_info::save(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {
       subrecord.write(this->navmesh);
       subrecord.write(this->category);
-      subrecord.write(this->unk08);
+      subrecord.write(this->approx_location.x);
+      subrecord.write(this->approx_location.y);
+      subrecord.write(this->approx_location.z);
+      subrecord.write(this->preference);
       {
          auto& list = this->links.edges;
          subrecord.write((uint32_t)list.size());
@@ -162,6 +168,9 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
       this->is_active_file_data = src.is_active_file_data;
 
       this->navmesh.set(my_owner, src.navmesh);
+      this->category = src.category;
+      this->approx_location = src.approx_location;
+      this->preference = src.preference;
       copy_form_reference_list(my_owner, this->links.edges, src.links.edges);
       copy_form_reference_list(my_owner, this->links.preferred_edges, src.links.preferred_edges);
       {

@@ -32,11 +32,12 @@ namespace dovah::loaded_forms::structs::navmesh_info_map {
       public:
          bool is_active_file_data = false;
 
-         form_reference_t     navmesh;       // NVMI+0x00 -> NAVM
-         uint32_t             category = 0;  // NVMI+0x04
-         std::array<float, 4> unk08    = {}; // NVMI+0x08
+         form_reference_t     navmesh;         // NVMI+0x00 -> NAVM
+         uint32_t             category = 0;    // NVMI+0x04
+         cobb::vector3<float> approx_location; // NVMI+0x08
+         float                preference = 0;  // NVMI+0x14 // a percentage
          struct {
-            std::vector<form_reference_t> edges; // NVMI+0x0C
+            std::vector<form_reference_t> edges; // NVMI+0x18
             std::vector<form_reference_t> preferred_edges;
             std::vector<door_link> doors;
          } links;

@@ -458,6 +458,7 @@ namespace dovahscript::lua_classes {
       { "dot",            &_methods::dot },
       { "length",         &_methods::length },
       { "length_squared", &_methods::length_squared },
+      { "mul",            &_methods::mul },   // operator*=
       { "normalize",      &_methods::normalize },  // modify the vector in-place
       { "normalized",     &_methods::normalized }, // return a normalized copy
       { "project",        &_methods::project },

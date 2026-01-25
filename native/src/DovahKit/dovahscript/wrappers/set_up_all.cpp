@@ -63,6 +63,8 @@ namespace dovahscript {
                define_wrapper_metatable<navmesh_triangle>(L);
                define_wrapper_metatable<navmesh_triangle_cover_edge>(L);
                define_wrapper_metatable<navmesh_vertex>(L);
+            define_wrapper_metatable<navmesh_info_map>(L);
+               define_wrapper_metatable<navmesh_info_collection>(L);
             define_wrapper_metatable<objectreference>(L);
                define_wrapper_metatable<objectreference_position>(L);
                define_wrapper_metatable<objectreference_rotation>(L);

@@ -77,6 +77,15 @@ namespace {
          lua_pushboolean(L, form->stub.test_record_flags(wrapped_type::form_flag::navmesh_gen_cell));
          return 1;
       }
+      int parent_cell(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         if (!self.stub)
+            return 0;
+         auto* base = self.stub->get_parent_form();
+         if (!base || base->form_type != dovah::form_type::cell)
+            return 0;
+         return push_native_object(base);
+      }
       int triangles(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* form = self.get_loaded_form_data<wrapped_type>();
@@ -117,6 +126,7 @@ namespace dovahscript::wrappers {
       { "door_links",         &_getters::door_links },
       { "edge_links",         &_getters::edge_links },
       { "initially_disabled", &_getters::initially_disabled },
+      { "parent_cell",        &_getters::parent_cell },
       { "triangles",          &_getters::triangles },
       { "version",            &_getters::version },
       { "vertices",           &_getters::vertices },
