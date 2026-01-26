@@ -295,6 +295,17 @@ Using the term "reference" for this is, obviously, a bit confusing, since plenty
 * References can store [extra data](#extra%20data) for specialized state.
 * All characters and creatures are [actors](#actor), a special kind of reference that reserves additional space for character-specific state such as stats.
 
+### Rule of One
+Typically, when a form is defined in multiple [data files](#data%20file), i.e. in multiple [records](#record), only the data from the [winning record](#winning%20record) is retained. This is known as the Rule of One.
+
+This is the leading source of mod conflicts: if one mod tries to change the price of a Green Apple, and another mod tries to change the keywords on a Green Apple, then only one mod's set of changes will be applied, because each mod includes a full copy of the original Green Apple record with a handful of changes made.
+
+In rare cases, game data won't follow the Rule of One. This is because the rule is enforced manually for all data in all form types. When the game sees an override record, it asks the to-be-loaded form to clear all of its already-loaded data (by invoking a virtual member function on the form), but whether and how that's actually done is left to the form's discretion. All a form has to do is just... *not* clear something, and then that data will be coalesced across all records. A few examples where this occurs include:
+
+* The Default Object Manager (`DOBJ`) [singleton form](#singleton%20form) doesn't follow the Rule of One. Default object entries always append to a common map. The NavMeshInfoMap singleton form behaves similarly.
+
+* Location (`LCTN`) forms maintain multiple lists of refs that exist within the given location. Location forms disobey the Rule of One for these lists specifically, and will manage the lists' contents manually via "define," "add," and "remove" subrecords.
+
 ## S
 
 ### script<br/>`ScriptObject`<br/>script-object

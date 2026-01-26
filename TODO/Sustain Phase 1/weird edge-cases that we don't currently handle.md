@@ -66,6 +66,9 @@ The problem with doing things that way, of course, is that Bethesda's form-type-
 * If a ref is defined inside the active file, allow these cross-form-type changes, but warn the user and ask them to confirm before proceeding. (If their active file is some other mod's master, then they'll break any incoming overrides of the ref from that other mod.)
 
 
+### Reference overrides and persistence oddities
+Refer to DovahKit's per-form documentation for refs. Basically, if a ref is defined across multiple records, and any of those records are flagged as persistent, then the non-persistent records are never retained or loaded. Note that records defined in a (non-master-flagged) ESP file are <i>per se</i> persistent.
+
 
 ### Sibling landscapes override each other
 
