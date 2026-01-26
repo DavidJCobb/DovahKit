@@ -235,6 +235,8 @@ namespace dovah::loaded_forms {
          }
       }
 
+      this->extra_data.post_load_validation(intfc);
+
       bool position_corrupt = false;
       bool rotation_corrupt = false;
       for (size_t i = 0; i < 3; ++i) {

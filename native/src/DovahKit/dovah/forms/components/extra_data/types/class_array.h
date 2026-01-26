@@ -66,7 +66,7 @@ namespace dovah::loaded_forms::components::extra_data_types {
    #pragma endregion
    #pragma region O
       class occlusion_plane;
-      class occlusion_plane_ref_Data;
+      class occlusion_plane_ref_data;
       class ownership;
    #pragma endregion
    #pragma region P
@@ -189,7 +189,7 @@ namespace dovah::loaded_forms::components {
       #pragma endregion
       #pragma region O
          extra_data_types::occlusion_plane,
-         extra_data_types::occlusion_plane_ref_Data,
+         extra_data_types::occlusion_plane_ref_data,
          extra_data_types::ownership,
       #pragma endregion
       #pragma region P

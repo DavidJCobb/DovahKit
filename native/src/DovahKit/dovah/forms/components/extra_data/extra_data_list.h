@@ -38,6 +38,7 @@ namespace dovah::loaded_forms::components {
          void remove(extra_data*);
          
          load_result load(tes_record_reader&, load_order_interfaces::form_load&);
+         void post_load_validation(load_order_interfaces::form_load&);
          void save(tes_record_writer&, load_order_interfaces::form_save&);
          void clear(loaded_forms::Form& my_owner);
          void clone_from(const extra_data_list& source, loaded_forms::Form& owner_of_clone);

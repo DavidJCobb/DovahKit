@@ -138,6 +138,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dovahscript\wrappers\form\navmesh.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_base_forms.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_door_links.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_triangles.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_triangle_cover_edges.cpp" />
@@ -148,6 +149,10 @@
     <ClCompile Include="dovahscript\wrappers\form\navmesh\triangle.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh\triangle_cover_edge.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh\vertex.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map\collection_precomputed_paths.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map\navmesh_info_collection.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map\precomputed_path.cpp" />
     <ClCompile Include="dovah\datastores\camera_paths.cpp" />
     <ClCompile Include="dovah\datastores\camera_paths\anam_subrecord_position.cpp" />
     <ClCompile Include="dovah\datastores\camera_paths\node.cpp" />
@@ -240,6 +245,7 @@
     <ClCompile Include="dovah\forms\components\extra_data\types\w\water_current_zone_data.cpp" />
     <ClCompile Include="dovah\forms\components\extra_data\types\w\water_data.cpp" />
     <ClCompile Include="dovah\forms\components\extra_data\use_info_state.cpp" />
+    <ClCompile Include="dovah\forms\components\extra_data\utils\extra_data_type_has_post_load_validation.cpp" />
     <ClCompile Include="dovah\forms\LensFlare.cpp" />
     <ClCompile Include="dovah\forms\mixins\StoryManagerNode.cpp" />
     <ClCompile Include="dovah\forms\Navmesh.cpp" />
@@ -1477,6 +1483,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovahscript\wrappers\form\navmesh.h" />
+    <ClInclude Include="dovahscript\wrappers\form\navmesh\collection_base_forms.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh\collection_door_links.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh\collection_edge_links.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh\collection_triangles.h" />
@@ -1487,6 +1494,10 @@
     <ClInclude Include="dovahscript\wrappers\form\navmesh\triangle.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh\triangle_cover_edge.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh\vertex.h" />
+    <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map.h" />
+    <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\collection_precomputed_paths.h" />
+    <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\navmesh_info_collection.h" />
+    <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\precomputed_path.h" />
     <ClInclude Include="dovah\bare_form_id_t.h" />
     <ClInclude Include="dovah\datastores\camera_paths.h" />
     <ClInclude Include="dovah\datastores\camera_paths\anam_subrecord_position.h" />
@@ -1712,6 +1723,7 @@
     <ClInclude Include="dovah\forms\components\extra_data\types\w\water_data.h" />
     <ClInclude Include="dovah\forms\components\extra_data\types\w\water_environment_map.h" />
     <ClInclude Include="dovah\forms\components\extra_data\use_info_state.h" />
+    <ClInclude Include="dovah\forms\components\extra_data\utils\extra_data_type_has_post_load_validation.h" />
     <ClInclude Include="dovah\forms\LensFlare.h" />
     <ClInclude Include="dovah\forms\mixins\StoryManagerNode.h" />
     <ClInclude Include="dovah\forms\Navmesh.h" />
@@ -1952,6 +1964,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\attack_data\expected_event_subrecord.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\container\item_has_bad_owner_form_type.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\destruction\stage_serialized_index_out_of_bounds.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\linked_refs_duplicate_keyword.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\primitive_is_zero_size.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data_insufficient_rooms.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\room_ref_data_swallowed_subrecord.h" />
@@ -4060,6 +4073,18 @@
       </SubType>
     </None>
     <None Include="dovah\_docs\form types\g\grass.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\form types\n\navmesh info map.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\form types\n\navmesh.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\form types\r\reference.md">
       <SubType>
       </SubType>
     </None>

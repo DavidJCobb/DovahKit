@@ -7,6 +7,14 @@ namespace {
    using record_load_result    = extra_data::record_load_result;
 }
 
+#include "../../../../../notices/form_load_warnings/by_form_component/extra_data/linked_refs_duplicate_keyword.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_component::extra_data;
+   }
+}
+
 namespace dovah::loaded_forms::components::extra_data_types {
    /*virtual*/ subrecord_load_result linked_ref::load(tes_file_reading::subrecord& subrecord, load_interface_t& intfc) /*override*/ {
       if (subrecord.signature() != signature)
@@ -22,6 +30,43 @@ namespace dovah::loaded_forms::components::extra_data_types {
    }
    /*virtual*/ record_load_result linked_ref::load(tes_file_reading::record& record, load_interface_t& intfc) /*override*/ {
       return record_load_result::complete;
+   }
+   /*virtual*/ void linked_ref::post_load_validation(load_interface_t& intfc) /*override*/ {
+      const size_t size = this->links.size();
+      if (size < 2)
+         return;
+      std::vector<bool> warned;
+      warned.resize(size);
+      for (size_t i = 0; i < size - 1; ++i) {
+         if (warned[i])
+            continue;
+         auto& a = this->links[i];
+
+         bool  warned_on_this = false;
+         size_t j = i + 1;
+         for (; j < size; ++j) {
+            auto& b = this->links[j];
+            if (a.keyword == b.keyword) {
+               specific_load_warnings::linked_refs_duplicate_keyword notice(
+                  intfc.target_stub,
+                  a.keyword.get_form_stub()
+               );
+               intfc.log_load_warning(notice);
+               //
+               warned[i] = true;
+               warned[j] = true;
+               warned_on_this = true;
+               break;
+            }
+         }
+         if (warned_on_this) {
+            for (++j; j < size; ++j) {
+               auto& b = this->links[j];
+               if (a.keyword == b.keyword)
+                  warned[j] = true;
+            }
+         }
+      }
    }
    /*virtual*/ void linked_ref::save(tes_file_writing::record& record, save_interface_t& intfc) /*override*/ {
       for (auto& link : this->links) {

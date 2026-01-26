@@ -539,6 +539,23 @@ namespace editor_helpers {
                }
             #pragma endregion
             #pragma region extra data
+               #pragma region linked_ref
+                  if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::extra_data::linked_refs_duplicate_keyword*>(&warning)) {
+                     QString subject = form_identifiers_to_string(&casted->subject);
+                     QString format;
+                     if (casted->keyword) {
+                        QString keyword = form_identifiers_to_string(casted->keyword);
+                        format = QObject::tr(
+                           "%1 links multiple refs to keyword %2."
+                        ).arg(subject).arg(keyword);
+                     } else {
+                        format = QObject::tr(
+                           "%1 has multiple default (i.e. keyword-less) linked refs."
+                        ).arg(subject);
+                     }
+                     return format;
+                  }
+               #pragma endregion
                #pragma region primitive
                   if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::extra_data::primitive_is_zero_size*>(&warning)) {
                      QString subject = form_identifiers_to_string(&casted->subject);

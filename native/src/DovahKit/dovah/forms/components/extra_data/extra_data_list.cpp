@@ -5,6 +5,7 @@
 #include "./extra_data.h"
 #include "./factories/construct_for_subrecord.h"
 #include "./factories/generate_use_info.h"
+#include "./utils/extra_data_type_has_post_load_validation.h"
 
 namespace {
    using extra_data            = dovah::loaded_forms::components::extra_data_types::extra_data;
@@ -65,6 +66,13 @@ namespace dovah::loaded_forms::components {
          std::unreachable();
       }
       return load_result::unrecognized;
+   }
+   void extra_data_list::post_load_validation(load_order_interfaces::form_load& intfc) {
+      for (auto* extra : this->content) {
+         if (!extra_data_utils::extra_data_has_post_load_validation(*extra))
+            continue;
+         extra->post_load_validation(intfc);
+      }
    }
    void extra_data_list::save(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       for (auto* extra : this->content)

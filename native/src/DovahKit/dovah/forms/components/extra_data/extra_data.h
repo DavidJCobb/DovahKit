@@ -53,6 +53,15 @@ namespace dovah::loaded_forms::components::extra_data_types {
       public:
          virtual subrecord_load_result load(tes_file_reading::subrecord& subrord, load_interface_t&) = 0;
          virtual record_load_result    load(tes_file_reading::record&, load_interface_t&) = 0;
+
+         // This is needed when an extra-data type loads data from multiple subrecords that need 
+         // not be contiguous (i.e. it uses the per-subrecord load handler, but each subrecord 
+         // appends to previously-loaded data rather than replacing it). ExtraLinkedRefs would 
+         // be one example: each subrecord appends an entry to a list, and we want to warn on 
+         // duplicate entries, so we have to wait until all such entries are loaded, i.e. until 
+         // the containing form has fully parsed all subrecords.
+         virtual void post_load_validation(load_interface_t&) {};
+
          virtual void save(tes_file_writing::record&, save_interface_t&) = 0;
          
          static void generate_use_info(tes_file_reading::record&, form_stub_use_info_builder&, extra_data_use_info_state&) {}

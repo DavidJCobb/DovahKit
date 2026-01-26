@@ -126,6 +126,8 @@ namespace dovah::loaded_forms {
                break;
          }
       }
+
+      this->extra_data.post_load_validation(intfc);
    }
    /*static*/ void Cell::generate_use_info(tes_record_reader& record, form_stub_use_info_builder& uib) {
       if (uib.is_partial_record) // TESObjectCELL::LoadPartial is a no-op.

@@ -3990,6 +3990,24 @@
     <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_triangle_cover_edges.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_base_forms.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map\navmesh_info_collection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map\collection_precomputed_paths.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map\precomputed_path.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovah\forms\components\extra_data\utils\extra_data_type_has_post_load_validation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9788,6 +9806,27 @@
     <ClInclude Include="dovahscript\wrappers\form\navmesh\collection_triangle_cover_edges.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\navmesh\collection_base_forms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\navmesh_info_collection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\collection_precomputed_paths.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\precomputed_path.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\extra_data\linked_refs_duplicate_keyword.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\forms\components\extra_data\utils\extra_data_type_has_post_load_validation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -11830,6 +11869,9 @@
     <None Include="ui\form_group_windows\region\RegionCanvasWidget.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="dovah\_docs\form types\n\navmesh.md" />
+    <None Include="dovah\_docs\form types\r\reference.md" />
+    <None Include="dovah\_docs\form types\n\navmesh info map.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

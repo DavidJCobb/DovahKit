@@ -1,26 +1,22 @@
 #pragma once
-#include <cstdint>
 #include "../../../base_form_load_warning.h"
 
 #include "../../../_util.define.h"
 namespace dovah::notices::form_load_warnings::by_component::extra_data {
-   class room_ref_data_insufficient_rooms : public base_form_load_warning {
+   class linked_refs_duplicate_keyword : public base_form_load_warning {
       public:
          MAKE_CLONE_OVERLOAD;
       public:
-         constexpr room_ref_data_insufficient_rooms(
+         constexpr linked_refs_duplicate_keyword(
             form_stub& subject,
-            size_t expected,
-            size_t found
+            form_stub* keyword
          )
          :
             base_form_load_warning(subject),
-            expected(expected),
-            found(found)
+            keyword(keyword)
          {}
          
-         size_t expected = 0;
-         size_t found    = 0;
+         form_stub* keyword = nullptr;
    };
 }
 #include "../../../_util.undef.h"
