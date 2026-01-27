@@ -1,6 +1,14 @@
 
 # UI polishing
 
+## General
+
+* `DKConditionList`, when disabled, doesn't allow resizing of its columns. Instead of disabling the listview, would it be possible to disable the child items in the listview, and the listview's root item, such that the widget is mostly non-interactable but the columns are still resizable?
+
+* Make it possible to enable sorting on a `DKFormListPane`. Allow sorting by editor ID or form ID, with extra-columns sorting by `Qt::DisplayRole`. We especially want this for the list panes that show Locations' contents, in the LCTN UI.
+
+* I forgot to implement having `DKBreadcrumbBar` show the icon of the current QMI, though that's moot right now since the idle model doesn't define any icons. I should implement a property to enable/disable showing icons, layout code to reserve space for an icon when icons are enabled, and code to fetch and cache the icon for the current item, and to update that on `dataChanged`.
+
 ## Imagespace Modifier
 
 * Should we allow the user to unset properties on the first or last keyframe?
