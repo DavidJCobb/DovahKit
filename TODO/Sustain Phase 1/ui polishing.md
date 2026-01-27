@@ -9,6 +9,8 @@
 
 * I forgot to implement having `DKBreadcrumbBar` show the icon of the current QMI, though that's moot right now since the idle model doesn't define any icons. I should implement a property to enable/disable showing icons, layout code to reserve space for an icon when icons are enabled, and code to fetch and cache the icon for the current item, and to update that on `dataChanged`.
 
+* Anything that loads filesystem icons should do so via `QFileIconProvider`. I believe currently, for the BSA browser UI, we use WinAPI directly.
+
 ## Imagespace Modifier
 
 * Should we allow the user to unset properties on the first or last keyframe?
