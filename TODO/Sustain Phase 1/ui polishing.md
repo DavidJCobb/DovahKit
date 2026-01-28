@@ -11,6 +11,8 @@
 
 * Anything that loads filesystem icons should do so via `QFileIconProvider`. I believe currently, for the BSA browser UI, we use WinAPI directly.
 
+* If `DKFormPicker` has an unnamed exterior cell force-included, it displays the cell's form ID. It should ideally display the cell's grid coordinates and the editor ID of its parent worldspace. This is relevant for the `DKFormPicker` used to pick cells within the `DKObjectReferencePicker`: if you pick an exterior ref in the Render Window, then an exterior cell gets force-included into the cell picker.
+
 ## Imagespace Modifier
 
 * Should we allow the user to unset properties on the first or last keyframe?
