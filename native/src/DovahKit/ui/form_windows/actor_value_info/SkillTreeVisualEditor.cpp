@@ -850,8 +850,8 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
          painter.fillPath(path, painter.brush());
       }
       void SkillTreeVisualEditor::_draw_gridlines(QPainter& painter) {
-         const auto canvas_w = this->_cached.row_count * grid_cell_w;
-         const auto canvas_h = this->_cached.col_count * grid_cell_h;
+         const auto canvas_w = this->_cached.col_count * grid_cell_w;
+         const auto canvas_h = this->_cached.row_count * grid_cell_h;
 
          painter.save();
          painter.setBrush(QBrush{});
@@ -863,7 +863,7 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
             _prepare_painter_for_style(painter, this->_style.gridline);
             {
                painter.save();
-               for (uint32_t i = 0; i < this->_cached.row_count; ++i) {
+               for (uint32_t i = 0; i < this->_cached.col_count; ++i) {
                   painter.translate(grid_cell_w, 0);
                   painter.drawLine(0, top, 0, bottom);
                }
@@ -871,7 +871,7 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
             }
             {
                painter.save();
-               for (uint32_t i = 0; i < this->_cached.col_count; ++i) {
+               for (uint32_t i = 0; i < this->_cached.row_count; ++i) {
                   painter.translate(0, grid_cell_h);
                   painter.drawLine(left, 0, right, 0);
                }
