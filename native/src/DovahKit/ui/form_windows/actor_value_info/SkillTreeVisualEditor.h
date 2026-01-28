@@ -38,6 +38,8 @@ class SkillTreeVisualEditor : public QWidget {
       struct LineStyle {
          QColor color     = QColor(0, 0, 0);
          size_t thickness = 1; // canvas-relative size
+
+         QPen pen(float zoom = 1) const;
       };
       struct ShapeStyle {
          QBrush    fill;
@@ -137,8 +139,6 @@ class SkillTreeVisualEditor : public QWidget {
             void _prepare_painter_for_style(QPainter&, const ShapeStyle&);
             void _prepare_painter_for_style(QPainter&, const TextStyle&);
             void _prepare_painter_for_style(QPainter&, const TextStyle& child, const TextStyle& parent);
-            void _draw_single_line_text(QPainter&, QPointF at, Qt::Alignment, QString);
-            void _draw_multiline_text(QPainter&, const QPointF& at, Qt::Alignment, QString);
             void _draw_gridlines(QPainter&);
             void _draw_connection(QPainter&, const PerkNode& src, const PerkNode& dst);
             void _draw_node_label(QPainter&, const PerkNode&, const NodeStyle&);

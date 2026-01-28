@@ -11,9 +11,25 @@
 #include "dovah/forms/ActorValueInfo.h"
 #include "dovah/form_stub.h"
 #include "editor/core.h"
+#include "ui/utils/painting/paint_arrow.h"
+#include "ui/utils/painting/paint_multiline_text.h"
+#include "ui/utils/painting/paint_single_line_text.h"
 #pragma region Panning
    #include <QApplication>
    #include <QScrollBar>
+#pragma endregion
+
+#pragma region SkillTreeVisualEditor::LineStyle
+   QPen SkillTreeVisualEditor::LineStyle::pen(float zoom) const {
+      QPen pen;
+      if (this->thickness != 0) {
+         pen.setColor(this->color);
+         pen.setWidth(this->thickness);
+         if (this->thickness == 1 && zoom < 1.0F)
+            pen.setCosmetic(true);
+      }
+      return pen;
+   }
 #pragma endregion
 
 #pragma region SkillTreeVisualEditor::PerkNode
@@ -736,14 +752,7 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
 
    #pragma region Override helpers: paintEvent
       void SkillTreeVisualEditor::_prepare_painter_for_style(QPainter& painter, const LineStyle& style) {
-         QPen pen;
-         if (style.thickness != 0) {
-            pen.setColor(style.color);
-            pen.setWidth(style.thickness);
-            if (style.thickness == 1 && this->_zoom < 1)
-               pen.setCosmetic(true);
-         }
-         painter.setPen(pen);
+         painter.setPen(style.pen(this->_zoom));
       }
       void SkillTreeVisualEditor::_prepare_painter_for_style(QPainter& painter, const ShapeStyle& style) {
          painter.setBrush(style.fill);
@@ -766,94 +775,6 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
             painter.setBrush(parent.color);
 
          this->_prepare_painter_for_style(painter, child.stroke);
-      }
-      void SkillTreeVisualEditor::_draw_single_line_text(QPainter& painter, QPointF at, Qt::Alignment align, QString text) {
-         const auto font_metrics = painter.fontMetrics();
-         if (align & (Qt::AlignmentFlag::AlignHCenter | Qt::AlignmentFlag::AlignRight)) {
-            QRect bounds = font_metrics.boundingRect(text);
-            if (align & Qt::AlignmentFlag::AlignHCenter) {
-               at.rx() -= bounds.width() / 2;
-            } else if (align & Qt::AlignmentFlag::AlignRight) {
-               at.rx() -= bounds.width();
-            }
-         }
-         if (align & Qt::AlignmentFlag::AlignTop) {
-            at.ry() += font_metrics.ascent();
-         } else if (align & Qt::AlignmentFlag::AlignBottom) {
-            at.ry() -= font_metrics.descent();
-         }
-
-         QPainterPath path;
-         path.addText(
-            at.x(),
-            at.y(),
-            painter.font(),
-            text
-         );
-         painter.strokePath(path, painter.pen());
-         painter.fillPath(path, painter.brush());
-      }
-      void SkillTreeVisualEditor::_draw_multiline_text(QPainter& painter, const QPointF& at, Qt::Alignment align, QString text) {
-         QPainterPath path;
-
-         const auto font_metrics = painter.fontMetrics();
-         const auto line_height  = font_metrics.ascent() + font_metrics.descent();
-         const auto line_count   = text.count('\n') + 1;
-
-         float y = at.y();
-         if (align & Qt::AlignmentFlag::AlignTop) {
-            y += font_metrics.ascent();
-         } else if (align & Qt::AlignmentFlag::AlignBottom) {
-            y -= font_metrics.descent();
-            y -= (line_height + font_metrics.leading()) * (line_count - 1);
-         } else if (align & Qt::AlignmentFlag::AlignVCenter) {
-            y += font_metrics.ascent();
-
-            int text_block_height = (line_height * line_count) + (font_metrics.leading() * (line_count - 1));
-            y -= text_block_height / 2;
-         }
-
-         const auto distance_per_line = line_height + font_metrics.leading();
-         int from  = 0;
-         int until = text.indexOf('\n', from);
-         do {
-            if (until == from) {
-               do {
-                  y    += distance_per_line;
-                  from  = until + 1;
-                  until = text.indexOf('\n', from);
-                  if (until < 0)
-                     break;
-               } while (until == from);
-               if (until < 0)
-                  break;
-            }
-            QString fragment;
-            if (until < 0)
-               fragment = text.mid(from);
-            else
-               fragment = text.mid(from, until - from);
-
-            float x = at.x();
-            if (align & (Qt::AlignmentFlag::AlignHCenter | Qt::AlignmentFlag::AlignRight)) {
-               QRect bounds = font_metrics.boundingRect(fragment);
-               if (align & Qt::AlignmentFlag::AlignHCenter) {
-                  x -= bounds.width() / 2;
-               } else if (align & Qt::AlignmentFlag::AlignRight) {
-                  x -= bounds.width();
-               }
-            }
-            path.addText(x, y, painter.font(), fragment);
-            y += distance_per_line;
-
-            if (until < 0)
-               break;
-            from  = until + 1;
-            until = text.indexOf('\n', from);
-         } while (true);
-
-         painter.strokePath(path, painter.pen());
-         painter.fillPath(path, painter.brush());
       }
       void SkillTreeVisualEditor::_draw_gridlines(QPainter& painter) {
          const auto canvas_w = this->_cached.col_count * grid_cell_w;
@@ -892,42 +813,22 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
          const auto  dst_point  = dst._cached.geometry.centerpoint;
          const auto& style      = (dst.data.parent_required) ? this->_style.connectors.required : this->_style.connectors.optional;
          const auto& node_style = (this->_selected_node_id == dst.id) ? this->_style.nodes.selected : this->_style.nodes.general;
-         _prepare_painter_for_style(painter, style.stem);
-         painter.drawLine(src_point, dst_point);
-         painter.setBrush(style.head.fill);
-         _prepare_painter_for_style(painter, style.head.line);
-         {
-            constexpr const float arrow_angle = cobb::degrees_to_radians_mult * 22.5F;
-            constexpr const float arrow_cos   = cobb::cosine(arrow_angle);
-            constexpr const float arrow_sin   = cobb::sine(arrow_angle);
 
-            QPointF direction = (dst_point - src_point);
-            if (direction.x() || direction.y()) {
-               float mag = sqrt(direction.x()*direction.x() + direction.y()*direction.y());
-               direction /= mag;
-            } else {
-               direction = { 0, 1 };
-            }
-            const auto x_cos = direction.x() * arrow_cos;
-            const auto x_sin = direction.x() * arrow_sin;
-            const auto y_cos = direction.y() * arrow_cos;
-            const auto y_sin = direction.y() * arrow_sin;
-
-            const auto arrow_head_pos = dst_point - (direction * node_style.radius);
-
-            const QPointF points[] = {
-               arrow_head_pos,
-               { arrow_head_pos.x() - (x_cos - y_sin)*style.head.length, arrow_head_pos.y() - (y_cos + x_sin)*style.head.length },
-               { arrow_head_pos.x() - (x_cos + y_sin)*style.head.length, arrow_head_pos.y() - (y_cos - x_sin)*style.head.length },
-            };
-            painter.drawPolygon(points, std::extent<decltype(points)>::value);
-         }
+         ui::utils::paint::ArrowStyle arrow_style;
+         arrow_style.stem.pen = style.stem.pen(this->_zoom);
+         arrow_style.head = {
+            .angle  = 22.5F,
+            .brush  = style.head.fill,
+            .length = (float)style.head.length,
+            .pen    = style.head.line.pen(this->_zoom),
+         };
+         ui::utils::paint_arrow(painter, src_point, dst_point, node_style.radius, arrow_style);
       }
       void SkillTreeVisualEditor::_draw_node_label(QPainter& painter, const PerkNode& node, const NodeStyle& style) {
          auto point = node._cached.geometry.centerpoint;
          point.ry() += style.text.distance;
 
-         this->_draw_single_line_text(
+         ui::utils::paint_single_line_text(
             painter,
             point,
             Qt::AlignmentFlag::AlignTop | Qt::AlignmentFlag::AlignHCenter,
@@ -1007,7 +908,7 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
             painter.drawRoundedRect(box, root_node_style.corner_radius, root_node_style.corner_radius);
 
             this->_prepare_painter_for_style(painter, root_node_style.text, base_node_style.text);
-            this->_draw_multiline_text(
+            ui::utils::paint_multiline_text(
                painter,
                node->_cached.geometry.centerpoint,
                Qt::AlignmentFlag::AlignHCenter | Qt::AlignmentFlag::AlignVCenter,

@@ -1295,6 +1295,9 @@
     <ClCompile Include="ui\utils\enum_dropdown_configs\skill.cpp" />
     <ClCompile Include="ui\utils\form_list_pane_columns\music_track_type.cpp" />
     <ClCompile Include="ui\utils\item_indices_to_data.cpp" />
+    <ClCompile Include="ui\utils\painting\paint_arrow.cpp" />
+    <ClCompile Include="ui\utils\painting\paint_multiline_text.cpp" />
+    <ClCompile Include="ui\utils\painting\paint_single_line_text.cpp" />
     <ClCompile Include="ui\utils\pair_slider_to_spinbox.cpp" />
     <ClCompile Include="ui\utils\set_custom_context_menu.cpp" />
     <ClCompile Include="ui\utils\shrink_dialog_on_show.cpp" />
@@ -2560,6 +2563,9 @@
     <ClInclude Include="ui\utils\form_list_pane_columns\music_track_type.h" />
     <ClInclude Include="ui\utils\get_selection.h" />
     <ClInclude Include="ui\utils\item_indices_to_data.h" />
+    <ClInclude Include="ui\utils\painting\paint_arrow.h" />
+    <ClInclude Include="ui\utils\painting\paint_multiline_text.h" />
+    <ClInclude Include="ui\utils\painting\paint_single_line_text.h" />
     <ClInclude Include="ui\utils\pair_slider_to_spinbox.h" />
     <ClInclude Include="ui\utils\set_combobox_by_data.h" />
     <ClInclude Include="ui\utils\set_custom_context_menu.h" />
@@ -4069,6 +4075,10 @@
       </SubType>
     </None>
     <None Include="dovah\_docs\extra data - full reference.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\form types\a\actor base.md">
       <SubType>
       </SubType>
     </None>

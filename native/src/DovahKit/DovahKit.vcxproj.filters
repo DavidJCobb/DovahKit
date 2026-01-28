@@ -4008,6 +4008,15 @@
     <ClCompile Include="dovah\forms\components\extra_data\utils\extra_data_type_has_post_load_validation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\utils\painting\paint_multiline_text.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\utils\painting\paint_single_line_text.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\utils\painting\paint_arrow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9827,6 +9836,15 @@
     <ClInclude Include="dovah\forms\components\extra_data\utils\extra_data_type_has_post_load_validation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ui\utils\painting\paint_multiline_text.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\painting\paint_single_line_text.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\utils\painting\paint_arrow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -11872,6 +11890,7 @@
     <None Include="dovah\_docs\form types\n\navmesh.md" />
     <None Include="dovah\_docs\form types\r\reference.md" />
     <None Include="dovah\_docs\form types\n\navmesh info map.md" />
+    <None Include="dovah\_docs\form types\a\actor base.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">
