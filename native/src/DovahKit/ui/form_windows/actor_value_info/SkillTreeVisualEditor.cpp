@@ -60,8 +60,11 @@ SkillTreeVisualEditor::SkillTreeVisualEditor(QWidget* parent) : QWidget(parent) 
          auto& style = this->_style.nodes.root;
          style.text.color = QColor(255, 255, 255);
          style.text.stroke.thickness = 0;
+         style.padding  = 4;
+         style.distance = 2;
       }
-      this->_style.margins = { 20, 20, 20, 20 };
+      this->_style.margins.absolute = { 20, 20, 20, 20 };
+      this->_style.margins.scaled   = { 40, 50,  0,  0 }; // make room for the root node (ugly hack ignorant of font size, etc.)
    #pragma endregion
    #pragma region Form data updates
       auto& editor = DovahKitCore::get();
@@ -595,9 +598,12 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
       return this->sizeHint();
    }
    /*virtual*/ QSize SkillTreeVisualEditor::sizeHint() const /*override*/ {
-      auto size = this->_cached.canvas_size * this->_zoom;
-      size.rwidth()  += this->_style.margins.left() + this->_style.margins.right();
-      size.rheight() += this->_style.margins.top() + this->_style.margins.bottom();
+      auto size = this->_cached.canvas_size;
+      size.rwidth()  += this->_style.margins.scaled.left() + this->_style.margins.scaled.right();
+      size.rheight() += this->_style.margins.scaled.top() + this->_style.margins.scaled.bottom();
+      size *= this->_zoom;
+      size.rwidth()  += this->_style.margins.absolute.left() + this->_style.margins.absolute.right();
+      size.rheight() += this->_style.margins.absolute.top() + this->_style.margins.absolute.bottom();
       return size;
    }
 
@@ -801,10 +807,10 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
             y -= font_metrics.descent();
             y -= (line_height + font_metrics.leading()) * (line_count - 1);
          } else if (align & Qt::AlignmentFlag::AlignVCenter) {
-            y -= font_metrics.ascent();
+            y += font_metrics.ascent();
 
             int text_block_height = (line_height * line_count) + (font_metrics.leading() * (line_count - 1));
-            y += text_block_height / 2;
+            y -= text_block_height / 2;
          }
 
          const auto distance_per_line = line_height + font_metrics.leading();
@@ -936,8 +942,9 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
       QPainter painter(this);
       painter.fillRect(painter.window(), this->_style.background);
 
-      painter.translate(this->_style.margins.left(), this->_style.margins.top());
+      painter.translate(this->_style.margins.absolute.left(), this->_style.margins.absolute.top());
       painter.scale(this->_zoom, this->_zoom);
+      painter.translate(this->_style.margins.scaled.left(), this->_style.margins.scaled.top());
 
       if (this->_style.advisory_level_labels.visible) {
          const auto& style        = this->_style.advisory_level_labels;
@@ -1136,9 +1143,11 @@ void SkillTreeVisualEditor::setContainingScrollArea(QScrollArea* w) {
 
 QPoint SkillTreeVisualEditor::_map_from_global(const QPoint& global_pos) {
    auto local = this->mapFromGlobal(global_pos);
-   local.rx() -= this->_style.margins.left();
-   local.ry() -= this->_style.margins.top();
+   local.rx() -= this->_style.margins.absolute.left();
+   local.ry() -= this->_style.margins.absolute.top();
    local /= this->_zoom;
+   local.rx() -= this->_style.margins.scaled.left();
+   local.ry() -= this->_style.margins.scaled.top();
    if (this->_style.advisory_level_labels.visible)
       local.rx() -= this->_style.advisory_level_labels.width;
    return local;
@@ -1314,11 +1323,12 @@ void SkillTreeVisualEditor::_update_node_geometry(PerkNode& node, const _geometr
       box_rect = rect;
       box_rect.adjust(-padding, -padding, padding, padding);
 
-      node._cached.geometry.centerpoint = QPointF{
+      auto& centerpoint = node._cached.geometry.centerpoint;
+      centerpoint = QPointF{
          (qreal) -(box_rect.width() / 2),
          (qreal) -box_rect.height() - root_style.distance
       };
-      box_rect.moveCenter(node._cached.geometry.centerpoint.toPoint());
+      box_rect.moveCenter(centerpoint.toPoint());
 
       return;
    }

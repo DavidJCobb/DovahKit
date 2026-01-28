@@ -183,7 +183,10 @@ class SkillTreeVisualEditor : public QWidget {
                TextStyle text;
             } root;
          } nodes;
-         QMarginsF margins; // absolute
+         struct {
+            QMarginsF scaled;
+            QMarginsF absolute;
+         } margins; // spacing between the inner edges of the scroll area, and the outer edges of the canvas
       } _style;
       struct {
          uint32_t row_count = 0;
@@ -243,6 +246,7 @@ class SkillTreeVisualEditor : public QWidget {
 
       PerkNode* _get_node_at_point(const QPoint& canvas_relative);
 
+      // Canvas-relative.
       QPointF _node_centerpoint(const PerkNode&) const;
 
       void _update_cursor(const QMouseEvent*);
