@@ -141,6 +141,10 @@ namespace dovahkit::subsystems::worldedit {
             this->_unload_refr(*form);
             return;
          }
+         if (dovah::form_type_is_cell_child(form->form_type)) {
+            static_assert(!require_complete_implementation, "TODO: handle landscapes and navmeshes.");
+            return;
+         }
          if (dovah::form_type_is_base_form(form->form_type)) {
             static_assert(!require_complete_implementation, "TODO: Find all loaded refs using this base form, and update them (show error NIF).");
             return;
@@ -159,6 +163,10 @@ namespace dovahkit::subsystems::worldedit {
             static_assert(!require_complete_implementation, "TODO: If the REFR is loaded: If we're in an exterior and an unselected REFR is moved out of the loaded area, unload the REFR.");
             static_assert(!require_complete_implementation, "TODO: If the REFR is loaded: If we're in an exterior and a selected REFR is moved to another world or an interior, unload the REFR.");
             static_assert(!require_complete_implementation, "TODO: If the REFR is NOT loaded: If we're in an exterior and the REFR is moved into the loaded area, load it.");
+            return;
+         }
+         if (dovah::form_type_is_cell_child(form->form_type)) {
+            static_assert(!require_complete_implementation, "TODO: handle landscapes and navmeshes.");
             return;
          }
          if (dovah::form_type_is_base_form(form->form_type)) {

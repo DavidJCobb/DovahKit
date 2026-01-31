@@ -2,6 +2,7 @@
 #include <QHeaderView>
 #include <QLineEdit>
 #include "../../../helpers/qt/strings.h"
+#include "dovah/utils/form_type_is_cell_child.h"
 #include "../../../editor/core.h"
 #include "../../../editor/helpers/form_identifiers_to_string.h"
 #include "../../../editor/open_window_for_form.h"
@@ -17,7 +18,7 @@ void DeleteFormDialogListModelItem::updateFromStub() {
    uint32_t signature = dovah::form_type_info::lookup(stub.form_type).signature;
    this->signature = cobb::qt::four_cc_to_string(signature);
    //
-   if (dovah::form_type_is_reference(stub.form_type)) {
+   if (dovah::form_type_is_cell_child(stub.form_type)) {
       auto parent = stub.get_parent_form();
       assert(parent->form_type == dovah::form_type::cell && "When this code was written, it was only possible for refs to appear inside of CELLs. Looks like something's changed?");
       if (parent) {

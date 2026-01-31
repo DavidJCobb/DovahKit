@@ -2,6 +2,7 @@
 #include <QMimeData>
 #include "helpers/qt/strings.h"
 #include "dovah/form_stubs/helpers/get_base_form.h"
+#include "dovah/utils/form_type_is_cell_child.h"
 #include "editor/core.h"
 #include "editor/helpers/form_identifiers_to_string.h"
 #include "editor/helpers/form_stub_drag_drop.h"
@@ -38,7 +39,7 @@ QString DKFormListPaneModel::Item::computeEditorID() const {
             world = parent;
          }
       }
-   } else if (dovah::form_type_is_reference(stub->form_type)) {
+   } else if (dovah::form_type_is_cell_child(stub->form_type)) {
       ref = stub;
       if (auto* parent = stub->get_parent_form()) [[likely]] {
          if (parent->form_type == dovah::form_type::cell) [[likely]] {

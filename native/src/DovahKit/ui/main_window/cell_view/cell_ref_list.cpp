@@ -10,6 +10,7 @@
 #include "dovah/form_stub.h"
 #include "dovah/form_stubs/helpers/for_each_child_form.h"
 #include "dovah/form_stubs/helpers/get_base_form.h"
+#include "dovah/utils/form_type_is_cell_child.h"
 #include "widgets/DKHeaderView.h"
 #include "../../generic/QItemSelectionModelEx.h"
 
@@ -51,14 +52,7 @@ void CellRefListModelItem::update() {
 
 #pragma region CellRefListModel
 /*static*/ bool CellRefListModel::acceptsFormType(dovah::form_type ft) {
-   if (dovah::form_type_is_reference(ft))
-      return true;
-   switch (ft) {
-      case dovah::form_type::land:
-      case dovah::form_type::navmesh:
-         return true;
-   }
-   return false;
+   return dovah::form_type_is_cell_child(ft);
 }
 
 CellRefListModel::CellRefListModel(QObject* parent) : QAbstractTableModel(parent) {
@@ -75,7 +69,7 @@ void CellRefListModel::formCreated(const dovah::form_stub* stub) {
       return;
    if (stub->get_parent_form() != this->last_used_cell)
       return;
-   if (!dovah::form_type_is_reference(stub->form_type))
+   if (!dovah::form_type_is_cell_child(stub->form_type))
       return;
    this->_insertItem(stub, false);
 }
@@ -112,7 +106,7 @@ void CellRefListModel::formDeletionImminent(const dovah::form_stub* stub, bool i
       return;
    if (stub->get_parent_form() != this->last_used_cell)
       return;
-   if (!dovah::form_type_is_reference(stub->form_type))
+   if (!dovah::form_type_is_cell_child(stub->form_type))
       return;
    auto& list = this->children;
    auto  size = list.size();

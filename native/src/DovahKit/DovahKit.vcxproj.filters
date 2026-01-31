@@ -9845,6 +9845,9 @@
     <ClInclude Include="ui\utils\painting\paint_arrow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\utils\form_type_is_cell_child.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

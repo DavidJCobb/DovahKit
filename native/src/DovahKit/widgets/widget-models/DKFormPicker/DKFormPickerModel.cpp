@@ -1,13 +1,14 @@
 #include "./DKFormPickerModel.h"
 #include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/form_stub.h"
+#include "dovah/utils/form_type_is_cell_child.h"
 #include "editor/subsystems/papyrus/core.h"
 #include "editor/core.h"
 #include "editor/form_stub_meta_type.h"
 
 namespace {
    bool _should_exclude_form_type(dovah::form_type ft) {
-      if (dovah::form_type_is_reference(ft))
+      if (dovah::form_type_is_cell_child(ft))
          return true;
       if (dovah::form_type_info::lookup(ft).flags & dovah::form_type_info::flag::no_connections)
          return true;

@@ -20,6 +20,7 @@
 #include "../forms/Form.h"
 #include "../logging.h"
 #include "./bsa/bsa_load_order.h"
+#include "../utils/form_type_is_cell_child.h"
 #include "../utils/get_ini_defined_bsa_list.h"
 #include "../utils/get_user_language_name.h"
 #include "../localization/localized_string_store.h"
@@ -1976,7 +1977,7 @@ namespace dovah {
          auto child_type  = request.form_type;
 
          bool error = false;
-         if (form_type_is_reference(child_type)) { // validate parent/child relationships
+         if (form_type_is_cell_child(child_type)) { // validate parent/child relationships
             error = parent_type != form_type::cell;
          } else if (child_type == form_type::cell) {
             error = parent_type != form_type::worldspace;
@@ -1999,7 +2000,7 @@ namespace dovah {
                return error_code::exterior_grid_coordinates_already_taken;
          }
       } else {
-         if (form_type_is_reference(request.form_type))
+         if (form_type_is_cell_child(request.form_type))
             return error_code::cannot_create_reference_with_no_parent_cell;
       }
       if (request.clone_of && request.form_type == form_type::cell) {

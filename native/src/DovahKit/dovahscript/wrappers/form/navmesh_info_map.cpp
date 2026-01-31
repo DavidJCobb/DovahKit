@@ -39,14 +39,10 @@ namespace {
                   }
                   lua_pushnumber(L, src.category);
                   lua_setfield(L, -2, "category");
-                  {
-                     lua_newtable(L);
-                     for (size_t i = 0; i < src.unk08.size(); ++i) {
-                        lua_pushnumber(L, src.unk08[i]);
-                        lua_seti(L, -2, i + 1);
-                     }
-                     lua_setfield(L, -2, "unk08");
-                  }
+                  lua_classes::vector3::push_new_instance(L, src.approx_location.x, src.approx_location.y, src.approx_location.z);
+                  lua_setfield(L, -2, "approx_location");
+                  lua_pushnumber(L, src.preference);
+                  lua_setfield(L, -2, "preference");
                   {
                      lua_newtable(L); // links
                      {

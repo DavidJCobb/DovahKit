@@ -17,6 +17,7 @@
 #include "dovah/files/bsa/bsa_archived_file.h"
 #include "dovah/files/papyrus/compiled_script.h"
 #include "dovah/forms/DefaultObjectManager.h"
+#include "dovah/utils/form_type_is_cell_child.h"
 #include "core_internals/load_task.h"
 #include "core_internals/backend_notice_dispatcher.h"
 #include "helpers/make_editor_id_for_duplicate.h"
@@ -523,7 +524,7 @@ dovah::form_stub* DovahKitCore::duplicate_form(dovah::form_stub& original, QWidg
    auto  request = this->request_form_duplication();
    request.set_target(&original);
    //
-   if (!dovah::form_type_is_reference(original.form_type)) { // shouldn't ever happen for the Object Window, but eh
+   if (!dovah::form_type_is_cell_child(original.form_type)) { // shouldn't ever happen for the Object Window, but eh
       QString suggestion = editor_helpers::make_editor_id_for_duplicate(original.get_editor_id());
       bool    ok         = false;
       QString editor_id  = QInputDialog::getText(dialog_parent, tr("Set editor ID"), tr("Editor ID:"), QLineEdit::Normal, suggestion, &ok);

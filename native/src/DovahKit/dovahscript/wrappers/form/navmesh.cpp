@@ -17,6 +17,8 @@
 #include "./navmesh/collection_triangles.h"
 #include "./navmesh/collection_vertices.h"
 
+#include "dovahscript/lua_classes/vector3.h"
+
 namespace {
    using namespace dovahscript;
    using cls          = wrappers::navmesh;
