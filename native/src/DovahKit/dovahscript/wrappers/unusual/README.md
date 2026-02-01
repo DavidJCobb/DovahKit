@@ -1,5 +1,4 @@
 
-There are certain rules and guidelines  that need to be followed when writing a 
 This folder  is for Lua classes that wrap a native object directly  rather than 
 through an instance of `wrapper`. As such, there's a one-to-one mapping between 
 a userdata and an  instance &mdash; that is, no two userdata  refer to the same 
