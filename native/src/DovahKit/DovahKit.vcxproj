@@ -153,6 +153,9 @@
     <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map\collection_precomputed_paths.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map\navmesh_info_collection.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map\precomputed_path.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form_components\collection_conditions.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form_components\condition.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form_components\condition\comparison.cpp" />
     <ClCompile Include="dovah\datastores\camera_paths.cpp" />
     <ClCompile Include="dovah\datastores\camera_paths\anam_subrecord_position.cpp" />
     <ClCompile Include="dovah\datastores\camera_paths\node.cpp" />
@@ -421,6 +424,7 @@
     <ClCompile Include="dovah\utils\auto_door_envelopes_teleport_marker.cpp" />
     <ClCompile Include="dovah\utils\default_light_emitter_shadow_depth_bias.cpp" />
     <ClCompile Include="dovah\utils\default_primitive_color_for_base_form.cpp" />
+    <ClCompile Include="dovah\utils\form_component_accessors\condition_list.cpp" />
     <ClCompile Include="dovah\utils\form_component_accessors\keyword_list.cpp" />
     <ClCompile Include="dovah\utils\get_computed_location.cpp" />
     <ClCompile Include="dovah\utils\get_region_worldspace.cpp" />
@@ -1501,6 +1505,10 @@
     <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\collection_precomputed_paths.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\navmesh_info_collection.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\precomputed_path.h" />
+    <ClInclude Include="dovahscript\wrappers\form_components\collection_conditions.h" />
+    <ClInclude Include="dovahscript\wrappers\form_components\condition.h" />
+    <ClInclude Include="dovahscript\wrappers\form_components\condition\comparison.h" />
+    <ClInclude Include="dovahscript\wrappers\form_components\_all.h" />
     <ClInclude Include="dovah\bare_form_id_t.h" />
     <ClInclude Include="dovah\datastores\camera_paths.h" />
     <ClInclude Include="dovah\datastores\camera_paths\anam_subrecord_position.h" />
@@ -2153,6 +2161,7 @@
     <ClInclude Include="dovah\utils\auto_door_envelopes_teleport_marker.h" />
     <ClInclude Include="dovah\utils\default_light_emitter_shadow_depth_bias.h" />
     <ClInclude Include="dovah\utils\default_primitive_color_for_base_form.h" />
+    <ClInclude Include="dovah\utils\form_component_accessors\condition_list.h" />
     <ClInclude Include="dovah\utils\form_component_accessors\keyword_list.h" />
     <ClInclude Include="dovah\utils\form_type_is_cell_child.h" />
     <ClInclude Include="dovah\utils\get_region_worldspace.h" />

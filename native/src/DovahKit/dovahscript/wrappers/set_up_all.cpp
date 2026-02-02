@@ -2,6 +2,7 @@
 #include "../../lua.h"
 
 #include "form/_all.h"
+#include "form_components/_all.h"
 #include "resource/_all.h"
 #include "ui/_all.h"
 #include "unusual/_all.h"
@@ -88,6 +89,11 @@ namespace dovahscript {
                define_wrapper_metatable<worldspace_grid_bounds>(L);
                define_wrapper_metatable<worldspace_grid_bounds_extent>(L);
          #pragma endregion
+      #pragma endregion
+      #pragma region Form components
+         define_collection_metatable(L, collections::condition_list);
+            define_wrapper_metatable<condition>(L);
+               define_wrapper_metatable<condition_comparison>(L);
       #pragma endregion
       #pragma region INI
          define_wrapper_metatable<ini::setting>(L);

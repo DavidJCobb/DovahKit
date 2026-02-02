@@ -12,6 +12,7 @@
 #include "editor/subsystems/form_info_cache/core.h"
 #include "./topic_info/collection_responses.h"
 #include "./topic_info/response.h"
+#include "../form_components/collection_conditions.h"
 
 namespace {
    using namespace dovahscript;
@@ -28,7 +29,17 @@ namespace {
          lua_pushboolean(L, !!(form->info_flags & Flag));
          return 1;
       }
-
+      
+      int conditions(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<wrapped_type>();
+         if (!form)
+            return 0;
+         wrapper out = self;
+         out.append_part(wrapper_part_types::condition_list);
+         out.is_collection = true;
+         return core::subsystems::userdata::get().push(L, out, wrappers::collections::condition_list.registry_key);
+      }
       int favor_level(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* form = self.get_loaded_form_data<wrapped_type>();
@@ -293,6 +304,7 @@ namespace dovahscript::wrappers {
          { "say_once",                     &_getters::_info_flag<wrapped_type::info_flag::say_once> },
          { "spends_favor_points",          &_getters::_info_flag<wrapped_type::info_flag::spends_favor_points> },
       #pragma endregion
+      { "conditions",          &_getters::conditions },
       { "favor_level",         &_getters::favor_level },
       { "has_lip_file",        &_getters::has_lip_file },
       { "hours_until_reset",   &_getters::hours_until_reset },
