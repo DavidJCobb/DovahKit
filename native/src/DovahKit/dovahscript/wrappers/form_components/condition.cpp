@@ -1,6 +1,7 @@
 #include "./condition.h"
 #include "./collection_conditions.h"
 #include "helpers/lua/error.h"
+#include "helpers/string/strieq_ascii.h"
 #include "dovahscript/core/subsystems/permissions.h"
 #include "dovahscript/core/subsystems/userdata.h"
 #include "dovahscript/core/classes.h"
@@ -9,6 +10,7 @@
 #include "dovahscript/wrapper.h"
 
 #include "dovah/data/conditions/all_function_info.h"
+#include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/forms/components/conditions.h"
 #include "dovah/forms/components/conditions/context.h"
 #include "dovah/forms/components/conditions/working_condition.h"
@@ -129,6 +131,13 @@ namespace {
                lua_pushnumber(L, wrapped->get_run_on_data().index); // TODO: push a package-data object instead
                return 1;
             case dovah::conditions::run_on_type::reference:
+               {
+                  auto* stub = wrapped->get_run_on_data().reference.get_form_stub();
+                  if (stub && stub->formID == dovah::hardcoded_form_ids::PlayerRef) {
+                     lua_pushstring(L, "player");
+                     return 1;
+                  }
+               }
                return push_native_object(wrapped->get_run_on_data().reference);
             case dovah::conditions::run_on_type::subject:
                lua_pushstring(L, "subject");
@@ -168,7 +177,62 @@ namespace {
          }
          self.after_edit();
       }
+      
+      int function(lua_State* L) {
+         uint16_t function_id = 0;
+         _try_edit_condition(
+            [L, &function_id]() {
+               if (lua_isinteger(L, 2)) {
+                  auto i = lua_tointeger(L, 2);
+                  if (i < 0 || i >= std::numeric_limits<decltype(function_id)>::max()) {
+                     cobb::lua::argerror(L, 2, "invalid integer");
+                  }
+                  const auto* info = dovah::conditions::function_info_by_id(i);
+                  if (!info) {
+                     cobb::lua::argerror(L, 2, "unrecognized function ID number");
+                  }
+                  function_id = i;
+               } else if (lua_isstring(L, 2)) {
+                  std::string_view arg = lua_tostring(L, 2);
 
+                  bool found = false;
+                  for (const auto& info : dovah::conditions::all_vanilla_function_info) {
+                     if (cobb::strieq_ascii(info.name, arg)) {
+                        function_id = info.id;
+                        found       = true;
+                        break;
+                     }
+                  }
+                  if (found)
+                     return;
+                  for (const auto& info : dovah::conditions::all_extended_function_info) {
+                     if (cobb::strieq_ascii(info.name, arg)) {
+                        function_id = info.id;
+                        found       = true;
+                        break;
+                     }
+                  }
+                  if (found)
+                     return;
+                  cobb::lua::argerror(L, 2, "unrecognized function name");
+               } else {
+                  cobb::lua::argerror(L, 2, "expected string (function name) or integer (function ID)");
+               }
+            },
+            [L, &function_id](working_type& working) {
+               if (working.function == function_id)
+                  return;
+               working.function = function_id;
+               working.parameters = {};
+               working.event_parameters = {};
+
+               const auto* info = dovah::conditions::function_info_by_id(function_id);
+               if (info && info->uses_event_data)
+                  working.event_parameters.emplace();
+            }
+         );
+         return 0;
+      }
       int is_or_linked(lua_State* L) {
          _try_edit_condition(
             [L]() {
@@ -206,6 +270,7 @@ namespace dovahscript::wrappers {
       { "swap_subject_and_target", &_getters::swap_subject_and_target },
    };
    /*static*/ cls::method_list_t cls::metatable_setters = {
+      { "function",                &_setters::function },
       { "is_or_linked",            &_setters::is_or_linked },
       { "swap_subject_and_target", &_setters::swap_subject_and_target },
    };
