@@ -174,3 +174,19 @@ The design for wrappers outlined [above](./#Wrappers) has some limitations:
 * **It's not clear how to represent collections of collections.** If the only distinction between `foo.bar` and `foo.bar[5]` is a single flag set across the entire wrapper, then how do we distinguish `foo.bar[5][7]` from either of those? This has come up when dealing with NavMeshInfoMap form data: the form stores a list of precomputed paths, and each precomputed path is just a list of navmesh forms; thus `navi.precomputed_paths[i][j]` should yield a navmesh form.
 
 I need to rethink wrappers.
+
+
+### Better access to UI models
+
+Right now, Dovahscript makes it possible for Lua to refer to a "flat" model's rows, columns, and cells, a way that accounts for the insertion or deletion of rows (i.e. if Lua refers to row #5, and we delete row #3, then Lua will still refer to the same row even though that row is now #4).
+
+However, I don't believe I ever implemented this functionality for trees, so we can't offer things like treeviews. Such an implementation would be fairly similar, except that deleting a model item would require us to find and sever any Lua references to child or descendant items.
+
+What's more: Lua can't attach arbitrary data to model items. There's no system whereby we can bind data to e.g. `(Qt::ItemDataRole)(Qt::UserRole + 1000)`. This makes some scripted tasks kind of painful, and it means that widgets like treeviews would have extremely limited utility. If we wanted to implement this, we'd need a system whereby the Qt model item stores a handle to Lua data, and that data is refcounted. We'd need two tables:
+
+* When you try to add Lua data to a model item, we store that data in a strong (i.e. non-weak) table and reserve a handle for it.
+
+* When we actually get around to creating the model item natively, we store a reference to the Lua data in a weak table, store the refcounting handle in the Qt model, and then remove the Lua data from the strong table.
+
+This order of operations should ensure that the data isn't dropped in transit.
+
