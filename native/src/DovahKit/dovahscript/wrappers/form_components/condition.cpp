@@ -15,6 +15,11 @@
 #include "dovah/forms/components/conditions/context.h"
 #include "dovah/forms/components/conditions/working_condition.h"
 #include "dovah/forms/Form.h"
+#include "dovah/forms/Quest.h"
+#include "editor/core.h"
+
+#include "../form/form.h"
+#include "../form/quest/alias.h"
 
 #include "./condition/comparison.h"
 
@@ -125,8 +130,10 @@ namespace {
                lua_pushstring(L, "linked ref");
                return 1;
             case dovah::conditions::run_on_type::quest_alias:
-               lua_pushnumber(L, wrapped->get_run_on_data().index); // TODO: push a quest-alias object instead
-               return 1;
+               if (auto* quest = _context_of(self).quest) {
+                  return wrappers::quest_alias::wrap(L, quest, wrapped->get_run_on_data().index);
+               }
+               break;
             case dovah::conditions::run_on_type::package_data:
                lua_pushnumber(L, wrapped->get_run_on_data().index); // TODO: push a package-data object instead
                return 1;
@@ -168,7 +175,11 @@ namespace {
          auto* wrapped = _unwrap(self);
          if (wrapped == nullptr)
             cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
-         check();
+         if constexpr (std::is_invocable<CheckFunctor, wrapper&>) {
+            check(self);
+         } else {
+            check();
+         }
          self.before_edit();
          {
             working_type working(*wrapped);
@@ -244,6 +255,68 @@ namespace {
          );
          return 0;
       }
+      int run_on(lua_State* L) {
+         dovah::conditions::run_on_type type;
+         dovah::form_stub* ref = nullptr;
+         int32_t index = -1;
+         _try_edit_condition(
+            [L, &type, &ref, &index](wrapper& self) {
+               if (lua_isstring(L, 2)) {
+                  std::string_view arg = lua_tostring(L, 2);
+                  if (arg == "combat target") {
+                     type = dovah::conditions::run_on_type::combat_target;
+                  } else if (arg == "linked ref") {
+                     type = dovah::conditions::run_on_type::linked_ref;
+                  } else if (arg == "player") {
+                     auto& editor = DovahKitCore::get();
+                     if (!editor.has_data())
+                        cobb::lua::error(L, "cannot create this data because no data is loaded in the editor");
+                     ref = editor.get_form(dovah::hardcoded_form_ids::PlayerRef);
+                     if (!ref)
+                        cobb::lua::error(L, "an internal error occurred: could not locate PlayerRef");
+                  } else if (arg == "subject") {
+                     type = dovah::conditions::run_on_type::subject;
+                  } else if (arg == "target") {
+                     type = dovah::conditions::run_on_type::target;
+                  } else {
+                     cobb::lua::argerror(L, 2, "unrecognized run-on type");
+                  }
+               } else {
+                  auto  context       = _context_of(self);
+                  auto* alias_wrapper = wrapper_from_stack<wrappers::quest_alias>(L, 2);
+                  if (alias_wrapper) {
+                     auto* alias = wrappers::quest_alias::unwrap(*alias_wrapper);
+                     if (!alias)
+                        cobb::lua::argerror(L, 2, "passed-in quest alias is missing (deleted?)");
+                     if (!context.quest)
+                        cobb::lua::argerror(L, 2, "this condition has no owning quest, and so cannot be set to run on a quest alias");
+                     if (&alias->owner.stub != context.quest)
+                        cobb::lua::argerror(L, 2, "the passed-in quest alias does not belong to this condition's owning quest");
+                     index = alias->id;
+                  } else {
+                     auto* form_wrapper = wrapper_from_stack<wrappers::form>(L, 2);
+                     if (!form_wrapper) {
+                        cobb::lua::argerror(L, 2, "form or string expected");
+                     }
+                     form_wrapper->error_if_wrong_form_type(L, 2, dovah::form_type::reference);
+                     ref = form_wrapper->stub;
+                  }
+                  // 
+                  // TODO: in the future, handle package data and event data
+                  //
+               }
+            },
+            [L, &type, &ref, &index](working_type& working) {
+               working.run_on.type = type;
+               if (ref) {
+                  working.run_on.entity.emplace<dovah::form_stub*>(ref);
+               } else {
+                  working.run_on.entity.emplace<uint32_t>(index);
+               }
+            }
+         );
+         return 0;
+      }
       int swap_subject_and_target(lua_State* L) {
          _try_edit_condition(
             [L]() {
@@ -272,6 +345,7 @@ namespace dovahscript::wrappers {
    /*static*/ cls::method_list_t cls::metatable_setters = {
       { "function",                &_setters::function },
       { "is_or_linked",            &_setters::is_or_linked },
+      { "run_on",                  &_setters::run_on },
       { "swap_subject_and_target", &_setters::swap_subject_and_target },
    };
 }

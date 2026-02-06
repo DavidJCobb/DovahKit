@@ -224,8 +224,13 @@ namespace dovahscript {
    void wrapper::error_if_wrong_form_type(lua_State* L, int arg_index, dovah::form_type ft, bool loose) {
       luaL_argcheck(L, this->type == wrapper_type::form, arg_index, "form expected");
       luaL_argcheck(L, this->depth == 0, arg_index, "form expected");
-      if (this->stub)
-         luaL_argcheck(L, this->stub->form_type == ft, arg_index, "incorrect form type");
+      if (this->stub) {
+         if (ft == dovah::form_type::reference) {
+            luaL_argcheck(L, dovah::form_type_is_reference(this->stub->form_type), arg_index, "incorrect form type");
+         } else {
+            luaL_argcheck(L, this->stub->form_type == ft, arg_index, "incorrect form type");
+         }
+      }
    }
 
    int8_t wrapper::depth_of(const cobb::eight_cc& code) const noexcept {
