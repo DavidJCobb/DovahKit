@@ -112,7 +112,9 @@ namespace {
 
          dovah::form_stub* operand_form  = nullptr;
          float             operand_float = 0.0F;
-         if (!lua_isnumber(L, 2)) {
+         if (lua_isnumber(L, 2)) {
+            operand_float = lua_tonumber(L, 2);
+         } else {
             operand_form = pull_form_stub_argument(L, 2, dovah::form_type::global);
             if (!operand_form)
                cobb::lua::argcheck(L, false, 2, "cannot compare to NONE");

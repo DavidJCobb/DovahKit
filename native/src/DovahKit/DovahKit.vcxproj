@@ -4110,6 +4110,10 @@
       <SubType>
       </SubType>
     </None>
+    <None Include="dovah\_docs\form types\t\topic info.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="qt.natstepfilter" />
     <None Include="dovah\_docs\form types\r\region.md">
       <SubType>
@@ -4442,6 +4446,7 @@
     <Natvis Include="helpers\glm\vec.natvis" />
     <Natvis Include="helpers\grid.natvis" />
     <Natvis Include="helpers\keyboard\key.natvis" />
+    <Natvis Include="helpers\lua\lua.natvis" />
     <Natvis Include="helpers\multiheap.natvis" />
     <Natvis Include="helpers\optionals\finite_float.natvis" />
     <Natvis Include="helpers\qt\keycodes.natvis" />

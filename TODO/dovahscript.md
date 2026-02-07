@@ -196,6 +196,7 @@ However, with the refactor described above, we sort of get this for free. Templa
 
 For overwriting collections, the logic above is performed per collection element, with collection-level behaviors differing depending on whether the collection is fixed-size, et cetera.
 
+
 ### Wrappers have a flawed design
 
 The design for wrappers outlined [above](./#Wrappers) has some limitations:
@@ -205,6 +206,11 @@ The design for wrappers outlined [above](./#Wrappers) has some limitations:
 * **It's not clear how to represent collections of collections.** If the only distinction between `foo.bar` and `foo.bar[5]` is a single flag set across the entire wrapper, then how do we distinguish `foo.bar[5][7]` from either of those? This has come up when dealing with NavMeshInfoMap form data: the form stores a list of precomputed paths, and each precomputed path is just a list of navmesh forms; thus `navi.precomputed_paths[i][j]` should yield a navmesh form.
 
 I need to rethink wrappers.
+
+
+### Collection wrappers need the ability to have custom member functions
+
+We mainly need this for TopicInfos' condition lists, which are bifurcated due to jank with how the game loads `INFO` records. The lists are split into "locked" conditions which cannot be edited in any way, and "normal" conditions which are alterable. It'd be nice if we could query, on the list, how many of the conditions are "locked."
 
 
 ### Better access to UI models

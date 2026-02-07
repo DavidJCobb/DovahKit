@@ -11927,6 +11927,7 @@
     <None Include="dovah\_docs\form types\r\reference.md" />
     <None Include="dovah\_docs\form types\n\navmesh info map.md" />
     <None Include="dovah\_docs\form types\a\actor base.md" />
+    <None Include="dovah\_docs\form types\t\topic info.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

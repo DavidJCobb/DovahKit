@@ -313,7 +313,7 @@ namespace {
       int run_on(lua_State* L) {
          dovah::conditions::run_on_type type;
          dovah::form_stub* ref = nullptr;
-         int32_t index = -1;
+         std::optional<int32_t> index;
          _try_edit_condition(
             L,
             [L, &type, &ref, &index](wrapper& self) {
@@ -369,8 +369,8 @@ namespace {
                working.run_on.type = type;
                if (ref) {
                   working.run_on.entity.emplace<dovah::form_stub*>(ref);
-               } else {
-                  working.run_on.entity.emplace<uint32_t>(index);
+               } else if (index.has_value()) {
+                  working.run_on.entity.emplace<uint32_t>(index.value());
                }
             }
          );
@@ -395,7 +395,7 @@ namespace dovahscript::wrappers {
    
    /*static*/ cls::method_list_t cls::metatable_getters = {
       { "comparison",              &_getters::comparison },
-      { "function",                &_getters::function },
+      { "function_name",           &_getters::function },
       { "is_or_linked",            &_getters::is_or_linked },
       { "override_types_with",     &_getters::override_types_with },
       { "owning_package",          &_getters::owning_package },
@@ -405,7 +405,7 @@ namespace dovahscript::wrappers {
       { "swap_subject_and_target", &_getters::swap_subject_and_target },
    };
    /*static*/ cls::method_list_t cls::metatable_setters = {
-      { "function",                &_setters::function },
+      { "function_name",           &_setters::function },
       { "is_or_linked",            &_setters::is_or_linked },
       { "override_types_with",     &_setters::override_types_with },
       { "run_on",                  &_setters::run_on },

@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+   <Type Name="lua_State">
+      <Intrinsic Name="_stack_size" Expression="this-&gt;ci-&gt;_stack_size()" />
+      <Intrinsic Name="_stack" Expression="this-&gt;ci-&gt;_stack()" />
+      <Intrinsic Name="_stack_value" Expression="this-&gt;ci-&gt;_stack_value(index)" >
+         <Parameter Name="index" Type="size_t" />
+      </Intrinsic>
+      
+      <Expand>
+         <Item Name="[stack size]">_stack_size()</Item>
+         <Item Name="[stack]">_stack(),[_stack_size()]</Item>
+         <Item Name="[call info]">this-&gt;ci</Item>
+         <Synthetic Name="[call stack]">
+            <Expand>
+               <LinkedListItems>
+                  <HeadPointer>this-&gt;ci</HeadPointer>
+                  <NextPointer>previous</NextPointer>
+                  <ValueNode>this</ValueNode>
+               </LinkedListItems>
+            </Expand>
+         </Synthetic>
+         <Item Name="[global state]">l_G</Item>
+      </Expand>
+   </Type>
+   
+   <Type Name="CallInfo">
+      <Intrinsic Name="_stack" Expression="this-&gt;func" />
+      <Intrinsic Name="_stack_size" Expression="(this-&gt;top - (_stack() + 1))" />
+      <Intrinsic Name="_stack_value" Expression="&amp;(_stack() + index)-&gt;val" >
+         <Parameter Name="index" Type="size_t" />
+      </Intrinsic>
+
+      <Intrinsic Name="_is_c_function" Expression="!!(callstatus &amp; (1 &lt;&lt; 1))" />
+
+      <Expand>
+         <Synthetic Name="[call status]">
+            <DisplayString>{callstatus}</DisplayString>
+            <Expand>
+               <Item Name="[original allowhook value]">!!(callstatus &amp; (1 &lt;&lt; 0))</Item>
+               <Item Name="[C function]">!!(callstatus &amp; (1 &lt;&lt; 1))</Item>
+               <Item Name="[fresh]">!!(callstatus &amp; (1 &lt;&lt; 2))</Item>
+               <Item Name="[debug hook]">!!(callstatus &amp; (1 &lt;&lt; 3))</Item>
+               <Item Name="[yieldable pcall]">!!(callstatus &amp; (1 &lt;&lt; 4))</Item>
+               <Item Name="[tail call]">!!(callstatus &amp; (1 &lt;&lt; 5))</Item>
+               <Item Name="[last hooked call yielded]">!!(callstatus &amp; (1 &lt;&lt; 6))</Item>
+               <Item Name="[is running a finalizer]">!!(callstatus &amp; (1 &lt;&lt; 7))</Item>
+               <Item Name="[has transfer information]">!!(callstatus &amp; (1 &lt;&lt; 8))</Item>
+               <Item Name="[using __lt for __le]">!!(callstatus &amp; (1 &lt;&lt; 9))</Item>
+            </Expand>
+         </Synthetic>
+         <Item Name="[function]">_stack_value(0)</Item>
+         <Item Name="[number of results]">nresults,d</Item>
+         <Item Name="[stack size]">_stack_size()</Item>
+         <Item Name="[stack]">_stack(),[_stack_size()]</Item>
+      </Expand>
+   </Type>
+   
+   <Type Name="StackValue">
+      <DisplayString>{val,na}</DisplayString>
+      <Expand>
+         <ExpandedItem>val</ExpandedItem>
+      </Expand>
+   </Type>
+   
+   <Type Name="TValue">
+      <Intrinsic Name="_typecode" Expression="this-&gt;tt_ &amp; 0x0F" />
+      <Intrinsic Name="_makevariant" Expression="type | (tag &lt;&lt; 4)">
+         <Parameter Name="type" Type="unsigned int" />
+         <Parameter Name="tag" Type="unsigned int" />
+      </Intrinsic>
+
+      <Intrinsic Name="_isnil" Expression="_typecode() == 0" />
+      <Intrinsic Name="_isboolean" Expression="_typecode() == 1" />
+      <Intrinsic Name="_isnumber" Expression="_typecode() == 3" />
+      <Intrinsic Name="_isinteger" Expression="this-&gt;tt_ == _makevariant(3, 0)" />
+      <Intrinsic Name="_isstring" Expression="_typecode() == 4" />
+      <Intrinsic Name="_istable" Expression="_typecode() == 5" />
+      <Intrinsic Name="_isfunction" Expression="_typecode() == 6" />
+      <Intrinsic Name="_isuserdata" Expression="_typecode() == 7" />
+
+      <Intrinsic Name="_tostring" Expression="(TString*)this-&gt;value_.gc,na" />
+      <Intrinsic Name="_totable" Expression="(Table*)this-&gt;value_.gc,na" />
+      <Intrinsic Name="_touserdata" Expression="(Udata*)this-&gt;value_.gc,na" />
+
+      <Intrinsic Name="_is_lua_function" Expression="(this-&gt;tt_ &amp; 0x3F) == _makevariant(6, 0)" />
+      <Intrinsic Name="_is_c_function" Expression="(this-&gt;tt_ &amp; 0x3F) == _makevariant(6, 1)" />
+      <Intrinsic Name="_is_c_closure" Expression="(this-&gt;tt_ &amp; 0x3F) == _makevariant(6, 2)" />
+
+      <DisplayString Condition="_isnil()">nil</DisplayString>
+      <DisplayString Condition="_isstring()">{_tostring(),na}</DisplayString>
+      
+      <Expand>
+         <Synthetic Name="[type]">
+            <DisplayString Condition="_isnil()">nil</DisplayString>
+            <DisplayString Condition="_isboolean()">boolean</DisplayString>
+            <DisplayString Condition="_typecode() == 2">light userdata</DisplayString>
+            <DisplayString Condition="_isinteger()">integer</DisplayString>
+            <DisplayString Condition="_isnumber()">number</DisplayString>
+            <DisplayString Condition="_isstring()">string</DisplayString>
+            <DisplayString Condition="_istable()">table</DisplayString>
+            <DisplayString Condition="_is_lua_function()">Lua function</DisplayString>
+            <DisplayString Condition="_is_c_function()">C function</DisplayString>
+            <DisplayString Condition="_is_c_closure()">C closure</DisplayString>
+            <DisplayString Condition="_isfunction()">function</DisplayString>
+            <DisplayString Condition="_isuserdata()">userdata</DisplayString>
+            <DisplayString Condition="_typecode() == 8">thread</DisplayString>
+            <DisplayString>unknown</DisplayString>
+         </Synthetic>
+         <Synthetic Name="[value]" Condition="_isboolean()">
+            <DisplayString Condition="this-&gt;tt_ == _makevariant(1, 0)">false</DisplayString>
+            <DisplayString Condition="this-&gt;tt_ == _makevariant(1, 1)">true</DisplayString>
+            <DisplayString>unknown</DisplayString>
+         </Synthetic>
+         <Item Name="[value]" Condition="_isinteger()">value_.i</Item>
+         <Item Name="[value]" Condition="_isnumber() &amp;&amp; !_isinteger()">value_.n</Item>
+         <Item Name="[value]" Condition="_isstring()">_tostring(),na</Item>
+         <ExpandedItem Condition="_istable()">_totable()</ExpandedItem>
+         <ExpandedItem Condition="_isuserdata()">_touserdata()</ExpandedItem>
+         <ExpandedItem Condition="_is_lua_function()">(LClosure*)value_.gc</ExpandedItem>
+         <Item Name="[value]" Condition="_is_c_function()">(lua_CFunction)this-&gt;value_.gc,na</Item>
+      </Expand>
+   </Type>
+
+   <!-- Lua functions -->
+   <Type Name="LClosure">
+      <Expand>
+         <Item Name="[proto]">p,na</Item>
+         <Item Name="[upvalues]">upvals,[nupvalues]na</Item>
+      </Expand>
+   </Type>
+   <Type Name="Proto">
+      <Expand>
+         <Item Name="[is vararg]">is_vararg != 0</Item>
+         <Item Name="[max stack size]">maxstacksize</Item>
+         <Item Name="[arguments]">locvars,[numparams]na</Item>
+         <Item Name="[constants]">k,[sizek]na</Item>
+         <Item Name="[locals]">locvars,[sizelocvars]na</Item>
+         <Item Name="[nested functions]">p,[sizep]na</Item>
+         <Item Name="[upvalues]">upvalues,[sizeupvalues]na</Item>
+         <Item Name="[source file]">source,na</Item>
+         <Item Name="[instructions]">code,[sizecode]na</Item>
+      </Expand>
+   </Type>
+   <Type Name="LocVar">
+      <DisplayString>{varname,na}</DisplayString>
+      <Expand>
+         <Item Name="[name]">varname,na</Item>
+         <Item Name="[start PC]">startpc</Item>
+         <Item Name="[end PC]">endpc</Item>
+      </Expand>
+   </Type>
+   <Type Name="Upvaldesc">
+      <DisplayString>{name,na}</DisplayString>
+      <Expand>
+         <Item Name="[name]">name,na</Item>
+         <Item Name="[in stack]">instack != 0</Item>
+         <Item Name="[index]">idx</Item>
+         <Item Name="[kind]">kind</Item>
+      </Expand>
+   </Type>
+
+   <Type Name="Table">
+      <Intrinsic Name="_isrealasize" Expression="!(flags &amp; (1 &lt;&lt; 7))" />
+      <Intrinsic Name="_ispow2" Expression="((x) &amp; ((x) - 1)) == 0">
+         <Parameter Name="x" Type="int" />
+      </Intrinsic>
+      <Intrinsic Name="_limitequalsasize" Expression="_isrealasize() || _ispow2(alimit)" />
+      <Intrinsic Name="_realasize" Expression="
+         _limitequalsasize() ? alimit : (
+            (
+               alimit |
+               (alimit &gt;&gt; 1) |
+               (alimit &gt;&gt; 2) |
+               (alimit &gt;&gt; 4) |
+               (alimit &gt;&gt; 8) |
+               (alimit &gt;&gt; 16) |
+               (alimit &gt;&gt; 32)
+            ) + 1
+         )
+      " />
+
+      <Expand>
+         <Item Name="[metatable]">metatable,na</Item>
+         <Synthetic Name="[properties]">
+            <Expand>
+               <CustomListItems MaxItemsPerView="5000" ExcludeView="Test">
+                  <Variable Name="i"     InitialValue="(int)0" />
+                  <Variable Name="asize" InitialValue="_realasize()" />
+                  <Variable Name="node"  InitialValue="this-&gt;node" />
+                  <Variable Name="nsize" InitialValue="1 &lt;&lt; lsizenode" />
+                  <Loop>
+                     <If Condition="i &gt;= asize">
+                        <Break />
+                     </If>
+                     <If Condition="(array[i].tt_ &amp; 0x0F) != 0">
+                        <Item>array[i]</Item>
+                     </If>
+                     <Exec>i = i + 1</Exec>
+                  </Loop>
+                  <Exec>i -= asize</Exec>
+                  <Loop>
+                     <If Condition="i &gt;= nsize">
+                        <Break />
+                     </If>
+                     <If Condition="(node[i].i_val.tt_ &amp; 0x0F) != 0">
+                        <Item Name="[{node[i],view(keyonly)}]">node[i],view(valueonly)</Item>
+                     </If>
+                     <Exec>i = i + 1</Exec>
+                  </Loop>
+               </CustomListItems>
+            </Expand>
+         </Synthetic>
+      </Expand>
+   </Type>
+
+   <!-- userdata value -->
+   <Type Name="Udata">
+      <Expand>
+         <Item Name="[metatable]">metatable,na</Item>
+         <Item Name="[size]">len</Item>
+         <Item Name="[data]">(uint8_t*)(uv + nuvalue),[len]x</Item>
+         <Item Name="[user values]" Condition="nuvalue &gt; 0">uv,[nuvalue]na</Item>
+      </Expand>
+   </Type>
+   <Type Name="Udata0">
+      <Expand>
+         <Item Name="[metatable]">metatable,na</Item>
+         <Item Name="[size]">len</Item>
+         <Item Name="[data]">(uint8_t*)bindata,[len]x</Item>
+      </Expand>
+   </Type>
+   <Type Name="UValue">
+      <DisplayString>{uv,na}</DisplayString>
+      <Expand>
+         <ExpandedItem>uv</ExpandedItem>
+      </Expand>
+   </Type>
+
+   <!-- key/value pair in a table -->
+   <Type Name="Node">
+      <Intrinsic Name="key_is_nil" Expression="u.key_tt == 0" />
+      <Intrinsic Name="key_is_integer" Expression="u.key_tt == (3 | (1 &lt;&lt; 0))" />
+      <Intrinsic Name="key_is_string" Expression="u.key_tt == (4 | (1 &lt;&lt; 6))" />
+      <DisplayString IncludeView="keyonly" Condition="key_is_nil()">nil</DisplayString>
+      <DisplayString IncludeView="keyonly" Condition="key_is_integer()">{u.key_val.i}</DisplayString>
+      <DisplayString IncludeView="keyonly" Condition="key_is_string()">{(TString*)u.key_val.gc,na}</DisplayString>
+      <DisplayString IncludeView="valueonly">{i_val}</DisplayString>
+      <DisplayString Condition="key_is_nil()">[nil] = {i_val}</DisplayString>
+      <DisplayString Condition="key_is_integer()">[{u.key_val.i}] = {i_val}</DisplayString>
+      <DisplayString Condition="key_is_string()">[{(TString*)u.key_val.gc,na}] = {i_val}</DisplayString>
+      <Expand>
+         <Synthetic Name="[key]" Condition="key_is_nil()">
+            <DisplayString>nil</DisplayString>
+         </Synthetic>
+         <Synthetic Name="[key]" Condition="key_is_integer()">
+            <DisplayString>{u.key_val.i}</DisplayString>
+         </Synthetic>
+         <Synthetic Name="[key]" Condition="key_is_string()">
+            <DisplayString>{(TString*)u.key_val.gc,na}</DisplayString>
+         </Synthetic>
+         <Item Name="[value]">i_val</Item>
+      </Expand>
+   </Type>
+   
+   <Type Name="TString">
+      <Intrinsic Name="_makevariant" Expression="type | (tag &lt;&lt; 4)">
+         <Parameter Name="type" Type="unsigned int" />
+         <Parameter Name="tag" Type="unsigned int" />
+      </Intrinsic>
+      <Intrinsic Name="size" Expression="this-&gt;tt == _makevariant(4, 0) ? this-&gt;shrlen : this-&gt;u.lnglen" />
+      
+      <DisplayString>{contents,[this-&gt;size()]}</DisplayString>
+      <StringView>contents,[this-&gt;size()]</StringView>
+      <Expand>
+         <Item Name="[contents]">contents,[this-&gt;size()]</Item>
+         <Item Name="[size]">size()</Item>
+         <Item Name="[hash]">hash</Item>
+      </Expand>
+   </Type>
+</AutoVisualizer>

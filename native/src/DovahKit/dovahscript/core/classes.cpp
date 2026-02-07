@@ -33,6 +33,16 @@ namespace {
 namespace {
    bool _should_skip_name(lua_State* L, int index) {
       index = lua_absindex(L, index);
+      switch (lua_type(L, index)) {
+         case LUA_TBOOLEAN:
+         case LUA_TNUMBER:
+            //
+            // The `lua_isstring` function will actually convert the to-be-tested 
+            // value if it's convertible. We want that for anything that might have 
+            // a `__tostring` metamethod, but not for numbers, booleans, et cetera.
+            //
+            return false;
+      }
       if (lua_isstring(L, index)) {
          auto nk = lua_tostring(L, index);
          if (cobb::lua::is_metamethod_name(nk))
@@ -385,7 +395,12 @@ namespace {
          constexpr int index_list = 5;
          //
          #if _DEBUG
-            const char* __key = lua_tostring(L, index_key);
+            std::string __key;
+            {
+               lua_pushvalue(L, index_key);
+               __key = lua_tostring(L, -1); // modifies, doesn't just cast, so it'll mangle integer keys
+               lua_pop(L, 1);
+            }
          #endif
          //
          bool has_getter = false;
