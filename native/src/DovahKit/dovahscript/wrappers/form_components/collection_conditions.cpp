@@ -10,6 +10,8 @@
 #include "dovah/forms/components/conditions.h"
 #include "dovah/utils/form_component_accessors/condition_list.h"
 #include "dovah/forms/FormList.h"
+#include "./condition.h"
+#include "../form/form.h"
 
 namespace {
    constexpr const char* collection_metatable_key = "collection<dovah.classes.condition>";
@@ -61,15 +63,18 @@ namespace {
       --i;
       wrapper out = self;
       assert(out.is_collection);
-      assert(out.parts[0].signature == wrapper_part_types::condition);
+      assert(out.parts[0].signature == wrapper_part_types::condition_list);
       out.into_collection(i);
       return core::subsystems::userdata::get().push(L, out, wrappers::condition::metatable_key);
    }
    int member_function_insert(lua_State* L) {
       core::subsystems::permissions::verify_form_write_permissions();
       //
-      auto& self  = get_collection_wrapper(L);
-      auto* form  = self.get_loaded_form_data<wrapped_type>();
+      auto& self     = get_collection_wrapper(L);
+      auto* form     = self.get_loaded_form_data<wrapped_type>();
+      auto* list_ptr = get_wrapped_object(self);
+      if (!list_ptr)
+         return 0;
       //
       int  pos_value = 2;
       bool has_index = false;
@@ -89,7 +94,7 @@ namespace {
       //
       if (!form)
          return 0;
-      auto& list = form->contents;
+      auto& list = *list_ptr;
       auto  size = list.size();
       int   i    = size + 1;
       if (has_index) {
@@ -98,22 +103,21 @@ namespace {
             cobb::lua::error(L, "indices below 1, such as %d, are not allowed", i);
          --i;
       }
+      self.before_edit();
       if (i >= size) {
          if (i > size) {
-            cobb::lua::warning(L, "index %s is out of bounds; nil elements will be created between the end of the list and the new element", lua_tolstring(L, 2, nullptr));
+            cobb::lua::error(L, "cannot insert past the end of the list");
          }
-         list.resize(i + 1);
+         list.emplace(list.begin() + i);
       } else {
          list.emplace(list.begin() + i);
       }
-      self.before_edit();
-      list[i].set(*form, target);
       self.after_edit();
       return 0;
    }
    int member_function_remove(lua_State* L) {
       core::subsystems::permissions::verify_form_write_permissions();
-      //
+      
       auto& self     = get_collection_wrapper(L);
       auto* form     = self.get_loaded_form_data<dovah::loaded_forms::Form>();
       auto* list_ptr = get_wrapped_object(self);
@@ -131,45 +135,6 @@ namespace {
       self.after_edit();
       return 0;
    }
-   int set_item(lua_State* L) {
-      core::subsystems::permissions::verify_form_write_permissions();
-      //
-      constexpr auto index_self  = 1;
-      constexpr auto index_key   = 2;
-      constexpr auto index_value = 3;
-      //
-      dovah::form_stub* target = nullptr;
-      if (!lua_isnoneornil(L, index_value)) {
-         auto* w = wrapper_from_stack<wrappers::form>(L, index_value);
-         if (!w)
-            cobb::lua::error(L, "you can only overwrite formlist entries with forms or nil");
-         target = w->stub;
-      }
-      auto& self = get_collection_wrapper(L);
-      auto* form = self.get_loaded_form_data<wrapped_type>();
-      if (!form)
-         return 0;
-      int v = 0;
-      int i = lua_tointegerx(L, index_key, &v);
-      if (!v)
-         cobb::lua::error(L, "indices in a formlist's entry list must be integers");
-      if (i < 1)
-         cobb::lua::error(L, "indices below 1, such as %d, are not allowed", i);
-      --i;
-      //
-      auto& list = form->contents;
-      auto  size = list.size();
-      if (i >= size) {
-         if (i > size) {
-            cobb::lua::warning(L, "index %s is out of bounds; nil elements will be created between the end of the list and the new element", lua_tolstring(L, index_key, nullptr));
-         }
-         list.resize(i + 1);
-      }
-      self.before_edit();
-      list[i].set(*form, target);
-      self.after_edit();
-      return 0;
-   }
 }
 
 namespace dovahscript::wrappers::collections {
@@ -181,6 +146,6 @@ namespace dovahscript::wrappers::collections {
       .lookup_item_by_index   = &lookup_item_by_index,
       .member_function_insert = &member_function_insert,
       .member_function_remove = &member_function_remove,
-      .set_item               = &set_item,
+      //.set_item               = &set_item,
    };
 }

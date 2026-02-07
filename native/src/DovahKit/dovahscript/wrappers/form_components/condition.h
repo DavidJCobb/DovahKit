@@ -7,6 +7,9 @@ namespace dovah::loaded_forms::components {
    }
    class condition;
 }
+namespace dovahscript {
+   class wrapper;
+}
 
 namespace dovahscript::wrapper_part_types {
    inline constexpr cobb::eight_cc condition_comparison = "CdtnCmps";

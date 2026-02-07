@@ -30,6 +30,8 @@ namespace {
    using wrapped_type = cls::wrapped_type;
    using working_type = dovah::loaded_forms::components::conditions::working_condition;
    using context_type = dovah::loaded_forms::components::conditions::context;
+
+   using parameter_type_override = dovah::loaded_forms::components::conditions::parameter_type_override;
 }
 
 wrapped_type* cls::unwrap(wrapper& w) {
@@ -94,6 +96,28 @@ namespace {
          }
          return 1;
       }
+      int is_or_linked(lua_State* L) {
+         auto& self    = get_wrapper_for_thiscall<cls>(L);
+         auto* wrapped = _unwrap(self);
+         if (wrapped == nullptr)
+            cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
+         lua_pushboolean(L, wrapped->test_flags(wrapped_type::flag::or_linked));
+         return 1;
+      }
+      int override_types_with(lua_State* L) {
+         auto& self    = get_wrapper_for_thiscall<cls>(L);
+         auto* wrapped = _unwrap(self);
+         if (wrapped == nullptr)
+            cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
+         if (wrapped->test_flags(wrapped_type::flag::use_aliases)) {
+            lua_pushstring(L, "alias");
+         } else if (wrapped->test_flags(wrapped_type::flag::use_package_data)) {
+            lua_pushstring(L, "packdata");
+         } else {
+            lua_pushstring(L, "none");
+         }
+         return 1;
+      }
       int owning_package(lua_State* L) {
          auto& self    = get_wrapper_for_thiscall<cls>(L);
          auto* wrapped = _unwrap(self);
@@ -118,14 +142,6 @@ namespace {
          wrapper out = self;
          out.append_part(wrapper_part_types::condition_parameters);
          return core::subsystems::userdata::get().push(L, out, wrappers::condition_parameter_set::metatable_key);
-      }
-      int is_or_linked(lua_State* L) {
-         auto& self    = get_wrapper_for_thiscall<cls>(L);
-         auto* wrapped = _unwrap(self);
-         if (wrapped == nullptr)
-            cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
-         lua_pushboolean(L, wrapped->test_flags(wrapped_type::flag::or_linked));
-         return 1;
       }
       int run_on(lua_State* L) {
          auto& self    = get_wrapper_for_thiscall<cls>(L);
@@ -178,26 +194,10 @@ namespace {
          lua_pushboolean(L, wrapped->test_flags(wrapped_type::flag::swap_subject_and_target));
          return 1;
       }
-      int use_aliases_for_params(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         auto* wrapped = _unwrap(self);
-         if (wrapped == nullptr)
-            cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
-         lua_pushboolean(L, wrapped->test_flags(wrapped_type::flag::use_aliases));
-         return 1;
-      }
-      int use_packdata_for_params(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         auto* wrapped = _unwrap(self);
-         if (wrapped == nullptr)
-            cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
-         lua_pushboolean(L, wrapped->test_flags(wrapped_type::flag::use_package_data));
-         return 1;
-      }
    }
    namespace _setters {
       template<typename CheckFunctor, typename EditFunctor>
-      void _try_edit_condition(CheckFunctor&& check, EditFunctor&& f) {
+      void _try_edit_condition(lua_State* L, CheckFunctor&& check, EditFunctor&& f) {
          core::subsystems::permissions::verify_form_write_permissions();
          
          auto& self    = get_wrapper_for_thiscall<cls>(L);
@@ -205,7 +205,7 @@ namespace {
          auto* wrapped = _unwrap(self);
          if (wrapped == nullptr)
             cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
-         if constexpr (std::is_invocable<CheckFunctor, wrapper&>) {
+         if constexpr (std::is_invocable_v<CheckFunctor, wrapper&>) {
             check(self);
          } else {
             check();
@@ -222,6 +222,7 @@ namespace {
       int function(lua_State* L) {
          uint16_t function_id = 0;
          _try_edit_condition(
+            L,
             [L, &function_id]() {
                if (lua_isinteger(L, 2)) {
                   auto i = lua_tointeger(L, 2);
@@ -276,11 +277,35 @@ namespace {
       }
       int is_or_linked(lua_State* L) {
          _try_edit_condition(
+            L,
             [L]() {
                cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
             },
             [L](working_type& working) {
-               cobb::edit_bit(working.flags, wrapped_type::flag::or_linked, lua_toboolean(L, 2));
+               working.flags.or_linked = lua_toboolean(L, 2);
+            }
+         );
+         return 0;
+      }
+      int override_types_with(lua_State* L) {
+         parameter_type_override type = parameter_type_override::none;
+         _try_edit_condition(
+            L,
+            [L, &type]() {
+               cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "string expected");
+               std::string_view v = lua_tostring(L, 2);
+               if (v == "none") {
+                  type = parameter_type_override::none;
+               } else if (v == "alias") {
+                  type = parameter_type_override::alias;
+               } else if (v == "packdata") {
+                  type = parameter_type_override::package_data;
+               } else {
+                  cobb::lua::argerror(L, 2, "unrecognized value");
+               }
+            },
+            [L, &type](working_type& working) {
+               working.override_types_with = type;
             }
          );
          return 0;
@@ -290,6 +315,7 @@ namespace {
          dovah::form_stub* ref = nullptr;
          int32_t index = -1;
          _try_edit_condition(
+            L,
             [L, &type, &ref, &index](wrapper& self) {
                if (lua_isstring(L, 2)) {
                   std::string_view arg = lua_tostring(L, 2);
@@ -352,33 +378,12 @@ namespace {
       }
       int swap_subject_and_target(lua_State* L) {
          _try_edit_condition(
+            L,
             [L]() {
                cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
             },
             [L](working_type& working) {
-               cobb::edit_bit(working.flags, wrapped_type::flag::swap_subject_and_target, lua_toboolean(L, 2));
-            }
-         );
-         return 0;
-      }
-      int use_aliases_for_params(lua_State* L) {
-         _try_edit_condition(
-            [L]() {
-               cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
-            },
-            [L](working_type& working) {
-               cobb::edit_bit(working.flags, wrapped_type::flag::use_aliases, lua_toboolean(L, 2));
-            }
-         );
-         return 0;
-      }
-      int use_packdata_for_params(lua_State* L) {
-         _try_edit_condition(
-            [L]() {
-               cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
-            },
-            [L](working_type& working) {
-               cobb::edit_bit(working.flags, wrapped_type::flag::use_package_data, lua_toboolean(L, 2));
+               working.flags.swap_subject_and_target = lua_toboolean(L, 2);
             }
          );
          return 0;
@@ -392,20 +397,18 @@ namespace dovahscript::wrappers {
       { "comparison",              &_getters::comparison },
       { "function",                &_getters::function },
       { "is_or_linked",            &_getters::is_or_linked },
+      { "override_types_with",     &_getters::override_types_with },
       { "owning_package",          &_getters::owning_package },
       { "owning_quest",            &_getters::owning_quest },
       { "parameters",              &_getters::parameters },
       { "run_on",                  &_getters::run_on },
       { "swap_subject_and_target", &_getters::swap_subject_and_target },
-      { "use_aliases_for_params",  &_getters::use_aliases_for_params },
-      { "use_packdata_for_params", &_getters::use_packdata_for_params },
    };
    /*static*/ cls::method_list_t cls::metatable_setters = {
       { "function",                &_setters::function },
       { "is_or_linked",            &_setters::is_or_linked },
+      { "override_types_with",     &_setters::override_types_with },
       { "run_on",                  &_setters::run_on },
       { "swap_subject_and_target", &_setters::swap_subject_and_target },
-      { "use_aliases_for_params",  &_setters::use_aliases_for_params },
-      { "use_packdata_for_params", &_setters::use_packdata_for_params },
    };
 }

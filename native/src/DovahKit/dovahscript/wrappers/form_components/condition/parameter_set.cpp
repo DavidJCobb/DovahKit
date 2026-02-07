@@ -360,7 +360,6 @@ namespace {
       }
       int event_form(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
-         auto* form = self.get_loaded_form_data<dovah::loaded_forms::Form>();
 
          dovah::form_stub* stub = nullptr;
          _edit_event_params(
@@ -368,8 +367,8 @@ namespace {
             [L, &stub]() {
                stub = pull_form_stub_argument(L, 2);
             },
-            [&stub](auto& params) {
-               params.form.set(*form, stub);
+            [&stub](working_type::event_data& params) {
+               params.form = stub;
             }
          );
          return 0;

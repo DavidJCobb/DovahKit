@@ -18,6 +18,7 @@
 #include "dovah/forms/Worldspace.h"
 #include "dovah/forms/components/extra_data.h"
 #include "dovah/forms/components/model.h"
+#include "dovah/utils/form_type_is_cell_child.h"
 #include "dovah/utils/world_coordinate_to_grid_coordinate.h"
 #include "dovah/utils/world_position_to_grid_coordinates.h"
 #include "editor/core.h"

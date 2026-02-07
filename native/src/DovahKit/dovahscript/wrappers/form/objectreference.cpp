@@ -59,13 +59,13 @@ namespace {
    };
    
    template<auto FormTypes, bool AllItems>
-   bool _form_type_matches(dovah::form_type ft) {
+   bool _form_type_matches(dovah::form_type desired) {
       for (auto ft : FormTypes)
-         if (base->form_type == ft)
+         if (ft == desired)
             return true;
       if constexpr (AllItems) {
          for (auto ft : all_item_types)
-            if (base->form_type == ft)
+            if (ft == desired)
                return true;
       }
       return false;
@@ -220,7 +220,7 @@ namespace {
          if (!self.stub)
             return 0;
          self.before_edit();
-         self.stub->edit_record_flags(flag, lua_toboolean(L, 2));
+         self.stub->edit_record_flags(Flag, lua_toboolean(L, 2));
          self.after_edit();
          return 0;
       }
@@ -237,7 +237,7 @@ namespace {
          if (!relevant)
             cobb::lua::error(L, "this flag is not available for references whose base forms are of this type");
          self.before_edit();
-         self.stub->edit_record_flags(flag, lua_toboolean(L, 2));
+         self.stub->edit_record_flags(Flag, lua_toboolean(L, 2));
          self.after_edit();
          return 0;
       }

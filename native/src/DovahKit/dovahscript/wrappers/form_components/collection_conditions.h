@@ -1,4 +1,5 @@
 #pragma once
+#include "helpers/eight_cc.h"
 #include "dovahscript/core/collections.h"
 namespace dovah::loaded_forms::components {
    class condition_list;

@@ -24,13 +24,21 @@ namespace dovah::loaded_forms::components::conditions {
          }
       } else if (owner.form_type == form_type::topic) {
          auto* quest = form_stub_helpers::get_unique_outbound_use<use_info::entry_flags::topic::parent_quest>(owner);
-         if (quest->form_type == dovah::form_type::quest)
+         #if _DEBUG
+            if (!quest)
+               __debugbreak(); // the DIAL should always have a parent QUST
+         #endif
+         if (quest && quest->form_type == dovah::form_type::quest)
             this->quest = quest;
       } else if (owner.form_type == form_type::topic_info) {
          auto* parent = owner.get_parent_form();
          if (parent && parent->form_type == dovah::form_type::topic) {
             auto* quest = form_stub_helpers::get_unique_outbound_use<use_info::entry_flags::topic::parent_quest>(*parent);
-            if (quest->form_type == dovah::form_type::quest)
+            #if _DEBUG
+               if (!quest)
+                  __debugbreak(); // the DIAL should always have a parent QUST
+            #endif
+            if (quest && quest->form_type == dovah::form_type::quest)
                this->quest = quest;
          }
       }

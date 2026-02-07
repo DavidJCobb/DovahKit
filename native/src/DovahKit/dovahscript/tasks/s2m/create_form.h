@@ -27,5 +27,9 @@ namespace dovahscript::tasks::s2m {
          virtual bool is_blocking() const noexcept override { return true; }
       protected:
          virtual void _exec_impl() override;
+
+         bool parenthood_is_via_record_groups() const;
+         bool check_non_group_parenthood() const;
+         void set_up_non_group_parenthood();
    };
 }
