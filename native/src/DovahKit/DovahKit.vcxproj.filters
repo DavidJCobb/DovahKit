@@ -4029,6 +4029,9 @@
     <ClCompile Include="dovahscript\wrappers\form_components\condition\comparison.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form_components\condition\parameter_set.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9873,6 +9876,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovahscript\wrappers\form_components\_all.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form_components\condition\parameter_set.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

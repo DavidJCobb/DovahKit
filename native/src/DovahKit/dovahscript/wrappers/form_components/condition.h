@@ -2,6 +2,9 @@
 #include "helpers/eight_cc.h"
 #include "../base.h"
 namespace dovah::loaded_forms::components {
+   namespace conditions {
+      struct context;
+   }
    class condition;
 }
 
@@ -19,7 +22,9 @@ namespace dovahscript::wrappers {
       static method_list_t metatable_setters;
 
       using wrapped_type = dovah::loaded_forms::components::condition;
+      using context_type = dovah::loaded_forms::components::conditions::context;
 
       static wrapped_type* unwrap(wrapper&);
+      static context_type  context_of(wrapper&);
    };
 }

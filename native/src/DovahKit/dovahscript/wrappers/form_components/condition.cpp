@@ -22,6 +22,7 @@
 #include "../form/quest/alias.h"
 
 #include "./condition/comparison.h"
+#include "./condition/parameter_set.h"
 
 namespace {
    using namespace dovahscript;
@@ -55,15 +56,19 @@ wrapped_type* cls::unwrap(wrapper& w) {
    return &list[i];
 }
 
+context_type cls::context_of(wrapper& w) {
+   auto* form = w.get_loaded_form_data<dovah::loaded_forms::Form>();
+   if (!form)
+      return {};
+   return context_type(form->stub);
+}
+
 namespace {
    wrapped_type* _unwrap(wrapper& w) {
       return cls::unwrap(w);
    }
    context_type _context_of(wrapper& w) {
-      auto* form = w.get_loaded_form_data<dovah::loaded_forms::Form>();
-      if (!form)
-         return {};
-      return context_type(form->stub);
+      return cls::context_of(w);
    }
 
    namespace _getters {
@@ -104,6 +109,15 @@ namespace {
             cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
          auto  context = _context_of(self);
          return push_native_object(context.quest);
+      }
+      int parameters(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<wrapped_type>();
+         if (!form)
+            return 0;
+         wrapper out = self;
+         out.append_part(wrapper_part_types::condition_parameters);
+         return core::subsystems::userdata::get().push(L, out, wrappers::condition_parameter_set::metatable_key);
       }
       int is_or_linked(lua_State* L) {
          auto& self    = get_wrapper_for_thiscall<cls>(L);
@@ -162,6 +176,22 @@ namespace {
          if (wrapped == nullptr)
             cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
          lua_pushboolean(L, wrapped->test_flags(wrapped_type::flag::swap_subject_and_target));
+         return 1;
+      }
+      int use_aliases_for_params(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* wrapped = _unwrap(self);
+         if (wrapped == nullptr)
+            cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
+         lua_pushboolean(L, wrapped->test_flags(wrapped_type::flag::use_aliases));
+         return 1;
+      }
+      int use_packdata_for_params(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* wrapped = _unwrap(self);
+         if (wrapped == nullptr)
+            cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
+         lua_pushboolean(L, wrapped->test_flags(wrapped_type::flag::use_package_data));
          return 1;
       }
    }
@@ -268,6 +298,7 @@ namespace {
                   } else if (arg == "linked ref") {
                      type = dovah::conditions::run_on_type::linked_ref;
                   } else if (arg == "player") {
+                     type = dovah::conditions::run_on_type::reference;
                      auto& editor = DovahKitCore::get();
                      if (!editor.has_data())
                         cobb::lua::error(L, "cannot create this data because no data is loaded in the editor");
@@ -293,13 +324,15 @@ namespace {
                      if (&alias->owner.stub != context.quest)
                         cobb::lua::argerror(L, 2, "the passed-in quest alias does not belong to this condition's owning quest");
                      index = alias->id;
+                     type  = dovah::conditions::run_on_type::quest_alias;
                   } else {
                      auto* form_wrapper = wrapper_from_stack<wrappers::form>(L, 2);
                      if (!form_wrapper) {
                         cobb::lua::argerror(L, 2, "form or string expected");
                      }
                      form_wrapper->error_if_wrong_form_type(L, 2, dovah::form_type::reference);
-                     ref = form_wrapper->stub;
+                     ref  = form_wrapper->stub;
+                     type = dovah::conditions::run_on_type::reference;
                   }
                   // 
                   // TODO: in the future, handle package data and event data
@@ -328,6 +361,28 @@ namespace {
          );
          return 0;
       }
+      int use_aliases_for_params(lua_State* L) {
+         _try_edit_condition(
+            [L]() {
+               cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
+            },
+            [L](working_type& working) {
+               cobb::edit_bit(working.flags, wrapped_type::flag::use_aliases, lua_toboolean(L, 2));
+            }
+         );
+         return 0;
+      }
+      int use_packdata_for_params(lua_State* L) {
+         _try_edit_condition(
+            [L]() {
+               cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
+            },
+            [L](working_type& working) {
+               cobb::edit_bit(working.flags, wrapped_type::flag::use_package_data, lua_toboolean(L, 2));
+            }
+         );
+         return 0;
+      }
    }
 }
 namespace dovahscript::wrappers {
@@ -339,13 +394,18 @@ namespace dovahscript::wrappers {
       { "is_or_linked",            &_getters::is_or_linked },
       { "owning_package",          &_getters::owning_package },
       { "owning_quest",            &_getters::owning_quest },
+      { "parameters",              &_getters::parameters },
       { "run_on",                  &_getters::run_on },
       { "swap_subject_and_target", &_getters::swap_subject_and_target },
+      { "use_aliases_for_params",  &_getters::use_aliases_for_params },
+      { "use_packdata_for_params", &_getters::use_packdata_for_params },
    };
    /*static*/ cls::method_list_t cls::metatable_setters = {
       { "function",                &_setters::function },
       { "is_or_linked",            &_setters::is_or_linked },
       { "run_on",                  &_setters::run_on },
       { "swap_subject_and_target", &_setters::swap_subject_and_target },
+      { "use_aliases_for_params",  &_setters::use_aliases_for_params },
+      { "use_packdata_for_params", &_setters::use_packdata_for_params },
    };
 }

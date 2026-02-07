@@ -94,6 +94,7 @@ namespace dovahscript {
          define_collection_metatable(L, collections::condition_list);
             define_wrapper_metatable<condition>(L);
                define_wrapper_metatable<condition_comparison>(L);
+               define_wrapper_metatable<condition_parameter_set>(L);
       #pragma endregion
       #pragma region INI
          define_wrapper_metatable<ini::setting>(L);

@@ -156,6 +156,7 @@
     <ClCompile Include="dovahscript\wrappers\form_components\collection_conditions.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition\comparison.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form_components\condition\parameter_set.cpp" />
     <ClCompile Include="dovah\datastores\camera_paths.cpp" />
     <ClCompile Include="dovah\datastores\camera_paths\anam_subrecord_position.cpp" />
     <ClCompile Include="dovah\datastores\camera_paths\node.cpp" />
@@ -1508,6 +1509,7 @@
     <ClInclude Include="dovahscript\wrappers\form_components\collection_conditions.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition\comparison.h" />
+    <ClInclude Include="dovahscript\wrappers\form_components\condition\parameter_set.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\_all.h" />
     <ClInclude Include="dovah\bare_form_id_t.h" />
     <ClInclude Include="dovah\datastores\camera_paths.h" />
