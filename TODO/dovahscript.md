@@ -165,6 +165,37 @@ namespace wrappers::forms::quests {
 }
 ```
 
+#### Overwriting sub-objects wholesale
+
+Right now, it's not possible to do something like this:
+
+```lua
+my_shout.words = {
+   {
+      word  = foo,
+      spell = bar,
+   },
+   {
+      word  = foo,
+      spell = bar,
+   },
+   {
+      word  = foo,
+      spell = bar,
+   },
+}
+```
+
+In order to implement this in Dovahscript as of this writing (i.e. before any of the refactors described above), we'd have to manually write a setter that validates each of the passed-in tables. This is the case both for writing to `my_shout.words` and for writing to any elements *in* `words` i.e. `my_shout.words[2] = { ... }`. Of course, I'd prefer for most if not all sub-objects to be overwriteable in this way, and handwriting this logic for every possible sub-object isn't a solution that would scale well.
+
+However, with the refactor described above, we sort of get this for free. Template metaprogramming can generate default validation for most properties (e.g. ensuring that you don't write out-of-bounds values into an `int32_t`, or ensuring that you don't write forms of the wrong type into a `form_use` that specifies its allowed form types). Custom validation functions can handle the rest. This means that all we have to do to support overwriting a non-collection sub-object is:
+
+* Error if the RHS table has any properties not present (or not writeable) on the sub-object.
+* For each writeable property on the sub-object, error if the corresponding value (or nil) on the RHS table fails validation.
+* Otherwise, invoke each property's setter individually, *or* invoke an "overwrite all at once" function if we've handwritten one for that sub-object.
+
+For overwriting collections, the logic above is performed per collection element, with collection-level behaviors differing depending on whether the collection is fixed-size, et cetera.
+
 ### Wrappers have a flawed design
 
 The design for wrappers outlined [above](./#Wrappers) has some limitations:
