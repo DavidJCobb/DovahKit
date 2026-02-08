@@ -178,6 +178,41 @@ namespace {
          //
          return 0;
       }
+      int get_form_by_editor_id(lua_State* L) {
+         cobb::lua::argcheck(L, lua_isstring(L, 1), 1, "string expected");
+         std::string_view editor_id = lua_tostring(L, 1);
+         cobb::lua::argcheck(L, !editor_id.empty(), 1, "cannot search for an empty string");
+
+         auto& editor = DovahKitCore::get();
+         if (!editor.has_data())
+            return 0;
+
+         dovah::form_stub* found = nullptr;
+         {
+            bool  valid = false;
+            auto  ft    = lua_libraries::form_types::pull(L, 2, valid);
+            if (valid) {
+               editor.for_each_form_of_type(ft, [&editor_id, &found](dovah::form_stub* form) -> bool {
+                  if (form->editorID == editor_id) {
+                     found = form;
+                     return true;
+                  }
+                  return false;
+               });
+            } else {
+               editor.for_each_form([&editor_id, &found](dovah::form_stub* form) -> bool {
+                  if (form->editorID == editor_id) {
+                     found = form;
+                     return true;
+                  }
+                  return false;
+               });
+            }
+         }
+         if (!found)
+            return 0;
+         return push_native_object(found);
+      }
       int get_form_by_id(lua_State* L) {
          luaL_argcheck(L, lua_isnumber(L, 1), 1, "form ID (number) expected");
          auto& editor = DovahKitCore::get();
@@ -398,6 +433,7 @@ namespace {
       luaL_Reg{ "deep_stringify",          &_definitions::deep_stringify },
       luaL_Reg{ "dump",                    &_definitions::dump },
       luaL_Reg{ "for_each_form_of_type",   &_definitions::for_each_form_of_type },
+      luaL_Reg{ "get_form_by_editor_id",   &_definitions::get_form_by_editor_id },
       luaL_Reg{ "get_form_by_id",          &_definitions::get_form_by_id },
       luaL_Reg{ "log_message",             &_definitions::log_message },
       luaL_Reg{ "load_game_asset",         &_definitions::load_game_asset },
