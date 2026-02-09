@@ -197,9 +197,11 @@ void QuestTabScenes::_on_form_created(dovah::form_stub* stub) {
    widget->addStub(stub);
 }
 void QuestTabScenes::_on_form_deleted(dovah::form_stub* stub, bool just_being_flagged) {
-   if (stub == &this->_state.loaded_scene->stub) {
-      this->_state.loaded_scene = nullptr; // so we don't do anything in `push_data_to_scene_form`
-      this->select_scene(nullptr);
+   if (this->_state.loaded_scene) {
+      if (stub == &this->_state.loaded_scene->stub) {
+         this->_state.loaded_scene = nullptr; // so we don't do anything in `push_data_to_scene_form`
+         this->select_scene(nullptr);
+      }
    }
    this->ui.scene_picker->removeStub(stub);
 }
