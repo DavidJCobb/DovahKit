@@ -17,7 +17,7 @@
       " />
       
       <DisplayString Condition="_ascii_printable()">{&amp;bytes,sb}</DisplayString>
-      <DisplayString>{&amp;bytes,c}</DisplayString>
+      <DisplayString>{value,Xb}</DisplayString>
       <StringView>bytes,sb</StringView>
    </Type>
 </AutoVisualizer>

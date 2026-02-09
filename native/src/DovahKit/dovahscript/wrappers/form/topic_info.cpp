@@ -10,6 +10,7 @@
 #include "dovah/use_info/entry_flags/topic.h"
 #include "dovah/forms/TopicInfo.h"
 #include "editor/subsystems/form_info_cache/core.h"
+#include "./topic_info/collection_link_to.h"
 #include "./topic_info/collection_responses.h"
 #include "./topic_info/response.h"
 #include "../form_components/collection_conditions.h"
@@ -79,6 +80,16 @@ namespace {
             return 0;
          lua_pushnumber(L, (lua_Number)form->get_hours_until_reset());
          return 1;
+      }
+      int link_to(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<wrapped_type>();
+         if (!form)
+            return 0;
+         wrapper out = self;
+         out.append_part(wrapper_part_types::topic_info_link_to);
+         out.is_collection = true;
+         return core::subsystems::userdata::get().push(L, out, wrappers::collections::topic_info_link_to.registry_key);
       }
       int override_topic_text(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -211,7 +222,7 @@ namespace {
          auto& self  = get_wrapper_for_thiscall<cls>(L);
          luaL_argcheck(L, lua_isnumber(L, 2), 2, "expected number");
          auto  value = lua_tonumber(L, 2);
-         luaL_argcheck(L, value >   0, 2, "you cannot set a negative number of hours");
+         luaL_argcheck(L, value >=  0, 2, "you cannot set a negative number of hours");
          luaL_argcheck(L, value <= 24, 2, "the maximum hours until reset is 24");
          auto* form = self.get_loaded_form_data<wrapped_type>();
          if (!form)
@@ -308,6 +319,7 @@ namespace dovahscript::wrappers {
       { "favor_level",         &_getters::favor_level },
       { "has_lip_file",        &_getters::has_lip_file },
       { "hours_until_reset",   &_getters::hours_until_reset },
+      { "link_to",             &_getters::link_to }, // collection
       { "override_topic_text", &_getters::override_topic_text },
       { "parent",              &_getters::parent },
       { "parent_quest",        &_getters::parent_quest },
@@ -342,6 +354,7 @@ namespace dovahscript::wrappers {
    };
 
    /*static*/ void cls::extra_class_setup(lua_State* L) {
+      define_collection_metatable(L, collections::topic_info_link_to);
       define_collection_metatable(L, collections::topic_info_responses);
    }
 }

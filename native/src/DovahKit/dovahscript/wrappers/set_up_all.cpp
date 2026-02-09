@@ -51,6 +51,7 @@ namespace dovahscript {
          #pragma region Form types
             define_wrapper_metatable<cell>(L);
                define_wrapper_metatable<cell_grid_coords>(L);
+            define_wrapper_metatable<dialogue_branch>(L);
             define_wrapper_metatable<formlist>(L);
             define_wrapper_metatable<land_texture>(L);
                define_wrapper_metatable<land_texture_havok>(L);

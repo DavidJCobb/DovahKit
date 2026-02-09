@@ -18,6 +18,7 @@ namespace {
    std::array form_classes = {
       std::pair{ dovah::form_type::none,          dovahscript::wrappers::form::metatable_key },
       std::pair{ dovah::form_type::cell,          dovahscript::wrappers::cell::metatable_key },
+      std::pair{ dovah::form_type::dialogue_branch, dovahscript::wrappers::dialogue_branch::metatable_key },
       std::pair{ dovah::form_type::formlist,      dovahscript::wrappers::formlist::metatable_key },
       std::pair{ dovah::form_type::land,          dovahscript::wrappers::landscape::metatable_key },
       std::pair{ dovah::form_type::land_texture,  dovahscript::wrappers::land_texture::metatable_key },

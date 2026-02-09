@@ -4032,6 +4032,12 @@
     <ClCompile Include="dovahscript\wrappers\form_components\condition\parameter_set.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\dialogue_branch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form\topic_info\collection_link_to.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9881,6 +9887,12 @@
     <ClInclude Include="dovahscript\wrappers\form_components\condition\parameter_set.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\dialogue_branch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form\topic_info\collection_link_to.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -12038,5 +12050,6 @@
     <Natvis Include="helpers\optionals\finite_float.natvis" />
     <Natvis Include="helpers\qt\qt_5_natvis\QDirPrivate.natvis" />
     <Natvis Include="helpers\qt\qt_5_natvis\QFileInfoPrivate.natvis" />
+    <Natvis Include="helpers\lua\lua.natvis" />
   </ItemGroup>
 </Project>

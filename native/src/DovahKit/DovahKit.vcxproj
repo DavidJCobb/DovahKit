@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovahscript\wrappers\form\dialogue_branch.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_base_forms.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_door_links.cpp" />
@@ -153,6 +154,7 @@
     <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map\collection_precomputed_paths.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map\navmesh_info_collection.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh_info_map\precomputed_path.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form\topic_info\collection_link_to.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\collection_conditions.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition\comparison.cpp" />
@@ -1490,6 +1492,7 @@
     <ClCompile Include="widgets\widget-models\DKTopicOrSubtypePicker\DKTopicOrSubtypePickerModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovahscript\wrappers\form\dialogue_branch.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh\collection_base_forms.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh\collection_door_links.h" />
@@ -1506,6 +1509,7 @@
     <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\collection_precomputed_paths.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\navmesh_info_collection.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh_info_map\precomputed_path.h" />
+    <ClInclude Include="dovahscript\wrappers\form\topic_info\collection_link_to.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\collection_conditions.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition\comparison.h" />

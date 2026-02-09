@@ -1,5 +1,6 @@
 #include "quest.h"
 #include "../../../helpers/lua/error.h"
+#include "../../../helpers/lua/warning.h"
 #include "../../core/subsystems/permissions.h"
 #include "../../core/subsystems/userdata.h"
 
@@ -18,9 +19,15 @@
 #include "../../../incomplete_code_warnings.h"
 static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_script_apis, "The Lua API for quests is incomplete.");
 
+#include "dovah/form_stubs/helpers/for_each_quest_dialogue_branch.h"
+#include "dovah/form_stubs/helpers/for_each_quest_scene.h"
+#include "dovah/form_stubs/helpers/for_each_quest_topic.h"
+#include "./quest/loc_alias.h"
+#include "./quest/ref_alias.h"
+
 namespace {
    using namespace dovahscript;
-   using cls          = wrappers::quest;
+   using cls = wrappers::quest;
    using wrapped_type = dovah::loaded_forms::Quest;
 }
 
@@ -43,10 +50,161 @@ namespace {
       quest_type_name{ wrapped_type::quest_type::dlc_dawnguard,    "dlc: dawnguard" },
       quest_type_name{ wrapped_type::quest_type::dlc_dragonborn,   "dlc: dragonborn" },
    };
+
+   static std::optional<uint32_t> _id_for_new_alias(wrapped_type& form) {
+      auto id = form.next_alias_id;
+      for (; id < std::numeric_limits<uint16_t>::max(); ++id) {
+         if (!form.lookup_alias_by_id(id))
+            break;
+      }
+      if (id == std::numeric_limits<uint16_t>::max()) {
+         for (id = 0; id < form.next_alias_id; ++id) {
+            if (!form.lookup_alias_by_id(id))
+               break;
+         }
+         if (id == form.next_alias_id)
+            return {};
+      }
+      return id;
+   }
 }
 
 #pragma region form
 namespace {
+   namespace _methods {
+      int create_loc_alias(lua_State* L) {
+         core::subsystems::permissions::verify_form_write_permissions();
+
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<wrapped_type>();
+         if (!form)
+            return 0;
+
+         dovah::loaded_forms::LocationAlias* result = nullptr;
+
+         self.before_edit();
+         {
+            auto id_opt = _id_for_new_alias(*form);
+            if (!id_opt.has_value()) {
+               cobb::lua::error(L, "no alias IDs available");
+            }
+            auto id = id_opt.value();
+            if (id < form->next_alias_id) {
+               cobb::lua::warning(L, "no new alias IDs available; recycling an old ID");
+            } else {
+               form->next_alias_id = id + 1;
+            }
+            auto*& alias_ptr = form->aliases.emplace_back();
+            alias_ptr = result = new dovah::loaded_forms::LocationAlias(*form);
+            alias_ptr->id = id;
+         }
+         self.after_edit();
+
+         return wrappers::quest_loc_alias::wrap(L, self.stub, result);
+      }
+      int create_ref_alias(lua_State* L) {
+         core::subsystems::permissions::verify_form_write_permissions();
+
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<wrapped_type>();
+         if (!form)
+            return 0;
+
+         dovah::loaded_forms::ReferenceAlias* result = nullptr;
+
+         self.before_edit();
+         {
+            auto id_opt = _id_for_new_alias(*form);
+            if (!id_opt.has_value()) {
+               cobb::lua::error(L, "no alias IDs available");
+            }
+            auto id = id_opt.value();
+            if (id < form->next_alias_id) {
+               cobb::lua::warning(L, "no new alias IDs available; recycling an old ID");
+            } else {
+               form->next_alias_id = id + 1;
+            }
+            auto*& alias_ptr = form->aliases.emplace_back();
+            alias_ptr = result = new dovah::loaded_forms::ReferenceAlias(*form);
+            alias_ptr->id = id;
+         }
+         self.after_edit();
+
+         return wrappers::quest_ref_alias::wrap(L, self.stub, result);
+      }
+      int get_all_dialogue_branches(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* stub = self.stub;
+         if (!stub) {
+            lua_createtable(L, 0, 0);
+            return 1;
+         }
+
+         size_t expected = 0;
+         dovah::form_stub_helpers::for_each_quest_dialogue_branch(*stub, [&expected](dovah::form_stub& branch) {
+            ++expected;
+         });
+
+         lua_createtable(L, expected, 0);
+         int i   = 0;
+         int pos = lua_gettop(L);
+         dovah::form_stub_helpers::for_each_quest_dialogue_branch(*stub, [L, &i, &pos](dovah::form_stub& branch) {
+            int wcount = push_native_object(&branch);
+            while (wcount--)
+               lua_rawseti(L, pos, ++i);
+         });
+         assert(lua_gettop(L) == pos);
+         return 1;
+      }
+      int get_all_dialogue_topics(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* stub = self.stub;
+         if (!stub) {
+            lua_createtable(L, 0, 0);
+            return 1;
+         }
+
+         size_t expected = 0;
+         dovah::form_stub_helpers::for_each_quest_topic(*stub, [&expected](dovah::form_stub& topic) {
+            ++expected;
+         });
+
+         lua_createtable(L, expected, 0);
+         int i   = 0;
+         int pos = lua_gettop(L);
+         dovah::form_stub_helpers::for_each_quest_topic(*stub, [L, &i, &pos](dovah::form_stub& topic) {
+            int wcount = push_native_object(&topic);
+            while (wcount--)
+               lua_rawseti(L, pos, ++i);
+         });
+         assert(lua_gettop(L) == pos);
+         return 1;
+      }
+      int get_all_scenes(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* stub = self.stub;
+         if (!stub) {
+            lua_createtable(L, 0, 0);
+            return 1;
+         }
+
+         size_t expected = 0;
+         dovah::form_stub_helpers::for_each_quest_scene(*stub, [&expected](dovah::form_stub& topic) {
+            ++expected;
+         });
+
+         lua_createtable(L, expected, 0);
+         int i   = 0;
+         int pos = lua_gettop(L);
+         dovah::form_stub_helpers::for_each_quest_scene(*stub, [L, &i, &pos](dovah::form_stub& scene) {
+            int wcount = push_native_object(&scene);
+            while (wcount--)
+               lua_rawseti(L, pos, ++i);
+         });
+         assert(lua_gettop(L) == pos);
+         return 1;
+      }
+   }
    namespace _getters {
       int aliases(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -225,7 +383,13 @@ namespace {
 }
 
 namespace dovahscript::wrappers {
-   /*static*/ cls::method_list_t cls::metatable_methods = no_functions;
+   /*static*/ cls::method_list_t cls::metatable_methods = {
+      { "create_loc_alias",          &_methods::create_loc_alias },
+      { "create_ref_alias",          &_methods::create_ref_alias },
+      { "get_all_dialogue_branches", &_methods::get_all_dialogue_branches },
+      { "get_all_dialogue_topics",   &_methods::get_all_dialogue_topics },
+      { "get_all_scenes",            &_methods::get_all_scenes },
+   };
    
    /*static*/ cls::method_list_t cls::metatable_getters = {
       { "aliases",                &_getters::aliases }, // collection

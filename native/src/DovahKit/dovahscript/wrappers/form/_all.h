@@ -1,6 +1,7 @@
 #pragma once
 #include "cell.h"
    #include "cell/grid_coords.h"
+#include "dialogue_branch.h"
 #include "form.h"
 /*//
    #include "papyrus/property.h"
@@ -53,6 +54,7 @@
    #include "texture_set/path_list.h"
 #include "topic.h"
 #include "topic_info.h"
+   #include "topic_info/collection_link_to.h"
    #include "topic_info/collection_responses.h"
    #include "topic_info/response.h"
 #include "voicetype.h"
