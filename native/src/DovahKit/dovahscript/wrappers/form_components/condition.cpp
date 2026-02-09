@@ -16,6 +16,7 @@
 #include "dovah/forms/components/conditions/working_condition.h"
 #include "dovah/forms/Form.h"
 #include "dovah/forms/Quest.h"
+#include "dovah/forms/TopicInfo.h"
 #include "editor/core.h"
 
 #include "../form/form.h"
@@ -34,11 +35,27 @@ namespace {
    using parameter_type_override = dovah::loaded_forms::components::conditions::parameter_type_override;
 }
 
+bool cls::is_writeable(wrapper& w) {
+   size_t depth = w.parts.size();
+   for (size_t i = 0; i < w.parts.size(); ++i) {
+      if (w.parts[i].signature == wrapper_part_types::condition_list) {
+         depth = i;
+         break;
+      }
+   }
+   if (depth >= w.parts.size())
+      return false;
+
+   if (w.stub && w.stub->form_type == dovah::form_type::topic_info) {
+      auto* form = w.get_loaded_form_data<dovah::loaded_forms::TopicInfo>();
+      if (!form)
+         return false;
+      return w.parts[depth].index >= form->conditions.locked.size();
+   }
+   return true;
+}
 wrapped_type* cls::unwrap(wrapper& w) {
    if (w.is_collection)
-      return nullptr;
-   auto* list_ptr = wrappers::collections::unwrap_condition_list(w);
-   if (!list_ptr)
       return nullptr;
 
    size_t depth = w.parts.size();
@@ -49,6 +66,23 @@ wrapped_type* cls::unwrap(wrapper& w) {
       }
    }
    if (depth >= w.parts.size())
+      return nullptr;
+
+   if (w.stub && w.stub->form_type == dovah::form_type::topic_info) {
+      auto* form = w.get_loaded_form_data<dovah::loaded_forms::TopicInfo>();
+      if (!form)
+         return nullptr;
+      auto i = w.parts[depth].index;
+      if (i < form->conditions.locked.size())
+         return &form->conditions.locked[i];
+      i -= form->conditions.locked.size();
+      if (i >= form->conditions.normal.size())
+         return nullptr;
+      return &form->conditions.normal[i];
+   }
+
+   auto* list_ptr = wrappers::collections::unwrap_condition_list(w);
+   if (!list_ptr)
       return nullptr;
 
    auto& list = *list_ptr;
@@ -205,6 +239,8 @@ namespace {
          auto* wrapped = _unwrap(self);
          if (wrapped == nullptr)
             cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
+         if (!cls::is_writeable(self))
+            cobb::lua::error(L, "this is a locked condition on a topic info; it cannot be edited");
          if constexpr (std::is_invocable_v<CheckFunctor, wrapper&>) {
             check(self);
          } else {
@@ -265,9 +301,10 @@ namespace {
                if (working.function == function_id)
                   return;
                working.function = function_id;
-               working.parameters = {};
-               working.event_parameters = {};
+               working.reset_parameters();
 
+               working.event_parameters = {};
+               //
                const auto* info = dovah::conditions::function_info_by_id(function_id);
                if (info && info->uses_event_data)
                   working.event_parameters.emplace();

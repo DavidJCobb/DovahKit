@@ -165,6 +165,8 @@ namespace {
          auto* data = wrappers::condition::unwrap(self);
          if (data == nullptr)
             cobb::lua::error(L, "condition_parameter_set wrapper has no underlying object (deleted?)");
+         if (!wrappers::condition::is_writeable(self))
+            cobb::lua::error(L, "this is a locked condition on a topic info; it cannot be edited");
 
          dovah::loaded_forms::components::conditions::working_parameter param;
 
@@ -300,6 +302,8 @@ namespace {
          auto* data = wrappers::condition::unwrap(self);
          if (data == nullptr)
             cobb::lua::error(L, "condition_parameter_set wrapper has no underlying object (deleted?)");
+         if (!wrappers::condition::is_writeable(self))
+            cobb::lua::error(L, "this is a locked condition on a topic info; it cannot be edited");
          if (!_condition_uses_event_params(*data))
             cobb::lua::error(L, "this property is only permitted for condition functions that use event data");
 

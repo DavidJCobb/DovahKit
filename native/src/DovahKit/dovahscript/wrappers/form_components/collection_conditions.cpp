@@ -191,7 +191,18 @@ namespace {
          list[i].commit(*form, working);
       }
       self.after_edit();
-      return 0;
+
+      wrapper out = self;
+      assert(out.is_collection);
+      assert(out.parts[0].signature == wrapper_part_types::condition_list);
+      if (self.stub && self.stub->form_type == dovah::form_type::topic_info) {
+         auto* form = self.get_loaded_form_data<dovah::loaded_forms::TopicInfo>();
+         assert(!!form);
+         out.into_collection(form->conditions.locked.size() + i);
+      } else {
+         out.into_collection(i);
+      }
+      return core::subsystems::userdata::get().push(L, out, wrappers::condition::metatable_key);
    }
    int member_function_remove(lua_State* L) {
       core::subsystems::permissions::verify_form_write_permissions();
