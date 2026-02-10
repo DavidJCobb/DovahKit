@@ -19,6 +19,7 @@ namespace dovahscript::wrapper_part_types {
    inline constexpr cobb::eight_cc papyrus_script         = "PapyScpt";
    inline constexpr cobb::eight_cc papyrus_property       = "PapyProp";
    inline constexpr cobb::eight_cc papyrus_property_array = "PapyPrpA"; // elements in an array-property's value
+   inline constexpr cobb::eight_cc papyrus_frags_named    = "PapyFrag";
    inline constexpr cobb::eight_cc papyrus_frag_begin     = "PapyFBgn"; // INFO, PACK, SCEN
    inline constexpr cobb::eight_cc papyrus_frag_change    = "PapyFChg"; // PACK
    inline constexpr cobb::eight_cc papyrus_frag_end       = "PapyFEnd"; // INFO, PACK, SCEN

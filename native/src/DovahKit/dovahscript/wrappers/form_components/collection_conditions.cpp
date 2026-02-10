@@ -244,6 +244,11 @@ namespace {
       list[i].clear(*form);
       list.erase(list.begin() + i);
       self.after_edit();
+      {
+         wrapper to_remove = self;
+         to_remove.into_collection(i);
+         core::subsystems::userdata::get().remove_from_sequential_collection(to_remove);
+      }
       return 0;
    }
 }

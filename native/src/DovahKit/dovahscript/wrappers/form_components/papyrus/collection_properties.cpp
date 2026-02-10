@@ -1,5 +1,6 @@
 #include "./collection_properties.h"
 #include "helpers/lua/error.h"
+#include "dovahscript/core/subsystems/permissions.h"
 #include "dovahscript/core/subsystems/userdata.h"
 #include "dovahscript/core/classes.h"
 #include "dovahscript/wrapper.h"
@@ -89,6 +90,70 @@ namespace {
       }
       return 1;
    }
+   int member_function_insert(lua_State* L) {
+      core::subsystems::permissions::verify_form_write_permissions();
+      
+      auto& self = get_collection_wrapper(L);
+      auto* script = parent_wrapper::unwrap(self);
+      if (!script)
+         return 0;
+
+      cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "string (property name) expected");
+      std::string_view name = lua_tostring(L, 2);
+      cobb::lua::argcheck(L, !name.empty(), 2, "property name cannot be empty");
+      if (script->lookup_property(name)) {
+         cobb::lua::argerror(L, 2, "a property with this name is already present");
+      }
+
+      auto& list = script->properties;
+
+      self.before_edit();
+      {
+         auto& p = list.emplace_back();
+         p.name   = name;
+         p.status = decltype(std::decay_t<decltype(p)>::status)::defined_locally;
+      }
+      self.after_edit();
+
+      wrapper out = self;
+      out.into_collection(list.size() - 1);
+      return core::subsystems::userdata::get().push(L, out, wrappers::papyrus_property::metatable_key);
+   }
+   int member_function_remove(lua_State* L) {
+      core::subsystems::permissions::verify_form_write_permissions();
+
+      auto& self = get_collection_wrapper(L);
+      auto* script = parent_wrapper::unwrap(self);
+      if (!script)
+         return 0;
+
+      cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "string (property name) expected");
+      std::string_view name = lua_tostring(L, 2);
+
+      auto& list = script->properties;
+
+      std::optional<size_t> index;
+      for (size_t i = 0; i < list.size(); ++i) {
+         if (dovah::papyrus::helpers::name_equals(name, list[i].name)) {
+            index = i;
+            break;
+         }
+      }
+      if (!index.has_value())
+         return 0;
+
+      auto* form = self.get_loaded_form_data<dovah::loaded_forms::Form>();
+      self.before_edit();
+      list[index.value()].clear(*form);
+      list.erase(list.begin() + index.value());
+      self.after_edit();
+      {
+         wrapper to_remove = self;
+         to_remove.into_collection(index.value());
+         core::subsystems::userdata::get().remove_from_sequential_collection(to_remove);
+      }
+      return 0;
+   }
 }
 
 namespace dovahscript::wrappers::collections {
@@ -101,5 +166,7 @@ namespace dovahscript::wrappers::collections {
       .items_are_named        = true,
       .lookup_item_by_name    = &lookup_item_by_name,
       .lookup_item_by_index   = &lookup_item_by_index,
+      .member_function_insert = &member_function_insert,
+      .member_function_remove = &member_function_remove,
    };
 }

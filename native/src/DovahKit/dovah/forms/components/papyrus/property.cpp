@@ -176,14 +176,28 @@ namespace dovah::loaded_forms::components::papyrus {
    void property::set_type(loaded_forms::Form& my_owner, property_type pt) {
       if (this->type() == pt)
          return;
-      this->clear(my_owner);
+
+      if (auto* casted = std::get_if<property_object_value>(&this->value)) {
+         casted->clear(my_owner);
+      } else if (auto* casted = std::get_if<std::vector<property_object_value>>(&this->value)) {
+         for (auto& item : *casted)
+            item.clear(my_owner);
+      }
       this->value = property_value_from_type(pt);
    }
 
    void property::set_value(loaded_forms::Form& my_owner, const property_value& v) {
       if (&v == &this->value)
          return;
-      this->clear(my_owner);
+
+      if (auto* casted = std::get_if<property_object_value>(&this->value)) {
+         casted->clear(my_owner);
+      } else if (auto* casted = std::get_if<std::vector<property_object_value>>(&this->value)) {
+         for (auto& item : *casted)
+            item.clear(my_owner);
+      }
+      this->value = {}; // to std::monostate
+
       std::visit(
          [this, &my_owner](const auto& src) {
             using value_type = std::decay_t<decltype(src)>;

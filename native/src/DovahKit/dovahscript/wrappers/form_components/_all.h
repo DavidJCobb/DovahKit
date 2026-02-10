@@ -9,3 +9,6 @@
          #include "./papyrus/collection_properties.h"
             #include "./papyrus/property.h"
                #include "./papyrus/collection_array_property_values.h"
+   #include "./papyrus/fragments_named.h"
+      #include "./papyrus/fragment.h"
+   #include "./papyrus/collection_fragments_indexed.h"

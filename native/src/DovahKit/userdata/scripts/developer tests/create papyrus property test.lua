@@ -29,7 +29,7 @@ create:on("OnActivated", "", function()
    local name   = s_name.text
    local script = list[name]
    if not script then
-      script = papyrus:add_script(name)
+      script = papyrus.scripts:insert(name)
       if not script then
          error("failed to create the script for some reason")
       end
@@ -39,7 +39,7 @@ create:on("OnActivated", "", function()
    name = p_name.text
    local prop = list[name]
    if not prop then
-      prop = script:add_property(name)
+      prop = script.properties:insert(name)
       if not prop then
          error("failed to create the property for some reason")
       end

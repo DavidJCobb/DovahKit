@@ -13,7 +13,9 @@
 #include "dovah/forms/_component_access.h"
 #include "dovah/forms/Form.h"
 #include "dovah/forms/Quest.h"
+#include "./papyrus/collection_fragments_indexed.h"
 #include "./papyrus/collection_scripts.h"
+#include "./papyrus/fragments_named.h"
 #include "../form/quest/alias.h"
 #include "../form/quest.h"
 
@@ -67,6 +69,37 @@ wrapped_type* cls::unwrap(wrapper& w) {
 
 namespace {
    namespace _getters {
+      int fragments(lua_State* L) {
+         auto& self    = get_wrapper_for_thiscall<cls>(L);
+         auto* form    = self.get_loaded_form_data<dovah::loaded_forms::Form>();
+         if (!form)
+            return 0;
+         auto* wrapped = cls::unwrap(self);
+         if (!wrapped)
+            return 0;
+
+         switch (form->stub.form_type) {
+            case dovah::form_type::package:
+            case dovah::form_type::scene:
+            case dovah::form_type::topic_info:
+               {
+                  wrapper out = self;
+                  out.append_part(wrapper_part_types::papyrus_frags_named);
+                  return core::subsystems::userdata::get().push(L, out, wrappers::papyrus_fragments_named::metatable_key);
+               }
+               break;
+            case dovah::form_type::perk:
+               {
+                  wrapper out = self;
+                  out.append_part(wrapper_part_types::papyrus_frag_indexed);
+                  out.is_collection = true;
+                  return core::subsystems::userdata::get().push(L, out, wrappers::collections::papyrus_fragments_indexed.registry_key);
+               }
+               break;
+         }
+
+         return 0;
+      }
       int scripts(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* form = self.get_loaded_form_data<wrapped_type>();
@@ -93,8 +126,9 @@ namespace dovahscript::wrappers {
    /*static*/ cls::method_list_t cls::metatable_methods = no_functions;
    
    /*static*/ cls::method_list_t cls::metatable_getters = {
-      { "scripts", &_getters::scripts },
-      { "version", &_getters::version },
+      { "fragments", &_getters::fragments },
+      { "scripts",   &_getters::scripts },
+      { "version",   &_getters::version },
    };
    /*static*/ cls::method_list_t cls::metatable_setters = no_functions;
 }

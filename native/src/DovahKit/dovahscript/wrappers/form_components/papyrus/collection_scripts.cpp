@@ -1,5 +1,6 @@
 #include "./collection_scripts.h"
 #include "helpers/lua/error.h"
+#include "dovahscript/core/subsystems/permissions.h"
 #include "dovahscript/core/subsystems/userdata.h"
 #include "dovahscript/core/classes.h"
 #include "dovahscript/wrapper.h"
@@ -88,6 +89,65 @@ namespace {
       }
       return 1;
    }
+   int member_function_insert(lua_State* L) {
+      core::subsystems::permissions::verify_form_write_permissions();
+      
+      auto& self = get_collection_wrapper(L);
+      auto* root = root_wrapper::unwrap(self);
+      if (!root)
+         return 0;
+
+      cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "string (script name) expected");
+      std::string_view scriptname = lua_tostring(L, 2);
+      cobb::lua::argcheck(L, !scriptname.empty(), 2, "script name cannot be empty");
+      if (root->lookup_script(scriptname)) {
+         cobb::lua::argerror(L, 2, "a script with this name is already attached");
+      }
+
+      self.before_edit();
+      {
+         auto& script = root->scripts.emplace_back();
+         script.name = scriptname;
+      }
+      self.after_edit();
+
+      wrapper out = self;
+      out.into_collection(root->scripts.size() - 1);
+      return core::subsystems::userdata::get().push(L, out, wrappers::papyrus_script::metatable_key);
+   }
+   int member_function_remove(lua_State* L) {
+      core::subsystems::permissions::verify_form_write_permissions();
+
+      auto& self = get_collection_wrapper(L);
+      auto* root = root_wrapper::unwrap(self);
+      if (!root)
+         return 0;
+
+      cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "string (script name) expected");
+      std::string_view scriptname = lua_tostring(L, 2);
+
+      std::optional<size_t> index;
+      for (size_t i = 0; i < root->scripts.size(); ++i) {
+         if (dovah::papyrus::helpers::name_equals(scriptname, root->scripts[i].name)) {
+            index = i;
+            break;
+         }
+      }
+      if (!index.has_value())
+         return 0;
+
+      auto* form = self.get_loaded_form_data<dovah::loaded_forms::Form>();
+      self.before_edit();
+      root->scripts[index.value()].clear(*form);
+      root->scripts.erase(root->scripts.begin() + index.value());
+      self.after_edit();
+      {
+         wrapper to_remove = self;
+         to_remove.into_collection(index.value());
+         core::subsystems::userdata::get().remove_from_sequential_collection(to_remove);
+      }
+      return 0;
+   }
 }
 
 namespace dovahscript::wrappers::collections {
@@ -100,5 +160,7 @@ namespace dovahscript::wrappers::collections {
       .items_are_named        = true,
       .lookup_item_by_name    = &lookup_item_by_name,
       .lookup_item_by_index   = &lookup_item_by_index,
+      .member_function_insert = &member_function_insert,
+      .member_function_remove = &member_function_remove,
    };
 }

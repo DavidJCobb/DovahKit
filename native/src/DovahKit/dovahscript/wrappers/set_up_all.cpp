@@ -102,6 +102,9 @@ namespace dovahscript {
                   define_collection_metatable(L, collections::papyrus_properties);
                      define_wrapper_metatable<papyrus_property>(L);
                         define_collection_metatable(L, collections::papyrus_array_property_values);
+            define_wrapper_metatable<papyrus_fragments_named>(L);
+               define_wrapper_metatable<papyrus_fragment>(L);
+            define_collection_metatable(L, collections::papyrus_fragments_indexed);
       #pragma endregion
       #pragma region INI
          define_wrapper_metatable<ini::setting>(L);
