@@ -6,6 +6,7 @@ namespace dovah::loaded_forms {
 }
 
 namespace dovahscript::wrapper_part_types {
+   inline constexpr cobb::eight_cc topic_info_link_to  = "InfoLink";
    inline constexpr cobb::eight_cc topic_info_response = "InfoResp";
 }
 

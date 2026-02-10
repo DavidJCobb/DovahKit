@@ -10,12 +10,10 @@
 
 #include "../../../../dovah/form_stub.h"
 #include "../../../../dovah/forms/Quest.h"
-/*//
-#include "../papyrus/root.h"
-//*/
 #include "../quest.h"
 #include "loc_alias.h"
 #include "ref_alias.h"
+#include "../../form_components/papyrus.h"
 
 //
 // MISSING APIS:
@@ -47,17 +45,13 @@ namespace {
             lua_pushstring(L, alias->name.c_str());
             return 1;
          }
-         /*//
          int papyrus(lua_State* L) {
             auto& self  = get_wrapper_for_thiscall<cls>(L);
             auto* alias = cls::unwrap(self);
             if (alias == nullptr)
                cobb::lua::error(L, "alias wrapper has no underlying object (deleted?)");
-            wrapper out = self;
-            out.append_part(wrapper_part_types::papyrus_root);
-            return core::subsystems::userdata::get().push(L, out, wrappers::papyrus_root::metatable_key);
+            return wrappers::papyrus_root::wrap_and_push(L, *alias);
          }
-         //*/
          int parent(lua_State* L) {
             auto& self  = get_wrapper_for_thiscall<cls>(L);
             auto* alias = cls::unwrap(self);
@@ -135,9 +129,7 @@ namespace dovahscript::wrappers {
       { "id",      &_base::getters::id },
       { "name",    &_base::getters::name },
       { "parent",  &_base::getters::parent },
-      /*//
       { "papyrus", &_base::getters::papyrus },
-      //*/
       { "type",    &_base::getters::type },
    };
    /*static*/ cls::method_list_t cls::metatable_setters = {

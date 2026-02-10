@@ -32,6 +32,8 @@ namespace dovah::loaded_forms::components::papyrus {
 
          // Changes the type of the property while properly clearing its value beforehand, to ensure that use info is properly managed.
          void set_type(loaded_forms::Form& my_owner, property_type);
+
+         void set_value(loaded_forms::Form& my_owner, const property_value&);
                   
          static void extract_name_and_skip_remainder(const attachment_header& header, tes_subrecord_reader&, std::string&);
          static void generate_use_info(const attachment_header& header, tes_subrecord_reader&, form_stub_use_info_builder&, bool already_read_name);

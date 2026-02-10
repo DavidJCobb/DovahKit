@@ -96,6 +96,12 @@ namespace dovahscript {
             define_wrapper_metatable<condition>(L);
                define_wrapper_metatable<condition_comparison>(L);
                define_wrapper_metatable<condition_parameter_set>(L);
+         define_wrapper_metatable<papyrus_root>(L);
+            define_collection_metatable(L, collections::papyrus_scripts);
+               define_wrapper_metatable<papyrus_script>(L);
+                  define_collection_metatable(L, collections::papyrus_properties);
+                     define_wrapper_metatable<papyrus_property>(L);
+                        define_collection_metatable(L, collections::papyrus_array_property_values);
       #pragma endregion
       #pragma region INI
          define_wrapper_metatable<ini::setting>(L);

@@ -146,39 +146,11 @@ namespace dovah::loaded_forms::components::papyrus {
       }
    }
    void property::clone_from(const property& source, loaded_forms::Form& owner_of_clone) noexcept {
-      this->clear(owner_of_clone);
-
+      if (&source == this)
+         return;
       this->name   = source.name;
       this->status = source.status;
-
-      std::visit(
-         [this, &owner_of_clone](const auto& src) {
-            using value_type = std::decay_t<decltype(src)>;
-            
-            if constexpr (cobb::is_std_vector<value_type>) {
-               using item_type = typename value_type::value_type;
-
-               this->value  = value_type{};
-               auto& casted = std::get<value_type>(this->value);
-
-               size_t size = src.size();
-               casted.resize(size);
-               for (size_t i = 0; i < size; ++i) {
-                  if constexpr (std::is_same_v<item_type, property_object_value>) {
-                     casted[i].clone_from(src[i], owner_of_clone);
-                  } else {
-                     casted[i] = src[i];
-                  }
-               }
-            } else if constexpr (std::is_same_v<value_type, property_object_value>) {
-               this->value = property_object_value{};
-               std::get<property_object_value>(this->value).clone_from(src, owner_of_clone);
-            } else {
-               this->value = src;
-            }
-         },
-         source.value
-      );
+      this->set_value(owner_of_clone, source.value);
    }
    void property::sever_outbound_references_to(form_stub& target, loaded_forms::Form& my_owner) noexcept {
       if (auto* casted = std::get_if<property_object_value>(&this->value)) {
@@ -206,6 +178,40 @@ namespace dovah::loaded_forms::components::papyrus {
          return;
       this->clear(my_owner);
       this->value = property_value_from_type(pt);
+   }
+
+   void property::set_value(loaded_forms::Form& my_owner, const property_value& v) {
+      if (&v == &this->value)
+         return;
+      this->clear(my_owner);
+      std::visit(
+         [this, &my_owner](const auto& src) {
+            using value_type = std::decay_t<decltype(src)>;
+            
+            if constexpr (cobb::is_std_vector<value_type>) {
+               using item_type = typename value_type::value_type;
+
+               this->value  = value_type{};
+               auto& casted = std::get<value_type>(this->value);
+
+               size_t size = src.size();
+               casted.resize(size);
+               for (size_t i = 0; i < size; ++i) {
+                  if constexpr (std::is_same_v<item_type, property_object_value>) {
+                     casted[i].clone_from(src[i], my_owner);
+                  } else {
+                     casted[i] = src[i];
+                  }
+               }
+            } else if constexpr (std::is_same_v<value_type, property_object_value>) {
+               this->value = property_object_value{};
+               std::get<property_object_value>(this->value).clone_from(src, my_owner);
+            } else {
+               this->value = src;
+            }
+         },
+         v
+      );
    }
 
    /*static*/ void property::extract_name_and_skip_remainder(const attachment_header& header, tes_subrecord_reader& subrecord, std::string& out) {

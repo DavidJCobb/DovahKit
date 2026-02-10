@@ -16,9 +16,7 @@
 
 #include "../../../dovah/files/tes_file_reading/file_loader.h"
 
-/*//
-#include "papyrus/root.h"
-//*/
+#include "../form_components/papyrus.h"
 
 namespace {
    using namespace dovahscript;
@@ -220,20 +218,13 @@ namespace {
          lua_libraries::form_types::push(L, self.stub->form_type);
          return 1;
       }
-      /*//
       int papyrus(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* form = self.get_loaded_form_data<dovah::loaded_forms::Form>();
          if (!form)
             return 0;
-         auto* root = form->get_papyrus_data();
-         if (!root)
-            return 0; // this form type can't have Papyrus data (or loading it isn't implemented yet)
-         wrapper out = self;
-         out.append_part(wrapper_part_types::papyrus_root);
-         return core::subsystems::userdata::get().push(L, out, wrappers::papyrus_root::metatable_key);
+         return wrappers::papyrus_root::wrap_and_push(L, form->stub);
       }
-      //*/
    }
    namespace _setters {
       int editor_id(lua_State* L) {
@@ -298,9 +289,7 @@ namespace dovahscript::wrappers {
       { "flags",     &_getters::flags },
       { "form_id",   &_getters::form_id },
       { "form_type", &_getters::form_type },
-      /*//
       { "papyrus",   &_getters::papyrus },
-      //*/
    };
    /*static*/ cls::method_list_t cls::metatable_setters = {
       { "editor_id", &_setters::editor_id },
