@@ -1,3 +1,4 @@
+#pragma once
 #include <cstdint>
 #include <optional>
 #include <variant>
@@ -10,7 +11,7 @@ namespace dovah::loaded_forms {
 
 namespace dovah::loaded_forms::structs {
    namespace alias_fill_params {
-      static constexpr const alias_id_t no_alias = -1;
+      constexpr const alias_id_t no_alias = -1;
 
       struct copy_external_alias {
          form_reference_t quest;            // ALEQ

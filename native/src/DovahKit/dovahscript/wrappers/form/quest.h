@@ -2,8 +2,9 @@
 #include "form.h"
 
 namespace dovahscript::wrapper_part_types {
-   inline constexpr cobb::eight_cc quest_alias       = "QstAlias"; // only used for the collection
-   inline constexpr cobb::eight_cc quest_alias_by_id = "QstAlsID"; // used for the by-ID collection and for all aliases in both collections
+   inline constexpr cobb::eight_cc quest_alias             = "QstAlias"; // only used for the collection
+   inline constexpr cobb::eight_cc quest_alias_by_id       = "QstAlsID"; // used for the by-ID collection and for all aliases in both collections
+   inline constexpr cobb::eight_cc quest_alias_fill_params = "QstAlsFl";
 }
 
 namespace dovahscript::wrappers {

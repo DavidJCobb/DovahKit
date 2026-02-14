@@ -66,7 +66,12 @@ I have a general-purpose C++ library in the top-level "helpers" folder &mdash; j
   * `lu::bytereader`
   * `lu::bytewriter`
 * `lu/strings/`
-  * `lu::strings::interned_table`
+  * `lu::fixed_size_string`
+    * A fixed-size string represented as a `std::array<char, Size>`. This is useful for compile-time string values, but it's also useful for run-time situations that always return strings of a given size (e.g. Skyrim event member codes like `R1` that are internally represented as `uint16_t` but could also return a null-terminated `lu::fixed_size_string<2>`).
+  * `lu::interned_string_table`
+  * `lu::zstring_view`
+    * A null-terminated `std::string_view` constructible only from sources that we know to be null-terminated. I have this defined in some of my work on GCC compiler plug-ins.
+    * Potentially we could do `lu::basic_zstring_view<CharT>` and make `using zstring_view = basic_zstring_view<char>`.
 * `lu/tuples/`
 * `lu/type_containers/`
   * `lu::type_containers::class_array`

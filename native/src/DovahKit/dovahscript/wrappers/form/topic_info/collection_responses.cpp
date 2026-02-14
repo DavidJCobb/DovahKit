@@ -1,6 +1,7 @@
 #include "./collection_responses.h"
 #include "helpers/lua/error.h"
 #include "helpers/lua/warning.h"
+#include "dovahscript/api_helpers/fail_table_if_expandos.h"
 #include "dovahscript/core/subsystems/userdata.h"
 #include "dovahscript/core/subsystems/permissions.h"
 #include "dovahscript/core/classes.h"
@@ -36,37 +37,14 @@ namespace {
          default:
             cobb::lua::argerror(L, pos, "expected table or userdata");
       }
-      
-      //
-      // Error on expandos:
-      //
-      constexpr const auto allowed_keys = std::array{
+      api_helpers::fail_table_if_expandos(L, pos, std::array{
          std::string_view("edits"),
          std::string_view("listener_idle"),
          std::string_view("script_notes"),
          std::string_view("speaker_idle"),
          std::string_view("substitute_sound"),
          std::string_view("text"),
-      };
-      lua_pushnil(L);  /* first key */
-      while (lua_next(L, pos) != 0) {
-         bool found = false;
-         {
-            lua_pushvalue(L, -2);
-            std::string_view key = lua_tostring(L, -1);
-            lua_pop(L, 1);
-            for (auto& allowed : allowed_keys) {
-               if (key == allowed) {
-                  found = true;
-                  break;
-               }
-            }
-         }
-         if (!found) {
-            cobb::lua::argerror(L, pos, "table contained an unexpected key");
-         }
-         lua_pop(L, 1);
-      }
+      });
 
       lua_getfield(L, pos, "edits");
       cobb::lua::argcheck(L, lua_isnoneornil(L, -1) || lua_isstring(L, -1), pos, "table's `edits` field is not a string");

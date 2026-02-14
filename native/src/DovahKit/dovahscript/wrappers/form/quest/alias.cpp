@@ -27,6 +27,16 @@ namespace {
    
    namespace _base {
       namespace getters {
+         template<uint32_t Flag>
+         int _flag(lua_State* L) {
+            auto& self = get_wrapper_for_thiscall<cls>(L);
+            auto* alias = cls::unwrap(self);
+            if (alias == nullptr)
+               cobb::lua::error(L, "alias wrapper has no underlying object (deleted?)");
+            lua_pushboolean(L, !!(alias->flags & Flag));
+            return 1;
+         }
+
          int id(lua_State* L) {
             auto& self  = get_wrapper_for_thiscall<cls>(L);
             auto* alias = cls::unwrap(self);
@@ -79,6 +89,21 @@ namespace {
          }
       }
       namespace setters {
+         template<uint32_t Flag>
+         int _flag(lua_State* L) {
+            core::subsystems::permissions::verify_form_write_permissions();
+
+            auto& self = get_wrapper_for_thiscall<cls>(L);
+            auto* alias = cls::unwrap(self);
+            if (alias == nullptr)
+               cobb::lua::error(L, "alias wrapper has no underlying object (deleted?)");
+            cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "boolean expected");
+            self.before_edit();
+            cobb::edit_bit(alias->flags, Flag, lua_toboolean(L, 2));
+            self.after_edit();
+            return 1;
+         }
+
          int name(lua_State* L) {
             core::subsystems::permissions::verify_form_write_permissions();
             //
@@ -126,6 +151,12 @@ namespace {
 namespace dovahscript::wrappers {
    /*static*/ cls::method_list_t cls::metatable_methods = no_functions;
    /*static*/ cls::method_list_t cls::metatable_getters = {
+      #pragma region Flags
+         { "allow_reserved",  &_base::getters::_flag<wrapped_type::flag::allow_reserved> },
+         { "allow_reuse",     &_base::getters::_flag<wrapped_type::flag::allow_reuse_in_quest> },
+         { "optional",        &_base::getters::_flag<wrapped_type::flag::optional> },
+         { "reserves_target", &_base::getters::_flag<wrapped_type::flag::reserves_target> },
+      #pragma endregion
       { "id",      &_base::getters::id },
       { "name",    &_base::getters::name },
       { "parent",  &_base::getters::parent },
@@ -133,6 +164,12 @@ namespace dovahscript::wrappers {
       { "type",    &_base::getters::type },
    };
    /*static*/ cls::method_list_t cls::metatable_setters = {
+      #pragma region Flags
+         { "allow_reserved",  &_base::setters::_flag<wrapped_type::flag::allow_reserved> },
+         { "allow_reuse",     &_base::setters::_flag<wrapped_type::flag::allow_reuse_in_quest> },
+         { "optional",        &_base::setters::_flag<wrapped_type::flag::optional> },
+         { "reserves_target", &_base::setters::_flag<wrapped_type::flag::reserves_target> },
+      #pragma endregion
       { "id",   &_base::setters::id },
       { "name", &_base::setters::name },
    };

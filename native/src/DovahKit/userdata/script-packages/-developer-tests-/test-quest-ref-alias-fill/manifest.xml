@@ -1,0 +1,14 @@
+<package>
+   <metadata>
+      <name>Quest ref alias - fill params test</name>
+      <author name="DavidJCobb">
+         <link name="NexusMods" url="https://www.nexusmods.com/users/9663214?tab=user+files" />
+      </author>
+      <description>
+         Test for viewing and editing a reference alias's fill parameters.
+      </description>
+   </metadata>
+   <files>
+script-ui.lua
+   </files>
+</package>

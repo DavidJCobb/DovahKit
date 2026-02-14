@@ -14,6 +14,9 @@ namespace dovahscript::wrappers {
       static method_list_t metatable_getters;
       static method_list_t metatable_setters;
 
+      static constexpr bool has_extra_class_setup = true;
+      static void extra_class_setup(lua_State* L);
+
       using wrapped_type = dovah::loaded_forms::ReferenceAlias;
       static wrapped_type* unwrap(wrapper& w);
    };
