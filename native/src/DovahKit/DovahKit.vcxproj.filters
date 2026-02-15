@@ -9983,6 +9983,9 @@
     <ClInclude Include="dovahscript\wrappers\form\quest\fill_params_helpers\overwrite_with_table.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\utils\story_event_member_id.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

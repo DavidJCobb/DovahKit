@@ -2213,6 +2213,7 @@
     <ClInclude Include="dovah\utils\get_all_relevant_template_actors.h" />
     <ClInclude Include="dovah\utils\leveled_list_preview.h" />
     <ClInclude Include="dovah\utils\get_computed_location.h" />
+    <ClInclude Include="dovah\utils\story_event_member_id.h" />
     <ClInclude Include="dovah\utils\subrecord_data_position.h" />
     <ClInclude Include="dovah\utils\text_replacers\do_text_replacement.h" />
     <ClInclude Include="dovah\utils\text_replacers\effect_item_handler.h" />

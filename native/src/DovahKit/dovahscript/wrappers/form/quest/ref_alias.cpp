@@ -10,6 +10,7 @@
 #include "dovah/form_stub.h"
 #include "dovah/forms/ActorBase.h"
 #include "dovah/forms/Quest.h"
+#include "dovah/utils/story_event_member_id.h"
 #include "../quest.h"
 #include "./ref_alias_fill_params_at_location.h"
 #include "./ref_alias_fill_params_create.h"
@@ -83,18 +84,9 @@ namespace {
             }
             if (casted->member & 0xFFFF0000)
                return 0;
-            char name[3] = { 0 };
-            {
-               uint16_t m = casted->member;
-               if constexpr (std::endian::native == std::endian::big) {
-                  name[0] = m;
-                  name[1] = m >> 8;
-               } else {
-                  name[0] = m >> 8;
-                  name[1] = m;
-               }
-            }
-            lua_pushlstring(L, name, 2);
+
+            dovah::story_event_member_id mid{ (uint16_t)casted->member };
+            lua_pushlstring(L, mid.to_string().data(), 2);
             return 1;
          }
          if (auto* casted = std::get_if<alias_fill_params::ref::find_in_loaded_area>(&fill)) {
@@ -275,17 +267,14 @@ namespace {
                self.after_edit();
             } else {
                if (value.size() == 2) {
-                  uint16_t member = 0;
-                  if constexpr (std::endian::native == std::endian::little) {
-                     member = ((uint16_t)value[0] << 8) | value[1];
-                  } else {
-                     member = ((uint16_t)value[1] << 8) | value[0];
-                  }
+                  dovah::story_event_member_id member;
+                  member.from_string(value);
+
                   self.before_edit();
                   {
                      auto& dst = _get_or_emplace_fill_params<alias_fill_params::ref::find_from_event>(self, L, *alias);
                      dst.code   = quest.event;
-                     dst.member = member;
+                     dst.member = (uint16_t)member;
                   }
                   self.after_edit();
                   return 0;

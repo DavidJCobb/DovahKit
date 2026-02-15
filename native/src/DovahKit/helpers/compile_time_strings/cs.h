@@ -10,9 +10,10 @@ namespace cobb {
    template<size_t Size> // includes the null terminator
    class cs {
       public: // "structural class types" usable as template parameter types cannot have protected or private members >_>
-         std::array<char, Size> _data = {};
+         std::array<char, Size> _data = { 0 };
 
       public:
+         constexpr cs() {}
          constexpr cs(const char(&c)[Size]) {
             for (size_t i = 0; i < Size; ++i)
                _data[i] = c[i];
@@ -23,6 +24,11 @@ namespace cobb {
          constexpr size_t size() const noexcept { return Size - 1; }
 
          constexpr char operator[](std::size_t n) const {
+            if (n >= Size)
+               throw std::out_of_range("");
+            return _data[n];
+         }
+         constexpr char& operator[](std::size_t n) {
             if (n >= Size)
                throw std::out_of_range("");
             return _data[n];
