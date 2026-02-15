@@ -197,6 +197,7 @@ namespace {
             list.resize(insert_at + 1);
          } else {
             list.emplace(list.begin() + insert_at);
+            core::subsystems::userdata::get().insert_into_sequential_collection(self, insert_at);
          }
          if (has_value) {
             table_to_response(L, pos_value, *form, list[insert_at]);

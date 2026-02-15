@@ -190,6 +190,7 @@ namespace {
          auto* form = self.get_loaded_form_data<dovah::loaded_forms::Form>();
          list[i].commit(*form, working);
       }
+      core::subsystems::userdata::get().insert_into_sequential_collection(self, lua_tointeger(L, 2) - 1);
       self.after_edit();
 
       wrapper out = self;

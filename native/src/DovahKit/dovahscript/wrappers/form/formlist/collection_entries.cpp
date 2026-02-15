@@ -80,6 +80,7 @@ namespace {
             cobb::lua::error(L, "indices below 1, such as %d, are not allowed", i);
          --i;
       }
+      self.before_edit();
       if (i >= size) {
          if (i > size) {
             cobb::lua::warning(L, "index %s is out of bounds; nil elements will be created between the end of the list and the new element", lua_tolstring(L, 2, nullptr));
@@ -88,7 +89,6 @@ namespace {
       } else {
          list.emplace(list.begin() + i);
       }
-      self.before_edit();
       list[i].set(*form, target);
       self.after_edit();
       return 0;
