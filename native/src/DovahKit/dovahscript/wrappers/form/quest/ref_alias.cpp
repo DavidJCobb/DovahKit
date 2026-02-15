@@ -19,7 +19,6 @@
 //
 // MISSING APIS:
 //  - Reference aliases
-//     - Fill type and parameters
 //     - Added Factions
 //     - Added Inventory
 //     - Added Keywords
@@ -296,7 +295,6 @@ namespace dovahscript::wrappers {
          { "allow_destroyed",         &_getters::_flag<wrapped_type::flag::allow_destroyed> },
          { "allow_disabled",          &_getters::_flag<wrapped_type::flag::allow_disabled> },
          { "clear_name_when_removed", &_getters::_flag<wrapped_type::flag::clear_name_when_removed> },
-         { "initially_disabled",      &_getters::_flag<wrapped_type::flag::initially_disabled> },
          { "is_quest_object",         &_getters::_flag<wrapped_type::flag::quest_object> },
          { "make_essential",          &_getters::_flag<wrapped_type::flag::make_essential> },
          { "make_protected",          &_getters::_flag<wrapped_type::flag::make_protected> },
@@ -311,7 +309,6 @@ namespace dovahscript::wrappers {
          { "allow_destroyed",         &_setters::_flag<wrapped_type::flag::allow_destroyed> },
          { "allow_disabled",          &_setters::_flag<wrapped_type::flag::allow_disabled> },
          { "clear_name_when_removed", &_setters::_flag<wrapped_type::flag::clear_name_when_removed> },
-         { "initially_disabled",      &_setters::_flag<wrapped_type::flag::initially_disabled> },
          { "is_quest_object",         &_setters::_flag<wrapped_type::flag::quest_object> },
          { "make_essential",          &_setters::_flag<wrapped_type::flag::make_essential> },
          { "make_protected",          &_setters::_flag<wrapped_type::flag::make_protected> },
