@@ -410,7 +410,7 @@ out.into_collection(i);
 return core::subsystems::userdata::get().push(L, out, wrappers::topic_info_response::metatable_key);
 ```
 
-When removing an item, you have to signal to our Lua userdata subsystem that the item has been destroyed and its next-siblings have shifted up an index. You do this by creating a `wrapper` to the removed item, and then invoking a function on the userdata subsystem. An example, from TopicInfo's collection of responses:
+When removing an item, you have to signal to our Lua userdata subsystem that the item has been destroyed and its next-siblings have shifted up an index. (This both zombifies any extant wrapper for the removed item and its own sub-objects, and updates the wrapper data for its next-siblings.) You do this by creating a `wrapper` to the removed item, and then invoking a function on the userdata subsystem. An example, from TopicInfo's collection of responses:
 
 ```c++
 self.before_edit();
@@ -445,6 +445,8 @@ out.parts[0].signature = wrapper_part_types::quest_alias_by_id;
 out.into_collection(alias->id);
 +out.last_part().noncontiguous = true;
 ```
+
+The only effect this has is to disable the behavior of updating sibling wrappers when the item wrapper is destroyed.
 
 
 ### Collections supporting access via string keys
