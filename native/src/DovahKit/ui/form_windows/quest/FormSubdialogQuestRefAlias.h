@@ -1,4 +1,5 @@
 #pragma once
+#include <QButtonGroup>
 #include <QDialog>
 #include "ui_FormSubdialogQuestRefAlias.h" // generated
 
@@ -21,10 +22,14 @@ class FormSubdialogQuestRefAlias : public QDialog {
 
    protected:
       Ui::FormSubdialogQuestRefAlias ui;
+      QButtonGroup _fill_types;
+      QButtonGroup _match_types;
       struct {
          loaded_form_type&  quest;
          loaded_alias_type& alias;
       } _data;
+
+      void _update_enable_states();
 
       void _update_ext_alias_combobox();
 };

@@ -4074,6 +4074,12 @@
     <ClCompile Include="dovahscript\wrappers\form\quest\ref_alias_fill_params_linked_ref.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\QuestTabAliases.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\form_windows\quest\QuestAliasesModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -9986,6 +9992,9 @@
     <ClInclude Include="dovah\utils\story_event_member_id.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="helpers\type_traits\is_std_pair.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -11475,6 +11484,12 @@
     <QtMoc Include="ui\form_group_windows\region\RegionCanvasWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="ui\form_windows\quest\QuestTabAliases.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\form_windows\quest\QuestAliasesModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -12033,6 +12048,7 @@
     <None Include="dovah\_docs\form types\n\navmesh info map.md" />
     <None Include="dovah\_docs\form types\a\actor base.md" />
     <None Include="dovah\_docs\form types\t\topic info.md" />
+    <None Include="dovahscript\_docs\how to expose form data to Lua.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

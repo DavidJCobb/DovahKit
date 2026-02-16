@@ -3,6 +3,7 @@
 #include "dovah/forms/Quest.h"
 #include "ui_quest.h"
 
+class QuestTabAliases;
 class QuestTabStages;
 class QuestTabObjectives;
 class QuestTabScenes;
@@ -25,6 +26,7 @@ class FormDialogQuest :
          QuestAllDialogueDatastore* dialogue_datastore = nullptr;
       } data;
       struct {
+         QuestTabAliases*    aliases    = nullptr;
          QuestTabStages*     stages     = nullptr;
          QuestTabObjectives* objectives = nullptr;
          QuestTabScenes*     scenes     = nullptr;

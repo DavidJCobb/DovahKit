@@ -120,14 +120,15 @@ namespace dovah::loaded_forms {
                   {
                      auto& data = this->fill_params.emplace<structs::alias_fill_params::loc::find>();
                      auto& ev   = data.from_event.emplace();
-                     subrecord.read(ev.code);
+                     subrecord.read_signature(ev.code);
                   }
                   break;
                case 'ALFD':
                   if (auto* data = std::get_if<structs::alias_fill_params::loc::find>(&this->fill_params)) {
                      auto& ev = data->from_event;
                      if (ev.has_value()) {
-                        subrecord.read((*ev).member);
+                        subrecord.read_signature((*ev).member);
+                        ev->member = (ev->member << 16) | (ev->member >> 16);
                      }
                   }
                   break;
@@ -229,12 +230,13 @@ namespace dovah::loaded_forms {
                case 'ALFE':
                   {
                      auto& data = this->fill_params.emplace<structs::alias_fill_params::ref::find_from_event>();
-                     subrecord.read(data.code);
+                     subrecord.read_signature(data.code);
                   }
                   break;
                case 'ALFD':
                   if (auto* data = std::get_if<structs::alias_fill_params::ref::find_from_event>(&this->fill_params)) {
-                     subrecord.read(data->member);
+                     subrecord.read_signature(data->member);
+                     data->member = (data->member << 16) | (data->member >> 16);
                   }
                   break;
             #pragma endregion

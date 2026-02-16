@@ -1104,12 +1104,14 @@
     <ClCompile Include="ui\form_windows\quest\alias_subdialog_helpers.cpp" />
     <ClCompile Include="ui\form_windows\quest\FormSubdialogQuestLocAlias.cpp" />
     <ClCompile Include="ui\form_windows\quest\FormSubdialogQuestRefAlias.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestAliasesModel.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestAllDialogueDatastore.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestDialogueBranchedTopicsModel.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestDialogueBranchesModel.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestDialogueBranchlessTopicsModel.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestDialogueTabBody.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestDialogueTopicInfosModel.cpp" />
+    <ClCompile Include="ui\form_windows\quest\QuestTabAliases.cpp" />
     <ClCompile Include="ui\form_windows\quest\QuestTabScenes.cpp" />
     <ClCompile Include="ui\form_windows\race.cpp" />
     <ClCompile Include="ui\form_windows\formlist.cpp" />
@@ -2296,6 +2298,7 @@
     <ClInclude Include="helpers\scope_guards\fail.h" />
     <ClInclude Include="helpers\scope_guards\success.h" />
     <ClInclude Include="helpers\sort_and_remember.h" />
+    <ClInclude Include="helpers\type_traits\is_std_pair.h" />
     <ClInclude Include="helpers\vectors\move_item_to_index.h" />
     <ClInclude Include="nif\blocks\BSFurnitureMarkerNode.h" />
     <QtMoc Include="ui\form_group_windows\idle\IdleAnimationsDialog.h" />
@@ -2368,6 +2371,8 @@
     <QtMoc Include="ui\form_windows\reference\ObjectReferenceLinkedFromModel.h" />
     <QtMoc Include="ui\form_windows\reference\ObjectReferenceReflectedObjectsModel.h" />
     <QtMoc Include="ui\form_windows\reference\ObjectReferenceWaterLightsModel.h" />
+    <QtMoc Include="ui\form_windows\quest\QuestTabAliases.h" />
+    <QtMoc Include="ui\form_windows\quest\QuestAliasesModel.h" />
     <ClInclude Include="ui\form_windows\reference\fragments\activate_parents.h" />
     <ClInclude Include="ui\form_windows\reference\fragments\emittance_source.h" />
     <ClInclude Include="ui\form_windows\reference\fragments\light.h" />
@@ -4061,6 +4066,10 @@
   <ItemGroup>
     <None Include="cpp.hint" />
     <None Include="dovahscript\wrappers\unusual\README.md" />
+    <None Include="dovahscript\_docs\how to expose form data to Lua.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovah\bs_hash.inl" />
     <None Include="dovah\datastores\camera_paths\node.inl" />
     <None Include="dovah\datastores\camera_paths\node_parent.inl" />

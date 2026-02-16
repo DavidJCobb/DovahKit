@@ -35,7 +35,7 @@ extern void set_combobox_to_alias(QComboBox& widget, uint32_t alias_id) {
    widget.setCurrentIndex(i);
 }
 
-extern void make_event_data_comboboxes(dovah::loaded_forms::Quest& quest, QComboBox& event_code, QComboBox& event_data) {
+extern void make_event_data_comboboxes(dovah::loaded_forms::Quest& quest, QComboBox& event_code, QComboBox& event_data, bool allow_loc, bool allow_ref, bool allow_other) {
    event_code.clear();
    for (auto code : dovah::all_story_event_codes) {
       if (code == dovah::story_event_code::none)
@@ -48,7 +48,7 @@ extern void make_event_data_comboboxes(dovah::loaded_forms::Quest& quest, QCombo
    event_code.insertItem(0, editor_helpers::story_event_name(dovah::story_event_code::none), (int)dovah::story_event_code::none);
    event_code.setCurrentIndex(0);
 
-   QObject::connect(&event_code, QOverload<int>::of(&QComboBox::currentIndexChanged), &event_data, [&event_code, &event_data]() {
+   QObject::connect(&event_code, QOverload<int>::of(&QComboBox::currentIndexChanged), &event_data, [&event_code, &event_data, allow_loc, allow_ref, allow_other]() {
       auto event = (dovah::story_event_code::type)event_code.currentData().toInt();
       if (event == dovah::story_event_code::none) {
          event_data.clear();
@@ -63,12 +63,17 @@ extern void make_event_data_comboboxes(dovah::loaded_forms::Quest& quest, QCombo
       }
       event_data.clear();
       for (const auto& member : dfn->members) {
-         bool valid = false;
+         bool valid = allow_other;
          for (auto ft : member.allowed_form_types) {
             if (ft == dovah::form_type::location) {
-               valid = true;
-               break;
+               valid = allow_loc;
+            } else if (dovah::form_type_is_reference(ft)) {
+               valid = allow_ref;
+            } else {
+               valid = allow_other;
             }
+            if (valid)
+               break;
          }
          if (!valid)
             continue;

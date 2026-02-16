@@ -26,5 +26,7 @@ class FormSubdialogQuestLocAlias : public QDialog {
          loaded_alias_type& alias;
       } _data;
 
+      void _update_enable_states();
+
       void _update_ext_alias_combobox();
 };

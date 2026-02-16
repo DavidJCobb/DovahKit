@@ -10,4 +10,4 @@ extern void make_location_alias_combobox(dovah::loaded_forms::Quest&, QComboBox&
 extern void make_reference_alias_combobox(dovah::loaded_forms::Quest&, QComboBox&);
 extern void set_combobox_to_alias(QComboBox&, uint32_t alias_id);
 
-extern void make_event_data_comboboxes(dovah::loaded_forms::Quest&, QComboBox& event_code, QComboBox& event_data);
+extern void make_event_data_comboboxes(dovah::loaded_forms::Quest&, QComboBox& event_code, QComboBox& event_data, bool allow_loc, bool allow_ref, bool allow_other);

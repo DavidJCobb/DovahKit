@@ -20,6 +20,24 @@ FormSubdialogQuestRefAlias::FormSubdialogQuestRefAlias(loaded_form_type& quest, 
    _data{ quest, alias }
 {
    this->ui.setupUi(this);
+   
+   for (auto* widget : std::array{
+      this->ui.fillTypePredefined,
+      this->ui.fillTypeUniqueActor,
+      this->ui.fillTypeLocRefType,
+      this->ui.fillTypeExternalAlias,
+      this->ui.fillTypeCreate,
+      this->ui.fillTypeMatching,
+   }) {
+      this->_fill_types.addButton(widget);
+   }
+   for (auto* widget : std::array{
+      this->ui.findMatchingModeLoadedArea,
+      this->ui.findMatchingModeNearAlias,
+      this->ui.findMatchingModeEvent,
+   }) {
+      this->_match_types.addButton(widget);
+   }
 
    this->ui.displayName->setAllowedFormType(dovah::form_type::message);
    this->ui.additionalVoicetypes->setAllowedFormType(dovah::form_type::actor_base);
@@ -58,7 +76,7 @@ FormSubdialogQuestRefAlias::FormSubdialogQuestRefAlias(loaded_form_type& quest, 
    //
    this->ui.fillFromExtAliasQuest->setAllowedFormType(dovah::form_type::quest);
    //
-   make_event_data_comboboxes(quest, *this->ui.findMatchingEventName, *this->ui.findMatchingEventData);
+   make_event_data_comboboxes(quest, *this->ui.findMatchingEventName, *this->ui.findMatchingEventData, false, true, false);
    make_reference_alias_combobox(quest, *this->ui.findMatchingNearAliasID);
    {
       auto* widget = this->ui.findMatchingNearType;
@@ -95,7 +113,6 @@ void FormSubdialogQuestRefAlias::load() {
       //
       this->ui.flagUseStoredText->setChecked(flags & loaded_alias_type::flag::uses_stored_text);
       this->ui.flagStoreText->setChecked(flags & loaded_alias_type::flag::stores_text);
-      this->ui.flagInitiallyDisabled->setChecked(flags & loaded_alias_type::flag::initially_disabled);
       this->ui.flagClearNameWhenRemoved->setChecked(flags & loaded_alias_type::flag::clear_name_when_removed);
    }
    this->ui.factions->pullStubs(this->_data.alias.factions);
@@ -133,6 +150,7 @@ void FormSubdialogQuestRefAlias::load() {
          this->_update_ext_alias_combobox();
          set_combobox_to_alias(*this->ui.fillFromExtAliasID, data->alias);
       } else if (const auto* data = std::get_if<alias_fill_params::ref::create>(&fill)) {
+         this->ui.fillTypeCreate->setChecked(true);
          this->ui.createBaseForm->setFormStub(data->base_form.get_form_stub());
          {
             auto* widget = this->ui.createLevel;
@@ -149,6 +167,7 @@ void FormSubdialogQuestRefAlias::load() {
             widget->setCurrentIndex(i);
          }
          set_combobox_to_alias(*this->ui.createAtSiblingReferenceAlias, data->at_reference.alias);
+         this->ui.createInitiallyDisabled->setChecked(this->_data.alias.flags & loaded_alias_type::flag::initially_disabled);
       } else if (const auto* data = std::get_if<alias_fill_params::ref::find_in_loaded_area>(&fill)) {
          this->ui.fillTypeMatching->setChecked(true);
 
@@ -195,6 +214,21 @@ void FormSubdialogQuestRefAlias::load() {
    }
    this->ui.findMatchingConditions->importFrom(this->_data.quest, this->_data.alias.conditions);
    this->ui.scriptListPane->setQuestWorkingCopyAndAliasVMAD(&this->_data.quest, this->_data.alias.script_data);
+
+   this->_update_enable_states();
+   for (auto* widget : std::array{
+      this->ui.fillTypePredefined,
+      this->ui.fillTypeUniqueActor,
+      this->ui.fillTypeLocRefType,
+      this->ui.fillTypeExternalAlias,
+      this->ui.fillTypeCreate,
+      this->ui.fillTypeMatching,
+      this->ui.findMatchingModeLoadedArea,
+      this->ui.findMatchingModeNearAlias,
+      this->ui.findMatchingModeEvent,
+   }) {
+      QObject::connect(widget, &QRadioButton::toggled, this, &FormSubdialogQuestRefAlias::_update_enable_states);
+   }
 }
 void FormSubdialogQuestRefAlias::save() {
    auto& form = this->_data.quest;
@@ -218,7 +252,6 @@ void FormSubdialogQuestRefAlias::save() {
       //
       cobb::edit_bit(flags, loaded_alias_type::flag::uses_stored_text, this->ui.flagUseStoredText->isChecked());
       cobb::edit_bit(flags, loaded_alias_type::flag::stores_text, this->ui.flagStoreText->isChecked());
-      cobb::edit_bit(flags, loaded_alias_type::flag::initially_disabled, this->ui.flagInitiallyDisabled->isChecked());
       cobb::edit_bit(flags, loaded_alias_type::flag::clear_name_when_removed, this->ui.flagClearNameWhenRemoved->isChecked());
    }
    this->_data.alias.force_into_alias_id = this->ui.forceInto->currentData().toInt();
@@ -255,6 +288,7 @@ void FormSubdialogQuestRefAlias::save() {
       dst.difficulty = this->ui.createLevel->currentData().toInt();;
       dst.at_reference.alias = this->ui.createAtSiblingReferenceAlias->currentData().toInt();
       dst.at_reference.place_in_inventory = this->ui.createVerb->currentData().toInt() != 0;
+      cobb::edit_bit(this->_data.alias.flags, loaded_alias_type::flag::initially_disabled, this->ui.createInitiallyDisabled->isChecked());
    } else if (this->ui.fillTypeMatching->isChecked()) {
       if (this->ui.findMatchingModeEvent->isChecked()) {
          auto& dst = this->_data.alias.fill_params.emplace<alias_fill_params::ref::find_from_event>();
@@ -271,6 +305,55 @@ void FormSubdialogQuestRefAlias::save() {
    }
    this->ui.findMatchingConditions->exportTo(this->_data.quest, this->_data.alias.conditions);
    this->ui.scriptListPane->commit();
+}
+
+void FormSubdialogQuestRefAlias::_update_enable_states() {
+   {
+      bool enable = this->ui.fillTypePredefined->isChecked();
+      this->ui.fillFromPredefined->setEnabled(enable);
+   }
+   {
+      bool enable = this->ui.fillTypeUniqueActor->isChecked();
+      this->ui.fillFromUniqueActorBase->setEnabled(enable);
+   }
+   {
+      bool enable = this->ui.fillTypeLocRefType->isChecked();
+      this->ui.fillFromLocationAlias->setEnabled(enable);
+      this->ui.fillFromLocationRefType->setEnabled(enable);
+   }
+   {
+      bool enable = this->ui.fillTypeExternalAlias->isChecked();
+      this->ui.fillTypeExternalAlias->setEnabled(enable);
+      this->ui.fillFromExtAliasQuest->setEnabled(enable);
+      this->ui.fillFromExtAliasID->setEnabled(enable);
+   }
+   {
+      bool enable = this->ui.fillTypeCreate->isChecked();
+      this->ui.createAtSiblingReferenceAlias->setEnabled(enable);
+      this->ui.createBaseForm->setEnabled(enable);
+      this->ui.createLevel->setEnabled(enable);
+      this->ui.createVerb->setEnabled(enable);
+      this->ui.createInitiallyDisabled->setEnabled(enable);
+   }
+   {
+      bool enable = this->ui.fillTypeMatching->isChecked();
+      this->ui.findMatchingModeLoadedArea->setEnabled(enable);
+      this->ui.findMatchingModeNearAlias->setEnabled(enable);
+      this->ui.findMatchingModeEvent->setEnabled(enable);
+      {
+         bool sub_enable = enable && this->ui.findMatchingModeLoadedArea->isChecked();
+         this->ui.findMatchingFlagClosest->setEnabled(sub_enable);
+      }
+      {
+         bool sub_enable = enable && this->ui.findMatchingModeEvent->isChecked();
+         this->ui.findMatchingEventData->setEnabled(sub_enable);
+      }
+      {
+         bool sub_enable = enable && this->ui.findMatchingModeNearAlias->isChecked();
+         this->ui.findMatchingNearAliasID->setEnabled(sub_enable);
+         this->ui.findMatchingNearType->setEnabled(sub_enable);
+      }
+   }
 }
 
 void FormSubdialogQuestRefAlias::_update_ext_alias_combobox() {

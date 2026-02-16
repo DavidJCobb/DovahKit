@@ -4,6 +4,7 @@
 #include "editor/subsystems/game_localized_strings/core.h"
 #include "./odds_and_ends/quest_tab_stages.h"
 #include "./odds_and_ends/quest_tab_objectives.h"
+#include "./quest/QuestTabAliases.h"
 #include "./quest/QuestTabScenes.h"
 
 #include "ui/utils/bind.h"
@@ -142,7 +143,12 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
       );
    }
    #pragma endregion
-
+   
+   {  // Aliases tab
+      auto* manager = this->tabs.aliases = new QuestTabAliases(*this->form, this);
+      manager->ui.view = this->ui.aliasList;
+      manager->setupUi();
+   }
    {  // Scene tab
       auto* manager = this->tabs.scenes = new QuestTabScenes(*this->form, *this->data.dialogue_datastore, this);
       manager->ui = {
@@ -188,7 +194,7 @@ FormDialogQuest::FormDialogQuest(dovah::form_stub& stub, QWidget* parent) : QDia
 void FormDialogQuest::_load_impl() {
    auto& gls     = dovahkit::subsystems::game_localized_strings::core::get();
    auto& working = *this->form;
-   //
+   
    #pragma region Basic Data
       ui::bind(this->ui.editorID, this->editor_id());
       ui::bind(this->ui.editorCategory, working.filter);
@@ -216,7 +222,9 @@ void FormDialogQuest::_load_impl() {
       //
    #pragma endregion
    #pragma region Aliases
-      // TODO
+      //
+      // Done by the subwidget, in its constructor.
+      //
    #pragma endregion
    #pragma region Dialogue
       this->data.dialogue_datastore->set_quest(this->formStub());
@@ -257,7 +265,9 @@ void FormDialogQuest::_save_impl() {
       //
    #pragma endregion
    #pragma region Aliases
-      // TODO
+      //
+      // The subwidget makes all changes in real-time.
+      //
    #pragma endregion
    #pragma region Dialogue
       //
@@ -270,8 +280,6 @@ void FormDialogQuest::_save_impl() {
    #pragma region Scripts
       this->ui.scriptListPane->commit();
    #pragma endregion
-
-   // TODO: EVERYTHING THAT DOESN'T MODIFY THE WORKING COPY IN REAL-TIME
 }
 
 #include <QApplication>

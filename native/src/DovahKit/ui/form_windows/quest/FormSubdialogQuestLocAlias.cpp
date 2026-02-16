@@ -27,7 +27,7 @@ FormSubdialogQuestLocAlias::FormSubdialogQuestLocAlias(loaded_form_type& quest, 
 
    make_location_alias_combobox(quest, *this->ui.forceInto);
    make_reference_alias_combobox(quest, *this->ui.fillFromSiblingAlias);
-   make_event_data_comboboxes(quest, *this->ui.findMatchingEventName, *this->ui.findMatchingEventData);
+   make_event_data_comboboxes(quest, *this->ui.findMatchingEventName, *this->ui.findMatchingEventData, true, false, false);
 
    QObject::connect(this->ui.buttonOK, &QPushButton::clicked, this, [this]() {
       this->save();
@@ -91,6 +91,17 @@ void FormSubdialogQuestLocAlias::load() {
    }
    this->ui.conditions->importFrom(this->_data.quest, this->_data.alias.conditions);
    this->ui.scriptListPane->setQuestWorkingCopyAndAliasVMAD(&this->_data.quest, this->_data.alias.script_data);
+
+   this->_update_enable_states();
+   for (auto* widget : std::array<QAbstractButton*, 5>{
+      this->ui.fillTypeExternalAlias,
+      this->ui.fillTypeMatching,
+      this->ui.findMatchingFlagEvent,
+      this->ui.fillTypePredefined,
+      this->ui.fillTypeSiblingAlias,
+   }) {
+      QObject::connect(widget, &QAbstractButton::toggled, this, &FormSubdialogQuestLocAlias::_update_enable_states);
+   }
 }
 void FormSubdialogQuestLocAlias::save() {
    this->_data.alias.name = this->ui.name->text().toStdString();
@@ -130,6 +141,31 @@ void FormSubdialogQuestLocAlias::save() {
    }
    this->ui.conditions->exportTo(this->_data.quest, this->_data.alias.conditions);
    this->ui.scriptListPane->commit();
+}
+
+void FormSubdialogQuestLocAlias::_update_enable_states() {
+   {
+      bool enabled = this->ui.fillTypeExternalAlias->isChecked();
+      this->ui.fillFromExtAliasQuest->setEnabled(enabled);
+      this->ui.fillFromExtAliasName->setEnabled(enabled);
+   }
+   {
+      bool enabled = this->ui.fillTypeMatching->isChecked();
+      this->ui.findMatchingFlagEvent->setEnabled(enabled);
+      {
+         bool sub_enabled = enabled && this->ui.findMatchingFlagEvent->isChecked();
+         this->ui.findMatchingEventData->setEnabled(sub_enabled);
+      }
+   }
+   {
+      bool enabled = this->ui.fillTypePredefined->isChecked();
+      this->ui.fillFromPredefined->setEnabled(enabled);
+   }
+   {
+      bool enabled = this->ui.fillTypeSiblingAlias->isChecked();
+      this->ui.fillFromSiblingAlias->setEnabled(enabled);
+      this->ui.fillFromSiblingAliasParentKeyword->setEnabled(enabled);
+   }
 }
 
 void FormSubdialogQuestLocAlias::_update_ext_alias_combobox() {
