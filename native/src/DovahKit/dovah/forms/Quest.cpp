@@ -139,11 +139,13 @@ namespace dovah::loaded_forms {
    }
    bool ReferenceAlias::_load_impl(tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       form_reference_t formID;
+      bool preassigned_present = false;
       switch (subrecord.signature()) {
          #pragma region Fill params
             #pragma region Specific Reference
                case 'ALFR':
                   {
+                     preassigned_present = true;
                      auto& data = this->fill_params.emplace<structs::alias_fill_params::ref::preassigned>();
                      subrecord.read(data.ref);
                      //intfc.warn_if_ref_is_wrong_type(data.actor_base, form_type::actor_base, subrecord.signature());
@@ -303,6 +305,27 @@ namespace dovah::loaded_forms {
          default:
             return false;
       }
+
+      if (!preassigned_present && std::holds_alternative<structs::alias_fill_params::ref::preassigned>(this->fill_params)) {
+         //
+         // If no fill-type subrecords are loaded, then the alias defaults to Conditions if it has at 
+         // least 1 condition, or to Preassigned (ref: None) otherwise.
+         //
+         if (!this->conditions.empty()) {
+            if (this->flags & flag::limit_to_loaded_area) {
+               auto& casted = this->fill_params.emplace<structs::alias_fill_params::ref::find_in_loaded_area>();
+            } else {
+               this->fill_params.emplace<structs::alias_fill_params::ref::find_anywhere>();
+            }
+         }
+      }
+      
+      if (auto* casted = std::get_if<structs::alias_fill_params::ref::create>(&this->fill_params)) {
+         casted->initially_disabled = this->flags & flag::initially_disabled;
+      } else if (auto* casted = std::get_if<structs::alias_fill_params::ref::find_in_loaded_area>(&this->fill_params)) {
+         casted->closest = this->flags & flag::use_closest;
+      }
+
       return true;
    }
 
@@ -616,6 +639,14 @@ namespace dovah::loaded_forms {
          flags &= ~flag::limit_to_loaded_area;
          flags &= ~flag::use_closest;
       }
+      if (const auto* data = std::get_if<structs::alias_fill_params::ref::create>(&this->fill_params)) {
+         if (data->initially_disabled)
+            flags |= flag::initially_disabled;
+         else
+            flags &= ~flag::initially_disabled;
+      } else {
+         flags &= ~flag::initially_disabled;
+      }
    }
    bool ReferenceAlias::_save_fill_impl(tes_record_writer& record, load_order_interfaces::form_save& intfc) {
       if (const auto* data = std::get_if<structs::alias_fill_params::ref::preassigned>(&this->fill_params)) {
@@ -636,6 +667,11 @@ namespace dovah::loaded_forms {
             ALFA.write(data->alias);
             ALFA.close();
          }
+      } else if (const auto* data = std::get_if<structs::alias_fill_params::ref::find_anywhere>(&this->fill_params)) {
+         //
+         // As long as we have at least one condition, and we clear certain flags on save (which 
+         // we do), this is the default.
+         //
       } else if (const auto* data = std::get_if<structs::alias_fill_params::ref::find_in_loaded_area>(&this->fill_params)) {
          //
          // Handled by adjusting flags on save.

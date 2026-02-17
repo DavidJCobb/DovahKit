@@ -52,7 +52,9 @@ namespace dovah::loaded_forms::structs {
                alias_id_t alias = no_alias;
                bool       place_in_inventory;
             } at_reference;
+            bool initially_disabled = false;
          };
+         struct find_anywhere {};
          struct find_in_loaded_area { // serialized as alias flag 0x00000020
             bool closest = false; // serialized as alias flag 0x00002000
          };
@@ -65,8 +67,8 @@ namespace dovah::loaded_forms::structs {
    }
    
    using location_alias_fill_params = std::variant<
-      alias_fill_params::loc::find, // executable-level default
       alias_fill_params::loc::preassigned,
+      alias_fill_params::loc::find, // executable-level default for newly-created aliases
       alias_fill_params::loc::at_reference_alias,
       alias_fill_params::copy_external_alias
    >;
@@ -76,6 +78,7 @@ namespace dovah::loaded_forms::structs {
       alias_fill_params::ref::at_location_alias,
       alias_fill_params::copy_external_alias,
       alias_fill_params::ref::create,
+      alias_fill_params::ref::find_anywhere,
       alias_fill_params::ref::find_in_loaded_area,
       alias_fill_params::ref::find_from_event,
       alias_fill_params::ref::find_near_alias

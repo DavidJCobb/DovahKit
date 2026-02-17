@@ -183,6 +183,14 @@ DKConditionList::DKConditionList(QWidget* parent) : QWidget(parent) {
    }
 #endif
 
+size_t DKConditionList::conditionCount() const {
+   #if !defined(QT_PLUGIN)
+      return this->_model->rowCount();
+   #else
+      return 0;
+   #endif
+}
+
 void DKConditionList::openCreateConditionModal() {
    #if !defined(QT_PLUGIN)
    auto* model = this->_model;

@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>FormSubdialogQuestRefAlias</class>
  <widget class="QDialog" name="FormSubdialogQuestRefAlias">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>958</width>
+    <height>910</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Reference Alias</string>
   </property>
@@ -384,20 +392,17 @@
        <string>Fill</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4" columnstretch="1,1,0,0,1">
-       <item row="2" column="1" colspan="2">
-        <widget class="QComboBox" name="fillFromLocationAlias">
+       <item row="1" column="0">
+        <widget class="QRadioButton" name="fillTypeUniqueActor">
          <property name="whatsThis">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A Location Alias on this Quest. It must be higher in the list (lower ID number) than this alias.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;p&gt;Fill this alias with a unique Actor. This only works reliably if the Actor has been assigned a Persist Location: if the actor isn't loaded when the quest starts, the game will search through every Location to find the one they persist in, and then use that to force them to load.&lt;/p&gt;</string>
+         </property>
+         <property name="text">
+          <string>Unique Actor</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="1" colspan="2">
-        <widget class="DKFormPicker" name="fillFromUniqueActorBase"/>
-       </item>
-       <item row="10" column="4">
-        <widget class="QComboBox" name="findMatchingEventData"/>
-       </item>
-       <item row="13" column="0" colspan="5">
+       <item row="14" column="0" colspan="5">
         <layout class="QHBoxLayout" name="horizontalLayout_5">
          <item>
           <spacer name="horizontalSpacer_6">
@@ -427,12 +432,6 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="1" colspan="2">
-        <widget class="DKCompactObjectReferencePicker" name="fillFromPredefined"/>
-       </item>
-       <item row="10" column="1" colspan="2">
-        <widget class="QComboBox" name="findMatchingEventName"/>
-       </item>
        <item row="5" column="0">
         <widget class="QRadioButton" name="fillTypeExternalAlias">
          <property name="whatsThis">
@@ -443,10 +442,23 @@
          </property>
         </widget>
        </item>
+       <item row="5" column="3">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Alias:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="buddy">
+          <cstring>fillFromExtAliasID</cstring>
+         </property>
+        </widget>
+       </item>
        <item row="11" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <spacer name="horizontalSpacer_5">
+          <spacer name="horizontalSpacer_4">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -462,13 +474,19 @@
           </spacer>
          </item>
          <item>
-          <widget class="QRadioButton" name="findMatchingModeNearAlias">
+          <widget class="QRadioButton" name="findMatchingModeEvent">
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only available for quests that are started from a Story Manager event.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
-            <string>...Near Alias</string>
+            <string>...From Event</string>
            </property>
           </widget>
          </item>
         </layout>
+       </item>
+       <item row="12" column="4">
+        <widget class="QComboBox" name="findMatchingNearType"/>
        </item>
        <item row="6" column="3">
         <widget class="QComboBox" name="createVerb">
@@ -488,6 +506,52 @@
            <string>in</string>
           </property>
          </item>
+        </widget>
+       </item>
+       <item row="11" column="3">
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Event Data:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="buddy">
+          <cstring>findMatchingEventData</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="11" column="1" colspan="2">
+        <widget class="QComboBox" name="findMatchingEventName"/>
+       </item>
+       <item row="5" column="1" colspan="2">
+        <widget class="DKFormPicker" name="fillFromExtAliasQuest"/>
+       </item>
+       <item row="6" column="1">
+        <widget class="DKFormPicker" name="createBaseForm">
+         <property name="minimumSize">
+          <size>
+           <width>250</width>
+           <height>0</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="12" column="1" colspan="2">
+        <widget class="QComboBox" name="findMatchingNearAliasID">
+         <property name="whatsThis">
+          <string>&lt;p&gt;Find an object near whatever other object is referred to by a Reference Alias on this quest. The alias in question must have a lower ID than this alias.&lt;/p&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1" colspan="2">
+        <widget class="DKFormPicker" name="fillFromUniqueActorBase"/>
+       </item>
+       <item row="6" column="4">
+        <widget class="QComboBox" name="createAtSiblingReferenceAlias">
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Another Reference Alias on this Quest. The new ObjectReference will be spawned at that alias's ObjectReference. You can only specify a &amp;quot;sibling&amp;quot; alias that fills before this alias (i.e. one with a lower ID number, appearing higher in the alias list).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
         </widget>
        </item>
        <item row="6" column="2">
@@ -528,112 +592,6 @@
          </item>
         </widget>
        </item>
-       <item row="6" column="1">
-        <widget class="DKFormPicker" name="createBaseForm">
-         <property name="minimumSize">
-          <size>
-           <width>250</width>
-           <height>0</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QRadioButton" name="fillTypeUniqueActor">
-         <property name="whatsThis">
-          <string>&lt;p&gt;Fill this alias with a unique Actor. This only works reliably if the Actor has been assigned a Persist Location: if the actor isn't loaded when the quest starts, the game will search through every Location to find the one they persist in, and then use that to force them to load.&lt;/p&gt;</string>
-         </property>
-         <property name="text">
-          <string>Unique Actor</string>
-         </property>
-        </widget>
-       </item>
-       <item row="10" column="3">
-        <widget class="QLabel" name="label_8">
-         <property name="text">
-          <string>Event Data:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="buddy">
-          <cstring>findMatchingEventData</cstring>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="3">
-        <widget class="QLabel" name="label_5">
-         <property name="text">
-          <string>Ref Type:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="buddy">
-          <cstring>fillFromLocationRefType</cstring>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1" colspan="2">
-        <widget class="DKFormPicker" name="fillFromExtAliasQuest"/>
-       </item>
-       <item row="5" column="3">
-        <widget class="QLabel" name="label_6">
-         <property name="text">
-          <string>Alias:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-         <property name="buddy">
-          <cstring>fillFromExtAliasID</cstring>
-         </property>
-        </widget>
-       </item>
-       <item row="10" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <item>
-          <spacer name="horizontalSpacer_4">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Maximum</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>30</width>
-             <height>0</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="findMatchingModeEvent">
-           <property name="whatsThis">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only available for quests that are started from a Story Manager event.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="text">
-            <string>...From Event</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="11" column="1" colspan="2">
-        <widget class="QComboBox" name="findMatchingNearAliasID">
-         <property name="whatsThis">
-          <string>&lt;p&gt;Find an object near whatever other object is referred to by a Reference Alias on this quest. The alias in question must have a lower ID than this alias.&lt;/p&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="4">
-        <widget class="QComboBox" name="createAtSiblingReferenceAlias">
-         <property name="whatsThis">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Another Reference Alias on this Quest. The new ObjectReference will be spawned at that alias's ObjectReference. You can only specify a &amp;quot;sibling&amp;quot; alias that fills before this alias (i.e. one with a lower ID number, appearing higher in the alias list).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-        </widget>
-       </item>
        <item row="2" column="0">
         <widget class="QRadioButton" name="fillTypeLocRefType">
          <property name="whatsThis">
@@ -645,7 +603,7 @@
          </property>
         </widget>
        </item>
-       <item row="9" column="0">
+       <item row="10" column="0">
         <layout class="QHBoxLayout" name="horizontalLayout_6">
          <item>
           <spacer name="horizontalSpacer_7">
@@ -678,19 +636,87 @@
          </item>
         </layout>
        </item>
-       <item row="11" column="4">
-        <widget class="QComboBox" name="findMatchingNearType"/>
-       </item>
-       <item row="5" column="4">
-        <widget class="QComboBox" name="fillFromExtAliasID"/>
-       </item>
-       <item row="9" column="1">
+       <item row="10" column="1">
         <widget class="QCheckBox" name="findMatchingFlagClosest">
          <property name="whatsThis">
           <string>&lt;p&gt;If unchecked, the alias will be filled with an ObjectReference chosen randomly from all ObjectReferences in the loaded area that match the given conditions. If checked, the alias will be filled with the matching ObjectReference that is closest to the player-character.&lt;/p&gt;</string>
          </property>
          <property name="text">
           <string>Closest</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Ref Type:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="buddy">
+          <cstring>fillFromLocationRefType</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" colspan="2">
+        <widget class="DKCompactObjectReferencePicker" name="fillFromPredefined"/>
+       </item>
+       <item row="5" column="4">
+        <widget class="QComboBox" name="fillFromExtAliasID"/>
+       </item>
+       <item row="6" column="0">
+        <widget class="QRadioButton" name="fillTypeCreate">
+         <property name="whatsThis">
+          <string>&lt;p&gt;Spawn a new ObjectReference in the world, and fill this alias with it.&lt;/p&gt;
+&lt;p&gt;You must select another Reference Alias in this quest to spawn the new object at. That alias must have a lower ID than this alias.&lt;/p&gt;</string>
+         </property>
+         <property name="text">
+          <string>Create Reference</string>
+         </property>
+        </widget>
+       </item>
+       <item row="11" column="4">
+        <widget class="QComboBox" name="findMatchingEventData"/>
+       </item>
+       <item row="2" column="1" colspan="2">
+        <widget class="QComboBox" name="fillFromLocationAlias">
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A Location Alias on this Quest. It must be higher in the list (lower ID number) than this alias.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="12" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <spacer name="horizontalSpacer_5">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Maximum</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>30</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="findMatchingModeNearAlias">
+           <property name="text">
+            <string>...Near Alias</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="7" column="1">
+        <widget class="QCheckBox" name="createInitiallyDisabled">
+         <property name="text">
+          <string>Initially Disabled</string>
          </property>
         </widget>
        </item>
@@ -704,7 +730,10 @@
          </property>
         </widget>
        </item>
-       <item row="11" column="3">
+       <item row="2" column="4">
+        <widget class="DKFormPicker" name="fillFromLocationRefType"/>
+       </item>
+       <item row="12" column="3">
         <widget class="QLabel" name="label_7">
          <property name="text">
           <string>Near Type:</string>
@@ -717,26 +746,36 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="0">
-        <widget class="QRadioButton" name="fillTypeCreate">
-         <property name="whatsThis">
-          <string>&lt;p&gt;Spawn a new ObjectReference in the world, and fill this alias with it.&lt;/p&gt;
-&lt;p&gt;You must select another Reference Alias in this quest to spawn the new object at. That alias must have a lower ID than this alias.&lt;/p&gt;</string>
-         </property>
-         <property name="text">
-          <string>Create Reference</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="4">
-        <widget class="DKFormPicker" name="fillFromLocationRefType"/>
-       </item>
-       <item row="7" column="1">
-        <widget class="QCheckBox" name="createInitiallyDisabled">
-         <property name="text">
-          <string>Initially Disabled</string>
-         </property>
-        </widget>
+       <item row="9" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <item>
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Maximum</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>30</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="findMatchingModeAnywhere">
+           <property name="whatsThis">
+            <string>&lt;p&gt;Find a reference anywhere in the game world. Note that references outside of the loaded area can only be selected if they are unique actors or persistent refs.&lt;/p&gt;
+&lt;p&gt;This option requires that you specify at least one condition below.&lt;/p&gt;</string>
+           </property>
+           <property name="text">
+            <string>...Anywhere</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
@@ -854,6 +893,7 @@
   <tabstop>flagAllowDestroyed</tabstop>
   <tabstop>flagUseStoredText</tabstop>
   <tabstop>flagStoreText</tabstop>
+  <tabstop>flagClearNameWhenRemoved</tabstop>
   <tabstop>factions</tabstop>
   <tabstop>keywords</tabstop>
   <tabstop>spells</tabstop>
@@ -880,6 +920,7 @@
   <tabstop>createAtSiblingReferenceAlias</tabstop>
   <tabstop>createInitiallyDisabled</tabstop>
   <tabstop>fillTypeMatching</tabstop>
+  <tabstop>findMatchingModeAnywhere</tabstop>
   <tabstop>findMatchingModeLoadedArea</tabstop>
   <tabstop>findMatchingFlagClosest</tabstop>
   <tabstop>findMatchingModeEvent</tabstop>
@@ -892,7 +933,6 @@
   <tabstop>scriptListPane</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
-  <tabstop>flagClearNameWhenRemoved</tabstop>
  </tabstops>
  <resources/>
  <connections/>

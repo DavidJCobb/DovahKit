@@ -46,6 +46,8 @@ class DKConditionList : public QWidget {
          void exportBifurcatedList(dovah::loaded_forms::Form& owner, BackendConditionList& locked, BackendConditionList& normal);
       #endif
 
+      size_t conditionCount() const;
+
    signals:
       void changeAttempted();
       void changed();

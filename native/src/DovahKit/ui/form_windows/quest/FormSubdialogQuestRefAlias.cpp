@@ -32,6 +32,7 @@ FormSubdialogQuestRefAlias::FormSubdialogQuestRefAlias(loaded_form_type& quest, 
       this->_fill_types.addButton(widget);
    }
    for (auto* widget : std::array{
+      this->ui.findMatchingModeAnywhere,
       this->ui.findMatchingModeLoadedArea,
       this->ui.findMatchingModeNearAlias,
       this->ui.findMatchingModeEvent,
@@ -168,9 +169,17 @@ void FormSubdialogQuestRefAlias::load() {
          }
          set_combobox_to_alias(*this->ui.createAtSiblingReferenceAlias, data->at_reference.alias);
          this->ui.createInitiallyDisabled->setChecked(this->_data.alias.flags & loaded_alias_type::flag::initially_disabled);
+      } else if (const auto* data = std::get_if<alias_fill_params::ref::find_anywhere>(&fill)) {
+         this->ui.fillTypeMatching->setChecked(true);
+
+         this->ui.findMatchingModeAnywhere->setChecked(true);
+         this->ui.findMatchingModeLoadedArea->setChecked(false);
+         this->ui.findMatchingModeEvent->setChecked(false);
+         this->ui.findMatchingModeNearAlias->setChecked(false);
       } else if (const auto* data = std::get_if<alias_fill_params::ref::find_in_loaded_area>(&fill)) {
          this->ui.fillTypeMatching->setChecked(true);
 
+         this->ui.findMatchingModeAnywhere->setChecked(false);
          this->ui.findMatchingModeLoadedArea->setChecked(true);
          this->ui.findMatchingModeEvent->setChecked(false);
          this->ui.findMatchingModeNearAlias->setChecked(false);
@@ -179,6 +188,7 @@ void FormSubdialogQuestRefAlias::load() {
       } else if (const auto* data = std::get_if<alias_fill_params::ref::find_from_event>(&fill)) {
          this->ui.fillTypeMatching->setChecked(true);
 
+         this->ui.findMatchingModeAnywhere->setChecked(false);
          this->ui.findMatchingModeLoadedArea->setChecked(false);
          this->ui.findMatchingModeNearAlias->setChecked(false);
          this->ui.findMatchingModeEvent->setChecked(true);
@@ -197,6 +207,7 @@ void FormSubdialogQuestRefAlias::load() {
       } else if (const auto* data = std::get_if<alias_fill_params::ref::find_near_alias>(&fill)) {
          this->ui.fillTypeMatching->setChecked(true);
 
+         this->ui.findMatchingModeAnywhere->setChecked(false);
          this->ui.findMatchingModeLoadedArea->setChecked(false);
          this->ui.findMatchingModeEvent->setChecked(false);
          this->ui.findMatchingModeNearAlias->setChecked(true);
@@ -223,12 +234,27 @@ void FormSubdialogQuestRefAlias::load() {
       this->ui.fillTypeExternalAlias,
       this->ui.fillTypeCreate,
       this->ui.fillTypeMatching,
+      this->ui.findMatchingModeAnywhere,
       this->ui.findMatchingModeLoadedArea,
       this->ui.findMatchingModeNearAlias,
       this->ui.findMatchingModeEvent,
    }) {
       QObject::connect(widget, &QRadioButton::toggled, this, &FormSubdialogQuestRefAlias::_update_enable_states);
    }
+   QObject::connect(this->ui.findMatchingConditions, &DKConditionList::changed, this, [this]() {
+      const bool empty    = this->ui.findMatchingConditions->conditionCount() == 0;
+      auto*      anywhere = this->ui.findMatchingModeAnywhere;
+      if (anywhere->isEnabled()) {
+         if (empty) {
+            anywhere->setEnabled(false);
+            if (anywhere->isChecked()) {
+               this->ui.findMatchingModeLoadedArea->setChecked(true);
+            }
+         }
+      } else {
+         anywhere->setEnabled(!empty);
+      }
+   });
 }
 void FormSubdialogQuestRefAlias::save() {
    auto& form = this->_data.quest;
@@ -290,7 +316,9 @@ void FormSubdialogQuestRefAlias::save() {
       dst.at_reference.place_in_inventory = this->ui.createVerb->currentData().toInt() != 0;
       cobb::edit_bit(this->_data.alias.flags, loaded_alias_type::flag::initially_disabled, this->ui.createInitiallyDisabled->isChecked());
    } else if (this->ui.fillTypeMatching->isChecked()) {
-      if (this->ui.findMatchingModeEvent->isChecked()) {
+      if (this->ui.findMatchingModeAnywhere->isChecked()) {
+         this->_data.alias.fill_params.emplace<alias_fill_params::ref::find_anywhere>();
+      } else if (this->ui.findMatchingModeEvent->isChecked()) {
          auto& dst = this->_data.alias.fill_params.emplace<alias_fill_params::ref::find_from_event>();
          dst.code   = form.event;
          dst.member = this->ui.findMatchingEventData->currentData().toInt();
@@ -337,6 +365,7 @@ void FormSubdialogQuestRefAlias::_update_enable_states() {
    }
    {
       bool enable = this->ui.fillTypeMatching->isChecked();
+      this->ui.findMatchingModeAnywhere->setEnabled(enable && this->ui.findMatchingConditions->conditionCount() > 0);
       this->ui.findMatchingModeLoadedArea->setEnabled(enable);
       this->ui.findMatchingModeNearAlias->setEnabled(enable);
       this->ui.findMatchingModeEvent->setEnabled(enable);
