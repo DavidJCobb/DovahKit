@@ -13,6 +13,20 @@ DovahKit currently doesn't handle this edge-case. The vast majority of form type
 
 Basically, if the last *n* records are flagged as deleted, then we need to coalesce the last *n + 1* records.
 
+#### Partial parent forms break the Rule of One too
+
+If a parent form (`CELL`, `DIAL`, `WRLD`) has an override flagged as "partial," it also skips the "clear" functions. Additionally, forms load full and "partial" data differently (`LoadForm` versus `LoadPartial`). This means that setting *or clearing* the "partial" flag on these forms after data has been loaded will have consequences that DovahKit is currently unable to handle:
+
+* Setting the flag on the active-file record means that the form's contents need to be reset to match whatever record preceded the active file. It also means that the active file will no longer be able to set or override certain data (anything not loaded by `LoadPartial`). This situation is comparable to the jank we see with TopicInfos, wherein the "partial" flag causes some form data to effectively be bifurcated between the active file and its preceding files.
+
+  By implication, our loaded use info will immediately become out of date, and will need to be rebuilt. We have no systems which would facilitate doing this.
+
+* Clearing the flag on the active-file record would have the opposite effect: any data that originally came from masters should either be cleared, or moved into the active-file data. If setting the flag risks bifurcating data, then clearing the flag reunites all the data.
+
+There are potential additional complications with all of this. I've seen some users report that if a cell's winning record is "partial," then the cell's contained refs may fail to load in-game. I'd need to investigate how cell loading works in order to know what's going on here.
+
+There's no single unified system we can build to handle all of this. We'd have to extensively document the full versus partial load behavior for the affected form types, and give each form type a function that can handle the "partial" flag being changed. This function would need to be able to process data from arbitrary records preceding the winning record. The most we can do declaratively, I think, is give each form type a flag indicating whether it needs these behaviors.
+
 ### Record flags during load
 
 A typical implementation of the `TESForm::Load` virtual member function will begin by loading basic data from the record header, including the form ID and record flags. All previously-loaded flags are cleared save for the following, which appear to all be run-time state flags that shouldn't be considered valid on a serialized record:
