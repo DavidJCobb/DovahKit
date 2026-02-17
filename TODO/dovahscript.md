@@ -165,6 +165,8 @@ namespace wrappers::forms::quests {
 }
 ```
 
+Additionally, it'd be nice if the collection internals could handle more of the nuances of collections. In particular, when dealing with a collection of sub-objects, it'd be nice if the "remove" function could signal success, with the internals then killing any extant wrappers for the removed sub-object (with all of the needed side-effects, e.g. shifting indices of any next-sibling sub-objects if the collection uses contiguous indices).
+
 #### Overwriting sub-objects wholesale
 
 Right now, it's not possible to do something like this:
