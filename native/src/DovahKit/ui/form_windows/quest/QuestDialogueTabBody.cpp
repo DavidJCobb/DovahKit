@@ -222,9 +222,10 @@ QuestDialogueTabBody::QuestDialogueTabBody(QWidget* parent) : QWidget(parent) {
       ui::typical_tableview_config(view);
       ui::set_tableview_column_widths(view, [](QHeaderView& header, const QFontMetrics& metrics) {
          header.resizeSection(QuestDialogueBranchedTopicsModel::Column::EditorID,    100);
+         header.resizeSection(QuestDialogueBranchedTopicsModel::Column::IsBranchStartingTopic, metrics.boundingRect(" < ").width() * 1.5F + 4);
          header.resizeSection(QuestDialogueBranchedTopicsModel::Column::FormID,      4);
          header.resizeSection(QuestDialogueBranchedTopicsModel::Column::DisplayText, 100);
-         header.resizeSection(QuestDialogueBranchlessTopicsModel::Column::Subtype,   metrics.boundingRect("CombatCombat").width() * 1.5F + 4);
+         //header.resizeSection(QuestDialogueBranchlessTopicsModel::Column::Subtype,   metrics.boundingRect("CombatCombat").width() * 1.5F + 4);
          header.resizeSection(QuestDialogueBranchedTopicsModel::Column::Priority,    metrics.boundingRect("100").width() * 1.5F + 4);
       });
 
@@ -332,6 +333,10 @@ void QuestDialogueTabBody::setCategory(dovah::dialogue::category c) {
       this->ui.buttonBranchDelete->setEnabled(false);
 
       this->ui.topics->setModel(this->_models.topics.branched);
+      if (auto* header = this->ui.topics->horizontalHeader()) {
+         auto metrics = QFontMetrics(header->font());
+         header->resizeSection(QuestDialogueBranchedTopicsModel::Column::IsBranchStartingTopic, metrics.boundingRect(" < ").width() * 1.5F + 4);
+      }
 
       this->_reset_selection_of(this->ui.branches);
       this->_branch_selection_changed(); // just in case; see other situation where sel-changed funcs needed to be called manually
@@ -344,6 +349,10 @@ void QuestDialogueTabBody::setCategory(dovah::dialogue::category c) {
 
       this->ui.topics->setModel(this->_models.topics.branchless);
       this->_models.topics.branchless->setCategory(c);
+      if (auto* header = this->ui.topics->horizontalHeader()) {
+         auto metrics = QFontMetrics(header->font());
+         header->resizeSection(QuestDialogueBranchlessTopicsModel::Column::Subtype, metrics.boundingRect("CombatCombat").width() * 1.5F + 4);
+      }
    }
    this->_set_up_topic_selection_model();
 }
