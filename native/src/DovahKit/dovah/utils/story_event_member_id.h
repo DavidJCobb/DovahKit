@@ -30,34 +30,34 @@ namespace dovah {
 
          constexpr char get_first_char() const noexcept {
             if constexpr (std::endian::native == std::endian::little)
-               return this->raw;
-            else
                return this->raw >> 8;
+            else
+               return this->raw;
          }
          constexpr char get_second_char() const noexcept {
             if constexpr (std::endian::native == std::endian::little)
-               return this->raw >> 8;
-            else
                return this->raw;
+            else
+               return this->raw >> 8;
          }
 
          constexpr void set_first_char(char c) noexcept {
             if constexpr (std::endian::native == std::endian::little)
-               _replace_lo_char(c);
-            else
                _replace_hi_char(c);
+            else
+               _replace_lo_char(c);
          }
          constexpr void set_second_char(char c) noexcept {
             if constexpr (std::endian::native == std::endian::little)
-               _replace_hi_char(c);
-            else
                _replace_lo_char(c);
+            else
+               _replace_hi_char(c);
          }
          constexpr void set_chars(char a, char b) noexcept {
             if constexpr (std::endian::native == std::endian::little)
-               this->raw = a | ((uint16_t)b << 8);
-            else
                this->raw = b | ((uint16_t)a << 8);
+            else
+               this->raw = a | ((uint16_t)b << 8);
          }
 
          constexpr bool operator==(const story_event_member_id&) const noexcept = default;

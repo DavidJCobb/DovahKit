@@ -1075,7 +1075,10 @@ void FormDialogObjectReference::_emit_warnings_on_load() {
    [&working, &logger, &base_form]() {
       if (!base_form)
          return;
-      auto* keywords = dovah::utils::form_component_accessors::keyword_list(*base_form);
+      auto  loaded_base = base_form->load();
+      if (!loaded_base)
+         return;
+      auto* keywords = dovah::utils::form_component_accessors::keyword_list(*loaded_base);
       if (!keywords)
          return;
 

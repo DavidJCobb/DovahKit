@@ -12,6 +12,7 @@
 #include "use_info/entry_flags/base.h"
 #include "use_info/entry_flag_to_mask.h"
 #include "utils/file_prefix.h"
+#include "./form_stub_addenda/passkeys/ordered_child_collection.h"
 #include "form_stub_addenda.h"
 #include "form_stub_heap.h"
 #include "form_stub_use_info_builder.h"
@@ -618,65 +619,6 @@ namespace dovah {
    }
    #pragma endregion
 
-   void form_stub::_insert_child_topic_info(form_stub_passkeys::build_use_info_during_load, form_stub& info, size_t at) {
-      assert(info.get_parent_form() == this);
-      
-      bool is_loading_active_file = info._get_load_order().is_defined_in_active_file(info);
-
-      auto& oc = this->get_or_create_addenda().ordered_children;
-      //
-      // Check if this INFO is already in the destination list(s).
-      //
-      std::optional<size_t> prior_position = [&oc, &info]() -> std::optional<size_t> {
-         auto& list = oc.active_file;
-         auto  it   = std::find(list.begin(), list.end(), &info);
-         if (it == list.end())
-            return {};
-         return std::distance(list.begin(), it);
-      }();
-      //
-      // Normalize the position we want to insert/move the INFO to.
-      //
-      if (at == 0xFFFFFFFF) {
-         //
-         // Sentinel value 0xFFFFFFFF will avoid moving an info at all if it's already 
-         // in any topic's info list, or place it at the end of the parent topic's info 
-         // list otherwise.
-         //
-         if (prior_position.has_value()) // already in our list
-            return;
-         at = std::numeric_limits<size_t>::max();
-      }
-      if (at > oc.active_file.size()) {
-         at = oc.active_file.size();
-      }
-
-      if (prior_position.has_value()) {
-         auto pp = prior_position.value();
-         if (!is_loading_active_file) {
-            assert(oc.active_file[pp] == oc.dependencies[pp]);
-         }
-         cobb::vectors::move_item_within(oc.active_file, pp, (int)at - pp);
-         if (!is_loading_active_file) {
-            cobb::vectors::move_item_within(oc.dependencies, pp, (int)at - pp);
-         }
-      } else {
-         oc.active_file.insert(oc.active_file.begin() + at, &info);
-         if (!is_loading_active_file)
-            oc.dependencies.insert(oc.dependencies.begin() + at, &info);
-      }
-   }
-   void form_stub::_remove_child_topic_info(form_stub_passkeys::build_use_info_during_load, form_stub& info, bool loading) {
-      if (!this->addenda)
-         return;
-      auto& list = this->addenda->ordered_children.active_file;
-      list.erase(std::remove(list.begin(), list.end(), &info), list.end());
-      if (loading) {
-         auto& list = this->addenda->ordered_children.dependencies;
-         list.erase(std::remove(list.begin(), list.end(), &info), list.end());
-      }
-   }
-
    #pragma region Addenda helper functions
    form_stub_addenda& form_stub::get_or_create_addenda() noexcept {
       if (!this->addenda)
@@ -699,37 +641,19 @@ namespace dovah {
          return 0;
       if (!this->addenda)
          return 0;
-      return this->addenda->ordered_children.active_file.size();
+      return this->addenda->ordered_children.get_active_list().size();
    }
    size_t form_stub::index_of_child_info(form_stub& info) const noexcept {
       if (this->form_type != form_type::topic || info.form_type != form_type::topic_info)
          return std::string::npos;
       if (!this->addenda)
          return std::string::npos;
-      auto&  list = this->addenda->ordered_children.active_file;
+      auto&  list = this->addenda->ordered_children.get_active_list();
       size_t size = list.size();
       for (size_t i = 0; i < size; ++i)
          if (list[i] == &info)
             return i;
       return std::string::npos;
-   }
-   void form_stub::_insert_child_topic_info_post_load(form_stub& info, size_t at) {
-      assert(this->form_type == form_type::topic);
-      assert(info.form_type == form_type::topic_info);
-      assert(info.get_parent_form() == this);
-      auto& list = this->get_or_create_addenda().ordered_children.active_file;
-      auto  size = list.size();
-      auto  it   = std::find(list.begin(), list.end(), &info);
-      if (it == list.end()) {
-         if (at >= size)
-            at = size;
-         list.insert(list.begin() + at, &info);
-      } else {
-         if (at >= size)
-            at = size - 1;
-         auto i = std::distance(list.begin(), it);
-         cobb::vectors::move_item_within(list, i, (int)at - i);
-      }
    }
    #pragma endregion
 
@@ -770,8 +694,10 @@ namespace dovah {
       if (!parent)
          return;
       this->revoke_outbound_reference(parent, use_info::entry_flag_to_mask(use_info::entry_flags::base::parent));
-      if (this->form_type == form_type::topic_info && parent->form_type == form_type::topic)
-         parent->_remove_child_topic_info({}, *this, false);
+      if (this->form_type == form_type::topic_info && parent->form_type == form_type::topic) {
+         if (auto* addenda = parent->addenda)
+            addenda->ordered_children._remove_child_after_load({}, *this);
+      }
    }
    void form_stub::set_parent_form(form_stub* target) noexcept {
       //
@@ -785,8 +711,9 @@ namespace dovah {
       if (!target)
          return;
       this->replace_outbound_reference(0, target, use_info::entry_flag_to_mask(use_info::entry_flags::base::parent));
-      if (target->form_type == form_type::topic && this->form_type == form_type::topic_info)
-         target->_insert_child_topic_info_post_load(*this);
+      if (target->form_type == form_type::topic && this->form_type == form_type::topic_info) {
+         target->get_or_create_addenda().ordered_children._insert_child_after_load({}, *this, std::numeric_limits<size_t>::max());
+      }
    }
    #pragma endregion
 
@@ -831,8 +758,8 @@ namespace dovah {
          return true;
       if (this->form_type == form_type::topic) {
          if (auto* addenda = this->addenda) {
-            auto& list_d = addenda->ordered_children.dependencies;
-            auto& list_a = addenda->ordered_children.active_file;
+            auto& list_d = addenda->ordered_children.get_master_list();
+            auto& list_a = addenda->ordered_children.get_active_list();
             if (list_d != list_a) {
                //
                // No child forms were added nor reparented into these lists (else they 

@@ -62,6 +62,8 @@ constexpr const auto& member_spec_by_name(std::string_view name) noexcept {
    for (auto& n : members)
       if (n.name == name)
          return n;
+   // don't warn about `throw` in `noexcept`; we're using it to make constant evaluation fail deliberately
+   #pragma warning(suppress:4297)
    throw;
 }
 

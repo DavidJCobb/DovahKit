@@ -156,8 +156,6 @@ namespace dovah {
          void _set_source_file_list(const std::vector<file_data>&);
          
          constexpr file_data* _get_source_file_info(int16_t file_index = -1) noexcept;
-
-         void _insert_child_topic_info_post_load(form_stub& info, size_t at = std::string::npos);
          
       public:
          #pragma region Passkeyed methods
@@ -168,9 +166,6 @@ namespace dovah {
          void _add_one_way_outbound_reference(form_stub_passkeys::build_use_info_during_load, form_stub* to_stub, use_info::entry_flag_underlying_type flags = 0);
          void _add_one_way_outbound_reference(form_stub_passkeys::build_use_info_during_load, uint32_t toFormID, use_info::entry_flag_underlying_type flags = 0);
          void _set_parent_form_one_way(form_stub_passkeys::build_use_info_during_load, form_stub* parent);
-
-         void _insert_child_topic_info(form_stub_passkeys::build_use_info_during_load, form_stub& info, size_t at = std::string::npos); // inserts (info) into the addendum info list, without form type checks or managing parenthood
-         void _remove_child_topic_info(form_stub_passkeys::build_use_info_during_load, form_stub& info, bool loading); // removes (info) from the addendum info list, without form type checks or managing parenthood
 
          loaded_form_ptr<loaded_forms::Form> load_even_if_unsafe(form_stub_passkeys::force_form_load);
 

@@ -105,16 +105,8 @@ namespace dovah::tes_file_reading {
       //
       auto& record = this->get_current_record();
       bool  is_ext = stub.is_exterior_cell();
-      
-      constexpr const size_t end_of_parent_topic_child_list =
-         (std::string::npos == 0xFFFFFFFF) ? // (uint32_t)-1 has special meaning in the file format
-            std::string::npos - 1
-         :
-            std::string::npos
-      ;
 
       #pragma region INFO pre-handling
-      size_t     insert_info_at = end_of_parent_topic_child_list;
       form_stub* parent_topic   = nullptr;
       if (stub.form_type == form_type::topic_info) {
          parent_topic = stub.get_parent_form();
@@ -123,6 +115,9 @@ namespace dovah::tes_file_reading {
       }
       #pragma endregion
       
+      form_stub* previous_sibling_info = nullptr;
+      bool info_is_appended = true;
+
       while (auto& subrecord = record.next_subrecord()) {
          switch (subrecord.signature()) {
             case 'EDID':
@@ -134,18 +129,15 @@ namespace dovah::tes_file_reading {
                if (parent_topic) {
                   assert(stub.form_type == form_type::topic_info);
                   //
-                  form_reference_t formID;
-                  subrecord.read(formID);
-                  //
-                  if (auto* stub = formID.get_form_stub()) {
-                     insert_info_at = parent_topic->index_of_child_info(*stub);
-                     if (insert_info_at == std::string::npos) {
-                        insert_info_at = 0;
-                     } else {
-                        ++insert_info_at;
-                     }
-                  } else {
-                     insert_info_at = end_of_parent_topic_child_list;
+                  auto     pos = subrecord.offset();
+                  uint32_t v;
+                  if (subrecord.read(v) && v != 0xFFFFFFFF) {
+                     info_is_appended = false;
+                     subrecord.seek(pos);
+
+                     form_reference_t formID;
+                     subrecord.read(formID);
+                     previous_sibling_info = formID.get_form_stub();
                   }
                }
                break;
@@ -162,8 +154,14 @@ namespace dovah::tes_file_reading {
       }
       //
       #pragma region INFO post-handling
-      if (parent_topic && !stub.test_record_flags(tes_file_record_header::flag::deleted))
-         parent_topic->_insert_child_topic_info({}, stub, insert_info_at);
+      if (parent_topic && !stub.test_record_flags(tes_file_record_header::flag::deleted)) {
+         bool is_active_file = this->get_load_order().get_active_file() == this->loader;
+         if (info_is_appended) {
+            parent_topic->get_or_create_addenda().ordered_children._insert_child_on_load({}, is_active_file, stub);
+         } else {
+            parent_topic->get_or_create_addenda().ordered_children._insert_child_on_load({}, is_active_file, stub, previous_sibling_info);
+         }
+      }
       #pragma endregion
    }
 

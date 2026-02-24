@@ -670,7 +670,10 @@ namespace dovah {
             //
             auto* old_parent = existing_form->get_parent_form();
             if (old_parent && old_parent != new_parent) {
-               old_parent->_remove_child_topic_info({}, *existing_form, true);
+               if (auto* addenda = old_parent->addenda) {
+                  bool is_active_file = stub->get_file_at_index(-1) == this->active_file;
+                  addenda->ordered_children._remove_child_on_load({}, is_active_file, *existing_form);
+               }
                //
                if (stub->test_record_flags(tes_file_record_header::flag::partial)) {
                   //

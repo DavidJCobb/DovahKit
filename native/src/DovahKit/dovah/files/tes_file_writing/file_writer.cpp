@@ -25,6 +25,12 @@ namespace {
    // partial record; however, I've seen reports of bugs (e.g. CELLs' refs failing to 
    // load) when this is done, so I want to test it extensively before I make use of it.
    constexpr const bool enable_partial_flagged_containers = false;
+
+   // Control whether we always write INFO/PNAM, or whether we conditionally skip it when 
+   // we believe it would have no effect. After further RE on topic info ordering, I'm 
+   // not sure the "skip" code is correct, so I'm turning it off for now but not wholly 
+   // removing it.
+   constexpr const bool topic_info_always_writes_previous = true;
 }
 
 namespace {
@@ -425,8 +431,8 @@ namespace dovah::tes_file_writing {
       if (!stub->addenda)
          return;
 
-      auto& list_a = stub->addenda->ordered_children.active_file;
-      auto& list_d = stub->addenda->ordered_children.dependencies;
+      auto& list_a = stub->addenda->ordered_children.get_active_list();
+      auto& list_d = stub->addenda->ordered_children.get_master_list();
       if (list_a.empty())
          return;
       
@@ -463,39 +469,43 @@ namespace dovah::tes_file_writing {
                previous = list_a[ia - 1];
             }
 
-            bool child_is_new = child->get_owning_load_order().is_defined_in_active_file(*child);
-            if (!child_is_new) {
-               //
-               // This INFO was originally defined in one of the master files. Its 
-               // order may have changed.
-               //
-               auto it = std::find(list_d.begin(), list_d.end(), child);
-               if (it == list_d.end()) {
-                  //
-                  // The INFO isn't newly-defined in the active file, but has been 
-                  // transplanted into this DIAL by the active file.
-                  //
-                  child_is_new = true;
-               }
-            }
-            //
-            // Now we need to decide whether to serialize INFO/PNAM based on the info 
-            // above. Notably, if you reorder INFOs in the Creation Kit from ABCD to 
-            // ACBD, the CK actually serializes overrides for A, B, and C, even though 
-            // in theory only B and C should need changes to their PNAMs. We're not 
-            // gonna try and do that because frankly, uh, it's easier not to bother.
-            //
-            if (child_is_new) {
+            if constexpr (topic_info_always_writes_previous) {
                this->_write_form(child, previous);
             } else {
-               if (child == list_d[id]) {
-                  if (child->needs_save())
-                     this->_write_form(child);
-               } else {
-                  child->set_edited(true); // because we have to serialize a potentially different INFO/PNAM
-                  this->_write_form(child, previous);
+               bool child_is_new = child->get_owning_load_order().is_defined_in_active_file(*child);
+               if (!child_is_new) {
+                  //
+                  // This INFO was originally defined in one of the master files. Its 
+                  // order may have changed.
+                  //
+                  auto it = std::find(list_d.begin(), list_d.end(), child);
+                  if (it == list_d.end()) {
+                     //
+                     // The INFO isn't newly-defined in the active file, but has been 
+                     // transplanted into this DIAL by the active file.
+                     //
+                     child_is_new = true;
+                  }
                }
-               ++id;
+               //
+               // Now we need to decide whether to serialize INFO/PNAM based on the info 
+               // above. Notably, if you reorder INFOs in the Creation Kit from ABCD to 
+               // ACBD, the CK actually serializes overrides for A, B, and C, even though 
+               // in theory only B and C should need changes to their PNAMs. We're not 
+               // gonna try and do that because frankly, uh, it's easier not to bother.
+               //
+               if (child_is_new) {
+                  this->_write_form(child, previous);
+               } else {
+                  if (child == list_d[id]) {
+                     if (child->needs_save())
+                        this->_write_form(child);
+                  } else {
+                     child->set_edited(true); // because we have to serialize a potentially different INFO/PNAM
+                     this->_write_form(child, previous);
+                  }
+                  ++id;
+               }
             }
          }
       }

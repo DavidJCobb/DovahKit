@@ -37,6 +37,7 @@ namespace dovahscript::core::subsystems {
          //
          int push(lua_State*, const wrapper&, const char* metatable_name);
 
+         void insert_into_sequential_collection(wrapper& collection, /*zero-indexed:*/ size_t at);
          void remove_from_sequential_collection(wrapper& to_remove);
 
          //

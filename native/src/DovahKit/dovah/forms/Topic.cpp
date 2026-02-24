@@ -172,7 +172,7 @@ namespace dovah::loaded_forms {
       auto& TIFC = record.open_next_subrecord('TIFC');
       uint32_t count = 0;
       if (auto* addenda = this->stub.addenda)
-         count = addenda->ordered_children.active_file.size();
+         count = addenda->ordered_children.get_active_list().size();
       TIFC.write(count);
       TIFC.close();
    }

@@ -547,9 +547,45 @@ namespace dovahscript::core::subsystems {
       return 1;
    }
 
+   void userdata::insert_into_sequential_collection(wrapper& collection, size_t at) {
+      require_script_thread();
+      assert(collection.depth > 0 && collection.is_collection && "The `collection` argument must be a sequential collection.");
+      if (collection.last_part().noncontiguous)
+         return;
+
+      auto* L     = _get_lua();
+      auto  start = lua_gettop(L);
+      auto  index = collection.last_part().index;
+      void* light = collection.pertinent_pointer;
+      
+      auto si_storage = start + 1;
+      auto si_nk      = start + 2;
+      auto si_nv      = start + 3;
+      
+      lua_getfield(L, LUA_REGISTRYINDEX, wrapper_storage_registry_key); // push 1
+      lua_pushlightuserdata(L, light);
+      lua_rawget(L, si_storage); // STACK: - [ ..., storage_root, storage_root[light] ] +
+      assert(lua_istable(L, -1));
+      lua_copy  (L, -1, si_storage);
+      lua_settop(L, si_storage); // STACK: - [ ..., storage_root[light] ] +
+
+      lua_pushnil(L); // nk
+      while (lua_next(L, si_storage) != 0) {
+         assert(lua_type(L, si_nv) == LUA_TUSERDATA);
+         wrapper* other = (wrapper*)lua_touserdata(L, si_nv);
+         lua_settop(L, si_nk);
+         
+         assert(other->lua_key != LUA_NOREF);
+         if (other->is_descendant_of(collection)) {
+            auto& o_part = other->parts[collection.depth - 1];
+            if (!o_part.noncontiguous && index <= o_part.index)
+               ++o_part.index;
+         }
+      }
+   }
    void userdata::remove_from_sequential_collection(wrapper& to_remove) {
       require_script_thread();
-      assert(to_remove.depth && !to_remove.is_collection && "The (to_remove) argument must be an element in a sequential collection.");
+      assert(to_remove.depth && !to_remove.is_collection && "The `to_remove` argument must be an element in a sequential collection.");
       this->destroy(to_remove);
    }
 

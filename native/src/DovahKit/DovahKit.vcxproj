@@ -425,6 +425,7 @@
     <ClCompile Include="dovah\form_stubs\helpers\get_worldspace_persistent_cell.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\is_worldspace_persistent_cell.cpp" />
     <ClCompile Include="dovah\form_stubs\helpers\winning_record_loads_after.cpp" />
+    <ClCompile Include="dovah\form_stub_addenda\ordered_child_collection.cpp" />
     <ClCompile Include="dovah\form_stub_use_info_builder_form_specific_data.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\file_load.cpp" />
     <ClCompile Include="dovah\load_order_interfaces\form_load.cpp" />
@@ -1955,6 +1956,8 @@
     <ClInclude Include="dovah\form_stubs\helpers\is_worldspace_persistent_cell.h" />
     <ClInclude Include="dovah\form_stubs\helpers\winning_record_loads_after.h" />
     <ClInclude Include="dovah\form_stubs\passkeys\do_custom_parse_during_load.h" />
+    <ClInclude Include="dovah\form_stub_addenda\ordered_child_collection.h" />
+    <ClInclude Include="dovah\form_stub_addenda\passkeys\ordered_child_collection.h" />
     <ClInclude Include="dovah\form_stub_use_info_builder_form_specific_data.h" />
     <ClInclude Include="dovah\game_change_failure_reason.h" />
     <ClInclude Include="dovah\load_order_interfaces\file_load.h" />
@@ -4147,6 +4150,10 @@
       </SubType>
     </None>
     <None Include="dovah\_docs\form types\n\navmesh.md">
+      <SubType>
+      </SubType>
+    </None>
+    <None Include="dovah\_docs\form types\q\quest\reference aliases.md">
       <SubType>
       </SubType>
     </None>

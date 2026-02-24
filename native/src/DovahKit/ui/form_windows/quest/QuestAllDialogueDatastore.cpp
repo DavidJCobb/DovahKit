@@ -689,7 +689,7 @@
          addenda = &topic.stub->get_or_create_addenda();
       }
       
-      auto&  dst_list = addenda->ordered_children.active_file;
+      auto&  dst_list = addenda->ordered_children.get_active_list();
       size_t dst_size = src_list.size();
       assert(dst_size >= src_size);
 
@@ -699,6 +699,11 @@
          replacement[i] = src_list[i]->stub;
       }
       {
+         //
+         // Take any elements in `dst_list` that aren't present in `src_list`, 
+         // and place them at the end of `replacement`, maintaining their 
+         // ordering with respect to each other.
+         //
          size_t dst_i = src_size;
          for (size_t i = 0; i < dst_size; ++i) {
             auto* stub = dst_list[i];
@@ -715,9 +720,13 @@
 
             replacement[dst_i++] = stub;
          }
+         //
+         // Assert that the size of the ordered-child list is consistent with 
+         // what's already in the form.
+         //
          assert(dst_i == dst_size);
       }
-      std::swap(addenda->ordered_children.active_file, replacement);
+      addenda->ordered_children.replace_order(std::move(replacement));
       //topic.stub->set_edited(true);
    }
 
@@ -733,7 +742,7 @@
       };
 
       if (const auto* addenda = stub.addenda) {
-         for (auto* child : addenda->ordered_children.active_file) {
+         for (auto* child : addenda->ordered_children.get_active_list()) {
             _handle_info(*child);
          }
       } else {
