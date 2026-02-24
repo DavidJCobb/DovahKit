@@ -39,7 +39,7 @@ namespace {
          if (insert_at > total_count)
             cobb::lua::error(L, "index %d is out of bounds", insert_at);
       } else {
-         if (insert_at >= total_count)
+         if (insert_at > total_count)
             cobb::lua::error(L, "index %d is out of bounds", insert_at);
       }
       if (insert_at <= locked_count)
