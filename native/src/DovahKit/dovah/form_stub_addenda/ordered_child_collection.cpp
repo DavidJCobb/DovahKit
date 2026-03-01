@@ -1,16 +1,25 @@
 #include "./ordered_child_collection.h"
 #include <cassert>
+#include "helpers/vectors/move_item_to_index.h"
 #include "helpers/vectors/move_item_within.h"
 #include "dovah/form_stubs/passkeys/build_use_info_during_load.h"
 #include "./passkeys/ordered_child_collection.h"
 
 namespace dovah::form_stub_addendum_types {
+   void ordered_child_collection::move_child_after_index(size_t from, size_t to) {
+      assert(from < this->active_file.size());
+      assert(to   < this->active_file.size());
+      if (from == to)
+         return;
+      cobb::vectors::move_item_after_index(this->active_file, from, to);
+   }
+
    void ordered_child_collection::move_child_before_index(size_t from, size_t to) {
       assert(from < this->active_file.size());
       assert(to   < this->active_file.size());
       if (from == to)
          return;
-      cobb::vectors::move_item_within(this->active_file, from, (std::make_signed_t<size_t>)to - from);
+      cobb::vectors::move_item_before_index(this->active_file, from, to);
    }
 
    void ordered_child_collection::replace_order(std::vector<form_stub*>&& src) {

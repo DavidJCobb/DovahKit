@@ -30,6 +30,10 @@ namespace dovah::form_stub_addendum_types {
 
          // Indices should be bounds-checked by the caller; we assert that they are 
          // in-bounds.
+         void move_child_after_index(size_t from, size_t to);
+
+         // Indices should be bounds-checked by the caller; we assert that they are 
+         // in-bounds.
          void move_child_before_index(size_t from, size_t to);
 
          // Change the order of the active list. The input vector must contain the 

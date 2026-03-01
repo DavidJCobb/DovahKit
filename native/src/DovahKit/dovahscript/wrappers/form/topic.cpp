@@ -12,13 +12,16 @@
 #include "../../../dovah/form_stub_addenda.h"
 #include "../../../dovah/forms/Topic.h"
 
+#include "helpers/vectors/move_item_within.h"
+
 namespace {
    using namespace dovahscript;
    using cls          = wrappers::topic;
    using wrapped_type = cls::wrapped_type;
 
    namespace _methods {
-      int place_info_before(lua_State* L) {
+      template<bool After>
+      void _move_info_by_index(lua_State* L) {
          auto& self    = get_wrapper_for_thiscall<cls>(L);
          cobb::lua::argcheck(L, !!self.stub, 2, "method called on zombie object");
          auto* subject = pull_form_stub_argument(L, 2, dovah::form_type::topic_info);
@@ -34,9 +37,9 @@ namespace {
          if (!subject)
             cobb::lua::argerror(L, 2, "must specify an info to move");
          if (subject == target)
-            cobb::lua::argerror(L, 3, "cannot place an info before itself");
+            cobb::lua::argerror(L, 3, "cannot place an info adjacent to itself");
          if (target && target->get_parent_form() != self.stub)
-            cobb::lua::argerror(L, 3, "the info you wish to place something before does not belong to this topic");
+            cobb::lua::argerror(L, 3, "the info you wish to place something adjacent to does not belong to this topic");
 
          dovah::form_stub* parent_src = subject->get_parent_form();
          dovah::form_stub* parent_dst = self.stub;
@@ -61,13 +64,28 @@ namespace {
                   assert(it != list.end());
                   i_dst = std::distance(list.begin(), it);
                } else {
-                  i_dst = 0;
+                  if constexpr (After) {
+                     i_dst = 0; // after nothing = at beginning
+                  } else {
+                     i_dst = list.size() - 1; // before nothing = after end
+                  }
                }
             }
-            oc.move_child_before_index(i_src, i_dst);
+            if constexpr (After) {
+               oc.move_child_after_index(i_src, i_dst);
+            } else {
+               oc.move_child_before_index(i_src, i_dst);
+            }
          }
          subject_wrapper.after_edit(); // See above comment
+      }
 
+      int place_info_after(lua_State* L) {
+         _move_info_by_index<true>(L);
+         return 0;
+      }
+      int place_info_before(lua_State* L) {
+         _move_info_by_index<false>(L);
          return 0;
       }
    }
@@ -232,6 +250,7 @@ namespace {
 
 namespace dovahscript::wrappers {
    /*static*/ cls::method_list_t cls::metatable_methods = {
+      { "place_info_after",  &_methods::place_info_after },
       { "place_info_before", &_methods::place_info_before },
    };
    
