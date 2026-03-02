@@ -35,6 +35,17 @@ Non-"collection" wrappers, i.e. wrappers for top-level native objects and for "s
   * Optionally, a "remove item" member function.
   * Optionally, a "set item by key" function.
   
+  
+## Outstanding issues
+
+### Deletion of forms can break collection wrappers
+
+Suppose a Dovahscript collection wraps a key/value map where the keys, and where the map itself is implemented as a `std::vector` of entries. Thus, the containing form for this map will react to the deletion of any form *K* by removing entries from this `std::vector` whose keys are *K*.
+
+Dovahscript has no way to be notified about this, nor any way to signal to any given collection wrapper that *K* is being deleted (so we can't even give collections some entry point whereby they could check for and handle this case).
+
+Dovahscript's `coordinator` subsystem is notified about the script-initiated deletion of forms, so in theory it could handle this kind of thing. Currently, it doesn't do anything (other than just track what forms are supposed ot be deleted, and verify that it's received signals for them; but it doesn't *do* anything in response to those signals, so this is all just dead code).
+
 
 ## Needed improvements
 

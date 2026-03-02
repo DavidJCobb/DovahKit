@@ -63,19 +63,18 @@ namespace {
                   auto it = std::find(list.begin(), list.end(), target);
                   assert(it != list.end());
                   i_dst = std::distance(list.begin(), it);
+                  if constexpr (After) {
+                     ++i_dst;
+                  }
                } else {
                   if constexpr (After) {
                      i_dst = 0; // after nothing = at beginning
                   } else {
-                     i_dst = list.size() - 1; // before nothing = after end
+                     i_dst = list.size(); // before nothing = after end
                   }
                }
             }
-            if constexpr (After) {
-               oc.move_child_after_index(i_src, i_dst);
-            } else {
-               oc.move_child_before_index(i_src, i_dst);
-            }
+            oc.move_child_before_index(i_src, i_dst);
          }
          subject_wrapper.after_edit(); // See above comment
       }

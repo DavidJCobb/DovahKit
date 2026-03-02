@@ -65,8 +65,6 @@ namespace dovahscript::core::subsystems {
       QObject::connect(&editor, &DovahKitCore::formDeletionImminent, this, [this](dovah::form_stub* stub, bool will_be_flagged) {
          if (!this->running)
             return;
-         if (!will_be_flagged)
-            return;
          auto& list = this->expected_deletions;
          auto  it   = std::find(list.begin(), list.end(), stub);
          assert(it != list.end() && "Form stubs should never be deleted while a script is running, except as the result of a delete_form task!");

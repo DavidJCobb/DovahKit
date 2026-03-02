@@ -32,6 +32,8 @@
       </Intrinsic>
 
       <Intrinsic Name="_is_c_function" Expression="!!(callstatus &amp; (1 &lt;&lt; 1))" />
+      <Intrinsic Name="_lua_function_proto" Expression="((LClosure*)_stack_value(0)-&gt;value_.gc)-&gt;p" />
+      <Intrinsic Name="_lua_pc" Expression="this-&gt;u.l.savedpc - _lua_function_proto()-&gt;code" />
 
       <Expand>
          <Synthetic Name="[call status]">
@@ -51,8 +53,36 @@
          </Synthetic>
          <Item Name="[function]">_stack_value(0)</Item>
          <Item Name="[number of results]">nresults,d</Item>
+         <Item Name="[number of varargs]" Condition="!_is_c_function()">u.l.nextraargs,d</Item>
          <Item Name="[stack size]">_stack_size()</Item>
          <Item Name="[stack]">_stack(),[_stack_size()]</Item>
+         <Synthetic Name="[locals]" Condition="!_is_c_function() &amp;&amp; !!_lua_function_proto()">
+            <Expand>
+               <CustomListItems>
+                  <Variable Name="loc_dfn_array" InitialValue="(LocVar*)nullptr" />
+                  <Variable Name="loc_idx"  InitialValue="-1" />
+                  <Variable Name="loc_dfn"  InitialValue="(LocVar*)nullptr" />
+                  <Variable Name="loc_name" InitialValue="(TString*)nullptr" />
+                  <Variable Name="i" InitialValue="1" />
+                  <Variable Name="stack_pos" InitialValue="1" />
+
+                  <Exec>loc_dfn_array = _lua_function_proto()-&gt;locvars</Exec>
+                  <Loop>
+                     <Break Condition="i &gt;= _lua_function_proto()-&gt;sizelocvars" />
+                     <Exec>loc_dfn  = &amp;loc_dfn_array[i - 1]</Exec>
+                     <If Condition="loc_dfn-&gt;startpc &lt;= _lua_pc()">
+                        <If Condition="loc_dfn-&gt;endpc &gt; _lua_pc()">
+                           <Exec>loc_idx  = 1 + (stack_pos - 1)</Exec>
+                           <Exec>loc_name = loc_dfn-&gt;varname</Exec>
+                           <Item Name="{loc_name-&gt;contents,[loc_name-&gt;size()]nasb}">_stack_value(loc_idx),na</Item>
+                           <Exec>++stack_pos</Exec>
+                        </If>
+                     </If>
+                     <Exec>++i</Exec>
+                  </Loop>
+               </CustomListItems>
+            </Expand>
+         </Synthetic>
       </Expand>
    </Type>
    
@@ -269,7 +299,7 @@
          <Parameter Name="tag" Type="unsigned int" />
       </Intrinsic>
       <Intrinsic Name="size" Expression="this-&gt;tt == _makevariant(4, 0) ? this-&gt;shrlen : this-&gt;u.lnglen" />
-      
+
       <DisplayString>{contents,[this-&gt;size()]}</DisplayString>
       <StringView>contents,[this-&gt;size()]</StringView>
       <Expand>

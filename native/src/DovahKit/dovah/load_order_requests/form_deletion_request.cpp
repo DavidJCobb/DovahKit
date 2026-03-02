@@ -4,6 +4,7 @@
 #include "../forms/Form.h"
 #include "../form_stub.h"
 #include "../form_stub_addenda.h"
+#include "../form_stub_addenda/passkeys/ordered_child_collection.h"
 #include "../exceptions/form_deletion_failed.h"
 #include "../load_order_processes/file_save.h"
 #include "../forms/factories/construct.h" // can_load_form_data
@@ -147,6 +148,11 @@ namespace dovah {
       }
    }
    void form_deletion_request::_prep_for_delete(form_stub& stub, bool flag) {
+      if (auto* parent = stub.get_parent_form()) { // doing this here is a HACK
+         if (auto* addenda = parent->addenda) {
+            addenda->ordered_children._sever_references_to_deleted_form({}, stub, true);
+         }
+      }
       stub.sever_all_outbound_references();
       //
       std::vector<form_stub*> pending;

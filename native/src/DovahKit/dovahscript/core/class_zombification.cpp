@@ -149,6 +149,7 @@ namespace {
       lua_getfield(L, index_meta, "__name");
       lua_pushfstring(L, "zombie<%s>", lua_tostring(L, -1));
       cobb::lua::rawsetfield(L, index_dead, "__name");
+      lua_pop(L, 1); // get the original __name off the stack
       //
       lua_getfield(L, LUA_REGISTRYINDEX, zombie_sentinel_key);
       cobb::lua::rawsetfield(L, index_dead, "__iszombie");
