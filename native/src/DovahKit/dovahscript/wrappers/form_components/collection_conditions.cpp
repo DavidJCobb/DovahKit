@@ -226,7 +226,7 @@ namespace {
             return 0;
 
          size_t no_no_threshold = form->conditions.locked.size();
-         if (i <= no_no_threshold)
+         if (i < no_no_threshold)
             cobb::lua::argerror(L, 2, "requested index is inside of this TopicInfo's locked conditions");
          i -= no_no_threshold;
 
