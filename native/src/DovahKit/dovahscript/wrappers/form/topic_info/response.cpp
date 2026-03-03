@@ -36,10 +36,39 @@ namespace {
       return *data;
    }
 
+   constexpr const auto emotion_type_names = []() {
+      using pair_type = std::pair<dovah::dialogue::emotion, std::string_view>;
+      return std::array{
+         pair_type{ dovah::dialogue::emotion::anger, "anger" },
+         pair_type{ dovah::dialogue::emotion::disgust, "disgust" },
+         pair_type{ dovah::dialogue::emotion::fear, "fear" },
+         pair_type{ dovah::dialogue::emotion::happy, "happy" },
+         pair_type{ dovah::dialogue::emotion::neutral, "neutral" },
+         pair_type{ dovah::dialogue::emotion::puzzled, "puzzled" },
+         pair_type{ dovah::dialogue::emotion::sad, "sad" },
+         pair_type{ dovah::dialogue::emotion::surprise, "surprise" },
+      };
+   }();
+
    namespace _getters {
       int edits(lua_State* L) {
          auto& data = _unwrap_and_require(L);
          lua_pushstring(L, data.edits.c_str());
+         return 1;
+      }
+      int emotion_type(lua_State* L) {
+         auto& data = _unwrap_and_require(L);
+         for (const auto& pair : emotion_type_names) {
+            if (data.emotion.type == pair.first) {
+               lua_pushstring(L, pair.second.data());
+               return 1;
+            }
+         }
+         return 0;
+      }
+      int emotion_value(lua_State* L) {
+         auto& data = _unwrap_and_require(L);
+         lua_pushinteger(L, data.emotion.value);
          return 1;
       }
       int listener_idle(lua_State* L) {
@@ -85,6 +114,46 @@ namespace {
          data->edits = lua_tostring(L, 2);
          self.after_edit();
          return 0;
+      }
+      int emotion_type(lua_State* L) {
+         core::subsystems::permissions::verify_form_write_permissions();
+         //
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto& data = _unwrap_and_require(L);
+         luaL_argcheck(L, lua_isstring(L, 2), 2, "string expected");
+         dovah::dialogue::emotion v;
+         {
+            std::string_view raw = lua_tostring(L, 2);
+            bool found = false;
+            for (const auto& pair : emotion_type_names) {
+               if (raw == pair.second) {
+                  v     = pair.first;
+                  found = true;
+                  break;
+               }
+            }
+            if (!found)
+               cobb::lua::argerror(L, 2, "unrecognized emotion type");
+         }
+         self.before_edit();
+         data.emotion.type = v;
+         self.after_edit();
+         return 1;
+      }
+      int emotion_value(lua_State* L) {
+         core::subsystems::permissions::verify_form_write_permissions();
+         //
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto& data = _unwrap_and_require(L);
+         luaL_argcheck(L, lua_isinteger(L, 2), 2, "integer expected");
+         auto v = lua_tointeger(L, 2);
+         if (v < 0 || v > 100)
+            luaL_argerror(L, 2, "emotion values must be in the range [0, 100]");
+
+         self.before_edit();
+         data.emotion.value = v;
+         self.after_edit();
+         return 1;
       }
       int listener_idle(lua_State* L) {
          core::subsystems::permissions::verify_form_write_permissions();
@@ -159,6 +228,8 @@ namespace dovahscript::wrappers {
    
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_getters = {
       { "edits",            &_getters::edits },
+      { "emotion_type",     &_getters::emotion_type },
+      { "emotion_value",    &_getters::emotion_value },
       { "listener_idle",    &_getters::listener_idle },
       { "parent",           &_getters::parent }, // get containing info
       { "script_notes",     &_getters::script_notes },
@@ -168,6 +239,8 @@ namespace dovahscript::wrappers {
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
       { "edits",            &_setters::edits },
+      { "emotion_type",     &_setters::emotion_type },
+      { "emotion_value",    &_setters::emotion_value },
       { "listener_idle",    &_setters::listener_idle },
       { "script_notes",     &_setters::script_notes },
       { "speaker_idle",     &_setters::speaker_idle },
