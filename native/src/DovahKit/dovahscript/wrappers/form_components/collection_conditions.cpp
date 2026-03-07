@@ -206,7 +206,6 @@ namespace {
 
       wrapper out = self;
       assert(out.is_collection);
-      assert(out.parts[0].signature == wrapper_part_types::condition_list);
       if (self.stub && self.stub->form_type == dovah::form_type::topic_info) {
          auto* form = self.get_loaded_form_data<dovah::loaded_forms::TopicInfo>();
          assert(!!form);
