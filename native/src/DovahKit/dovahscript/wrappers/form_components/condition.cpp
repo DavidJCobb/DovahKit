@@ -35,7 +35,7 @@ namespace {
    using parameter_type_override = dovah::loaded_forms::components::conditions::parameter_type_override;
 }
 
-bool cls::is_writeable(wrapper& w) {
+bool cls::is_not_locked(wrapper& w) {
    size_t depth = w.parts.size();
    for (size_t i = 0; i < w.parts.size(); ++i) {
       if (w.parts[i].signature == wrapper_part_types::condition_list) {
@@ -43,14 +43,13 @@ bool cls::is_writeable(wrapper& w) {
          break;
       }
    }
-   if (depth >= w.parts.size())
-      return false;
-
-   if (w.stub && w.stub->form_type == dovah::form_type::topic_info) {
-      auto* form = w.get_loaded_form_data<dovah::loaded_forms::TopicInfo>();
-      if (!form)
-         return false;
-      return w.parts[depth].index >= form->conditions.locked.size();
+   if (depth < w.parts.size()) {
+      if (w.stub && w.stub->form_type == dovah::form_type::topic_info) {
+         auto* form = w.get_loaded_form_data<dovah::loaded_forms::TopicInfo>();
+         if (!form)
+            return false;
+         return w.parts[depth].index >= form->conditions.locked.size();
+      }
    }
    return true;
 }
@@ -58,56 +57,10 @@ wrapped_type* cls::unwrap(wrapper& w) {
    if (w.is_collection)
       return nullptr;
 
-   size_t depth = w.parts.size();
-   for (size_t i = 0; i < w.parts.size(); ++i) {
-      if (w.parts[i].signature == wrapper_part_types::condition_list) {
-         depth = i;
-         break;
-      }
-   }
-   if (depth >= w.parts.size())
-      return nullptr;
-
-   if (w.stub && w.stub->form_type == dovah::form_type::quest) {
-      using condition_list_type = dovah::loaded_forms::components::condition_list; // lambdas are stupid sometimes
-
-      auto [list_ptr, index] = [&w]() -> std::pair<condition_list_type*, size_t> {
-         auto* quest = w.get_loaded_form_data<dovah::loaded_forms::Quest>();
-         if (!quest)
-            return {};
-         for (const auto& part : w.parts) {
-            if (part.signature == wrapper_part_types::condition_list_quest_dialogue)
-               return { &quest->conditions.dialogue, part.index };
-            if (part.signature == wrapper_part_types::condition_list_quest_events)
-               return { &quest->conditions.event, part.index };
-         }
-         return {};
-      }();
-      if (!list_ptr)
-         return nullptr;
-      if (index >= list_ptr->size())
-         return nullptr;
-      return &((*list_ptr)[index]);
-   }
-   if (w.stub && w.stub->form_type == dovah::form_type::topic_info) {
-      auto* form = w.get_loaded_form_data<dovah::loaded_forms::TopicInfo>();
-      if (!form)
-         return nullptr;
-      auto i = w.parts[depth].index;
-      if (i < form->conditions.locked.size())
-         return &form->conditions.locked[i];
-      i -= form->conditions.locked.size();
-      if (i >= form->conditions.normal.size())
-         return nullptr;
-      return &form->conditions.normal[i];
-   }
-
-   auto* list_ptr = wrappers::collections::unwrap_condition_list(w);
+   auto [list_ptr, i] = wrappers::collections::unwrap_condition_list_and_index(w);
    if (!list_ptr)
       return nullptr;
-
    auto& list = *list_ptr;
-   auto  i = w.parts[depth].index;
    if (i >= list.size())
       return nullptr;
    return &list[i];
@@ -260,7 +213,7 @@ namespace {
          auto* wrapped = _unwrap(self);
          if (wrapped == nullptr)
             cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
-         if (!cls::is_writeable(self))
+         if (!cls::is_not_locked(self))
             cobb::lua::error(L, "this is a locked condition on a topic info; it cannot be edited");
          if constexpr (std::is_invocable_v<CheckFunctor, wrapper&>) {
             check(self);

@@ -71,7 +71,7 @@ namespace {
          auto* data = wrappers::condition::unwrap(self);
          if (data == nullptr)
             cobb::lua::error(L, "condition_comparison wrapper has no underlying object (deleted?)");
-         if (!wrappers::condition::is_writeable(self))
+         if (!wrappers::condition::is_not_locked(self))
             cobb::lua::error(L, "this is a locked condition on a topic info; it cannot be edited");
          cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "string expected");
 
@@ -111,7 +111,7 @@ namespace {
          auto* data = wrappers::condition::unwrap(self);
          if (data == nullptr)
             cobb::lua::error(L, "condition_comparison wrapper has no underlying object (deleted?)");
-         if (!wrappers::condition::is_writeable(self))
+         if (!wrappers::condition::is_not_locked(self))
             cobb::lua::error(L, "this is a locked condition on a topic info; it cannot be edited");
 
          dovah::form_stub* operand_form  = nullptr;

@@ -29,6 +29,6 @@ namespace dovahscript::wrappers {
 
       static wrapped_type* unwrap(wrapper&);
       static context_type  context_of(wrapper&);
-      static bool is_writeable(wrapper&); // needed because of how INFO content is bifurcated
+      static bool is_not_locked(wrapper&); // needed because of how INFO content is bifurcated
    };
 }

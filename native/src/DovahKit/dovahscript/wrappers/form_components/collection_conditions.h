@@ -1,4 +1,5 @@
 #pragma once
+#include <utility> // std::pair
 #include "helpers/eight_cc.h"
 #include "dovahscript/core/collections.h"
 namespace dovah::loaded_forms::components {
@@ -19,4 +20,5 @@ namespace dovahscript::wrappers::collections {
    extern const collection_definition_params condition_list;
 
    extern dovah::loaded_forms::components::condition_list* unwrap_condition_list(wrapper&);
+   extern std::pair<dovah::loaded_forms::components::condition_list*, size_t> unwrap_condition_list_and_index(wrapper&);
 }

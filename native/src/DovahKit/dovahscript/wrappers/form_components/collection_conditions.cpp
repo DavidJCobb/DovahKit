@@ -27,39 +27,50 @@ namespace {
 
 namespace dovahscript::wrappers::collections {
    extern dovah::loaded_forms::components::condition_list* unwrap_condition_list(wrapper& self) {
-      auto* form = self.get_loaded_form_data<dovah::loaded_forms::Form>();
+      return unwrap_condition_list_and_index(self).first;
+   }
+   extern std::pair<dovah::loaded_forms::components::condition_list*, size_t> unwrap_condition_list_and_index(wrapper& w) {
+      auto* form = w.get_loaded_form_data<dovah::loaded_forms::Form>();
       if (!form)
-         return nullptr;
+         return {};
 
       if (form->stub.form_type == dovah::form_type::quest) {
          auto* quest = static_cast<dovah::loaded_forms::Quest*>(form);
-         for (const auto& part : self.parts) {
+         for (const auto& part : w.parts) {
             if (part.signature == wrapper_part_types::condition_list_quest_dialogue)
-               return &quest->conditions.dialogue;
+               return { &quest->conditions.dialogue, part.index };
             if (part.signature == wrapper_part_types::condition_list_quest_events)
-               return &quest->conditions.event;
+               return { &quest->conditions.event, part.index };
          }
-         return nullptr;
+         return {};
       }
       if (form->stub.form_type == dovah::form_type::topic_info) {
          //
          // TopicInfos have a bifurcated condition list.
          //
          size_t ctda_index = 0;
-         for (const auto& part : self.parts) {
+         for (const auto& part : w.parts) {
             if (part.signature == wrapper_part_types::condition_list) {
                ctda_index = part.index;
                break;
             }
          }
          assert(form == dynamic_cast<dovah::loaded_forms::TopicInfo*>(form));
-         auto* topic_info = static_cast<dovah::loaded_forms::TopicInfo*>(form);
-         if (ctda_index < topic_info->conditions.locked.size())
-            return &topic_info->conditions.locked;
-         return &topic_info->conditions.normal;
+         auto*  topic_info   = static_cast<dovah::loaded_forms::TopicInfo*>(form);
+         size_t locked_count = topic_info->conditions.locked.size();
+         if (ctda_index < locked_count)
+            return { &topic_info->conditions.locked, ctda_index };
+         return { &topic_info->conditions.normal, ctda_index - locked_count };
       }
 
-      return dovah::utils::form_component_accessors::condition_list(*form);
+      size_t index = 0;
+      for (size_t i = 0; i < w.parts.size(); ++i) {
+         if (w.parts[i].signature == wrapper_part_types::condition_list) {
+            index = w.parts[i].index;
+            break;
+         }
+      }
+      return { dovah::utils::form_component_accessors::condition_list(*form), index };
    }
 }
 
