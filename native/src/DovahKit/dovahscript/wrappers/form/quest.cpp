@@ -24,6 +24,7 @@ static_assert(incomplete_code_warnings::allow_compiling_despite_incomplete_scrip
 #include "dovah/form_stubs/helpers/for_each_quest_topic.h"
 #include "./quest/loc_alias.h"
 #include "./quest/ref_alias.h"
+#include "../form_components/collection_conditions.h"
 
 namespace {
    using namespace dovahscript;
@@ -226,6 +227,26 @@ namespace {
          out.is_collection = true;
          return core::subsystems::userdata::get().push(L, out, wrappers::collections::quest_alias_by_id_set.registry_key);
       }
+      int dialogue_conditions(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<wrapped_type>();
+         if (!form)
+            return 0;
+         wrapper out = self;
+         out.append_part(dovahscript::wrapper_part_types::condition_list_quest_dialogue);
+         out.is_collection = true;
+         return core::subsystems::userdata::get().push(L, out, wrappers::collections::condition_list.registry_key);
+      }
+      int event_conditions(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<wrapped_type>();
+         if (!form)
+            return 0;
+         wrapper out = self;
+         out.append_part(dovahscript::wrapper_part_types::condition_list_quest_events);
+         out.is_collection = true;
+         return core::subsystems::userdata::get().push(L, out, wrappers::collections::condition_list.registry_key);
+      }
       int name(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* form = self.get_loaded_form_data<wrapped_type>();
@@ -394,6 +415,8 @@ namespace dovahscript::wrappers {
    /*static*/ cls::method_list_t cls::metatable_getters = {
       { "aliases",                &_getters::aliases }, // collection
       { "aliases_by_id",          &_getters::aliases_by_id }, // collection
+      { "dialogue_conditions",    &_getters::dialogue_conditions }, // collection
+      { "event_conditions",       &_getters::event_conditions }, // collection
       { "name",                   &_getters::name },
       { "object_window_category", &_getters::object_window_category },
       { "priority",               &_getters::priority },

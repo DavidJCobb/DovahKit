@@ -68,6 +68,27 @@ wrapped_type* cls::unwrap(wrapper& w) {
    if (depth >= w.parts.size())
       return nullptr;
 
+   if (w.stub && w.stub->form_type == dovah::form_type::quest) {
+      using condition_list_type = dovah::loaded_forms::components::condition_list; // lambdas are stupid sometimes
+
+      auto [list_ptr, index] = [&w]() -> std::pair<condition_list_type*, size_t> {
+         auto* quest = w.get_loaded_form_data<dovah::loaded_forms::Quest>();
+         if (!quest)
+            return {};
+         for (const auto& part : w.parts) {
+            if (part.signature == wrapper_part_types::condition_list_quest_dialogue)
+               return { &quest->conditions.dialogue, part.index };
+            if (part.signature == wrapper_part_types::condition_list_quest_events)
+               return { &quest->conditions.event, part.index };
+         }
+         return {};
+      }();
+      if (!list_ptr)
+         return nullptr;
+      if (index >= list_ptr->size())
+         return nullptr;
+      return &((*list_ptr)[index]);
+   }
    if (w.stub && w.stub->form_type == dovah::form_type::topic_info) {
       auto* form = w.get_loaded_form_data<dovah::loaded_forms::TopicInfo>();
       if (!form)

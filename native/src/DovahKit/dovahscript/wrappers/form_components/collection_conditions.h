@@ -10,6 +10,10 @@ namespace dovahscript {
 
 namespace dovahscript::wrapper_part_types {
    inline constexpr cobb::eight_cc condition_list = "CtdnList";
+
+   // Specific condition lists, on the handful of forms that have multiple:
+   inline constexpr cobb::eight_cc condition_list_quest_dialogue = "CtdLQDia";
+   inline constexpr cobb::eight_cc condition_list_quest_events   = "CtdLQEvt";
 }
 namespace dovahscript::wrappers::collections {
    extern const collection_definition_params condition_list;

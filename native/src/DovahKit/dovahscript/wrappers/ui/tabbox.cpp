@@ -92,7 +92,11 @@ namespace {
          if (!self.widget)
             return 0;
          int result = api_helpers::get_widget_property((wrapped_type*)self.widget, &QTabWidget::currentIndex);
-         lua_pushinteger(L, result);
+         if (result < 0) {
+            lua_pushnil(L);
+         } else {
+            lua_pushinteger(L, result + 1);
+         }
          return 1;
       }
       int selected_tab(lua_State* L) {
@@ -136,8 +140,10 @@ namespace {
          int isnum;
          int index = lua_tointegerx(L, 2, &isnum);
          cobb::lua::argcheck(L, isnum, 2, "integer expected");
+         cobb::lua::argcheck(L, index > 0, 2, "tab indices cannot be zero or negative");
          if (!self.widget)
             return 0;
+         ++index;
          api_helpers::set_widget_property_and_block_signals((wrapped_type*)self.widget, &QTabWidget::setCurrentIndex, index);
          return 0;
       }

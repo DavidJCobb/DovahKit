@@ -9,6 +9,7 @@
 
 #include "dovah/forms/components/conditions.h"
 #include "dovah/utils/form_component_accessors/condition_list.h"
+#include "dovah/forms/Quest.h"
 #include "dovah/forms/TopicInfo.h"
 #include "./condition.h"
 #include "../form/form.h"
@@ -30,6 +31,16 @@ namespace dovahscript::wrappers::collections {
       if (!form)
          return nullptr;
 
+      if (form->stub.form_type == dovah::form_type::quest) {
+         auto* quest = static_cast<dovah::loaded_forms::Quest*>(form);
+         for (const auto& part : self.parts) {
+            if (part.signature == wrapper_part_types::condition_list_quest_dialogue)
+               return &quest->conditions.dialogue;
+            if (part.signature == wrapper_part_types::condition_list_quest_events)
+               return &quest->conditions.event;
+         }
+         return nullptr;
+      }
       if (form->stub.form_type == dovah::form_type::topic_info) {
          //
          // TopicInfos have a bifurcated condition list.
