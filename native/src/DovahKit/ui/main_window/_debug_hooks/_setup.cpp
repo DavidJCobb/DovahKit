@@ -34,6 +34,7 @@
 #include "./qt/qpalette.h"
 #include "./qt/qt_3d_tests.h"
 #include "./widgets/attack_data.h"
+#include "./widgets/audio_simple.h"
 #include "./widgets/bound_script_list_pane.h"
 #include "./widgets/breadcrumb_bar.h"
 #include "./widgets/ui_bsa_picker.h"
@@ -71,6 +72,7 @@ namespace DovahKitDebug {
    >;
    using widget_tests = cobb::class_list<
       features::widgets::attack_data,
+      features::widgets::audio_simple,
       features::widgets::bound_script_list_pane,
       features::widgets::breadcrumb_bar,
       features::widgets::ui_bsa_picker,

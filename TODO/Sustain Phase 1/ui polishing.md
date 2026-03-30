@@ -3,6 +3,8 @@
 
 ## General
 
+* I built my own classes for handling XAudio2, for playing FUZ files (i.e. dialogue audio). I should avoid interfacing with XAudio2 directly in favor of going through Qt's Multimedia module and using `QMediaPlayer`. The only reason I'm not doing that now is because enabling or disabling Qt modules will force a rebuild of the entire program, and I don't want to deal with that.
+
 * `DKConditionList`, when disabled, doesn't allow resizing of its columns. Instead of disabling the listview, would it be possible to disable the child items in the listview, and the listview's root item, such that the widget is mostly non-interactable but the columns are still resizable?
 
 * `DKHeaderView` doesn't use `Q_OBJECT` in its definition, so we can't `qobject_cast` to it. Add that macro, and in general, double-check all custom widgets and widget-like classes for it.

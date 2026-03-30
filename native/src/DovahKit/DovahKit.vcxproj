@@ -1233,6 +1233,7 @@
     <ClCompile Include="ui\main_window\_debug_hooks\qt\qt_3d_tests.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\script_attachment_query_from_cache.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\widgets\attack_data.cpp" />
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\audio_simple.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\widgets\bound_script_list_pane.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\widgets\ui_bsa_picker.cpp" />
     <ClCompile Include="ui\main_window\_debug_hooks\widgets\collapsible_pane.cpp">
@@ -1380,6 +1381,7 @@
     <ClCompile Include="vulkan\swap_chain_image.cpp" />
     <ClCompile Include="vulkan\vertex.cpp" />
     <ClCompile Include="widgets\DKAttackDataWidget.cpp" />
+    <ClCompile Include="widgets\DKAudioWidgetSimple.cpp" />
     <ClCompile Include="widgets\DKBreadcrumbBar.cpp" />
     <ClCompile Include="widgets\DKCollapsiblePane.cpp" />
     <ClCompile Include="ui\generic\DKLuaSyntaxHighlighter.cpp" />
@@ -1466,6 +1468,7 @@
     <ClCompile Include="widgets\DKYesNoUnsetWidget.cpp" />
     <ClCompile Include="widgets\widget-data\DKCustomFormFilter.cpp" />
     <ClCompile Include="widgets\widget-data\DKCustomFormFilterableModelMixin.cpp" />
+    <ClCompile Include="xaudio2\core_interface.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKAddPapyrusScriptDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBSABrowseDialog.cpp" />
     <ClCompile Include="widgets\widget-dialogs\DKBoundScriptDialog.cpp" />
@@ -1505,6 +1508,8 @@
     <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\Phase.cpp" />
     <ClCompile Include="ui\form_windows\scene\SceneFormVisualEditor_impl\TimerAction.cpp" />
     <ClCompile Include="widgets\widget-models\DKTopicOrSubtypePicker\DKTopicOrSubtypePickerModel.cpp" />
+    <ClCompile Include="xaudio2\simple_fuz_sound.cpp" />
+    <ClCompile Include="xaudio2\xwma_file_info.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovahscript\api_helpers\fail_table_if_expandos.h" />
@@ -1665,6 +1670,7 @@
     <ClInclude Include="dovah\exceptions\invalid_load_order\load_order_would_have_too_many_files.h" />
     <ClInclude Include="dovah\exceptions\invalid_load_order\some_files_are_too_new.h" />
     <ClInclude Include="dovah\exceptions\object_reference_move_failed.h" />
+    <ClInclude Include="dovah\files\fuz\file_info.h" />
     <ClInclude Include="dovah\files\pex\parsers\function_collector.h" />
     <ClInclude Include="dovah\files\pex\parsers\util\file_string_table.h" />
     <ClInclude Include="dovah\forms\AcousticSpace.h" />
@@ -2227,6 +2233,12 @@
     <ClInclude Include="editor\helpers\face_fx_phoneme_name.h" />
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
+    <QtMoc Include="widgets\DKAudioWidgetSimple.h" />
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h" />
+    <ClInclude Include="xaudio2\core_interface.h" />
+    <ClInclude Include="xaudio2\operation_set_handle.h" />
+    <QtMoc Include="xaudio2\simple_fuz_sound.h" />
+    <ClInclude Include="xaudio2\xwma_file_info.h" />
     <QtMoc Include="widgets\widget-models\DKTopicOrSubtypePicker\DKTopicOrSubtypePickerModel.h" />
     <QtMoc Include="widgets\widget-models\DKMagicEffectListModel.h" />
     <QtMoc Include="ui\form_windows\quest\QuestTabScenes.h" />

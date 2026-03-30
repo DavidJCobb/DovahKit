@@ -4083,6 +4083,21 @@
     <ClCompile Include="dovah\form_stub_addenda\ordered_child_collection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="xaudio2\xwma_file_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKAudioWidgetSimple.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="xaudio2\simple_fuz_sound.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="xaudio2\core_interface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\main_window\_debug_hooks\widgets\audio_simple.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10004,6 +10019,21 @@
     <ClInclude Include="dovah\form_stub_addenda\passkeys\ordered_child_collection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="xaudio2\xwma_file_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovah\files\fuz\file_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xaudio2\operation_set_handle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xaudio2\core_interface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -11497,6 +11527,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ui\form_windows\quest\QuestAliasesModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKAudioWidgetSimple.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="xaudio2\simple_fuz_sound.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

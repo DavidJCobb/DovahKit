@@ -127,7 +127,7 @@ DovahKitCore::DovahKitCore() {
       //
       // Set up COM on this thread so that it can use DirectXTex.
       //
-      HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+      HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED); // Qt forcibly uses COINIT_APARTMENTTHREADED via OleInitialize
       if (!FAILED(hr)) {
          this->com_is_ready = true;
       }
