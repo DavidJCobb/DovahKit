@@ -190,6 +190,7 @@ bool ActiveFileSaveDialog::_check_cross_game_masters_exist(dovah::game game) {
    auto& editor = DovahKitCore::get();
    if (!editor.get_game_path(dst_path, game))
       return true;
+   dst_path /= "Data\\";
 
    std::vector<std::string> missing_files;
    {

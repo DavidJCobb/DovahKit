@@ -60,33 +60,52 @@ namespace dovah::load_order_processes {
       //
       float desired_file_version = this->write_config.use_file_version.value_or(active_load_order.active_file->header.file_version);
       {
-         bool verify_all_ids_in_light_range           = (_save_as_light_plugin && !_was_originally_light);
-         bool verify_no_cannibalizing_hardcoded_range = false;
+         enum class hardcoded_range_handling {
+            ignore,
+            bump_version,
+            disallow,
+         } hardcoded_range_handling = hardcoded_range_handling::ignore;
+         bool verify_all_ids_in_light_range = (_save_as_light_plugin && !_was_originally_light);
+
          if (active_load_order.current_game != this->write_config.output_game) {
             auto min_ver_opt = game_feature_support::hardcoded_form_ids_ignore_record_id_prefix_until_file_version(this->write_config.output_game);
             if (min_ver_opt.has_value()) {
                auto min_ver = min_ver_opt.value();
                if (desired_file_version < min_ver) {
                   if (this->write_config.use_file_version.has_value()) {
-                     throw exception(error_code::desired_file_version_does_not_support_co_opting_the_hardcoded_form_id_range);
+                     //
+                     // We've been explicitly instructed to use a file version that's too old to 
+                     // support co-opting the hardcoded range, so don't allow that co-opting.
+                     //
+                     hardcoded_range_handling = hardcoded_range_handling::disallow;
+                  } else {
+                     //
+                     // We merely defaulted to an old file version, so if it turns out that we have 
+                     // forms which co-opt the hardcoded range, we should bump the version up to 
+                     // the minimum version which supports that co-opting.
+                     //
+                     hardcoded_range_handling = hardcoded_range_handling::bump_version;
                   }
-                  desired_file_version = min_ver;
                }
             } else {
-               verify_no_cannibalizing_hardcoded_range = true;
+               hardcoded_range_handling = hardcoded_range_handling::disallow;
             }
          }
-         if (verify_all_ids_in_light_range || verify_no_cannibalizing_hardcoded_range) {
+         if (verify_all_ids_in_light_range || hardcoded_range_handling != hardcoded_range_handling::ignore) {
             for (auto& pair : active_load_order.active_file_forms.forms) {
                auto id = pair.second->formID;
                if (verify_all_ids_in_light_range) {
                   if (id & 0x00FFF000)
                      throw exception(error_code::forms_out_of_esl_form_id_range);
                }
-               if (verify_no_cannibalizing_hardcoded_range) {
+               if (hardcoded_range_handling != hardcoded_range_handling::ignore) {
                   auto remapped = active_load_order.remap_formID_for_save(id);
                   if ((remapped & 0x00FFFFFF) < 0x800) {
-                     throw exceptions::game_change_failed(dovah::game_change_failure_reason::active_file_co_opts_the_hardcoded_form_id_range, active_load_order.current_game, this->write_config.output_game);
+                     if (hardcoded_range_handling == hardcoded_range_handling::disallow) {
+                        throw exceptions::game_change_failed(dovah::game_change_failure_reason::active_file_co_opts_the_hardcoded_form_id_range, active_load_order.current_game, this->write_config.output_game);
+                     } else if (hardcoded_range_handling == hardcoded_range_handling::bump_version) {
+                        desired_file_version = game_feature_support::hardcoded_form_ids_ignore_record_id_prefix_until_file_version(this->write_config.output_game).value();
+                     }
                   }
                }
             }
