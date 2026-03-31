@@ -5,7 +5,7 @@
 namespace dovah::conditions {
    constexpr const auto gapless_function_info_list = std::array{
       function_info(  0, "GetWantBlocking"),
-      function_info(  1, "GetDistance"),
+      function_info(  1, "GetDistance",                             parameter_types::ObjectReference),
       function_info(  5, "GetLocked"),
       function_info(  6, "GetPos",                                  parameter_types::Axis),
       function_info(  8, "GetAngle",                                parameter_types::Axis),
