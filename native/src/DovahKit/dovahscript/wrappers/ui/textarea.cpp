@@ -16,7 +16,7 @@
 #include "../../api_helpers/widget_properties.h"
 
 namespace {
-   constexpr int max_allowed_length = 99999;
+   constexpr int max_allowed_length = 5000000;
 }
 
 namespace {
