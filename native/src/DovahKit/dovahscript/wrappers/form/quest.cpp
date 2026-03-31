@@ -207,6 +207,16 @@ namespace {
       }
    }
    namespace _getters {
+      template<wrapped_type::quest_flag::type Flag>
+      int _quest_flag(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* form = self.get_loaded_form_data<wrapped_type>();
+         if (!form)
+            return 0;
+         lua_pushboolean(L, (form->flags & Flag) != 0);
+         return 1;
+      }
+
       int aliases(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          auto* form = self.get_loaded_form_data<wrapped_type>();
@@ -296,6 +306,21 @@ namespace {
       }
    }
    namespace _setters {
+      template<wrapped_type::quest_flag::type Flag>
+      int _quest_flag(lua_State* L) {
+         core::subsystems::permissions::verify_form_write_permissions();
+         //
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         cobb::lua::argcheck(L, lua_isboolean(L, 2), 2, "expected boolean");
+         auto* form = self.get_loaded_form_data<wrapped_type>();
+         if (!form)
+            return 0;
+         self.before_edit();
+         cobb::edit_bit(form->flags, Flag, lua_toboolean(L, 2));
+         self.after_edit();
+         return 0;
+      }
+
       int name(lua_State* L) {
          core::subsystems::permissions::verify_form_write_permissions();
          //
@@ -413,6 +438,13 @@ namespace dovahscript::wrappers {
    };
    
    /*static*/ cls::method_list_t cls::metatable_getters = {
+      #pragma region Quest flags
+         { "allow_repeated_stages",        &_getters::_quest_flag<wrapped_type::quest_flag::allow_repeated_stages> },
+         { "exclude_from_dialogue_export", &_getters::_quest_flag<wrapped_type::quest_flag::exclude_from_dialogue_export> },
+         { "run_once",                     &_getters::_quest_flag<wrapped_type::quest_flag::run_once> },
+         { "start_game_enabled",           &_getters::_quest_flag<wrapped_type::quest_flag::start_game_enabled> },
+         { "warn_on_alias_fill_failure",   &_getters::_quest_flag<wrapped_type::quest_flag::warn_on_alias_fill_failure> },
+      #pragma endregion
       { "aliases",                &_getters::aliases }, // collection
       { "aliases_by_id",          &_getters::aliases_by_id }, // collection
       { "dialogue_conditions",    &_getters::dialogue_conditions }, // collection
@@ -424,6 +456,13 @@ namespace dovahscript::wrappers {
       { "quest_type",             &_getters::quest_type },
    };
    /*static*/ cls::method_list_t cls::metatable_setters = {
+      #pragma region Quest flags
+         { "allow_repeated_stages",        &_setters::_quest_flag<wrapped_type::quest_flag::allow_repeated_stages> },
+         { "exclude_from_dialogue_export", &_setters::_quest_flag<wrapped_type::quest_flag::exclude_from_dialogue_export> },
+         { "run_once",                     &_setters::_quest_flag<wrapped_type::quest_flag::run_once> },
+         { "start_game_enabled",           &_setters::_quest_flag<wrapped_type::quest_flag::start_game_enabled> },
+         { "warn_on_alias_fill_failure",   &_setters::_quest_flag<wrapped_type::quest_flag::warn_on_alias_fill_failure> },
+      #pragma endregion
       { "name",                   &_setters::name },
       { "object_window_category", &_setters::object_window_category },
       { "priority",               &_setters::priority },

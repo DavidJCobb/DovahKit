@@ -100,51 +100,54 @@ namespace dovah::loaded_forms::components::conditions {
       } else {
          if (this->event_parameters.has_value())
             return false;
-         for (size_t i = 0; i < this->parameters.size(); ++i) {
-            auto* typeinfo  = function_info->argument_types[i];
-            auto& parameter = this->parameters[i];
-            if (typeinfo == &dovah::conditions::parameter_types::None) {
-               if (!std::holds_alternative<std::monostate>(parameter))
-                  return false;
-               continue;
-            }
-
-            auto underlying = this->get_argument_underlying_type(i);
-            switch (underlying) {
-               using enum dovah::conditions::parameter_underlying_type;
-               case alias:
-               case int_unsigned:
-               case package_data:
-               case quest_stage:
-                  if (!std::holds_alternative<uint32_t>(parameter))
-                     return false;
-                  break;
-               case enumeration:
-               case int_signed:
-                  if (!std::holds_alternative<int32_t>(parameter))
-                     return false;
-                  break;
-               case float32:
-                  if (!std::holds_alternative<float>(parameter))
-                     return false;
-                  break;
-               case character:
-                  if (!std::holds_alternative<char>(parameter))
-                     return false;
-                  break;
-               case string:
-                  if (!std::holds_alternative<std::string>(parameter))
-                     return false;
-                  break;
-               case form:
-                  if (!std::holds_alternative<form_stub*>(parameter))
-                     return false;
-                  break;
-            }
-         }
+         for (size_t i = 0; i < this->parameters.size(); ++i)
+            if (!this->is_parameter_valid(i))
+               return false;
       }
 
       return true;
+   }
+   bool working_condition::is_parameter_valid(size_t n) const {
+      if (n >= this->parameters.size())
+         return false;
+
+      auto* function_info = dovah::conditions::function_info_by_id(this->function);
+      if (!function_info)
+         return false;
+
+      if (function_info->uses_event_data) {
+         if (!std::holds_alternative<std::monostate>(this->parameters[n]))
+            return false;
+         return true;
+      }
+      
+      auto* typeinfo  = function_info->argument_types[n];
+      auto& parameter = this->parameters[n];
+      if (typeinfo == &dovah::conditions::parameter_types::None) {
+         return std::holds_alternative<std::monostate>(parameter);
+      }
+
+      auto underlying = this->get_argument_underlying_type(n);
+      switch (underlying) {
+         using enum dovah::conditions::parameter_underlying_type;
+         case alias:
+         case int_unsigned:
+         case package_data:
+         case quest_stage:
+            return std::holds_alternative<uint32_t>(parameter);
+         case enumeration:
+         case int_signed:
+            return std::holds_alternative<int32_t>(parameter);
+         case float32:
+            return std::holds_alternative<float>(parameter);
+         case character:
+            return std::holds_alternative<char>(parameter);
+         case string:
+            return std::holds_alternative<std::string>(parameter);
+         case form:
+            return std::holds_alternative<form_stub*>(parameter);
+      }
+      return false;
    }
 
    const dovah::conditions::parameter_typeinfo* working_condition::get_argument_typeinfo(size_t index) const {

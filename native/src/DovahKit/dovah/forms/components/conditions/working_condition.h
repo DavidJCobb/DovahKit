@@ -75,6 +75,7 @@ namespace dovah::loaded_forms::components::conditions {
 
       public:
          bool valid() const;
+         bool is_parameter_valid(size_t) const;
 
          // does not apply `override_types_with`
          const dovah::conditions::parameter_typeinfo* get_argument_typeinfo(size_t index) const;

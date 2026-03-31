@@ -317,6 +317,9 @@ namespace {
             },
             [L, &type](working_type& working) {
                working.override_types_with = type;
+               for (size_t i = 0; i < working.parameters.size(); ++i)
+                  if (!working.is_parameter_valid(i))
+                     working.reset_parameter(i);
             }
          );
          return 0;
