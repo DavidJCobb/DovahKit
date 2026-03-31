@@ -12,14 +12,22 @@
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
-MAINICON ICON "DovahKit.ico"
-
 /////////////////////////////////////////////////////////////////////////////
 // English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+MAINICON                ICON                    "DovahKit.ico"
+
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -70,7 +78,7 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName", "DavidJCobb"
-            VALUE "FileDescription", "An unofficial third-party editor for Skyrim game data"
+            VALUE "FileDescription", "DovahKit"
             VALUE "FileVersion", "0.0.0.1"
             VALUE "InternalName", "DovahKit"
             VALUE "LegalCopyright", "Copyright (C) 2020"
