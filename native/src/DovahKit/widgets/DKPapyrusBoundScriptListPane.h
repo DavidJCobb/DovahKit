@@ -42,6 +42,7 @@ class DKPapyrusBoundScriptListPane : public QWidget {
       void setUsesGroupbox(bool);
 
       std::vector<QString> allNonDeletedScriptnames() const;
+      bool hasScript(QString name, bool allow_deleted) const;
 
    signals:
       void scriptAdded(QString scriptname);

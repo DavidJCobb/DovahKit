@@ -16,8 +16,7 @@ namespace dovah::loaded_forms::components::papyrus {
          static constexpr const size_t max_fragment_count = std::numeric_limits<fragment_count_serialized_type>::max();
 
          struct fragment {
-            uint16_t index;
-            uint16_t unknown02;
+            uint32_t index;
             uint8_t  unknown04;
             std::string filename;
             std::string function;
@@ -26,7 +25,7 @@ namespace dovah::loaded_forms::components::papyrus {
       public:
          perk_fragment_data() : fragment_data_base(type) {};
 
-         virtual void load(attachment_data& owner, tes_subrecord_reader&) override;
+         virtual void load(attachment_data& owner, tes_subrecord_reader&, load_order_interfaces::form_load&) override;
          virtual void save(attachment_data& owner, tes_subrecord_writer&, load_order_interfaces::form_save&) override;
          virtual fragment_data_base* clone(loaded_forms::Form& owner_of_clone) const noexcept override;
          

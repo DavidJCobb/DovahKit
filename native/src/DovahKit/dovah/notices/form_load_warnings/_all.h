@@ -21,6 +21,7 @@
    #include "./by_form_component/navmesh_pathing_cell/bad_crc.h"
    #include "./by_form_component/navmesh_pathing_cell/improper_exterior.h"
    #include "./by_form_component/package_event_dialogue/unrecognized_subrecord.h"
+   #include "./by_form_component/papyrus/inconsistent_fragment_scriptname.h"
    #include "./by_form_component/papyrus/vmad_too_large.h"
 #pragma endregion
 #pragma region by form type

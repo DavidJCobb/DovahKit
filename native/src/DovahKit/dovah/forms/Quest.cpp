@@ -984,14 +984,12 @@ namespace dovah::loaded_forms {
             assert(subrecord.signature() == 'VMAD');
             if (!subrecord.is_in_bounds(
                sizeof(stage_id) +
-               sizeof(unknown02) +
                sizeof(entry_index) +
                sizeof(unknown08)
             )) {
                return;
             }
             subrecord.unchecked_read(this->stage_id);
-            subrecord.unchecked_read(this->unknown02);
             subrecord.unchecked_read(this->entry_index);
             subrecord.unchecked_read(this->unknown08);
             if (!subrecord.read_length_prefixed_string<2>(this->filename))
@@ -1002,7 +1000,6 @@ namespace dovah::loaded_forms {
          void Quest::LogEntry::script_fragment::save(tes_subrecord_writer& subrecord, uint16_t stage_id, uint32_t entry_index) {
             assert(subrecord.signature() == 'VMAD');
             subrecord.write(stage_id);
-            subrecord.write(this->unknown02);
             subrecord.write(entry_index);
             subrecord.write(this->unknown08);
             subrecord.write_length_prefixed_string<2>(this->filename);
@@ -1011,7 +1008,6 @@ namespace dovah::loaded_forms {
          void Quest::LogEntry::script_fragment::generate_use_info(tes_subrecord_reader& subrecord, form_stub_use_info_builder& uib) {
             subrecord.skip_bytes(
                sizeof(stage_id) + 
-               sizeof(unknown02) + 
                sizeof(entry_index) +
                sizeof(unknown08)
             );
@@ -1019,7 +1015,6 @@ namespace dovah::loaded_forms {
             subrecord.skip_length_prefixed_string<2>();
          }
          void Quest::LogEntry::script_fragment::clear() {
-            this->unknown02 = 0x0000;
             this->unknown08 = 0x01;
             this->stage_id    = 0;
             this->entry_index = 0;

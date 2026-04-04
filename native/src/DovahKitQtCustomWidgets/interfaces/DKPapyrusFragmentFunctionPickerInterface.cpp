@@ -42,11 +42,11 @@ QIcon DKPapyrusFragmentFunctionPickerInterface::icon() const {
 }
 
 QString DKPapyrusFragmentFunctionPickerInterface::toolTip() const {
-   return tr("A widget that can be used to set a Papyrus script and function for use as a fragment script.");
+   return tr("A widget that can be used to set a Papyrus script and function for use as a Papyrus fragment.");
 }
 
 QString DKPapyrusFragmentFunctionPickerInterface::whatsThis() const {
-   return tr("A widget that can be used to set a Papyrus script and function for use as a fragment script.");
+   return tr("A widget that can be used to set a Papyrus script and function for use as a Papyrus fragment.");
 }
 
 bool DKPapyrusFragmentFunctionPickerInterface::isContainer() const {

@@ -10,7 +10,7 @@ namespace {
 }
 
 namespace dovah::loaded_forms::components::papyrus {
-   void scene_fragment_data::load(attachment_data& owner, tes_subrecord_reader& subrecord) {
+   void scene_fragment_data::load(attachment_data& owner, tes_subrecord_reader& subrecord, load_order_interfaces::form_load&) {
       uint8_t flags = 0;
 
       if (!subrecord.read(this->unknown))

@@ -792,6 +792,26 @@ namespace editor_helpers {
                }
             #pragma endregion
             #pragma region papyrus
+               if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::papyrus::inconsistent_fragment_scriptname*>(&warning)) {
+                  QString subject = form_identifiers_to_string(&casted->subject);
+                  QString fragment_type = "?";
+                  switch (casted->fragment) {
+                     using enum form_load_warnings::by_component::papyrus::inconsistent_fragment_scriptname::fragment_type;
+                     case on_begin:
+                        fragment_type = QObject::tr("OnBegin", disambig);
+                        break;
+                     case on_end:
+                        fragment_type = QObject::tr("OnEnd", disambig);
+                        break;
+                  }
+                  //
+                  return QObject::tr(
+                     "%1 specifies filename \"%2\" for its fragments overall, but specifies filename "
+                     "\"%3\" for its %4 fragment. The game will clear this fragment after loading it; "
+                     "it will not work in-game.",
+                     disambig
+                  ).arg(subject).arg(QString::fromStdString(casted->scriptnames.overall)).arg(QString::fromStdString(casted->scriptnames.fragment)).arg(fragment_type);
+               }
                if (auto* casted = cobb::dynamic_fast_cast<const form_load_warnings::by_component::papyrus::vmad_too_large*>(&warning)) {
                   QString subject = form_identifiers_to_string(&casted->subject);
                   //

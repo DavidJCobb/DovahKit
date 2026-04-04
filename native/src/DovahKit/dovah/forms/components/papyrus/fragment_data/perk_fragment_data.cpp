@@ -10,7 +10,7 @@ namespace {
 }
 
 namespace dovah::loaded_forms::components::papyrus {
-   void perk_fragment_data::load(attachment_data& owner, tes_subrecord_reader& subrecord) {
+   void perk_fragment_data::load(attachment_data& owner, tes_subrecord_reader& subrecord, load_order_interfaces::form_load&) {
       if (!subrecord.read(this->unknown))
          return;
       if (!subrecord.read_length_prefixed_string<2>(this->filename))
@@ -24,7 +24,6 @@ namespace dovah::loaded_forms::components::papyrus {
             break;
          auto& frag = this->fragments.emplace_back();
          subrecord.unchecked_read(frag.index);
-         subrecord.unchecked_read(frag.unknown02);
          subrecord.unchecked_read(frag.unknown04);
          if (!subrecord.read_length_prefixed_string<2>(frag.filename))
             break;
@@ -46,7 +45,6 @@ namespace dovah::loaded_forms::components::papyrus {
       subrecord.write((fragment_count_serialized_type)this->fragments.size());
       for (auto& frag : this->fragments) {
          subrecord.write(frag.index);
-         subrecord.write(frag.unknown02);
          subrecord.write(frag.unknown04);
          subrecord.write_length_prefixed_string<2>(frag.filename);
          subrecord.write_length_prefixed_string<2>(frag.function);

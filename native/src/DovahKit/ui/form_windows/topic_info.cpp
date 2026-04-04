@@ -192,8 +192,9 @@ FormDialogTopicInfo::FormDialogTopicInfo(dovah::form_stub& stub, QWidget* parent
    this->ui.hoursUntilReset->setRange(0, 24);
 
    {  // Scripts
-      this->ui.fragmentBegin->setSourceWidget(this->ui.scriptListPane);
-      this->ui.fragmentEnd->setSourceWidget(this->ui.scriptListPane);
+      this->ui.fragScript->setSourceWidget(this->ui.scriptListPane);
+      this->ui.fragFunctionBegin->setSourceWidget(this->ui.fragScript);
+      this->ui.fragFunctionEnd->setSourceWidget(this->ui.fragScript);
    }
 
    {
@@ -277,21 +278,16 @@ void FormDialogTopicInfo::_load_impl() {
          if (fragdata) {
             assert(fragdata->type == dovah::loaded_forms::components::papyrus::fragment_type::info);
 
+            this->ui.fragScript->setValue(fragdata->filename);
             if (auto& opt = fragdata->fragments.on_begin; opt.has_value()) {
                auto& src = opt.value();
-               auto* dst = this->ui.fragmentBegin;
-               dst->setCurrentScriptname(src.script);
-               if (src.script.empty())
-                  dst->setCurrentScriptname(fragdata->filename);
-               dst->setCurrentFunction(src.function);
+               auto* dst = this->ui.fragFunctionBegin;
+               dst->setValue(src.function);
             }
             if (auto& opt = fragdata->fragments.on_end; opt.has_value()) {
                auto& src = opt.value();
-               auto* dst = this->ui.fragmentEnd;
-               dst->setCurrentScriptname(src.script);
-               if (src.script.empty())
-                  dst->setCurrentScriptname(fragdata->filename);
-               dst->setCurrentFunction(src.function);
+               auto* dst = this->ui.fragFunctionEnd;
+               dst->setValue(src.function);
             }
          }
       }
@@ -325,15 +321,13 @@ void FormDialogTopicInfo::_save_impl() {
 
          bool any_data = false;
          {
-            auto* widget_a = this->ui.fragmentBegin;
-            auto* widget_b = this->ui.fragmentEnd;
-            if (!widget_a->currentScriptname().isEmpty())
+            auto* widget_a = this->ui.fragFunctionBegin;
+            auto* widget_b = this->ui.fragFunctionEnd;
+            if (!this->ui.fragScript->value().isEmpty())
                any_data = true;
-            else if (!widget_b->currentScriptname().isEmpty())
+            else if (!widget_a->value().isEmpty())
                any_data = true;
-            else if (!widget_a->currentFunction().isEmpty())
-               any_data = true;
-            else if (!widget_b->currentFunction().isEmpty())
+            else if (!widget_b->value().isEmpty())
                any_data = true;
          }
 
@@ -344,22 +338,20 @@ void FormDialogTopicInfo::_save_impl() {
             working.script_data.fragment_data = new papyrus_fragment_data_type;
          }
          if (fragdata) {
-            auto _write = [](const DKPapyrusFragmentFunctionPicker* src, fragment_optional_type& dst, std::string& dst_shared_filename) {
-               auto scriptname = src->currentScriptname();
-               auto function   = src->currentFunction();
-               if (scriptname.isEmpty() && function.isEmpty()) {
+            auto scriptname = this->ui.fragScript->value().toStdString();
+            auto _write = [&scriptname](const DKPapyrusFragmentFunctionNamePicker* src, fragment_optional_type& dst) {
+               auto function = src->value();
+               if (function.isEmpty()) {
                   dst = {};
                } else {
                   auto& dst_data = dst.emplace();
-                  dst_data.script   = scriptname.toStdString();
+                  dst_data.script   = scriptname;
                   dst_data.function = function.toStdString();
-
-                  if (!dst_data.script.empty())
-                     dst_shared_filename = dst_data.script;
                }
             };
-            _write(this->ui.fragmentBegin, fragdata->fragments.on_begin, fragdata->filename);
-            _write(this->ui.fragmentEnd,   fragdata->fragments.on_end,   fragdata->filename);
+            _write(this->ui.fragFunctionBegin, fragdata->fragments.on_begin);
+            _write(this->ui.fragFunctionEnd,   fragdata->fragments.on_end);
+            fragdata->filename = std::move(scriptname);
          }
       }
       this->ui.scriptListPane->commit();

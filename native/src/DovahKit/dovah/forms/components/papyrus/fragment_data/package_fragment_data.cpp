@@ -2,7 +2,7 @@
 #include "../../../_common_cpp.h"
 
 namespace dovah::loaded_forms::components::papyrus {
-   void package_fragment_data::load(attachment_data& owner, tes_subrecord_reader& subrecord) {
+   void package_fragment_data::load(attachment_data& owner, tes_subrecord_reader& subrecord, load_order_interfaces::form_load&) {
       uint8_t flags = 0;
 
       if (subrecord.is_in_bounds(2)) {

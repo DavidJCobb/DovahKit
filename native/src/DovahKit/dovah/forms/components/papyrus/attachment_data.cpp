@@ -65,7 +65,7 @@ namespace dovah::loaded_forms::components::papyrus {
             break;
       }
       if (this->fragment_data)
-         this->fragment_data->load(*this, subrecord);
+         this->fragment_data->load(*this, subrecord, intfc);
       return subrecord.is_in_bounds();
    }
    void attachment_data::save(tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {

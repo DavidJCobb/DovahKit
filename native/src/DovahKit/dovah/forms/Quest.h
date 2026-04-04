@@ -210,10 +210,9 @@ namespace dovah::loaded_forms {
                using flags_t = std::underlying_type_t<flag::type>;
 
                struct script_fragment {
-                  uint16_t    stage_id; // not meaningful outside of load
-                  uint16_t    unknown02 = 0x0000;
-                  uint32_t    entry_index; // not meaningful outside of load
-                  uint8_t     unknown08 = 0x01;
+                  uint32_t    stage_id    = 0; // not meaningful outside of load
+                  uint32_t    entry_index = 0; // not meaningful outside of load
+                  uint8_t     unknown08   = 0x01;
                   std::string filename; // read as a length-prefixed string, capped to 65535 chars
                   std::string function; // read as a length-prefixed string, capped to 65535 chars
                   //

@@ -4098,6 +4098,12 @@
     <ClCompile Include="ui\main_window\_debug_hooks\widgets\audio_simple.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\DKPapyrusFragmentScriptNamePicker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKPapyrusFragmentFunctionNamePicker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10034,6 +10040,9 @@
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\papyrus\inconsistent_fragment_scriptname.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">
@@ -11535,6 +11544,12 @@
     <QtMoc Include="xaudio2\simple_fuz_sound.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="widgets\DKPapyrusFragmentScriptNamePicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKPapyrusFragmentFunctionNamePicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DovahKit.rc">
@@ -12095,6 +12110,7 @@
     <None Include="dovah\_docs\form types\t\topic info.md" />
     <None Include="dovahscript\_docs\how to expose form data to Lua.md" />
     <None Include="dovah\_docs\form types\q\quest\reference aliases.md" />
+    <None Include="xaudio2\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

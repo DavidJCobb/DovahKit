@@ -27,7 +27,7 @@ namespace dovah::loaded_forms::components::papyrus {
          
          fragment_data_base(fragment_type t) : type(t) {}
          
-         virtual void load(attachment_data& owner, tes_subrecord_reader&) = 0;
+         virtual void load(attachment_data& owner, tes_subrecord_reader&, load_order_interfaces::form_load&) = 0;
          virtual void save(attachment_data& owner, tes_subrecord_writer&, load_order_interfaces::form_save&) = 0;
          virtual fragment_data_base* clone(loaded_forms::Form& owner_of_clone) const noexcept = 0;
          virtual void clear(loaded_forms::Form& owner) {}

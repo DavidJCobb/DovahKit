@@ -1,8 +1,16 @@
 #include "./topic_info_fragment_data.h"
 #include "../../../_common_cpp.h"
 
+#include "../../../../notices/form_load_warnings/by_form_component/papyrus/inconsistent_fragment_scriptname.h"
+
+namespace {
+   namespace specific_load_warnings {
+      using namespace dovah::notices::form_load_warnings::by_component::papyrus;
+   }
+}
+
 namespace dovah::loaded_forms::components::papyrus {
-   void topic_info_fragment_data::load(attachment_data& owner, tes_subrecord_reader& subrecord) {
+   void topic_info_fragment_data::load(attachment_data& owner, tes_subrecord_reader& subrecord, load_order_interfaces::form_load& intfc) {
       uint8_t flags = 0;
 
       if (subrecord.is_in_bounds(2)) {
@@ -12,15 +20,35 @@ namespace dovah::loaded_forms::components::papyrus {
       subrecord.read_length_prefixed_string<2>(this->filename);
       if (flags & fragment_flag::has_begin_fragment) {
          auto& frag = this->fragments.on_begin.emplace();
-         if (subrecord.read(frag.unknown))
-            if (subrecord.read_length_prefixed_string<2>(frag.script))
+         if (subrecord.read(frag.unknown)) {
+            if (subrecord.read_length_prefixed_string<2>(frag.script)) {
                subrecord.read_length_prefixed_string<2>(frag.function);
+
+               specific_load_warnings::inconsistent_fragment_scriptname notice(
+                  const_cast<form_stub&>(intfc.target_stub),
+                  specific_load_warnings::inconsistent_fragment_scriptname::fragment_type::on_begin,
+                  this->filename,
+                  frag.script
+               );
+               intfc.log_load_warning(notice);
+            }
+         }
       }
       if (flags & fragment_flag::has_end_fragment) {
          auto& frag = this->fragments.on_end.emplace();
-         if (subrecord.read(frag.unknown))
-            if (subrecord.read_length_prefixed_string<2>(frag.script))
+         if (subrecord.read(frag.unknown)) {
+            if (subrecord.read_length_prefixed_string<2>(frag.script)) {
                subrecord.read_length_prefixed_string<2>(frag.function);
+
+               specific_load_warnings::inconsistent_fragment_scriptname notice(
+                  const_cast<form_stub&>(intfc.target_stub),
+                  specific_load_warnings::inconsistent_fragment_scriptname::fragment_type::on_end,
+                  this->filename,
+                  frag.script
+               );
+               intfc.log_load_warning(notice);
+            }
+         }
       }
    }
    void topic_info_fragment_data::save(attachment_data& owner, tes_subrecord_writer& subrecord, load_order_interfaces::form_save& intfc) {

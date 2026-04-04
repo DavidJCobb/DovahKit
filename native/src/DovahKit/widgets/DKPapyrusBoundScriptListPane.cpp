@@ -359,3 +359,15 @@ std::vector<QString> DKPapyrusBoundScriptListPane::allNonDeletedScriptnames() co
       str.push_back(QString::fromUtf8(item.data(), item.size()));
    return str;
 }
+bool DKPapyrusBoundScriptListPane::hasScript(QString name, bool allow_deleted) const {
+   auto qmi = this->model->index(name);
+   if (!qmi.isValid())
+      return false;
+   if (!allow_deleted) {
+      auto status = this->model->status(qmi);
+      if (status == ui::bound_script_models::vmad::script_status::removed) {
+         return false;
+      }
+   }
+   return true;
+}

@@ -15,6 +15,8 @@
 #include "interfaces/DKDelayedEnableButtonInterface.h"
 #include "interfaces/DKCompactObjectReferencePickerInterface.h"
 #include "interfaces/DKPapyrusFragmentFunctionPickerInterface.h"
+#include "interfaces/DKPapyrusFragmentScriptNamePickerInterface.h"
+#include "interfaces/DKPapyrusFragmentFunctionNamePickerInterface.h"
 #include "interfaces/DKConditionListInterface.h"
 #include "interfaces/DKNavmeshGenerationImportOptionPickerInterface.h"
 #include "interfaces/DKFormInventoryWidgetInterface.h"
@@ -49,6 +51,8 @@ DovahKitQtCustomWidgetsPlugin::DovahKitQtCustomWidgetsPlugin(QObject* parent) : 
    widgets.append(new DKFormDestructionDataButtonInterface(this));
    widgets.append(new DKPapyrusBoundScriptListPaneInterface(this));
    widgets.append(new DKPapyrusFragmentFunctionPickerInterface(this));
+   widgets.append(new DKPapyrusFragmentScriptNamePickerInterface(this));
+   widgets.append(new DKPapyrusFragmentFunctionNamePickerInterface(this));
    widgets.append(new DKConditionListInterface(this));
    widgets.append(new DKFormInventoryWidgetInterface(this));
    widgets.append(new DKNavmeshGenerationImportOptionPickerInterface(this));

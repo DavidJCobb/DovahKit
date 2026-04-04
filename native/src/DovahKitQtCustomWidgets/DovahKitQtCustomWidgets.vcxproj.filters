@@ -211,10 +211,22 @@
     <QtMoc Include="interfaces\DKSliderSpinboxPairIntInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="widgets\DKBreadcrumbBar.h">
+    <QtMoc Include="interfaces\DKBreadcrumbBarInterface.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="interfaces\DKBreadcrumbBarInterface.h">
+    <QtMoc Include="widgets\DKPapyrusFragmentFunctionNamePicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKPapyrusFragmentScriptNamePicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="interfaces\DKPapyrusFragmentScriptNamePickerInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="interfaces\DKPapyrusFragmentFunctionNamePickerInterface.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKBreadcrumbBar.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -405,10 +417,22 @@
     <ClCompile Include="interfaces\DKSliderSpinboxPairIntInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widgets\DKBreadcrumbBar.cpp">
+    <ClCompile Include="interfaces\DKBreadcrumbBarInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="interfaces\DKBreadcrumbBarInterface.cpp">
+    <ClCompile Include="widgets\DKPapyrusFragmentScriptNamePicker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKPapyrusFragmentFunctionNamePicker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="interfaces\DKPapyrusFragmentScriptNamePickerInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="interfaces\DKPapyrusFragmentFunctionNamePickerInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\DKBreadcrumbBar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -416,6 +440,9 @@
     <None Include="README.md" />
     <None Include="cpp.hint" />
     <None Include="EDITING.md" />
+    <None Include="widgets\DKBreadcrumbBar.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="tools\action_editor\ActionEditorWindow.ui" />

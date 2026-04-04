@@ -90,6 +90,7 @@
     <QtModules>core;gui;help;widgets;winextras</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
     <QtDeploy>true</QtDeploy>
+    <QtOptionsBuildLog>true</QtOptionsBuildLog>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>5.15.2 MSVC2019 x64</QtInstall>
@@ -1452,7 +1453,9 @@
     <ClCompile Include="widgets\DKNavmeshGenerationImportOptionPicker.cpp" />
     <ClCompile Include="widgets\DKObjectReferencePicker.cpp" />
     <ClCompile Include="widgets\DKPapyrusBoundScriptListPane.cpp" />
+    <ClCompile Include="widgets\DKPapyrusFragmentFunctionNamePicker.cpp" />
     <ClCompile Include="widgets\DKPapyrusFragmentFunctionPicker.cpp" />
+    <ClCompile Include="widgets\DKPapyrusFragmentScriptNamePicker.cpp" />
     <ClCompile Include="widgets\DKQuestAliasPicker.cpp" />
     <ClCompile Include="widgets\DKSliderSpinboxPairFloat.cpp" />
     <ClCompile Include="widgets\DKSliderSpinboxPairInt.cpp" />
@@ -2036,6 +2039,7 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\navmesh_pathing_cell\bad_crc.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\navmesh_pathing_cell\improper_exterior.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\package_event_dialogue\unrecognized_subrecord.h" />
+    <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\papyrus\inconsistent_fragment_scriptname.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\papyrus\vmad_too_large.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\actor_value_info\unexpected_subrecord_in_perk_tree_node.h" />
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_type\actor_value_info\unterminated_perk_tree_node.h" />
@@ -2235,6 +2239,8 @@
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
     <QtMoc Include="widgets\DKAudioWidgetSimple.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h" />
+    <QtMoc Include="widgets\DKPapyrusFragmentScriptNamePicker.h" />
+    <QtMoc Include="widgets\DKPapyrusFragmentFunctionNamePicker.h" />
     <ClInclude Include="xaudio2\core_interface.h" />
     <ClInclude Include="xaudio2\operation_set_handle.h" />
     <QtMoc Include="xaudio2\simple_fuz_sound.h" />
@@ -4445,6 +4451,10 @@
       <SubType>
       </SubType>
     </None>
+    <None Include="xaudio2\README.md">
+      <SubType>
+      </SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\assets\papyrus-added-edited.png" />
@@ -4547,50 +4557,4 @@
   </ImportGroup>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-  <PropertyGroup>
-    <BuildDependsOn>
-         LogAllBuildInfo;
-         $(BuildDependsOn);
-         LogAllBuildInfo;
-         MakeDirsForCl
-      </BuildDependsOn>
-  </PropertyGroup>
-  <Target Name="LogAllBuildInfo">
-    <Message Text="Microsoft.CppBuild.targets/MakeDirsForCl" />
-    <Message Text="=&gt; PrecompiledHeaderOutputFile  [@(CLCompile-&gt;Metadata('PrecompiledHeaderOutputFile')-&gt;DirectoryName()-&gt;Distinct())]" />
-    <Message Text="=&gt; AssemblerListingLocation     [@(CLCompile-&gt;Metadata('AssemblerListingLocation')-&gt;DirectoryName()-&gt;Distinct())]" />
-    <Message Text="=&gt; ObjectFileName               [@(CLCompile-&gt;Metadata('ObjectFileName')-&gt;DirectoryName()-&gt;Distinct())]" />
-    <Message Text="=&gt; ProgramDataBaseFileName      [@(CLCompile-&gt;Metadata('ProgramDataBaseFileName')-&gt;DirectoryName()-&gt;Distinct())]" />
-    <Message Text="=&gt; XMLDocumentationFileName     [@(CLCompile-&gt;Metadata('XMLDocumentationFileName')-&gt;DirectoryName()-&gt;Distinct())]" />
-    <Message Text="=&gt; BrowseInformationFile        [@(CLCompile-&gt;Metadata('BrowseInformationFile')-&gt;DirectoryName()-&gt;Distinct())]" />
-    <Message Text="=&gt; PreprocessOutputPath         [@(CLCompile-&gt;Metadata('PreprocessOutputPath')-&gt;DirectoryName()-&gt;Distinct())]" />
-    <Message Text="=&gt; PreprocessorDefinitions      [@(CLCompile-&gt;Metadata('PreprocessorDefinitions')-&gt;Distinct())]" />
-    <Message Text="=&gt; ClDirsToMake                 [@(ClDirsToMake)]" />
-  </Target>
-  <!-- BEGIN JANKY WORKAROUND TO FORCE-KILL MODULES -->
-  <PropertyGroup>
-    <ComputeCompileInputsTargets>
-         $(ComputeCompileInputsTargets);
-         ForciblyDisableModules;
-      </ComputeCompileInputsTargets>
-  </PropertyGroup>
-  <Target Name="ForciblyDisableModules">
-    <PropertyGroup>
-      <EnableCppModules>false</EnableCppModules>
-      <EnableStdModules>false</EnableStdModules>
-    </PropertyGroup>
-  </Target>
-  <Target Name="ComputeStdModulesCompileInputs" Condition="'@(ClCompile)' != ''">
-    <!-- override -->
-    <PropertyGroup>
-      <EnableStdModules>false</EnableStdModules>
-    </PropertyGroup>
-  </Target>
-  <Target Name="SetModuleDependencies">
-    <!-- override -->
-    <ItemGroup>
-      <_ClCompileWithModuleDependencies Remove="@(_ClCompileWithModuleDependencies)" />
-    </ItemGroup>
-  </Target>
-  <!-- END JANKY WORKAROUND TO FORCE-KILL MODULES -->
 </Project>

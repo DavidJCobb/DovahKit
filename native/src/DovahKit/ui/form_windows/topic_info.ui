@@ -19,46 +19,71 @@
      <property name="title">
       <string>Scripts</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,1,0">
-      <item row="0" column="0">
-       <widget class="DKPapyrusFragmentFunctionPicker" name="fragmentBegin">
-        <property name="whatsThis">
-         <string>You can select a Papyrus function to run when the NPC begins saying this info.</string>
-        </property>
-        <property name="headerText">
-         <string>&quot;Begin&quot; fragment data</string>
-        </property>
-       </widget>
+     <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0,0,0">
+      <item row="1" column="1">
+       <layout class="QGridLayout" name="gridLayout_8">
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_15">
+          <property name="text">
+           <string>&quot;Begin&quot; Function:</string>
+          </property>
+          <property name="buddy">
+           <cstring>fragFunctionBegin</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_14">
+          <property name="text">
+           <string>Fragment Script:</string>
+          </property>
+          <property name="buddy">
+           <cstring>fragScript</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="DKPapyrusFragmentFunctionNamePicker" name="fragFunctionEnd">
+          <property name="whatsThis">
+           <string>&lt;p&gt;The game can be directed to call a Papyrus function when an actor begins to say this Topic Info, and/or when an actor finishes saying this Topic Info. The Papyrus functions must both come from the same script, must have no return value, and must take an &lt;code&gt;ObjectReference&lt;/code&gt; argument (the actor saying the dialogue lines).&lt;/p&gt;
+&lt;p&gt;The Creation Kit presents this functionality as &quot;fragment scripts:&quot; it offers two textboxes for typing script code. Under the hood, the Creation Kit modifies a single Papyrus script file, attaches that script to the Topic Info, and attaches hidden data to the Topic Info indicating the names of the functions to call.&lt;/p&gt;</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_16">
+          <property name="text">
+           <string>&quot;End&quot; Function:</string>
+          </property>
+          <property name="buddy">
+           <cstring>fragFunctionEnd</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="DKPapyrusFragmentFunctionNamePicker" name="fragFunctionBegin">
+          <property name="whatsThis">
+           <string>&lt;p&gt;The game can be directed to call a Papyrus function when an actor begins to say this Topic Info, and/or when an actor finishes saying this Topic Info. The Papyrus functions must both come from the same script, must have no return value, and must take an &lt;code&gt;ObjectReference&lt;/code&gt; argument (the actor saying the dialogue lines).&lt;/p&gt;
+&lt;p&gt;The Creation Kit presents this functionality as &quot;fragment scripts:&quot; it offers two textboxes for typing script code. Under the hood, the Creation Kit modifies a single Papyrus script file, attaches that script to the Topic Info, and attaches hidden data to the Topic Info indicating the names of the functions to call.&lt;/p&gt;</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="DKPapyrusFragmentScriptNamePicker" name="fragScript">
+          <property name="whatsThis">
+           <string>&lt;p&gt;The game can be directed to call a Papyrus function when an actor begins to say this Topic Info, and/or when an actor finishes saying this Topic Info. The Papyrus functions must both come from the same script, must have no return value, and must take an &lt;code&gt;ObjectReference&lt;/code&gt; argument (the actor saying the dialogue lines).&lt;/p&gt;
+&lt;p&gt;The Creation Kit presents this functionality as &quot;fragment scripts:&quot; it offers two textboxes for typing script code. Under the hood, the Creation Kit modifies a single Papyrus script file, attaches that script to the Topic Info, and attaches hidden data to the Topic Info indicating the names of the functions to call.&lt;/p&gt;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
-      <item row="2" column="0">
-       <widget class="DKPapyrusFragmentFunctionPicker" name="fragmentEnd">
-        <property name="whatsThis">
-         <string>You can select a Papyrus function to run roughly when the NPC finishes saying this info. The function may run a second or two late, and the conversation (e.g. the dialogue menu) will not wait for your Papyrus function to finish executing.</string>
-        </property>
-        <property name="headerText">
-         <string>&quot;End&quot; fragment data</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1" rowspan="3">
+      <item row="0" column="1">
        <widget class="DKPapyrusBoundScriptListPane" name="scriptListPane">
         <property name="usesGroupbox">
          <bool>false</bool>
         </property>
        </widget>
-      </item>
-      <item row="1" column="0">
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
       </item>
      </layout>
     </widget>
@@ -558,9 +583,14 @@
    <header>widgets/DKPapyrusBoundScriptListPane.h</header>
   </customwidget>
   <customwidget>
-   <class>DKPapyrusFragmentFunctionPicker</class>
+   <class>DKPapyrusFragmentScriptNamePicker</class>
    <extends>QWidget</extends>
-   <header>widgets/DKPapyrusFragmentFunctionPicker.h</header>
+   <header>widgets/DKPapyrusFragmentScriptNamePicker.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DKPapyrusFragmentFunctionNamePicker</class>
+   <extends>QWidget</extends>
+   <header>widgets/DKPapyrusFragmentFunctionNamePicker.h</header>
   </customwidget>
   <customwidget>
    <class>DKConditionList</class>
@@ -595,9 +625,10 @@
   <tabstop>walkAwayGroupbox</tabstop>
   <tabstop>walkAwayTopic</tabstop>
   <tabstop>flagWalkAwayTopicInvis</tabstop>
-  <tabstop>fragmentBegin</tabstop>
-  <tabstop>fragmentEnd</tabstop>
   <tabstop>scriptListPane</tabstop>
+  <tabstop>fragScript</tabstop>
+  <tabstop>fragFunctionBegin</tabstop>
+  <tabstop>fragFunctionEnd</tabstop>
   <tabstop>buttonOK</tabstop>
   <tabstop>buttonCancel</tabstop>
  </tabstops>
