@@ -23,14 +23,15 @@ namespace dovah::loaded_forms::components::papyrus {
          if (subrecord.read(frag.unknown)) {
             if (subrecord.read_length_prefixed_string<2>(frag.script)) {
                subrecord.read_length_prefixed_string<2>(frag.function);
-
-               specific_load_warnings::inconsistent_fragment_scriptname notice(
-                  const_cast<form_stub&>(intfc.target_stub),
-                  specific_load_warnings::inconsistent_fragment_scriptname::fragment_type::on_begin,
-                  this->filename,
-                  frag.script
-               );
-               intfc.log_load_warning(notice);
+               if (frag.script != this->filename) {
+                  specific_load_warnings::inconsistent_fragment_scriptname notice(
+                     const_cast<form_stub&>(intfc.target_stub),
+                     specific_load_warnings::inconsistent_fragment_scriptname::fragment_type::on_begin,
+                     this->filename,
+                     frag.script
+                  );
+                  intfc.log_load_warning(notice);
+               }
             }
          }
       }
@@ -39,14 +40,15 @@ namespace dovah::loaded_forms::components::papyrus {
          if (subrecord.read(frag.unknown)) {
             if (subrecord.read_length_prefixed_string<2>(frag.script)) {
                subrecord.read_length_prefixed_string<2>(frag.function);
-
-               specific_load_warnings::inconsistent_fragment_scriptname notice(
-                  const_cast<form_stub&>(intfc.target_stub),
-                  specific_load_warnings::inconsistent_fragment_scriptname::fragment_type::on_end,
-                  this->filename,
-                  frag.script
-               );
-               intfc.log_load_warning(notice);
+               if (frag.script != this->filename) {
+                  specific_load_warnings::inconsistent_fragment_scriptname notice(
+                     const_cast<form_stub&>(intfc.target_stub),
+                     specific_load_warnings::inconsistent_fragment_scriptname::fragment_type::on_end,
+                     this->filename,
+                     frag.script
+                  );
+                  intfc.log_load_warning(notice);
+               }
             }
          }
       }
