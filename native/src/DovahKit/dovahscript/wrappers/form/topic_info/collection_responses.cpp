@@ -39,16 +39,40 @@ namespace {
       }
       api_helpers::fail_table_if_expandos(L, pos, std::array{
          std::string_view("edits"),
+         std::string_view("emotion_type"),
+         std::string_view("emotion_value"),
          std::string_view("listener_idle"),
          std::string_view("script_notes"),
          std::string_view("speaker_idle"),
          std::string_view("substitute_sound"),
          std::string_view("text"),
+         std::string_view("unique_id"),
       });
 
       lua_getfield(L, pos, "edits");
       cobb::lua::argcheck(L, lua_isnoneornil(L, -1) || lua_isstring(L, -1), pos, "table's `edits` field is not a string");
       lua_pop(L, 1);
+      {
+         lua_getfield(L, pos, "emotion_type");
+         if (!lua_isnoneornil(L, -1)) {
+            if (!lua_isstring(L, -1))
+               cobb::lua::argerror(L, pos, "table's `emotion_type` field is not an integer");
+            if (!wrappers::topic_info_response::emotion_from_string(lua_tostring(L, -1)))
+               cobb::lua::argerror(L, pos, "table's `emotion_type` field does not have a recognized value");
+         }
+         lua_pop(L, 1);
+      }
+      {
+         lua_getfield(L, pos, "emotion_value");
+         if (!lua_isnoneornil(L, -1)) {
+            if (!lua_isinteger(L, -1))
+               cobb::lua::argerror(L, pos, "table's `emotion_value` field is not an integer");
+            auto v = lua_tointeger(L, -1);
+            if (v < 0 || v > 100)
+               cobb::lua::argerror(L, pos, "table's `emotion_value` field is out of bounds");
+         }
+         lua_pop(L, 1);
+      }
       {
          lua_getfield(L, pos, "listener_idle");
          if (!lua_isnoneornil(L, -1)) {
@@ -82,11 +106,35 @@ namespace {
       lua_getfield(L, pos, "text");
       cobb::lua::argcheck(L, lua_isnoneornil(L, -1) || lua_isstring(L, -1), pos, "table's `text` field is not a string");
       lua_pop(L, 1);
+      {
+         lua_getfield(L, pos, "unique_id");
+         if (!lua_isnoneornil(L, -1)) {
+            if (!lua_isinteger(L, -1))
+               cobb::lua::argerror(L, pos, "table's `unique_id` field is not an integer");
+            auto v = lua_tointeger(L, -1);
+            if (v < 0 || v > wrapped_type::max_available_response_ids)
+               cobb::lua::argerror(L, pos, "table's `unique_id` field is out of bounds");
+         }
+         lua_pop(L, 1);
+      }
    }
    static void table_to_response(lua_State* L, int pos, wrapped_type& form, wrapped_type::response& dst) {
       lua_getfield(L, pos, "edits");
       if (!lua_isnoneornil(L, -1)) {
          dst.edits = lua_tostring(L, -1);
+      }
+      lua_pop(L, 1);
+
+      lua_getfield(L, pos, "emotion_type");
+      if (!lua_isnoneornil(L, -1)) {
+         auto v = lua_tostring(L, -1);
+         dst.emotion.type = wrappers::topic_info_response::emotion_from_string(v).value();
+      }
+      lua_pop(L, 1);
+
+      lua_getfield(L, pos, "emotion_value");
+      if (!lua_isnoneornil(L, -1)) {
+         dst.emotion.value = lua_tointeger(L, -1);
       }
       lua_pop(L, 1);
 
@@ -131,6 +179,11 @@ namespace {
          dst.text = lua_tostring(L, -1);
       }
       lua_pop(L, 1);
+
+      lua_getfield(L, pos, "unique_id");
+      if (!lua_isinteger(L, -1))
+         dst.id = lua_tointeger(L, -1);
+      lua_pop(L, 1);
    }
 
    // ---
@@ -173,6 +226,7 @@ namespace {
       int  insert_at = form->responses.size();
       int  pos_value = 2;
       bool has_value = false;
+      bool has_uid   = false;
       {
          if (lua_gettop(L) >= 3) {
             pos_value = 3;
@@ -186,10 +240,48 @@ namespace {
          if (!lua_isnoneornil(L, pos_value)) {
             verify_table_arg_is_response_like(L, pos_value);
             has_value = true;
+
+            std::optional<uint8_t> unique_id;
+            {
+               lua_getfield(L, pos_value, "unique_id");
+               if (lua_isinteger(L, -1)) {
+                  auto v = lua_tointeger(L, -1);
+                  assert(v >= 0 && v <= wrapped_type::max_available_response_ids);
+                  unique_id = v;
+               }
+               lua_pop(L, 1);
+            }
+            if (unique_id.has_value()) {
+               has_uid = true;
+               for (auto& item : list)
+                  if (item.id == unique_id.value())
+                     cobb::lua::argerror(L, 2, "the provided table has a `unique_id` which is already in use by an existing response");
+            }
          }
       }
       if (!form)
          return 0;
+
+      uint8_t generated_uid = 0;
+      if (!has_uid) {
+         cobb::bitset<255> used_ids;
+         for (auto& item : list) {
+            used_ids.set(item.id);
+         }
+         if (used_ids.all()) {
+            cobb::lua::error(L, "this `topic_info` form has no more unique IDs left for new responses");
+         }
+         used_ids.set(0);
+         if (used_ids.all()) {
+            cobb::lua::warning(L, "this `topic_info` form only has unique ID 0 available for new responses; this ID is a sentinel value used when recording lines in the Creation Kit");
+         } else {
+            //
+            // TODO: Prefer `highest_set_bit + 1` unless the highest set bit is the 255th bit, 
+            //       in which case fall through to the first clear bit.
+            //
+            generated_uid = used_ids.find_first_clear();
+         }
+      }
 
       self.before_edit();
       {
@@ -201,6 +293,9 @@ namespace {
          }
          if (has_value) {
             table_to_response(L, pos_value, *form, list[insert_at]);
+         }
+         if (!has_uid) {
+            list[insert_at].id = generated_uid;
          }
       }
       self.after_edit();
@@ -256,9 +351,33 @@ namespace {
          if (i > size) {
             cobb::lua::warning(L, "index %s is out of bounds; empty elements will be created between the end of the list and the new element", lua_tolstring(L, index_key, nullptr));
          }
-         list.resize(i + 1);
       }
+
+      {  // enforce that any passed-in unique ID actually is unique within this TopicInfo
+         std::optional<uint8_t> unique_id;
+         {
+            lua_getfield(L, index_value, "unique_id");
+            if (lua_isinteger(L, -1)) {
+               auto v = lua_tointeger(L, -1);
+               assert(v >= 0 && v <= wrapped_type::max_available_response_ids);
+               unique_id = v;
+            }
+            lua_pop(L, 1);
+         }
+         if (unique_id.has_value()) {
+            for (size_t j = 0; j < size; ++j) {
+               if (j == i)
+                  continue;
+               auto& item = list[j];
+               if (item.id == unique_id.value())
+                  cobb::lua::argerror(L, 2, "the provided table has a `unique_id` which is already in use by a different response");
+            }
+         }
+      }
+
       self.before_edit();
+      if (i >= size)
+         list.resize(i + 1);
       table_to_response(L, index_value, *form, list[i]);
       self.after_edit();
       return 0;

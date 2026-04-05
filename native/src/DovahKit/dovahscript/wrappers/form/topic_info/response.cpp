@@ -1,17 +1,15 @@
 #include "response.h"
-#include "../../../../helpers/lua/error.h"
-#include "../../../core/subsystems/permissions.h"
-#include "../../../core/subsystems/userdata.h"
-#include "../../../pull_native_object.h"
-#include "../../../push_native_object.h"
-#include "../../../wrapper.h"
-
-#include "../../../../dovah/forms/TopicInfo.h"
+#include "helpers/lua/error.h"
+#include "dovahscript/core/subsystems/permissions.h"
+#include "dovahscript/core/subsystems/userdata.h"
+#include "dovahscript/pull_native_object.h"
+#include "dovahscript/push_native_object.h"
+#include "dovahscript/wrapper.h"
 
 namespace {
    using namespace dovahscript;
-   using cls          = wrappers::topic_info_response;
-   using form_type    = dovah::loaded_forms::TopicInfo;
+   using cls = wrappers::topic_info_response;
+   using form_type = dovah::loaded_forms::TopicInfo;
    using wrapped_type = cls::wrapped_type;
 
    static wrapped_type* _unwrap(wrapper& w) {
@@ -39,17 +37,28 @@ namespace {
    constexpr const auto emotion_type_names = []() {
       using pair_type = std::pair<dovah::dialogue::emotion, std::string_view>;
       return std::array{
-         pair_type{ dovah::dialogue::emotion::anger, "anger" },
-         pair_type{ dovah::dialogue::emotion::disgust, "disgust" },
-         pair_type{ dovah::dialogue::emotion::fear, "fear" },
-         pair_type{ dovah::dialogue::emotion::happy, "happy" },
-         pair_type{ dovah::dialogue::emotion::neutral, "neutral" },
-         pair_type{ dovah::dialogue::emotion::puzzled, "puzzled" },
-         pair_type{ dovah::dialogue::emotion::sad, "sad" },
+         pair_type{ dovah::dialogue::emotion::anger,    "anger" },
+         pair_type{ dovah::dialogue::emotion::disgust,  "disgust" },
+         pair_type{ dovah::dialogue::emotion::fear,     "fear" },
+         pair_type{ dovah::dialogue::emotion::happy,    "happy" },
+         pair_type{ dovah::dialogue::emotion::neutral,  "neutral" },
+         pair_type{ dovah::dialogue::emotion::puzzled,  "puzzled" },
+         pair_type{ dovah::dialogue::emotion::sad,      "sad" },
          pair_type{ dovah::dialogue::emotion::surprise, "surprise" },
       };
    }();
+}
 
+namespace dovahscript::wrappers {
+   /*static*/ std::optional<dovah::dialogue::emotion> topic_info_response::emotion_from_string(std::string_view v) {
+      for (const auto& pair : emotion_type_names)
+         if (v == pair.second)
+            return pair.first;
+      return {};
+   }
+}
+
+namespace {
    namespace _getters {
       int edits(lua_State* L) {
          auto& data = _unwrap_and_require(L);
@@ -100,6 +109,11 @@ namespace {
          lua_pushstring(L, data.text.c_str());
          return 1;
       }
+      int unique_id(lua_State* L) {
+         auto& data = _unwrap_and_require(L);
+         lua_pushinteger(L, data.id);
+         return 1;
+      }
    }
    namespace _setters {
       int edits(lua_State* L) {
@@ -124,16 +138,10 @@ namespace {
          dovah::dialogue::emotion v;
          {
             std::string_view raw = lua_tostring(L, 2);
-            bool found = false;
-            for (const auto& pair : emotion_type_names) {
-               if (raw == pair.second) {
-                  v     = pair.first;
-                  found = true;
-                  break;
-               }
-            }
-            if (!found)
+            auto opt = wrappers::topic_info_response::emotion_from_string(raw);
+            if (!opt.has_value())
                cobb::lua::argerror(L, 2, "unrecognized emotion type");
+            v = opt.value();
          }
          self.before_edit();
          data.emotion.type = v;
@@ -220,6 +228,32 @@ namespace {
          self.after_edit();
          return 0;
       }
+      int unique_id(lua_State* L) {
+         core::subsystems::permissions::verify_form_write_permissions();
+         //
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto& data = _unwrap_and_require(L);
+         luaL_argcheck(L, lua_isinteger(L, 2), 2, "integer expected");
+         auto v = lua_tointeger(L, 2);
+         if (v < 0 || v > form_type::max_available_response_ids)
+            luaL_argerror(L, 2, "response IDs must be in the range [0, 255]");
+         if (v == 0)
+            lua_warning(L, "a response ID of 0 is invalid (it is the sentinel used while recording lines in the Creation Kit)", 0);
+
+         if (data.id == v)
+            return 0;
+         auto* form = self.get_loaded_form_data<form_type>();
+         for (auto& resp : form->responses) {
+            if (resp.id == v && &resp != &data) {
+               luaL_argerror(L, 2, "the provided response ID is already in use by another response on this TopicInfo");
+            }
+         }
+
+         self.before_edit();
+         data.id = v;
+         self.after_edit();
+         return 1;
+      }
    }
 }
 
@@ -236,6 +270,7 @@ namespace dovahscript::wrappers {
       { "speaker_idle",     &_getters::speaker_idle },
       { "substitute_sound", &_getters::substitute_sound },
       { "text",             &_getters::text },
+      { "unique_id",        &_getters::unique_id },
    };
    /*static*/ const std::initializer_list<luaL_Reg> cls::metatable_setters = {
       { "edits",            &_setters::edits },
@@ -246,5 +281,6 @@ namespace dovahscript::wrappers {
       { "speaker_idle",     &_setters::speaker_idle },
       { "substitute_sound", &_setters::substitute_sound },
       { "text",             &_setters::text },
+      { "unique_id",        &_setters::unique_id },
    };
 }

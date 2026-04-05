@@ -1,6 +1,8 @@
 #pragma once
+#include <optional>
 #include "../topic_info.h"
-#include "../../../../dovah/forms/TopicInfo.h"
+#include "dovah/data/dialogue/emotion.h"
+#include "dovah/forms/TopicInfo.h"
 
 namespace dovahscript::wrappers {
    struct topic_info_response : public wrapper_metatable {
@@ -12,5 +14,7 @@ namespace dovahscript::wrappers {
       static method_list_t metatable_setters;
 
       using wrapped_type = dovah::loaded_forms::TopicInfo::response;
+
+      static std::optional<dovah::dialogue::emotion> emotion_from_string(std::string_view);
    };
 }
