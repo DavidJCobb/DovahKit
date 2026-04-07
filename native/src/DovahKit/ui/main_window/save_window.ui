@@ -221,9 +221,16 @@
   </layout>
  </widget>
  <tabstops>
+  <tabstop>filename</tabstop>
+  <tabstop>game</tabstop>
   <tabstop>flagMaster</tabstop>
   <tabstop>flagLight</tabstop>
+  <tabstop>compressionPolicy</tabstop>
+  <tabstop>compressionThreshold</tabstop>
+  <tabstop>flagUse1Point71FormIDSpace</tabstop>
   <tabstop>dependencies</tabstop>
+  <tabstop>buttonOK</tabstop>
+  <tabstop>buttonCancel</tabstop>
  </tabstops>
  <resources/>
  <connections/>

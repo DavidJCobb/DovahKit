@@ -280,8 +280,10 @@ namespace {
          cobb::lua::rawgetfield(L, index_meta, "__classlist");
          auto index_list = 4;
          //
-         #if _DEBUG
-            const char* __key = lua_tostring(L, index_key);
+         #if _DEBUG // give us a variable we can inspect for ease of debugging
+            lua_pushvalue(L, index_key); // copy value to ensure we don't coerce the original to a string
+            const char* __key = lua_tostring(L, -1);
+            lua_pop(L, 1);
          #endif
          //
          auto count = lua_rawlen(L, index_list);

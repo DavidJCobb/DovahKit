@@ -1,6 +1,7 @@
 #include "./parameter_set.h"
 #include <limits>
 #include "helpers/lua/error.h"
+#include "helpers/lua/warning.h"
 #include "dovahscript/core/subsystems/permissions.h"
 #include "dovahscript/core/subsystems/userdata.h"
 #include "dovahscript/core/classes.h"
@@ -8,6 +9,7 @@
 #include "dovahscript/push_native_object.h"
 #include "dovahscript/wrapper.h"
 
+#include "dovah/data/conditions/all_function_info.h"
 #include "dovah/data/conditions/event_function.h"
 #include "dovah/data/conditions/function_info.h"
 #include "dovah/data/conditions/parameter_typeinfo.h"
@@ -157,6 +159,38 @@ namespace {
       }
    }
    namespace _setters {
+      void _warn_on_param(
+         lua_State* L,
+         size_t which,
+         uint16_t function_id,
+         const dovah::loaded_forms::components::conditions::working_parameter& param
+      ) {
+         if (which == 0) {
+            switch (function_id) {
+               case dovah::conditions::function_id_by_name("GetPos"):
+                  if (auto* casted = std::get_if<char>(&param)) {
+                     switch (*casted) {
+                        case 'X':
+                        case 'Y':
+                        case 'Z':
+                           break;
+                        case 'x':
+                        case 'y':
+                        case 'z':
+                           cobb::lua::warning(L, "axis '%c' is not valid for GetPos conditions (axis name must be uppercase); this condition will always return false in-game", *casted);
+                           break;
+                        default:
+                           cobb::lua::warning(L, "axis '%c' is not valid for GetPos conditions (axis name must be 'X', 'Y', or 'Z'); this condition will always return false in - game", *casted);
+                           break;
+                     }
+                  }
+                  break;
+            }
+         } else {
+            // ...
+         }
+      }
+
       void _edit_param(lua_State* L, size_t which) {
          core::subsystems::permissions::verify_form_write_permissions();
 
@@ -291,6 +325,8 @@ namespace {
          self.before_edit();
          data->commit(*form, working);
          self.after_edit();
+
+         _warn_on_param(L, which, working.function, param);
       }
 
       template<typename CheckFunctor, typename EditFunctor>
