@@ -317,30 +317,40 @@ namespace {
          return push_native_object(result);
       }
       int object_is(lua_State* L) {
+         struct stack_offset {
+            enum {
+               arg_subject     = 1,
+               arg_classname   = 2,
+               class_metatable = 3,
+               class_list      = 4,
+               class_list_item = 5,
+               class_name      = 6,
+            };
+         };
          lua_settop(L, 2);
-         constexpr int index_obj = 1;
-         constexpr int index_req = 2;
-         constexpr int index_mt  = 3;
-         //
-         luaL_argcheck(L, lua_isstring(L, index_req), 2, "typename (string) expected");
-         auto  t   = lua_type    (L, index_obj);
-         auto* req = lua_tostring(L, index_req);
+         luaL_argcheck(L, lua_isstring(L, stack_offset::arg_classname), stack_offset::arg_classname, "typename (string) expected");
+         auto  t   = lua_type    (L, stack_offset::arg_subject);
+         auto* req = lua_tostring(L, stack_offset::arg_classname);
          if (t == LUA_TTABLE || t == LUA_TUSERDATA) {
-            lua_getmetatable(L, index_obj);
-            assert(lua_gettop(L) == index_mt);
-            while (lua_type(L, index_mt) == LUA_TTABLE) {
+            lua_getmetatable(L, stack_offset::arg_subject);
+            assert(lua_gettop(L) == stack_offset::class_metatable);
+            lua_pushstring(L, "__classlist");
+            lua_rawget(L, stack_offset::class_metatable);
+            if (!lua_istable(L, stack_offset::class_list)) {
+               lua_pushboolean(L, false);
+               return 1;
+            }
+            auto len = lua_rawlen(L, stack_offset::class_list);
+            for (decltype(len) i = 1; i <= len; ++i) {
+               lua_rawgeti(L, stack_offset::class_list, i);
                lua_pushstring(L, "__name");
-               if (lua_rawget(L, index_mt) == LUA_TSTRING) {
-                  auto* tn = lua_tostring(L, -1);
-                  if (strcmp(tn, req) == 0) {
+               if (lua_rawget(L, stack_offset::class_list_item) == LUA_TSTRING) {
+                  if (lua_rawequal(L, stack_offset::arg_classname, stack_offset::class_name)) {
                      lua_pushboolean(L, true);
                      return 1;
                   }
                }
-               lua_settop(L, index_mt);
-               lua_pushstring(L, "__superclass");
-               lua_rawget    (L, index_mt);
-               lua_replace(L, index_mt);
+               lua_settop(L, stack_offset::class_list);
             }
          }
          const char* tn  = lua_typename(L, t);

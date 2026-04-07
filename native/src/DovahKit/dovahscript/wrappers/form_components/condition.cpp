@@ -385,6 +385,8 @@ namespace {
                   working.run_on.entity.emplace<dovah::form_stub*>(ref);
                } else if (index.has_value()) {
                   working.run_on.entity.emplace<uint32_t>(index.value());
+               } else {
+                  working.run_on.entity.emplace<std::monostate>();
                }
             }
          );
