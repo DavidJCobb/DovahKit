@@ -10043,6 +10043,45 @@
     <ClInclude Include="dovah\notices\form_load_warnings\by_form_component\papyrus\inconsistent_fragment_scriptname.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\table_contains_expandos.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tuples\all_types_match_functor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\property_definition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\is_property_tuple_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\property_name_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\verify_table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\common_lambdas.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\form_property_definition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\localized_string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\make_getters_and_setters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\apply_table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\tuples\for_each_nttp_value.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helpers\attributes\forceinline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\main_window.ui">

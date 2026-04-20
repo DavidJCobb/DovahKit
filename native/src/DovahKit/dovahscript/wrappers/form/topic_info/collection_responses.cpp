@@ -29,95 +29,6 @@ namespace {
       return *self;
    }
 
-   static void verify_table_arg_is_response_like(lua_State* L, int pos) {
-      switch (lua_type(L, pos)) {
-         case LUA_TTABLE:
-         case LUA_TUSERDATA:
-            break;
-         default:
-            cobb::lua::argerror(L, pos, "expected table or userdata");
-      }
-      api_helpers::fail_table_if_expandos(L, pos, std::array{
-         std::string_view("edits"),
-         std::string_view("emotion_type"),
-         std::string_view("emotion_value"),
-         std::string_view("listener_idle"),
-         std::string_view("script_notes"),
-         std::string_view("speaker_idle"),
-         std::string_view("substitute_sound"),
-         std::string_view("text"),
-         std::string_view("unique_id"),
-      });
-
-      lua_getfield(L, pos, "edits");
-      cobb::lua::argcheck(L, lua_isnoneornil(L, -1) || lua_isstring(L, -1), pos, "table's `edits` field is not a string");
-      lua_pop(L, 1);
-      {
-         lua_getfield(L, pos, "emotion_type");
-         if (!lua_isnoneornil(L, -1)) {
-            if (!lua_isstring(L, -1))
-               cobb::lua::argerror(L, pos, "table's `emotion_type` field is not an integer");
-            if (!wrappers::topic_info_response::emotion_from_string(lua_tostring(L, -1)))
-               cobb::lua::argerror(L, pos, "table's `emotion_type` field does not have a recognized value");
-         }
-         lua_pop(L, 1);
-      }
-      {
-         lua_getfield(L, pos, "emotion_value");
-         if (!lua_isnoneornil(L, -1)) {
-            if (!lua_isinteger(L, -1))
-               cobb::lua::argerror(L, pos, "table's `emotion_value` field is not an integer");
-            auto v = lua_tointeger(L, -1);
-            if (v < 0 || v > 100)
-               cobb::lua::argerror(L, pos, "table's `emotion_value` field is out of bounds");
-         }
-         lua_pop(L, 1);
-      }
-      {
-         lua_getfield(L, pos, "listener_idle");
-         if (!lua_isnoneornil(L, -1)) {
-            auto* w = wrapper_from_stack<wrappers::form>(L, -1);
-            if (!w || w->stub->form_type != dovah::form_type::idle)
-               cobb::lua::argerror(L, pos, "table's `listener_idle` field is not an idle animation");
-         }
-         lua_pop(L, 1);
-      }
-      lua_getfield(L, pos, "script_notes");
-      cobb::lua::argcheck(L, lua_isnoneornil(L, -1) || lua_isstring(L, -1), pos, "table's `script_notes` field is not a string");
-      lua_pop(L, 1);
-      {
-         lua_getfield(L, pos, "speaker_idle");
-         if (!lua_isnoneornil(L, -1)) {
-            auto* w = wrapper_from_stack<wrappers::form>(L, -1);
-            if (!w || w->stub->form_type != dovah::form_type::idle)
-               cobb::lua::argerror(L, pos, "table's `listener_idle` field is not an idle form");
-         }
-         lua_pop(L, 1);
-      }
-      {
-         lua_getfield(L, pos, "substitute_sound");
-         if (!lua_isnoneornil(L, -1)) {
-            auto* w = wrapper_from_stack<wrappers::form>(L, -1);
-            if (!w || w->stub->form_type != dovah::form_type::sound)
-               cobb::lua::argerror(L, pos, "table's `substitute_sound` field is not a sound form");
-         }
-         lua_pop(L, 1);
-      }
-      lua_getfield(L, pos, "text");
-      cobb::lua::argcheck(L, lua_isnoneornil(L, -1) || lua_isstring(L, -1), pos, "table's `text` field is not a string");
-      lua_pop(L, 1);
-      {
-         lua_getfield(L, pos, "unique_id");
-         if (!lua_isnoneornil(L, -1)) {
-            if (!lua_isinteger(L, -1))
-               cobb::lua::argerror(L, pos, "table's `unique_id` field is not an integer");
-            auto v = lua_tointeger(L, -1);
-            if (v < 0 || v > wrapped_type::max_available_response_ids)
-               cobb::lua::argerror(L, pos, "table's `unique_id` field is out of bounds");
-         }
-         lua_pop(L, 1);
-      }
-   }
    static void table_to_response(lua_State* L, int pos, wrapped_type& form, wrapped_type::response& dst) {
       lua_getfield(L, pos, "edits");
       if (!lua_isnoneornil(L, -1)) {
@@ -238,7 +149,12 @@ namespace {
          }
 
          if (!lua_isnoneornil(L, pos_value)) {
-            verify_table_arg_is_response_like(L, pos_value);
+            {
+               auto message = wrappers::topic_info_response::verify_table_is_response_like(L, pos_value);
+               if (!message.empty()) {
+                  cobb::lua::error(L, "bad argument #%d to 'topic_info_response_list:insert': %s", pos_value, message.data());
+               }
+            }
             has_value = true;
 
             std::optional<uint8_t> unique_id;
@@ -292,7 +208,13 @@ namespace {
             core::subsystems::userdata::get().insert_into_sequential_collection(self, insert_at);
          }
          if (has_value) {
-            table_to_response(L, pos_value, *form, list[insert_at]);
+            wrappers::topic_info_response::modify_from_table(
+               *form,
+               list[insert_at],
+               L,
+               pos_value,
+               false
+            );
          }
          if (!has_uid) {
             list[insert_at].id = generated_uid;
@@ -334,7 +256,12 @@ namespace {
       constexpr auto index_key   = 2;
       constexpr auto index_value = 3;
 
-      verify_table_arg_is_response_like(L, index_value);
+      {
+         auto message = wrappers::topic_info_response::verify_table_is_response_like(L, index_value);
+         if (!message.empty()) {
+            cobb::lua::error(L, "bad assignment to 'topic_info_response_list[...]': %s", index_value, message.data());
+         }
+      }
 
       auto& self = get_collection_wrapper(L);
       auto* form = self.get_loaded_form_data<wrapped_type>();
@@ -378,7 +305,13 @@ namespace {
       self.before_edit();
       if (i >= size)
          list.resize(i + 1);
-      table_to_response(L, index_value, *form, list[i]);
+      wrappers::topic_info_response::modify_from_table(
+         *form,
+         list[i],
+         L,
+         index_value,
+         true
+      );
       self.after_edit();
       return 0;
    }

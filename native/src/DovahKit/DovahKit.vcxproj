@@ -1516,6 +1516,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dovahscript\api_helpers\fail_table_if_expandos.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\apply_table.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\common_lambdas.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\make_getters_and_setters.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\property_definition.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\property_name_list.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\is_property_tuple_type.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\form_property_definition.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\localized_string.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\verify_table.h" />
+    <ClInclude Include="dovahscript\api_helpers\table_contains_expandos.h" />
     <ClInclude Include="dovahscript\wrappers\form\dialogue_branch.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh\collection_base_forms.h" />
@@ -2238,6 +2248,9 @@
     <ClInclude Include="editor\helpers\form_stub_drag_drop.h" />
     <ClInclude Include="editor\helpers\backend_warning_to_string.h" />
     <QtMoc Include="widgets\DKAudioWidgetSimple.h" />
+    <ClInclude Include="helpers\attributes\forceinline.h" />
+    <ClInclude Include="helpers\tuples\all_types_match_functor.h" />
+    <ClInclude Include="helpers\tuples\for_each_nttp_value.h" />
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentScriptNamePicker.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentFunctionNamePicker.h" />
