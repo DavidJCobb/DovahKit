@@ -531,6 +531,7 @@ namespace dovahscript::classes {
          end
       */
       auto  guard = cobb::lua::set_top_on_exit(L, lua_gettop(L));
+      stack_pos = lua_absindex(L, stack_pos);
       void* ud    = lua_touserdata(L, stack_pos);
       if (!ud)
          return nullptr;

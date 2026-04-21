@@ -47,9 +47,8 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
       template<typename T>
       concept lua_push_function = requires {
          //
-         // Signature must be one of:
+         // Signature must be:
          //    void func(lua_State* L, const stored_type&);
-         //    void func(lua_State* L, stored_type);
          // 
          // Takes a reference to the appropriate field on a sub-object (as accessed by 
          // the access function) and pushes the field's value directly into Lua. Must 

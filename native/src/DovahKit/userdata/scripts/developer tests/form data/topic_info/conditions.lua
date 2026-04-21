@@ -22,3 +22,41 @@ do
    cnd.comparison.operator = "=="
    cnd.comparison.operand  = 1
 end
+
+info.conditions:insert()
+do
+   local cnd = info.conditions[2]
+   cnd:overwrite_with({
+      run_on        = "subject",
+      function_name = "GetIsID",
+      parameters    = { actor },
+      comparison    = {
+         operator = "==",
+         operand  = 1
+      }
+   })
+end
+
+info.conditions:insert()
+do
+   local cnd = info.conditions[3]
+   cnd:assign({
+      -- BUG: "treat nil as unchanged" doesn't apply transitively to nested tables
+      --      so we can't e.g. assign only the operator and leave the operand 
+      --      unchanged.
+      comparison  = {
+         operator = "!=",
+         operand  = 1
+      },
+      is_or_linked = true
+   })
+end
+
+-- BUG: `insert` does not pay attention to any value you pass in, yet
+info.conditions:insert(info.conditions[2])
+do
+   local cnd = info.conditions[4]
+   cnd:assign({
+      is_or_linked = true
+   })
+end

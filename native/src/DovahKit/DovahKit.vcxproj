@@ -162,6 +162,9 @@
     <ClCompile Include="dovahscript\wrappers\form_components\collection_conditions.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition\comparison.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_comparison_from_lua.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_from_lua.cpp" />
+    <ClCompile Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_set_from_lua.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition\parameter_set.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\papyrus.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\papyrus\collection_array_property_values.cpp" />
@@ -1565,6 +1568,9 @@
     <ClInclude Include="dovahscript\wrappers\form_components\collection_conditions.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition\comparison.h" />
+    <ClInclude Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_comparison_from_lua.h" />
+    <ClInclude Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_from_lua.h" />
+    <ClInclude Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_set_from_lua.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition\parameter_set.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\papyrus.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\papyrus\collection_array_property_values.h" />

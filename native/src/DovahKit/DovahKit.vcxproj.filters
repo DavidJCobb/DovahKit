@@ -4104,6 +4104,15 @@
     <ClCompile Include="widgets\DKPapyrusFragmentFunctionNamePicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_from_lua.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_comparison_from_lua.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_set_from_lua.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -10110,6 +10119,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\verify_table_for_lua_assignment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_from_lua.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_comparison_from_lua.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_set_from_lua.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

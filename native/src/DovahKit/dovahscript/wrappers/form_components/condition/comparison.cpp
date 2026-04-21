@@ -10,6 +10,7 @@
 #include "dovah/forms/components/conditions.h"
 #include "dovah/forms/components/conditions/working_condition.h"
 #include "../condition.h"
+#include "./impl/pull_condition_comparison_from_lua.h"
 
 namespace {
    using namespace dovahscript;
@@ -73,34 +74,19 @@ namespace {
             cobb::lua::error(L, "condition_comparison wrapper has no underlying object (deleted?)");
          if (!wrappers::condition::is_not_locked(self))
             cobb::lua::error(L, "this is a locked condition on a topic info; it cannot be edited");
-         cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "string expected");
 
-         using enumeration = dovah::conditions::comparison_operator;
-
-         const auto operator_str = std::string_view(lua_tostring(L, 2));
-         enumeration value;
-         if (operator_str == "==")
-            value = enumeration::equal;
-         else if (operator_str == "!=")
-            value = enumeration::not_equal;
-         else if (operator_str == ">")
-            value = enumeration::greater;
-         else if (operator_str == ">=")
-            value = enumeration::greater_or_equal;
-         else if (operator_str == "<")
-            value = enumeration::less;
-         else if (operator_str == "<=")
-            value = enumeration::less_or_equal;
-         else
-            cobb::lua::argcheck(L, false, 2, "unrecognized operator");
-
-         self.before_edit();
-         {
-            working_type working(*data);
-            working.comparison.op = value;
-            data->commit(*form, working);
+         auto result = pull_condition_comparison_operator_from_lua(L, 2);
+         if (result.has_value()) {
+            self.before_edit();
+            {
+               working_type working(*data);
+               working.comparison.op = result.value();
+               data->commit(*form, working);
+            }
+            self.after_edit();
+         } else {
+            cobb::lua::argerror(L, 2, result.error().data());
          }
-         self.after_edit();
          return 0;
       }
       int operand(lua_State* L) {
@@ -113,29 +99,19 @@ namespace {
             cobb::lua::error(L, "condition_comparison wrapper has no underlying object (deleted?)");
          if (!wrappers::condition::is_not_locked(self))
             cobb::lua::error(L, "this is a locked condition on a topic info; it cannot be edited");
-
-         dovah::form_stub* operand_form  = nullptr;
-         float             operand_float = 0.0F;
-         if (lua_isnumber(L, 2)) {
-            operand_float = lua_tonumber(L, 2);
-         } else {
-            operand_form = pull_form_stub_argument(L, 2, dovah::form_type::global);
-            if (!operand_form)
-               cobb::lua::argcheck(L, false, 2, "cannot compare to NONE");
-         }
          
-         self.before_edit();
-         {
-            working_type working(*data);
-            auto& dst = working.comparison.operand;
-            if (operand_form) {
-               dst = operand_form;
-            } else {
-               dst.emplace<float>(operand_float);
+         auto result = pull_condition_comparison_operand_from_lua(L, 2);
+         if (result.has_value()) {
+            self.before_edit();
+            {
+               working_type working(*data);
+               working.comparison.operand = result.value();
+               data->commit(*form, working);
             }
-            data->commit(*form, working);
+            self.after_edit();
+         } else {
+            cobb::lua::argerror(L, 2, result.error().data());
          }
-         self.after_edit();
          return 0;
       }
    }

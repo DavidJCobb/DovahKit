@@ -18,6 +18,7 @@
 #include "dovah/forms/components/conditions/working_condition.h"
 #include "dovah/forms/Quest.h"
 #include "../condition.h"
+#include "./impl/pull_condition_parameter_from_lua.h"
 
 #include "../../form/quest/alias.h"
 
@@ -202,122 +203,17 @@ namespace {
          if (!wrappers::condition::is_not_locked(self))
             cobb::lua::error(L, "this is a locked condition on a topic info; it cannot be edited");
 
-         dovah::loaded_forms::components::conditions::working_parameter param;
-
-         auto underlying = data->get_argument_underlying_type(which);
-         switch (underlying) {
-            case dovah::conditions::parameter_underlying_type::alias:
-               {
-                  auto* alias_wrapper = wrapper_from_stack<wrappers::quest_alias>(L, 2);
-                  if (!alias_wrapper)
-                     cobb::lua::argerror(L, 2, "quest alias expected");
-                  auto context = wrappers::condition::context_of(self);
-                  if (!context.quest)
-                     cobb::lua::argerror(L, 2, "this condition has no owning quest and so cannot refer to a quest alias");
-                  auto* alias = wrappers::quest_alias::unwrap(*alias_wrapper);
-                  if (!alias)
-                     cobb::lua::argerror(L, 2, "passed-in quest alias is missing (deleted?)");
-                  if (&alias->owner.stub != context.quest)
-                     cobb::lua::argerror(L, 2, "the passed-in quest alias does not belong to this condition's owning quest");
-                  param.emplace<uint32_t>(alias->id);
-               }
-               break;
-            case dovah::conditions::parameter_underlying_type::character:
-               cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "character (string of size 1) expected");
-               {
-                  std::string_view v = lua_tostring(L, 2);
-                  cobb::lua::argcheck(L, v.size() == 1, 2, "character (string of size 1) expected");
-                  param.emplace<char>(v[0]);
-               }
-               break;
-            case dovah::conditions::parameter_underlying_type::enumeration:
-               cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "string expected");
-               {
-                  auto* func = data->get_function();
-                  if (!func)
-                     cobb::lua::error(L, "internal error: unable to find internal data for this condition function, so we don't know what values are valid here");
-                  auto* typeinfo = func->argument_types[which];
-                  if (!typeinfo)
-                     cobb::lua::error(L, "internal error: unable to find internal data (typeinfo) for this parameter type, so we don't know what values are valid here");
-                  if (!typeinfo->enumeration_info.has_value())
-                     cobb::lua::error(L, "internal error: unable to find internal data (enumeration data) for this parameter type, so we don't know what values are valid here");
-
-                  std::optional<int32_t> value;
-                  {
-                     const auto& enumeration = typeinfo->enumeration_info.value();
-                     std::string name        = lua_tostring(L, 2);
-                     for (size_t i = 0; i < enumeration.size; ++i) {
-                        const auto& member = enumeration.members[i];
-                        if (member.name == name) {
-                           value = member.value;
-                           break;
-                        }
-                     }
-                     if (!value.has_value())
-                        cobb::lua::argerror(L, 2, "unrecognized value");
-                  }
-                  param.emplace<int32_t>(value.value());
-               }
-               break;
-            case dovah::conditions::parameter_underlying_type::float32:
-               cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "number expected");
-               param.emplace<float>(lua_tonumber(L, 2));
-               break;
-            case dovah::conditions::parameter_underlying_type::form:
-               {
-                  auto* stub = pull_form_stub_argument(L, 2);
-                  if (stub) {
-                     if (auto* func = data->get_function()) {
-                        if (auto* typeinfo = func->argument_types[which]) {
-                           if (!typeinfo->allows_form_type(stub->form_type)) {
-                              cobb::lua::argerror(L, 2, "invalid form type for this parameter");
-                           }
-                        }
-                     }
-                  }
-                  param.emplace<dovah::form_stub*>(stub);
-               }
-               break;
-            case dovah::conditions::parameter_underlying_type::int_signed:
-               cobb::lua::argcheck(L, lua_isinteger(L, 2), 2, "integer expected");
-               {
-                  auto v = lua_tointeger(L, 2);
-                  cobb::lua::argcheck(L, v >= std::numeric_limits<int32_t>::lowest(), 2, "this value is not representable in a signed 4-byte integer");
-                  cobb::lua::argcheck(L, v <= std::numeric_limits<int32_t>::max(), 2, "this value is not representable in a signed 4-byte integer");
-                  param.emplace<int32_t>(v);
-               }
-               break;
-            case dovah::conditions::parameter_underlying_type::int_unsigned:
-               cobb::lua::argcheck(L, lua_isinteger(L, 2), 2, "unsigned integer expected");
-               {
-                  auto v = lua_tointeger(L, 2);
-                  cobb::lua::argcheck(L, v >= 0, 2, "unsigned integer expected");
-                  cobb::lua::argcheck(L, v <= std::numeric_limits<uint32_t>::max(), 2, "this value is not representable in an unsigned 4-byte integer");
-                  param.emplace<uint32_t>(v);
-               }
-               break;
-            case dovah::conditions::parameter_underlying_type::package_data:
-               cobb::lua::error(L, "package-data parameters are not yet implemented in Dovahscript"); // TODO
-               break;
-            case dovah::conditions::parameter_underlying_type::quest_stage:
-               cobb::lua::argcheck(L, lua_isinteger(L, 2), 2, "unsigned integer expected");
-               {
-                  using value_type = decltype(dovah::loaded_forms::Quest::Stage::index);
-
-                  auto v = lua_tointeger(L, 2);
-                  cobb::lua::argcheck(L, v >= 0, 2, "unsigned integer expected");
-                  cobb::lua::argcheck(L, v <= std::numeric_limits<value_type>::max(), 2, "this value is too high to be a valid quest stage");
-                  param.emplace<uint32_t>(v);
-               }
-               break;
-            case dovah::conditions::parameter_underlying_type::string:
-               cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "string expected");
-               param.emplace<std::string>(lua_tostring(L, 2));
-               break;
-         }
-
          working_type working(*data);
-         working.parameters[which] = param;
+         {
+            auto result = pull_condition_parameter_from_lua(L, 2, self, working, which);
+            if (result.has_value()) {
+               auto& param = result.value();
+               _warn_on_param(L, which, working.function, param);
+               working.parameters[which] = param;
+            } else {
+               cobb::lua::argerror(L, 2, result.error().data());
+            }
+         }
          if (!working.valid()) { // just in case
             cobb::lua::argerror(L, 2, "invalid value");
          }
@@ -325,8 +221,6 @@ namespace {
          self.before_edit();
          data->commit(*form, working);
          self.after_edit();
-
-         _warn_on_param(L, which, working.function, param);
       }
 
       template<typename CheckFunctor, typename EditFunctor>
@@ -364,13 +258,11 @@ namespace {
          _edit_event_params(
             L,
             [L, &fn]() {
-               cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "string expected");
-               std::string_view v = lua_tostring(L, 2);
-               #define CASE(name, ...) if (v == #name) { fn = dovah::conditions::event_function::name; } else
-               FOR_EACH_EVENT_FUNCTION_ID(CASE) /*else*/ {
-                  cobb::lua::argerror(L, 2, "unrecognized event function name");
-               }
-               #undef CASE
+               auto result = pull_condition_event_function_from_lua(L, 2);
+               if (result.has_value())
+                  fn = result.value();
+               else
+                  cobb::lua::argerror(L, 2, result.error().data());
             },
             [&fn](auto& params) {
                params.function = fn;
@@ -383,14 +275,11 @@ namespace {
          _edit_event_params(
             L,
             [L, &member]() {
-               cobb::lua::argcheck(L, lua_isstring(L, 2), 2, "string expected");
-               std::string_view name = lua_tostring(L, 2);
-               cobb::lua::argcheck(L, name.size() == 2, 2, "argument is not an event member signature");
-               if constexpr (std::endian::native == std::endian::little) {
-                  member = name[1] | ((uint16_t)name[0] << 8);
-               } else {
-                  member = name[0] | ((uint16_t)name[1] << 8);
-               }
+               auto result = pull_condition_event_member_from_lua(L, 2);
+               if (result.has_value())
+                  member = result.value();
+               else
+                  cobb::lua::argerror(L, 2, result.error().data());
             },
             [&member](auto& params) {
                params.member = member;
@@ -405,7 +294,11 @@ namespace {
          _edit_event_params(
             L,
             [L, &stub]() {
-               stub = pull_form_stub_argument(L, 2);
+               auto result = pull_condition_event_form_from_lua(L, 2);
+               if (result.has_value())
+                  stub = result.value();
+               else
+                  cobb::lua::argerror(L, 2, result.error().data());
             },
             [&stub](working_type::event_data& params) {
                params.form = stub;
