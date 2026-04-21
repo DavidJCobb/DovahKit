@@ -130,7 +130,7 @@ namespace dovahscript {
             if (!lua_isinteger(L, pos))
                return std::unexpected("unsigned integer expected");
             {
-               auto v = lua_tointeger(L, 2);
+               auto v = lua_tointeger(L, pos);
                if (v < 0)
                   return std::unexpected("unsigned integer expected");
                if (v > std::numeric_limits<int32_t>::max())
@@ -147,7 +147,7 @@ namespace dovahscript {
             {
                using value_type = decltype(dovah::loaded_forms::Quest::Stage::index);
 
-               auto v = lua_tointeger(L, 2);
+               auto v = lua_tointeger(L, pos);
                if (v < 0)
                   return std::unexpected("unsigned integer expected");
                if (v > std::numeric_limits<value_type>::max())
@@ -158,7 +158,7 @@ namespace dovahscript {
          case dovah::conditions::parameter_underlying_type::string:
             if (!lua_isstring(L, pos))
                return std::unexpected("string expected");
-            param.emplace<std::string>(lua_tostring(L, 2));
+            param.emplace<std::string>(lua_tostring(L, pos));
             break;
       }
 
@@ -177,7 +177,7 @@ namespace dovahscript {
    extern std::expected<uint16_t, std::string_view> pull_condition_event_member_from_lua(lua_State* L, int pos) {
       if (!lua_isstring(L, pos))
          return std::unexpected("string expected");
-      std::string_view name = lua_tostring(L, 2);
+      std::string_view name = lua_tostring(L, pos);
       if (name.size() != 2)
          return std::unexpected("argument is not an event member signature");
       if constexpr (std::endian::native == std::endian::little) {

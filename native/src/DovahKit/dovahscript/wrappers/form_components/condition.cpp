@@ -321,7 +321,7 @@ namespace {
             parameter_type_override::none
          );
          {
-            lua_getfield(L, 2, "parameters");
+            lua_getfield(L, table_pos, "parameters");
             if (lua_isnoneornil(L, -1)) {
                lua_pop(L, 1);
                if constexpr (!TreatNilAsUnchanged) {
@@ -380,7 +380,7 @@ namespace {
          }
 
          if (!working.valid()) {
-            cobb::lua::argerror(L, 2, "invalid value");
+            cobb::lua::argerror(L, table_pos, "invalid value");
          }
          self.before_edit();
          wrapped->commit(*form, working);
