@@ -78,8 +78,8 @@ namespace dovah::loaded_forms {
             flags_t flags = 0;
             // 3 padding bytes here
             localized_string text         = localized_string(localized_string_type::info);
-            localized_string script_notes = localized_string(localized_string_type::info);
-            localized_string edits        = localized_string(localized_string_type::info);
+            std::string      script_notes;
+            std::string      edits;
             struct {
                form_reference_t speaker;
                form_reference_t listener;

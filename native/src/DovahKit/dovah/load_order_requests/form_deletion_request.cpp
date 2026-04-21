@@ -154,21 +154,28 @@ namespace dovah {
          }
       }
       stub.sever_all_outbound_references();
+      
+      std::vector<std::pair<form_stub*, bool>> pending;
       //
-      std::vector<form_stub*> pending;
+      // Gather the forms first. Processing them as we gather them would change use info 
+      // and potentially invalidate iterators.
       //
       for (auto& pair : stub.inbound) {
          auto& entry = pair.second;
          auto* other = entry.other;
-         pending.push_back(other); // gather forms to process later. we don't want to sever refs now, as that will change use info and potentially invalidate iterators during the loop
-         if (other->addenda)
-            other->addenda->sever_references_to_deleted_form(stub, flag);
-         other->set_edited(true);
+         pending.push_back({ other, (bool)(entry.flags & use_info::entry_flag_to_mask(use_info::entry_flags::base::parent)) });
       }
-      for (auto* user : pending) {
-         auto form = LOAD_FORM_FROM_STUB(user);
-         assert(!!form); // our caller, form_deletion_request::commit, is not allowed to fail
-         form->sever_outbound_references_to(stub);
+      for (auto& [user, user_is_child] : pending) {
+         user->set_edited(true);
+         {
+            auto form = LOAD_FORM_FROM_STUB(user);
+            assert(!!form); // our caller, form_deletion_request::commit, is not allowed to fail
+            form->sever_outbound_references_to(stub);
+         }
+         if (user_is_child)
+            user->orphan();
+         if (user->addenda)
+            user->addenda->sever_references_to_deleted_form(stub, flag);
       }
    }
 

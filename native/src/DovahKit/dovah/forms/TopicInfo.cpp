@@ -20,8 +20,8 @@ namespace dovah::loaded_forms {
       this->sound.set(owner, nullptr);
       this->flags = 0;
       this->text.reset();
-      this->script_notes.reset();
-      this->edits.reset();
+      this->script_notes.clear();
+      this->edits.clear();
       this->idles.speaker.set(owner, nullptr);
       this->idles.listener.set(owner, nullptr);
    }
