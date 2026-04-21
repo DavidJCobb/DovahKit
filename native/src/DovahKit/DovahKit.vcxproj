@@ -1517,14 +1517,24 @@
   <ItemGroup>
     <ClInclude Include="dovahscript\api_helpers\fail_table_if_expandos.h" />
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\apply_table.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\apply_table_variations.h" />
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\common_lambdas.h" />
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\make_getters_and_setters.h" />
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\property_definition.h" />
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\property_name_list.h" />
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\is_property_tuple_type.h" />
-    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\form_property_definition.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\enumeration.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\form.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\integer.h" />
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\localized_string.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\std_string.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\utils\is_accessor.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\utils\is_accessor_for_type.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\utils\property_list_has_late_checks.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\utils\type_accessed_by.h" />
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\verify_table.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\verify_table_for_lua_assignment.h" />
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\verify_table_late.h" />
     <ClInclude Include="dovahscript\api_helpers\table_contains_expandos.h" />
     <ClInclude Include="dovahscript\wrappers\form\dialogue_branch.h" />
     <ClInclude Include="dovahscript\wrappers\form\navmesh.h" />
@@ -4099,6 +4109,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
+    <None Include="dovahscript\api_helpers\subobject_property_helpers\README.md">
+      <SubType>
+      </SubType>
+    </None>
     <None Include="dovahscript\wrappers\unusual\README.md" />
     <None Include="dovahscript\_docs\how to expose form data to Lua.md">
       <SubType>

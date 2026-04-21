@@ -10064,7 +10064,7 @@
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\common_lambdas.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\form_property_definition.h">
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\form.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\localized_string.h">
@@ -10080,6 +10080,36 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="helpers\attributes\forceinline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\std_string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\utils\is_accessor_for_type.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\integer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\types\enumeration.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\utils\type_accessed_by.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\utils\is_accessor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\verify_table_late.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\utils\property_list_has_late_checks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\apply_table_variations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\verify_table_for_lua_assignment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -12150,6 +12180,7 @@
     <None Include="dovahscript\_docs\how to expose form data to Lua.md" />
     <None Include="dovah\_docs\form types\q\quest\reference aliases.md" />
     <None Include="xaudio2\README.md" />
+    <None Include="dovahscript\api_helpers\subobject_property_helpers\README.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="shaders\Tamriel-Skyrim.esm.png">

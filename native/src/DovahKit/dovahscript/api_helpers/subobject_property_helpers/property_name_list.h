@@ -8,7 +8,7 @@
 
 namespace dovahscript::api_helpers::subobject_property_helpers {
    template<const auto& PropertiesTuple>
-   constexpr const auto property_name_list = []() {
+   constexpr const auto property_name_list = []() consteval {
       std::array<std::string_view, std::tuple_size_v<std::decay_t<decltype(PropertiesTuple)>>> names = {};
       {
          size_t i = 0;

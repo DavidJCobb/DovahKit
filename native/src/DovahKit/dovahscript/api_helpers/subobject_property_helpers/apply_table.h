@@ -6,6 +6,7 @@
 #include <type_traits>
 #include "helpers/tuples/all_types_match_functor.h"
 #include "helpers/tuples/for_each_nttp_value.h"
+#include "helpers/tuples/for_each_value.h"
 #include "lua.h"
 #include "./is_property_tuple_type.h"
 #include "./property_definition.h"
@@ -17,7 +18,7 @@ namespace dovah {
 }
 
 namespace dovahscript::api_helpers::subobject_property_helpers {
-   template<typename Dst, bool Overwrite, const auto& PropertiesTuple>
+   template<typename Dst, bool NilMeansUnchanged, const auto& PropertiesTuple>
       requires (
          is_property_tuple_type<std::decay_t<decltype(PropertiesTuple)>>
          #ifndef __INTELLISENSE__ // 04/20/2026: IntelliSense hates `all_types_match_functor`
@@ -38,6 +39,38 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
    ) {
       assert(lua_istable(L, table_pos) || lua_isuserdata(L, table_pos));
 
+      constexpr bool has_any_late_checks = []() {
+         bool any = false;
+         cobb::tuples::for_each_value(PropertiesTuple, [&any](const auto& dfn) {
+            if (dfn.late_check) {
+               any = true;
+            }
+         });
+         return any;
+      }();
+      if constexpr (has_any_late_checks) {
+         cobb::tuples::for_each_nttp_value<
+            PropertiesTuple,
+            []<const auto& PropertyDefinition>(
+               lua_State* L,
+               int table_pos,
+               dovah::loaded_forms::Form& dst_form,
+               Dst& dst_data
+            ) {
+               if constexpr (PropertyDefinition.late_check) {
+                  lua_getfield(L, table_pos, PropertyDefinition.name.data());
+                  if (lua_isnoneornil(L, -1)) {
+                     lua_pop(L, 1);
+                  } else {
+                     auto v = PropertyDefinition.pull(L, -1);
+                     lua_pop(L, 1);
+                     PropertyDefinition.late_check(L, dst_form, &dst_data, v);
+                  }
+               }
+            }
+         >(L, table_pos, dst_form, dst_data);
+      }
+
       cobb::tuples::for_each_nttp_value<
          PropertiesTuple,
          []<const auto& PropertyDefinition>(
@@ -54,7 +87,7 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
             lua_getfield(L, table_pos, PropertyDefinition.name.data());
             if (lua_isnoneornil(L, -1)) {
                lua_pop(L, 1);
-               if constexpr (Overwrite && !PropertyDefinition.treat_nil_as_unchanged) {
+               if constexpr (!NilMeansUnchanged && !PropertyDefinition.treat_nil_as_unchanged) {
                   if constexpr (std::is_base_of_v<dovah::form_reference_t, stored_type>) {
                      dst_field.set(dst_form, nullptr);
                   } else if constexpr (std::is_base_of_v<dovah::localized_string, stored_type>) {

@@ -46,22 +46,26 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
       
          auto& self      = get_wrapper_for_thiscall<Wrapper>(L);
          auto& subobject = UnwrapFunc(L);
+         value_type src;
          {
             auto message = PropertyDefinition.check(L, 2);
             if (!message.empty()) {
-               luaL_argcheck(L, false, 2, message.data());
+               luaL_argerror(L, 2, message.data());
             }
+            src = PropertyDefinition.pull(L, 2);
+         }
+         if constexpr (PropertyDefinition.late_check) {
+            PropertyDefinition.late_check(L, *self.form, &subobject, src);
          }
          self.before_edit();
          {
-            auto  v   = PropertyDefinition.pull(L, 2);
             auto& dst = PropertyDefinition.access(subobject);
             if constexpr (std::is_base_of_v<dovah::form_reference_t, stored_type>) {
-               dst.set(*self.stub->form, v);
+               dst.set(*self.stub->form, src);
             } else if constexpr (std::is_base_of_v<dovah::localized_string, stored_type> && std::is_same_v<value_type, std::string_view>) {
-               dst = std::string(v); // HACK because there's no assignment operator for string-view and I don't wanna recompile the whole program to add one
+               dst = std::string(src); // HACK because there's no assignment operator for string-view and I don't wanna recompile the whole program to add one
             } else {
-               dst = v;
+               dst = src;
             }
          }
          self.after_edit();
@@ -71,12 +75,14 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
 
    // Use the "extra class setup" functionality for wrapper metatables.
    // Class internals take initializer lists rather than doing things cleanly, so we have to do this nonsense.
+   // Just as well, though: it means we can define read-only getters the normal way, and define properties in 
+   // bulk as "extra."
    template<typename Wrapper, auto UnwrapFunc, const auto& PropertyDefinitionList>
       requires is_property_tuple_type<std::decay_t<decltype(PropertyDefinitionList)>>
    void setup_extra_getters_and_setters(lua_State* L) {
       cobb::tuples::for_each_nttp_value<
          PropertyDefinitionList,
-         []<const auto& Definition>(lua_State* L) {
+         []<const auto& Definition>(lua_State* L) [[msvc::forceinline]] [[gnu::always_inline]] {
             auto g = &property_apis<Wrapper, UnwrapFunc, Definition>::property_getter;
             auto s = &property_apis<Wrapper, UnwrapFunc, Definition>::property_setter;
             lua_pushcfunction(L, g);

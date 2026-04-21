@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <string_view>
 #include "lua.h"
 #include "dovahscript/push_native_object.h"
@@ -26,7 +27,7 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
       inline auto integer(lua_State* L, int pos) {
          return lua_tointeger(L, pos);
       }
-      inline std::string_view string(lua_State* L, int pos) {
+      inline std::string_view string_view(lua_State* L, int pos) {
          return lua_tostring(L, pos);
       }
    }
@@ -44,6 +45,12 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
             lua_pushnil(L);
          else if (count > 1)
             lua_pop(L, count - 1);
+      }
+      inline void string(lua_State* L, const std::string& v) {
+         lua_pushstring(L, v.c_str());
+      }
+      inline void string_view(lua_State* L, const std::string_view& v) {
+         lua_pushlstring(L, v.data(), v.size());
       }
    }
 }

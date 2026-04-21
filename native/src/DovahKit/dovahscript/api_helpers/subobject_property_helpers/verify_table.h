@@ -48,7 +48,7 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
             }
          }
          if (!first_seen_expando_name.empty()) {
-            return std::format("table contains one or more unexpected keys (first seen: `%s`)", first_seen_expando_name);
+            return std::format("table contains one or more unexpected keys (first seen: `{}`)", first_seen_expando_name);
          }
       }
 
@@ -61,12 +61,12 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
             lua_getfield(L, table_pos, Definition.name.data());
             if (lua_isnoneornil(L, -1)) {
                if constexpr (!AlwaysAllowNil && !Definition.default_value.has_value() && !Definition.treat_nil_as_unchanged) {
-                  error_message = std::format("table is missing a value for key `%s`", Definition.name);
+                  error_message = std::format("table is missing a value for key `{}`", Definition.name);
                }
             } else {
                const auto field_error = Definition.check(L, -1);
                if (!field_error.empty())
-                  error_message = std::format("table has an invalid value for key `%s`: %s", Definition.name, field_error);
+                  error_message = std::format("table has an invalid value for key `{}`: {}", Definition.name, field_error);
             }
             lua_pop(L, 1);
          }

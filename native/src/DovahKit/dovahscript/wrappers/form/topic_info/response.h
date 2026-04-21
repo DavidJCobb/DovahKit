@@ -19,21 +19,18 @@ namespace dovahscript::wrappers {
       static constexpr bool has_extra_class_setup = true;
       static void extra_class_setup(lua_State* L);
 
-      static std::optional<dovah::dialogue::emotion> emotion_from_string(std::string_view);
+      // Collections that contain this sub-object can use this to check whether a value 
+      // is valid, for a statement like `collection[n] = {}`.
+      static void verify_table_can_overwrite(lua_State*, int stack_pos, dovah::loaded_forms::Form& dst_form, wrapped_type& dst_subobject);
+      static void verify_table_for_insertion(lua_State*, int stack_pos, dovah::loaded_forms::Form& dst_form);
 
-      // Returns empty if no problems.
-      // Else returns a suitable error string.
-      static std::string verify_table_is_response_like(lua_State*, int stack_pos);
-
-      // These do not validate the table you pass in, nor its fields, beyond nil-checking 
-      // them and either leaving the destination field unchanged ("assign") or defaulting 
-      // it ("overwrite").
-      static void modify_from_table(
+      // This won't validate the table you pass in, nor its fields, beyond nil-checking 
+      // them as needed to default destination fields.
+      static void overwrite_with_table(
          dovah::loaded_forms::Form& dst_form,
          wrapped_type& dst,
          lua_State* L,
-         int table_pos,
-         bool is_overwrite
+         int table_pos
       );
    };
 }
