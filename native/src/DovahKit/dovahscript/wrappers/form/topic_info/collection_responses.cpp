@@ -21,7 +21,9 @@ namespace {
 namespace {
    using namespace dovahscript;
 
-   using wrapped_type = dovah::loaded_forms::TopicInfo;
+   using wrapped_type      = dovah::loaded_forms::TopicInfo;
+   using subobject_wrapper = wrappers::topic_info_response;
+   using subobject_type    = subobject_wrapper::wrapped_type;
    
    wrapper& get_collection_wrapper(lua_State* L) {
       auto* self = (wrapper*) classes::cast_to_class(L, 1, collection_metatable_key);
@@ -47,7 +49,6 @@ namespace {
       //
       return used_ids.find_first_clear();
    }
-
    static std::vector<uint8_t> generate_unique_ids(auto& list, size_t count) {
       cobb::bitset<256> used_ids;
       for (auto& item : list)
@@ -79,6 +80,35 @@ namespace {
       return result;
    }
 
+   static bool table_has_unique_id(lua_State* L, int pos) {
+      lua_getfield(L, pos, "unique_id");
+      bool result = !lua_isnoneornil(L, -1);
+      lua_pop(L, 1);
+      return result;
+   }
+
+   static void autogenerate_unique_ids_for_span(lua_State* L, std::vector<uint8_t>& out, auto& list, size_t count_to_create, size_t count_to_auto) {
+      out = generate_unique_ids(list, count_to_auto);
+      if (out.empty()) {
+         cobb::lua::error(L, "this `topic_info` form has no more unique IDs left for new responses");
+      }
+      if (out.size() < count_to_auto) {
+         cobb::lua::error(L, "this `topic_info` form doesn't have enough unique IDs left for the %u new responses you are attempting to create", (int)count_to_create);
+      }
+      if (out.back() == 0) {
+         cobb::lua::warning(L, "one of the new responses will end up using unique ID 0; this ID is a sentinel value used when recording lines in the Creation Kit");
+      }
+   }
+   static void autogenerate_unique_ids_for_single(lua_State* L, std::vector<uint8_t>& out, auto& list) {
+      auto opt = generate_unique_id(list);
+      if (!opt.has_value())
+         cobb::lua::error(L, "this `topic_info` form has no more unique IDs left for new responses");
+      auto val = opt.value();
+      if (val == 0)
+         cobb::lua::warning(L, "this `topic_info` form only has unique ID 0 available for new responses; this ID is a sentinel value used when recording lines in the Creation Kit");
+      out.push_back(val);
+   }
+
    // ---
    
    int get_collection_length(lua_State* L) {
@@ -105,19 +135,17 @@ namespace {
       assert(out.is_collection);
       assert(out.parts[0].signature == wrapper_part_types::topic_info_response);
       out.into_collection(i);
-      return core::subsystems::userdata::get().push(L, out, wrappers::topic_info_response::metatable_key);
+      return core::subsystems::userdata::get().push(L, out, subobject_wrapper::metatable_key);
    }
    int member_function_insert(lua_State* L) {
-      using subobject_wrapper = wrappers::topic_info_response;
-      using subobject_type    = subobject_wrapper::wrapped_type;
-
       core::subsystems::permissions::verify_form_write_permissions();
       
       auto& self  = get_collection_wrapper(L);
       auto* form  = self.get_loaded_form_data<wrapped_type>();
       if (!form)
          return 0;
-      auto& list = form->responses;
+      auto&  list = form->responses;
+      size_t size = list.size();
 
       int  insert_at = form->responses.size();
       int  pos_value = 2;
@@ -133,21 +161,28 @@ namespace {
             insert_at = i - 1;
          }
          if (!lua_isnoneornil(L, pos_value)) {
-            wrappers::topic_info_response::verify_table_for_insertion(L, pos_value, *form);
+            subobject_wrapper::verify_table_for_insertion(L, pos_value, *form);
             has_value = true;
+            has_uid   = table_has_unique_id(L, pos_value);
          }
       }
       if (!form)
          return 0;
 
-      uint8_t generated_uid = 0;
+      std::vector<uint8_t> uids_to_generate;
       if (!has_uid) {
-         auto opt = generate_unique_id(list);
-         if (!opt.has_value())
-            cobb::lua::error(L, "this `topic_info` form has no more unique IDs left for new responses");
-         generated_uid = opt.value();
-         if (generated_uid == 0)
-            cobb::lua::warning(L, "this `topic_info` form only has unique ID 0 available for new responses; this ID is a sentinel value used when recording lines in the Creation Kit");
+         if (insert_at > size) {
+            cobb::lua::warning(L, "index %s is out of bounds; empty elements will be created between the end of the list and the new element", lua_tolstring(L, 2, nullptr));
+            {
+               size_t count_to_create = insert_at - size + 1;
+               size_t count_to_auto = count_to_create;
+               if (has_uid)
+                  --count_to_auto;
+               autogenerate_unique_ids_for_span(L, uids_to_generate, list, count_to_create, count_to_auto);
+            }
+         } else {
+            autogenerate_unique_ids_for_single(L, uids_to_generate, list);
+         }
       }
 
       self.before_edit();
@@ -159,16 +194,15 @@ namespace {
             core::subsystems::userdata::get().insert_into_sequential_collection(self, insert_at);
          }
          if (has_value) {
-            wrappers::topic_info_response::overwrite_with_table(
+            subobject_wrapper::overwrite_with_table(
                *form,
                list[insert_at],
                L,
                pos_value
             );
          }
-         if (!has_uid) {
-            list[insert_at].id = generated_uid;
-         }
+         for (size_t j = 0; j < uids_to_generate.size(); ++j)
+            list[insert_at + j].id = uids_to_generate[j];
       }
       self.after_edit();
       return 0;
@@ -220,48 +254,21 @@ namespace {
       auto& list = form->responses;
       auto  size = list.size();
       if (i > size) {
+         subobject_wrapper::verify_table_for_insertion(L, index_value, *form);
          cobb::lua::warning(L, "index %s is out of bounds; empty elements will be created between the end of the list and the new element", lua_tolstring(L, index_key, nullptr));
-         wrappers::topic_info_response::verify_table_for_insertion(L, index_value, *form);
-
          {
             size_t count_to_create = i - size + 1;
             size_t count_to_auto   = count_to_create;
-            {
-               lua_getfield(L, index_value, "unique_id");
-               if (!lua_isnoneornil(L, -1))
-                  --count_to_auto;
-               lua_pop(L, 1);
-            }
-
-            uids_to_generate = generate_unique_ids(list, count_to_auto);
-            if (uids_to_generate.empty()) {
-               cobb::lua::error(L, "this `topic_info` form has no more unique IDs left for new responses");
-            }
-            if (uids_to_generate.size() < count_to_auto) {
-               cobb::lua::error(L, "this `topic_info` form doesn't have enough unique IDs left for the %u new responses you are attempting to create", (int)count_to_create);
-            }
-            if (uids_to_generate.back() == 0) {
-               cobb::lua::warning(L, "one of the new responses will end up using unique ID 0; this ID is a sentinel value used when recording lines in the Creation Kit");
-            }
+            if (table_has_unique_id(L, index_value))
+               --count_to_auto;
+            autogenerate_unique_ids_for_span(L, uids_to_generate, list, count_to_create, count_to_auto);
          }
       } else {
-         wrappers::topic_info_response::verify_table_can_overwrite(L, index_value, *form, list[i]);
+         subobject_wrapper::verify_table_can_overwrite(L, index_value, *form, list[i]);
 
-         bool has_uid = false;
-         {
-            lua_getfield(L, index_value, "unique_id");
-            if (!lua_isnoneornil(L, -1))
-               has_uid = true;
-            lua_pop(L, 1);
-         }
+         bool has_uid = table_has_unique_id(L, index_value);
          if (!has_uid) {
-            auto opt = generate_unique_id(list);
-            if (!opt.has_value())
-               cobb::lua::error(L, "this `topic_info` form has no more unique IDs left for new responses");
-            auto val = opt.value();
-            if (val == 0)
-               cobb::lua::warning(L, "this `topic_info` form only has unique ID 0 available for new responses; this ID is a sentinel value used when recording lines in the Creation Kit");
-            uids_to_generate.push_back(val);
+            autogenerate_unique_ids_for_single(L, uids_to_generate, list);
          }
       }
 
@@ -271,7 +278,7 @@ namespace {
       for (size_t j = 0; j < uids_to_generate.size(); ++j) {
          list[size + j].id = uids_to_generate[j];
       }
-      wrappers::topic_info_response::overwrite_with_table(
+      subobject_wrapper::overwrite_with_table(
          *form,
          list[i],
          L,

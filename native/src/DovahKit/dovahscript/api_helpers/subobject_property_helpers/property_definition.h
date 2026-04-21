@@ -77,9 +77,6 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
          requires utils::is_accessor<AccessFunc>
       using push_function_given_access_function = void (*)(lua_State*, const utils::type_accessed_by<AccessFunc>&);
 
-      template<typename PullFunc>
-      using value_type = typename cobb::function_traits<PullFunc>::return_type;
-
       template<typename Subobject, typename ValueType>
       using late_check_function_type = void(*)(lua_State*, const dovah::loaded_forms::Form&, const Subobject*, const ValueType&);
    }
