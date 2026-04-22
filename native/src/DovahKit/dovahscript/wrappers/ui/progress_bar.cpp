@@ -58,7 +58,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QString result = api_helpers::get_widget_property((wrapped_type*)self.widget, &QProgressBar::text);
+         QString result = api_helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::text);
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
@@ -66,7 +66,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         QString result = api_helpers::get_widget_property((wrapped_type*)self.widget, &QProgressBar::format);
+         QString result = api_helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::format);
          lua_pushstring(L, result.toUtf8());
          return 1;
       }
@@ -74,7 +74,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         int result = api_helpers::get_widget_property((wrapped_type*)self.widget, &QProgressBar::maximum);
+         int result = api_helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::maximum);
          lua_pushinteger(L, result);
          return 1;
       }
@@ -82,7 +82,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         int result = api_helpers::get_widget_property((wrapped_type*)self.widget, &QProgressBar::minimum);
+         int result = api_helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::minimum);
          lua_pushinteger(L, result);
          return 1;
       }
@@ -90,7 +90,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         bool result = api_helpers::get_widget_property((wrapped_type*)self.widget, &QProgressBar::isTextVisible);
+         bool result = api_helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::isTextVisible);
          lua_pushboolean(L, result);
          return 1;
       }
@@ -98,7 +98,7 @@ namespace {
          auto& self = get_wrapper_for_thiscall<cls>(L);
          if (!self.widget)
             return 0;
-         int result = api_helpers::get_widget_property((wrapped_type*)self.widget, &QProgressBar::value);
+         int result = api_helpers::get_widget_property((wrapped_type*)self.widget, &wrapped_type::value);
          lua_pushinteger(L, result);
          return 1;
       }
@@ -148,7 +148,7 @@ namespace {
          if (!self.widget)
             return 0;
          auto value = QString::fromUtf8(lua_tostring(L, 2));
-         api_helpers::set_widget_property((wrapped_type*)self.widget, &QProgressBar::setFormat, value);
+         api_helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setFormat, value);
          return 0;
       }
       int maximum(lua_State* L) {
@@ -157,7 +157,7 @@ namespace {
          if (!self.widget)
             return 0;
          int value = lua_tointeger(L, 2);
-         api_helpers::set_widget_property((wrapped_type*)self.widget, &QProgressBar::setMaximum, value);
+         api_helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setMaximum, value);
          return 0;
       }
       int minimum(lua_State* L) {
@@ -166,7 +166,7 @@ namespace {
          if (!self.widget)
             return 0;
          int value = lua_tointeger(L, 2);
-         api_helpers::set_widget_property((wrapped_type*)self.widget, &QProgressBar::setMinimum, value);
+         api_helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setMinimum, value);
          return 0;
       }
       int show_text(lua_State* L) {
@@ -175,7 +175,7 @@ namespace {
          if (!self.widget)
             return 0;
          bool value = lua_toboolean(L, 2);
-         api_helpers::set_widget_property((wrapped_type*)self.widget, &QProgressBar::setTextVisible, value);
+         api_helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setTextVisible, value);
          return 0;
       }
       int value(lua_State* L) {
@@ -184,7 +184,7 @@ namespace {
             return 0;
          cobb::lua::argcheck(L, lua_isnumber(L, 2), 2, "number expected (integer preferred)");
          int value = lua_tonumber(L, 2);
-         api_helpers::set_widget_property((wrapped_type*)self.widget, &QProgressBar::setValue, value);
+         api_helpers::set_widget_property((wrapped_type*)self.widget, &wrapped_type::setValue, value);
          return 0;
 
       }
@@ -199,6 +199,7 @@ namespace {
          auto* task = new tasks::s2m::create_ui_widget<wrapped_type>();
          task->configure = [](wrapped_type* created) {
             created->setAlignment(Qt::AlignmentFlag::AlignHCenter);
+            created->setFormat("");
          };
          send_script_ui_task(*task);
          auto* created = task->created;

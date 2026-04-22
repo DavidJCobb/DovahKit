@@ -1459,6 +1459,7 @@
     <ClCompile Include="widgets\DKPapyrusFragmentFunctionNamePicker.cpp" />
     <ClCompile Include="widgets\DKPapyrusFragmentFunctionPicker.cpp" />
     <ClCompile Include="widgets\DKPapyrusFragmentScriptNamePicker.cpp" />
+    <ClCompile Include="widgets\DKProgressBar.cpp" />
     <ClCompile Include="widgets\DKQuestAliasPicker.cpp" />
     <ClCompile Include="widgets\DKSliderSpinboxPairFloat.cpp" />
     <ClCompile Include="widgets\DKSliderSpinboxPairInt.cpp" />
@@ -2270,6 +2271,7 @@
     <ClInclude Include="ui\main_window\_debug_hooks\widgets\audio_simple.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentScriptNamePicker.h" />
     <QtMoc Include="widgets\DKPapyrusFragmentFunctionNamePicker.h" />
+    <QtMoc Include="widgets\DKProgressBar.h" />
     <ClInclude Include="xaudio2\core_interface.h" />
     <ClInclude Include="xaudio2\operation_set_handle.h" />
     <QtMoc Include="xaudio2\simple_fuz_sound.h" />

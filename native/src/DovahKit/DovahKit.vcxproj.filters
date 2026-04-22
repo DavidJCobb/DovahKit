@@ -4113,6 +4113,9 @@
     <ClCompile Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_set_from_lua.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\DKProgressBar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="helpers\files.h">
@@ -11635,6 +11638,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="widgets\DKPapyrusFragmentFunctionNamePicker.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="widgets\DKProgressBar.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

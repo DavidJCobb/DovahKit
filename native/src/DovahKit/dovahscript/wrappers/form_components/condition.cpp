@@ -345,7 +345,16 @@ namespace {
                      working.parameters = std::move(p_set.parameters);
                   }
                } else {
-                  auto error = std::format("problem with field `parameters`: {}", result.error());
+                  std::string_view function_name = "?";
+                  {
+                     auto* info = dovah::conditions::function_info_by_id(working.function);
+                     if (info)
+                        function_name = info->name;
+                  }
+                  auto error = std::format("problem with field `parameters` (given condition function `{}`): {}",
+                     function_name,
+                     result.error()
+                  );
                   cobb::lua::argerror(L, table_pos, error.c_str());
                }
             }
