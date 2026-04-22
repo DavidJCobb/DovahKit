@@ -4104,16 +4104,34 @@
     <ClCompile Include="widgets\DKPapyrusFragmentFunctionNamePicker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_from_lua.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_comparison_from_lua.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_set_from_lua.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="widgets\DKProgressBar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\wrappers\form_components\condition\impl\push_condition_parameter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_indexed_parameter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_run_on.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_parameter_type_override.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_comparison_operator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_comparison_operand.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\conditions\pull_comparison_as_table.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_event_parameter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dovahscript\api_helpers\conditions\pull_parameters_as_table.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -10124,13 +10142,34 @@
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\verify_table_for_lua_assignment.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_from_lua.h">
+    <ClInclude Include="dovahscript\wrappers\form_components\condition\impl\push_condition_parameter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_comparison_from_lua.h">
+    <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_indexed_parameter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_set_from_lua.h">
+    <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_run_on.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\conditions\_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_parameter_type_override.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_comparison_operator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_comparison_operand.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\conditions\pull_comparison_as_table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_event_parameter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dovahscript\api_helpers\conditions\pull_parameters_as_table.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

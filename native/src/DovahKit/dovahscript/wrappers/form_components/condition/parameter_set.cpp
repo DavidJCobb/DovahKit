@@ -18,9 +18,9 @@
 #include "dovah/forms/components/conditions/working_condition.h"
 #include "dovah/forms/Quest.h"
 #include "../condition.h"
-#include "./impl/pull_condition_parameter_from_lua.h"
 
-#include "../../form/quest/alias.h"
+#include "dovahscript/api_helpers/conditions/push_pull_event_parameter.h"
+#include "dovahscript/api_helpers/conditions/push_pull_indexed_parameter.h"
 
 #define FOR_EACH_EVENT_FUNCTION_ID(DO) \
    DO(GetIsID) \
@@ -47,55 +47,13 @@ namespace {
          auto* data = wrappers::condition::unwrap(self);
          if (data == nullptr)
             cobb::lua::error(L, "condition_parameter_set wrapper has no underlying object (deleted?)");
-
-         auto underlying = data->get_argument_underlying_type(which);
-         auto param      = data->get_parameter(which);
-         if (std::holds_alternative<std::monostate>(param)) {
-            lua_pushnil(L);
-         } else if (std::holds_alternative<uint32_t>(param)) {
-            switch (underlying) {
-               case dovah::conditions::parameter_underlying_type::alias:
-                  if (auto* quest = wrappers::condition::context_of(self).quest) {
-                     return wrappers::quest_alias::wrap(L, quest, std::get<uint32_t>(param));
-                  }
-                  break;
-               case dovah::conditions::parameter_underlying_type::int_unsigned:
-               case dovah::conditions::parameter_underlying_type::quest_stage:
-               default:
-                  lua_pushinteger(L, std::get<uint32_t>(param));
-                  break;
-               case dovah::conditions::parameter_underlying_type::package_data:
-                  lua_pushinteger(L, std::get<uint32_t>(param)); // TODO: return a wrapped package data
-                  break;
-            }
-         } else if (std::holds_alternative<char>(param)) {
-            lua_pushlstring(L, &std::get<char>(param), 1);
-         } else if (std::holds_alternative<float>(param)) {
-            lua_pushnumber(L, std::get<float>(param));
-         } else if (std::holds_alternative<int32_t>(param)) {
-            auto v = std::get<int32_t>(param);
-            if (underlying == dovah::conditions::parameter_underlying_type::enumeration) {
-               const auto* typeinfo = data->get_argument_type(which);
-               if (typeinfo && typeinfo->enumeration_info.has_value()) {
-                  const auto& enumeration = typeinfo->enumeration_info.value();
-                  for (size_t i = 0; i < enumeration.size; ++i) {
-                     const auto& member = enumeration.members[i];
-                     if (member.value == v) {
-                        lua_pushstring(L, member.name.data());
-                        return 1;
-                     }
-                  }
-               }
-            }
-            lua_pushinteger(L, v);
-         } else if (std::holds_alternative<dovah::form_stub*>(param)) {
-            return push_native_object(std::get<dovah::form_stub*>(param));
-         } else if (std::holds_alternative<std::string>(param)) {
-            auto& data = std::get<std::string>(param);
-            lua_pushstring(L, data.c_str());
-         } else {
-            return 0;
-         }
+         api_helpers::conditions::push_indexed_parameter(
+            L,
+            wrappers::condition::context_of(self),
+            data->get_argument_type(which),
+            data->get_argument_underlying_type(which),
+            data->get_parameter(which)
+         );
          return 1;
       }
 
@@ -108,12 +66,8 @@ namespace {
             return 0;
 
          auto& params = data->get_event_parameters();
-         switch (params.function) {
-            #define CASE(name, ...) case dovah::conditions::event_function::name: lua_pushstring(L, #name); return 1;
-            FOR_EACH_EVENT_FUNCTION_ID(CASE)
-            #undef CASE
-         }
-         return 0;
+         api_helpers::conditions::push_event_function(L, params.function);
+         return 1;
       }
       int event_member(lua_State* L) {
          auto& self = get_wrapper_for_thiscall<cls>(L);
@@ -124,20 +78,7 @@ namespace {
             return 0;
 
          auto& params = data->get_event_parameters();
-         if (params.member == 0)
-            return 0;
-         //
-         // Event members are defined as two-CCs.
-         //
-         char name[3] = { '\0', '\0', '\0' };
-         if constexpr (std::endian::native == std::endian::little) {
-            name[0] = params.member >> 8;
-            name[1] = params.member;
-         } else {
-            name[0] = params.member;
-            name[1] = params.member >> 8;
-         }
-         lua_pushlstring(L, name, 2);
+         api_helpers::conditions::push_event_member(L, params.member);
          return 1;
       }
       int event_form(lua_State* L) {
@@ -149,7 +90,8 @@ namespace {
             return 0;
 
          auto& params = data->get_event_parameters();
-         return push_native_object(params.form);
+         api_helpers::conditions::push_event_form(L, params.form.get_form_stub());
+         return 1;
       }
       
       int parameter_1(lua_State* L) {
@@ -205,7 +147,13 @@ namespace {
 
          working_type working(*data);
          {
-            auto result = pull_condition_parameter_from_lua(L, 2, self, working, which);
+            auto result = api_helpers::conditions::pull_indexed_parameter(
+               L,
+               2,
+               wrappers::condition::context_of(self),
+               working.get_argument_underlying_type(which),
+               working.get_effective_argument_typeinfo(which)
+            );
             if (result.has_value()) {
                auto& param = result.value();
                _warn_on_param(L, which, working.function, param);
@@ -258,7 +206,7 @@ namespace {
          _edit_event_params(
             L,
             [L, &fn]() {
-               auto result = pull_condition_event_function_from_lua(L, 2);
+               auto result = api_helpers::conditions::pull_event_function(L, 2);
                if (result.has_value())
                   fn = result.value();
                else
@@ -275,7 +223,7 @@ namespace {
          _edit_event_params(
             L,
             [L, &member]() {
-               auto result = pull_condition_event_member_from_lua(L, 2);
+               auto result = api_helpers::conditions::pull_event_member(L, 2);
                if (result.has_value())
                   member = result.value();
                else
@@ -294,7 +242,7 @@ namespace {
          _edit_event_params(
             L,
             [L, &stub]() {
-               auto result = pull_condition_event_form_from_lua(L, 2);
+               auto result = api_helpers::conditions::pull_event_form(L, 2);
                if (result.has_value())
                   stub = result.value();
                else

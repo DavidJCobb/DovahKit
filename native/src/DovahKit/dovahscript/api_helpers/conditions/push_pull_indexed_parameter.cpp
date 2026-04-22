@@ -1,44 +1,30 @@
-#include "./pull_condition_parameter_from_lua.h"
+#include "./push_pull_indexed_parameter.h"
 #include "lua.h"
-#include "dovah/data/conditions/all_function_info.h"
-#include "dovah/forms/components/conditions/context.h"
+#include "dovah/data/conditions/parameter_typeinfo.h"
 #include "dovah/forms/Quest.h"
-#include "dovahscript/pull_native_object.h"
-#include "dovahscript/wrapper.h"
-#include "dovahscript/wrappers/form_components/condition.h"
-#include "dovahscript/wrappers/form/form.h"
+#include "dovahscript/push_native_object.h"
 #include "dovahscript/wrappers/form/quest/alias.h"
+#include "dovahscript/wrappers/form/form.h"
 
-#define FOR_EACH_EVENT_FUNCTION_ID(DO) \
-   DO(GetIsID) \
-   DO(IsInList) \
-   DO(GetValue) \
-   DO(HasKeyword) \
-   DO(GetItemValue) \
-
-namespace dovahscript {
+namespace dovahscript::api_helpers::conditions {
    extern std::expected<
-      dovah::loaded_forms::components::conditions::working_parameter,
+      working_parameter,
       std::string_view
-   > pull_condition_parameter_from_lua(
+   > pull_indexed_parameter(
       lua_State* L,
       int pos,
-      wrapper& self,
-      const dovah::loaded_forms::components::conditions::working_condition& working,
-      int which_parameter
+      //
+      const context_type& context,
+      dovah::conditions::parameter_underlying_type underlying,
+      const dovah::conditions::parameter_typeinfo* typeinfo
    ) {
-      auto* form = self.get_loaded_form_data<dovah::loaded_forms::Form>();
-
       dovah::loaded_forms::components::conditions::working_parameter param;
-
-      auto underlying = working.get_argument_underlying_type(which_parameter);
       switch (underlying) {
          case dovah::conditions::parameter_underlying_type::alias:
             {
                auto* alias_wrapper = wrapper_from_stack<wrappers::quest_alias>(L, pos);
                if (!alias_wrapper)
                   return std::unexpected("quest alias expected");
-               auto context = wrappers::condition::context_of(self);
                if (!context.quest)
                   return std::unexpected("this condition has no owning quest and so cannot refer to a quest alias");
                auto* alias = wrappers::quest_alias::unwrap(*alias_wrapper);
@@ -63,10 +49,6 @@ namespace dovahscript {
             if (!lua_isstring(L, pos))
                return std::unexpected("string expected");
             {
-               auto* func = dovah::conditions::function_info_by_id(working.function);
-               if (!func)
-                  return std::unexpected("internal error: unable to find internal data for this condition function, so we don't know what values are valid here");
-               auto* typeinfo = func->argument_types[which_parameter];
                if (!typeinfo)
                   return std::unexpected("internal error: unable to find internal data (typeinfo) for this parameter type, so we don't know what values are valid here");
                if (!typeinfo->enumeration_info.has_value())
@@ -103,15 +85,8 @@ namespace dovahscript {
                      return std::unexpected("form or nil expected");
                   stub = other->stub;
                }
-               if (stub) {
-                  auto* func = dovah::conditions::function_info_by_id(working.function);
-                  if (func) {
-                     if (auto* typeinfo = func->argument_types[which_parameter]) {
-                        if (!typeinfo->allows_form_type(stub->form_type)) {
-                           return std::unexpected("invalid form type for this parameter");
-                        }
-                     }
-                  }
+               if (stub && typeinfo && !typeinfo->allows_form_type(stub->form_type)) {
+                  return std::unexpected("invalid form type for this parameter");
                }
                param.emplace<dovah::form_stub*>(stub);
             }
@@ -134,7 +109,7 @@ namespace dovahscript {
                if (v < 0)
                   return std::unexpected("unsigned integer expected");
                if (v > std::numeric_limits<int32_t>::max())
-                  return std::unexpected("this value is not representable in a signed 4-byte integer");
+                  return std::unexpected("this value is not representable in an unsigned 4-byte integer");
                param.emplace<uint32_t>(v);
             }
             break;
@@ -165,33 +140,83 @@ namespace dovahscript {
       return param;
    }
 
-   extern std::expected<dovah::conditions::event_function::type, std::string_view> pull_condition_event_function_from_lua(lua_State* L, int pos) {
-      if (!lua_isstring(L, pos))
-         return std::unexpected("string expected");
-      std::string_view v = lua_tostring(L, pos);
-      #define CASE(name, ...) if (v == #name) return dovah::conditions::event_function::name;
-      FOR_EACH_EVENT_FUNCTION_ID(CASE)
-      #undef CASE
-      return std::unexpected("unrecognized event function name");
-   }
-   extern std::expected<uint16_t, std::string_view> pull_condition_event_member_from_lua(lua_State* L, int pos) {
-      if (!lua_isstring(L, pos))
-         return std::unexpected("string expected");
-      std::string_view name = lua_tostring(L, pos);
-      if (name.size() != 2)
-         return std::unexpected("argument is not an event member signature");
-      if constexpr (std::endian::native == std::endian::little) {
-         return name[1] | ((uint16_t)name[0] << 8);
-      } else {
-         return name[0] | ((uint16_t)name[1] << 8);
+   extern void push_indexed_parameter(
+      lua_State* L,
+      const context_type& context,
+      const dovah::conditions::parameter_typeinfo*       typeinfo,
+      const dovah::conditions::parameter_underlying_type underlying,
+      const working_parameter& param
+   ) {
+      if (std::holds_alternative<std::monostate>(param)) {
+         lua_pushnil(L);
+         return;
       }
-   }
-   extern std::expected<dovah::form_stub*, std::string_view> pull_condition_event_form_from_lua(lua_State* L, int pos) {
-      if (lua_isnoneornil(L, pos))
-         return nullptr;
-      auto* other = wrapper_from_stack<wrappers::form>(L, pos);
-      if (!other)
-         return std::unexpected("form or nil expected");
-      return other->stub;
+      if (std::holds_alternative<uint32_t>(param)) {
+         switch (underlying) {
+            case dovah::conditions::parameter_underlying_type::alias:
+               if (context.quest) {
+                  int c = wrappers::quest_alias::wrap(L, context.quest, std::get<uint32_t>(param));
+                  if (c > 0) {
+                     if (c > 1)
+                        lua_pop(L, c - 1);
+                     return;
+                  }
+               }
+               lua_pushnil(L);
+               return;
+            case dovah::conditions::parameter_underlying_type::int_unsigned:
+            case dovah::conditions::parameter_underlying_type::quest_stage:
+            default:
+               lua_pushinteger(L, std::get<uint32_t>(param));
+               return;
+            case dovah::conditions::parameter_underlying_type::package_data:
+               lua_pushinteger(L, std::get<uint32_t>(param)); // TODO: return a wrapped package data
+               return;
+         }
+         std::unreachable();
+         return;
+      }
+      if (std::holds_alternative<char>(param)) {
+         lua_pushlstring(L, &std::get<char>(param), 1);
+         return;
+      }
+      if (std::holds_alternative<float>(param)) {
+         lua_pushnumber(L, std::get<float>(param));
+         return;
+      }
+      if (std::holds_alternative<int32_t>(param)) {
+         auto v = std::get<int32_t>(param);
+         if (underlying == dovah::conditions::parameter_underlying_type::enumeration) {
+            if (typeinfo && typeinfo->enumeration_info.has_value()) {
+               const auto& enumeration = typeinfo->enumeration_info.value();
+               for (size_t i = 0; i < enumeration.size; ++i) {
+                  const auto& member = enumeration.members[i];
+                  if (member.value == v) {
+                     lua_pushstring(L, member.name.data());
+                     return;
+                  }
+               }
+            }
+         }
+         lua_pushinteger(L, v);
+         return;
+      }
+      if (std::holds_alternative<dovah::form_stub*>(param)) {
+         int c = push_native_object(std::get<dovah::form_stub*>(param));
+         if (c > 0) {
+            if (c > 1)
+               lua_pop(L, c - 1);
+            return;
+         }
+         lua_pushnil(L);
+         return;
+      }
+      if (std::holds_alternative<std::string>(param)) {
+         auto& data = std::get<std::string>(param);
+         lua_pushstring(L, data.c_str());
+         return;
+      }
+
+      lua_pushnil(L);
    }
 }

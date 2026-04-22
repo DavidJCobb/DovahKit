@@ -12,23 +12,22 @@
 #include "dovahscript/wrapper.h"
 
 #include "dovah/data/conditions/all_function_info.h"
-#include "dovah/data/hardcoded_form_ids.h"
 #include "dovah/forms/components/conditions.h"
 #include "dovah/forms/components/conditions/context.h"
 #include "dovah/forms/components/conditions/working_condition.h"
 #include "dovah/forms/Form.h"
-#include "dovah/forms/Quest.h"
 #include "dovah/forms/TopicInfo.h"
-#include "editor/core.h"
-
-#include "../form/form.h"
-#include "../form/quest/alias.h"
 
 #include "./condition/comparison.h"
 #include "./condition/parameter_set.h"
-#include "./condition/impl/pull_condition_comparison_from_lua.h"
-#include "./condition/impl/pull_condition_parameter_from_lua.h"
-#include "./condition/impl/pull_condition_parameter_set_from_lua.h"
+#include "dovahscript/api_helpers/conditions/pull_comparison_as_table.h"
+#include "dovahscript/api_helpers/conditions/pull_parameters_as_table.h"
+#include "dovahscript/api_helpers/conditions/push_pull_comparison_operand.h"
+#include "dovahscript/api_helpers/conditions/push_pull_comparison_operator.h"
+#include "dovahscript/api_helpers/conditions/push_pull_event_parameter.h"
+#include "dovahscript/api_helpers/conditions/push_pull_indexed_parameter.h"
+#include "dovahscript/api_helpers/conditions/push_pull_parameter_type_override.h"
+#include "dovahscript/api_helpers/conditions/push_pull_run_on.h"
 
 namespace {
    using namespace dovahscript;
@@ -104,78 +103,6 @@ namespace {
          return std::unexpected("unrecognized function name");
       }
       return std::unexpected("expected string (function name) or integer (function ID)");
-   }
-   std::expected<parameter_type_override, std::string_view> parameter_type_override_from_lua(lua_State* L, int pos) {
-      if (!lua_isstring(L, pos))
-         return std::unexpected("string expected");
-      std::string_view v = lua_tostring(L, pos);
-      if (v == "none") {
-         return parameter_type_override::none;
-      } else if (v == "alias") {
-         return parameter_type_override::alias;
-      } else if (v == "packdata") {
-         return parameter_type_override::package_data;
-      }
-      return std::unexpected("unrecognized value");
-   }
-   std::expected<working_run_on_params, std::string_view> run_on_from_lua(lua_State* L, int pos, const context_type& context) {
-      using run_on_params = working_run_on_params;
-
-      if (lua_isstring(L, pos)) {
-         std::string_view arg = lua_tostring(L, pos);
-         if (arg == "combat target") {
-            return run_on_params{ .type = dovah::conditions::run_on_type::combat_target };
-         }
-         if (arg == "linked ref") {
-            return run_on_params{ .type = dovah::conditions::run_on_type::linked_ref };
-         }
-         if (arg == "player") {
-            auto& editor = DovahKitCore::get();
-            if (!editor.has_data())
-               return std::unexpected("cannot set the run-on type to the player because no data is loaded in the editor");
-            auto* ref = editor.get_form(dovah::hardcoded_form_ids::PlayerRef);
-            if (!ref)
-               return std::unexpected("an internal error occurred: could not locate PlayerRef");
-            return run_on_params{
-               .type   = dovah::conditions::run_on_type::reference,
-               .entity = ref
-            };
-         }
-         if (arg == "subject") {
-            return run_on_params{ .type = dovah::conditions::run_on_type::subject };
-         }
-         if (arg == "target") {
-            return run_on_params{ .type = dovah::conditions::run_on_type::target };
-         }
-         return std::unexpected("unrecognized run-on type");
-      }
-      auto* alias_wrapper = wrapper_from_stack<wrappers::quest_alias>(L, pos);
-      if (alias_wrapper) {
-         auto* alias = wrappers::quest_alias::unwrap(*alias_wrapper);
-         if (!alias)
-            return std::unexpected("passed-in quest alias is missing (deleted?)");
-         if (!context.quest)
-            return std::unexpected("this condition has no owning quest, and so cannot be set to run on a quest alias");
-         if (&alias->owner.stub != context.quest)
-            return std::unexpected("the passed-in quest alias does not belong to this condition's owning quest");
-         return run_on_params{
-            .type   = dovah::conditions::run_on_type::quest_alias,
-            .entity = alias->id
-         };
-      } else {
-         auto* form_wrapper = wrapper_from_stack<wrappers::form>(L, pos);
-         if (!form_wrapper)
-            return std::unexpected("form or string expected");
-         if (!form_wrapper->stub || !dovah::form_type_is_reference(form_wrapper->stub->form_type))
-            return std::unexpected("the passed-in form is not a ref");
-         return run_on_params{
-            .type   = dovah::conditions::run_on_type::reference,
-            .entity = form_wrapper->stub
-         };
-      }
-      // 
-      // TODO: in the future, handle package data and event data
-      //
    }
 }
 
@@ -291,7 +218,7 @@ namespace {
 
          _handle_field(
             "comparison",
-            &pull_condition_comparison_from_lua,
+            &api_helpers::conditions::pull_comparison_as_table,
             [](auto& working, auto&& v) {
                working.comparison = v;
             }
@@ -313,7 +240,7 @@ namespace {
          );
          _handle_field_with_default(
             "override_types_with",
-            &parameter_type_override_from_lua,
+            &api_helpers::conditions::pull_parameter_type_override,
             [&reset_params_if_invalid](auto& working, auto&& v) {
                working.override_types_with = v;
                reset_params_if_invalid = true;
@@ -334,7 +261,13 @@ namespace {
                // We've already handled `function_name` and `override_types_with`, so we can 
                // actually set the parameters and check their validity right now.
                //
-               auto result = pull_condition_parameter_set_from_lua(L, -1, self, working);
+               auto result = api_helpers::conditions::pull_parameters_as_table(
+                  L,
+                  -1,
+                  *dovah::conditions::function_info_by_id(working.function),
+                  context,
+                  working.override_types_with
+               );
                lua_pop(L, 1);
                if (result.has_value()) {
                   auto& p_set = result.value();
@@ -361,7 +294,7 @@ namespace {
          }
          _handle_field(
             "run_on",
-            &run_on_from_lua,
+            &api_helpers::conditions::pull_run_on,
             [&reset_params_always](auto& working, auto&& v) {
                working.run_on = v;
             }
@@ -395,6 +328,79 @@ namespace {
          wrapped->commit(*form, working);
          self.after_edit();
          return 0;
+      }
+
+      int copy_as_table(lua_State* L) {
+         auto& self = get_wrapper_for_thiscall<cls>(L);
+         auto* wrapped = _unwrap(self);
+         if (wrapped == nullptr)
+            cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
+
+         const auto* function_info = wrapped->get_function();
+
+         lua_createtable(L, 0, 7);
+         {
+            auto& src_cmp = wrapped->get_comparison();
+            lua_createtable(L, 0, 2);
+            {
+               api_helpers::conditions::push_comparison_operator(L, src_cmp.op);
+               lua_setfield(L, -2, "operator");
+               api_helpers::conditions::push_comparison_operand(L, src_cmp.operand);
+               lua_setfield(L, -2, "operand");
+            }
+            lua_setfield(L, -2, "comparison");
+         }
+         {
+            if (function_info) {
+               lua_pushlstring(L, function_info->name.data(), function_info->name.size());
+            } else {
+               lua_pushnil(L);
+            }
+            lua_setfield(L, -2, "function_name");
+         }
+         {
+            lua_pushboolean(L, wrapped->test_flags(wrapped_type::flag::or_linked));
+            lua_setfield(L, -2, "is_or_linked");
+         }
+         {
+            api_helpers::conditions::push_parameter_type_override(L, *wrapped);
+            lua_setfield(L, -2, "override_types_with");
+         }
+         {
+            lua_createtable(L, 0, 5);
+            if (function_info) {
+               if (function_info->uses_event_data) {
+                  const auto& ep = wrapped->get_event_parameters();
+                  api_helpers::conditions::push_event_function(L, ep.function);
+                  lua_setfield(L, -2, "function");
+                  api_helpers::conditions::push_event_member(L, ep.member);
+                  lua_setfield(L, -2, "member");
+                  api_helpers::conditions::push_event_form(L, ep.form.get_form_stub());
+                  lua_setfield(L, -2, "form");
+               } else {
+                  for (size_t i = 0; i < 1; ++i) {
+                     api_helpers::conditions::push_indexed_parameter(
+                        L,
+                        wrappers::condition::context_of(self),
+                        wrapped->get_argument_type(i),
+                        wrapped->get_argument_underlying_type(i),
+                        wrapped->get_parameter(i)
+                     );
+                     lua_seti(L, -2, i + 1);
+                  }
+               }
+            }
+            lua_setfield(L, -2, "parameters");
+         }
+         {
+            api_helpers::conditions::push_run_on(L, wrapped->get_run_on_data(), cls::context_of(self));
+            lua_setfield(L, -2, "run_on");
+         }
+         {
+            lua_pushboolean(L, wrapped->test_flags(wrapped_type::flag::swap_subject_and_target));
+            lua_setfield(L, -2, "swap_subject_and_target");
+         }
+         return 1;
       }
    }
    namespace _getters {
@@ -433,13 +439,7 @@ namespace {
          auto* wrapped = _unwrap(self);
          if (wrapped == nullptr)
             cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
-         if (wrapped->test_flags(wrapped_type::flag::use_aliases)) {
-            lua_pushstring(L, "alias");
-         } else if (wrapped->test_flags(wrapped_type::flag::use_package_data)) {
-            lua_pushstring(L, "packdata");
-         } else {
-            lua_pushstring(L, "none");
-         }
+         api_helpers::conditions::push_parameter_type_override(L, *wrapped);
          return 1;
       }
       int owning_package(lua_State* L) {
@@ -472,42 +472,7 @@ namespace {
          auto* wrapped = _unwrap(self);
          if (wrapped == nullptr)
             cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
-
-         switch (wrapped->get_run_on_data().type) {
-            case dovah::conditions::run_on_type::combat_target:
-               lua_pushstring(L, "combat target");
-               return 1;
-            case dovah::conditions::run_on_type::event_data:
-               lua_pushnumber(L, wrapped->get_run_on_data().index); // TODO: push an event-data object instead
-               return 1;
-            case dovah::conditions::run_on_type::linked_ref:
-               lua_pushstring(L, "linked ref");
-               return 1;
-            case dovah::conditions::run_on_type::quest_alias:
-               if (auto* quest = _context_of(self).quest) {
-                  return wrappers::quest_alias::wrap(L, quest, wrapped->get_run_on_data().index);
-               }
-               break;
-            case dovah::conditions::run_on_type::package_data:
-               lua_pushnumber(L, wrapped->get_run_on_data().index); // TODO: push a package-data object instead
-               return 1;
-            case dovah::conditions::run_on_type::reference:
-               {
-                  auto* stub = wrapped->get_run_on_data().reference.get_form_stub();
-                  if (stub && stub->formID == dovah::hardcoded_form_ids::PlayerRef) {
-                     lua_pushstring(L, "player");
-                     return 1;
-                  }
-               }
-               return push_native_object(wrapped->get_run_on_data().reference);
-            case dovah::conditions::run_on_type::subject:
-               lua_pushstring(L, "subject");
-               return 1;
-            case dovah::conditions::run_on_type::target:
-               lua_pushstring(L, "target");
-               return 1;
-         }
-         lua_pushnil(L);
+         api_helpers::conditions::push_run_on(L, wrapped->get_run_on_data(), cls::context_of(self));
          return 1;
       }
       int swap_subject_and_target(lua_State* L) {
@@ -562,7 +527,7 @@ namespace {
          _try_edit_condition(
             L,
             [L, &v]() {
-               auto result = pull_condition_comparison_from_lua(L, 2);
+               auto result = api_helpers::conditions::pull_comparison_as_table(L, 2);
                if (result.has_value())
                   v = result.value();
                else
@@ -617,7 +582,7 @@ namespace {
          _try_edit_condition(
             L,
             [L, &type]() {
-               auto result = parameter_type_override_from_lua(L, 2);
+               auto result = api_helpers::conditions::pull_parameter_type_override(L, 2);
                if (result.has_value())
                   type = result.value();
                else
@@ -633,11 +598,14 @@ namespace {
          return 0;
       }
       int parameters(lua_State* L) {
-         api_helpers::working_condition_parameter_set v;
+         api_helpers::conditions::working_parameter_set v;
          _try_edit_condition(
             L,
             [L, &v](wrapper& self, working_type& working) {
-               auto result = pull_condition_parameter_set_from_lua(L, 2, self, working);
+               const auto* function_info = dovah::conditions::function_info_by_id(working.function);
+               if (!function_info)
+                  cobb::lua::error(L, "internal error: unable to find function info for this condition");
+               auto result = api_helpers::conditions::pull_parameters_as_table(L, 2, *function_info, cls::context_of(self), working.override_types_with);
                if (result.has_value())
                   v = result.value();
                else
@@ -659,7 +627,7 @@ namespace {
          _try_edit_condition(
             L,
             [L, &params](wrapper& self) {
-               auto result = run_on_from_lua(L, 2, cls::context_of(self));
+               auto result = api_helpers::conditions::pull_run_on(L, 2, cls::context_of(self));
                if (result.has_value())
                   params = std::move(result.value());
                else
@@ -688,6 +656,7 @@ namespace {
 namespace dovahscript::wrappers {
    /*static*/ cls::method_list_t cls::metatable_methods = {
       { "assign",         &_methods::_apply_table<true> },
+      { "copy_as_table",  &_methods::copy_as_table },
       { "overwrite_with", &_methods::_apply_table<false> },
    };
    

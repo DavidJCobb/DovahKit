@@ -138,6 +138,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dovahscript\api_helpers\conditions\pull_comparison_as_table.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\conditions\pull_parameters_as_table.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_event_parameter.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_indexed_parameter.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_comparison_operand.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_comparison_operator.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_parameter_type_override.cpp" />
+    <ClCompile Include="dovahscript\api_helpers\conditions\push_pull_run_on.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\dialogue_branch.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh.cpp" />
     <ClCompile Include="dovahscript\wrappers\form\navmesh\collection_base_forms.cpp" />
@@ -162,9 +170,6 @@
     <ClCompile Include="dovahscript\wrappers\form_components\collection_conditions.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition\comparison.cpp" />
-    <ClCompile Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_comparison_from_lua.cpp" />
-    <ClCompile Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_from_lua.cpp" />
-    <ClCompile Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_set_from_lua.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\condition\parameter_set.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\papyrus.cpp" />
     <ClCompile Include="dovahscript\wrappers\form_components\papyrus\collection_array_property_values.cpp" />
@@ -1519,6 +1524,15 @@
     <ClCompile Include="xaudio2\xwma_file_info.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dovahscript\api_helpers\conditions\pull_comparison_as_table.h" />
+    <ClInclude Include="dovahscript\api_helpers\conditions\pull_parameters_as_table.h" />
+    <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_event_parameter.h" />
+    <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_indexed_parameter.h" />
+    <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_comparison_operand.h" />
+    <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_comparison_operator.h" />
+    <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_parameter_type_override.h" />
+    <ClInclude Include="dovahscript\api_helpers\conditions\push_pull_run_on.h" />
+    <ClInclude Include="dovahscript\api_helpers\conditions\_types.h" />
     <ClInclude Include="dovahscript\api_helpers\fail_table_if_expandos.h" />
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\apply_table.h" />
     <ClInclude Include="dovahscript\api_helpers\subobject_property_helpers\apply_table_variations.h" />
@@ -1569,9 +1583,6 @@
     <ClInclude Include="dovahscript\wrappers\form_components\collection_conditions.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition\comparison.h" />
-    <ClInclude Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_comparison_from_lua.h" />
-    <ClInclude Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_from_lua.h" />
-    <ClInclude Include="dovahscript\wrappers\form_components\condition\impl\pull_condition_parameter_set_from_lua.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\condition\parameter_set.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\papyrus.h" />
     <ClInclude Include="dovahscript\wrappers\form_components\papyrus\collection_array_property_values.h" />
