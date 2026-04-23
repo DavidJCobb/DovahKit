@@ -28,6 +28,8 @@
 #include "dovahscript/api_helpers/conditions/push_pull_indexed_parameter.h"
 #include "dovahscript/api_helpers/conditions/push_pull_parameter_type_override.h"
 #include "dovahscript/api_helpers/conditions/push_pull_run_on.h"
+#include "dovahscript/api_helpers/fail_table_if_expandos.h"
+#include "dovahscript/wrappers/form/form.h"
 
 namespace {
    using namespace dovahscript;
@@ -39,6 +41,30 @@ namespace {
    using parameter_type_override = dovah::loaded_forms::components::conditions::parameter_type_override;
    using working_comparison      = decltype(working_type::comparison);
    using working_run_on_params   = decltype(working_type::run_on);
+}
+
+namespace {
+   // If `true`, then attempting to overwrite a condition with a table-or-userdata will 
+   // fail if the source table specifies an `owning_package` or `owning_quest` field that 
+   // doesn't match the owning package/quest of the destination condition. (This behavior 
+   // is skipped when overwriting a condition with another condition.)
+   constexpr const bool apply_table_fails_on_mismatched_context = true;
+
+   // If `true`, then `condition:copy_as_table()` stores the `owning_package` and the 
+   // `owning_quest` fields on the output table. This probably shouldn't be set to `true` 
+   // unless `apply_table_fails_on_mismatched_context` is set to `false`, as otherwise, 
+   // the ergonomics will be miserable for code like the following, when the condition has 
+   // an owning package or quest:
+   //
+   //    local t = cnd:copy_as_table()
+   // 
+   //    -- some hypothetical change, possibly behind multiple layers of abstraction 
+   //    -- within the victim script
+   //    t.is_or_linked = false
+   // 
+   //    cnd:overwrite_with(t)
+   //
+   constexpr const bool copy_as_table_also_saves_context = false;
 }
 
 bool cls::is_not_locked(wrapper& w) {
@@ -137,11 +163,72 @@ namespace {
                cobb::lua::argerror(L, table_pos, "table or userdata expected");
          }
 
+         bool arg_is_another_condition = false;
+         {
+            auto* arg_wrap = wrapper_from_stack<cls>(L, table_pos);
+            if (arg_wrap) {
+               arg_is_another_condition = true;
+               if (arg_wrap == &self)
+                  //
+                  // Early-out on self-assignment.
+                  //
+                  return 0;
+            }
+         }
+
+         api_helpers::fail_table_if_expandos(L, table_pos, std::array<std::string_view, 9>{
+            "comparison",
+            "function_name",
+            "is_or_linked",
+            "override_types_with",
+            "parameters",
+            "run_on",
+            "swap_subject_and_target",
+            //
+            // Context fields:
+            //
+            "owning_package",
+            "owning_quest",
+         });
+
          bool reset_params_if_invalid = false;
          bool reset_params_always     = false;
 
          working_type working(*wrapped);
          context_type context = cls::context_of(self);
+
+         //
+         // Check if `owning_package` or `owning_quest` are set on the argument, and if 
+         // so, require that they match the destination condition.
+         // 
+         // NOTE: We deliberately ignore mismatches when overwriting one condition with 
+         // another, to more easily allow copying conditions across forms.
+         //
+         if constexpr (apply_table_fails_on_mismatched_context) {
+            if (!arg_is_another_condition) {
+               auto _pull_form = [L](int pos) -> std::optional<dovah::form_stub*> {
+                  auto* wrapper = wrapper_from_stack<wrappers::form>(L, pos);
+                  if (!wrapper)
+                     return {};
+                  return wrapper->stub;
+               };
+
+               lua_getfield(L, table_pos, "owning_package");
+               if (!lua_isnoneornil(L, -1)) {
+                  auto opt_form = _pull_form(-1);
+                  if (!opt_form.has_value() || opt_form.value() != context.package)
+                     cobb::lua::argerror(L, 2, "the table-or-userdata specified an `owning_package` that is not this condition's owning package (you don't need to specify the owning form, so consider not doing that instead)");
+               }
+               lua_pop(L, 1);
+               lua_getfield(L, table_pos, "owning_quest");
+               if (!lua_isnoneornil(L, -1)) {
+                  auto opt_form = _pull_form(-1);
+                  if (!opt_form.has_value() || opt_form.value() != context.quest)
+                     cobb::lua::argerror(L, 2, "the table-or-userdata specified an `owning_quest` that is not this condition's owning quest (you don't need to specify the owning form, so consider not doing that instead)");
+               }
+               lua_pop(L, 1);
+            }
+         }
 
          auto _handle_field = [L, table_pos, &working, &context](std::string_view field_name, auto pull, auto apply) {
             using pull_function_type   = decltype(pull);
@@ -400,6 +487,23 @@ namespace {
             lua_pushboolean(L, wrapped->test_flags(wrapped_type::flag::swap_subject_and_target));
             lua_setfield(L, -2, "swap_subject_and_target");
          }
+
+         if constexpr (copy_as_table_also_saves_context) {
+            auto context = cls::context_of(self);
+            int  pushed  = push_native_object(context.package);
+            if (pushed > 0) {
+               if (pushed > 1)
+                  lua_pop(L, pushed - 1);
+               lua_setfield(L, -2, "owning_package");
+            }
+            pushed = push_native_object(context.quest);
+            if (pushed > 0) {
+               if (pushed > 1)
+                  lua_pop(L, pushed - 1);
+               lua_setfield(L, -2, "owning_quest");
+            }
+         }
+
          return 1;
       }
    }

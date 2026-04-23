@@ -16,6 +16,7 @@ namespace dovahscript::api_helpers::conditions {
       const context_type& context,
       parameter_type_override pto
    ) {
+      table_pos = lua_absindex(L, table_pos);
       switch (lua_type(L, table_pos)) {
          case LUA_TTABLE:
          case LUA_TUSERDATA:

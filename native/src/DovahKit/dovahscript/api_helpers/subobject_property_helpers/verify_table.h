@@ -4,10 +4,10 @@
 #include "./property_name_list.h"
 #include <format>
 #include <string>
-#include <string_view>
 #include <type_traits>
 #include "helpers/tuples/for_each_nttp_value.h"
 #include "lua.h"
+#include "../table_contains_expandos.h"
 
 namespace dovahscript::api_helpers::subobject_property_helpers {
    template<typename Dst, bool AlwaysAllowNil, const auto& PropertiesTuple>
@@ -25,30 +25,12 @@ namespace dovahscript::api_helpers::subobject_property_helpers {
       {
          constexpr auto property_names = property_name_list<PropertiesTuple>;
 
-         std::string_view first_seen_expando_name;
-         {
-            lua_pushnil(L); // first key
-            while (lua_next(L, table_pos) != 0) {
-               lua_pushvalue(L, -2); // copy the key so we don't modify its type in-place
-               std::string_view key = lua_tostring(L, -1);
-               lua_pop(L, 1);
-               bool found = false;
-               for (const auto& allowed : property_names) {
-                  if (key == allowed) {
-                     found = true;
-                     break;
-                  }
-               }
-               lua_pop(L, 1);
-
-               if (!found) {
-                  first_seen_expando_name = key;
-                  break;
-               }
+         auto pair = table_contains_expandos(L, table_pos, property_names);
+         if (pair.first) {
+            if (!pair.second.empty()) {
+               return std::format("table contains one or more unexpected keys (first seen: `{}`)", pair.second);
             }
-         }
-         if (!first_seen_expando_name.empty()) {
-            return std::format("table contains one or more unexpected keys (first seen: `{}`)", first_seen_expando_name);
+            return std::format("table contains one or more unexpected keys");
          }
       }
 
