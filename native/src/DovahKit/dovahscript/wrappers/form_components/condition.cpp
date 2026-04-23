@@ -418,16 +418,17 @@ namespace {
       }
 
       int copy_as_table(lua_State* L) {
-         auto& self = get_wrapper_for_thiscall<cls>(L);
-         auto* wrapped = _unwrap(self);
+         auto&       self    = get_wrapper_for_thiscall<cls>(L);
+         const auto  context = cls::context_of(self);
+         const auto* wrapped = _unwrap(self);
          if (wrapped == nullptr)
             cobb::lua::error(L, "condition wrapper has no underlying object (deleted?)");
 
          const auto* function_info = wrapped->get_function();
 
-         lua_createtable(L, 0, 7);
+         lua_createtable(L, 0, copy_as_table_also_saves_context ? 9 : 7);
          {
-            auto& src_cmp = wrapped->get_comparison();
+            const auto& src_cmp = wrapped->get_comparison();
             lua_createtable(L, 0, 2);
             {
                api_helpers::conditions::push_comparison_operator(L, src_cmp.op);
@@ -454,7 +455,7 @@ namespace {
             lua_setfield(L, -2, "override_types_with");
          }
          {
-            lua_createtable(L, 0, 5);
+            lua_createtable(L, 2, 3);
             if (function_info) {
                if (function_info->uses_event_data) {
                   const auto& ep = wrapped->get_event_parameters();
@@ -468,7 +469,7 @@ namespace {
                   for (size_t i = 0; i < 1; ++i) {
                      api_helpers::conditions::push_indexed_parameter(
                         L,
-                        wrappers::condition::context_of(self),
+                        context,
                         wrapped->get_argument_type(i),
                         wrapped->get_argument_underlying_type(i),
                         wrapped->get_parameter(i)
@@ -480,7 +481,7 @@ namespace {
             lua_setfield(L, -2, "parameters");
          }
          {
-            api_helpers::conditions::push_run_on(L, wrapped->get_run_on_data(), cls::context_of(self));
+            api_helpers::conditions::push_run_on(L, wrapped->get_run_on_data(), context);
             lua_setfield(L, -2, "run_on");
          }
          {
@@ -489,8 +490,7 @@ namespace {
          }
 
          if constexpr (copy_as_table_also_saves_context) {
-            auto context = cls::context_of(self);
-            int  pushed  = push_native_object(context.package);
+            int pushed = push_native_object(context.package);
             if (pushed > 0) {
                if (pushed > 1)
                   lua_pop(L, pushed - 1);
