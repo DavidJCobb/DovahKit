@@ -133,6 +133,263 @@ namespace {
 }
 
 namespace {
+   template<bool TreatNilAsUnchanged>
+   void _pull_from_table(lua_State* L, int table_pos, const context_type& context, working_type& working) {
+      table_pos = lua_absindex(L, table_pos);
+      switch (lua_type(L, table_pos)) {
+         case LUA_TTABLE:
+         case LUA_TUSERDATA:
+            break;
+         default:
+            cobb::lua::argerror(L, table_pos, "table or userdata expected");
+      }
+
+      bool arg_is_another_condition = false;
+      if (auto* arg_wrap = wrapper_from_stack<cls>(L, table_pos))
+         arg_is_another_condition = true;
+
+      api_helpers::fail_table_if_expandos(L, table_pos, std::array<std::string_view, 9>{
+         "comparison",
+         "function_name",
+         "is_or_linked",
+         "override_types_with",
+         "parameters",
+         "run_on",
+         "swap_subject_and_target",
+         //
+         // Context fields:
+         //
+         "owning_package",
+         "owning_quest",
+      });
+
+      bool reset_params_if_invalid = false;
+      bool reset_params_always     = false;
+
+      //
+      // Check if `owning_package` or `owning_quest` are set on the argument, and if 
+      // so, require that they match the destination condition.
+      // 
+      // NOTE: We deliberately ignore mismatches when overwriting one condition with 
+      // another, to more easily allow copying conditions across forms.
+      //
+      if constexpr (apply_table_fails_on_mismatched_context) {
+         if (!arg_is_another_condition) {
+            auto _pull_form = [L](int pos) -> std::optional<dovah::form_stub*> {
+               auto* wrapper = wrapper_from_stack<wrappers::form>(L, pos);
+               if (!wrapper)
+                  return {};
+               return wrapper->stub;
+            };
+
+            lua_getfield(L, table_pos, "owning_package");
+            if (!lua_isnoneornil(L, -1)) {
+               auto opt_form = _pull_form(-1);
+               if (!opt_form.has_value() || opt_form.value() != context.package)
+                  cobb::lua::argerror(L, table_pos, "the table-or-userdata specified an `owning_package` that is not this condition's owning package (you don't need to specify the owning form, so consider not doing that instead)");
+            }
+            lua_pop(L, 1);
+            lua_getfield(L, table_pos, "owning_quest");
+            if (!lua_isnoneornil(L, -1)) {
+               auto opt_form = _pull_form(-1);
+               if (!opt_form.has_value() || opt_form.value() != context.quest)
+                  cobb::lua::argerror(L, table_pos, "the table-or-userdata specified an `owning_quest` that is not this condition's owning quest (you don't need to specify the owning form, so consider not doing that instead)");
+            }
+            lua_pop(L, 1);
+         }
+      }
+
+      auto _handle_field = [L, table_pos, &working, &context](std::string_view field_name, auto pull, auto apply) {
+         using pull_function_type   = decltype(pull);
+         using pulled_expected_type = typename cobb::function_traits<pull_function_type>::return_type;
+
+         lua_getfield(L, table_pos, field_name.data());
+
+         if constexpr (TreatNilAsUnchanged) {
+            if (lua_isnoneornil(L, -1)) {
+               lua_pop(L, 1);
+               return;
+            }
+         }
+
+         // Construct the expected with an empty error object, since we're using std::string_view as 
+         // our error object. This will avoid default-constructing the value-type just to immediately 
+         // clobber it with whatever the `pull` function produces.
+         pulled_expected_type result{ std::unexpect, std::string_view{} };
+         if constexpr (std::is_invocable_v<pull_function_type, lua_State*, int, context_type>) {
+            result = pull(L, -1, context);
+         } else {
+            result = pull(L, -1);
+         }
+
+         lua_pop(L, 1);
+
+         if (!result.has_value()) {
+            auto error = std::format("problem with field `{}`: {}", field_name, result.error());
+            cobb::lua::argerror(L, table_pos, error.c_str());
+         }
+         apply(working, result.value());
+      };
+      auto _handle_field_with_default = [L, table_pos, &working, &context](std::string_view field_name, auto pull, auto apply, auto dv) {
+         using pull_function_type   = decltype(pull);
+         using pulled_expected_type = cobb::function_traits<pull_function_type>::return_type;
+
+         lua_getfield(L, table_pos, field_name.data());
+         if (lua_isnoneornil(L, -1)) {
+            lua_pop(L, 1);
+            if constexpr (!TreatNilAsUnchanged) {
+               apply(working, dv);
+            }
+            return;
+         }
+
+         // Construct the expected with an empty error object, since we're using std::string_view as 
+         // our error object. This will avoid default-constructing the value-type just to immediately 
+         // clobber it with whatever the `pull` function produces.
+         pulled_expected_type result{ std::unexpect, std::string_view{} };
+         if constexpr (std::is_invocable_v<pull_function_type, lua_State*, int, context_type>) {
+            result = pull(L, -1, context);
+         } else {
+            result = pull(L, -1);
+         }
+
+         lua_pop(L, 1);
+
+         if (!result.has_value()) {
+            auto error = std::format("problem with field `{}`: {}", field_name, result.error());
+            cobb::lua::argerror(L, table_pos, error.c_str());
+         }
+         apply(working, result.value());
+      };
+
+      //
+
+      auto _pull_boolean = [](lua_State* L, int pos) -> std::expected<bool, std::string_view> {
+         if (!lua_isboolean(L, pos) && !lua_isnoneornil(L, pos))
+            return std::unexpected("boolean expected");
+         return lua_toboolean(L, pos);
+      };
+
+      //
+
+      _handle_field(
+         "comparison",
+         &api_helpers::conditions::pull_comparison_as_table,
+         [](auto& working, auto&& v) {
+            working.comparison = v;
+         }
+      );
+      _handle_field(
+         "function_name",
+         &function_id_from_lua,
+         [&reset_params_always](auto& working, auto&& v) {
+            working.function = v;
+            reset_params_always = true;
+         }
+      );
+      _handle_field(
+         "is_or_linked",
+         _pull_boolean,
+         [](auto& working, auto&& v) {
+            working.flags.or_linked = v;
+         }
+      );
+      _handle_field_with_default(
+         "override_types_with",
+         &api_helpers::conditions::pull_parameter_type_override,
+         [&reset_params_if_invalid](auto& working, auto&& v) {
+            working.override_types_with = v;
+            reset_params_if_invalid = true;
+         },
+         parameter_type_override::none
+      );
+      {
+         lua_getfield(L, table_pos, "parameters");
+         if (lua_isnoneornil(L, -1)) {
+            lua_pop(L, 1);
+            if constexpr (!TreatNilAsUnchanged) {
+               reset_params_always = true;
+            }
+         } else {
+            reset_params_always     = false;
+            reset_params_if_invalid = false;
+            //
+            // We've already handled `function_name` and `override_types_with`, so we can 
+            // actually set the parameters and check their validity right now.
+            //
+            auto result = api_helpers::conditions::pull_parameters_as_table(
+               L,
+               -1,
+               *dovah::conditions::function_info_by_id(working.function),
+               context,
+               working.override_types_with
+            );
+            lua_pop(L, 1);
+            if (result.has_value()) {
+               auto& p_set = result.value();
+               working.event_parameters = p_set.event_data;
+               if (p_set.event_data.has_value()) {
+                  working.reset_parameters();
+               } else {
+                  working.parameters = std::move(p_set.parameters);
+               }
+            } else {
+               std::string_view function_name = "?";
+               {
+                  auto* info = dovah::conditions::function_info_by_id(working.function);
+                  if (info)
+                     function_name = info->name;
+               }
+               auto error = std::format("problem with field `parameters` (given condition function `{}`): {}",
+                  function_name,
+                  result.error()
+               );
+               cobb::lua::argerror(L, table_pos, error.c_str());
+            }
+         }
+      }
+      _handle_field(
+         "run_on",
+         &api_helpers::conditions::pull_run_on,
+         [&reset_params_always](auto& working, auto&& v) {
+            working.run_on = v;
+         }
+      );
+      _handle_field(
+         "swap_subject_and_target",
+         _pull_boolean,
+         [](auto& working, auto&& v) {
+            working.flags.swap_subject_and_target = v;
+         }
+      );
+
+      if (reset_params_always) {
+         working.reset_parameters();
+
+         working.event_parameters = {};
+         //
+         const auto* info = dovah::conditions::function_info_by_id(working.function);
+         if (info && info->uses_event_data)
+            working.event_parameters.emplace();
+      } else if (reset_params_if_invalid) {
+         for (size_t i = 0; i < working.parameters.size(); ++i)
+            if (!working.is_parameter_valid(i))
+               working.reset_parameter(i);
+      }
+
+      if (!working.valid()) {
+         cobb::lua::argerror(L, table_pos, "invalid value");
+      }
+   }
+}
+
+working_type cls::pull_from_table(lua_State* L, int pos, const context_type& context) {
+   working_type working;
+   _pull_from_table<false>(L, pos, context, working);
+   return working;
+}
+
+namespace {
    wrapped_type* _unwrap(wrapper& w) {
       return cls::unwrap(w);
    }
@@ -155,262 +412,15 @@ namespace {
 
          constexpr const int table_pos = 2;
 
-         switch (lua_type(L, table_pos)) {
-            case LUA_TTABLE:
-            case LUA_TUSERDATA:
-               break;
-            default:
-               cobb::lua::argerror(L, table_pos, "table or userdata expected");
-         }
-
-         bool arg_is_another_condition = false;
-         {
-            auto* arg_wrap = wrapper_from_stack<cls>(L, table_pos);
-            if (arg_wrap) {
-               arg_is_another_condition = true;
-               if (arg_wrap == &self)
-                  //
-                  // Early-out on self-assignment.
-                  //
-                  return 0;
-            }
-         }
-
-         api_helpers::fail_table_if_expandos(L, table_pos, std::array<std::string_view, 9>{
-            "comparison",
-            "function_name",
-            "is_or_linked",
-            "override_types_with",
-            "parameters",
-            "run_on",
-            "swap_subject_and_target",
-            //
-            // Context fields:
-            //
-            "owning_package",
-            "owning_quest",
-         });
-
-         bool reset_params_if_invalid = false;
-         bool reset_params_always     = false;
+         // Early-out on self-assignment.
+         if (auto* arg_wrap = wrapper_from_stack<cls>(L, table_pos))
+            if (arg_wrap == &self)
+               return 0;
 
          working_type working(*wrapped);
          context_type context = cls::context_of(self);
+         _pull_from_table<TreatNilAsUnchanged>(L, table_pos, context, working);
 
-         //
-         // Check if `owning_package` or `owning_quest` are set on the argument, and if 
-         // so, require that they match the destination condition.
-         // 
-         // NOTE: We deliberately ignore mismatches when overwriting one condition with 
-         // another, to more easily allow copying conditions across forms.
-         //
-         if constexpr (apply_table_fails_on_mismatched_context) {
-            if (!arg_is_another_condition) {
-               auto _pull_form = [L](int pos) -> std::optional<dovah::form_stub*> {
-                  auto* wrapper = wrapper_from_stack<wrappers::form>(L, pos);
-                  if (!wrapper)
-                     return {};
-                  return wrapper->stub;
-               };
-
-               lua_getfield(L, table_pos, "owning_package");
-               if (!lua_isnoneornil(L, -1)) {
-                  auto opt_form = _pull_form(-1);
-                  if (!opt_form.has_value() || opt_form.value() != context.package)
-                     cobb::lua::argerror(L, 2, "the table-or-userdata specified an `owning_package` that is not this condition's owning package (you don't need to specify the owning form, so consider not doing that instead)");
-               }
-               lua_pop(L, 1);
-               lua_getfield(L, table_pos, "owning_quest");
-               if (!lua_isnoneornil(L, -1)) {
-                  auto opt_form = _pull_form(-1);
-                  if (!opt_form.has_value() || opt_form.value() != context.quest)
-                     cobb::lua::argerror(L, 2, "the table-or-userdata specified an `owning_quest` that is not this condition's owning quest (you don't need to specify the owning form, so consider not doing that instead)");
-               }
-               lua_pop(L, 1);
-            }
-         }
-
-         auto _handle_field = [L, table_pos, &working, &context](std::string_view field_name, auto pull, auto apply) {
-            using pull_function_type   = decltype(pull);
-            using pulled_expected_type = typename cobb::function_traits<pull_function_type>::return_type;
-
-            lua_getfield(L, table_pos, field_name.data());
-
-            if constexpr (TreatNilAsUnchanged) {
-               if (lua_isnoneornil(L, -1)) {
-                  lua_pop(L, 1);
-                  return;
-               }
-            }
-
-            // Construct the expected with an empty error object, since we're using std::string_view as 
-            // our error object. This will avoid default-constructing the value-type just to immediately 
-            // clobber it with whatever the `pull` function produces.
-            pulled_expected_type result{ std::unexpect, std::string_view{} };
-            if constexpr (std::is_invocable_v<pull_function_type, lua_State*, int, context_type>) {
-               result = pull(L, -1, context);
-            } else {
-               result = pull(L, -1);
-            }
-
-            lua_pop(L, 1);
-
-            if (!result.has_value()) {
-               auto error = std::format("problem with field `{}`: {}", field_name, result.error());
-               cobb::lua::argerror(L, table_pos, error.c_str());
-            }
-            apply(working, result.value());
-         };
-         auto _handle_field_with_default = [L, table_pos, &working, &context](std::string_view field_name, auto pull, auto apply, auto dv) {
-            using pull_function_type   = decltype(pull);
-            using pulled_expected_type = cobb::function_traits<pull_function_type>::return_type;
-
-            lua_getfield(L, table_pos, field_name.data());
-            if (lua_isnoneornil(L, -1)) {
-               lua_pop(L, 1);
-               if constexpr (!TreatNilAsUnchanged) {
-                  apply(working, dv);
-               }
-               return;
-            }
-
-            // Construct the expected with an empty error object, since we're using std::string_view as 
-            // our error object. This will avoid default-constructing the value-type just to immediately 
-            // clobber it with whatever the `pull` function produces.
-            pulled_expected_type result{ std::unexpect, std::string_view{} };
-            if constexpr (std::is_invocable_v<pull_function_type, lua_State*, int, context_type>) {
-               result = pull(L, -1, context);
-            } else {
-               result = pull(L, -1);
-            }
-
-            lua_pop(L, 1);
-
-            if (!result.has_value()) {
-               auto error = std::format("problem with field `{}`: {}", field_name, result.error());
-               cobb::lua::argerror(L, table_pos, error.c_str());
-            }
-            apply(working, result.value());
-         };
-
-         //
-
-         auto _pull_boolean = [](lua_State* L, int pos) -> std::expected<bool, std::string_view> {
-            if (!lua_isboolean(L, pos) && !lua_isnoneornil(L, pos))
-               return std::unexpected("boolean expected");
-            return lua_toboolean(L, pos);
-         };
-
-         //
-
-         _handle_field(
-            "comparison",
-            &api_helpers::conditions::pull_comparison_as_table,
-            [](auto& working, auto&& v) {
-               working.comparison = v;
-            }
-         );
-         _handle_field(
-            "function_name",
-            &function_id_from_lua,
-            [&reset_params_always](auto& working, auto&& v) {
-               working.function = v;
-               reset_params_always = true;
-            }
-         );
-         _handle_field(
-            "is_or_linked",
-            _pull_boolean,
-            [](auto& working, auto&& v) {
-               working.flags.or_linked = v;
-            }
-         );
-         _handle_field_with_default(
-            "override_types_with",
-            &api_helpers::conditions::pull_parameter_type_override,
-            [&reset_params_if_invalid](auto& working, auto&& v) {
-               working.override_types_with = v;
-               reset_params_if_invalid = true;
-            },
-            parameter_type_override::none
-         );
-         {
-            lua_getfield(L, table_pos, "parameters");
-            if (lua_isnoneornil(L, -1)) {
-               lua_pop(L, 1);
-               if constexpr (!TreatNilAsUnchanged) {
-                  reset_params_always = true;
-               }
-            } else {
-               reset_params_always     = false;
-               reset_params_if_invalid = false;
-               //
-               // We've already handled `function_name` and `override_types_with`, so we can 
-               // actually set the parameters and check their validity right now.
-               //
-               auto result = api_helpers::conditions::pull_parameters_as_table(
-                  L,
-                  -1,
-                  *dovah::conditions::function_info_by_id(working.function),
-                  context,
-                  working.override_types_with
-               );
-               lua_pop(L, 1);
-               if (result.has_value()) {
-                  auto& p_set = result.value();
-                  working.event_parameters = p_set.event_data;
-                  if (p_set.event_data.has_value()) {
-                     working.reset_parameters();
-                  } else {
-                     working.parameters = std::move(p_set.parameters);
-                  }
-               } else {
-                  std::string_view function_name = "?";
-                  {
-                     auto* info = dovah::conditions::function_info_by_id(working.function);
-                     if (info)
-                        function_name = info->name;
-                  }
-                  auto error = std::format("problem with field `parameters` (given condition function `{}`): {}",
-                     function_name,
-                     result.error()
-                  );
-                  cobb::lua::argerror(L, table_pos, error.c_str());
-               }
-            }
-         }
-         _handle_field(
-            "run_on",
-            &api_helpers::conditions::pull_run_on,
-            [&reset_params_always](auto& working, auto&& v) {
-               working.run_on = v;
-            }
-         );
-         _handle_field(
-            "swap_subject_and_target",
-            _pull_boolean,
-            [](auto& working, auto&& v) {
-               working.flags.swap_subject_and_target = v;
-            }
-         );
-
-         if (reset_params_always) {
-            working.reset_parameters();
-
-            working.event_parameters = {};
-            //
-            const auto* info = dovah::conditions::function_info_by_id(working.function);
-            if (info && info->uses_event_data)
-               working.event_parameters.emplace();
-         } else if (reset_params_if_invalid) {
-            for (size_t i = 0; i < working.parameters.size(); ++i)
-               if (!working.is_parameter_valid(i))
-                  working.reset_parameter(i);
-         }
-
-         if (!working.valid()) {
-            cobb::lua::argerror(L, table_pos, "invalid value");
-         }
          self.before_edit();
          wrapped->commit(*form, working);
          self.after_edit();

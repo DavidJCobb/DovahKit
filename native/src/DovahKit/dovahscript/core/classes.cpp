@@ -137,12 +137,15 @@ namespace {
                         return k, v
                      end
                      --
-                     -- No getters or all getters iterated; move on to
-                     -- next class.
+                     -- No getters left to iterate in this class.
                      --
-                     self.done    = self.done + 1
                      self.getters = false
                   end
+                  --
+                  -- No getters or all getters iterated; move on to
+                  -- next class.
+                  --
+                  self.done = self.done + 1
                end
                return nil, nil -- implicit
             end
@@ -174,14 +177,24 @@ namespace {
          //
          cobb::lua::rawgetfield(L, index_meta, "__classlist");
          assert(lua_gettop(L) == index_list);
-         auto count = lua_rawlen(L, index_list);
-         for (decltype(count) i = count; i > 0; --i) {
+         lua_Integer count = lua_rawlen(L, index_list);
+         lua_Integer done;
+         {
+            cobb::lua::rawgetfield(L, index_self, "done");
+            done = lua_tointeger(L, -1);
+            lua_pop(L, 1);
+         }
+         const int start = count - done;
+         for (decltype(count) i = start; i > 0; --i) {
+            assert(lua_gettop(L) == index_list);
             lua_rawgeti(L, index_list, i);
-            //
+            
             cobb::lua::rawgetfield(L, index_self, "getters");
             bool getters = lua_toboolean(L, -1);
             lua_pop(L, 1);
+
             if (!getters) {
+               lua_pushvalue(L, index_k);
                while (lua_next(L, index_cls) != 0) {
                   if (!_should_skip_name(L, index_nk)) {
                      cobb::lua::rawgetvalue(L, index_seen, index_nk);
@@ -192,34 +205,55 @@ namespace {
                   }
                   lua_settop(L, index_nk);
                }
+               assert(lua_gettop(L) == index_cls);
+
                getters = true;
                lua_pushboolean(L, true);
                lua_setfield(L, index_self, "getters");
+               {
+                  lua_pushnil(L);
+                  lua_replace(L, index_k);
+               }
             }
+
             if (getters) {
                cobb::lua::rawgetfield(L, index_cls, "__getters");
                lua_replace(L, index_cls);
-               //
-               while (lua_next(L, index_cls) != 0) {
-                  if (!_should_skip_name(L, index_nk)) {
-                     cobb::lua::rawgetvalue(L, index_seen, index_nk);
-                     bool seen = lua_toboolean(L, -1);
-                     lua_pop(L, 1);
-                     if (!seen) {
-                        //
-                        // Execute the getter.
-                        //
-                        lua_pushvalue(L, index_t);
-                        lua_call(L, 1, 1);
-                        //
-                        return 2;
+               if (lua_istable(L, index_cls)) {
+                  lua_pushvalue(L, index_k);
+                  while (lua_next(L, index_cls) != 0) {
+                     if (!_should_skip_name(L, index_nk)) {
+                        cobb::lua::rawgetvalue(L, index_seen, index_nk);
+                        bool seen = lua_toboolean(L, -1);
+                        lua_pop(L, 1);
+                        if (!seen) {
+                           //
+                           // Execute the getter.
+                           //
+                           lua_pushvalue(L, index_t);
+                           lua_call(L, 1, 1);
+                           //
+                           return 2;
+                        }
                      }
+                     lua_settop(L, index_nk);
                   }
-                  lua_settop(L, index_nk);
                }
-               //
+               assert(lua_gettop(L) == index_cls);
+               
+               getters = false;
                lua_pushboolean(L, false);
                lua_setfield(L, index_self, "getters");
+               {
+                  lua_pushnil(L);
+                  lua_replace(L, index_k);
+               }
+            }
+
+            lua_pop(L, 1); // pop the class we were just iterating
+            {
+               lua_pushinteger(L, ++done);
+               cobb::lua::rawsetfield(L, index_self, "done");
             }
          }
          return 0;

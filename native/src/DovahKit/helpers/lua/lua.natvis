@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
    <Type Name="lua_State">
-      <Intrinsic Name="_stack_size" Expression="this-&gt;ci-&gt;_stack_size()" />
+      <!--<Intrinsic Name="_stack_size" Expression="this-&gt;ci-&gt;_stack_size()" />-->
+      <Intrinsic Name="_stack_size" Expression="(int)(this-&gt;top - (this-&gt;ci-&gt;func + 1))" />
       <Intrinsic Name="_stack" Expression="this-&gt;ci-&gt;_stack()" />
       <Intrinsic Name="_stack_value" Expression="this-&gt;ci-&gt;_stack_value(index)" >
          <Parameter Name="index" Type="size_t" />
       </Intrinsic>
       
       <Expand>
-         <Item Name="[stack size]">_stack_size()</Item>
-         <Item Name="[stack]">_stack(),[_stack_size()]</Item>
+         <Item Name="[stack size]">_stack_size(),d</Item>
+         <Item Name="[stack]">_stack(),[_stack_size() + 1]</Item> <!-- +1 to include the current function at stack pos 0 -->
          <Item Name="[call info]">this-&gt;ci</Item>
          <Synthetic Name="[call stack]">
             <Expand>
@@ -26,7 +27,7 @@
    
    <Type Name="CallInfo">
       <Intrinsic Name="_stack" Expression="this-&gt;func" />
-      <Intrinsic Name="_stack_size" Expression="(this-&gt;top - (_stack() + 1))" />
+      <Intrinsic Name="_stack_size" Expression="(int)(this-&gt;top - (_stack() + 1))" />
       <Intrinsic Name="_stack_value" Expression="&amp;(_stack() + index)-&gt;val" >
          <Parameter Name="index" Type="size_t" />
       </Intrinsic>

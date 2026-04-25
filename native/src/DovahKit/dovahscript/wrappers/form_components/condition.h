@@ -4,6 +4,7 @@
 namespace dovah::loaded_forms::components {
    namespace conditions {
       struct context;
+      class  working_condition;
    }
    class condition;
 }
@@ -30,5 +31,7 @@ namespace dovahscript::wrappers {
       static wrapped_type* unwrap(wrapper&);
       static context_type  context_of(wrapper&);
       static bool is_not_locked(wrapper&); // needed because of how INFO content is bifurcated
+
+      static dovah::loaded_forms::components::conditions::working_condition pull_from_table(lua_State*, int, const context_type&);
    };
 }

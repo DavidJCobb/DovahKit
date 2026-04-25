@@ -1,0 +1,23 @@
+#pragma once
+#include "../member_function_spec.h"
+
+namespace dovahscript::api_helpers::native_lists::impl {
+   // Takes: wrapper; zero-based index within list
+   // Returns: list to modify; zero-based index within list
+   template<typename Spec>
+   std::pair<typename Spec::collection_wrapped_type*, size_t> get_list_read_target(wrapper& self, size_t requested_index) {
+      if constexpr (impl::unwrap_collection::is_single<Spec>) {
+         return std::pair{ Spec::unwrap_collection(self), requested_index };
+      } else {
+         static_assert(impl::unwrap_collection::is_bifurcated<Spec>);
+         const auto pair = Spec::unwrap_collection(self);
+         if (pair.first) {
+            const size_t split_at = pair.first->size();
+            if (requested_index < split_at)
+               return { pair.first, requested_index };
+            requested_index -= split_at;
+         }
+         return { pair.second, requested_index };
+      }
+   }
+}

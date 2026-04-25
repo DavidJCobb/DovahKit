@@ -1,12 +1,12 @@
-#include "collection_words.h"
-#include "../../../../helpers/lua/error.h"
-#include "../../../core/subsystems/userdata.h"
-#include "../../../core/classes.h"
-#include "../../../wrapper.h"
+#include "./collection_words.h"
+#include "helpers/lua/error.h"
+#include "dovahscript/core/subsystems/userdata.h"
+#include "dovahscript/core/classes.h"
+#include "dovahscript/wrapper.h"
 
-#include "../../../../dovah/forms/Shout.h"
+#include "dovah/forms/Shout.h"
 #include "../shout.h"
-#include "word.h"
+#include "./word.h"
 
 namespace {
    constexpr const char* collection_metatable_key = "collection<dovah.classes.shout.words>";
