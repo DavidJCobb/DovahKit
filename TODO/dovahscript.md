@@ -49,6 +49,50 @@ Dovahscript's `coordinator` subsystem is notified about the script-initiated del
 
 ## Needed improvements
 
+### Implement and allow `require`
+
+We don't currently expose `require` to script packages. Instead, script files must be listed in a `manifest.xml` file; this determines the order in which scripts are loaded or executed. This... kinda sucks? It forces a script package developer to manually manage file execution order, instead of allowing files to `require` their dependencies.
+
+It has an additional drawback. I'd actually love to be able to expose extensions to the Lua standard library, e.g. `extable.join(a, b)` or `extable.reserve(table, arr_count, name_count)`, but I'd prefer for those singletons to be explicitly requested by a script via e.g. `local extable = require "@dovah/extable"`. Since we don't currently expose `require`, that's... just not something we can offer.
+
+Of course, Lua's built-in `package` library, which exports `require`, has a lot of configuration details that need to be seen to, so we can ensure that users can't load arbitrary Lua files outside of the script package, load standard library functions we don't want to expose, load DLLs, et cetera.
+
+
+### Better error reporting
+
+Lua APIs like `luaL_argerror`, and functions in my helper library which wrap it (like `cobb::lua::argerror`), rely on hardcoded logic to identify the names of faulting functions. This logic can't be extended e.g. to properly report the names of setters in the Dovahscript API. The result is error messages like these --
+
+```
+bad argument #2 to '?' (unrecognized run-on type)
+stack traceback:
+	[C]: in setter: condition.run_on
+	userscript:8: in main chunk
+```
+
+-- wherein Dovahscript's custom stack-trace logic properly identifies the name of the faulting function (`setter: condition.run_on`), but the initial error message lists the function as `'?'`.
+
+Dovahscript should expose, and its APIs should use, a collection of common functions for reporting these styles of errors, e.g. `dovahscript::throw_because::bad_setter_rhs` or `dovahscript::throw_because::bad_argument`. These functions should share the same logic used within our stack-trace code, to be able to properly identify the throwing API function. The use of `luaL_argerror`, `luaL_argcheck`, and friends within Dovahscript's APIs should be deprecated.
+
+An alternative implementation to sharing logic with the stack-trace code -- perhaps more reliable -- would be to have a hidden global table such that `FUNCTION_DESCRIPTORS[func]` is a table like the following:
+
+```lua
+{
+   is_member_of = "condition",
+   name         = "run_on",
+   type         = "setter",
+   is_static    = false,       -- not a static member function
+}
+```
+
+#### Debugging Lua errors
+
+Consider this a pipe dream.
+
+It'd be nice if we could offer a debugger for uncaught Lua errors. It wouldn't allow running Lua code, continuing script execution, etc., but it'd be cool if we could allow users to inspect the values of variables at each call stack frame.
+
+This is harder than it sounds, of course. The "obvious" approach would be to avoid using Lua's API in favor of inspecting its internal data (essentially doing what my Lua Natvis already does, but in C++), so we can allow the user to see a frozen snapshot of all Lua call stack frames. However, that approach will fail completely when dealing with native objects; unless we implement two sets of getters (one within Lua, and one external to Lua which returns a `std::any` wrapping Lua-suitable values), native objects can only be inspected (in "Lua-compatible" form) by invoking their getters, and we can't know to a certainty that that would be side-effect-free (including possible side effects on the overall Lua state).
+
+
 ### Easier script bindings for form data
 
 Writing these is extremely unpleasant and entails a massive amount of boilerplate. I *desperately* need to find some way to reduce that boilerplate via template metaprogramming.
@@ -177,6 +221,17 @@ namespace wrappers::forms::quests {
 ```
 
 Additionally, it'd be nice if the collection internals could handle more of the nuances of collections. In particular, when dealing with a collection of sub-objects, it'd be nice if the "remove" function could signal success, with the internals then killing any extant wrappers for the removed sub-object (with all of the needed side-effects, e.g. shifting indices of any next-sibling sub-objects if the collection uses contiguous indices).
+
+#### Collection improvements
+
+Right now, Dovahscript uses a common abstraction, "collections," for all of the following:
+
+* Native arrays of fixed length (e.g. `shout.words`)
+* Native vectors (e.g. `land_texture.grasses`)
+  * ...including cases where a bifurcated list needs to be presented as joined (e.g. `topic_info.conditions`)
+* Native key/value maps, when the keys are exclusively integers and/or strings (e.g. `quest.aliases` and `quest.aliases_by_id`)
+
+We should give each of these their own independently programmed abstraction.
 
 #### Overwriting sub-objects wholesale
 

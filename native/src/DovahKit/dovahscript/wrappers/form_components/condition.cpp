@@ -148,20 +148,29 @@ namespace {
       if (auto* arg_wrap = wrapper_from_stack<cls>(L, table_pos))
          arg_is_another_condition = true;
 
-      api_helpers::fail_table_if_expandos(L, table_pos, std::array<std::string_view, 9>{
-         "comparison",
-         "function_name",
-         "is_or_linked",
-         "override_types_with",
-         "parameters",
-         "run_on",
-         "swap_subject_and_target",
+      if (!arg_is_another_condition) {
          //
-         // Context fields:
+         // We only check expandos if we're not being told to copy from another condition. 
+         // Checking expandos requires calling `next`/`pairs`, which, for a userdata, will 
+         // invoke every getter. If we already know we're being told to copy from another 
+         // condition, then we know there are no expandos, so we can avoid the overhead of 
+         // invoking each getter in sequence.
          //
-         "owning_package",
-         "owning_quest",
-      });
+         api_helpers::fail_table_if_expandos(L, table_pos, std::array<std::string_view, 9>{
+            "comparison",
+            "function_name",
+            "is_or_linked",
+            "override_types_with",
+            "parameters",
+            "run_on",
+            "swap_subject_and_target",
+            //
+            // Context fields:
+            //
+            "owning_package",
+            "owning_quest",
+         });
+      }
 
       bool reset_params_if_invalid = false;
       bool reset_params_always     = false;
